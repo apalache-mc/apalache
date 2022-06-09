@@ -183,8 +183,27 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       libraryDependencies += Deps.scalaCollectionContrib,
   )
 
+lazy val shai = (project in file("shai"))
+  .settings(
+      // See https://zio.dev/version-1.x/usecases/usecases_testing/
+      testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+      libraryDependencies ++= Seq(
+          Deps.zio,
+          Deps.grpcNetty,
+          Deps.scalapbRuntimGrpc,
+          Deps.zioGrpcCodgen,
+          TestDeps.zioTest,
+          TestDeps.zioTestSbt,
+      ),
+      // See https://scalapb.github.io/zio-grpc/docs/installation
+      Compile / PB.targets := Seq(
+          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
+          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
+      ),
+  )
+
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, hai)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, shai)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -215,20 +234,6 @@ lazy val distribution = (project in file("mod-distribution"))
       testSettings
   )
 
-lazy val hai = (project in file("hai"))
-  .settings(
-      libraryDependencies ++= Seq(
-          Deps.grpcNetty,
-          Deps.scalapbRuntimGrpc,
-          Deps.zioGrpcCodgen,
-      ),
-      // See https://scalapb.github.io/zio-grpc/docs/installation
-      Compile / PB.targets := Seq(
-          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
-          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
-      ),
-  )
-
 ///////////////
 // Packaging //
 ///////////////
@@ -248,7 +253,7 @@ lazy val root = (project in file("."))
       tla_pp,
       tla_assignments,
       tla_bmcmt,
-      hai,
+      shai,
       tool,
       distribution,
   )
@@ -297,6 +302,12 @@ lazy val root = (project in file("."))
                   "tla2sany/StandardModules/__rewire_folds_in_apalache.tla",
             ),
         )
+      },
+      assembly / assemblyMergeStrategy := {
+        // Workaround for conflict with grpc-netty manifest files
+        // See https://github.com/sbt/sbt-assembly/issues/362
+        case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+        case x                                                    => (assembly / assemblyMergeStrategy).value(x)
       },
       // Package the distribution files
       Universal / mappings ++= Seq(
