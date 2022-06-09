@@ -776,7 +776,7 @@ class ToEtcExpr(
       case ex @ OperEx(VariantOper.variant, tag @ _, _) =>
         throw new TypingInputException(s"The first argument of Variant must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.`variantFilter`, v @ ValEx(TlaStr(tagName)), setEx) =>
+      case OperEx(VariantOper.variantFilter, v @ ValEx(TlaStr(tagName)), setEx) =>
         val a = varPool.fresh
         val b = varPool.fresh
         // (Str, Set(T1a(a) | b)) => Set(a)
@@ -784,10 +784,10 @@ class ToEtcExpr(
         // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, setEx))
 
-      case ex @ OperEx(VariantOper.`variantFilter`, tag @ _, _) =>
+      case ex @ OperEx(VariantOper.variantFilter, tag @ _, _) =>
         throw new TypingInputException(s"The first argument of FilterByTag must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.`variantMatch`, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
+      case OperEx(VariantOper.variantMatch, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
         val a = varPool.fresh
         val b = varPool.fresh
         val c = varPool.fresh
@@ -808,10 +808,10 @@ class ToEtcExpr(
         // For some reason, we required the field tag: Str to be present in the value type. We should revisit this.
         mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
 
-      case OperEx(VariantOper.`variantMatch`, tag @ _, _, _, _) =>
+      case OperEx(VariantOper.variantMatch, tag @ _, _, _, _) =>
         throw new TypingInputException(s"The first argument of MatchTag must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.`variantGet`, v @ ValEx(TlaStr(tagName)), variantEx) =>
+      case OperEx(VariantOper.variantGet, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
         // (Str, T1a(a)) => a
         val operArgs =
@@ -825,7 +825,7 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, variantEx))
 
       // ******************************************** Apalache **************************************************
-      case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
+      case OperEx(ApalacheOper.mkSeq, len, ctor) =>
         val a = varPool.fresh
         // (Int, (Int => a)) => Seq(a)
         val opsig = OperT1(Seq(IntT1, OperT1(Seq(IntT1), a)), SeqT1(a))
