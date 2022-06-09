@@ -2868,6 +2868,24 @@ $ apalache-mc typecheck --features=rows TestRecordsNewIll4.tla | sed 's/[IEW]@.*
 EXITCODE: ERROR (120)
 ```
 
+### typecheck TestVariants.tla
+
+Variant operators are type correct.
+
+```sh
+$ apalache-mc typecheck --features=rows TestVariants.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck TestReqAckVariants.tla
+
+```sh
+$ apalache-mc typecheck --features=rows TestReqAckVariants.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir
 
 import org.scalacheck.Gen
-import org.scalacheck.Gen.{alphaNumStr, choose, const, identifier, listOfN, lzy, oneOf, posNum, resize, sized, some}
+import org.scalacheck.Gen.{choose, const, identifier, listOfN, lzy, oneOf, posNum, resize, sized, some}
 
 import scala.collection.immutable.SortedMap
 
@@ -108,7 +108,7 @@ trait TlaType1Gen {
     for {
       // use resize to decrease the depth of the elements (as terms)
       row <- genRow
-    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq :+ ("tag" -> StrT1): _*), row.other))
+    } yield RecRowT1(RowT1(SortedMap(row.fieldTypes.toSeq: _*), row.other))
   }
 
   def genVariant: Gen[VariantT1] =
@@ -117,7 +117,7 @@ trait TlaType1Gen {
         // use resize to decrease the depth of the elements (as terms)
         s <- choose(0, size)
         elem = resize(s - 1, genVariantOption)
-        keys <- listOfN(s, alphaNumStr)
+        keys <- listOfN(s, identifier)
         values <- listOfN(s, elem)
         varNo <- choose(0, 25)
         optVar <- some(VarT1(varNo))
