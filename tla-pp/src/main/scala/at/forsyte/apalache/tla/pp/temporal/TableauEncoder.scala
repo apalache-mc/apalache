@@ -39,7 +39,7 @@ class TableauEncoder(
 
     val (varDeclSeqs, predsSeq, exVarDecls) = formulas.map(singleTemporalToInvariant).unzip3
     val varDecls = varDeclSeqs.flatten
-    val preds = predsSeq.foldLeft(Preds())(_ ++ _)
+    val preds = predsSeq.foldLeft(PredExs())(_ ++ _)
 
     // update init
     val newInit = andInDecl(builder.and(preds.initExs: _*), modWithPreds.init, tracker)
@@ -79,7 +79,7 @@ class TableauEncoder(
   /**
    * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
    */
-  def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], Preds, TlaVarDecl) = {
+  def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
 
     var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(formula.body)
 
@@ -117,7 +117,7 @@ class TableauEncoder(
    * that B holding at some point in the future is the definition of <>B).
    * @return
    */
-  def encodeSyntaxTreeInPredicates(curNode: TlaEx): (Seq[TlaVarDecl], Preds, TBuilderInstruction) = {
+  def encodeSyntaxTreeInPredicates(curNode: TlaEx): (Seq[TlaVarDecl], PredExs, TBuilderInstruction) = {
     levelFinder.getLevelOfExpression(Set.empty, curNode) match {
       case TlaLevelTemporal =>
         curNode match {
@@ -181,13 +181,13 @@ class TableauEncoder(
 
             /* encode the arguments of the node
              */
-            val (_, argsPreds: Seq[Preds], argExs: Seq[TBuilderInstruction]) = args
+            val (_, argsPreds: Seq[PredExs], argExs: Seq[TBuilderInstruction]) = args
               .map(arg => {
                 encodeSyntaxTreeInPredicates(arg)
               })
               .unzip3
 
-            val argsPredsUnion = argsPreds.foldLeft(Preds())(_ ++ _)
+            val argsPredsUnion = argsPreds.foldLeft(PredExs())(_ ++ _)
 
             /* encode the node itself
              */
@@ -313,7 +313,7 @@ class TableauEncoder(
                         nodeLoopVarDecl,
                         auxVarDecl,
                     ),
-                    Preds(
+                    PredExs(
                         initExs = Seq(
                             nodeVarInitAssignmentEx,
                             nodeVarInitConditionEx,
@@ -367,7 +367,7 @@ class TableauEncoder(
                         nodeVarDecl,
                         nodeLoopVarDecl,
                     ),
-                    Preds(
+                    PredExs(
                         initExs = Seq(
                             nodeVarInitAssignmentEx,
                             nodeVarInitConditionEx,
@@ -391,7 +391,7 @@ class TableauEncoder(
                 s"Cannot handle expression ${curNode.toString()} of type ${curNode.getClass()}")
         }
       case _ => /* a propositional expression - used as-is in the formula encoding the syntax tree */
-        (Seq.empty[TlaVarDecl], Preds(), builder.useTrustedEx(curNode))
+        (Seq.empty[TlaVarDecl], PredExs(), builder.useTrustedEx(curNode))
     }
   }
 

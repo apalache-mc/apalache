@@ -13,16 +13,19 @@ case class ModWithPreds(
     val module: TlaModule,
     val init: TlaOperDecl,
     val next: TlaOperDecl,
-    val loopOK: TlaOperDecl) {
-}
+    val loopOK: TlaOperDecl) {}
 
-case class Preds(
+/**
+ * A convenience class for packing conjuncts that make up the init, next and loopOK predicates. Useful for collecting
+ * these expressions without adding them to the predicates one by one, to later add them all at once.
+ */
+case class PredExs(
     val initExs: Seq[TBuilderInstruction] = Seq.empty,
     val nextExs: Seq[TBuilderInstruction] = Seq.empty,
     val loopOKExs: Seq[TBuilderInstruction] = Seq.empty) {
 
-  def ++(that: Preds): Preds = {
-    Preds(
+  def ++(that: PredExs): PredExs = {
+    PredExs(
         this.initExs ++ that.initExs,
         this.nextExs ++ that.nextExs,
         this.loopOKExs ++ that.loopOKExs,
