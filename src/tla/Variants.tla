@@ -17,13 +17,13 @@
  * @param rec a value
  * @return the record wrapped in the variant type
  *
- * The type looks like follows, when __tag == "Tag":
+ * The type looks like follows, when __tagName == "Tag":
  *
  *   (Str, a) => Tag(a) | b
  *)
-Variant(__tag, __value) ==
+Variant(__tagName, __value) ==
     \* default untyped implementation
-    [ tag |-> __tag, value |-> __value ]
+    [ tag |-> __tagName, value |-> __value ]
 
 (**
  * Filter a set of variants with the provided tag value.
@@ -32,13 +32,13 @@ Variant(__tag, __value) ==
  * @param `tagValue` a constant string that is used to filter the set elements
  * @return the set of elements of S that are tagged with `tagValue`.
  *
- * The type looks like follows, when __tag == "Tag":
+ * The type looks like follows, when __tagName == "Tag":
  *
  *   (Str, Set(Tag(a) | b)) => Set(a)
  *)
-VariantFilter(__tag, __S) ==
+VariantFilter(__tagName, __S) ==
     \* default untyped implementation
-    { __d \in { __e \in __S: __e.tag = __tag }: __d.value }
+    { __d \in { __e \in __S: __e.tag = __tagName }: __d.value }
 
 
 (**
@@ -57,7 +57,7 @@ VariantFilter(__tag, __S) ==
  *        when `variant` is tagged with a value different from `tagValue`
  * @return the result returned by either `ThenOper`, or `ElseOper`
  *
- * The type could look like follows, when __tag == "Tag":
+ * The type could look like follows, when __tagName == "Tag":
  *
  *   (
  *     Str,
@@ -66,14 +66,14 @@ VariantFilter(__tag, __S) ==
  *     Variant(b) => r
  *   ) => r
  *)
-VariantMatch(__tag, __variant, __ThenOper(_), __ElseOper(_)) ==
+VariantMatch(__tagName, __variant, __ThenOper(_), __ElseOper(_)) ==
     \* default untyped implementation
-    IF __variant.tag = __tag
+    IF __variant.tag = __tagName
     THEN __ThenOper(__variant.value)
     ELSE __ElseOper(__variant)
 
 (**
- * In case when `variant` allows for one value,
+ * In cases where `variant` allows for one value,
  * extract the associated value and return it.
  * The type checker must enforce that `variant` allows for one option.
  *
@@ -85,10 +85,10 @@ VariantMatch(__tag, __variant, __ThenOper(_), __ElseOper(_)) ==
  *
  *   (Str, Tag(a)) => a
  *)
-VariantGet(__tag, __variant) ==
+VariantGet(__tagName, __variant) ==
     \* default untyped implementation
-    IF __variant.tag = __tag
+    IF __variant.tag = __tagName
     THEN __variant.value
     ELSE \* trigger an error in TLC by choosing a non-existant element
-         CHOOSE x \in { __variant }: x.tag = __tag
+         CHOOSE x \in { __variant }: x.tag = __tagName
 ===============================================================================
