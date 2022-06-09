@@ -49,7 +49,7 @@ class TableauEncoder(
 
     // update loopOK
     val newLoopOK = andInDecl(builder.and(preds.loopOKExs: _*), modWithPreds.loopOK, tracker)
-    val loopOKopApp = builder.appOp(builder.name(newLoopOK.name, BoolT1))
+    val loopOKopApp = builder.appOp(builder.name(newLoopOK.name, OperT1(Seq.empty, BoolT1)))
 
     val declarationsWithUpdatedPreds = modWithPreds.module.declarations
       .map(decl =>
@@ -67,7 +67,7 @@ class TableauEncoder(
     }
 
     val declarationsWithoutFormulas = declarationsWithUpdatedPreds
-      .filter(decl => formulas.exists(formula => formula.name == decl.name))
+      .filterNot(decl => formulas.exists(formula => formula.name == decl.name))
 
     modWithPreds.module.copy(
         declarations = varDecls ++
