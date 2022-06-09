@@ -774,7 +774,7 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, valueEx))
 
       case ex @ OperEx(VariantOper.variant, tag @ _, _) =>
-        throw new TypingInputException(s"The second argument of Variant must be a string, found: $tag", ex.ID)
+        throw new TypingInputException(s"The first argument of Variant must be a string, found: $tag", ex.ID)
 
       case OperEx(VariantOper.`variantFilter`, v @ ValEx(TlaStr(tagName)), setEx) =>
         val a = varPool.fresh
@@ -785,7 +785,7 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, setEx))
 
       case ex @ OperEx(VariantOper.`variantFilter`, tag @ _, _) =>
-        throw new TypingInputException(s"The second argument of FilterByTag must be a string, found: $tag", ex.ID)
+        throw new TypingInputException(s"The first argument of FilterByTag must be a string, found: $tag", ex.ID)
 
       case OperEx(VariantOper.`variantMatch`, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
         val a = varPool.fresh
@@ -809,7 +809,7 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
 
       case OperEx(VariantOper.`variantMatch`, tag @ _, _, _, _) =>
-        throw new TypingInputException(s"The second argument of MatchTag must be a string, found: $tag", ex.ID)
+        throw new TypingInputException(s"The first argument of MatchTag must be a string, found: $tag", ex.ID)
 
       case OperEx(VariantOper.`variantGet`, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
