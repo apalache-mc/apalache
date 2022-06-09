@@ -12,18 +12,18 @@ VARIABLE
 Init ==
     x = 0 /\ y = 0
 
-ActionWithPrimedVarsInNonAssignments ==
-    /\ x' = x + 1 \/ x' = y + 1
+ActionWithPrimedVarsInNonAssignments(s, t) ==
+    /\ x' = t + 1
+    /\ y' = s - 1
     /\ x' > 5
-    /\ y' = 2 \/ y' = 1
-    /\ x' = 6 => y' = 1
+    /\ x' = 6 => y' = t
     /\ x' # 6 => y' = 2
 
 Next ==
     \/ x' = y /\ y' = x
 
 InvActionWithPrimedVarsInNonAssignments ==
-    ENABLED ActionWithPrimedVarsInNonAssignments
+    \E s, t \in {1,2,3,4,5,6,7,8,9,10}: ENABLED ActionWithPrimedVarsInNonAssignments(s, t)
 
 
 ====
