@@ -9,32 +9,24 @@ import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
  * A convenience class storing a module, together with the init, next and loopOK predicates of that module. Useful to
  * avoid re-finding these predicates.
  */
-class ModWithPreds(
+case class ModWithPreds(
     val module: TlaModule,
     val init: TlaOperDecl,
     val next: TlaOperDecl,
     val loopOK: TlaOperDecl) {
+}
 
-  def setPredicates(newInit: TlaOperDecl, newNext: TlaOperDecl, newLoopOK: TlaOperDecl): ModWithPreds = {
-    val newDeclarations = module.declarations.map(decl =>
-      decl.name match {
-        case init.name   => newInit
-        case next.name   => newNext
-        case loopOK.name => newLoopOK
-        case _           => decl
-      })
-    val newModule = new TlaModule(module.name, newDeclarations)
-    new ModWithPreds(newModule, newInit, newNext, newLoopOK)
-  }
+case class Preds(
+    val initExs: Seq[TBuilderInstruction] = Seq.empty,
+    val nextExs: Seq[TBuilderInstruction] = Seq.empty,
+    val loopOKExs: Seq[TBuilderInstruction] = Seq.empty) {
 
-  def setModule(newModule: TlaModule): ModWithPreds = {
-    new ModWithPreds(newModule, init, next, loopOK)
-  }
-
-  def prependDecl(decl: TlaDecl): ModWithPreds = {
-    val newDecls = decl +: module.declarations
-    val newModule = new TlaModule(module.name, newDecls)
-    setModule(newModule)
+  def ++(that: Preds): Preds = {
+    Preds(
+        this.initExs ++ that.initExs,
+        this.nextExs ++ that.nextExs,
+        this.loopOKExs ++ that.loopOKExs,
+    )
   }
 }
 

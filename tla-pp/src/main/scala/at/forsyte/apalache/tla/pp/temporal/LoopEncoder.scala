@@ -95,31 +95,22 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
   }
 
   /**
-   * Adds logic for manipulating the loop_var in next. Transforms next into
+   * Returns an expression for updating the loop_var
    *
-   * newNext ==
-   *
-   * /\ oldNext
-   *
-   * /\ __saved_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo
+   * {{{__saved_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo}}}
    */
-  def addLoopVarToNext(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl, next: TlaOperDecl): TlaOperDecl = {
+  def getLoopVarUpdateEx(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl): TBuilderInstruction = {
     val loopEx = builder.varDeclAsNameEx(loopVarDecl)
     val loopExPrime = builder.prime(loopEx)
 
-    next.copy(body = builder.and(
-        /* oldNext */
-        builder.useTrustedEx(next.body),
-        /* /\ __saved_foo' = IF (InLoop' = InLoop) THEN __saved_foo ELSE foo */
-        builder.eql(
-            loopExPrime,
-            builder.ite(
-                builder.eql(inLoop, inLoopPrime),
-                loopEx,
-                builder.varDeclAsNameEx(varDecl),
-            ),
+    builder.eql(
+        loopExPrime,
+        builder.ite(
+            builder.eql(inLoop, inLoopPrime),
+            loopEx,
+            builder.varDeclAsNameEx(varDecl),
         ),
-    ))
+    )
   }
 
   /**
