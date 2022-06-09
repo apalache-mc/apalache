@@ -111,7 +111,7 @@ class TableauEncoder(
 
   /**
    * Moves down the syntax tree of a provided expression curNode. Each node of the syntax tree that has temporal level,
-   * e.g. contains temporal operators somewhere below it, is encoded by a variable curNode_predicate. For example, for
+   * e.g. contains temporal operators somewhere below it, is encoded by a variable __temporal_curNode. For example, for
    * the formula [](A => <>B), The syntax tree has the shape
    * {{{
    *   box
@@ -150,10 +150,10 @@ class TableauEncoder(
             varNamesToExStrings = varNamesToExStrings +
               ((nodeIdentifier, curNode.toString().replace("\"", "\'")))
 
-            /* create a new variable for this node
+            /* create a new variable for this node.
                     e.g.
                     \* @type: Bool;
-                    curNode_predicate
+                    __temporal_curNode
              */
             val nodeVarDecl = new TlaVarDecl(nodeIdentifier)(Typed(BoolT1))
 
@@ -163,26 +163,26 @@ class TableauEncoder(
             /* create a new loop variable for this node
                     e.g.
                     \* @type: Bool;
-                    __saved_curNode_predicate
+                    __saved___temporal_curNode
              */
             val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
 
             varNamesToExStrings = varNamesToExStrings + ((nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'")))
 
-            /* generic initialization for node variable: curNode_predicate \in BOOLEAN */
+            /* generic initialization for node variable: __temporal_curNode \in BOOLEAN */
             val nodeVarInitAssignmentEx =
               builder.in(nodeVarEx, builder.booleanSet())
 
-            /* generic update for node variable: curNode_predicate' \in BOOLEAN */
+            /* generic update for node variable: __temporal_curNode' \in BOOLEAN */
             val nodeVarUpdateAssignmentEx =
               builder.in(nodeVarExPrime, builder.booleanSet())
 
-            /* initialize loop variable: __saved_curNode_predicate = curNode_predicate
+            /* initialize loop variable: __saved___temporal_curNode = __temporal_curNode
              */
             val loopVarInitAssignmentEx =
               builder.eql(builder.varDeclAsNameEx(nodeLoopVarDecl), builder.varDeclAsNameEx(nodeVarDecl))
 
-            /* generic update for loop variable: __saved_curNode_predicate' = IF (InLoop' = InLoop) THEN __saved_curNode_predicate ELSE curNode_predicate}}}
+            /* generic update for loop variable: __saved___temporal_curNode' = IF (InLoop' = InLoop) THEN __saved___temporal_curNode ELSE __temporal_curNode}}}
              */
             val loopVarUpdateAssignmentEx = loopEnc.getLoopVarUpdateEx(nodeVarDecl, nodeLoopVarDecl)
 
@@ -205,7 +205,7 @@ class TableauEncoder(
              */
             oper match {
               case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
-                /* create new auxiliary variable curNode_globally or curNode_finally */
+                /* create new auxiliary variable curNode_unroll or curNode_finally */
                 val nameSuffix = oper match {
                   case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
                   case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
@@ -216,10 +216,10 @@ class TableauEncoder(
                 val auxVarExPrime = builder.prime(auxVarEx)
 
                 /*
-                  initialize curNode_predicate
+                  initialize __temporal_curNode
 
-                  /\ curNode_predicate \in BOOLEAN
-                  /\ curNode_predicate_globally = TRUE or /\ curNode_predicate_finally = FALSE
+                  /\ __temporal_curNode \in BOOLEAN
+                  /\ __temporal_curNode_globally = TRUE or /\ __temporal_curNode_finally = FALSE
                  */
                 val initialValue = oper match {
                   case TlaTempOper.box     => true
@@ -232,21 +232,21 @@ class TableauEncoder(
                       builder.bool(initialValue),
                   )
 
-                /* update curNode_predicate:
+                /* update __temporal_curNode:
 
-                  /\ curNode_predicate' \in BOOLEAN
-                  /\ curNode_predicate_globally' \in BOOLEAN or curNode_predicate_finally' \in BOOLEAN
+                  /\ __temporal_curNode' \in BOOLEAN
+                  /\ __temporal_curNode_globally' \in BOOLEAN or __temporal_curNode_finally' \in BOOLEAN
 
                                            outerOp                                          outerOp
-                  /\ curNode_predicate <=> A /\ curNode_predicate' or curNode_predicate <=> A \/ curNode_predicate'
+                  /\ __temporal_curNode <=> A /\ __temporal_curNode' or __temporal_curNode <=> A \/ __temporal_curNode'
 
                                                     outerOp
-                  /\ curNode_predicate_globally' <=>  /\ curNode_predicate_globally
+                  /\ __temporal_curNode_globally' <=>  /\ __temporal_curNode_globally
                                                       /\ (~InLoop' \/ A')
                                                     outerOp      innerOp
                   or
                                                    outerOp
-                  /\ curNode_predicate_finally' <=>   \/ curNode_predicate_finally
+                  /\ __temporal_curNode_finally' <=>   \/ __temporal_curNode_finally
                                                       \/  (InLoop' /\ A')
                                                     outerOp      innerOp
                  */
@@ -267,19 +267,19 @@ class TableauEncoder(
                 def outerOp(args: TBuilderInstruction*): TBuilderInstruction = outerOpTmp(args)
                 def innerOp(args: TBuilderInstruction*): TBuilderInstruction = innerOpTmp(args)
 
-                /* curNode_predicate' \in BOOLEAN */
+                /* __temporal_curNode' \in BOOLEAN */
                 val nodeVarUpdateAssignmentEx = builder.in(
                     nodeVarExPrime,
                     builder.booleanSet(),
                 )
 
-                /* curNode_predicate_globally' \in BOOLEAN */
+                /* __temporal_curNode_unroll' \in BOOLEAN */
                 val auxVarUpdateAssignmentEx = builder.in(
                     builder.prime(auxVarEx),
                     builder.booleanSet(),
                 )
 
-                /* curNode_predicate <=> A /\ curNode_predicate' */
+                /* __temporal_curNode <=> A /\ __temporal_curNode' */
                 val nodeVarUpdateConditionEx = builder.equiv(
                     nodeVarEx,
                     outerOp(
@@ -288,7 +288,7 @@ class TableauEncoder(
                     ),
                 )
 
-                /* curNode_predicate_globally' <=>  /\ curNode_predicate_globally
+                /* __temporal_curNode_unroll' <=>  /\ __temporal_curNode_unroll
                                                             /\ (~InLoop' \/ A')
                  */
                 val auxVarUpdateConditionEx = builder.equiv(
@@ -303,7 +303,7 @@ class TableauEncoder(
                 )
 
                 /* update loopOK:
-                  (curNode_predicate_globally => curNode_predicate) or (curNode_predicate => curNode_predicate_finally)
+                  (__temporal_curNode_unroll => __temporal_curNode) or (__temporal_curNode => __temporal_curNode_finally)
                  */
                 val auxVarLoopOKEx =
                   oper match {
@@ -318,24 +318,24 @@ class TableauEncoder(
                         auxVarDecl,
                     ) ++ argVarDecls.flatten,
                     argsPredsUnion ++
-                    PredExs(
-                        initExs = Seq(
-                            nodeVarInitAssignmentEx,
-                            loopVarInitAssignmentEx,
-                            auxVarInitEx,
-                        ),
-                        nextExs = Seq(
-                            nodeVarUpdateAssignmentEx,
-                            loopVarUpdateAssignmentEx,
-                            auxVarUpdateAssignmentEx,
-                            nodeVarUpdateConditionEx,
-                            auxVarUpdateConditionEx,
-                        ),
-                        loopOKExs = Seq(
-                            loopVarLoopOKEx,
-                            auxVarLoopOKEx,
-                        ),
-                    ),
+                      PredExs(
+                          initExs = Seq(
+                              nodeVarInitAssignmentEx,
+                              loopVarInitAssignmentEx,
+                              auxVarInitEx,
+                          ),
+                          nextExs = Seq(
+                              nodeVarUpdateAssignmentEx,
+                              loopVarUpdateAssignmentEx,
+                              auxVarUpdateAssignmentEx,
+                              nodeVarUpdateConditionEx,
+                              auxVarUpdateConditionEx,
+                          ),
+                          loopOKExs = Seq(
+                              loopVarLoopOKEx,
+                              auxVarLoopOKEx,
+                          ),
+                      ),
                     nodeVarEx,
                 )
               case TlaTempOper.leadsTo =>
@@ -350,7 +350,7 @@ class TableauEncoder(
                 throw new NotImplementedError("Handling temporal quantifiers is not supported yet!")
               case _ => // not a temporal operator. e.g. A /\ B
                 /* initialize the variable for this node
-                    e.g. curNode_predicate = A_predicate /\ B_predicate
+                    e.g. __temporal_curNode = A_predicate /\ B_predicate
                  */
                 val nodeVarInitConditionEx =
                   builder.eql(
@@ -359,7 +359,7 @@ class TableauEncoder(
                   )
 
                 /* update the variable for this node
-                    e.g. curNode_predicate' = A_predicate' /\ B_predicate'
+                    e.g. __temporal_curNode' = A_predicate' /\ B_predicate'
                  */
                 val nodeVarUpdateConditionEx = builder.eql(
                     nodeVarExPrime,
