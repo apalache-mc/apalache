@@ -61,14 +61,14 @@ VariantFilter(__tag, __S) ==
  *
  *   (
  *     Str,
- *     { Tag(a) | b },
+ *     Tag(a) | b,
  *     a => r,
  *     Variant(b) => r
  *   ) => r
  *)
-VariantMatch(__tagValue, __variant, __ThenOper(_), __ElseOper(_)) ==
+VariantMatch(__tag, __variant, __ThenOper(_), __ElseOper(_)) ==
     \* default untyped implementation
-    IF __variant.tag = __tagValue
+    IF __variant.tag = __tag
     THEN __ThenOper(__variant.value)
     ELSE __ElseOper(__variant)
 
@@ -85,10 +85,10 @@ VariantMatch(__tagValue, __variant, __ThenOper(_), __ElseOper(_)) ==
  *
  *   (Str, Tag(a)) => a
  *)
-VariantGet(__tagValue, __variant) ==
+VariantGet(__tag, __variant) ==
     \* default untyped implementation
-    IF __variant.tag = __tagValue
+    IF __variant.tag = __tag
     THEN __variant.value
     ELSE \* trigger an error in TLC by choosing a non-existant element
-         CHOOSE x \in { __variant }: x.tag = __tagValue
+         CHOOSE x \in { __variant }: x.tag = __tag
 ===============================================================================
