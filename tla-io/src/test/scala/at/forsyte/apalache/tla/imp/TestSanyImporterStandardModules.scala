@@ -602,7 +602,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         OperEx(
             VariantOper.variant,
             ValEx(TlaStr("T1a")),
-            OperEx(TlaFunOper.`enum`, ValEx(TlaStr("val")), ValEx(TlaInt(3)), ValEx(TlaStr("found")),
+            OperEx(TlaFunOper.rec, ValEx(TlaStr("val")), ValEx(TlaInt(3)), ValEx(TlaStr("found")),
                 ValEx(TlaBool(false))),
         ),
     )
