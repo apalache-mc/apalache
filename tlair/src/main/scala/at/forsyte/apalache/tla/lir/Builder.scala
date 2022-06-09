@@ -443,7 +443,7 @@ class Builder {
 
   // TODO: rename to record, because it is used only for the records
   def enumFun(key1: BuilderEx, value1: BuilderEx, keysAndValuesInterleaved: BuilderEx*): BuilderEx = {
-    BuilderOper(TlaFunOper.enum, key1 +: value1 +: keysAndValuesInterleaved: _*)
+    BuilderOper(TlaFunOper.rec, key1 +: value1 +: keysAndValuesInterleaved: _*)
   }
 
   def except(
@@ -783,7 +783,7 @@ class Builder {
         TlaFiniteSetOper.isFiniteSet.name -> TlaFiniteSetOper.isFiniteSet,
         TlaFunOper.app.name -> TlaFunOper.app,
         TlaFunOper.domain.name -> TlaFunOper.domain,
-        TlaFunOper.enum.name -> TlaFunOper.enum,
+        TlaFunOper.rec.name -> TlaFunOper.rec,
         TlaFunOper.except.name -> TlaFunOper.except,
         TlaFunOper.funDef.name -> TlaFunOper.funDef,
         TlaFunOper.tuple.name -> TlaFunOper.tuple,
