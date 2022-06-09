@@ -153,17 +153,20 @@ class EnabledRewriter(
   private def transformEnabled(ex: TlaEx, varDecls: Seq[TlaVarDecl], operDecls: Seq[TlaOperDecl]): TlaEx = {
     val vars = varDecls.map(_.name)
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
+    val constSimplifier = new ConstSimplifier(tracker)
 
     val operMap = BodyMapFactory.makeFromDecls(operDecls)
 
     val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, ex, operMap)
 
-    val transitionsWithoutAssignments = transitionPairs.map(symbTrans => {
-      val assignmentEx = symbTrans._2
-      val assignments = flattenAssignments(extractAssignmentsFromExpression(assignmentEx))
-      val modifiedEx = flattenEx(removeAssignmentsFromExpression(assignmentEx), assignments)
-      modifiedEx
-    })
+    val transitionsWithoutAssignments = transitionPairs
+      .map(symbTrans => {
+        val assignmentEx = symbTrans._2
+        val assignments = flattenAssignments(extractAssignmentsFromExpression(assignmentEx))
+        val modifiedEx = flattenEx(removeAssignmentsFromExpression(assignmentEx), assignments)
+        modifiedEx
+      })
+      .map(constSimplifier(_)) // equivalent to .map(constSimplifier), but makes it clearer that constSimplifier is used as a function
 
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
   }
