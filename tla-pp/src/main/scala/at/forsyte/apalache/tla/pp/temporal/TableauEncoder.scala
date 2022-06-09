@@ -193,7 +193,7 @@ class TableauEncoder(
 
             /* encode the arguments of the node
              */
-            val (_, argsPreds: Seq[PredExs], argExs: Seq[TBuilderInstruction]) = args
+            val (argVarDecls, argsPreds: Seq[PredExs], argExs: Seq[TBuilderInstruction]) = args
               .map(arg => {
                 encodeSyntaxTreeInPredicates(arg)
               })
@@ -225,14 +225,6 @@ class TableauEncoder(
                   case TlaTempOper.box     => true
                   case TlaTempOper.diamond => false
                 }
-
-                val nodeVarInitConditionEx =
-                  builder.and(
-                      builder.in(
-                          nodeVarEx,
-                          builder.booleanSet(),
-                      )
-                  )
 
                 val auxVarInitEx =
                   builder.eql(
@@ -324,26 +316,26 @@ class TableauEncoder(
                         nodeVarDecl,
                         nodeLoopVarDecl,
                         auxVarDecl,
-                    ),
+                    ) ++ argVarDecls.flatten,
+                    argsPredsUnion ++
                     PredExs(
                         initExs = Seq(
                             nodeVarInitAssignmentEx,
-                            nodeVarInitConditionEx,
                             loopVarInitAssignmentEx,
                             auxVarInitEx,
                         ),
                         nextExs = Seq(
                             nodeVarUpdateAssignmentEx,
-                            nodeVarUpdateConditionEx,
                             loopVarUpdateAssignmentEx,
                             auxVarUpdateAssignmentEx,
+                            nodeVarUpdateConditionEx,
                             auxVarUpdateConditionEx,
                         ),
                         loopOKExs = Seq(
                             loopVarLoopOKEx,
                             auxVarLoopOKEx,
                         ),
-                    ) ++ argsPredsUnion,
+                    ),
                     nodeVarEx,
                 )
               case TlaTempOper.leadsTo =>
@@ -378,22 +370,22 @@ class TableauEncoder(
                     Seq(
                         nodeVarDecl,
                         nodeLoopVarDecl,
-                    ),
-                    PredExs(
+                    ) ++ argVarDecls.flatten,
+                    argsPredsUnion ++ PredExs(
                         initExs = Seq(
                             nodeVarInitAssignmentEx,
-                            nodeVarInitConditionEx,
                             loopVarInitAssignmentEx,
+                            nodeVarInitConditionEx,
                         ),
                         nextExs = Seq(
                             nodeVarUpdateAssignmentEx,
-                            nodeVarUpdateConditionEx,
                             loopVarUpdateAssignmentEx,
+                            nodeVarUpdateConditionEx,
                         ),
                         loopOKExs = Seq(
                             loopVarLoopOKEx
                         ),
-                    ) ++ argsPredsUnion,
+                    ),
                     /* expression for this node is the name of the variable that encodes it */
                     nodeVarEx,
                 )
