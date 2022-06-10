@@ -14,6 +14,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
+import shapeless.ops.nat
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 /**
  * Encodes temporal formulas as invariants.
@@ -315,36 +317,15 @@ class TableauEncoder(
               case TlaTempOper.AA | TlaTempOper.EE =>
                 throw new NotImplementedError("Handling temporal quantifiers is not supported yet!")
               case _ => // not a temporal operator. e.g. A /\ B
-                /* initialize the variable for this node
-                    e.g. __temporal_curNode = A_predicate /\ B_predicate
-                 */
-                val nodeVarInitConditionEx =
-                  builder.eql(
-                      nodeVarEx,
-                      builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
-                  )
-
-                /* update the variable for this node
-                    e.g. __temporal_curNode' = A_predicate' /\ B_predicate'
-                 */
-                val nodeVarUpdateConditionEx = builder.eql(
-                    builder.prime(nodeVarEx),
-                    builder.useTrustedEx(OperEx(oper, argExs: _*)(curNode.typeTag)),
-                )
+                /* init and next conditions look like this: __temporal_curNode = __temporal_A /\ __temporal_B */
+                val conditionalPredExs = createPropositionalOperNodeExs(nodeVarEx, oper, curNode.typeTag, argExs: _*)
 
                 (
                     Seq(
                         nodeVarDecl,
                         nodeLoopVarDecl,
                     ) ++ argVarDecls.flatten,
-                    argsPredsUnion ++ PredExs(
-                        initExs = Seq(
-                            nodeVarInitConditionEx
-                        ),
-                        nextExs = Seq(
-                            nodeVarUpdateConditionEx
-                        ),
-                    ),
+                    argsPredsUnion ++ conditionalPredExs,
                     /* expression for this node is the name of the variable that encodes it */
                     nodeVarEx,
                 )
@@ -356,6 +337,36 @@ class TableauEncoder(
       case _ => /* a propositional expression - used as-is in the formula encoding the syntax tree */
         (Seq.empty[TlaVarDecl], PredExs(), builder.useTrustedEx(curNode))
     }
+  }
+
+  /**
+   * Creates PredExs for a given propositional operator application of the form OperEx(oper, argExs)(typeTag). The
+   * nodeVarEx should be the variable for the node in the syntax tree representing the operator application.
+   */
+  private def createPropositionalOperNodeExs(
+      nodeVarEx: TBuilderInstruction,
+      oper: TlaOper,
+      typeTag: TypeTag,
+      argExs: TlaEx*): PredExs = {
+
+    /* initialize the variable for this node
+                    e.g. __temporal_curNode = __temporal_A /\ __temporal_B
+     */
+    val nodeVarInitConditionEx =
+      builder.eql(
+          nodeVarEx,
+          builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
+      )
+
+    /* update the variable for this node
+                    e.g. __temporal_curNode' = __temporal_A' /\ __temporal_B'
+     */
+    val nodeVarUpdateConditionEx = builder.eql(
+        builder.prime(nodeVarEx),
+        builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
+    )
+
+    PredExs(Seq(nodeVarInitConditionEx), Seq(nodeVarUpdateConditionEx))
   }
 
   private def createGenericNodeVarExs(
