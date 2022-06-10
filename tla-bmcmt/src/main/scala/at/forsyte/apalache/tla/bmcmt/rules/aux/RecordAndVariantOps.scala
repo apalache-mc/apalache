@@ -1,21 +1,26 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{RecRowT1, RowT1, TlaType1}
+import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedMap
 
 /**
- * <p>A small collection of operations on records. We isolate these operations in a single class to re-use them for
- * records and variants. Importantly, this class itself does not use rewriting rules.</p>
+ * <p>A small collection of operations on records and variants. We isolate these operations in a single class to re-use
+ * them for records and variants. Importantly, this class itself does not use rewriting rules.</p>
  *
  * @param rewriter
  *   state rewriter
  * @author
  *   Igor Konnov
  */
-class RecordOps(rewriter: SymbStateRewriter) {
+class RecordAndVariantOps(rewriter: SymbStateRewriter) {
+  // the name of the hidden tag field that is attached to every variant
+  private val tagField = "__tag"
+  // the uninterpreted sort to use for storing the tag values
+  private val tagSort = "__TAG"
+  private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   /**
    * Construct a record.
@@ -27,10 +32,19 @@ class RecordOps(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state that contains the constructed record (a cell) as an expression
    */
-  def make(state: SymbState, fields: SortedMap[String, ArenaCell]): SymbState = {
+  def makeRecord(state: SymbState, fields: SortedMap[String, ArenaCell]): SymbState = {
     // create a record cell
     val recordT = RecRowT1(RowT1(fields.map { case (name, cell) => (name, cell.cellType.toTlaType1) }, None))
-    var nextState = state.updateArena(_.appendCell(recordT))
+    makeRecordInternal(state, fields, recordT)
+  }
+
+  // an internal implementation of makeRecord that allows us to associate a target type with the record
+  private def makeRecordInternal(
+      state: SymbState,
+      fields: SortedMap[String, ArenaCell],
+      targetType: TlaType1): SymbState = {
+    // create a record cell
+    var nextState = state.updateArena(_.appendCell(targetType))
     val recordCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- fields.valuesIterator) {
@@ -41,6 +55,50 @@ class RecordOps(rewriter: SymbStateRewriter) {
     // The record domain can be easily constructed from its type, whenever it is needed (which is rare).
 
     nextState.setRex(recordCell.toNameEx)
+  }
+
+  /**
+   * Construct a variant.
+   *
+   * @param state
+   *   a symbolic state to start with
+   * @param variantT
+   *   the type of the variant
+   * @param tagName
+   *   the name of the tag
+   * @param value
+   *   the value to attach associate with the tag
+   * @return
+   *   a new symbolic state that contains the constructed record (a cell) as an expression
+   */
+  def makeVariant(
+      state: SymbState,
+      variantT: TlaType1,
+      tagName: String,
+      value: ArenaCell): SymbState = {
+    var nextState = state
+    variantT match {
+      case VariantT1(RowT1(variantOptions, None)) =>
+        // create a record that has a value attached to every tag
+        val fields = variantOptions.map { case (t, tp) =>
+          if (t == tagName) {
+            (t, value)
+          } else {
+            val (newArena, defaultValue) = defaultValueFactory.makeUpValue(nextState.arena, tp)
+            nextState = nextState.setArena(newArena)
+            (t, defaultValue)
+          }
+        }
+
+        // add the additional field __tag that stores the tag value
+        val (newArena, tagAsCell) = rewriter.modelValueCache.getOrCreate(nextState.arena, (tagSort, tagName))
+        nextState = nextState.setArena(newArena)
+        // create a record that contains exactly the fields and associate the variant type with it
+        makeRecordInternal(nextState, fields + (tagField -> tagAsCell), variantT)
+
+      case _ =>
+        throw new TypingException("Unexpected type in Variant: " + variantT, state.ex.ID)
+    }
   }
 
   /**

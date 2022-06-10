@@ -9,13 +9,12 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.{
 }
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir.values._
 
 import scala.collection.mutable
 
@@ -281,6 +280,9 @@ class SymbStateRewriterImpl(
           -> List(new SeqOpsRule(this)),
         key(tla.apalacheSetAsFun(tla.enumSet()))
           -> List(new SetAsFunRule(this)),
+        // variants
+        key(tla.variant("Tag", tla.int(33)))
+          -> List(new VariantOpsRule(this)),
         // FiniteSets
         key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
           -> List(new CardinalityConstRule(this)),

@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordOps
+import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
@@ -20,7 +20,7 @@ import scala.collection.immutable.{SortedMap, SortedSet}
  *   Igor Konnov
  */
 class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -49,7 +49,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
             makeOldRecord(newState, recordT, ctorKeys, valueCells)
 
           case RecRowT1(RowT1(_, _)) =>
-            recordOps.make(newState, SortedMap(ctorKeys.zip(valueCells): _*))
+            recordOps.makeRecord(newState, SortedMap(ctorKeys.zip(valueCells): _*))
 
           case tt =>
             throw new IllegalStateException("Unexpected type of a constructed record: " + tt)

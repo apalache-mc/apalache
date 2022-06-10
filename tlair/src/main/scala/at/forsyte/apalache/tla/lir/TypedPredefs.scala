@@ -175,7 +175,8 @@ object TypedPredefs {
           ValEx(TlaBool(value))(Typed(BoolT1))
 
         case BuilderVal(TlaStr(value)) =>
-          ValEx(TlaStr(value))(Typed(StrT1))
+          // If the top type is specified, e.g., ConstT1(_) or StrT1(), use it. Otherwise, use StrT1.
+          ValEx(TlaStr(value))(Typed(topType.getOrElse(StrT1)))
 
         case BuilderVal(TlaIntSet) =>
           ValEx(TlaIntSet)(Typed(SetT1(IntT1)))

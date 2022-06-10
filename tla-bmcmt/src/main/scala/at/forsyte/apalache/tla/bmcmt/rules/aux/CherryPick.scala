@@ -2,18 +2,14 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, MalformedSepecificationError, OperEx, RecRowT1, RecT1, RowT1, SeqT1, SetT1, StrT1,
-  TlaEx, TlaType1, TupT1, ValEx,
-}
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 import scala.collection.immutable.SortedMap
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * An element picket that allows us:
@@ -28,7 +24,7 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVar
  */
 class CherryPick(rewriter: SymbStateRewriter) {
   private val protoSeqOps = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
   val oracleFactory = new OracleFactory(rewriter)
 
   /**
