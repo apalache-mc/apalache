@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.tooling.opt._
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import at.forsyte.apalache.shai
-import com.google.inject.{Guice, Injector}
+import com.google.inject.Guice
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
@@ -426,16 +426,16 @@ object Tool extends LazyLogging {
     }
     val options = injector.getInstance(classOf[WriteablePassOptions])
     val executor = new PassChainExecutor(options, passes)
+    val adapter = injector.getInstance(classOf[ExceptionAdapter])
 
-    handleExceptions(runner, injector, executor, cmd)
+    handleExceptions(runner, adapter, executor, cmd)
   }
 
   private def handleExceptions[C <: General](
       runner: (PassChainExecutor, C) => Int,
-      injector: Injector,
+      adapter: ExceptionAdapter,
       executor: PassChainExecutor,
       cmd: C): Int = {
-    val adapter = injector.getInstance(classOf[ExceptionAdapter])
     try {
       runner(executor, cmd)
     } catch {
