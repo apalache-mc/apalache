@@ -170,6 +170,17 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
               .typed(BoolT1)
         )
         .typed(BoolT1)
+    
+    // rewrite WF_vars(A)
+    // to <>[](ENABLED <<A>>_vars) => []<> <<A>>_vars
+    case OperEx(TlaTempOper.weakFairness, vars, body) =>
+      val builder = new ScopedBuilder
+
+    // rewrite SF_vars(A)
+    // to []<>(ENABLED <<A>>_vars) => []<> <<A>>_vars
+    case OperEx(TlaTempOper.strongFairness, vars, body) =>
+      val builder = new ScopedBuilder
+      
 
     case ex @ OperEx(op, args @ _*) =>
       OperEx(op, args.map(transform): _*)(ex.typeTag)
