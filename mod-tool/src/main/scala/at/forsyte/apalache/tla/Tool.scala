@@ -110,32 +110,20 @@ object Tool extends LazyLogging {
             ExitCodes.ERROR
           }
           case Right(()) => {
+
             val startTime = LocalDateTime.now()
+
             try {
+              // Execute the program specified by the subcommand
               cmd.run() match {
-                case Left((errorCode, failMsg)) =>
-                  logger.info(failMsg)
-                  errorCode
-                case Right(msg) =>
-                  logger.info(msg)
-                  ExitCodes.OK
+                case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
+                case Right(msg)                 => { logger.info(msg); ExitCodes.OK }
               }
             } catch {
               case e: AdaptedException =>
                 e.err match {
-                  case NormalErrorMessage(text) =>
-                    logger.error(text)
-
-                  case FailureMessage(text) =>
-                    logger.error(text, e)
-                    val absPath = ReportGenerator.prepareReportFile(
-                        cmd.invocation.split(" ").dropRight(1).mkString(" "),
-                        s"${BuildInfo.version} build ${BuildInfo.build}",
-                    )
-                    Console.err.println(
-                        s"Please report an issue at $ISSUES_LINK: $e\nA bug report template has been generated at [$absPath].\nIf you choose to use it, please complete the template with a description of the expected behavior."
-                    )
-
+                  case NormalErrorMessage(text) => logger.error(text)
+                  case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd) }
                 }
                 ExitCodes.ERROR
 
@@ -148,7 +136,9 @@ object Tool extends LazyLogging {
                 logger.error("Unhandled exception", e)
                 ExitCodes.ERROR
             } finally {
+
               printTimeDiff(startTime)
+
             }
           }
         }
@@ -214,5 +204,17 @@ object Tool extends LazyLogging {
       params.put("jvmOffHeapMem", "0")
       statCollector.collect(params)
     }
+  }
+
+  private def generateBugReport(e: Throwable, cmd: General): Unit = {
+    val absPath = ReportGenerator.prepareReportFile(
+        cmd.invocation.split(" ").dropRight(1).mkString(" "),
+        s"${BuildInfo.version} build ${BuildInfo.build}",
+    )
+    Console.err.println(
+        s"""|Please report an issue at $ISSUES_LINK: $e
+            |A bug report template has been generated at [$absPath].
+            |If you choose to use it, please complete the template with a description of the expected behavior.""".stripMargin
+    )
   }
 }
