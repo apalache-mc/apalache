@@ -29,22 +29,35 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
     expectTaggedValue(rewriter, nextState, cell, "__tag", tla.str(s"Foo_OF_${tagSort}").as(ConstT1(tagSort)))
   }
 
-  /*
-  test("record equality") { rewriterType: SMTEncoding =>
-    // order of the fields does not matter
-    val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val a = str("a")
-    val b = str("b")
-    val c = str("c")
-    val record1 = enumFun(a, int(1), b, bool(false), c, str("d")).as(recordT)
-    val record2 = enumFun(c, str("d"), b, bool(false), a, int(1)).as(recordT)
-    val eq = eql(record1, record2).as(BoolT1)
-    val state = new SymbState(eq, arena, Binding())
+  test("""Variant equality""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val vrt2 = variant("Foo", minus(int(44), int(11)).as(IntT1)).as(variantT)
+
+    val state = new SymbState(eql(vrt1, vrt2).as(BoolT1), arena, Binding())
     val rewriter = create(rewriterType)
     assertTlaExAndRestore(rewriter, state)
   }
 
-   */
+  test("""Variant inequality with different tags""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val vrt2 = variant("Bar", bool(false)).as(variantT)
+
+    val state = new SymbState(not(eql(vrt1, vrt2).as(BoolT1)).as(BoolT1), arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""Variant inequality with different values""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val vrt2 = variant("Foo", int(10)).as(variantT)
+
+    val state = new SymbState(not(eql(vrt1, vrt2).as(BoolT1)).as(BoolT1), arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
+  }
 
   private def getVariantOptions(tp: CellT): Map[String, TlaType1] = {
     tp match {

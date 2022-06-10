@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedMap
@@ -58,6 +58,21 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
   }
 
   /**
+   * Get or create the arena cell that is associated with a tag name.
+   *
+   * @param state
+   *   a symbolic state
+   * @param tagName
+   *   the tag name
+   * @return
+   *   a new symbolic state that contains the constructed tag cell as an expression
+   */
+  def getOrCreateVariantTag(state: SymbState, tagName: String): SymbState = {
+    val (newArena, tagAsCell) = rewriter.modelValueCache.getOrCreate(state.arena, (tagSort, tagName))
+    state.setArena(newArena).setRex(tagAsCell.toNameEx)
+  }
+
+  /**
    * Construct a variant.
    *
    * @param state
@@ -91,8 +106,8 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
         }
 
         // add the additional field __tag that stores the tag value
-        val (newArena, tagAsCell) = rewriter.modelValueCache.getOrCreate(nextState.arena, (tagSort, tagName))
-        nextState = nextState.setArena(newArena)
+        nextState = getOrCreateVariantTag(nextState, tagName)
+        val tagAsCell = nextState.asCell
         // create a record that contains exactly the fields and associate the variant type with it
         makeRecordInternal(nextState, fields + (tagField -> tagAsCell), variantT)
 
@@ -137,6 +152,48 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
 
     val index = fieldTypes.keySet.toList.indexOf(fieldName)
     val elems = arena.getHas(recordCell)
+    assert(0 <= index && index < elems.length)
+    elems(index)
+  }
+
+  /**
+   * Get the variant value by tag. This is an unsafe method, that is, if the associated tag name is different from the
+   * provided one, this method returns some of the proper type (usually, the default value).
+   *
+   * @param arena
+   *   current arena
+   * @param variantCell
+   *   a variant cell
+   * @param tagName
+   *   a field name
+   * @return
+   *   a cell that contains the extracted field
+   */
+  def getUnsafeVariantValue(arena: Arena, variantCell: ArenaCell, tagName: String): ArenaCell = {
+    val options = getVariantOptions(variantCell)
+    expectVariantTag(variantCell, options, tagName)
+
+    val index = (options.keySet + tagField).toList.indexOf(tagName)
+    val elems = arena.getHas(variantCell)
+    assert(0 <= index && index < elems.length)
+    elems(index)
+  }
+
+  /**
+   * Get the tag associated with a variant.
+   *
+   * @param arena
+   *   current arena
+   * @param variantCell
+   *   a variant cell
+   * @return
+   *   the cell that contains the tag value
+   */
+  def getVariantTag(arena: Arena, variantCell: ArenaCell): ArenaCell = {
+    val options = getVariantOptions(variantCell)
+
+    val index = (options.keySet + tagField).toList.indexOf(tagField)
+    val elems = arena.getHas(variantCell)
     assert(0 <= index && index < elems.length)
     elems(index)
   }
@@ -188,12 +245,32 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     }
   }
 
+  private def expectVariantTag(
+      variantCell: ArenaCell,
+      options: SortedMap[String, TlaType1],
+      tagName: String): Unit = {
+    if (!options.contains(tagName)) {
+      val variantT = VariantT1(RowT1(options, None))
+      val msg = s"Accessing a non-existing variant option via tag $tagName of variant of type $variantT"
+      throw new RewriterException(msg, variantCell.toNameEx)
+    }
+  }
+
   private def getFieldTypes(cell: ArenaCell): SortedMap[String, TlaType1] = {
     cell.cellType match {
       case CellTFrom(RecRowT1(RowT1(ft, None))) => ft
 
       case tt =>
         throw new RewriterException(s"Unexpected record type $tt of cell ${cell.id}", cell.toNameEx)
+    }
+  }
+
+  private def getVariantOptions(cell: ArenaCell): SortedMap[String, TlaType1] = {
+    cell.cellType match {
+      case CellTFrom(VariantT1(RowT1(opts, None))) => opts
+
+      case tt =>
+        throw new RewriterException(s"Unexpected variant type $tt of cell ${cell.id}", cell.toNameEx)
     }
   }
 }

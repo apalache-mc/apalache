@@ -154,6 +154,10 @@ class LazyEquality(rewriter: SymbStateRewriter)
             assert(fieldTypes == fieldTypes2)
             mkRowRecordEq(state, fieldTypes, left, right)
 
+          case (CellTFrom(VariantT1(RowT1(options1, None))), CellTFrom(VariantT1(RowT1(options2, None)))) =>
+            assert(options1 == options2)
+            mkVariantEq(state, options1, left, right)
+
           case (CellTFrom(TupT1(_ @_*)), CellTFrom(TupT1(_ @_*))) =>
             mkTupleEq(state, left, right)
 
@@ -517,16 +521,49 @@ class LazyEquality(rewriter: SymbStateRewriter)
       fieldTypes: SortedMap[String, TlaType1],
       leftRec: ArenaCell,
       rightRec: ArenaCell): SymbState = {
+    var nextState = state
     def fieldsEq(name: String): TlaEx = {
-      val leftField = recordOps.getField(state.arena, leftRec, name)
-      val rightField = recordOps.getField(state.arena, rightRec, name)
-      tla.eql(leftField.toNameEx, rightField.toNameEx).as(BoolT1)
+      val leftField = recordOps.getField(nextState.arena, leftRec, name)
+      val rightField = recordOps.getField(nextState.arena, rightRec, name)
+      // The field values may be non-basic expressions. Use lazy equality over them too.
+      nextState = cacheOneEqConstraint(nextState, leftField, rightField)
+      safeEq(leftField, rightField)
     }
 
     val allFieldsEq = tla.and(fieldTypes.keys.map { n => tla.fromTlaEx(fieldsEq(n)) }.toSeq: _*).as(BoolT1)
     rewriter.solverContext.assertGroundExpr(tla.eql(tla.eql(leftRec.toNameEx, rightRec.toNameEx), allFieldsEq))
     eqCache.put(leftRec, rightRec, EqCache.EqEntry())
-    state
+    nextState
+  }
+
+  private def mkVariantEq(
+      state: SymbState,
+      options: SortedMap[String, TlaType1],
+      leftVar: ArenaCell,
+      rightVar: ArenaCell): SymbState = {
+    var nextState = state
+    val leftTag = recordOps.getVariantTag(nextState.arena, leftVar)
+    val rightTag = recordOps.getVariantTag(nextState.arena, rightVar)
+
+    def valuesEq(tagName: String): TlaEx = {
+      val leftValue = recordOps.getUnsafeVariantValue(nextState.arena, leftVar, tagName)
+      val rightValue = recordOps.getUnsafeVariantValue(nextState.arena, rightVar, tagName)
+      // The field values may be non-basic expressions. Use lazy equality over them too.
+      nextState = cacheOneEqConstraint(nextState, leftValue, rightValue)
+      // Get the tag as a cell
+      nextState = recordOps.getOrCreateVariantTag(nextState, tagName)
+      val tagAsCell = nextState.asCell
+      // tag = leftTag => leftValue = rightValue
+      tla
+        .or(tla.not(tla.eql(tagAsCell.toNameEx, leftTag.toNameEx).as(BoolT1)).as(BoolT1), safeEq(leftValue, rightValue))
+    }
+
+    val tagsEq = tla.eql(leftTag.toNameEx, rightTag.toNameEx).as(BoolT1)
+    val tagsAndValuesEq =
+      tla.and(tagsEq +: options.keys.map { n => tla.fromTlaEx(valuesEq(n)).as(BoolT1) }.toSeq: _*).as(BoolT1)
+    rewriter.solverContext.assertGroundExpr(tla.eql(tla.eql(leftVar.toNameEx, rightVar.toNameEx), tagsAndValuesEq))
+    eqCache.put(leftVar, rightVar, EqCache.EqEntry())
+    nextState
   }
 
   private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
