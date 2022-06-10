@@ -99,16 +99,13 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
    *
    * {{{__saved_foo' = IF (InLoop' = InLoop) THEN loop_foo ELSE foo}}}
    */
-  def getLoopVarUpdateEx(varDecl: TlaVarDecl, loopVarDecl: TlaVarDecl): TBuilderInstruction = {
-    val loopEx = builder.varDeclAsNameEx(loopVarDecl)
-    val loopExPrime = builder.prime(loopEx)
-
+  def getLoopVarUpdateEx(varEx: TBuilderInstruction, loopVarEx: TBuilderInstruction): TBuilderInstruction = {
     builder.eql(
-        loopExPrime,
+        builder.prime(loopVarEx),
         builder.ite(
             builder.eql(inLoop, inLoopPrime),
-            loopEx,
-            builder.varDeclAsNameEx(varDecl),
+            loopVarEx,
+            varEx,
         ),
     )
   }
