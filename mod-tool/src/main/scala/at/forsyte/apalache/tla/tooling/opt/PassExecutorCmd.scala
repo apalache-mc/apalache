@@ -1,0 +1,50 @@
+package at.forsyte.apalache.tla.tooling.opt
+
+import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.infra.Executor
+
+/**
+ * Interface for the subcommands commands that run an [[Executor]]
+ *
+ * @author
+ *   Shon Feder
+ */
+trait PassExecutorCmd extends General {
+
+  /**
+   * The executor used to sequence a chain of passes
+   *
+   * Executors are created using [[at.forsyte.apalache.infra.passes.ToolModule]]. E.g.,
+   *
+   * {{{
+   * val executor = Executor(new TypeCheckerModule)
+   * }}}
+   *
+   * The [[run]] methods of a subcommand implementing this trait will generally end with an invication of
+   * [[executor.run]], such as
+   *
+   * {{{
+   * executor.run() match {
+   *   case Right(module) => Right("Success msg")
+   *   case Left(errCode) => Left(errorCode, "Failure msg")
+   * }
+   * }}}
+   */
+  val executor: Executor
+
+  /**
+   * Sets the common options in the [[executor]]
+   *
+   * This may be overrided by classes to change which options the class considers common.
+   *
+   * NOTE: It is not invoked autmoatically, and you should invoke it explicitly in your `Cmd` classe's [[run]] method.
+   */
+  def setCommonOptions(): Unit = {
+    executor.passOptions.set("general.debug", debug)
+    executor.passOptions.set("smt.prof", smtprof)
+    executor.passOptions.set("general.features", features)
+
+    // TODO: Remove pass option, and just rely on OutputManager config
+    executor.passOptions.set("io.outdir", OutputManager.outDir)
+  }
+}
