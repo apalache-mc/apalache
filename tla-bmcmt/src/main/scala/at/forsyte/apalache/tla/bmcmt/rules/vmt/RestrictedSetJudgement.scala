@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet, Tla
  * @author
  *   Jure Kukovec
  */
-class RestrictedSetJudgement(constSets: Map[String, UninterpretedSort]) {
+class RestrictedSetJudgement(constSets: Map[String, UninterpretedSort], intsAsOrderedUninterpreted: Boolean = true) {
   def isPrimitiveRestrictedSet(ex: TlaEx): Boolean =
     ex match {
       case ValEx(s: TlaPredefSet) =>
@@ -43,7 +43,7 @@ class RestrictedSetJudgement(constSets: Map[String, UninterpretedSort]) {
     ex match {
       case ValEx(s: TlaPredefSet) =>
         s match {
-          case TlaIntSet | TlaNatSet => IntSort()
+          case TlaIntSet | TlaNatSet => if (intsAsOrderedUninterpreted) Sort.intOrderSort else IntSort()
           case TlaBoolSet            => BoolSort()
           case _                     => throw new RewriterException(s"$s not supported in reTLA", ex)
         }

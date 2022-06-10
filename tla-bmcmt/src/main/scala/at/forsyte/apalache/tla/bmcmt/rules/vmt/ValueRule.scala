@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.formulas.Ord.intToUninterpLit
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
@@ -18,7 +19,7 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
  * @author
  *   Jure Kukovec
  */
-class ValueRule extends FormulaRule {
+class ValueRule(intsAsOrderedUninterpreted: Boolean = true) extends FormulaRule {
 
   def isApplicable(ex: TlaEx): Boolean =
     ex match {
@@ -33,17 +34,22 @@ class ValueRule extends FormulaRule {
   def apply(ex: TlaEx): Term = ex match {
     case ValEx(v) =>
       v match {
-        case TlaInt(i) => IntLiteral(i)
+        case TlaInt(i) =>
+          if (intsAsOrderedUninterpreted) intToUninterpLit(i)
+          else IntLiteral(i)
         case TlaStr(s) =>
           val (tlaType, id) = ModelValueHandler.typeAndIndex(s).getOrElse((StrT1, s))
           UninterpretedLiteral(id, UninterpretedSort(tlaType.toString))
         case TlaBool(b) => if (b) True else False
         case _          => throwOn(ex)
       }
-    case nameEx: NameEx                           => termFromNameEx(nameEx)
+    case nameEx: NameEx =>
+      val correctedTag = if (intsAsOrderedUninterpreted) Ord.intTagCorrection(nameEx.typeTag) else nameEx.typeTag
+      termFromNameEx(nameEx.withTag(correctedTag))
     case OperEx(TlaActionOper.prime, nEx: NameEx) =>
       // Rename x' to x^ for VMT
-      termFromNameEx(renamePrimesForVMT(nEx))
+      val correctedTag = if (intsAsOrderedUninterpreted) Ord.intTagCorrection(nEx.typeTag) else nEx.typeTag
+      termFromNameEx(renamePrimesForVMT(nEx.withTag(correctedTag)))
     case _ => throwOn(ex)
 
   }
@@ -60,6 +66,7 @@ object ValueRule {
     ex.typeTag match {
       case Typed(tt: TlaType1) =>
         val sort = TlaType1ToSortConverter.sortFromType(tt)
+
         mkVariable(ex.name, sort)
       case Untyped =>
         mkVariable(ex.name, UntypedSort())

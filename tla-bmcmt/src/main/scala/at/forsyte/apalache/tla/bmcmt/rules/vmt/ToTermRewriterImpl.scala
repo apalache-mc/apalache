@@ -17,7 +17,7 @@ class ToTermRewriterImpl(constSets: ConstSetMapT, gen: UniqueNameGenerator) exte
       new BoolRule(this),
       new QuantifierRule(this, setJudgement),
       new EUFRule(this, setJudgement, gen),
-      new PORule(this),
+      new OrderRule(this),
       new ValueRule,
   )
 

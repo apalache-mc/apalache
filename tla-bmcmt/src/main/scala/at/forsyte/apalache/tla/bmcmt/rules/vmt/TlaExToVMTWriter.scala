@@ -2,14 +2,13 @@ package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, Equiv, Exists, Forall, Impl, Neg, Or}
-import at.forsyte.apalache.tla.lir.formulas.EUF.{
-  Apply, Equal, FunDef, FunctionVar, ITE, UninterpretedLiteral, UninterpretedVar,
-}
+import at.forsyte.apalache.tla.lir.formulas.EUF._
 import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.{ConstT1, SetT1, StrT1, TlaConstDecl, TlaEx, TlaVarDecl, Typed}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.formulas.PO.LtGeneric
+import at.forsyte.apalache.tla.lir.formulas.Ord.LtUninterpreted
+import org.checkerframework.checker.units.qual.s
 import scalaz.unused
 
 /**
@@ -31,7 +30,6 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
     var freeVars: Set[Variable] = Set.empty
     var uninterpLits: Set[UninterpretedLiteral] = Set.empty
     var uninterpSorts: Set[UninterpretedSort] = Set.empty
-    var sortsWithPOs: Set[UninterpretedSort] = Set.empty
 
     private def addFnDef(fd: FunDef): Unit =
       fnDefs = fd :: fnDefs
@@ -44,9 +42,6 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
 
     private def addUS(us: UninterpretedSort): Unit =
       uninterpSorts += us
-
-    private def addPO(us: UninterpretedSort): Unit =
-      sortsWithPOs += us
 
     def collectAll(t: Term): Unit = t match {
       case fd @ FunDef(_, _, body) =>
@@ -90,13 +85,9 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
         collectAll(body)
         freeVars = freeVars.filterNot(v => boundVars.map(_._1).toSet.contains(v.name))
 
-      case LtGeneric(lhs, _) =>
-        // assume lhs and rhs have same sorts
-        lhs.sort match {
-          case us: UninterpretedSort => addPO(us)
-          case _                     => ()
-        }
-
+      case LtUninterpreted(lhs, rhs) =>
+        collectAll(lhs)
+        collectAll(rhs)
       case v @ UninterpretedVar(_, uvSort) =>
         addVar(v)
         addUS(uvSort)
@@ -104,6 +95,11 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       case v: Variable              => addVar(v)
       case _                        => ()
     }
+  }
+
+  private def mkFreshVar(sort: Sort): Variable = {
+    val x = gen.newName()
+    mkVariable(x, sort)
   }
 
   // Main entry point.
@@ -114,6 +110,8 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       initTransitions: Seq[(String, TlaEx)],
       nextTransitions: Seq[(String, TlaEx)],
       invariants: Seq[(String, TlaEx)]): Unit = {
+
+    val writer = TermToVMTWriter
 
     // First, we parse the constant declarations, to extract all restricted sets, i.e.,
     // constants typed with SetT1(ConsT1(_))
@@ -141,21 +139,21 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       Init(name, rewrite(ex))
     }
 
-    val initStrs = inits.map(TermToVMTWriter.mkVMTString)
+    val initStrs = inits.map(writer.mkVMTString)
 
     // Each transition in nextTransitions needs the VMT wrapper Trans
     val transitions = nextTransitions.map { case (name, ex) =>
       Trans(name, rewrite(ex))
     }
 
-    val transStrs = transitions.map(TermToVMTWriter.mkVMTString)
+    val transStrs = transitions.map(writer.mkVMTString)
 
     // Each invariant in invariants needs the VMT wrapper Invar
     val invs = invariants.zipWithIndex.map { case ((name, ex), i) =>
       Invar(name, i, rewrite(ex))
     }
 
-    val invStrs = invs.map(TermToVMTWriter.mkVMTString)
+    val invStrs = invs.map(writer.mkVMTString)
 
     // Each variable v in varDecls needs the VMT binding Next(v, v')
     val nextBindings = varDecls.map { case d @ TlaVarDecl(name) =>
@@ -163,10 +161,10 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       Next(nextName(name), mkVariable(name, sort), mkVariable(VMTprimeName(name), sort))
     }
 
-    val nextStrs = nextBindings.map(TermToVMTWriter.mkVMTString)
+    val nextStrs = nextBindings.map(writer.mkVMTString)
 
     // Variable declarations
-    val smtVarDecls = varDecls.map(TermToVMTWriter.mkSMTDecl)
+    val smtVarDecls = varDecls.map(writer.mkSMTDecl)
 
     // Now we declare constants and define functions aggregated by Collector
     val collector = new Collector
@@ -176,36 +174,65 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
 
     // Sort declaration
     val allSorts = (setConstants.values ++ collector.uninterpSorts).toSet
-    val sortDecls = allSorts.map(TermToVMTWriter.mkSortDecl)
+    val sortDecls = allSorts.map(writer.mkSortDecl)
 
     // Uninterpreted literal declaration and uniqueness assert
-    val ulitDecls = collector.uninterpLits.map(TermToVMTWriter.mkConstDecl)
+    val ulitDecls = collector.uninterpLits.map(writer.mkConstDecl)
     val disticntAsserts = allSorts.flatMap { s =>
       val litsForSortS = collector.uninterpLits.filter {
         _.sort == s
       }
-      (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermToVMTWriter.assertDistinct)
+      (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(writer.assertDistinct)
     }
 
-    // partial order function construction and axioms
-    // For each sort S, we define a function fS: S -> Int, s.t. A < B iff fS(A) < fS(B)
-    val sortsWithPOs = collector.sortsWithPOs
-    val poFnDeclsAndAxioms = sortsWithPOs.map { sort =>
-      val fnName = TermToVMTWriter.poFnName(sort)
-      val decl = TermToVMTWriter.mkPOFunDecl(sort, fnName)
-      val axiom = {
-        val fnSort: FunctionSort = FunctionSort(IntSort(), sort)
-        val fnVar = mkVariable(fnName, fnSort)
-        val x = gen.newName()
-        val xVar = mkVariable(x, sort)
-        val y = gen.newName()
-        val yVar = mkVariable(y, sort)
-        val args = List((x, sort), (y, sort))
-        // injectivity, f(x) = f(y) => x = y
-        Forall(args, Impl(Equal(Apply(fnVar, xVar), Apply(fnVar, yVar)), Equal(xVar, yVar)))
+    val intLits = collector.uninterpLits.filter { _.sort == Sort.intOrderSort }
+
+    // Create axioms for i1 < i2 < ... < in
+    val sortedInts = intLits.toIndexedSeq.sortWith { case (a, b) =>
+      a.s.toInt < b.s.toInt
+    }
+    val ltPairs = for {
+      i <- 0 until sortedInts.size - 1
+    } yield LtUninterpreted(sortedInts(i), sortedInts(i + 1))
+    val orderAxiom = writer.axiom(".axiom_litOrder", writer.mkSMT2String(And(ltPairs: _*)))
+
+    // TODO
+
+    // order function construction and axioms
+    val intOrderAndAxioms = {
+      val sort = Sort.intOrderSort
+      val fnName = writer.orderFnName
+      val decl = writer.mkOrdFunDecl
+      val fnSort = FunctionSort(BoolSort(), sort, sort) // (I,I) -> Bool
+      val ltVar = mkVariable(fnName, fnSort)
+      val irreflexivity = "irr" -> {
+        val x = mkFreshVar(sort)
+        // \A x \in INT_T: ~Lt(x, x)
+        Forall(List((x.name, sort)), Neg(Apply(ltVar, x, x)))
       }
-      val axiomStr = TermToVMTWriter.axiom(s".axiom$fnName", TermToVMTWriter.mkSMT2String(axiom))
-      s"$decl\n$axiomStr"
+      val transitivity = "trans" -> {
+        val x = mkFreshVar(sort)
+        val y = mkFreshVar(sort)
+        val z = mkFreshVar(sort)
+        // \A x,y,z \in INT_T: Lt(x, y) /\ Lt(y, z) => Lt(x,z)
+        Forall(List((x.name, sort), (y.name, sort), (z.name, sort)),
+            Impl(And(Apply(ltVar, x, y), Apply(ltVar, y, z)), Apply(ltVar, x, z)))
+      }
+      val totality = "tot" -> {
+        val x = mkFreshVar(sort)
+        val y = mkFreshVar(sort)
+        // A x,y\ in INT_T: x /= y => Lt(x,y) \/ LT (y,x)
+        Forall(
+            List((x.name, sort), (y.name, sort)),
+            Impl(Neg(Equal(x, y)), Or(Apply(ltVar, x, y), Apply(ltVar, y, x))),
+        )
+      }
+      val axiomStrs = Seq(irreflexivity, transitivity, totality)
+        .map { case (name, formula) =>
+          writer.axiom(s".axiom_$name", writer.mkSMT2String(formula))
+        }
+        .mkString("\n")
+      s"$decl\n$axiomStrs"
     }
 
     // Lastly, we collect free vars generated by skolemization
@@ -214,7 +241,7 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
     val varNames = varDecls.map(_.name).toSet
     val notSkolemNames = varNames ++ varNames.map(VMTprimeName)
     val freeVars = collector.freeVars.withFilter(v => !notSkolemNames.contains(v.name))
-    val freeVarDecls = freeVars.map { TermToVMTWriter.mkConstDecl }
+    val freeVarDecls = freeVars.map { writer.mkConstDecl }
 
     OutputManager.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
       writer.println(";Sorts")
@@ -232,8 +259,9 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       writer.println(";Variable bindings")
       nextStrs.foreach(writer.println)
       writer.println()
-      writer.println(";Partial orders")
-      poFnDeclsAndAxioms.foreach(writer.println)
+      writer.println(";Int order")
+      writer.println(intOrderAndAxioms)
+      writer.println(orderAxiom)
       writer.println()
 //      writer.println(";TLA constant initialization")
 //      cinitStrs.foreach(writer.println)

@@ -77,7 +77,6 @@ object StandardLibrary {
         ("__apalache_folds", "__ApalacheMkSeq") -> ApalacheOper.mkSeq,
         ("__apalache_internal", "__NotSupportedByModelChecker") -> ApalacheInternalOper.notSupportedByModelChecker,
         ("__apalache_internal", "__ApalacheSeqCapacity") -> ApalacheInternalOper.apalacheSeqCapacity,
-        ("PartialOrder", "LT") -> ApalacheInternalOper.partialOrderLT,
     ) ////
 
   /**
