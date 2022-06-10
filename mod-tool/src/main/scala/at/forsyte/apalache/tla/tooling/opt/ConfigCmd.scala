@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.tooling.opt
 import org.backuity.clist.{Command, _}
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
-// FIXME Why "_root_"?
+
+// From tlatools.jar
 import _root_.util.ExecutionStatisticsCollector
 import _root_.util.ExecutionStatisticsCollector.Selection
 
