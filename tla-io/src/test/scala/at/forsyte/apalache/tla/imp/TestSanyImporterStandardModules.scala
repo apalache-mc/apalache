@@ -559,4 +559,100 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         OperEx(ApalacheOper.mkSeq, ValEx(TlaInt(10)), NameEx("Identity")),
     )
   }
+
+  test("EXTENDS Variants") {
+    val text =
+      """---- MODULE root ----
+        |EXTENDS Integers, FiniteSets, Variants
+        |
+        |\* @type: () => T1a({ val: Int, found: Bool });
+        |TestVariant == Variant("T1a", [ val |-> 3, found |-> FALSE ])
+        |
+        |\* @type: Set(T1a({ val: Int, found: Bool) | T2a({ bal: Int })) => Set({ val: Int, found: Bool });
+        |TestVariantFilter == VariantFilter("T1a", { TestVariant })
+        |
+        |\* @type: T1a({ val: Int, found: Bool }) | T2a({ bal: Int }) => Bool;
+        |TestVariantMatch(var) ==
+        |  LET ThenOper(v) == v.found IN
+        |  LET ElseOper(v) == FALSE IN
+        |  VariantMatch("T1a", var, ThenOper, ElseOper)
+        |
+        |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
+        |MO(var) ==
+        |  VariantGet("T1a", var)
+        |================================
+      """.stripMargin
+
+    // If you run this test in an IDE and the test fails, set environment variable `APALACHE_HOME` to the root of the
+    // Apalache source tree.
+
+    val (_, modules) = sanyImporter
+      .loadFromSource("root", Source.fromString(text))
+
+    val root = modules("root")
+    expectSourceInfoInDefs(root)
+
+    def expectDecl(name: String, body: TlaEx, params: OperParam*): Unit = {
+      findAndExpectOperDecl(root, name, params.toList, body)
+    }
+
+    // TestVariant == Variant("T1a", [ val |-> 3, found |-> FALSE ])
+    expectDecl(
+        "TestVariant",
+        OperEx(
+            VariantOper.variant,
+            ValEx(TlaStr("T1a")),
+            OperEx(TlaFunOper.rec, ValEx(TlaStr("val")), ValEx(TlaInt(3)), ValEx(TlaStr("found")),
+                ValEx(TlaBool(false))),
+        ),
+    )
+
+    // TestVariantFilter == VariantFilter("T1a", { Var })
+    expectDecl(
+        "TestVariantFilter",
+        OperEx(
+            VariantOper.variantFilter,
+            ValEx(TlaStr("T1a")),
+            OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("TestVariant"))),
+        ),
+    )
+
+    // TestVariantMatch(var) ==
+    //   LET ThenOper(v) == v.found IN
+    //   LET ElseOper(v) == FALSE IN
+    //   VariantMatch("T1a", var, ThenOper, ElseOper)
+    val mtThen =
+      declOp("ThenOper", appFun(name("v"), str("found")), OperParam("v")).untypedOperDecl()
+    val mtElse =
+      declOp("ElseOper", bool(false), OperParam("v")).untypedOperDecl()
+    val applyMatchTag =
+      OperEx(
+          VariantOper.variantMatch,
+          ValEx(TlaStr("T1a")),
+          name("var"),
+          name("ThenOper"),
+          name("ElseOper"),
+      )
+
+    expectDecl(
+        "TestVariantMatch",
+        letIn(letIn(applyMatchTag, mtElse), mtThen),
+        OperParam("var"),
+    )
+
+    // MO(var) ==
+    //   VariantGet("T1a", var)
+    val applyMatchOnly =
+      OperEx(
+          VariantOper.variantGet,
+          str("T1a"),
+          name("var"),
+      )
+
+    expectDecl(
+        "MO",
+        applyMatchOnly,
+        OperParam("var"),
+    )
+  }
 }
