@@ -14,3 +14,10 @@ class PassExecException(message: String) extends Exception(message)
  *   an error message
  */
 class PassOptionException(message: String) extends Exception(message)
+
+/**
+ * An error that is has been adapted by the [[ExceptionAdaptor]]
+ * @param err
+ *   the [[ErrorMessage]] into which the originating error was adapted
+ */
+class AdaptedException(val err: ErrorMessage) extends Exception(err.msg)
