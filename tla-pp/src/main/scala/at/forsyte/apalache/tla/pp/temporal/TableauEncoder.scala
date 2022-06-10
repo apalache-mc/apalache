@@ -14,7 +14,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
-import shapeless.ops.nat
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 /**
