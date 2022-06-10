@@ -71,7 +71,9 @@ object StandardLibrary {
         ("Variants", "Variant") -> VariantOper.variant,
         ("Variants", "VariantFilter") -> VariantOper.variantFilter,
         ("Variants", "VariantMatch") -> VariantOper.variantMatch,
-        ("Variants", "VariantGet") -> VariantOper.variantGet,
+        ("Variants", "VariantGetOnly") -> VariantOper.variantGetOnly,
+        ("Variants", "VariantGetUnsafe") -> VariantOper.variantGetUnsafe,
+        ("Variants", "VariantGetOrElse") -> VariantOper.variantGetOrElse,
         // internal modules
         ("__apalache_folds", "__ApalacheFoldSeq") -> ApalacheOper.foldSeq,
         ("__apalache_folds", "__ApalacheMkSeq") -> ApalacheOper.mkSeq,

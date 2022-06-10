@@ -22,10 +22,18 @@ TestVariantFilter ==
     \E v \in VariantFilter("B", { VarA, VarB }):
         v.value = "hello"
 
-TestVariantGet ==
+TestVariantGetOnly ==
     \* We could just pass "hello", without wrapping it in a record.
     \* But we want to see how it works with records too.
-    VariantGet("B", VarB) = [ value |-> "hello" ]
+    VariantGetOnly("B", VarB) = [ value |-> "hello" ]
+
+TestVariantGetUnsafe ==
+    \* The unsafe version gives us only a type guarantee.
+    VariantGetUnsafe("A", VarB) \in Int
+
+TestVariantGetOrElse ==
+    \* When the tag name is different from the actual one, return the default value.
+    VariantGetOrElse("A", VarB, 12) = 12
 
 TestVariantMatch ==
     VariantMatch(
@@ -38,7 +46,9 @@ TestVariantMatch ==
 AllTests ==
     /\ TestVariant
     /\ TestVariantFilter
-    /\ TestVariantGet
+    /\ TestVariantGetOnly
     /\ TestVariantMatch
+    /\ TestVariantGetUnsafe
+    /\ TestVariantGetOrElse
 
 ===============================================================================

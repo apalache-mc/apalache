@@ -85,10 +85,49 @@ VariantMatch(__tagName, __variant, __ThenOper(_), __ElseOper(_)) ==
  *
  *   (Str, Tag(a)) => a
  *)
-VariantGet(__tagName, __variant) ==
+VariantGetOnly(__tagName, __variant) ==
     \* default untyped implementation
     IF __variant.tag = __tagName
     THEN __variant.value
     ELSE \* trigger an error in TLC by choosing a non-existant element
          CHOOSE x \in { __variant }: x.tag = __tagName
+
+(**
+ * Return the value associated with the tag, when the tag equals to __tagName.
+ * Otherwise, return __elseValue.
+ *
+ * @param `__tagName` the tag attached to the variant
+ * @param `__variant` a variant that is constructed with `Variant(...)`
+ * @param `__defaultValue` the default value to return, if not tagged with __tagName
+ * @return the value extracted from the variant, or the __defaultValue
+ *
+ * Its type could look like follows:
+ *
+ *   (Str, Tag(a)) => a
+ *)
+VariantGetOrElse(__tagName, __variant, __defaultValue) ==
+    \* default untyped implementation
+    IF __variant.tag = __tagName
+    THEN __variant.value
+    ELSE __defaultValue
+
+
+(**
+ * Unsafely return a value of the type associated with __tagName.
+ * If the variant is tagged with __tagName, then return the associated value.
+ * Otherwise, return some value of the type associated with __tagName.
+ *
+ * @param `tagValue` the tag attached to the variant
+ * @param `variant` a variant that is constructed with `Variant(...)`
+ * @return the value extracted from the variant, when tagged __tagName;
+ *         otherwise, return some value
+ *
+ * Its type could look like follows:
+ *
+ *   (Str, Tag(a) | b) => a
+ *)
+VariantGetUnsafe(__tagName, __variant) ==
+    \* the default untyped implementation
+    __variant.value
+         
 ===============================================================================
