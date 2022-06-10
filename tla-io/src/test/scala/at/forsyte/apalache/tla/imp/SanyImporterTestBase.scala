@@ -2,11 +2,12 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{LetInEx, OperEx, OperParam, TlaDecl, TlaEx, TlaModule, TlaOperDecl}
+import at.forsyte.apalache.tla.lir._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should
 
-trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
+trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter with should.Matchers {
   protected var sourceStore: SourceStore = _
   protected var annotationStore: AnnotationStore = _
   protected var sanyImporter: SanyImporter = _
@@ -55,9 +56,9 @@ trait SanyImporterTestBase extends AnyFunSuite with BeforeAndAfter {
       params: List[OperParam],
       body: TlaEx): (TlaDecl => Unit) = {
     case d: TlaOperDecl =>
-      assert(name == d.name)
-      assert(params == d.formalParams)
-      assert(body == d.body)
+      d.name should equal(name)
+      d.formalParams should equal(params)
+      d.body should equal(body)
       // the source location of the definition body has been saved
       assert(
           sourceStore.contains(d.body.ID),

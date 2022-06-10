@@ -666,6 +666,73 @@ class Builder {
     BuilderOper(ApalacheInternalOper.unconstrainArray, arrayElemName)
   }
 
+  // variants
+
+  /**
+   * Construct a variant
+   *
+   * @param tagName
+   *   the tag to be associated with the value
+   * @param valueEx
+   *   the value associated with the tag
+   * @return
+   *   a new variant
+   */
+  def variant(tagName: String, valueEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variant, str(tagName), valueEx)
+  }
+
+  /**
+   * Filter a set of variants by tag name.
+   *
+   * @param tagName
+   *   a tag value to use as a filter
+   * @param setEx
+   *   a set of variants
+   * @return
+   *   a set of the values extracted for the given tag
+   */
+  def variantFilter(tagName: String, setEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantFilter, str(tagName), setEx)
+  }
+
+  /**
+   * Match a variant by a tag
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @param thenOper
+   *   the operator to be applied when the variant is tagged with `tagName`; the associated value is passed to it
+   * @param elseOper
+   *   the operator te be applied when the variant is not tagged with `tagName`; the reduced invariant is passed to it
+   * @return
+   */
+  def variantMatch(
+      tagName: String,
+      variantEx: BuilderEx,
+      thenOper: BuilderEx,
+      elseOper: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantMatch, str(tagName), variantEx, thenOper, elseOper)
+  }
+
+  /**
+   * Match a variant that admits only one option (one tag)
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @return
+   *   the value extracted from the variant
+   */
+  def variantGet(
+      tagName: String,
+      variantEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantGet, str(tagName), variantEx)
+  }
+
   private val m_nameMap: Map[String, TlaOper] =
     scala.collection.immutable.Map(
         TlaOper.eq.name -> TlaOper.eq,
@@ -760,6 +827,10 @@ class Builder {
         ApalacheInternalOper.unconstrainArray.name -> ApalacheInternalOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
+        VariantOper.variant.name -> VariantOper.variant,
+        VariantOper.variantGet.name -> VariantOper.variantGet,
+        VariantOper.variantMatch.name -> VariantOper.variantMatch,
+        VariantOper.variantFilter.name -> VariantOper.variantFilter,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {
