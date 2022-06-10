@@ -16,8 +16,6 @@ import scala.collection.immutable.SortedMap
  *   Igor Konnov
  */
 class RecordAndVariantOps(rewriter: SymbStateRewriter) {
-  // the name of the hidden tag field that is attached to every variant
-  private val tagField = "__tag"
   // the uninterpreted sort to use for storing the tag values
   private val tagSort = "__TAG"
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
@@ -109,7 +107,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
         nextState = getOrCreateVariantTag(nextState, tagName)
         val tagAsCell = nextState.asCell
         // create a record that contains exactly the fields and associate the variant type with it
-        makeRecordInternal(nextState, fields + (tagField -> tagAsCell), variantT)
+        makeRecordInternal(nextState, fields + (RecordAndVariantOps.variantTagField -> tagAsCell), variantT)
 
       case _ =>
         throw new TypingException("Unexpected type in Variant: " + variantT, state.ex.ID)
@@ -173,7 +171,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val options = getVariantOptions(variantCell)
     expectVariantTag(variantCell, options, tagName)
 
-    val index = (options.keySet + tagField).toList.indexOf(tagName)
+    val index = (options.keySet + RecordAndVariantOps.variantTagField).toList.indexOf(tagName)
     val elems = arena.getHas(variantCell)
     assert(0 <= index && index < elems.length)
     elems(index)
@@ -192,7 +190,8 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
   def getVariantTag(arena: Arena, variantCell: ArenaCell): ArenaCell = {
     val options = getVariantOptions(variantCell)
 
-    val index = (options.keySet + tagField).toList.indexOf(tagField)
+    val index =
+      (options.keySet + RecordAndVariantOps.variantTagField).toList.indexOf(RecordAndVariantOps.variantTagField)
     val elems = arena.getHas(variantCell)
     assert(0 <= index && index < elems.length)
     elems(index)
@@ -273,4 +272,9 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
         throw new RewriterException(s"Unexpected variant type $tt of cell ${cell.id}", cell.toNameEx)
     }
   }
+}
+
+object RecordAndVariantOps {
+  // the name of the hidden tag field that is attached to every variant
+  val variantTagField = "__tag"
 }

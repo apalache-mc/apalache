@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
 
 import scala.collection.immutable.SortedMap
@@ -141,6 +141,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       case CellTFrom(RecRowT1(_)) =>
         pickRecord(state, oracle, elems, elseAssert)
+
+      case CellTFrom(VariantT1(_)) =>
+        pickVariant(state, oracle, elems, elseAssert)
 
       case CellTFrom(t @ SetT1(_)) =>
         pickSet(t, state, oracle, elems, elseAssert)
@@ -371,6 +374,63 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$recordT")
 
     nextState.setRex(newRecord.toNameEx)
+  }
+
+  /**
+   * Picks a variant from a sequence of variants.
+   *
+   * @param state
+   *   a symbolic state
+   * @param oracle
+   *   a variable that stores which element (by index) should be picked, can be unrestricted
+   * @param variants
+   *   a sequence of records of cellType
+   * @return
+   *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
+   */
+  def pickVariant(
+      state: SymbState,
+      oracle: Oracle,
+      variants: Seq[ArenaCell],
+      elseAssert: TlaEx): SymbState = {
+    // variants should always have the same type
+    val (optionTypes, variantT) = variants.head.cellType match {
+      case CellTFrom(rt @ VariantT1(RowT1(opts, None))) => (opts, rt)
+      case tt => throw new IllegalArgumentException("Unexpected variant type: " + tt)
+    }
+    rewriter.solverContext
+      .log("; CHERRY-PICK %s FROM [%s] {".format(variantT, variants.map(_.toString).mkString(", ")))
+
+    var nextState = state
+
+    // project all records on a single tag and pick the value according to the oracle
+    def pickValueByTag(tagName: String): ArenaCell = {
+      val projection = variants.map(cell => recordOps.getUnsafeVariantValue(nextState.arena, cell, tagName))
+      nextState = pickByOracle(nextState, oracle, projection, elseAssert)
+      nextState.asCell
+    }
+
+    val pickedTag: ArenaCell = {
+      val tags = variants.map(c => recordOps.getVariantTag(nextState.arena, c))
+      nextState = pickByOracle(nextState, oracle, tags, elseAssert)
+      nextState.asCell
+    }
+
+    // introduce a new variant
+    nextState = nextState.setArena(nextState.arena.appendCell(variantT))
+    val newVariant = nextState.arena.topCell
+    // pick the values using the oracle and connect them to the variant
+    val pickedValuesAndTag = (optionTypes.keySet + RecordAndVariantOps.variantTagField).toSeq.map { key =>
+      if (key == RecordAndVariantOps.variantTagField) {
+        pickedTag
+      } else {
+        pickValueByTag(key)
+      }
+    }
+    nextState = nextState.updateArena(_.appendHasNoSmt(newVariant, pickedValuesAndTag: _*))
+    rewriter.solverContext.log(s"; } CHERRY-PICK $newVariant:$variantT")
+
+    nextState.setRex(newVariant.toNameEx)
   }
 
   /**
