@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.25.7 - 2022-06-13
+
+### Features
+
+- Add support for variants in the typechecker, see #1847
+
 ## 0.25.6 - 2022-06-06
 
 ### Features
