@@ -18,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   - "violation" and `errorIndex` for counterexamples, and
  *   - "example" and `exampleIndex` for examples.
  */
-object DumpCounterexamplesModelCheckerListener extends ModelCheckerListener with LazyLogging {
+object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
   override def onCounterexample(
       rootModule: TlaModule,
