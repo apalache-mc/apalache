@@ -200,6 +200,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
           )
           .typed(BoolT1)
 
+      // desugar again to get rid of implication, desugar <<A>>_vars, ...
       transform(tla.impl(leftHandSide, rightHandSide).typed(BoolT1))
 
     // rewrite SF_vars(A)
@@ -231,6 +232,7 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
           )
           .typed(BoolT1)
 
+      // desugar again to get rid of implication, desugar <<A>>_vars, ...
       transform(tla.impl(leftHandSide, rightHandSide).typed(BoolT1))
 
     case ex @ OperEx(op, args @ _*) =>
