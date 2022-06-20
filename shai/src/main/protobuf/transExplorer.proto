@@ -20,6 +20,3 @@ message ConnectRequest {
 message Connection {
   string id = 1;
 }
-
-// service Terminate {
-// }

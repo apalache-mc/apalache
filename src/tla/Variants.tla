@@ -12,35 +12,33 @@
  *)
 
 (**
- * Wrap a record into a variant. The record must contain the field `tag`,
- * and the value of the tag field must be a string literal.
+ * Wrap a value with a variant.
  *
- * @param rec a record that contains a field `tag`
+ * @param rec a value
  * @return the record wrapped in the variant type
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type looks like follows, when __tagName == "Tag":
  *
- *   { tag: Str, a } =>
- *     { tag: "$tagValue", a } | b
+ *   (Str, a) => Tag(a) | b
  *)
-Variant(__rec) ==
+Variant(__tagName, __value) ==
     \* default untyped implementation
-    __rec 
+    [ tag |-> __tagName, value |-> __value ]
 
 (**
  * Filter a set of variants with the provided tag value.
  *
  * @param `S` a set of variants that are constructed with `Variant(...)`
- * @param `tagValue` a string literal that is used to filter the set elements
+ * @param `tagValue` a constant string that is used to filter the set elements
  * @return the set of elements of S that are tagged with `tagValue`.
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type looks like follows, when __tagName == "Tag":
  *
- *   (Set({ tag: "$tagValue", a} | b), Str) => Set({ tag: Str, a })
+ *   (Str, Set(Tag(a) | b)) => Set(a)
  *)
-FilterByTag(__S, __tagValue) ==
+VariantFilter(__tagName, __S) ==
     \* default untyped implementation
-    { __e \in S: __e.tag = __tagValue }
+    { __d \in { __e \in __S: __e.tag = __tagName }: __d.value }
 
 
 (**
@@ -52,48 +50,45 @@ FilterByTag(__S, __tagValue) ==
  * the tag `tagValue`.
  *
  * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `tagValue` a string literal that is used to extract a record
+ * @param `tagValue` a constant string that is used to extract a record
  * @param `ThenOper` an operator that is called
  *        when `variant` is tagged with `tagValue`
  * @param `ElseOper` an operator that is called
  *        when `variant` is tagged with a value different from `tagValue`
  * @return the result returned by either `ThenOper`, or `ElseOper`
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type could look like follows, when __tagName == "Tag":
  *
  *   (
- *     { "$tagValue": { tag: Str, a } | b },
- *     { tag: Str, a } => r,
+ *     Str,
+ *     Tag(a) | b,
+ *     a => r,
  *     Variant(b) => r
  *   ) => r
  *)
-MatchTag(__variant, __tagValue, __ThenOper(_), __ElseOper(_)) ==
+VariantMatch(__tagName, __variant, __ThenOper(_), __ElseOper(_)) ==
     \* default untyped implementation
-    IF __variant.tag = __tagValue
-    THEN __ThenOper(__variant)
+    IF __variant.tag = __tagName
+    THEN __ThenOper(__variant.value)
     ELSE __ElseOper(__variant)
 
 (**
- * In case when `variant` allows for one record type,
- * apply `ThenOper(rec)`, where `rec` is a record extracted from `variant`.
- * The type checker must enforce that `variant` allows for one record type.
- * The untyped implementation does not perform such a test,
- * as it is impossible to do so without types.
+ * In cases where `variant` allows for one value,
+ * extract the associated value and return it.
+ * The type checker must enforce that `variant` allows for one option.
  *
+ * @param `tagValue` the tag attached to the variant
  * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `ThenOper` an operator that is called
- *        when `variant` is tagged with `tagValue`
- * @return the result returned by `ThenOper`
+ * @return the value extracted from the variant
  *
- * The type could look like follows, if we supported string literals in types:
+ * Its type could look like follows:
  *
- *   (
- *     { "$tagValue": { tag: Str, a } },
- *     { tag: Str, a } => r
- *   ) => r
+ *   (Str, Tag(a)) => a
  *)
- *)
-MatchOnly(__variant, __ThenOper(_)) ==
+VariantGet(__tagName, __variant) ==
     \* default untyped implementation
-    __ThenOper(__variant)
+    IF __variant.tag = __tagName
+    THEN __variant.value
+    ELSE \* trigger an error in TLC by choosing a non-existant element
+         CHOOSE x \in { __variant }: x.tag = __tagName
 ===============================================================================

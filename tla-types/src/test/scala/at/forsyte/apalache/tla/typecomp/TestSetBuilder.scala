@@ -477,6 +477,21 @@ class TestSetBuilder extends BuilderTest {
       build(builder.recSetMixed())
     }
 
+    // test fail on n = 1
+    assertThrows[IllegalArgumentException] {
+      build(builder.recSetMixed(builder.str("x")))
+    }
+
+    // test fail on repeated key
+    assertThrows[IllegalArgumentException] {
+      build(builder.recSetMixed(
+              builder.str("k"),
+              builder.name("S", SetT1(IntT1)),
+              builder.str("k"),
+              builder.name("T", SetT1(IntT1)),
+          ))
+    }
+
     // now for builder.map (not mapMixed)
 
     type T2 = Seq[(String, TBuilderInstruction)]
@@ -520,6 +535,14 @@ class TestSetBuilder extends BuilderTest {
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
       build(builder.recSet())
+    }
+
+    // test fail on repeated key
+    assertThrows[IllegalArgumentException] {
+      build(builder.recSet(
+              ("k", builder.name("S", SetT1(IntT1))),
+              ("k", builder.name("T", SetT1(IntT1))),
+          ))
     }
   }
 
