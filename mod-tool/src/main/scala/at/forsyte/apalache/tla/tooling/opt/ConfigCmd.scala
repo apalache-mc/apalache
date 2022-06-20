@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import org.backuity.clist.opt
+import java.io.File
+import com.typesafe.scalalogging.LazyLogging
+
 // imports from Sany utils
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
-
-// clist also has a `util`, so this import must be after the Sany imports
-import org.backuity.clist.{Command, _}
-import java.io.File
-import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This command initiates the 'config' command line.
@@ -15,8 +14,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Igor Konnov
  */
-class ConfigCmd
-    extends Command(name = "config", description = "Configure Apalache options") with General with LazyLogging {
+class ConfigCmd extends ApalacheCommand(name = "config", description = "Configure Apalache options") with LazyLogging {
 
   var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
       description = "Let Apalache submit usage statistics to tlapl.us\n"

@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import org.backuity.clist.{arg, opt, Command}
+import org.backuity.clist.{arg, opt}
 
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
-    extends Command(name, description) with PassExecutorCmd with LazyLogging {
+    extends PassExecutorCmd(name, description) with LazyLogging {
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var config: String = opt[String](name = "config", default = "", description = "configuration file in TLC format")
   var cinit: String = opt[String](name = "cinit", default = "",

@@ -9,14 +9,15 @@ import org.backuity.clist._
 import org.backuity.clist.util.Read
 
 /**
- * The general commands.
+ * The base class used by all Apalache CLI subcommands.
  *
  * See: https://github.com/backuity/clist
  *
  * @author
  *   Igor Konnov, Shon Feder
  */
-trait General extends Command with CliConfig {
+abstract class ApalacheCommand(name: String, description: String)
+    extends Command(name: String, description: String) with CliConfig {
   // TODO Fix excessively long strings
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",

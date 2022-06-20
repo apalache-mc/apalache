@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import java.io.File
 
-import org.backuity.clist.{Command, _}
+import org.backuity.clist._
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
@@ -14,8 +14,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   Igor Konnov
  */
 class TypeCheckCmd
-    extends Command(name = "typecheck", description = "Check types in a TLA+ specification") with PassExecutorCmd
-    with LazyLogging {
+    extends PassExecutorCmd(name = "typecheck", description = "Check types in a TLA+ specification") with LazyLogging {
 
   val executor = Executor(new TypeCheckerModule)
 

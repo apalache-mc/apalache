@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import java.io.File
 
-import org.backuity.clist.{Command, _}
+import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
@@ -14,8 +14,7 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
  *   Igor Konnov
  */
 class ParseCmd
-    extends Command(name = "parse", description = "Parse a TLA+ specification and quit") with PassExecutorCmd
-    with LazyLogging {
+    extends PassExecutorCmd(name = "parse", description = "Parse a TLA+ specification and quit") with LazyLogging {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var output: Option[String] = opt[Option[String]](name = "output",

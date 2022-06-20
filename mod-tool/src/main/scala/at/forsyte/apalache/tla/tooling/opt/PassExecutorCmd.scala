@@ -9,7 +9,8 @@ import at.forsyte.apalache.infra.Executor
  * @author
  *   Shon Feder
  */
-trait PassExecutorCmd extends General {
+abstract class PassExecutorCmd(name: String, description: String)
+    extends ApalacheCommand(name: String, description: String) {
 
   /**
    * The executor used to sequence a chain of passes
@@ -35,9 +36,9 @@ trait PassExecutorCmd extends General {
   /**
    * Sets the common options in the [[executor]]
    *
-   * This may be overrided by classes to change which options the class considers common.
+   * This may be overridden by classes to change which options the class considers common.
    *
-   * NOTE: It is not invoked autmoatically, and you should invoke it explicitly in your `Cmd` classe's [[run]] method.
+   * NOTE: It is not invoked automatically, and you should invoke it explicitly in your `Cmd` class' [[run]] method.
    */
   def setCommonOptions(): Unit = {
     executor.passOptions.set("general.debug", debug)

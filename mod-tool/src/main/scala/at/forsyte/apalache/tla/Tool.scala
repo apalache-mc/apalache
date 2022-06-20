@@ -47,7 +47,7 @@ object Tool extends LazyLogging {
   }
 
   // Returns `Left(errmsg)` in case of configuration errors
-  private def outputAndLogConfig(cmd: General): Either[String, Unit] = {
+  private def outputAndLogConfig(cmd: ApalacheCommand): Either[String, Unit] = {
     ConfigManager(cmd).map { cfg =>
       try {
         OutputManager.configure(cfg)
@@ -130,7 +130,7 @@ object Tool extends LazyLogging {
   }
 
   // Execute the program specified by the subcommand cmd, handling errors as needed
-  private def runCommand(cmd: General): ExitCodes.TExitCode =
+  private def runCommand(cmd: ApalacheCommand): ExitCodes.TExitCode =
     try {
       cmd.run() match {
         case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
@@ -208,7 +208,7 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def generateBugReport(e: Throwable, cmd: General): Unit = {
+  private def generateBugReport(e: Throwable, cmd: ApalacheCommand): Unit = {
     val absPath = ReportGenerator.prepareReportFile(
         cmd.invocation.split(" ").dropRight(1).mkString(" "),
         s"${BuildInfo.version} build ${BuildInfo.build}",

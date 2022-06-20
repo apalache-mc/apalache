@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import org.backuity.clist.{Command, _}
+import org.backuity.clist._
 
 import java.io.File
 import at.forsyte.apalache.infra.Executor
@@ -13,8 +13,8 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Igor Konnov
  */
-class TestCmd extends Command(name = "test", description = "Quickly test a TLA+ specification")
-    with PassExecutorCmd with LazyLogging {
+class TestCmd
+    extends PassExecutorCmd(name = "test", description = "Quickly test a TLA+ specification") with LazyLogging {
 
   val executor = Executor(new CheckerModule)
 
