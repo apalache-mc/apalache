@@ -261,13 +261,76 @@ very hard to debug and understand invariant violations.
 ### 2. Fairness
 
 `WF_e(A)` and `SF_e(A)` use `ENABLED(A)` as part of their definitions. Hence,
-`ENABLED(A)` is of ultimate importance for handling `WF` and `SF`. However, we
-do not know how to efficiently translate `ENABLED(A)` into SMT. A
-straightforward approach requires to check that for all combinations of state
-variables `A` does not hold.
+`ENABLED(A)` is of ultimate importance for handling `WF` and `SF`.
+We decided to remove `ENABLED(A)` by preprocessing. In short,
+the symbolic transition finder is used to identify the parts of
+`A` that refer to effects, and the parts that refer to guards/preconditions.
 
-This work requires further research, which we will do in parallel with the
-first part of work. To be detailed later...
+For example:
+Take the following action over integer variables `x, y, z`:
+
+```
+A ==
+  /\ x >= 5
+  /\ x' = x + 1
+  /\ y = x' + 5
+  /\ z' \in {x', y}
+  /\ y' = y
+```
+We wish to find a formula for `ENABLED(A)`. First, we call 
+the assignment finder.
+It identifies the following parts of the formula as assignments:
+```
+x' := x + 1
+```
+```
+\E v \in {x',y}: z' := v
+```
+```
+y' := y
+```
+
+To define `ENABLED(A)`, parts of the action that are identified as assignments
+can be replaced by `TRUE`, since they do not contribute to the precondition:
+```
+  /\ x >= 5
+  /\ TRUE
+  /\ y = x' + 5
+  /\ \E v \in {x', y}: TRUE \* observe this is satisfied when {x', y} is nonempty
+  /\ TRUE
+```
+Notice that the set quantification was left in place, only the assignment replaced with `TRUE`, which reflects the fact that the action should only be possible if there is
+some valid assignment to `z'`, i.e. the set it is chosen from is nonempty.
+
+Next, we replace references to primed variables, since `ENABLED(A)`
+should be rewritten to be evaluated as a state predicate.
+For this, we simply replace mentions of the variables by their assignments
+to obtain the definition of `ENABLED(A)`:
+```
+ENABLED(A) ==
+  /\ x >= 5
+  /\ TRUE
+  /\ y = (x + 1) + 5
+  /\ \E v \in {(x + 1), y}: TRUE
+  /\ TRUE
+```
+Note that we replaced `x'` by `x+1`.
+
+Advantages of this approach:
+- Can be done in preprocessing, no need to interface with the SMT solver
+- Straightforward to implement
+
+Disadvantages:
+- Relies on the transition finder, and can thus not handle expressions that
+are not handled by the transition finder either
+- Applying enabled on large actions, e.g. with disjunctions, like `ENABLED(Next)`
+can produce very large expressions in general. (Notice that `ENABLED(Next)` is
+produced when rewriting `WF(Next)`, which is a fairly common pattern).
+
+To properly take advantage of this approach, it could be prudent to
+nudge users to prefer writing `WF(smallAction)`,
+rather than defaulting to the too-encompassing `WF(Next)`.
+
 
 ## Consequences
 
