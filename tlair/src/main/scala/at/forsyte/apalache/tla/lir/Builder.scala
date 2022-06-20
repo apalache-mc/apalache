@@ -747,7 +747,7 @@ class Builder {
   def variantGetUnsafe(
       tagName: String,
       variantEx: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.variantGetOnly, str(tagName), variantEx)
+    BuilderOper(VariantOper.variantGetUnsafe, str(tagName), variantEx)
   }
 
   /**
@@ -865,6 +865,8 @@ class Builder {
         ApalacheOper.guess.name -> ApalacheOper.guess,
         VariantOper.variant.name -> VariantOper.variant,
         VariantOper.variantGetOnly.name -> VariantOper.variantGetOnly,
+        VariantOper.variantGetUnsafe.name -> VariantOper.variantGetUnsafe,
+        VariantOper.variantGetOrElse.name -> VariantOper.variantGetOrElse,
         VariantOper.variantMatch.name -> VariantOper.variantMatch,
         VariantOper.variantFilter.name -> VariantOper.variantFilter,
     )

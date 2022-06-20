@@ -156,7 +156,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
 
   /**
    * Get the variant value by tag. This is an unsafe method, that is, if the associated tag name is different from the
-   * provided one, this method returns some of the proper type (usually, the default value).
+   * provided one, this method returns some value of the proper type (usually, the default value).
    *
    * @param arena
    *   current arena

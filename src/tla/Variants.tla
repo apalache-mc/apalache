@@ -8,7 +8,7 @@
  * Apalache treats these operators as typed, so it enforces type safety of
  * variants.
  *
- * Igor Konnov, Informal Systems, 2021
+ * Igor Konnov, Informal Systems, 2021-2022
  *)
 
 (**
@@ -42,6 +42,9 @@ VariantFilter(__tagName, __S) ==
 
 
 (**
+ * NOTE: This operator is not supported by the model checker yet.
+ * We are thinking about a reasonably simple implementation of it.
+ *
  * Test the tag of `variant` against the value `tagValue`.
  * If `variant.tag = tagValue`, then apply `ThenOper(rec)`,
  * where `rec` is a record extracted from `variant`.
@@ -89,7 +92,7 @@ VariantGetOnly(__tagName, __variant) ==
     \* default untyped implementation
     IF __variant.tag = __tagName
     THEN __variant.value
-    ELSE \* trigger an error in TLC by choosing a non-existant element
+    ELSE \* trigger an error in TLC by choosing a non-existent element
          CHOOSE x \in { __variant }: x.tag = __tagName
 
 (**
@@ -103,7 +106,7 @@ VariantGetOnly(__tagName, __variant) ==
  *
  * Its type could look like follows:
  *
- *   (Str, Tag(a)) => a
+ *   (Str, Tag(a) | b, a) => a
  *)
 VariantGetOrElse(__tagName, __variant, __defaultValue) ==
     \* default untyped implementation
