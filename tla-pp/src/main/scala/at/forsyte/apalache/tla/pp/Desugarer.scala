@@ -172,16 +172,56 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
         .typed(BoolT1)
 
     // rewrite WF_vars(A)
-    // to <>[](ENABLED <<A>>_vars) => []<> <<A>>_vars
+    // to []<>(~ENABLED <<A>>_vars) \/ []<> <<A>>_vars
     case OperEx(TlaTempOper.weakFairness, vars, body) =>
+      val leftHandSide =
+        tla
+          .box(
+              tla
+                .diamond(
+                    tla
+                      .not(
+                          tla
+                            .enabled(
+                                tla.nostutt(body, vars).typed(BoolT1)
+                            )
+                            .typed(BoolT1)
+                      )
+                      .typed(BoolT1)
+                )
+                .typed(BoolT1)
+          )
+          .typed(BoolT1)
+
+      val rightHandSide =
+        tla
+          .box(
+              tla
+                .diamond(
+                    tla.nostutt(body, vars).typed(BoolT1)
+                )
+                .typed(BoolT1)
+          )
+          .typed(BoolT1)
+
+      // desugar again to desugar <<A>>_vars, ...
+      transform(tla.or(leftHandSide, rightHandSide).typed(BoolT1))
+
+    // rewrite SF_vars(A)
+    // to <>[](~ENABLED <<A>>_vars) \/ []<> <<A>>_vars
+    case OperEx(TlaTempOper.strongFairness, vars, body) =>
       val leftHandSide =
         tla
           .diamond(
               tla
                 .box(
                     tla
-                      .enabled(
-                          tla.nostutt(body, vars).typed(BoolT1)
+                      .not(
+                          tla
+                            .enabled(
+                                tla.nostutt(body, vars).typed(BoolT1)
+                            )
+                            .typed(BoolT1)
                       )
                       .typed(BoolT1)
                 )
@@ -200,40 +240,8 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
           )
           .typed(BoolT1)
 
-      // desugar again to get rid of implication, desugar <<A>>_vars, ...
-      transform(tla.impl(leftHandSide, rightHandSide).typed(BoolT1))
-
-    // rewrite SF_vars(A)
-    // to []<>(ENABLED <<A>>_vars) => []<> <<A>>_vars
-    case OperEx(TlaTempOper.strongFairness, vars, body) =>
-      val leftHandSide =
-        tla
-          .box(
-              tla
-                .diamond(
-                    tla
-                      .enabled(
-                          tla.nostutt(body, vars).typed(BoolT1)
-                      )
-                      .typed(BoolT1)
-                )
-                .typed(BoolT1)
-          )
-          .typed(BoolT1)
-
-      val rightHandSide =
-        tla
-          .box(
-              tla
-                .diamond(
-                    tla.nostutt(body, vars).typed(BoolT1)
-                )
-                .typed(BoolT1)
-          )
-          .typed(BoolT1)
-
-      // desugar again to get rid of implication, desugar <<A>>_vars, ...
-      transform(tla.impl(leftHandSide, rightHandSide).typed(BoolT1))
+      // desugar again to desugar <<A>>_vars, ...
+      transform(tla.or(leftHandSide, rightHandSide).typed(BoolT1))
 
     case ex @ OperEx(op, args @ _*) =>
       OperEx(op, args.map(transform): _*)(ex.typeTag)

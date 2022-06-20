@@ -857,10 +857,11 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
         )
         .typed(BoolT1)
 
+    // desugar to get rid of nostutt, ...
     val expected =
-      tla.or(expectedLHS, expectedRHS).typed(BoolT1)
+      desugarer.transform(tla.or(expectedLHS, expectedRHS).typed(BoolT1))
 
-    assert(expected.eqTyped(output))
+    assert(expected.eqTyped(output), s"Actual is ${output.toString()}, but expected was ${expected.toString()}")
   }
 
   test("""rewrite SF_e(A) to <>[]~(ENABLED <<A>>_e) \/ []<>(<<A_e>>)""") {
@@ -893,9 +894,10 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
         )
         .typed(BoolT1)
 
+    // desugar to get rid of nostutt, ...
     val expected =
-      tla.or(expectedLHS, expectedRHS).typed(BoolT1)
-      
-    assert(expected.eqTyped(output))
+      desugarer.transform(tla.or(expectedLHS, expectedRHS).typed(BoolT1))
+
+    assert(expected.eqTyped(output), s"Actual is ${output.toString()}, but expected was ${expected.toString()}")
   }
 }
