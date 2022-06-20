@@ -9,6 +9,7 @@ class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = 
   val executor = Executor(new ReTLAToVMTModule)
 
   def run() = {
+    // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.passOptions.set("typechecker.inferPoly", true)
     setCommonOptions()
     val outFilePath = OutputManager.runDirPathOpt
