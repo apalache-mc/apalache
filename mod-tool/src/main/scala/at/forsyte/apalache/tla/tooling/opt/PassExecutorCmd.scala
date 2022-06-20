@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.infra.Executor
 
 /**
- * Interface for the subcommands commands that run an [[Executor]]
+ * Interface for the subcommands that run an [[Executor]]
  *
  * @author
  *   Shon Feder
