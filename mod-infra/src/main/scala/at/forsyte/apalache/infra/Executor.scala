@@ -8,6 +8,8 @@ import com.google.inject.Guice
  *
  * @param toolModule
  *   The [[ToolModule]] that specifies the sequence of passes
+ * @throws [[AdaptedException]]
+ *   if any exceptions are caught by the configured [[ExceptionAdapter]]
  * @author
  *   Shon Feder
  */
