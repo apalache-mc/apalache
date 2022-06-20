@@ -8,7 +8,15 @@ import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx, TlaModule}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * Observer to [[SeqModelChecker]] that dumps counterexamples to files.
+ * Observer to [[SeqModelChecker]] that dumps example and counterexample traces to files.
+ *
+ * The traces are written to files
+ *   - `${prefix}${index}.{tla,json,.itf.json}` contains the current (counter)example
+ *   - `${prefix}.{tla,json,.itf.json}` contains the latest (counter)example
+ *
+ * where $prefix and $index are
+ *   - "violation" and `errorIndex` for counterexamples, and
+ *   - "example" and `exampleIndex` for examples.
  */
 object DumpCounterexamplesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
@@ -36,10 +44,10 @@ object DumpCounterexamplesModelCheckerListener extends ModelCheckerListener with
       CounterexampleWriter.writeAllFormats(prefix, suffix, rootModule, invViolated, states)
     }
 
-    // for a human user, write the latest counterexample into counterexample.{tla,json}
+    // for a human user, write the latest (counter)example into ${prefix}.{tla,json,...}
     dump("")
 
-    // for automation scripts, produce counterexample${nFoundErrors}.{tla,json}
+    // for automation scripts, produce ${prefix}${index}.{tla,json,...}
     val filenames = dump(index.toString)
 
     logger.error(s"Check the trace in: ${filenames.mkString(", ")}")
