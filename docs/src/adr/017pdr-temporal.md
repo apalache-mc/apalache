@@ -327,7 +327,7 @@ are not handled by the transition finder either
 can produce very large expressions in general. (Notice that `ENABLED(Next)` is
 produced when rewriting `WF(Next)`, which is a fairly common pattern).
 
-To properly take advantage of this approach, it could be prudent to
+To properly take advantage of this approach, we should
 nudge users to prefer writing `WF(smallAction)`,
 rather than defaulting to the too-encompassing `WF(Next)`.
 
