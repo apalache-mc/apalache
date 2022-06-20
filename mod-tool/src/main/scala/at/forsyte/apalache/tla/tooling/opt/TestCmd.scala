@@ -60,8 +60,6 @@ class TestCmd extends Command(name = "test", description = "Quickly test a TLA+ 
     executor.passOptions.set("checker.algo", "offline")
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.passOptions.set("typechecker.inferPoly", true)
-    // NOTE Must go after all other options are set due to side-effecting
-    // behavior of current OutmputManager configuration
     setCommonOptions()
 
     executor.run() match {
