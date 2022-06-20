@@ -16,10 +16,10 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.0")
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 
 // See https://github.com/scalapb/zio-grpc/blob/master/examples/routeguide/project/plugins.sbt
-val zioGrpcVersion = "0.5.0"
+val zioGrpcVersion = "0.5.1"
 libraryDependencies ++= Seq(
     "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % zioGrpcVersion,
-    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.10",
+    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.11",
 )
 
 // Add the locally defined plugins

@@ -1,6 +1,24 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.25.7 - 2022-06-13
+
+### Features
+
+- Add support for variants in the typechecker, see #1847
+
+## 0.25.6 - 2022-06-06
+
+### Features
+
+- Always output an example trace, add `--save-runs` flag to save examples for each run of `simulate`, see #1838
+
+### Bug fixes
+
+- Output rare expressions as unserializable to ITF, see #1841
+- Fix a problem in comparing functions with empty domains in the arrays encoding, see #1811
+- Fix spurious counter-example generation with functions of records in the arrays encoding, see #1840
+
 ## 0.25.5 - 2022-05-30
 
 ### Features

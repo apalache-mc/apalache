@@ -168,7 +168,7 @@ object KeraLanguagePred {
         TlaSetOper.enumSet,
         TlaFunOper.except,
         TlaFunOper.tuple,
-        TlaFunOper.enum,
+        TlaFunOper.rec,
         TlaSeqOper.subseq,
         TlaOper.label,
     ) /////

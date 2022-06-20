@@ -1,14 +1,12 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecT1, RowT1, SeqT1, SetT1, StrT1, VarT1,
-}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
-import org.scalatestplus.easymock.EasyMockSugar
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
@@ -335,15 +333,15 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   test("unifying variants with compatible fields") {
     val c = VarT1("c")
     val d = VarT1("d")
-    val variant1 = parser("""{ tag: "tag1", field1: Int } | c""")
-    val variant2 = parser("""{ tag: "tag2", field2: Str } | d""")
+    val variant1 = parser("""Tag1({ field1: Int }) | c""")
+    val variant2 = parser("""Tag2({ field2: Str }) | d""")
     val expectedSub = Substitution(
-        EqClass(Set(c.no)) -> parser("""(| tag2: { tag: Str, field2: Str } | a100 |)"""),
-        EqClass(Set(d.no)) -> parser("""(| tag1: { tag: Str, field1: Int } | a100 |)"""),
+        EqClass(Set(c.no)) -> parser("""(| Tag2: { field2: Str } | a100 |)"""),
+        EqClass(Set(d.no)) -> parser("""(| Tag1: { field1: Int } | a100 |)"""),
         EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
     ) ///
     val result = unifier.unify(Substitution(), variant1, variant2)
-    val expectedType = parser("""{ tag: "tag1", field1: Int } | { tag: "tag2", field2: Str } | a100""")
+    val expectedType = parser("""Tag1({ field1: Int }) | Tag2({ field2: Str }) | a100""")
     assert(result.contains((expectedSub, expectedType)))
   }
 
@@ -351,13 +349,13 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val c = VarT1("c")
     val d = VarT1("d")
     val variant1 = parser("""Variant(c)""")
-    val variant2 = parser("""{ tag: "tag2", field2: Str } | d""")
+    val variant2 = parser("""Tag2({ field2: Str }) | d""")
     val expectedSub = Substitution(
-        EqClass(Set(c.no)) -> parser("""(| tag2: { tag: Str, field2: Str } | d |)"""),
+        EqClass(Set(c.no)) -> parser("""(| Tag2: { field2: Str } | d |)"""),
         EqClass(Set(d.no)) -> d,
     ) ///
     val result = unifier.unify(Substitution(), variant1, variant2)
-    val expectedType = parser("""{ tag: "tag2", field2: Str } | d""")
+    val expectedType = parser("""Tag2({ field2: Str }) | d""")
     assert(result.contains((expectedSub, expectedType)))
   }
 
@@ -366,21 +364,21 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     // However, we do not enforce that yet.
     val c = VarT1("c")
     val d = VarT1("d")
-    val variant1 = parser("""{ tag: "tag1", field1: Int } | c""")
-    val variant2 = parser("""{ tag: "tag2", field1: Str } | d""")
+    val variant1 = parser("""Tag1({ field1: Int }) | c""")
+    val variant2 = parser("""Tag2({ field1: Str }) | d""")
     val expectedSub = Substitution(
-        EqClass(Set(c.no)) -> parser("""(| tag2: { tag: Str, field1: Str } | a100 |)"""),
-        EqClass(Set(d.no)) -> parser("""(| tag1: { tag: Str, field1: Int } | a100 |)"""),
+        EqClass(Set(c.no)) -> parser("""(| Tag2: { field1: Str } | a100 |)"""),
+        EqClass(Set(d.no)) -> parser("""(| Tag1: { field1: Int } | a100 |)"""),
         EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
     ) ///
     val result = unifier.unify(Substitution(), variant1, variant2)
-    val expectedType = parser("""{ tag: "tag1", field1: Int } | { tag: "tag2", field1: Str } | a100""")
+    val expectedType = parser("""Tag1({ field1: Int }) | Tag2({ field1: Str }) | a100""")
     assert(result.contains((expectedSub, expectedType)))
   }
 
   test("unifying variants with incompatible fields") {
-    val variant1 = parser("""{ tag: "tag1", field1: Int }""")
-    val variant2 = parser("""{ tag: "tag2", field2: Str }""")
+    val variant1 = parser("""Tag1({ field1: Int })""")
+    val variant2 = parser("""Tag2({ field2: Str })""")
     val result = unifier.unify(Substitution(), variant1, variant2)
     assert(result.isEmpty)
   }
