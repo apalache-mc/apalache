@@ -132,8 +132,8 @@ object Tool extends LazyLogging {
                 ExitCodes.ERROR
 
               case e: Throwable =>
-                Console.err.println("Please report an issue at: " + ISSUES_LINK, e)
                 logger.error("Unhandled exception", e)
+                generateBugReport(e, cmd)
                 ExitCodes.ERROR
             } finally {
 
