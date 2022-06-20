@@ -60,7 +60,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     opt[String](name = "view", description = "the state view to use with --max-error=n, default: transition index",
         default = "")
 
-  def setTuningOptions(): Map[String, String] = {
+  def collectTuningOptions(): Map[String, String] = {
     val tuning =
       if (tuningOptionsFile != "") loadProperties(tuningOptionsFile) else Map[String, String]()
     overrideProperties(tuning, tuningOptions)
@@ -68,7 +68,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   def run() = {
 
-    val tuning = setTuningOptions()
+    val tuning = collectTuningOptions()
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
