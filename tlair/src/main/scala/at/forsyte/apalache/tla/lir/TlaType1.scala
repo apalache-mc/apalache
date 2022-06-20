@@ -381,40 +381,16 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
 case class VariantT1(row: RowT1) extends TlaType1 {
   override def toString: String = {
     // the special user-friendly form, e.g.,
-    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a }, or
-    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
-    val options = row.fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
+    // tag1(a) | tag2(b), or
+    // tag1(a) | tag2(b) | c
+    val options = row.fieldTypes
+      .map { case (tag, tp) =>
+        s"$tag($tp)"
+      }
+      .mkString(" | ")
     row.other match {
       case None    => options
       case Some(v) => if (options.nonEmpty) s"$options | $v" else s"Variant($v)"
-    }
-  }
-
-  private def elemToString(tag: String, elem: TlaType1): String = {
-    // This syntax is similar to that of a record, but it contains tag: "..." as part of the record.
-    // For example, { tag: "tag1", g: Bool } or { tag: "tag2", g: Bool, a }
-    elem match {
-      case RecRowT1(RowT1(fieldTypes, other)) =>
-        val pairs = fieldTypes.filter(_._1 != "tag").map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
-        other match {
-          case None =>
-            if (pairs.nonEmpty) {
-              s"""{ tag: "$tag", $pairs }"""
-            } else {
-              s"""{ tag: "$tag" }"""
-            }
-
-          case Some(v) =>
-            if (pairs.nonEmpty) {
-              s"""{ tag: "$tag", $pairs, $v }"""
-            } else {
-              s"""{ tag: "$tag", $v }"""
-            }
-        }
-
-      case _ =>
-        // the general case, which is probably never reachable
-        s"{ $row }"
     }
   }
 

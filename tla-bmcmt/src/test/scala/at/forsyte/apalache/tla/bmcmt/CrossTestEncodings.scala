@@ -377,7 +377,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           fieldValues <- Gen.sequence[Seq[TlaEx], TlaEx](fieldTypes.values.map(genWitness(_)))
           fieldNames = fieldTypes.toSeq.map { case (name, _) => tla.str(name).as(StrT1) }
           namesAndSets = TlaOper.interleave(fieldNames, fieldValues)
-        } yield OperEx(TlaFunOper.enum, namesAndSets: _*)(Typed(tp))
+        } yield OperEx(TlaFunOper.rec, namesAndSets: _*)(Typed(tp))
       case tp @ FunT1(arg, res) =>
         for {
           id <- Gen.identifier

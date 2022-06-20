@@ -109,6 +109,16 @@ Related functionality is grouped into services, defined in supporting files, and
 then the services are registered with the
 [`RpcServer`](src/main/scala/at/forsyte/apalache/shai/rpcServer.scala).
 
+## Tests
+
+We use the `zio-test` library as the principle test harness for this project.
+
+You may find it useful to consult the following documentation:
+
+- [Overview](https://zio.dev/version-1.x/usecases/usecases_testing/)
+- [Documentation](https://zio.dev/version-1.x/howto/test-effects)
+- [Tutorial](https://scala.monster/zio-test/)
+
 ## Resources
 
 - [Preliminary Design Notes](../docs/src/adr/010rfc-transition-explorer.md)

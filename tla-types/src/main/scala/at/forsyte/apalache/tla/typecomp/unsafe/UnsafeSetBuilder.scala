@@ -77,7 +77,9 @@ trait UnsafeSetBuilder extends ProtoBuilder {
   /** Function set constructor [fromSet -> toSet] */
   protected def _funSet(fromSet: TlaEx, toSet: TlaEx): TlaEx = buildBySignatureLookup(TlaSetOper.funSet, fromSet, toSet)
 
-  /** Record set constructor [ k1: v1, ... , kN: vN ]; must have at least 1 key-value pair */
+  /**
+   * Record set constructor [ k1: v1, ... , kN: vN ]; must have at least 1 key-value pair and all keys must be unique
+   */
   protected def _recSet(kvs: (String, TlaEx)*): TlaEx = {
     // the other _recSet does all the require checks
     val args = kvs.flatMap { case (k, v) =>
@@ -96,17 +98,18 @@ trait UnsafeSetBuilder extends ProtoBuilder {
     // All keys must be ValEx(TlaStr(_))
     require(kvs.nonEmpty)
     require(kvs.size % 2 == 0)
-    require(TlaOper.deinterleave(kvs)._1.forall {
+    val recKeys = TlaOper.deinterleave(kvs)._1
+    require(recKeys.forall {
       case ValEx(_: TlaStr) => true
       case _                => false
     })
+    val duplicates = recKeys.filter(k => recKeys.count(_ == k) > 1)
+    if (duplicates.nonEmpty)
+      throw new IllegalArgumentException(s"Found repeated keys in record set constructor: ${duplicates.mkString(", ")}")
 
     // Record constructors don't have a signature, so we must construct a type-computation manually
     // This type computation cannot be pure, as it must read the string values of the record field names
     val typeCmp: TypeComputation = { args =>
-      // Even-indexed values should be strings, odd-indexed values should be sets
-      val (keys, vals) = TlaOper.deinterleave(args)
-
       // read a set's element type or throw
       def getSetElemT(ex: TlaEx): TypeComputationResult =
         ex.typeTag match {
@@ -118,17 +121,19 @@ trait UnsafeSetBuilder extends ProtoBuilder {
 
       // Iterate over the pairs (zip), first-to-throw determines the Left value, if any.
       // If no Left appears, we get a record field-to-type map.
+      // Even-indexed values should be strings, odd-indexed values should be sets
+      val (keys, values) = TlaOper.deinterleave(args)
       val keyTypeMapE: exOrMap =
         keys
-          .zip(vals)
+          .zip(values)
           .foldLeft[exOrMap](Right(SortedMap.empty)) {
-            case (mapE, (ValEx(TlaStr(s)), ex)) => // key shape guaranteed by construction
+            case (mapE, (ValEx(TlaStr(s)), ex)) => // key shape guaranteed by `require` check
               for {
                 map <- mapE
                 setElemT <- getSetElemT(ex)
               } yield map + (s -> setElemT)
             case (_, (k, _)) => // Impossible, but need to suppress warning
-              Left(new TBuilderTypeException(s"Key $k is not a string"))
+              Left(new TBuilderTypeException(s"Key $k is not a string literal"))
           }
 
       keyTypeMapE.flatMap { keyTypeMap =>

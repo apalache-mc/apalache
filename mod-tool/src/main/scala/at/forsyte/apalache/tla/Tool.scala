@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.tooling.opt._
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
+import at.forsyte.apalache.shai
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
@@ -256,6 +257,7 @@ object Tool extends LazyLogging {
         // propagate the simulator options to the tuning options, so the model checker can easily pick them
         tuning += "search.simulation" -> "true"
         tuning += "search.simulation.maxRun" -> sim.maxRun.toString
+        tuning += "search.simulation.saveRuns" -> sim.saveRuns.toString
 
       case _ => ()
     }
@@ -322,7 +324,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "No example found",
-        "Checker has found an example. Check counterexample.tla.",
+        "Found a violation of the postcondition. Check violation.tla.",
     )
   }
 
@@ -347,13 +349,14 @@ object Tool extends LazyLogging {
   }
 
   private def runServer(executor: PassChainExecutor, server: ServerCmd): Int = {
-    logger.info("Running server...")
+    logger.info("Starting server...")
 
     // NOTE Must go after all other options are set due to side-effecting
-    // behavior of current OutmputManager configuration
+    // behavior of current OutputManager configuration
     setCommonOptions(server, executor.options)
-    logger.info("Server mode is not yet implemented!")
-    ExitCodes.ERROR
+
+    shai.v1.RpcServer.main(Array())
+    ExitCodes.OK
   }
 
   private def runConstrain(executor: PassChainExecutor, constrain: TranspileCmd): Int = {
