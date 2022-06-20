@@ -866,7 +866,7 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
 
   test("""rewrite SF_e(A) to <>[]~(ENABLED <<A>>_e) \/ []<>(<<A_e>>)""") {
     val input: TlaEx =
-      tla.WF(tla.name("e").typed(IntT1), tla.name("A").typed(BoolT1)).typed(BoolT1)
+      tla.SF(tla.name("e").typed(IntT1), tla.name("A").typed(BoolT1)).typed(BoolT1)
 
     val output = desugarer.transform(input)
 
