@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+// imports from Sany utils
+import util.ExecutionStatisticsCollector
+import util.ExecutionStatisticsCollector.Selection
+
+// clist also has a `util`, so this import must be after the Sany imports
 import org.backuity.clist.{Command, _}
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
-
-// From tlatools.jar
-import _root_.util.ExecutionStatisticsCollector
-import _root_.util.ExecutionStatisticsCollector.Selection
 
 /**
  * This command initiates the 'config' command line.
