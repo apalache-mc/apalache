@@ -24,6 +24,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     opt[Int](name = "length", default = 10, description = "maximal number of Next steps, default: 10")
 
   override def setCommonOptions(): Unit = {
+    super.setCommonOptions()
     logger.info {
       val environment = if (env != "") s"(${env}) " else ""
       s"Checker options: ${environment}${name} ${invocation}"
@@ -40,6 +41,5 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     if (cinit != "")
       executor.passOptions.set("checker.cinit", cinit)
     executor.passOptions.set("checker.length", length)
-    super.setCommonOptions()
   }
 }
