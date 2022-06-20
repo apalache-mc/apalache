@@ -380,8 +380,8 @@ class TableauEncoder(
     /* initialize loop variable: __saved___temporal_curNode = __temporal_curNode
      */
     val loopVarInitAssignmentEx = builder.eql(
-        nodeVarEx,
         loopNodeVarEx,
+        nodeVarEx,
     )
 
     /* generic update for loop variable: __saved___temporal_curNode' = IF (InLoop' = InLoop) THEN __saved___temporal_curNode ELSE __temporal_curNode}}}
