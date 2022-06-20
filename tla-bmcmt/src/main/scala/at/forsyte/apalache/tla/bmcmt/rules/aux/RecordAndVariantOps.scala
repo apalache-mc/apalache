@@ -2,7 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
 
@@ -175,6 +178,36 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val elems = arena.getHas(variantCell)
     assert(0 <= index && index < elems.length)
     elems(index)
+  }
+
+  /**
+   * Return the value associated with the tag, when the tag equals to tagName. Otherwise, return defaultValue.
+   *
+   * @param state
+   *   a symbolic state to start with
+   * @param variantCell
+   *   an arena cell that holds a variant
+   * @param tagName
+   *   the tag name
+   * @param defaultValue
+   *   the value to use when the variant is not tagged with tagName
+   * @return
+   *   the value associated with the tag, or the default value
+   */
+  def variantGetOrElse(
+      state: SymbState,
+      variantCell: ArenaCell,
+      tagName: String,
+      defaultValue: ArenaCell): SymbState = {
+    val tagCell = getVariantTag(state.arena, variantCell)
+    val unsafeValueCell = getUnsafeVariantValue(state.arena, variantCell, tagName)
+    // IF variant.__tag = tagName THEN variant.__value ELSE defaultValue
+    val tagNameOfSort = tla.str(ModelValueHandler.construct((tagSort, tagName))).as(ConstT1(tagSort))
+    val ite =
+      tla
+        .ite(tla.eql(tagCell.toNameEx, tagNameOfSort).as(BoolT1), unsafeValueCell.toNameEx, defaultValue.toNameEx)
+        .as(defaultValue.cellType.toTlaType1)
+    rewriter.rewriteUntilDone(state.setRex(ite))
   }
 
   /**

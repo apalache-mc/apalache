@@ -72,7 +72,7 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
 
   test("""VariantGetUnsafe with a wrong tag""") { rewriterType: SMTEncoding =>
     val variantT = parser("Foo(Int) | Bar(Bool)")
-    val vrt2 = variant("Foo", minus(int(44), int(11)).as(IntT1)).as(variantT)
+    val vrt2 = variant("Bar", bool(false)).as(variantT)
     val unsafe = variantGetUnsafe("Foo", vrt2).as(IntT1)
 
     val state = new SymbState(unsafe, arena, Binding())
@@ -81,6 +81,28 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
     // The implementation is free to return any value of the right type (Int).
     // This operator should not make the solver stuck, that is, produce unsatisfiable constraints.
     assert(solverContext.sat())
+  }
+
+  test("""VariantGetOrElse with a matching tag""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val value = variantGetOrElse("Foo", vrt1, int(-1)).as(IntT1)
+    val eq = eql(value, int(33)).as(BoolT1)
+
+    val state = new SymbState(eq, arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""VariantGetOrElse with a non-matching tag""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val vrt2 = variant("Bar", bool(false)).as(variantT)
+    val value = variantGetOrElse("Foo", vrt2, int(-1)).as(IntT1)
+    val eq = eql(value, int(-1)).as(BoolT1)
+
+    val state = new SymbState(eq, arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
   }
 
   private def getVariantOptions(tp: CellT): Map[String, TlaType1] = {

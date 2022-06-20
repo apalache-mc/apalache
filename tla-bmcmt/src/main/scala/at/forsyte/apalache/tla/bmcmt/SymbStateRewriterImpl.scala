@@ -285,6 +285,8 @@ class SymbStateRewriterImpl(
           -> List(new VariantOpsRule(this)),
         key(tla.variantGetUnsafe("Tag", tla.name("V")))
           -> List(new VariantOpsRule(this)),
+        key(tla.variantGetOrElse("Tag", tla.name("V"), tla.name("def")))
+          -> List(new VariantOpsRule(this)),
         // FiniteSets
         key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
           -> List(new CardinalityConstRule(this)),

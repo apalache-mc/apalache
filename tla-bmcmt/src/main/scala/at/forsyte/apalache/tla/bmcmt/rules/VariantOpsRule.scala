@@ -17,9 +17,10 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
-      case OperEx(VariantOper.variant, _, _)          => true
-      case OperEx(VariantOper.variantGetUnsafe, _, _) => true
-      case _                                          => false
+      case OperEx(VariantOper.variant, _, _)             => true
+      case OperEx(VariantOper.variantGetUnsafe, _, _)    => true
+      case OperEx(VariantOper.variantGetOrElse, _, _, _) => true
+      case _                                             => false
     }
   }
 
@@ -31,6 +32,9 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case OperEx(VariantOper.variantGetUnsafe, ValEx(TlaStr(tagName)), variantEx) =>
         translateVariantGetUnsafe(state, tagName, variantEx)
+
+      case OperEx(VariantOper.variantGetOrElse, ValEx(TlaStr(tagName)), variantEx, defaultEx) =>
+        translateVariantGetOrElse(state, tagName, variantEx, defaultEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -61,5 +65,20 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val variantCell = nextState.asCell
     val unsafeValueCell = variantOps.getUnsafeVariantValue(nextState.arena, variantCell, tagName)
     nextState.setRex(unsafeValueCell.toNameEx)
+  }
+
+  /**
+   * Translate VariantGetOrElse(tagName, variant, defaultValue).
+   */
+  private def translateVariantGetOrElse(
+      state: SymbState,
+      tagName: String,
+      variantEx: TlaEx,
+      defaultEx: TlaEx): SymbState = {
+    var nextState = rewriter.rewriteUntilDone(state.setRex(variantEx))
+    val variantCell = nextState.asCell
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(defaultEx))
+    val defaultValueCell = nextState.asCell
+    variantOps.variantGetOrElse(nextState, variantCell, tagName, defaultValueCell)
   }
 }
