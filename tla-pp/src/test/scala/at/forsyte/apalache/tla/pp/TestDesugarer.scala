@@ -826,4 +826,96 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
         .typed(BoolT1)
     assert(expected.eqTyped(output))
   }
+
+  test("""rewrite <A>_vars to A /\ ~UNCHANGED << vars >>""") {
+    val input: TlaEx =
+      tla.nostutt(tla.name("A").typed(BoolT1), tla.name("B").typed(IntT1)).typed(BoolT1)
+
+    val output = desugarer.transform(input)
+
+    val expected =
+      tla
+        .and(
+            tla.name("A").typed(BoolT1),
+            tla
+              .not(
+                  tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)
+              )
+              .typed(BoolT1),
+        )
+        .typed(BoolT1)
+    assert(expected.eqTyped(output))
+  }
+
+  test("""rewrite WF_e(A) to []<>~(ENABLED <<A>>_e) \/ []<>(<<A_e>>)""") {
+    val input: TlaEx =
+      tla.WF(tla.name("e").typed(IntT1), tla.name("A").typed(BoolT1)).typed(BoolT1)
+
+    val output = desugarer.transform(input)
+
+    val nostutt_A_e = tla.nostutt(tla.name("A").typed(BoolT1), tla.name("e").typed(IntT1)).typed(BoolT1)
+
+    val expectedLHS =
+      tla
+        .box(
+            tla
+              .diamond(
+                  tla
+                    .not(
+                        tla.enabled(nostutt_A_e).typed(BoolT1)
+                    )
+                    .typed(BoolT1)
+              )
+              .typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    val expectedRHS =
+      tla
+        .box(
+            tla.diamond(nostutt_A_e).typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    val expected =
+      tla.or(expectedLHS, expectedRHS).typed(BoolT1)
+
+    assert(expected.eqTyped(output))
+  }
+
+  test("""rewrite SF_e(A) to <>[]~(ENABLED <<A>>_e) \/ []<>(<<A_e>>)""") {
+    val input: TlaEx =
+      tla.WF(tla.name("e").typed(IntT1), tla.name("A").typed(BoolT1)).typed(BoolT1)
+
+    val output = desugarer.transform(input)
+
+    val nostutt_A_e = tla.nostutt(tla.name("A").typed(BoolT1), tla.name("e").typed(IntT1)).typed(BoolT1)
+
+    val expectedLHS =
+      tla
+        .diamond(
+            tla
+              .box(
+                  tla
+                    .not(
+                        tla.enabled(nostutt_A_e).typed(BoolT1)
+                    )
+                    .typed(BoolT1)
+              )
+              .typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    val expectedRHS =
+      tla
+        .box(
+            tla.diamond(nostutt_A_e).typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    val expected =
+      tla.or(expectedLHS, expectedRHS).typed(BoolT1)
+      
+    assert(expected.eqTyped(output))
+  }
 }

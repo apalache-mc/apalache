@@ -170,17 +170,68 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
               .typed(BoolT1)
         )
         .typed(BoolT1)
-    
+
     // rewrite WF_vars(A)
     // to <>[](ENABLED <<A>>_vars) => []<> <<A>>_vars
     case OperEx(TlaTempOper.weakFairness, vars, body) =>
-      val builder = new ScopedBuilder
+      val leftHandSide =
+        tla
+          .diamond(
+              tla
+                .box(
+                    tla
+                      .enabled(
+                          tla.nostutt(body, vars).typed(BoolT1)
+                      )
+                      .typed(BoolT1)
+                )
+                .typed(BoolT1)
+          )
+          .typed(BoolT1)
+
+      val rightHandSide =
+        tla
+          .box(
+              tla
+                .diamond(
+                    tla.nostutt(body, vars).typed(BoolT1)
+                )
+                .typed(BoolT1)
+          )
+          .typed(BoolT1)
+
+      transform(tla.impl(leftHandSide, rightHandSide).typed(BoolT1))
 
     // rewrite SF_vars(A)
     // to []<>(ENABLED <<A>>_vars) => []<> <<A>>_vars
     case OperEx(TlaTempOper.strongFairness, vars, body) =>
-      val builder = new ScopedBuilder
-      
+      val leftHandSide =
+        tla
+          .box(
+              tla
+                .diamond(
+                    tla
+                      .enabled(
+                          tla.nostutt(body, vars).typed(BoolT1)
+                      )
+                      .typed(BoolT1)
+                )
+                .typed(BoolT1)
+          )
+          .typed(BoolT1)
+
+      val rightHandSide =
+        tla
+          .box(
+              tla
+                .diamond(
+                    tla.nostutt(body, vars).typed(BoolT1)
+                )
+                .typed(BoolT1)
+          )
+          .typed(BoolT1)
+
+      transform(tla.impl(leftHandSide, rightHandSide).typed(BoolT1))
 
     case ex @ OperEx(op, args @ _*) =>
       OperEx(op, args.map(transform): _*)(ex.typeTag)
