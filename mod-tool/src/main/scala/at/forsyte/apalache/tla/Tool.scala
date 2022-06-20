@@ -127,6 +127,7 @@ object Tool extends LazyLogging {
                 }
                 ExitCodes.ERROR
 
+              // Raised on invalid or erroneous property files or tuning options arguments
               case e: PassOptionException =>
                 logger.error(e.getMessage)
                 ExitCodes.ERROR
