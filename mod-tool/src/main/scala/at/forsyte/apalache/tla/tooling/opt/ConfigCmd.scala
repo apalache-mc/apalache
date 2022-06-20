@@ -28,30 +28,23 @@ class ConfigCmd
   def run() = {
     logger.info("Configuring Apalache")
     submitStats.foreach { isEnabled =>
-      val warning = "Unable to update statistics configuration. The other features will keep working."
-
       if (!configDirExistsOrCreated()) {
-        logger.warn(warning)
+        logger.warn("Unable to update statistics configuration. The other features will keep working.")
       } else {
         val statCollector = new ExecutionStatisticsCollector()
         // protect against potential exceptions in the tla2tools code
-        try {
-          if (isEnabled) {
-            statCollector.set(Selection.ON)
-            logger.info("Statistics collection is ON.")
-            logger.info("This also enabled TLC and TLA+ Toolbox statistics.")
-          } else {
-            statCollector.set(Selection.NO_ESC)
-            logger.info("Statistics collection is OFF.")
-            logger.info("This also disabled TLC and TLA+ Toolbox statistics.")
-          }
-        } catch {
-          case e: Exception =>
-            logger.warn(e.getMessage)
-            logger.warn(warning)
+        if (isEnabled) {
+          statCollector.set(Selection.ON)
+          logger.info("Statistics collection is ON.")
+          logger.info("This also enabled TLC and TLA+ Toolbox statistics.")
+        } else {
+          statCollector.set(Selection.NO_ESC)
+          logger.info("Statistics collection is OFF.")
+          logger.info("This also disabled TLC and TLA+ Toolbox statistics.")
         }
       }
     }
+
     Right("Configuration complete")
   }
 
