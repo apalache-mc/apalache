@@ -5,11 +5,12 @@ import org.junit.runner.RunWith
 import org.scalacheck.Gen.asciiStr
 import org.scalacheck.Prop.forAll
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestCommentPreprocessor extends AnyFunSuite with Checkers {
+class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
 
   test("test on empty input") {
     val (output, potentialAnnotations) = CommentPreprocessor()("")
@@ -154,6 +155,15 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers {
 
   test("Multi-line comment only") {
     hasAnnotationsWhenNonEmpty("""(* aaa *)""")
+  }
+
+  test("accept pipe") {
+    val extractedText =
+      """@typeAlias: MESSAGE = { tag: "req", ask: Int }""" + "\n" + """ | { tag: "ack", success: Bool };"""
+    val input = s"(*\n  $extractedText\n *)"
+    val (_, potentialAnnotations) = CommentPreprocessor()(input)
+    potentialAnnotations should equal(
+        List("""@typeAlias: MESSAGE = { tag: "req", ask: Int } | { tag: "ack", success: Bool };"""))
   }
 
   test("no failure on random inputs") {

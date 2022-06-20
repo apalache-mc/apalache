@@ -450,7 +450,7 @@ class ToEtcExpr(
         mkApp(ref, Seq(principal), lambda)
 
       // ******************************************** FUNCTIONS **************************************************
-      case OperEx(TlaFunOper.enum, args @ _*) =>
+      case OperEx(TlaFunOper.rec, args @ _*) =>
         // a record constructor:
         // [f1 |-> e1, f2 |-> e2]
         val (fields, values) =
@@ -763,8 +763,65 @@ class ToEtcExpr(
         val opsig = OperT1(Seq(a, BoolT1), BoolT1) // (a, Bool) => Bool
         mkExRefApp(opsig, Seq(sub, act))
 
+      // ******************************************** Variants **************************************************
+      case OperEx(VariantOper.variant, v @ ValEx(TlaStr(tagName)), valueEx) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // (Str, a) => T1a(a) | b
+        val opsig =
+          OperT1(Seq(StrT1, a), VariantT1(RowT1(b, tagName -> a)))
+        mkExRefApp(opsig, Seq(v, valueEx))
+
+      case ex @ OperEx(VariantOper.variant, tag @ _, _) =>
+        throw new TypingInputException(s"The first argument of Variant must be a string, found: $tag", ex.ID)
+
+      case OperEx(VariantOper.variantFilter, v @ ValEx(TlaStr(tagName)), setEx) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // (Str, Set(T1a(a) | b)) => Set(a)
+        val opsig = OperT1(Seq(StrT1, SetT1(VariantT1(RowT1(b, tagName -> a)))), SetT1(a))
+        mkExRefApp(opsig, Seq(v, setEx))
+
+      case ex @ OperEx(VariantOper.variantFilter, tag @ _, _) =>
+        throw new TypingInputException(s"The first argument of FilterByTag must be a string, found: $tag", ex.ID)
+
+      case OperEx(VariantOper.variantMatch, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        val c = varPool.fresh
+        // a => c
+        val thenType = OperT1(Seq(a), c)
+        // Variant(b) => c
+        val elseType = OperT1(Seq(VariantT1(RowT1(b))), c)
+        // (Str, T1a(a) | b, thenOper, elseOper) => c
+        val operArgs =
+          Seq(
+              StrT1,
+              VariantT1(RowT1(b, tagName -> a)),
+              thenType,
+              elseType,
+          )
+
+        val opsig = OperT1(operArgs, c)
+        mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
+
+      case OperEx(VariantOper.variantMatch, tag @ _, _, _, _) =>
+        throw new TypingInputException(s"The first argument of MatchTag must be a string, found: $tag", ex.ID)
+
+      case OperEx(VariantOper.variantGet, v @ ValEx(TlaStr(tagName)), variantEx) =>
+        val a = varPool.fresh
+        // (Str, T1a(a)) => a
+        val operArgs =
+          Seq(
+              StrT1,
+              VariantT1(RowT1(tagName -> a)),
+          )
+
+        val opsig = OperT1(operArgs, a)
+        mkExRefApp(opsig, Seq(v, variantEx))
+
       // ******************************************** Apalache **************************************************
-      case OperEx(ApalacheOper.`mkSeq`, len, ctor) =>
+      case OperEx(ApalacheOper.mkSeq, len, ctor) =>
         val a = varPool.fresh
         // (Int, (Int => a)) => Seq(a)
         val opsig = OperT1(Seq(IntT1, OperT1(Seq(IntT1), a)), SeqT1(a))

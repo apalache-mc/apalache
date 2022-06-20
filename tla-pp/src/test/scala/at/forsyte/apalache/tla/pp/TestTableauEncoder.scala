@@ -15,8 +15,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.pp.temporal.LoopEncoder
+import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.TableauEncoder
-import at.forsyte.apalache.tla.typecomp.ScopedBuilder
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Gen.oneOf
@@ -28,18 +28,16 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestTemporalEncoder extends AnyFunSuite with Checkers {
+class TestTableauEncoder extends AnyFunSuite with Checkers {
   private val loopEncoder = new LoopEncoder(new IdleTracker())
 
   // loop encoder expects init and next declarations, so we generate empty ones to use when we don't care about them
-  val init = new TlaOperDecl("init", List.empty, new ValEx(new TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1))
-  val next = new TlaOperDecl("next", List.empty, new ValEx(new TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1))
+  val init = builder.decl("init", builder.bool(true))
+  val next = builder.decl("next", builder.bool(true))
   val module = new TlaModule("module", List(init, next))
   val modWithPreds = loopEncoder.addLoopLogic(module, init, next)
 
   val levelFinder = new TlaLevelFinder(modWithPreds.module)
-
-  val builder = new ScopedBuilder()
 
   private val tableauEncoder =
     new TableauEncoder(
@@ -97,12 +95,12 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
       } else {
         val output =
           tableauEncoder
-            .singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+            .temporalsToInvariants(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val nodesInFormulaSyntaxTree = computeNumberOfNodes(formula)
 
         // identify predicate variables by the variable names
-        val predicateVariables = output.module.varDeclarations
+        val predicateVariables = output.varDeclarations
           .filter(decl =>
             decl.name.startsWith(TableauEncoder.NAME_PREFIX)
               && !decl.name.contains(LoopEncoder.NAME_PREFIX)
@@ -123,12 +121,12 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
       }
       val output =
         tableauEncoder
-          .singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+          .temporalsToInvariants(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
       val nodesInFormulaSyntaxTree = computeNumberOfNodes(formula)
 
       // identify predicate variables by the variable names
-      val loopPredicateVariables = output.module.varDeclarations
+      val loopPredicateVariables = output.varDeclarations
         .filter(decl =>
           decl.name.startsWith(LoopEncoder.NAME_PREFIX + TableauEncoder.NAME_PREFIX)
             && !decl.name.endsWith(TableauEncoder.BOX_SUFFIX)
@@ -149,12 +147,12 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
         }
         val output =
           tableauEncoder
-            .singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+            .temporalsToInvariants(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val boxApplications = countOperatorApplications(TlaTempOper.box, formula)
 
         // identify predicate variables by the variable names
-        val boxVariables = output.module.varDeclarations
+        val boxVariables = output.varDeclarations
           .filter(decl => decl.name.endsWith(TableauEncoder.BOX_SUFFIX))
           .length
 
@@ -170,12 +168,12 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
         }
         val output =
           tableauEncoder
-            .singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+            .temporalsToInvariants(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val diamondApplications = countOperatorApplications(TlaTempOper.diamond, formula)
 
         // identify predicate variables by the variable names
-        val diamondVariables = output.module.varDeclarations
+        val diamondVariables = output.varDeclarations
           .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
           .length
 
@@ -191,13 +189,13 @@ class TestTemporalEncoder extends AnyFunSuite with Checkers {
         }
         val output =
           tableauEncoder
-            .singleTemporalToInvariant(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
+            .temporalsToInvariants(modWithPreds, new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)))
 
         val temporalApplications =
           countOperatorApplications(TlaTempOper.diamond, formula) + countOperatorApplications(TlaTempOper.box, formula)
 
         // identify predicate variables by the variable names
-        val temporalAuxVars = output.module.varDeclarations
+        val temporalAuxVars = output.varDeclarations
           .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
           .length
 
