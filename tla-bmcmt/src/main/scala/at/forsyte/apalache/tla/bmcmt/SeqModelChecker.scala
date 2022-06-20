@@ -430,7 +430,7 @@ class SeqModelChecker[ExecutorContextT](
       val ctorArgs = b.toMap.flatMap { case (key, value) =>
         List(ValEx(TlaStr(key)), value.toNameEx)
       }
-      OperEx(TlaFunOper.`enum`, ctorArgs.toList: _*)(Typed(stateType))
+      OperEx(TlaFunOper.rec, ctorArgs.toList: _*)(Typed(stateType))
     }
 
     // construct a history sequence
