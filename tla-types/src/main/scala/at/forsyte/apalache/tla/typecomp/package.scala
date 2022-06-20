@@ -38,11 +38,19 @@ package object typecomp {
    * TBuilderContext holds all of the information about the internal state of the builder. It can be extended in the
    * future, to have the builder perform additional static analysis, e.g. assignment analysis.
    *
-   * `nameScope` tracks the types of the variables currently considered as free.
+   *   - `freeNameScope` tracks the types of the variables currently considered as free and their types.
+   *   - `usedNames` tracks the set of free and bound names in the scope.
+   *
+   * We track both to prevent shadowing. Expressions which introduce bound variables, e.g. \E x \in S: P, may cause
+   * shadowing if:
+   *   - `x` appears as bound in `P` (e.g. \E x \in S: \E x \in T: x).
+   *   - `x` appears as free or bound in `S` (e.g. \E x \in {x}: P(x))
+   *
+   * Invariant: freeNameScope.keys \subseteq usedNames
    */
-  final case class TBuilderContext(nameScope: Map[String, TlaType1])
+  final case class TBuilderContext(freeNameScope: Map[String, TlaType1], usedNames: Set[String])
   object TBuilderContext {
-    def empty: TBuilderContext = TBuilderContext(Map.empty)
+    def empty: TBuilderContext = TBuilderContext(Map.empty, Set.empty)
   }
 
   /** An IntenalState is a computation (possibly) mutating some MetaInfo */

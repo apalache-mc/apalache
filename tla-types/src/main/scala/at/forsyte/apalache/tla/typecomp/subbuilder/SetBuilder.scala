@@ -44,21 +44,35 @@ trait SetBuilder extends UnsafeSetBuilder {
 
   /** { x \in set: p } */
   def filter(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    for {
-      xEx <- x
-      setEx <- set
-      pEx <- p
-      _ <- markAsBound(xEx)
-    } yield _filter(xEx, setEx, pEx)
+    boundVarIntroductionTernary(_filter)(x, set, p)
 
   /** { mapExpr: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair */
   def map(
       e: TBuilderInstruction,
       varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
-    val args = varSetPairs.flatMap { case (k, v) =>
-      Seq(k, v)
-    }
-    mapMixed(e, args: _*)
+    for {
+      mapExpr <- e
+      boundAfterMapExpr <- allBound // xi may not appear as bound in mapExpr
+      _ = {}
+      pairs <- varSetPairs.foldLeft(Seq.empty[(TlaEx, TlaEx)].point[TBuilderInternalState]) {
+        case (cmp, (variable, set)) =>
+          for {
+            seq <- cmp
+            setEx <- set
+            usedInS <- allUsed // xi may not appear as bound or free in S
+            xEx <- variable
+            _ = require(xEx.isInstanceOf[NameEx])
+            _ <- markAsBound(xEx)
+            // x is shadowed iff boundAfterX \subseteq usedInS \union boundAfrerP
+            boundAfterX <- allBound
+            diff = (boundAfterX -- usedInS) -- boundAfterMapExpr
+          } yield
+            if (diff.isEmpty) {
+              val name = xEx.asInstanceOf[NameEx].name // require would have already thrown if not NameEx
+              throw new TBuilderScopeException(s"Variable $name is shadowed in $mapExpr or $setEx.")
+            } else seq :+ (xEx, setEx)
+      }
+    } yield _map(mapExpr, pairs: _*)
   }
 
   /**
@@ -70,22 +84,11 @@ trait SetBuilder extends UnsafeSetBuilder {
   def mapMixed(
       e: TBuilderInstruction,
       varSetPairs: TBuilderInstruction*): TBuilderInstruction = {
-    // Requirements for deinterleave
-    require(varSetPairs.nonEmpty)
     require(varSetPairs.size % 2 == 0)
-    for {
-      pairs <- buildSeq(varSetPairs)
-      (xs, _) = TlaOper.deinterleave(pairs)
-      // every other argument is NameEx
-      _ = require(xs.forall {
-        _.isInstanceOf[NameEx]
-      })
-      mapExpr <- e
-      // Mark all vars as bound
-      _ <- xs.map(_.asInstanceOf[NameEx]).foldLeft(().point[TBuilderInternalState]) { case (cmp, xi) =>
-        cmp.flatMap { _ => markAsBound(xi) }
-      }
-    } yield _mapMixed(mapExpr, pairs: _*)
+    val asPairs = varSetPairs.grouped(2).toSeq.map { case Seq(a, b) =>
+      (a, b)
+    }
+    map(e, asPairs: _*)
   }
 
   /** Function set constructor [fromSet -> toSet] */

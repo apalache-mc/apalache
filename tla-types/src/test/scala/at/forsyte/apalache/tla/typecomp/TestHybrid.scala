@@ -208,5 +208,4 @@ class TestHybrid extends BuilderTest {
   }
 
   // TODO: test hybrid FunOper methods (except/funDef)
-  // TODO: test shadowing ([x \in {x} |-> e] should fail)
 }

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.typecomp.subbuilder
 
+import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeBoolBuilder
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, TBuilderScopeException}
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 
 /**
@@ -29,34 +30,18 @@ trait BoolBuilder extends UnsafeBoolBuilder {
 
   /** \A x \in set: p */
   def forall(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    for {
-      xEx <- x
-      setEx <- set
-      pEx <- p
-      _ <- markAsBound(xEx)
-    } yield _forall(xEx, setEx, pEx)
+    boundVarIntroductionTernary(_forall)(x, set, p)
 
   /** \A x: p */
-  def forall(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction = for {
-    xEx <- x
-    pEx <- p
-    _ <- markAsBound(xEx)
-  } yield _forall(xEx, pEx)
+  def forall(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
+    boundVarIntroductionBinary(_forall)(x, p)
 
   /** \E x \in set: p */
   def exists(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    for {
-      xEx <- x
-      setEx <- set
-      pEx <- p
-      _ <- markAsBound(xEx)
-    } yield _exists(xEx, setEx, pEx)
+    boundVarIntroductionTernary(_exists)(x, set, p)
 
   /** \E x: p */
-  def exists(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction = for {
-    xEx <- x
-    pEx <- p
-    _ <- markAsBound(xEx)
-  } yield _exists(xEx, pEx)
+  def exists(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
+    boundVarIntroductionBinary(_exists)(x, p)
 
 }
