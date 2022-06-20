@@ -110,36 +110,11 @@ object Tool extends LazyLogging {
             ExitCodes.ERROR
           }
           case Right(()) => {
-
             val startTime = LocalDateTime.now()
-
             try {
-              // Execute the program specified by the subcommand
-              cmd.run() match {
-                case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
-                case Right(msg)                 => { logger.info(msg); ExitCodes.OK }
-              }
-            } catch {
-              case e: AdaptedException =>
-                e.err match {
-                  case NormalErrorMessage(text) => logger.error(text)
-                  case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd) }
-                }
-                ExitCodes.ERROR
-
-              // Raised on invalid or erroneous property files or tuning options arguments
-              case e: PassOptionException =>
-                logger.error(e.getMessage)
-                ExitCodes.ERROR
-
-              case e: Throwable =>
-                logger.error("Unhandled exception", e)
-                generateBugReport(e, cmd)
-                ExitCodes.ERROR
+              runCommand(cmd)
             } finally {
-
               printTimeDiff(startTime)
-
             }
           }
         }
@@ -153,6 +128,32 @@ object Tool extends LazyLogging {
       }
     }
   }
+
+  // Execute the program specified by the subcommand cmd, handling errors as needed
+  private def runCommand(cmd: General): ExitCodes.TExitCode =
+    try {
+      cmd.run() match {
+        case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
+        case Right(msg)                 => { logger.info(msg); ExitCodes.OK }
+      }
+    } catch {
+      case e: AdaptedException =>
+        e.err match {
+          case NormalErrorMessage(text) => logger.error(text)
+          case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd) }
+        }
+        ExitCodes.ERROR
+
+      // Raised on invalid or erroneous property files or tuning options arguments
+      case e: PassOptionException =>
+        logger.error(e.getMessage)
+        ExitCodes.ERROR
+
+      case e: Throwable =>
+        logger.error("Unhandled exception", e)
+        generateBugReport(e, cmd)
+        ExitCodes.ERROR
+    }
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
