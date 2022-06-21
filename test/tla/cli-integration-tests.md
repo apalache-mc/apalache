@@ -2266,6 +2266,24 @@ $ apalache-mc check --features=rows --length=4 MC_LamportMutexTyped.tla | sed 's
 EXITCODE: OK
 ```
 
+### check TestVariants.tla
+
+Variant operators work in the model checker.
+
+```sh
+$ apalache-mc check --features=rows --inv=AllTests TestVariants.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestReqAckVariants.tla
+
+```sh
+$ apalache-mc check --features=rows TestReqAckVariants.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
