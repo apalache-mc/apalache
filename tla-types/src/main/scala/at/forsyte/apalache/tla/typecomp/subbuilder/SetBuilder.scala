@@ -62,7 +62,7 @@ trait SetBuilder extends UnsafeSetBuilder {
             xEx <- variable
             _ = require(xEx.isInstanceOf[NameEx])
             _ <- markAsBound(xEx)
-            // x is shadowed iff boundAfterX \subseteq usedInS \union boundAfrerP
+            // x is shadowed iff boundAfterX \subseteq usedInS \union boundAfterMapExpr
             boundAfterX <- allBound
             diff = (boundAfterX -- usedInS) -- boundAfterMapExpr
           } yield

@@ -29,6 +29,7 @@ object BuilderUtil {
     (mi.copy(freeNameScope = mi.freeNameScope - elem.asInstanceOf[NameEx].name), ())
   }
 
+  /** Performs shadowing checks for ternary operators which introduce bound variables */
   def boundVarIntroductionTernary(
       rawMethod: (TlaEx, TlaEx, TlaEx) => TlaEx // order: variable, set, expression
     )(variable: TBuilderInstruction,
@@ -51,6 +52,7 @@ object BuilderUtil {
     } else ret
   }
 
+  /** Performs shadowing checks for binary operators which introduce bound variables */
   def boundVarIntroductionBinary(
       rawMethod: (TlaEx, TlaEx) => TlaEx // order: variable, expression
     )(variable: TBuilderInstruction,
