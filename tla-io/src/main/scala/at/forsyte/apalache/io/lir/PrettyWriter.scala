@@ -45,6 +45,24 @@ class PrettyWriter(
   def write(mod: TlaModule, extendedModuleNames: List[String] = List.empty): Unit =
     prettyWriteDoc(modToDoc(mod, extendedModuleNames))
 
+  /**
+   * Pretty-prints the given decl twice: Once as valid TLA, and once (before the TLA expression) in a comment, where
+   * names of NameExs are replaced by their mapping in the NameReplacementMap. The output looks, for example, like this:
+   *
+   * {{{
+   *  (* State0 ==
+   * ♢(x = 11) = FALSE
+   * /\ ♢(x = 11)_unroll = FALSE *)
+   * State0 ==
+   * __temporal_t_1 = FALSE
+   * /\ __temporal_t_1_unroll = FALSE
+   * }}}
+   *
+   * Note that the expression and its comment are the same, but the names for {{{__temporal_t_1}}} and
+   * {{{__temporal_t_1_unroll}}} were substituted.
+   * @see
+   *   NameReplacementMap
+   */
   def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
     val declDoc = declToDoc(decl) <> line <> line
     if (NameReplacementMap.NameReplacementMap.isEmpty) {
@@ -93,8 +111,9 @@ class PrettyWriter(
   }
 
   /**
-   * when resolving names in NameExs, the nameResolver substitutes them by the value that results from applying it to
-   * the name. If no substitution is wanted, use defaultNameResolver
+   * writes a provided ex as a doc. The parent precedence is needed to determine whether and how to wrap with braces.
+   * The nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
+   * wanted, use defaultNameResolver, which always defaults to using the name of the NameEx.
    *
    * @see
    *   defaultNameResolver
@@ -500,6 +519,10 @@ class PrettyWriter(
     }
   }
 
+  /**
+   * Pretty-writes the given decl, while replacing names with the values in the NameReplacementMap. Then, wrap the
+   * result as a comment, since the substituted names might not be valid TLA.
+   */
   def toCommentDoc(decl: TlaDecl): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
