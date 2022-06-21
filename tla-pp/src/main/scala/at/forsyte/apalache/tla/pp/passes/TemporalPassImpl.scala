@@ -49,8 +49,8 @@ class TemporalPassImpl @Inject() (
   def temporalToInvariants(
       module: TlaModule,
       temporalProperties: List[String],
-      init: String,
-      next: String): TlaModule = {
+      initName: String,
+      nextName: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
     val temporalFormulas = temporalProperties
@@ -75,8 +75,8 @@ class TemporalPassImpl @Inject() (
 
       // if init and next don't exist, Apalache should throw already in an earlier pass
       // so it's safe to assume they exist
-      val initDecl = module.declarations.find(_.name == init).get.asInstanceOf[TlaOperDecl]
-      val nextDecl = module.declarations.find(_.name == next).get.asInstanceOf[TlaOperDecl]
+      val initDecl = module.declarations.find(_.name == initName).get.asInstanceOf[TlaOperDecl]
+      val nextDecl = module.declarations.find(_.name == nextName).get.asInstanceOf[TlaOperDecl]
 
       val loopEncoder = new LoopEncoder(tracker)
 
