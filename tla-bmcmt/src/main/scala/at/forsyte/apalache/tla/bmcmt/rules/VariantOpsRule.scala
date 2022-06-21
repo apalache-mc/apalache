@@ -20,7 +20,7 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     symbState.ex match {
       case OperEx(VariantOper.variant, _, _)             => true
       case OperEx(VariantOper.variantGetUnsafe, _, _)    => true
-      case OperEx(VariantOper.variantGetOnly, _, _)      => true
+      case OperEx(VariantOper.`variantUnwrap`, _, _)     => true
       case OperEx(VariantOper.variantGetOrElse, _, _, _) => true
       case _                                             => false
     }
@@ -36,7 +36,7 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // This should work independently of the tag associated with the variant.
         translateVariantGetUnsafe(state, tagName, variantEx)
 
-      case OperEx(VariantOper.variantGetOnly, ValEx(TlaStr(tagName)), variantEx) =>
+      case OperEx(VariantOper.`variantUnwrap`, ValEx(TlaStr(tagName)), variantEx) =>
         // At this point, there is no difference between VariantGetUnsafe and VariantGetOnly.
         // The type checker has to make sure that the variant has only one option.
         assertSingletonVariant(variantEx)

@@ -88,7 +88,7 @@ VariantMatch(__tagName, __variant, __ThenOper(_), __ElseOper(_)) ==
  *
  *   (Str, Tag(a)) => a
  *)
-VariantGetOnly(__tagName, __variant) ==
+VariantUnwrap(__tagName, __variant) ==
     \* default untyped implementation
     IF __variant.tag = __tagName
     THEN __variant.value

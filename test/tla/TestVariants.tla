@@ -11,9 +11,20 @@ Next == TRUE
 
 (* DEFINITIONS *)
 
+\* A variant that belongs to a more general type.
+\*
+\* @type: A(Int) | B({ value: Str });
 VarA == Variant("A", 1)
 
+\* A variant that belongs to a more general type.
+\*
+\* @type: A(Int) | B({ value: Str });
 VarB == Variant("B", [ value |-> "hello" ])
+
+\* A singleton variant, e.g., to be used with a filter.
+\*
+\* @type: C({ value: Str });
+VarC == Variant("C", [ value |-> "world" ])
 
 TestVariant ==
     VarA \in { VarA, VarB }
@@ -22,10 +33,10 @@ TestVariantFilter ==
     \E v \in VariantFilter("B", { VarA, VarB }):
         v.value = "hello"
 
-TestVariantGetOnly ==
-    \* We could just pass "hello", without wrapping it in a record.
+TestVariantUnwrap ==
+    \* We could just pass "world", without wrapping it in a record.
     \* But we want to see how it works with records too.
-    VariantGetOnly("B", VarB) = [ value |-> "hello" ]
+    VariantUnwrap("C", VarC) = [ value |-> "world" ]
 
 TestVariantGetUnsafe ==
     \* The unsafe version gives us only a type guarantee.
@@ -46,7 +57,7 @@ TestVariantMatch ==
 AllTests ==
     /\ TestVariant
     /\ TestVariantFilter
-    /\ TestVariantGetOnly
+    /\ TestVariantUnwrap
     /\ TestVariantGetUnsafe
     /\ TestVariantGetOrElse
     \* Disabled as unsupported by the model checker yet

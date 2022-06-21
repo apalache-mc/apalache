@@ -808,7 +808,7 @@ class ToEtcExpr(
       case OperEx(VariantOper.variantMatch, tag @ _, _, _, _) =>
         throw new TypingInputException(s"The first argument of VariantMatch must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.variantGetOnly, v @ ValEx(TlaStr(tagName)), variantEx) =>
+      case OperEx(VariantOper.variantUnwrap, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
         // (Str, T1a(a)) => a
         val operArgs =
@@ -820,7 +820,7 @@ class ToEtcExpr(
         val opsig = OperT1(operArgs, a)
         mkExRefApp(opsig, Seq(v, variantEx))
 
-      case OperEx(VariantOper.variantGetOnly, tag @ _, _) =>
+      case OperEx(VariantOper.`variantUnwrap`, tag @ _, _) =>
         throw new TypingInputException(s"The first argument of VariantGetOnly must be a string, found: $tag", ex.ID)
 
       case OperEx(VariantOper.variantGetUnsafe, v @ ValEx(TlaStr(tagName)), variantEx) =>

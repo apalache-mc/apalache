@@ -71,7 +71,7 @@ object StandardLibrary {
         ("Variants", "Variant") -> VariantOper.variant,
         ("Variants", "VariantFilter") -> VariantOper.variantFilter,
         ("Variants", "VariantMatch") -> VariantOper.variantMatch,
-        ("Variants", "VariantGetOnly") -> VariantOper.variantGetOnly,
+        ("Variants", "VariantUnwrap") -> VariantOper.variantUnwrap,
         ("Variants", "VariantGetUnsafe") -> VariantOper.variantGetUnsafe,
         ("Variants", "VariantGetOrElse") -> VariantOper.variantGetOrElse,
         // internal modules

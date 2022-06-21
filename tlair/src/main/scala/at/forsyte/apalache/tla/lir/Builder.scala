@@ -727,10 +727,10 @@ class Builder {
    * @return
    *   the value extracted from the variant
    */
-  def variantGetOnly(
+  def variantUnwrap(
       tagName: String,
       variantEx: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.variantGetOnly, str(tagName), variantEx)
+    BuilderOper(VariantOper.variantUnwrap, str(tagName), variantEx)
   }
 
   /**
@@ -864,7 +864,7 @@ class Builder {
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
         VariantOper.variant.name -> VariantOper.variant,
-        VariantOper.variantGetOnly.name -> VariantOper.variantGetOnly,
+        VariantOper.variantUnwrap.name -> VariantOper.variantUnwrap,
         VariantOper.variantGetUnsafe.name -> VariantOper.variantGetUnsafe,
         VariantOper.variantGetOrElse.name -> VariantOper.variantGetOrElse,
         VariantOper.variantMatch.name -> VariantOper.variantMatch,

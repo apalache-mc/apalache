@@ -652,7 +652,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     //   VariantGetOnly("T1a", var)
     val applyMatchOnly =
       OperEx(
-          VariantOper.variantGetOnly,
+          VariantOper.variantUnwrap,
           str("T1a"),
           name("var"),
       )

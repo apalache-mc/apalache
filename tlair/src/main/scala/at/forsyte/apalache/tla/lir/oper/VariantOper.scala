@@ -48,8 +48,8 @@ object VariantOper {
   /**
    * Match a single variant.
    */
-  object variantGetOnly extends VariantOper {
-    override def name: String = "Variants!VariantGetOnly"
+  object variantUnwrap extends VariantOper {
+    override def name: String = "Variants!VariantUnwrap"
 
     override def arity: OperArity = FixedArity(2)
 
