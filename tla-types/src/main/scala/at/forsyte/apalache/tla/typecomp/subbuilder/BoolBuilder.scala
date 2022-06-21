@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.typecomp.subbuilder
 
-import at.forsyte.apalache.tla.lir.NameEx
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeBoolBuilder
-import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, TBuilderScopeException}
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 
 /**
