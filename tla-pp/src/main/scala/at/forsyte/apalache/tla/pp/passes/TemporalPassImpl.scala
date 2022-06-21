@@ -39,7 +39,7 @@ class TemporalPassImpl @Inject() (
       case Some(formulas) =>
         val init = options.get[String]("checker", "init")
         val next = options.get[String]("checker", "next")
-        temporalToInvariants(tlaModule, invariants, init.get, next.get)
+        temporalToInvariants(tlaModule, formulas, init.get, next.get)
     }
 
     writeOut(writerFactory, newModule)
