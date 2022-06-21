@@ -86,7 +86,7 @@ class TableauEncoder(
    */
   def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
 
-    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(formula.body)
+    val (varDecls, preds, formulaEx) = encodeSyntaxTreeInPredicates(formula.body)
 
     // create a new variable that stores whether the formula evaluated to true in the first state
     // this is necessary because a temporal formula on a sequence of states should be satisfied
@@ -97,10 +97,10 @@ class TableauEncoder(
     // __foo_init = [inital evaluation of foo]
     val initExVarEx = builder.eql(
         exVar,
-        builder.useTrustedEx(formulaEx),
+        formulaEx,
     )
 
-    // UNCHANGED << __foo_init >>
+    // UNCHANGED __foo_init
     val nextExVarEx = builder.unchanged(exVar)
 
     (
@@ -127,10 +127,10 @@ class TableauEncoder(
    *         B
    * }}}
    * Assuming A and B do not contain temporal operators, new variables are introduced for all nodes above them, that is
-   * var_BoxAImpliesDiamondB, var_AImpliesDiamondB, var_DiamondB The value of each variable in a given state corresponds
-   * to a commitment whether or not the formula corresponding to this variable holds true at that point in the trace.
-   * For example, if var_DiamondB is true in a state, the spec will ensure that in some future state, B holds (recall
-   * that B holding at some point in the future is the definition of <>B).
+   * var_BoxAImpliesDiamondB, var_AImpliesDiamondB, var_DiamondB. The value of each variable in a given state
+   * corresponds to a commitment whether or not the formula corresponding to this variable holds true at that point in
+   * the trace. For example, if var_DiamondB is true in a state, the spec will ensure that in some future state, B holds
+   * (recall that B holding at some point in the future is the definition of <>B).
    * @return
    */
   def encodeSyntaxTreeInPredicates(curNode: TlaEx): (Seq[TlaVarDecl], PredExs, TBuilderInstruction) = {
@@ -255,7 +255,8 @@ class TableauEncoder(
                 val nodeVarUpdateConditionEx = builder.equiv(
                     nodeVarEx,
                     outerOp(
-                        argExs(0),
+                        // box and diamond have 1 arg, so head will not throw
+                        argExs.head,
                         builder.prime(nodeVarEx),
                     ),
                 )
