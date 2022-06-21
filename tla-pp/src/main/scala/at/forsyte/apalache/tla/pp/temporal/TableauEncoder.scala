@@ -85,7 +85,7 @@ class TableauEncoder(
    */
   def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
 
-    var (varDecls, preds, formulaEx) = encodeSyntaxTreeInPredicates(formula.body)
+    val (varDecls, preds, formulaEx) = encodeSyntaxTreeInPredicates(formula.body)
 
     // create a new variable that stores whether the formula evaluated to true in the first state
     // this is necessary because a temporal formula on a sequence of states should be satisfied
