@@ -1384,6 +1384,144 @@ Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set
 EXITCODE: ERROR (75)
 ```
 
+### check FalseLiveness fails (temporal)
+
+```sh
+$ apalache-mc check --inv=FalseLiveness LongPrefix.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check Liveness succeeds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness LongPrefix.tla
+...
+EXITCODE: OK
+```
+
+### check LongLoops: Liveness succeeds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness LongLoops.tla
+...
+EXITCODE: OK
+```
+
+### check LongLoops: FalseLiveness fails (temporal)
+
+```sh
+$ apalache-mc check --inv=FalseLiveness LongLoops.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check NoLoopsNoProblems succeeds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness NoLoopsNoProblems.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness NoLoopsNoProblems.tla
+...
+EXITCODE: OK
+```
+
+### check ManyBoxes (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness ManyBoxes.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness ManyBoxes.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check ManyDiamonds (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness ManyDiamonds.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness ManyDiamonds.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check DiamondBox (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness DiamondBox.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness DiamondBox.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check BoxDiamond (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness BoxDiamond.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness BoxDiamond.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check NestedTemporalInBool (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness NestedTemporalInBool.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness NestedTemporalInBool.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check LetIn (temporal)
+
+```sh
+$ apalache-mc check --inv=Liveness LetIn.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseLiveness LetIn.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1152
@@ -2956,20 +3094,24 @@ $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 03_OutDesugarerPass.tla
 04_OutInlinePass.json
 04_OutInlinePass.tla
-05_OutPrimingPass.json
-05_OutPrimingPass.tla
-06_OutVCGen.json
-06_OutVCGen.tla
-07_OutPreprocessingPass.json
-07_OutPreprocessingPass.tla
-08_OutTransitionFinderPass.json
-08_OutTransitionFinderPass.tla
-09_OutOptimizationPass.json
-09_OutOptimizationPass.tla
-10_OutAnalysisPass.json
-10_OutAnalysisPass.tla
-11_OutPostTypeCheckerSnowcat.json
-11_OutPostTypeCheckerSnowcat.tla
+05_OutTemporalPass.json
+05_OutTemporalPass.tla
+06_OutInlinePass.json
+06_OutInlinePass.tla
+07_OutPrimingPass.json
+07_OutPrimingPass.tla
+08_OutVCGen.json
+08_OutVCGen.tla
+09_OutPreprocessingPass.json
+09_OutPreprocessingPass.tla
+10_OutTransitionFinderPass.json
+10_OutTransitionFinderPass.tla
+11_OutOptimizationPass.json
+11_OutOptimizationPass.tla
+12_OutAnalysisPass.json
+12_OutAnalysisPass.tla
+13_OutPostTypeCheckerSnowcat.json
+13_OutPostTypeCheckerSnowcat.tla
 detailed.log
 example0.itf.json
 example0.json
@@ -3032,20 +3174,24 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 03_OutDesugarerPass.tla
 04_OutInlinePass.json
 04_OutInlinePass.tla
-05_OutPrimingPass.json
-05_OutPrimingPass.tla
-06_OutVCGen.json
-06_OutVCGen.tla
-07_OutPreprocessingPass.json
-07_OutPreprocessingPass.tla
-08_OutTransitionFinderPass.json
-08_OutTransitionFinderPass.tla
-09_OutOptimizationPass.json
-09_OutOptimizationPass.tla
-10_OutAnalysisPass.json
-10_OutAnalysisPass.tla
-11_OutPostTypeCheckerSnowcat.json
-11_OutPostTypeCheckerSnowcat.tla
+05_OutTemporalPass.json
+05_OutTemporalPass.tla
+06_OutInlinePass.json
+06_OutInlinePass.tla
+07_OutPrimingPass.json
+07_OutPrimingPass.tla
+08_OutVCGen.json
+08_OutVCGen.tla
+09_OutPreprocessingPass.json
+09_OutPreprocessingPass.tla
+10_OutTransitionFinderPass.json
+10_OutTransitionFinderPass.tla
+11_OutOptimizationPass.json
+11_OutOptimizationPass.tla
+12_OutAnalysisPass.json
+12_OutAnalysisPass.tla
+13_OutPostTypeCheckerSnowcat.json
+13_OutPostTypeCheckerSnowcat.tla
 detailed.log
 example0.itf.json
 example0.json
