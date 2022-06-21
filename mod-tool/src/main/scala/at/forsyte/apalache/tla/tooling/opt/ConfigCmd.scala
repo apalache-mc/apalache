@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 // imports from Sany utils
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
+import at.forsyte.apalache.infra.ExitCodes
 
 /**
  * This command initiates the 'config' command line.
@@ -25,10 +26,12 @@ class ConfigCmd extends ApalacheCommand(name = "config", description = "Configur
 
   def run() = {
     logger.info("Configuring Apalache")
-    submitStats.foreach { isEnabled =>
-      if (!configDirExistsOrCreated()) {
-        logger.warn("Unable to update statistics configuration. The other features will keep working.")
-      } else {
+
+    if (!configDirExistsOrCreated()) {
+      logger.warn("Unable to update statistics configuration. The other features will keep working.")
+      Left(ExitCodes.ERROR, "Configuration directory could not be found or created")
+    } else {
+      submitStats.foreach { isEnabled =>
         val statCollector = new ExecutionStatisticsCollector()
         // protect against potential exceptions in the tla2tools code
         if (isEnabled) {
@@ -41,9 +44,8 @@ class ConfigCmd extends ApalacheCommand(name = "config", description = "Configur
           logger.info("This also disabled TLC and TLA+ Toolbox statistics.")
         }
       }
+      Right("Configuration complete")
     }
-
-    Right("Configuration complete")
   }
 
   private def configDirExistsOrCreated(): Boolean = {
