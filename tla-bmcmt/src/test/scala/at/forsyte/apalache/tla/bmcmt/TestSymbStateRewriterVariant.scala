@@ -105,6 +105,17 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
+  test("""VariantGetOnly""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val only = variantGetOnly("Foo", vrt1).as(IntT1)
+    val eq = eql(only, int(33)).as(BoolT1)
+
+    val state = new SymbState(eq, arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
   private def getVariantOptions(tp: CellT): Map[String, TlaType1] = {
     tp match {
       case CellTFrom(VariantT1(RowT1(variantOptions, None))) =>
