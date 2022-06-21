@@ -15,12 +15,14 @@ class MonotypeLanguagePred extends LanguagePred {
     expr match {
       case OperEx(_, args @ _*) =>
         args.foldLeft[PredResult](checkMono(expr.ID, expr.typeTag.asTlaType1())) { case (r, arg) =>
-          r.and(checkMono(arg.ID, arg.typeTag.asTlaType1()))
+          r.and(isExprOk(arg))
         }
 
       case LetInEx(body, decls @ _*) =>
         decls.foldLeft(checkMono(body.ID, body.typeTag.asTlaType1())) { case (r, d) =>
-          r.and(checkMono(d.ID, d.typeTag.asTlaType1()))
+          checkMono(d.ID, d.typeTag.asTlaType1())
+            .and(isExprOk(d.body))
+            .and(r)
         }
 
       case _ => checkMono(expr.ID, expr.typeTag.asTlaType1())
@@ -29,7 +31,9 @@ class MonotypeLanguagePred extends LanguagePred {
 
   override def isModuleOk(mod: TlaModule): PredResult = {
     mod.operDeclarations.foldLeft[PredResult](PredResultOk()) { case (r, d) =>
-      r.and(isExprOk(d.body))
+      isExprOk(d.body)
+        .and(checkMono(d.ID, d.typeTag.asTlaType1()))
+        .and(r)
     }
   }
 
