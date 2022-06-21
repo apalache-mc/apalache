@@ -167,7 +167,7 @@ object UTFPrinter extends Printer {
 
           case TlaFunOper.app    => "%s[%s]".format(opApp(args.head), apply(args.tail.head))
           case TlaFunOper.domain => mkOpApp("DOMAIN %s", args: _*)
-          case TlaFunOper.enum   => "[%s]".format(opAppStrPairs(args, pad(m_mapto), ", "))
+          case TlaFunOper.rec    => "[%s]".format(opAppStrPairs(args, pad(m_mapto), ", "))
           case TlaFunOper.except =>
             "[%s EXCEPT %s]".format(apply(args.head), opAppPattern(args.tail, 2, "![%s] = %s", ", "))
           case TlaFunOper.funDef =>

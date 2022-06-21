@@ -4,7 +4,35 @@
 will submit anonymized statistics to
 `tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
-## Model checker command-line parameters
+Apalache supports several modes of execution. You can run it with the `--help` option,
+to see the complete list of modes and their invocation commands:
+
+```bash
+$ apalache-mc --help
+```
+
+The most important commands are as follows:
+
+ - `parse` reads a TLA+ specification with the SANY parser and flattens it by
+   instantiating all modules. It terminates successfully, if there are no parse
+   errors. The input specification to `parse` may be given in standard TLA+ format, or in the [JSON serialization
+   format][], while the outputs are produced in both formats.
+
+ - `typecheck` performs all of the operations of `parse` and additionally runs the type checker Snowcat to infer
+   the types of all expressions in the parsed specification. It terminates successfully, if there are no type errors.
+
+ - `simulate` performs all of the operations of `typecheck` and additionally runs the model checker in simulation mode, which *randomly* picks a sequence of [actions](https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices) and checks the invariants for the subset of all executions which only admit actions in the selected order. 
+ It terminates successfully, if there are no invariant violations. 
+ This command usually checks randomized symbolic runs much faster than the `check` command.
+
+ - `check` performs all of the operations of `typecheck` and then runs the model checker in bounded model checking mode, which checks invariants for *all executions*, the length of which does not exceed the value specified by the `--length` parameter. 
+   It terminates successfully, if there are no invariant violations.
+
+ - `test` performs all of the operations of `check` in a mode that is designed to [test a single action](https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions).
+
+## 1. Model checker and simulator command-line parameters
+
+### 1.1. Model checker command-line parameters
 
 The model checker can be run as follows:
 
@@ -73,7 +101,25 @@ In case conflicting arguments are passed for the same parameter, the following p
 2. Environment variable value
 3. Configuration file value
 
-### Supplying JVM arguments
+### 1.2. Simulator command-line parameters
+
+The simulator can be run as follows:
+
+```bash
+$ apalache-mc simulate
+    [all-checker-options] [--max-run=NUM] [--save-runs] <myspec>.tla
+```
+
+The arguments are as follows:
+
+* Special parameters:
+
+  - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
+
+  - `--save-runs`: save an example trace for each simulated run, default:
+    `false`
+
+### 1.3. Supplying JVM arguments
 
 You can supply JVM argument to be used when running Apalache by setting the
 environment variable `JVM_ARGS`. For example, to change the JVM heap size from
@@ -97,7 +143,7 @@ To track memory usage with: `jcmd <pid> VM.native_memory summary`, you can set
 JVM_ARGS="-XX:NativeMemoryTracking=summary"
 ```
 
-### Bounded model checking
+### 1.4. Bounded model checking
 
 By default, Apalache performs *bounded model checking*, that is, it encodes a
 symbolic execution of length `k` and a violation of a state invariant in SMT:
@@ -114,13 +160,12 @@ means that the state variables `v` are replaced with their copies `v_i` for the 
 variables `v'` are replaced with their copies
 `v_{i+1}` for the state `i+1`.
 
-#### Bounded model checking is an incomplete technique
+**Bounded model checking is an incomplete technique**. If Apalache finds a bug
+in this symbolic execution (by querying z3), then it reports a counterexample.
+Otherwise, it reports that no bug was found up to the given length. If a bug
+needs a long execution to get revealed, bounded model checking may miss it!
 
-If Apalache finds a bug in this symbolic execution (by querying z3), then it reports a counterexample. Otherwise, it
-reports that no bug was found up to the given length. If a bug needs a long execution to get revealed, bounded model
-checking may miss it!
-
-### Checking an inductive invariant
+### 1.5. Checking an inductive invariant
 
 To check executions of arbitrary lengths, one usually finds a formula that satisfies the two following properties:
 
@@ -165,9 +210,9 @@ It may happen that your inductive invariant `IndInv` is too weak and it
 violates `Safety`. In this case, you would have to add additional constraints to `IndInv`.
 Then you would have to check the queries IndInit, IndNext, and IndProp again.
 
-## Examples
+## 2. Examples
 
-### Checking safety up to 20 steps
+### 2.1. Checking safety up to 20 steps
 
 ```bash
 $ cd test/tla
@@ -177,7 +222,7 @@ $ apalache-mc check --length=20 --inv=Safety y2k_override.tla
 This command checks, whether `Safety` can be violated in 20 specification steps. If `Safety` is not violated, your spec
 might still have a bug that requires a computation longer than 20 steps to manifest.
 
-### Checking an inductive invariant:
+### 2.2. Checking an inductive invariant:
 
 ```bash
 $ cd test/tla
@@ -189,7 +234,7 @@ The first call to apalache checks, whether the initial states satisfy the invari
 whether a single specification step satisfies the invariant, when starting in a state that satisfies the invariant. (
 That is why these invariants are called inductive.)
 
-### Using a constant initializer:
+### 2.3. Using a constant initializer:
 
 ```bash
 $ cd test/tla
@@ -223,7 +268,7 @@ InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
 
 <a name="lookup"></a>
 
-## Module lookup
+## 3. Module lookup
 
 Apalache uses [the SANY parser](https://lamport.azurewebsites.net/tla/tools.html), which is the standard parser of TLC
 and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in
@@ -240,7 +285,7 @@ the [TLA+ Community Modules](https://github.com/tlaplus/CommunityModules).
 
 <a name="detailed"></a>
 
-## Detailed output
+## 4. Detailed output
 
 The location for detailed output is determined by the value of the `out-dir`
 parameter, which specifies the path to a directory into which all Apalache
@@ -291,7 +336,7 @@ intermediate TLA+ files in the run-specific subdirectory:
 
 <a name="parsing"></a>
 
-## Parsing and pretty-printing
+## 5. Parsing and pretty-printing
 
 If you'd like to check that your TLA+ specification is syntactically correct, without running the model checker, you can
 run the following command:
@@ -321,4 +366,6 @@ $ apalache-mc parse --output=result.json <myspec>.tla
 will write the IR to the file `result.json`.
 
 [alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
-[Enumeration of counterexamples]: ./enumeration.md
+[Enumeration of counterexamples]: ./principles/enumeration.md
+[JSON serialization format]: ../adr/005adr-json.html
+reads a TLA+ specification with the SANY parser and flattens it by

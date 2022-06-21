@@ -17,6 +17,8 @@ class SearchState(params: ModelCheckerParams) {
 
   private var _result: CheckerResult = NoError()
   private var _nFoundErrors: Int = 0
+  private var _nRunsLeft: Int =
+    if (params.isRandomSimulation) params.nSimulationRuns else 1
 
   /**
    * Get the number of errors that were found so far (excluding deadlocks and runtime errors).
@@ -25,6 +27,14 @@ class SearchState(params: ModelCheckerParams) {
    *   number of found errors
    */
   def nFoundErrors: Int = _nFoundErrors
+
+  /**
+   * Get the number of simulation runs to explore.
+   *
+   * @return
+   *   the non-negative number of runs.
+   */
+  def nRunsLeft: Int = _nRunsLeft
 
   /**
    * Get the cumulative result of the machine.
@@ -54,7 +64,7 @@ class SearchState(params: ModelCheckerParams) {
    */
   def canContinue: Boolean = {
     _result match {
-      case NoError() => true
+      case NoError() => _nRunsLeft > 0
       case _         => false
     }
   }
@@ -87,6 +97,17 @@ class SearchState(params: ModelCheckerParams) {
 
       case _ =>
         _result = result
+    }
+  }
+
+  /**
+   * Register that one run of a symbolic execution is over.
+   */
+  def onRunDone(): Unit = {
+    _nRunsLeft -= 1
+    if (_nRunsLeft > 0 && _result == ExecutionsTooShort()) {
+      // The current execution (of random simulation) is too short. However, we can try other executions.
+      _result = NoError()
     }
   }
 }

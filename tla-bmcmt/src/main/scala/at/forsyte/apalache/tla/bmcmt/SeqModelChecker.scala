@@ -15,6 +15,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.util.Random
+
 /**
  * A new version of the sequential model checker. This version is using TransitionExecutor, which allows us to freely
  * switch between the online and offline SMT solving.
@@ -52,19 +54,49 @@ class SeqModelChecker[ExecutorContextT](
     checkerInput.rootModule.assumeDeclarations.foreach { d =>
       trex.assertState(d.body)
     }
-    // apply the Init predicate
-    makeStep(isNext = false, checkerInput.initTransitions)
-    // unroll the transition relation
-    while (searchState.canContinue && trex.stepNo <= params.stepsBound) {
-      // apply the Next predicate
-      makeStep(isNext = true, checkerInput.nextTransitions)
+    val constSnapshot = trex.snapshot()
+
+    // Repeat the search: 1 time in the `check` mode, and `params.nSimulationRuns` times in the `simulation` mode.
+    // If the error budget (set with `params.nMaxErrors`) is overrun, terminate immediately.
+    while (searchState.canContinue) {
+      // apply the Init predicate
+      makeStep(isNext = false, checkerInput.initTransitions)
+      // unroll the transition relation
+      while (searchState.canContinue && trex.stepNo <= params.stepsBound) {
+        // apply the Next predicate
+        makeStep(isNext = true, checkerInput.nextTransitions)
+      }
+
+      if (params.saveRuns) {
+        outputExampleRun()
+      }
+
+      searchState.onRunDone()
+      // Continue provided that there are more runs to execute and the error budget is not overrun.
+      if (searchState.canContinue) {
+        trex.recover(constSnapshot)
+        logger.info("----------------------------")
+        logger.info(s"Symbolic runs left: ${searchState.nRunsLeft}")
+      }
     }
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
+    } else {
+      // Output an example in the end of the search.
+      outputExampleRun()
     }
 
     searchState.finalResult
+  }
+
+  // output an example of a run, if the context is satisfiable
+  def outputExampleRun(): Unit = {
+    trex.sat(params.smtTimeoutSec) match {
+      case Some(true) =>
+        listeners.foreach(_.onExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft))
+      case _ => ()
+    }
   }
 
   /**
@@ -82,11 +114,11 @@ class SeqModelChecker[ExecutorContextT](
    * @param errorIndex
    *   Number of found error (likely [[SearchState.nFoundErrors]]).
    */
-  private def notifyCounterexample(
+  private def notifyOnError(
       rootModule: TlaModule,
       trace: DecodedExecution,
       invViolated: TlaEx,
-      errorIndex: Int) = {
+      errorIndex: Int): Unit = {
     listeners.foreach(_.onCounterexample(rootModule, trace, invViolated, errorIndex))
   }
 
@@ -106,7 +138,7 @@ class SeqModelChecker[ExecutorContextT](
 
         case Some(false) =>
           if (trex.sat(0).contains(true)) {
-            notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
+            notifyOnError(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
                 searchState.nFoundErrors)
             logger.error("Found a deadlock.")
           } else {
@@ -170,13 +202,17 @@ class SeqModelChecker[ExecutorContextT](
       newIndices
     }
 
-    for ((tr, no) <- transitions.zipWithIndex) {
+    // in case we do random simulation, shuffle the indices and stop at the first enabled transition
+    val transitionIndices =
+      if (params.isRandomSimulation) Random.shuffle(transitions.indices.toList) else transitions.indices
+
+    for (no <- transitionIndices) {
       var snapshot: Option[SnapshotT] = None
       if (params.discardDisabled) {
         // save the context, unless the transitions are not checked
         snapshot = Some(trex.snapshot())
       }
-      val translatedOk = trex.prepareTransition(no, tr)
+      val translatedOk = trex.prepareTransition(no, transitions(no))
       if (translatedOk) {
         val transitionInvs = addMaybeInvariants(no)
         val transitionActionInvs = addMaybeActionInvariants(no)
@@ -213,6 +249,16 @@ class SeqModelChecker[ExecutorContextT](
                 }
               }
 
+              if (params.isRandomSimulation) {
+                // When random simulation is enabled, we need only one enabled transition.
+                // recover from the snapshot
+                trex.recover(snapshot.get)
+                // pick one transition
+                logger.info(s"Step ${trex.stepNo}: randomly picked transition $no")
+                trex.pickTransition()
+                return (maybeInvariantNos, maybeActionInvariantNos)
+              }
+
             case Some(false) =>
               // recover the transition before the transition was prepared
               logger.info(s"Step ${trex.stepNo}: Transition #$no is disabled")
@@ -240,7 +286,7 @@ class SeqModelChecker[ExecutorContextT](
     if (trex.preparedTransitionNumbers.isEmpty) {
       if (params.checkForDeadlocks) {
         if (trex.sat(0).contains(true)) {
-          notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
+          notifyOnError(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
               searchState.nFoundErrors)
           logger.error("Found a deadlock.")
         } else {
@@ -310,7 +356,7 @@ class SeqModelChecker[ExecutorContextT](
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
               searchState.onResult(Error(1))
-              notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), notInv, searchState.nFoundErrors)
+              notifyOnError(checkerInput.rootModule, trex.decodedExecution(), notInv, searchState.nFoundErrors)
               val msg = "State %d: %s invariant %s violated.".format(stateNo, kind, invNo)
               logger.error(msg)
               excludePathView()
@@ -355,8 +401,7 @@ class SeqModelChecker[ExecutorContextT](
         trex.sat(params.smtTimeoutSec) match {
           case Some(true) =>
             searchState.onResult(Error(1))
-            notifyCounterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp,
-                searchState.nFoundErrors)
+            notifyOnError(checkerInput.rootModule, trex.decodedExecution(), traceInvApp, searchState.nFoundErrors)
             val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)
             logger.error(msg)
             excludePathView()
@@ -385,7 +430,7 @@ class SeqModelChecker[ExecutorContextT](
       val ctorArgs = b.toMap.flatMap { case (key, value) =>
         List(ValEx(TlaStr(key)), value.toNameEx)
       }
-      OperEx(TlaFunOper.`enum`, ctorArgs.toList: _*)(Typed(stateType))
+      OperEx(TlaFunOper.rec, ctorArgs.toList: _*)(Typed(stateType))
     }
 
     // construct a history sequence

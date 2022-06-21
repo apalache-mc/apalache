@@ -55,6 +55,11 @@ trait IrGenerators extends TlaType1Gen {
   val maxDeclsPerModule: Int = 10
 
   /**
+   * When false, generated expressions are never Untyped. When true, they may be Untyped or have a type.
+   */
+  val allowUntypedExpressions: Boolean = true
+
+  /**
    * Fundamental operators (`TlaOper._`)
    */
   val simpleOperators = List(TlaOper.eq, TlaOper.ne, TlaOper.chooseBounded, TlaOper.apply)
@@ -82,7 +87,7 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Function operators (`TlaFunOper._`)
    */
-  val functionOperators = List(TlaFunOper.enum, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef,
+  val functionOperators = List(TlaFunOper.rec, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef,
       TlaFunOper.recFunDef, TlaFunOper.recFunRef, TlaFunOper.except)
 
   /**
@@ -105,7 +110,7 @@ trait IrGenerators extends TlaType1Gen {
    */
   def genTypeTag: Gen[TypeTag] = for {
     tp <- genType1
-    tt <- oneOf(Untyped, Typed(tp))
+    tt <- oneOf(if (allowUntypedExpressions) Seq(Untyped, Typed(tp)) else Seq(Typed(tp)))
   } yield tt
 
   /**

@@ -64,7 +64,7 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
       .parse("""  @type: (Int, Int) -> Set(Int) ;""")
       .map(a => assert(expected == a))
       .swap
-      .map(r => "Unexpected parser outcome: " + r)
+      .map(r => fail("Unexpected parser outcome: " + r))
   }
 
   test("test on multiline input") {
@@ -84,7 +84,7 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
       .parse(text)
       .map(a => assert(expected == a))
       .swap
-      .map(r => "Unexpected parser outcome: " + r)
+      .map(r => fail("Unexpected parser outcome: " + r))
   }
 
   test("regression") {
@@ -108,6 +108,23 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
     AnnotationParser
       .parse(text)
       .map(r => fail("Expected a failure. Found: " + r))
+  }
+
+  test("parse variants in type aliases") {
+    val extractedText =
+      """MESSAGE =""" + "\n" + """  Req({ ask: Int })      """ + "\n" + """        | Ack({ success: Bool })"""
+    val text = s"@typeAlias: $extractedText;"
+
+    val expected =
+      Annotation(
+          "typeAlias",
+          AnnotationStr(""" MESSAGE = Req({ ask: Int }) | Ack({ success: Bool })"""),
+      )
+    AnnotationParser
+      .parse(text)
+      .map(a => assert(expected == a))
+      .swap
+      .map(r => fail("Unexpected parser outcome: " + r))
   }
 
   test("multiple annotations as in unit tests") {
