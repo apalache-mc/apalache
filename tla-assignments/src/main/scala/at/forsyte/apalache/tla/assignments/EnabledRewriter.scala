@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -157,14 +158,15 @@ class EnabledRewriter(
    * @param varDecls:
    */
   private def transformEnabled(ex: TlaEx, varDecls: Seq[TlaVarDecl], operDecls: Seq[TlaOperDecl]): TlaEx = {
-    val vars = varDecls.map(_.name)
+    val nonTemporalVars = varDecls.map(_.name).filterNot(TemporalAuxVarStore.store.contains(_))
+    print(nonTemporalVars)
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
     val constSimplifier = new ConstSimplifier(tracker)
     val operMap = BodyMapFactory.makeFromDecls(operDecls)
 
     // splits the sequence into symbolic transitions.
     // notably, afterwards it is possible to differentiate between assignments (x' := 5) and conditionals (x' = 5)
-    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, ex, operMap)
+    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(nonTemporalVars.toSet, ex, operMap)
 
     val transitionsWithoutAssignments = transitionPairs
       .map(symbTrans => {

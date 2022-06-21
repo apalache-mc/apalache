@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
 
 /**
  * A class for adding loop logic to a TLA Module: An extra variable InLoop is added, which, in each step, can
@@ -231,6 +232,8 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         case next.name => newNext
         case _         => decl
       })
+
+    TemporalAuxVarStore.store = TemporalAuxVarStore.store ++ loopVariables.map(_.name).toSet + inLoopDecl.name
 
     new ModWithPreds(new TlaModule(module.name, (loopVariables :+ inLoopDecl) ++ (newDeclarations :+ loopOk)), newInit,
         newNext, loopOk)

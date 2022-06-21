@@ -9,7 +9,8 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
-import at.forsyte.apalache.io.lir.NameReplacementMap.NameReplacementMap
+import at.forsyte.apalache.tla.lir.io.NameReplacementMap.NameReplacementMap
+import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -43,6 +44,8 @@ class TableauEncoder(
     val (varDeclSeqs, predsSeq, exVarDecls) = formulas.map(singleTemporalToInvariant).unzip3
     val varDecls = varDeclSeqs.flatten
     val preds = predsSeq.foldLeft(PredExs())(_ ++ _)
+
+    TemporalAuxVarStore.store = TemporalAuxVarStore.store ++ varDecls.map(_.name).toSet
 
     // update init
     val newInit = andInDecl(builder.and(preds.initExs: _*), modWithPreds.init, tracker)
