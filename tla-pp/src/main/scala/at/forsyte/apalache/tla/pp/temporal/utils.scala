@@ -4,59 +4,32 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
-import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-
-object ScopedBuilderExtensions {
-  implicit class ScopedBuilderExtension(val builder: ScopedBuilder) {
-    def primeVar(varDecl: TlaVarDecl): TBuilderInstruction = {
-      builder.prime(declAsNameEx(varDecl))
-    }
-
-    def declAsNameEx(decl: TlaDecl): TBuilderInstruction = {
-      builder.name(decl.name, decl.typeTag.asTlaType1())
-    }
-  }
-}
 
 /**
  * A convenience class storing a module, together with the init, next and loopOK predicates of that module. Useful to
  * avoid re-finding these predicates.
  */
-class ModWithPreds(
+case class ModWithPreds(
     val module: TlaModule,
     val init: TlaOperDecl,
     val next: TlaOperDecl,
-    val loopOK: TlaOperDecl) {
+    val loopOK: TlaOperDecl) {}
 
-  def setPredicates(newInit: TlaOperDecl, newNext: TlaOperDecl, newLoopOK: TlaOperDecl): ModWithPreds = {
-    val newDeclarations = module.declarations.map(decl =>
-      decl.name match {
-        case init.name   => newInit
-        case next.name   => newNext
-        case loopOK.name => newLoopOK
-        case _           => decl
-      })
-    val newModule = new TlaModule(module.name, newDeclarations)
-    new ModWithPreds(newModule, newInit, newNext, newLoopOK)
-  }
+/**
+ * A convenience class for packing conjuncts that make up the init, next and loopOK predicates. Useful for collecting
+ * these expressions without adding them to the predicates one by one, to later add them all at once.
+ */
+case class PredExs(
+    val initExs: Seq[TBuilderInstruction] = Seq.empty,
+    val nextExs: Seq[TBuilderInstruction] = Seq.empty,
+    val loopOKExs: Seq[TBuilderInstruction] = Seq.empty) {
 
-  def setModule(newModule: TlaModule): ModWithPreds = {
-    new ModWithPreds(newModule, init, next, loopOK)
-  }
-
-  def prependDecl(decl: TlaDecl): ModWithPreds = {
-    val newDecls = decl +: module.declarations
-    val newModule = new TlaModule(module.name, newDecls)
-    setModule(newModule)
-  }
-
-  /**
-   * Replaces all instances of oldDecl with newDecl
-   */
-  def replaceDeclInMod(oldDecl: TlaDecl, newDecl: TlaDecl): ModWithPreds = {
-    val newDeclarations = module.declarations.map(decl => if (decl.name == oldDecl.name) newDecl else decl)
-    val newModule = new TlaModule(module.name, newDeclarations)
-    new ModWithPreds(newModule, init, next, loopOK)
+  def ++(that: PredExs): PredExs = {
+    PredExs(
+        this.initExs ++ that.initExs,
+        this.nextExs ++ that.nextExs,
+        this.loopOKExs ++ that.loopOKExs,
+    )
   }
 }
 
@@ -71,16 +44,14 @@ object DeclUtils {
    * Takes decl, ex and returns newDecl with the same name as decl, with its body extended like this: newDecl == decl /\
    * ex
    */
-  def conjunctExToOperDecl(ex: TlaEx, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
-    new TlaOperDecl(
-        decl.name,
-        decl.formalParams,
-        Flatten(tracker)(Typed(BoolT1))(
-            builder.and(
-                builder.useTrustedEx(decl.body),
-                builder.useTrustedEx(ex),
-            )
-        ),
-    )(decl.typeTag)
+  def andInDecl(ex: TBuilderInstruction, decl: TlaOperDecl, tracker: TransformationTracker): TlaOperDecl = {
+    val newBody =
+      Flatten(tracker)(Typed(BoolT1))(
+          builder.and(
+              builder.useTrustedEx(decl.body),
+              ex,
+          )
+      )
+    decl.copy(body = newBody)
   }
 }

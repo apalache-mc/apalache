@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.tooling.opt._
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
+import at.forsyte.apalache.shai
 import com.google.inject.{Guice, Injector}
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.configuration2.builder.fluent.Configurations
@@ -99,6 +100,7 @@ object Tool extends LazyLogging {
       .withCommands(
           new ParseCmd,
           new CheckCmd,
+          new SimulateCmd,
           new TypeCheckCmd,
           new TestCmd,
           new ConfigCmd,
@@ -125,6 +127,10 @@ object Tool extends LazyLogging {
               cmd match {
                 case parse: ParseCmd =>
                   runForModule(runParse, new ParserModule, parse)
+
+                case simulate: SimulateCmd =>
+                  // simulation is just a special case of checking, which has additional parameters passed via SimulateCmd
+                  runForModule(runCheck, new CheckerModule, simulate)
 
                 case check: CheckCmd =>
                   runForModule(runCheck, new CheckerModule, check)
@@ -245,6 +251,16 @@ object Tool extends LazyLogging {
     var tuning =
       if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()
     tuning = overrideProperties(tuning, check.tuningOptions)
+
+    check match {
+      case sim: SimulateCmd =>
+        // propagate the simulator options to the tuning options, so the model checker can easily pick them
+        tuning += "search.simulation" -> "true"
+        tuning += "search.simulation.maxRun" -> sim.maxRun.toString
+        tuning += "search.simulation.saveRuns" -> sim.saveRuns.toString
+
+      case _ => ()
+    }
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.options.set("general.tuning", tuning)
@@ -308,7 +324,7 @@ object Tool extends LazyLogging {
     runAndExit(
         executor,
         _ => "No example found",
-        "Checker has found an example. Check counterexample.tla.",
+        "Found a violation of the postcondition. Check violation.tla.",
     )
   }
 
@@ -333,13 +349,14 @@ object Tool extends LazyLogging {
   }
 
   private def runServer(executor: PassChainExecutor, server: ServerCmd): Int = {
-    logger.info("Running server...")
+    logger.info("Starting server...")
 
     // NOTE Must go after all other options are set due to side-effecting
-    // behavior of current OutmputManager configuration
+    // behavior of current OutputManager configuration
     setCommonOptions(server, executor.options)
-    logger.info("Server mode is not yet implemented!")
-    ExitCodes.ERROR
+
+    shai.v1.RpcServer.main(Array())
+    ExitCodes.OK
   }
 
   private def runConstrain(executor: PassChainExecutor, constrain: TranspileCmd): Int = {

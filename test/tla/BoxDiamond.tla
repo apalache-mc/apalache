@@ -1,6 +1,6 @@
 ---- MODULE BoxDiamond ----
 
-\* Tests behaviour when a diamond operator is followed by a box operator
+\* Tests behaviour when a box operator is followed by a diamond operator
 
 EXTENDS Integers
 

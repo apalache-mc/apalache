@@ -100,3 +100,4 @@
 - [ADR-016: ReTLA: Relational TLA](./adr/016adr-retla.md)
 - [PDR-017: Checking temporal properties](./adr/017pdr-temporal.md)
 - [ADR-018: Inlining in Apalache](./adr/018adr-inlining.md)
+- [ADR-020: Improving membership in arenas](./adr/020adr-arenas.md)
