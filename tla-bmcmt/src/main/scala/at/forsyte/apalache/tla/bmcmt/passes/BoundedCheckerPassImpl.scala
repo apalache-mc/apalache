@@ -11,10 +11,12 @@ import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
-import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, KeraLanguagePred}
+import at.forsyte.apalache.tla.lir.transformations.standard.{
+  IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred,
+}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -36,9 +38,8 @@ class BoundedCheckerPassImpl @Inject() (
   override def name: String = "BoundedChecker"
 
   override def execute(module: TlaModule): PassResult = {
-    for (decl <- module.operDeclarations) {
-      LanguageWatchdog(KeraLanguagePred()).check(decl.body)
-    }
+    LanguageWatchdog(KeraLanguagePred()).check(module)
+    LanguageWatchdog(MonotypeLanguagePred()).check(module)
 
     val initTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
     val nextTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
