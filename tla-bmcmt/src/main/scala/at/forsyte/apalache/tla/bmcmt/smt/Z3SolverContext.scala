@@ -570,32 +570,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   private def getOrMkCellDefaultValue(cellSort: Sort, isInfiniteSet: Boolean = false): ExprSort = {
-  private def mkCellElemSort(cellType: CellT): Sort = {
-    cellType match {
-      case CellTFrom(BoolT1) =>
-        z3context.getBoolSort
-
-      case CellTFrom(IntT1) =>
-        z3context.getIntSort
-
-      case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
-        mkCellElemSort(CellTFrom(elemType))
-
-      case PowSetT(domType) if encoding == arraysEncoding =>
-        mkCellElemSort(CellTFrom(domType))
-
-      case FinFunSetT(argType, cdmType) if encoding == arraysEncoding =>
-        mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
-
-      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
-        z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
-
-      case _ =>
-        z3context.mkUninterpretedSort("Cell_" + cellType.signature)
-    }
-  }
-
-  private def getOrMkCellDefaultValue(cellSort: Sort): ExprSort = {
     val sig = "Cell_" + cellSort
     val sort = cellDefaults.get(sig)
     if (sort.isDefined) {
@@ -624,6 +598,31 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       cellDefaults += (sig -> (newDefault.asInstanceOf[ExprSort], level))
       newDefault.asInstanceOf[ExprSort]
+    }
+  }
+
+  private def mkCellElemSort(cellType: CellT): Sort = {
+    cellType match {
+      case CellTFrom(BoolT1) =>
+        z3context.getBoolSort
+
+      case CellTFrom(IntT1) =>
+        z3context.getIntSort
+
+      case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+        mkCellElemSort(CellTFrom(elemType))
+
+      case PowSetT(domType) if encoding == arraysEncoding =>
+        mkCellElemSort(CellTFrom(domType))
+
+      case FinFunSetT(argType, cdmType) if encoding == arraysEncoding =>
+        mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
+
+      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+        z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
+
+      case _ =>
+        z3context.mkUninterpretedSort("Cell_" + cellType.signature)
     }
   }
 
