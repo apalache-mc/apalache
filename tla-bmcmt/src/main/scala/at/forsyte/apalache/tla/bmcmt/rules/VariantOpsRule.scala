@@ -20,8 +20,9 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     symbState.ex match {
       case OperEx(VariantOper.variant, _, _)             => true
       case OperEx(VariantOper.variantGetUnsafe, _, _)    => true
-      case OperEx(VariantOper.`variantUnwrap`, _, _)     => true
+      case OperEx(VariantOper.variantUnwrap, _, _)       => true
       case OperEx(VariantOper.variantGetOrElse, _, _, _) => true
+      case OperEx(VariantOper.variantFilter, _, _)       => true
       case _                                             => false
     }
   }
@@ -44,6 +45,9 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case OperEx(VariantOper.variantGetOrElse, ValEx(TlaStr(tagName)), variantEx, defaultEx) =>
         translateVariantGetOrElse(state, tagName, variantEx, defaultEx)
+
+      case OperEx(VariantOper.variantFilter, ValEx(TlaStr(tagName)), setEx) =>
+        translateVariantFilter(state, tagName, setEx)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
@@ -89,6 +93,18 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = rewriter.rewriteUntilDone(nextState.setRex(defaultEx))
     val defaultValueCell = nextState.asCell
     variantOps.variantGetOrElse(nextState, variantCell, tagName, defaultValueCell)
+  }
+
+  /**
+   * Translate VariantFilter(tagName, set).
+   */
+  private def translateVariantFilter(
+      state: SymbState,
+      tagName: String,
+      setEx: TlaEx): SymbState = {
+    val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
+    val setCell = nextState.asCell
+    variantOps.variantFilter(nextState, setCell, tagName)
   }
 
   // make sure that the expression is a variant that has only one option

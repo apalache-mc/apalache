@@ -231,6 +231,50 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
   }
 
   /**
+   * Filter a set of variants.
+   *
+   * @param state
+   *   a symbolic state
+   * @param setCell
+   *   the cell that represents the set
+   * @param tagName
+   *   the tag name of the variants to keep
+   * @return
+   *   the largest subset of `setCell` that contains the variants that are tagged with `tagName`
+   */
+  def variantFilter(state: SymbState, setCell: ArenaCell, tagName: String): SymbState = {
+    setCell.cellType.toTlaType1 match {
+      case SetT1(VariantT1(RowT1(opts, None))) if opts.contains(tagName) =>
+        val valueT = opts(tagName)
+        var nextState = state.updateArena(_.appendCell(SetT1(valueT)))
+        val filteredSetCell = nextState.arena.topCell
+        // translate the tag name to a cell
+        nextState = getOrCreateVariantTag(nextState, tagName)
+        val goalTagAsCell = nextState.asCell
+
+        val variants = nextState.arena.getHas(setCell)
+        // get the values unsafely and leave only those values that are produced from the variants tagged with tagName
+        val values = variants.map(v => getUnsafeVariantValue(nextState.arena, v, tagName))
+        nextState = nextState.updateArena(_.appendHas(filteredSetCell, values: _*))
+        variants.zip(values).foreach { case (variant, value) =>
+          val inFiltered = tla.apalacheStoreInSet(value.toNameEx, filteredSetCell.toNameEx).as(BoolT1)
+          val notInFiltered = tla.apalacheStoreNotInSet(value.toNameEx, filteredSetCell.toNameEx).as(BoolT1)
+          val inOriginal = tla.apalacheSelectInSet(variant.toNameEx, setCell.toNameEx).as(BoolT1)
+          val variantTag = getVariantTag(nextState.arena, variant)
+          nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, goalTagAsCell, variantTag)
+          val tagsEq = rewriter.lazyEq.safeEq(goalTagAsCell, variantTag)
+          val storeIf = tla.ite(tla.and(tagsEq, inOriginal).as(BoolT1), inFiltered, notInFiltered).as(BoolT1)
+          rewriter.solverContext.assertGroundExpr(storeIf)
+        }
+
+        nextState.setRex(filteredSetCell.toNameEx)
+
+      case _ =>
+        throw new TypingException(s"Expected a set of variants, one of them being $tagName()", state.ex.ID)
+    }
+  }
+
+  /**
    * Update a record field.
    *
    * @param state

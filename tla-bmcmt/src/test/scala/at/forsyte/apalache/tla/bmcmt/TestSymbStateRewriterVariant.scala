@@ -11,8 +11,6 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
   private val tagSort = "__TAG"
   private val parser = DefaultType1Parser
   private val fieldA = int(33).typed()
-  private val fieldB = bool(false).typed()
-  private val fieldC = str("d").typed()
 
   test("""Variant("Foo", 33)""") { rewriterType: SMTEncoding =>
     val variantT = parser("Foo(Int) | Bar(Bool)")
@@ -110,6 +108,22 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
     val vrt1 = variant("Foo", int(33)).as(variantT)
     val only = variantUnwrap("Foo", vrt1).as(IntT1)
     val eq = eql(only, int(33)).as(BoolT1)
+
+    val state = new SymbState(eq, arena, Binding())
+    val rewriter = create(rewriterType)
+    assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""VariantFilter""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val intSetT = parser("Set(Int)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val vrt2 = variant("Foo", int(10)).as(variantT)
+    val vrt3 = variant("Bar", bool(false)).as(variantT)
+    val variantSetT = SetT1(variantT)
+    val set = enumSet(vrt1, vrt2, vrt3).as(variantSetT)
+    val filtered = variantFilter("Foo", set).as(intSetT)
+    val eq = eql(filtered, enumSet(int(33), int(10)).as(intSetT)).as(BoolT1)
 
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create(rewriterType)
