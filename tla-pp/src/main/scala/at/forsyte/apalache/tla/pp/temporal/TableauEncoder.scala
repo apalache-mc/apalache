@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
-import scala.collection.immutable.HashMap
+import at.forsyte.apalache.io.lir.NameReplacementMap.NameReplacementMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -30,7 +30,6 @@ class TableauEncoder(
     tracker: TransformationTracker)
     extends LazyLogging {
   val levelFinder = new TlaLevelFinder(module)
-  var varNamesToExStrings = new HashMap[String, String]()
 
   private def inBoolSet(element: TBuilderInstruction): TBuilderInstruction = builder.in(element, builder.booleanSet())
 
@@ -152,6 +151,7 @@ class TableauEncoder(
                 "Expected to find no LET-IN expressions. They should have been rewritten by the inliner.")
           case OperEx(oper, args @ _*) =>
             val nodeIdentifier = TableauEncoder.NAME_PREFIX + gen.newName()
+            NameReplacementMap = NameReplacementMap.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
 
             /* create a new variable for this node.
             e.g.
@@ -168,11 +168,11 @@ class TableauEncoder(
              */
             val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
 
+            NameReplacementMap = NameReplacementMap
+              .addOne(nodeLoopVarDecl.name, LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"))
+
             val nodeVarEx = builder.varDeclAsNameEx(nodeVarDecl)
             val nodeLoopVarEx = builder.varDeclAsNameEx(nodeLoopVarDecl)
-
-            varNamesToExStrings = varNamesToExStrings + ((nodeVarDecl.name, curNode.toString().replace("\"", "\'")))
-            varNamesToExStrings = varNamesToExStrings + ((nodeLoopVarDecl.name, curNode.toString().replace("\"", "\'")))
 
             // creates the expressions that should be present for both temporal and non-temporal node variables
             val genericPredExs = createGenericNodeVarExs(nodeVarEx, nodeLoopVarEx)

@@ -49,11 +49,20 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     val mappedStates = state0 :: states.drop(2).map(_._2)
     // construct the root JSON object
     val rootMap: mutable.LinkedHashMap[String, ujson.Value] = mutable.LinkedHashMap()
+
+    val metaInformation: List[(String, ujson.Value)] =
+      List[(String, ujson.Value)](
+          "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+      ) ++ (if (NameReplacementMap.NameReplacementMap.isEmpty)
+              List()
+            else
+              List("variables-to-expressions" -> NameReplacementMap.NameReplacementMap))
+
     rootMap.put("#meta",
         ujson.Obj(
             "format" -> "ITF",
-            "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-            "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+            metaInformation: _*
         ))
     paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
     rootMap.put("vars", varsToJson(rootModule))
