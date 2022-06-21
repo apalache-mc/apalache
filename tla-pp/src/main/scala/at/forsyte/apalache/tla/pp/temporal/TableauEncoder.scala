@@ -34,82 +34,72 @@ class TableauEncoder(
   private def inBoolSet(element: TBuilderInstruction): TBuilderInstruction = builder.in(element, builder.booleanSet())
 
   /**
-   * Encodes each of a sequence of temporal formulas.
-   * @see
-   *   [[encodeFormula]]
+   * Creates PredExs for a given propositional operator application of the form OperEx(oper, argExs)(typeTag). The
+   * nodeVarEx should be the variable for the node in the syntax tree representing the operator application.
    */
-  def temporalsToInvariants(modWithPreds: ModWithPreds, formulas: TlaOperDecl*): TlaModule = {
+  private def createPropositionalOperNodeExs(
+      nodeVarEx: TBuilderInstruction,
+      oper: TlaOper,
+      typeTag: TypeTag,
+      argExs: TlaEx*): PredExs = {
 
-    val (varDeclSeqs, predsSeq, exVarDecls) = formulas.map(singleTemporalToInvariant).unzip3
-    val varDecls = varDeclSeqs.flatten
-    val preds = predsSeq.foldLeft(PredExs())(_ ++ _)
+    /* initialize the variable for this node
+                    e.g. __temporal_curNode = __temporal_A /\ __temporal_B
+     */
+    val nodeVarInitConditionEx =
+      builder.eql(
+          nodeVarEx,
+          builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
+      )
 
-    // update init
-    val newInit = andInDecl(builder.and(preds.initExs: _*), modWithPreds.init, tracker)
-
-    // update next
-    val newNext = andInDecl(builder.and(preds.nextExs: _*), modWithPreds.next, tracker)
-
-    // update loopOK
-    val newLoopOK = andInDecl(builder.and(preds.loopOKExs: _*), modWithPreds.loopOK, tracker)
-    val loopOKopApp = builder.appOp(builder.name(newLoopOK.name, OperT1(Seq.empty, BoolT1)))
-
-    val declarationsWithUpdatedPreds = modWithPreds.module.declarations
-      .map(decl =>
-        decl.name match {
-          case newInit.name   => newInit
-          case newNext.name   => newNext
-          case newLoopOK.name => newLoopOK
-          case _              => decl
-        })
-
-    // replace each formula by formula == loopOK => formulaInitVar
-    // note: this needs to be after the loopOK predicate in the TLA module, since it depends on it
-    // this reuses the name of 'formula' so we don't have to change the invariant in the checker
-    val newFormulas = formulas.zip(exVarDecls).map { case (formula, exVarDecl) =>
-      formula.copy(body = builder.impl(loopOKopApp, builder.varDeclAsNameEx(exVarDecl)))
-    }
-
-    val declarationsWithoutFormulas = declarationsWithUpdatedPreds
-      .filterNot(decl => formulas.exists(formula => formula.name == decl.name))
-
-    // the order of declarations should be safe, but sorting doesn't hurt
-    new DeclarationSorter()(modWithPreds.module.copy(
-            declarations = varDecls ++
-              declarationsWithoutFormulas ++
-              newFormulas
-        ))
-  }
-
-  /**
-   * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
-   */
-  def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
-
-    val (varDecls, preds, formulaEx) = encodeSyntaxTreeInPredicates(formula.body)
-
-    // create a new variable that stores whether the formula evaluated to true in the first state
-    // this is necessary because a temporal formula on a sequence of states should be satisfied
-    // if it holds in the first state, so we need to remember this information
-    val exVarDecl = new TlaVarDecl("__" + formula.name + "_init")(Typed(BoolT1))
-    val exVar = builder.varDeclAsNameEx(exVarDecl)
-
-    // __foo_init = [inital evaluation of foo]
-    val initExVarEx = builder.eql(
-        exVar,
-        formulaEx,
+    /* update the variable for this node
+                    e.g. __temporal_curNode' = __temporal_A' /\ __temporal_B'
+     */
+    val nodeVarUpdateConditionEx = builder.eql(
+        builder.prime(nodeVarEx),
+        builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
     )
 
-    // UNCHANGED __foo_init
-    val nextExVarEx = builder.unchanged(exVar)
+    PredExs(Seq(nodeVarInitConditionEx), Seq(nodeVarUpdateConditionEx))
+  }
 
-    (
-        varDecls :+ exVarDecl,
-        preds ++ PredExs(
-            initExs = Seq(initExVarEx),
-            nextExs = Seq(nextExVarEx),
+  private def createGenericNodeVarExs(
+      nodeVarEx: TBuilderInstruction,
+      loopNodeVarEx: TBuilderInstruction): PredExs = {
+    /* generic initialization for node variable: __temporal_curNode \in BOOLEAN */
+    val nodeVarInitAssignmentEx = inBoolSet(nodeVarEx)
+
+    /* generic update for node variable: __temporal_curNode' \in BOOLEAN */
+    val nodeVarUpdateAssignmentEx = inBoolSet(builder.prime(nodeVarEx))
+
+    /* initialize loop variable: __saved___temporal_curNode = __temporal_curNode
+     */
+    val loopVarInitAssignmentEx = builder.eql(
+        loopNodeVarEx,
+        nodeVarEx,
+    )
+
+    /* generic update for loop variable: __saved___temporal_curNode' = IF (InLoop' = InLoop) THEN __saved___temporal_curNode ELSE __temporal_curNode}}}
+     */
+    val loopVarUpdateAssignmentEx = loopEnc.getLoopVarUpdateEx(nodeVarEx, loopNodeVarEx)
+
+    /* update loopOK
+     */
+    val loopVarLoopOKEx =
+      builder.eql(nodeVarEx, loopNodeVarEx)
+
+    PredExs(
+        Seq(
+            nodeVarInitAssignmentEx,
+            loopVarInitAssignmentEx,
         ),
-        exVarDecl,
+        Seq(
+            nodeVarUpdateAssignmentEx,
+            loopVarUpdateAssignmentEx,
+        ),
+        Seq(
+            loopVarLoopOKEx
+        ),
     )
   }
 
@@ -340,73 +330,83 @@ class TableauEncoder(
   }
 
   /**
-   * Creates PredExs for a given propositional operator application of the form OperEx(oper, argExs)(typeTag). The
-   * nodeVarEx should be the variable for the node in the syntax tree representing the operator application.
+   * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
    */
-  private def createPropositionalOperNodeExs(
-      nodeVarEx: TBuilderInstruction,
-      oper: TlaOper,
-      typeTag: TypeTag,
-      argExs: TlaEx*): PredExs = {
+  def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
 
-    /* initialize the variable for this node
-                    e.g. __temporal_curNode = __temporal_A /\ __temporal_B
-     */
-    val nodeVarInitConditionEx =
-      builder.eql(
-          nodeVarEx,
-          builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
-      )
+    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(formula.body)
 
-    /* update the variable for this node
-                    e.g. __temporal_curNode' = __temporal_A' /\ __temporal_B'
-     */
-    val nodeVarUpdateConditionEx = builder.eql(
-        builder.prime(nodeVarEx),
-        builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
+    // create a new variable that stores whether the formula evaluated to true in the first state
+    // this is necessary because a temporal formula on a sequence of states should be satisfied
+    // if it holds in the first state, so we need to remember this information
+    val exVarDecl = new TlaVarDecl("__" + formula.name + "_init")(Typed(BoolT1))
+    val exVar = builder.varDeclAsNameEx(exVarDecl)
+
+    // __foo_init = [inital evaluation of foo]
+    val initExVarEx = builder.eql(
+        exVar,
+        builder.useTrustedEx(formulaEx),
     )
 
-    PredExs(Seq(nodeVarInitConditionEx), Seq(nodeVarUpdateConditionEx))
+    // UNCHANGED << __foo_init >>
+    val nextExVarEx = builder.unchanged(exVar)
+
+    (
+        varDecls :+ exVarDecl,
+        preds ++ PredExs(
+            initExs = Seq(initExVarEx),
+            nextExs = Seq(nextExVarEx),
+        ),
+        exVarDecl,
+    )
   }
 
-  private def createGenericNodeVarExs(
-      nodeVarEx: TBuilderInstruction,
-      loopNodeVarEx: TBuilderInstruction): PredExs = {
-    /* generic initialization for node variable: __temporal_curNode \in BOOLEAN */
-    val nodeVarInitAssignmentEx = inBoolSet(nodeVarEx)
+  /**
+   * Encodes each of a sequence of temporal formulas.
+   * @see
+   *   [[encodeFormula]]
+   */
+  def temporalsToInvariants(modWithPreds: ModWithPreds, formulas: TlaOperDecl*): TlaModule = {
 
-    /* generic update for node variable: __temporal_curNode' \in BOOLEAN */
-    val nodeVarUpdateAssignmentEx = inBoolSet(builder.prime(nodeVarEx))
+    val (varDeclSeqs, predsSeq, exVarDecls) = formulas.map(singleTemporalToInvariant).unzip3
+    val varDecls = varDeclSeqs.flatten
+    val preds = predsSeq.foldLeft(PredExs())(_ ++ _)
 
-    /* initialize loop variable: __saved___temporal_curNode = __temporal_curNode
-     */
-    val loopVarInitAssignmentEx = builder.eql(
-        loopNodeVarEx,
-        nodeVarEx,
-    )
+    // update init
+    val newInit = andInDecl(builder.and(preds.initExs: _*), modWithPreds.init, tracker)
 
-    /* generic update for loop variable: __saved___temporal_curNode' = IF (InLoop' = InLoop) THEN __saved___temporal_curNode ELSE __temporal_curNode}}}
-     */
-    val loopVarUpdateAssignmentEx = loopEnc.getLoopVarUpdateEx(nodeVarEx, loopNodeVarEx)
+    // update next
+    val newNext = andInDecl(builder.and(preds.nextExs: _*), modWithPreds.next, tracker)
 
-    /* update loopOK
-     */
-    val loopVarLoopOKEx =
-      builder.eql(nodeVarEx, loopNodeVarEx)
+    // update loopOK
+    val newLoopOK = andInDecl(builder.and(preds.loopOKExs: _*), modWithPreds.loopOK, tracker)
+    val loopOKopApp = builder.appOp(builder.name(newLoopOK.name, OperT1(Seq.empty, BoolT1)))
 
-    PredExs(
-        Seq(
-            nodeVarInitAssignmentEx,
-            loopVarInitAssignmentEx,
-        ),
-        Seq(
-            nodeVarUpdateAssignmentEx,
-            loopVarUpdateAssignmentEx,
-        ),
-        Seq(
-            loopVarLoopOKEx
-        ),
-    )
+    val declarationsWithUpdatedPreds = modWithPreds.module.declarations
+      .map(decl =>
+        decl.name match {
+          case newInit.name   => newInit
+          case newNext.name   => newNext
+          case newLoopOK.name => newLoopOK
+          case _              => decl
+        })
+
+    // replace each formula by formula == loopOK => formulaInitVar
+    // note: this needs to be after the loopOK predicate in the TLA module, since it depends on it
+    // this reuses the name of 'formula' so we don't have to change the invariant in the checker
+    val newFormulas = formulas.zip(exVarDecls).map { case (formula, exVarDecl) =>
+      formula.copy(body = builder.impl(loopOKopApp, builder.varDeclAsNameEx(exVarDecl)))
+    }
+
+    val declarationsWithoutFormulas = declarationsWithUpdatedPreds
+      .filterNot(decl => formulas.exists(formula => formula.name == decl.name))
+
+    // the order of declarations should be safe, but sorting doesn't hurt
+    new DeclarationSorter()(modWithPreds.module.copy(
+            declarations = varDecls ++
+              declarationsWithoutFormulas ++
+              newFormulas
+        ))
   }
 
 }
