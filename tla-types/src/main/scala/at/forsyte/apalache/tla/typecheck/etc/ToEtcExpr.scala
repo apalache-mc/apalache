@@ -825,11 +825,12 @@ class ToEtcExpr(
 
       case OperEx(VariantOper.variantGetUnsafe, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
-        // (Str, T1a(a)) => a
+        val b = varPool.fresh
+        // (Str, T1a(a) | b) => a
         val operArgs =
           Seq(
               StrT1,
-              VariantT1(RowT1(tagName -> a)),
+              VariantT1(RowT1(b, tagName -> a)),
           )
 
         val opsig = OperT1(operArgs, a)
@@ -840,11 +841,12 @@ class ToEtcExpr(
 
       case OperEx(VariantOper.variantGetOrElse, v @ ValEx(TlaStr(tagName)), variantEx, defaultEx) =>
         val a = varPool.fresh
-        // (Str, T1a(a), a) => a
+        val b = varPool.fresh
+        // (Str, T1a(a) | b, a) => a
         val operArgs =
           Seq(
               StrT1,
-              VariantT1(RowT1(tagName -> a)),
+              VariantT1(RowT1(b, tagName -> a)),
               a,
           )
 

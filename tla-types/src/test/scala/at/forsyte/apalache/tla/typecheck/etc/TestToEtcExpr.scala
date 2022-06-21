@@ -412,7 +412,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
   }
 
   test("""VariantGetUnsafe("T1a", v)""") {
-    val operType = parser(s"""(Str, T1a(a)) => a""")
+    val operType = parser(s"""(Str, T1a(a) | b) => a""")
     val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"))
     val matchEx = tla.variantGetUnsafe("T1a", tla.name("v"))
     val produced = gen(matchEx)
@@ -420,7 +420,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
   }
 
   test("""VariantGetOrElse("T1a", v, d)""") {
-    val operType = parser(s"""(Str, T1a(a), a) => a""")
+    val operType = parser(s"""(Str, T1a(a) | b, a) => a""")
     val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"), mkUniqName("d"))
     val matchEx = tla.variantGetOrElse("T1a", tla.name("v"), tla.name("d"))
     val produced = gen(matchEx)

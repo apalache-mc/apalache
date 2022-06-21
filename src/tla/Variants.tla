@@ -42,7 +42,7 @@ VariantFilter(__tagName, __S) ==
 
 
 (**
- * NOTE: This operator is not supported by the model checker yet.
+ * WARNING: This operator is not supported by the Apalache model checker yet.
  * We are thinking about a reasonably simple implementation of it.
  *
  * Test the tag of `variant` against the value `tagValue`.
@@ -132,5 +132,5 @@ VariantGetOrElse(__tagName, __variant, __defaultValue) ==
 VariantGetUnsafe(__tagName, __variant) ==
     \* the default untyped implementation
     __variant.value
-         
+
 ===============================================================================

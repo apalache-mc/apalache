@@ -47,8 +47,9 @@ AllTests ==
     /\ TestVariant
     /\ TestVariantFilter
     /\ TestVariantGetOnly
-    /\ TestVariantMatch
     /\ TestVariantGetUnsafe
     /\ TestVariantGetOrElse
+    \* Disabled as unsupported by the model checker yet
+    \*/\ TestVariantMatch
 
 ===============================================================================
