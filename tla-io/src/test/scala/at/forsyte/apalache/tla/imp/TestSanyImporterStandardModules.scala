@@ -648,8 +648,8 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         OperParam("var"),
     )
 
-    // TestVariantGetOnly(var) ==
-    //   VariantGetOnly("T1a", var)
+    // TestVariantUnwrap(var) ==
+    //   VariantUnwrap("T1a", var)
     val applyMatchOnly =
       OperEx(
           VariantOper.variantUnwrap,
@@ -658,7 +658,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
       )
 
     expectDecl(
-        "TestVariantGetOnly",
+        "TestVariantUnwrap",
         applyMatchOnly,
         OperParam("var"),
     )
