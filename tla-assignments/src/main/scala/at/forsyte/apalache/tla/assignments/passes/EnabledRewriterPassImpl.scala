@@ -48,7 +48,7 @@ class EnabledRewriterPassImpl @Inject() (
     Right(newModule)
   }
 
-  override def dependencies = Set()
+  override def dependencies = Set(ModuleProperty.Configured, ModuleProperty.Inlined)
 
-  override def transformations = Set()
+  override def transformations = Set(ModuleProperty.EnabledRewritten)
 }
