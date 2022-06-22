@@ -578,8 +578,8 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |  VariantMatch("T1a", var, ThenOper, ElseOper)
         |
         |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
-        |TestVariantGetOnly(var) ==
-        |  VariantGetOnly("T1a", var)
+        |TestVariantUnwrap(var) ==
+        |  VariantUnwrap("T1a", var)
         |
         |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
         |TestVariantGetUnsafe(var) ==
