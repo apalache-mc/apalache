@@ -43,7 +43,7 @@ We have three possible actions:
 
 Now, we are ready to specify properties we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
-We wan write the property like this:
+We can write the property like this:
 
 ```
 {{#include TrafficLight.tla:prop}}
@@ -163,8 +163,8 @@ We'll go explain the counterexample in the following.
 ## Counterexamples encode traces with a loop
 
 First, it's important to know that counterexamples to temporal properties are in general traces with a loop.
-A loop is a subtrace that starts and ends with the same state. A trace with a loop describes
-a possible infinite execution that repeats the loop forever.
+A loop is a partial trace that starts and ends with the same state. 
+A trace containing a loop describes a possible infinite execution that repeats the loop forever.
 
 For example, what is a trace that is a counterexample to the property `♢isGreen`?
 It's an execution that loops without ever finding a state that satisfies `isGreen`.
@@ -242,7 +242,7 @@ It is also clear why this trace violates the property:
 `requestedGreen` holds in state 1, but `isGreen` never holds,
 so in state 1 the property `requestedGreen => <>isGreen` is violated.
 
-## Auxiliary variables encode subformula evaluations along the trace
+## Auxiliary variables encode evaluations of subformulas along the trace
 
 Next, let us discuss the other auxiliary variables that are introduced by Apalache to check the temporal property.
 These extra variables correspond to parts of the temporal property we want to check.
@@ -261,7 +261,7 @@ These are the following variables with their valuations in state 0:
 ```
 There are three groups of variables: those that look like formulas, e.g. `☐(requestedGreen ⇒ ♢isGreen)`,
 those that look like formulas and end with `_unroll`,
-e.g. , and the variable `RequestWillBeFulfilled_init`.
+e.g., and the variable `RequestWillBeFulfilled_init`.
 
 Let's focus on the non-`_unroll` variables that look like formulas
 first.
@@ -290,7 +290,7 @@ there is an auxiliary variable. And as mentioned before, the value of
 the variable in a state tells us whether from that state, the subformula is true. In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
 
 What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
-For example,  `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll variable for the
+For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable for the
 leading box operator. These are necessary because to know whether a formula like
 `[]isGreen` holds in the last state of the loop, we need to know whether
 `isGreen` holds in all states of the loop. However, when we are in the last state of the loop,
