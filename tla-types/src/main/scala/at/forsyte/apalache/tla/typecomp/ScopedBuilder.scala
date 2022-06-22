@@ -219,4 +219,11 @@ class ScopedBuilder
     funDef(e, tuple(elems: _*), times(sets: _*))
   }
 
+  /**
+   * A name expression referring to the TlaVarDecl
+   */
+  def varDeclAsNameEx(decl: TlaVarDecl): TBuilderInstruction = {
+    name(decl.name, decl.typeTag.asTlaType1())
+  }
+
 }

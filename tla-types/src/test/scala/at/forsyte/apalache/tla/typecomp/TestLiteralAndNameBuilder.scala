@@ -48,7 +48,7 @@ class TestLiteralAndNameBuilder extends BuilderTest {
         _ <- xInt
         _ <- xBool
       } yield ()
-      both.run(TBuilderContext(Map.empty))
+      both.run(TBuilderContext.empty)
     }
 
   }

@@ -175,7 +175,7 @@ has a finite diameter (more specifically, a diameter of 6), because:
   1. for any \\(k \ge 6\\), \\(r(k) = r(6) = R\\)
 
 ### Invariants
-Much like `Init`, an invariant operator `Inv` defines a predicate. However, it is not, in general, the case that `Inv` defines a predicate over `S`. There are different cases we can consider, discussed in more detail [here](../apalache/invariants.md). For the purposes of this document, we focus on _state invariants_, i.e. operators which use only unprimed variables and no temporal- or trace- operators. A state invariant operator `Inv` defines a predicate \\(I\\) over \\(S\\).
+Much like `Init`, an invariant operator `Inv` defines a predicate. However, it is not, in general, the case that `Inv` defines a predicate over `S`. There are different cases we can consider, discussed in more detail [here](../apalache/principles/invariants.md). For the purposes of this document, we focus on _state invariants_, i.e. operators which use only unprimed variables and no temporal- or trace- operators. A state invariant operator `Inv` defines a predicate \\(I\\) over \\(S\\).
 We say that the \\(I\\) is an _invariant_ in the transition system, if \\(R \subseteq I\\), that is, for every reachable state \\(s_r \in R\\), \\(I(s_r)\\) holds true. If \\(R \setminus I\\) is nonempty (i.e., there exists a state \\(s_r \in R\\), such that \\(\neg I(s_r)\\)), we refer to elements of \\(R \setminus I\\) as _witnesses_ to invariant violation.
 
 ### Goals of model checking
