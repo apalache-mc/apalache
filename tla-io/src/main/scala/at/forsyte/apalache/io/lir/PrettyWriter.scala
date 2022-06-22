@@ -32,8 +32,6 @@ class PrettyWriter(
     extends PrettyPrinter with TlaWriter {
   override val defaultIndent: Int = layout.indent
 
-  val defaultNameResolver = (x: String) => x
-
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
   // when printing a recursive function, this variable contains its name
   private var recFunName: String = REC_FUN_UNDEFINED
@@ -47,15 +45,27 @@ class PrettyWriter(
 
   /**
    * Pretty-prints the given decl twice: Once as valid TLA, and once (before the TLA expression) in a comment, where
-   * names of NameExs are replaced by their mapping in the NameReplacementMap. The output looks, for example, like this:
+   * names of NameExs are replaced by their mapping in the nameReplacementMap. The output looks, for example, like this:
    *
    * {{{
    *  (* State0 ==
-   * ♢(x = 11) = FALSE
+   *    ♢(x = 11) = FALSE
    * /\ ♢(x = 11)_unroll = FALSE *)
    * State0 ==
-   * __temporal_t_1 = FALSE
+   *    __temporal_t_1 = FALSE
    * /\ __temporal_t_1_unroll = FALSE
+   * }}}
+   *
+   * Here, the NameReplacementMap used was
+   * {{{
+   *  "__temporal_t_1" -> "♢(x = 11)",
+   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
+   * }}}
+   *
+   * Here, the nameReplacementMap used was
+   * {{{
+   *  "__temporal_t_1" -> "♢(x = 11)",
+   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
    * }}}
    *
    * Note that the expression and its comment are the same, but the names for {{{__temporal_t_1}}} and
@@ -65,7 +75,7 @@ class PrettyWriter(
    */
   def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
     val declDoc = declToDoc(decl) <> line <> line
-    if (NameReplacementMap.NameReplacementMap.isEmpty) {
+    if (NameReplacementMap.store.isEmpty) {
       prettyWriteDoc(declDoc)
     } else {
       val declComment = toCommentDoc(decl)
@@ -78,7 +88,8 @@ class PrettyWriter(
     prettyWriteDoc(declToDoc(decl) <> line <> line)
   }
 
-  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, (x: String) => x))
+  private def identity(x: String): String = x
+  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, identity))
 
   def writeComment(commentStr: String): Unit = {
     prettyWriteDoc(wrapWithComment(commentStr) <> line)
@@ -111,12 +122,9 @@ class PrettyWriter(
   }
 
   /**
-   * writes a provided ex as a doc. The parent precedence is needed to determine whether and how to wrap with braces.
-   * The nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
-   * wanted, use defaultNameResolver, which always defaults to using the name of the NameEx.
-   *
-   * @see
-   *   defaultNameResolver
+   * Writes the provided expr as a doc. parentPrecedence determines whether and how to wrap expressions with braces.
+   * nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
+   * wanted, use (x: String) => x.
    */
   def exToDoc(
       parentPrecedence: (Int, Int),
@@ -526,7 +534,7 @@ class PrettyWriter(
   def toCommentDoc(decl: TlaDecl): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
-          NameReplacementMap.NameReplacementMap.getOrElse(x, x)
+          NameReplacementMap.store.getOrElse(x, x)
         }))
   }
 
