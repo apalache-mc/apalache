@@ -12,7 +12,6 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
-import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -24,20 +23,6 @@ class EnabledRewriter(
     tracker: TransformationTracker,
     sourceStore: SourceStore,
     changeListener: ChangeListener) {
-
-  private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
-    ex match {
-      case OperEx(oper, args @ _*) =>
-        oper match {
-          case ApalacheOper.assign =>
-            OperEx(TlaOper.eq, args: _*)(ex.typeTag)
-          case _ =>
-            OperEx(oper, args.map(removeAssignmentsFromExpression): _*)(ex.typeTag)
-        }
-      case _ =>
-        ex
-    }
-  }
 
   /**
    * Removes the assignments x' := foo from an expression by replacing them with TRUE
@@ -198,8 +183,7 @@ class EnabledRewriter(
 
         // simplify the expression, since many terms become trivial after replacement:
         // e.g. TRUE /\ TRUE /\ (1 = 2 => 2 > 1) becomes TRUE
-        val withoutAssignments = rewriteAssignmentsAsEquality(modifiedEx)
-        constSimplifier(withoutAssignments)
+        constSimplifier(modifiedEx)
       })
 
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
