@@ -52,7 +52,6 @@ trait SetBuilder extends UnsafeSetBuilder {
     for {
       mapExpr <- e
       boundAfterMapExpr <- allBound // xi may not appear as bound in mapExpr
-      _ = {}
       pairs <- varSetPairs.foldLeft(Seq.empty[(TlaEx, TlaEx)].point[TBuilderInternalState]) {
         case (cmp, (variable, set)) =>
           for {
@@ -62,11 +61,10 @@ trait SetBuilder extends UnsafeSetBuilder {
             xEx <- variable
             _ = require(xEx.isInstanceOf[NameEx])
             _ <- markAsBound(xEx)
-            // x is shadowed iff boundAfterX \subseteq usedInS \union boundAfterMapExpr
+            // xi is shadowed iff boundAfterX \subseteq usedInS \union boundAfterMapExpr
             boundAfterX <- allBound
-            diff = (boundAfterX -- usedInS) -- boundAfterMapExpr
           } yield
-            if (diff.isEmpty) {
+            if (boundAfterX.subsetOf(usedInS.union(boundAfterMapExpr))) {
               val name = xEx.asInstanceOf[NameEx].name // require would have already thrown if not NameEx
               throw new TBuilderScopeException(s"Variable $name is shadowed in $mapExpr or $setEx.")
             } else seq :+ (xEx, setEx)

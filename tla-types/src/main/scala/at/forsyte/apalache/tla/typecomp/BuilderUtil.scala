@@ -29,44 +29,49 @@ object BuilderUtil {
     (mi.copy(freeNameScope = mi.freeNameScope - elem.asInstanceOf[NameEx].name), ())
   }
 
-  /** Performs shadowing checks for ternary operators which introduce bound variables */
+  /**
+   * Some (ternary) operators introduce bound variables (e.g. choose, exists, forall). This method constructs the
+   * expressions associated with the operator, and additionally performs shadowing checks and bound-variable tagging.
+   */
   def boundVarIntroductionTernary(
-      rawMethod: (TlaEx, TlaEx, TlaEx) => TlaEx // order: variable, set, expression
+      rawMethod: (TlaEx, TlaEx, TlaEx) => TlaEx // argument order: (variable, set, expression)
     )(variable: TBuilderInstruction,
       set: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
     setEx <- set
-    usedInSet <- allUsed // x may not appear as bound or free in set
+    usedInSet <- allUsed // variable may not appear as bound or free in set
     exprEx <- expr
-    boundAfterExpr <- allBound // x may not appear as bound in expr
+    boundAfterExpr <- allBound // variable may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
     // variable is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfrerExpr
     boundAfterVar <- allBound
-    diff = (boundAfterVar -- usedInSet) -- boundAfterExpr
   } yield {
     val ret = rawMethod(varEx, setEx, exprEx)
-    if (diff.isEmpty) {
+    if (boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
       val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
       throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
     } else ret
   }
 
-  /** Performs shadowing checks for binary operators which introduce bound variables */
+  /**
+   * Some (binary) operators introduce bound variables (e.g. chooseUnbounded, existsUnbounded, forallUnbounded). This
+   * method constructs the expressions associated with the operator, and additionally performs shadowing checks and
+   * bound-variable tagging.
+   */
   def boundVarIntroductionBinary(
-      rawMethod: (TlaEx, TlaEx) => TlaEx // order: variable, expression
+      rawMethod: (TlaEx, TlaEx) => TlaEx // argument order: (variable, expression)
     )(variable: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
     exprEx <- expr
-    boundAfterExpr <- allBound // x may not appear as bound in expr
+    boundAfterExpr <- allBound // variable may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
     // variable is shadowed iff boundAfterVar \subseteq boundAfterExpr
     boundAfterVar <- allBound
-    diff = boundAfterVar -- boundAfterExpr
   } yield {
     val ret = rawMethod(varEx, exprEx)
-    if (diff.isEmpty) {
+    if (boundAfterVar.subsetOf(boundAfterExpr)) {
       val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
       throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
     } else ret

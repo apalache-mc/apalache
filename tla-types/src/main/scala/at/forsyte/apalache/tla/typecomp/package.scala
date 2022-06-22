@@ -38,7 +38,7 @@ package object typecomp {
    * TBuilderContext holds all of the information about the internal state of the builder. It can be extended in the
    * future, to have the builder perform additional static analysis, e.g. assignment analysis.
    *
-   *   - `freeNameScope` tracks the types of the variables currently considered as free and their types.
+   *   - `freeNameScope` tracks the variables currently considered as free and their types.
    *   - `usedNames` tracks the set of free and bound names in the scope.
    *
    * We track both to prevent shadowing. Expressions which introduce bound variables, e.g. \E x \in S: P, may cause
