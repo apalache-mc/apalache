@@ -32,8 +32,6 @@ class PrettyWriter(
     extends PrettyPrinter with TlaWriter {
   override val defaultIndent: Int = layout.indent
 
-  val defaultNameResolver = (x: String) => x
-
   val REC_FUN_UNDEFINED = "recFunNameUndefined"
   // when printing a recursive function, this variable contains its name
   private var recFunName: String = REC_FUN_UNDEFINED
@@ -113,10 +111,7 @@ class PrettyWriter(
   /**
    * writes a provided ex as a doc. The parent precedence is needed to determine whether and how to wrap with braces.
    * The nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
-   * wanted, use defaultNameResolver, which always defaults to using the name of the NameEx.
-   *
-   * @see
-   *   defaultNameResolver
+   * wanted, use (x: String) => x.
    */
   def exToDoc(
       parentPrecedence: (Int, Int),
