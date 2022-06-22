@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import java.io.PrintWriter
 import java.util.Calendar
 import scala.collection.mutable
+import scala.collection.immutable.Map
 
 /**
  * This class produces counterexamples in the Informal Trace Format.
