@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 /**
  * Encodes temporal formulas as invariants.
@@ -32,6 +33,21 @@ class TableauEncoder(
   val levelFinder = new TlaLevelFinder(module)
 
   private def inBoolSet(element: TBuilderInstruction): TBuilderInstruction = builder.in(element, builder.booleanSet())
+
+  /* replaces all occurences of foo := bar with foo = bar */
+  private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
+    ex match {
+      case OperEx(oper, args @ _*) =>
+        oper match {
+          case ApalacheOper.assign =>
+            OperEx(TlaOper.eq, args: _*)(ex.typeTag)
+          case _ =>
+            OperEx(oper, args.map(rewriteAssignmentsAsEquality): _*)(ex.typeTag)
+        }
+      case _ =>
+        ex
+    }
+  }
 
   /**
    * Creates PredExs for a given propositional operator application of the form OperEx(oper, argExs)(typeTag). The
@@ -347,8 +363,9 @@ class TableauEncoder(
    * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
    */
   def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
+    val assignmentlessBody = rewriteAssignmentsAsEquality(formula.body)
 
-    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(formula.body)
+    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(assignmentlessBody)
 
     // create a new variable that stores whether the formula evaluated to true in the first state
     // this is necessary because a temporal formula on a sequence of states should be satisfied
