@@ -55,6 +55,12 @@ class PrettyWriter(
    * __temporal_t_1 = FALSE
    * /\ __temporal_t_1_unroll = FALSE
    * }}}
+   * 
+   * Here, the NameReplacementMap used was
+   * {{{
+   *  "__temporal_t_1" -> "♢(x = 11)",
+   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
+   * }}}
    *
    * Here, the nameReplacementMap used was
    * {{{
