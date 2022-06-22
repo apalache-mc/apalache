@@ -86,7 +86,10 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   }
 
   /** [x \in S |-> e] */
-  protected def _funDef(e: TlaEx, x: TlaEx, S: TlaEx): TlaEx = buildBySignatureLookup(TlaFunOper.funDef, e, x, S)
+  protected def _funDef(e: TlaEx, x: TlaEx, S: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx])
+    buildBySignatureLookup(TlaFunOper.funDef, e, x, S)
+  }
 
   // The rest of the operators are overloaded, so buildBySignatureLookup doesn't work
 
