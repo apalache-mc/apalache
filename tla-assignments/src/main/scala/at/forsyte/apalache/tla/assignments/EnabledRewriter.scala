@@ -26,7 +26,6 @@ class EnabledRewriter(
     changeListener: ChangeListener) {
 
   private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
-    println("rewriting assignments on: " + ex.toString())
     ex match {
       case OperEx(oper, args @ _*) =>
         oper match {
@@ -175,7 +174,6 @@ class EnabledRewriter(
    */
   private def transformEnabled(ex: TlaEx, varDecls: Seq[TlaVarDecl], operDecls: Seq[TlaOperDecl]): TlaEx = {
     val nonTemporalVars = varDecls.map(_.name).filterNot(TemporalAuxVarStore.store.contains(_))
-    print(nonTemporalVars)
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
     val constSimplifier = new ConstSimplifier(tracker)
     val operMap = BodyMapFactory.makeFromDecls(operDecls)
@@ -212,7 +210,6 @@ class EnabledRewriter(
       case OperEx(TlaActionOper.enabled, arg) =>
         // val body = rewriteAssignmentsAsEquality(arg)
         val body = arg
-        print("\nbody: " + body.toString() + "\n")
         transformEnabled(body, module.varDeclarations, module.operDeclarations)
       case OperEx(oper, args @ _*) =>
         new OperEx(oper, args.map(arg => this(arg, module)): _*)(ex.typeTag)
