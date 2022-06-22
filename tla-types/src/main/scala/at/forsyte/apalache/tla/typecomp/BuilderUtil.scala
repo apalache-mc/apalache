@@ -61,7 +61,7 @@ object BuilderUtil {
     boundAfterExpr <- allBound // x may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
-    // variable is shadowed iff boundAfterVar \subseteq boundAfrerExpr
+    // variable is shadowed iff boundAfterVar \subseteq boundAfterExpr
     boundAfterVar <- allBound
     diff = boundAfterVar -- boundAfterExpr
   } yield {
