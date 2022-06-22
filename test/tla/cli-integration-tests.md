@@ -2404,6 +2404,16 @@ $ apalache-mc check --features=rows --length=4 MC_LamportMutexTyped.tla | sed 's
 EXITCODE: OK
 ```
 
+### check InfDomFun (array-encoding)
+
+A regression test for functions with infinite domain.
+
+```sh
+$ apalache-mc check --inv=Inv InfDomFun.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
