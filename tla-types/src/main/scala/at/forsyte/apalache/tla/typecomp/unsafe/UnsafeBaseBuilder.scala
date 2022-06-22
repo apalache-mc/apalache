@@ -22,12 +22,16 @@ trait UnsafeBaseBuilder extends ProtoBuilder {
   protected def _appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
 
   /** CHOOSE x: p */
-  protected def _choose(x: TlaEx, p: TlaEx): TlaEx =
+  protected def _choose(x: TlaEx, p: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaOper.chooseUnbounded, x, p)
+  }
 
   /** CHOOSE x \in set: p */
-  protected def _choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx =
+  protected def _choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaOper.chooseBounded, x, set, p)
+  }
 
   /** args[0](args[1], ..., args[n]) :: ex */
   protected def _label(ex: TlaEx, args: String*): TlaEx = {
