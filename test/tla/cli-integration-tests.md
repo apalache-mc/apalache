@@ -1576,6 +1576,20 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check temporal properties over actions work
+```sh
+$ apalache-mc check --temporal Liveness TemporalNostutter.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal Liveness TemporalNostutter.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/informalsystems/apalache/issues/1152

@@ -82,14 +82,14 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
       val builder = new ScopedBuilder
       transform(builder.or(
               builder.useTrustedEx(body),
-              builder.unchanged(builder.useTrustedEx(vars)),
+              builder.useTrustedEx(transform(builder.unchanged(builder.useTrustedEx(vars)))),
           ))
 
     case OperEx(TlaActionOper.nostutter, body, vars) =>
       val builder = new ScopedBuilder
       transform(builder.and(
               builder.useTrustedEx(body),
-              builder.not(builder.unchanged(builder.useTrustedEx(vars))),
+              builder.not(builder.useTrustedEx(transform(builder.unchanged(builder.useTrustedEx(vars))))),
           ))
 
     case OperEx(TlaOper.eq, OperEx(TlaFunOper.tuple, largs @ _*), OperEx(TlaFunOper.tuple, rargs @ _*)) =>

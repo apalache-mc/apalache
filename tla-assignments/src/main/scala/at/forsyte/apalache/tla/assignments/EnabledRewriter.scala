@@ -26,6 +26,7 @@ class EnabledRewriter(
     changeListener: ChangeListener) {
 
   private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
+    println("rewriting assignments on: " + ex.toString())
     ex match {
       case OperEx(oper, args @ _*) =>
         oper match {
@@ -199,7 +200,8 @@ class EnabledRewriter(
 
         // simplify the expression, since many terms become trivial after replacement:
         // e.g. TRUE /\ TRUE /\ (1 = 2 => 2 > 1) becomes TRUE
-        constSimplifier(modifiedEx)
+        val withoutAssignments = rewriteAssignmentsAsEquality(modifiedEx)
+        constSimplifier(withoutAssignments)
       })
 
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
@@ -208,7 +210,8 @@ class EnabledRewriter(
   def apply(ex: TlaEx, module: TlaModule): TlaEx = {
     ex match {
       case OperEx(TlaActionOper.enabled, arg) =>
-        val body = rewriteAssignmentsAsEquality(arg)
+        // val body = rewriteAssignmentsAsEquality(arg)
+        val body = arg
         print("\nbody: " + body.toString() + "\n")
         transformEnabled(body, module.varDeclarations, module.operDeclarations)
       case OperEx(oper, args @ _*) =>
