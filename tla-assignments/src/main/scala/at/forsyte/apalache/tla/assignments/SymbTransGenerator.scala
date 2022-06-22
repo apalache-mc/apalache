@@ -284,8 +284,6 @@ class SymbTransGenerator(tracker: TransformationTracker) {
    */
   def apply(phi: TlaEx, asgnStrategy: StrategyType): Seq[SymbTrans] = {
 
-    print("\nphi " + phi.toString() + "\n")
-
     import helperFunctions._
 
     /**
@@ -297,9 +295,6 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     /** Replace all assignments */
     val asgnTransform = AssignmentOperatorIntroduction(stratSet, tracker)
     val transformed = asgnTransform(phi)
-
-    print("\ntransformed " + transformed.toString() + "\n")
-
 
     /**
      * Since the new assignments have different UIDs, the new strategy is obtained by replacing the UIDs in the old
