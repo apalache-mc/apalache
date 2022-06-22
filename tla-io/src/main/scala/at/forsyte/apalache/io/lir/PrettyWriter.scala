@@ -49,10 +49,10 @@ class PrettyWriter(
    *
    * {{{
    *  (* State0 ==
-   * ♢(x = 11) = FALSE
+   *    ♢(x = 11) = FALSE
    * /\ ♢(x = 11)_unroll = FALSE *)
    * State0 ==
-   * __temporal_t_1 = FALSE
+   *    __temporal_t_1 = FALSE
    * /\ __temporal_t_1_unroll = FALSE
    * }}}
    * 
