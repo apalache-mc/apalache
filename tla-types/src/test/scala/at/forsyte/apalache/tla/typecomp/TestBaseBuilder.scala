@@ -161,6 +161,57 @@ class TestBaseBuilder extends BuilderTest {
             resultIsExpected,
         )
     )
+
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          // CHOOSE 1 \in S: TRUE
+          builder.choose(
+              builder.int(1),
+              builder.name("S", SetT1(IntT1)),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          // CHOOSE x \in S: x = x
+          builder.choose(
+              builder.name("x", StrT1),
+              builder.name("S", SetT1(StrT1)),
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)),
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // CHOOSE x \in {x}: p
+          builder.choose(
+              builder.name("x", StrT1),
+              builder.enumSet(builder.name("x", StrT1)),
+              builder.name("p", BoolT1),
+          )
+      )
+    }
+
+    assertThrows[TBuilderScopeException] {
+      build(
+          // CHOOSE x \in S: \E x \in S: TRUE
+          builder.choose(
+              builder.name("x", StrT1),
+              builder.name("S", SetT1(StrT1)),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("S", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
   }
 
   test("choose2") {
@@ -194,6 +245,44 @@ class TestBaseBuilder extends BuilderTest {
             resultIsExpected,
         )
     )
+
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          // CHOOSE 1: TRUE
+          builder.choose(
+              builder.int(1),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          // CHOOSE x: x = x
+          builder.choose(
+              builder.name("x", StrT1),
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)),
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // CHOOSE x : \E x \in S: TRUE
+          builder.choose(
+              builder.name("x", StrT1),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("S", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
+
   }
 
   test("label") {

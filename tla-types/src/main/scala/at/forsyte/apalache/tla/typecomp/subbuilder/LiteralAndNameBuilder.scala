@@ -37,7 +37,7 @@ trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
 
   /** exprName: exType */
   def name(exprName: String, exType: TlaType1): TBuilderInstruction = State[TBuilderContext, TlaEx] { mi =>
-    val scope = mi.nameScope
+    val scope = mi.freeNameScope
 
     // If already in scope, type must be the same
     scope.get(exprName).foreach { tt =>
@@ -48,12 +48,12 @@ trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
     }
 
     val ret = _name(exprName, exType)
-    (mi.copy(scope + (exprName -> exType)), ret)
+    (mi.copy(freeNameScope = scope + (exprName -> exType), usedNames = mi.usedNames + exprName), ret)
   }
 
   /** Attempt to infer the type from the scope. Fails if exprName is not in scope. */
   def nameWithInferredType(exprName: String): TBuilderInstruction = get[TBuilderContext].map { mi: TBuilderContext =>
-    val scope = mi.nameScope
+    val scope = mi.freeNameScope
 
     val tt = scope.getOrElse(exprName,
         throw new TBuilderScopeException(

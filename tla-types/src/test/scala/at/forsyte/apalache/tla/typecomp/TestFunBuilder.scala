@@ -12,7 +12,7 @@ import scala.collection.immutable.SortedMap
 @RunWith(classOf[JUnitRunner])
 class TestFunBuilder extends BuilderTest {
 
-  test("enum") {
+  test("enum (rec)") {
     type T = Seq[TBuilderInstruction]
 
     type TParam = Seq[TlaType1]
@@ -70,6 +70,14 @@ class TestFunBuilder extends BuilderTest {
               builder.name("v", IntT1),
               builder.str("k"),
               builder.name("w", IntT1),
+          ))
+    }
+
+    // test fail on non-literal key
+    assertThrows[IllegalArgumentException] {
+      build(builder.recMixed(
+              builder.name("k", StrT1),
+              builder.name("v", IntT1),
           ))
     }
 
@@ -261,11 +269,43 @@ class TestFunBuilder extends BuilderTest {
         )
     )
 
-    // Check scope validation works
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      // [1 \in S |-> x]
+      build(builder.funDef(
+              builder.name("x", IntT1),
+              builder.int(1),
+              builder.name("S", SetT1(IntT1)),
+          ))
+    }
+
+    // test fail on scope error
     assertThrows[TBuilderScopeException] {
       // [x \in S |-> x]
       build(builder.funDef(
               builder.name("x", StrT1),
+              builder.name("x", IntT1),
+              builder.name("S", SetT1(IntT1)),
+          ))
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      // [x \in {x} |-> x]
+      build(builder.funDef(
+              builder.name("x", IntT1),
+              builder.name("x", IntT1),
+              builder.enumSet(builder.name("x", IntT1)),
+          ))
+    }
+    assertThrows[TBuilderScopeException] {
+      // [x \in S |-> \E x \in S: TRUE]
+      build(builder.funDef(
+              builder.exists(
+                  builder.name("x", IntT1),
+                  builder.name("S", SetT1(IntT1)),
+                  builder.bool(true),
+              ),
               builder.name("x", IntT1),
               builder.name("S", SetT1(IntT1)),
           ))
