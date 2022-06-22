@@ -45,7 +45,7 @@ class PrettyWriter(
 
   /**
    * Pretty-prints the given decl twice: Once as valid TLA, and once (before the TLA expression) in a comment, where
-   * names of NameExs are replaced by their mapping in the NameReplacementMap. The output looks, for example, like this:
+   * names of NameExs are replaced by their mapping in the nameReplacementMap. The output looks, for example, like this:
    *
    * {{{
    *  (* State0 ==
@@ -54,6 +54,12 @@ class PrettyWriter(
    * State0 ==
    * __temporal_t_1 = FALSE
    * /\ __temporal_t_1_unroll = FALSE
+   * }}}
+   *
+   * Here, the nameReplacementMap used was
+   * {{{
+   *  "__temporal_t_1" -> "♢(x = 11)",
+   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
    * }}}
    *
    * Note that the expression and its comment are the same, but the names for {{{__temporal_t_1}}} and
