@@ -79,11 +79,24 @@ class TableauEncoder(
     PredExs(Seq(nodeVarInitConditionEx), Seq(nodeVarUpdateConditionEx))
   }
 
+<<<<<<< HEAD
   private def createGenericNodeVarExs(
       nodeVarEx: TBuilderInstruction,
       loopNodeVarEx: TBuilderInstruction): PredExs = {
     /* generic initialization for node variable: __temporal_curNode \in BOOLEAN */
     val nodeVarInitAssignmentEx = inBoolSet(nodeVarEx)
+=======
+  /**
+   * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
+   */
+  def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
+
+    // assignments in the temporal formula are harmful, since parts of the formula
+    // will be used as right-hand sides in next or init (where assignments are usually not allowed)
+    val assignmentlessBody = rewriteAssignmentsAsEquality(formula.body)
+
+    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(assignmentlessBody)
+>>>>>>> 33dc4b999... Fix: Remove assignments from temporal formulas, not enabled expressions
 
     /* generic update for node variable: __temporal_curNode' \in BOOLEAN */
     val nodeVarUpdateAssignmentEx = inBoolSet(builder.prime(nodeVarEx))
