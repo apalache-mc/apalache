@@ -148,7 +148,7 @@ Two things are notable:
 1. The initial state formula appears twice, once as a comment and once in TLA.
 2. There are way more variables than the two variables we specified.
 
-The comment and the TLA express the same state, but in the comment, some variable names from the encoding have been replaced
+The comment and the TLA specification express the same state, but in the comment, some variable names from the encoding have been replaced
 with more human-readable names.
 For example, there is a variable called `☐(requestedGreen ⇒ ♢isGreen)` in the comment,
 which is called `__temporal_t_1` in TLA.
