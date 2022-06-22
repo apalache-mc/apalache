@@ -56,11 +56,11 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
           "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
       )
 
-      (if (NameReplacementMap.NameReplacementMap.isEmpty)
+      (if (NameReplacementMap.nameReplacementMap.isEmpty)
          descriptions
        else
          descriptions ++
-           Map("variables-to-expressions" -> NameReplacementMap.NameReplacementMap))
+           Map("variables-to-expressions" -> NameReplacementMap.nameReplacementMap))
     }
 
     rootMap.put("#meta",
