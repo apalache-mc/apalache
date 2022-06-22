@@ -55,7 +55,7 @@ class PrettyWriter(
    *    __temporal_t_1 = FALSE
    * /\ __temporal_t_1_unroll = FALSE
    * }}}
-   * 
+   *
    * Here, the NameReplacementMap used was
    * {{{
    *  "__temporal_t_1" -> "♢(x = 11)",
@@ -121,8 +121,8 @@ class PrettyWriter(
   }
 
   /**
-   * writes a provided ex as a doc. The parent precedence is needed to determine whether and how to wrap with braces.
-   * The nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
+   * Writes the provided expr as a doc. parentPrecedence determines whether and how to wrap expressions with braces.
+   * nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
    * wanted, use (x: String) => x.
    */
   def exToDoc(
