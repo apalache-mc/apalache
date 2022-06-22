@@ -1537,7 +1537,6 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
-
 ### check LetIn (temporal)
 
 ```sh
@@ -1691,15 +1690,12 @@ $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
   > Config1.cfg: Loading TLC configuration
 ...
-  > Config1.cfg: PROPERTY AwesomeLiveness is ignored. Only INVARIANTS are supported.
-...
   > Set the initialization predicate to Init1
   > Set the transition predicate to Next1
   > Set an invariant to Inv1
+  > Set a temporal property to AwesomeLiveness
 ...
-Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
-...
-EXITCODE: ERROR (75)
+EXITCODE: OK
 ```
 
 ### configure via TLC config and override it via CLI
@@ -1713,9 +1709,13 @@ $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | 
   > Set the transition predicate to Next2
   > Set an invariant to Inv1
 ...
-Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
-EXITCODE: ERROR (75)
+State 7: state invariant 0 violated.
+Found 1 error(s)
+The outcome is: Error
+Checker has found an error
+...
+EXITCODE: ERROR (12)
 ```
 
 ### configure missing property in TLC config
