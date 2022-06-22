@@ -88,7 +88,8 @@ class PrettyWriter(
     prettyWriteDoc(declToDoc(decl) <> line <> line)
   }
 
-  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, (x: String) => x))
+  private def identity(x: String): String = x
+  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, identity))
 
   def writeComment(commentStr: String): Unit = {
     prettyWriteDoc(wrapWithComment(commentStr) <> line)
