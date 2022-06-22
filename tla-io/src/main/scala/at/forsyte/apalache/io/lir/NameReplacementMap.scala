@@ -11,5 +11,5 @@ import scala.collection.mutable.HashMap
  *   Philip Offtermatt
  */
 package object NameReplacementMap {
-  var nameReplacementMap = new HashMap[String, String]()
+  var store = new HashMap[String, String]()
 }

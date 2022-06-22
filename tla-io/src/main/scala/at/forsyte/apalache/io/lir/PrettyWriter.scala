@@ -75,7 +75,7 @@ class PrettyWriter(
    */
   def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
     val declDoc = declToDoc(decl) <> line <> line
-    if (NameReplacementMap.nameReplacementMap.isEmpty) {
+    if (NameReplacementMap.store.isEmpty) {
       prettyWriteDoc(declDoc)
     } else {
       val declComment = toCommentDoc(decl)
@@ -533,7 +533,7 @@ class PrettyWriter(
   def toCommentDoc(decl: TlaDecl): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
-          NameReplacementMap.nameReplacementMap.getOrElse(x, x)
+          NameReplacementMap.store.getOrElse(x, x)
         }))
   }
 

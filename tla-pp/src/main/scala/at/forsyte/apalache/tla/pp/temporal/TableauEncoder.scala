@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
-import at.forsyte.apalache.io.lir.NameReplacementMap.NameReplacementMap
+import at.forsyte.apalache.io.lir.NameReplacementMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -141,7 +141,8 @@ class TableauEncoder(
                 "Expected to find no LET-IN expressions. They should have been rewritten by the inliner.")
           case OperEx(oper, args @ _*) =>
             val nodeIdentifier = TableauEncoder.NAME_PREFIX + gen.newName()
-            NameReplacementMap = NameReplacementMap.addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
+            NameReplacementMap.store = NameReplacementMap.store
+              .addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
 
             /* create a new variable for this node.
             e.g.
@@ -158,7 +159,7 @@ class TableauEncoder(
              */
             val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
 
-            NameReplacementMap = NameReplacementMap
+            NameReplacementMap.store = NameReplacementMap.store
               .addOne(nodeLoopVarDecl.name, LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"))
 
             val nodeVarEx = builder.varDeclAsNameEx(nodeVarDecl)
