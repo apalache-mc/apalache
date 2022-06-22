@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps.tagSort
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -19,8 +20,6 @@ import scala.collection.immutable.SortedMap
  *   Igor Konnov
  */
 class RecordAndVariantOps(rewriter: SymbStateRewriter) {
-  // the uninterpreted sort to use for storing the tag values
-  private val tagSort = "__TAG"
   private val defaultValueFactory = new DefaultValueFactory(rewriter)
 
   /**
@@ -352,6 +351,14 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
 }
 
 object RecordAndVariantOps {
-  // the name of the hidden tag field that is attached to every variant
+
+  /**
+   * The name of the hidden tag field that is attached to every variant.
+   */
   val variantTagField = "__tag"
+
+  /**
+   * The uninterpreted sort to use for storing the tag values.
+   */
+  val tagSort = "__TAG"
 }
