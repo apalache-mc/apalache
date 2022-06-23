@@ -16,17 +16,16 @@ the current state of the light (either green or red),
 and whether the button has been pushed that requests the traffic light to switch from red to green.
 
 The full specification of the traffic light is here:
-[TrafficLight.tla](TrafficLight.tla)
+[TrafficLight.tla](TrafficLight.tla).  
 But don't worry - we will dissect the spec in the following.
 
-In the TLA specification, this corresponds to
-two variables:
+In the TLA specification, we declare two variables:
 
 ```
 {{#include TrafficLight.tla:2:15}}
 ```
 
-Initially, the light should be red and green should not be requested:
+Initially, the light is red and green has not yet been requested:
 
 ```
 {{#include TrafficLight.tla:18:20}}
@@ -41,7 +40,7 @@ We have three possible actions:
 {{#include TrafficLight.tla:actions}}
 ```
 
-Now, we are ready to specify properties we are interested in.
+Now, we are ready to specify properties that we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
 We can write the property like this:
 
@@ -145,13 +144,13 @@ State0 ==
 ```
 
 Two things are notable:
-1. The initial state formula appears twice, once as a comment and once in TLA.
+1. The initial state formula appears twice, once as a comment and once in TLA+.
 2. There are way more variables than the two variables we specified.
 
-The comment and the TLA specification express the same state, but in the comment, some variable names from the encoding have been replaced
+The comment and the TLA+ specification express the same state, but in the comment, some variable names from the encoding have been replaced
 with more human-readable names.
 For example, there is a variable called `☐(requestedGreen ⇒ ♢isGreen)` in the comment,
-which is called `__temporal_t_1` in TLA.
+which is called `__temporal_t_1` in TLA+.
 In the following, let's focus on the content of the comment, since it's easier to understand what's going on.
 
 There are many additional variables in the counterexample because to check temporal formulas, Apalache uses an
@@ -172,12 +171,12 @@ For example, a counterexample trace might visually look like this:
 
 ![A counterexample trace for the property <>isGreen](img/looping_trace.png)
 
-If the execution doesn't loop, then we'd never be sure that there isn't some future state that satisfies `isGreen`.
+In contrast, as long as the model checking engine has not found a loop, there may still exist some future state satisfying `isGreen`.
 
-Apalache can identify looping executions using auxiliary variables.
-The auxiliary variable `__loop_InLoop` is true when the trace has started the loop, and false otherwise.
-Additionally, when the loop is started, so `__loop_InLoop` switches from true to false,
-the current status of variables of the model is stored in an extra copy of those variables.
+Apalache can identify looping executions by using auxiliary variables.
+The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
+Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
+we store the valuation of all variables in an auxiliary copy whose name is prefixed by `__loop_`.
 In our example, it looks like this:
 ```
 (* State0 ==
@@ -245,7 +244,7 @@ so in state 1 the property `requestedGreen => <>isGreen` is violated.
 
 Next, let us discuss the other auxiliary variables that are introduced by Apalache to check the temporal property.
 These extra variables correspond to parts of the temporal property we want to check.
-These are the following variables with their valuations in state 0:
+These are the following variables with their valuations in the initial state:
 
 ```
 (* State0 ==
@@ -286,16 +285,16 @@ The syntax tree of this formula looks like this:
 
 For each node of the syntax tree where the formula contains a temporal operator,
 there is an auxiliary variable. And as mentioned before, the value of 
-the variable in a state tells us whether from that state, the subformula is true. In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
+the variable in a state tells us whether from that state, the subformula is true. In this particular example, the formulas that correspond to auxiliary variables in the encoding are filled with orange in the syntax tree.
 
-What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
+What about the `_unroll` variables? There is one `_unroll` variable for each immediate application of a temporal operator in the formula.
 For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable for the
 leading box operator. These are necessary because to know whether a formula like
 `[]isGreen` holds in the last state of the loop, we need to know whether
 `isGreen` holds in all states of the loop. However, when we are in the last state of the loop,
 we won't see the state of the loop again! So we need to store this information when we traverse the loop.
 That's why we have an extra variable, which essentially tells us whether `isGreen` holds on all states of the loop.
-Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along the execution to see this.
+Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along our counterexample to see this.
 
 ```
 (* State0 ==
@@ -335,14 +334,10 @@ So in the last state, `☐(requestedGreen ⇒ ♢isGreen)_unroll`
 is not true, since `☐(requestedGreen ⇒ ♢isGreen)`
 does not hold in state 2, which is on the loop.
 
-Notice that for the variables corresponding to nodes in the
-syntax tree, e.g. `☐(requestedGreen ⇒ ♢isGreen)`,
-we have loop copies, e.g. `__loop_☐(requestedGreen ⇒ ♢isGreen)`.
-
-
-
+Similar to the `__loop_` copies for model variables,
+we also introduce copies for all (temporal) subformulas, e.g., `__loop_☐(requestedGreen ⇒ ♢isGreen)` for `☐(requestedGreen ⇒ ♢isGreen)`.
 These fulfill the same function as the `__loop_` copies for the
-original variables of the model, as explained above.
+original variables of the model, i.e., retaining the state of variables from the first state of the loop, e.g.,
 
 ```
 (* State0 ==
