@@ -290,12 +290,16 @@ there is an auxiliary variable. And as mentioned before, the value of
 the variable in a state tells us whether from that state, the subformula is true. In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
 
 What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
-For example,  `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll variable for the
-leading box operator. These are necessary because to know whether a formula like
-`[]isGreen` holds in the last state of the loop, we need to know whether
-`isGreen` holds in all states of the loop. However, when we are in the last state of the loop,
-we won't see the state of the loop again! So we need to store this information when we traverse the loop.
-That's why we have an extra variable, which essentially tells us whether `isGreen` holds on all states of the loop.
+For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable for the
+leading box operator. 
+
+To illustrate why these are necessary, consider the formula
+`[]isGreen`. To decide whether this formula holds in the last state of the loop, we need to know whether
+`isGreen` holds in all states of the loop. So we need to store this information when we traverse the loop.
+That's why we have an extra variable, which essentially tells us whether `isGreen` holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
+Similarly, the unroll-variable `♢isGreen_unroll` holds true
+if in any state on the loop, `isGreen` is true.
+
 Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along the execution to see this.
 
 ```
