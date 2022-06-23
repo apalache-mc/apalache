@@ -23,13 +23,13 @@ In the TLA specification, this corresponds to
 two variables:
 
 ```
-{{#include TrafficLight.tla:2:15}}
+{{#include TrafficLight.tla:vars}}
 ```
 
 Initially, the light should be red and green should not be requested:
 
 ```
-{{#include TrafficLight.tla:18:20}}
+{{#include TrafficLight.tla:init}}
 ```
 
 We have three possible actions: 
