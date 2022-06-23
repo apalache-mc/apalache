@@ -6,19 +6,15 @@ EXTENDS Integers
 
 VARIABLES
     \* @type: Int;
-    x,
-    \* @type: Int;
-    y
+    x
 
 Init ==
     /\ x = 0
-    /\ y = 1
 
 Next ==
-    /\ x' = y
-    /\ y' = x
+    /\ x' = IF x = 3 THEN 0 ELSE x + 1
 
-Liveness == []<>(x = 1 /\ y = 0)
-FalseLiveness == []<>(x = 0 /\ y = 0)
+Liveness == []<>(x = 1)
+FalseLiveness == <>[](x = 0)
 
 ====

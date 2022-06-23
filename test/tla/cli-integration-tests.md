@@ -1441,6 +1441,20 @@ $ apalache-mc check --temporal=FalseLiveness NoLoopsNoProblems.tla
 EXITCODE: OK
 ```
 
+### check SimpleProp succeeds (temporal)
+
+```sh
+$ apalache-mc check --temporal=Liveness SimpleProp.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness SimpleProp.tla
+...
+EXITCODE: OK
+```
+
 ### check ManyBoxes (temporal)
 
 ```sh

@@ -207,12 +207,19 @@ class TableauEncoder(
                 val auxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
                 val prevAuxVarDecl =
                   new TlaVarDecl(nodeIdentifier + nameSuffix + TableauEncoder.LOOKBACK_SUFFIX)(Typed(BoolT1))
+                val nextAuxVarDecl =
+                  new TlaVarDecl(nodeIdentifier + nameSuffix + TableauEncoder.LOOKAHEAD_SUFFIX)(Typed(BoolT1))
 
                 val auxVarEx = builder.varDeclAsNameEx(auxVarDecl)
 
-                // variable needed for a technicality: TLA+ doesn't allow double-priming,
+                // variables needed for a technicality: TLA+ doesn't allow double-priming,
                 // so instead, we look one step forward and one step backward to avoid it.
+                // this also requires guessing the value of the variable in the next step,
+                // and then merely -checking- the satisfaction of the condition in the current step.
+                // intuitively, we check whether we guessed right, which requires only looking forward and backward,
+                // rather than two steps forward
                 val prevAuxVarEx = builder.varDeclAsNameEx(prevAuxVarDecl)
+                val nextAuxVarEx = builder.varDeclAsNameEx(nextAuxVarDecl)
 
                 /*
                   initialize __temporal_curNode
@@ -220,6 +227,7 @@ class TableauEncoder(
                   /\ __temporal_curNode \in BOOLEAN
                   /\ __temporal_curNode_globally = TRUE or /\ __temporal_curNode_finally = FALSE
                   /\ __temporal_curNode_globally_prev = TRUE or /\ __temporal_curNode_finally_prev = FALSE
+                  /\ __temporal_curNode_globally_next \in BOOLEAN or /\ __temporal_curNode_globally_next \in BOOLEAN
                  */
                 val initialValue = oper match {
                   case TlaTempOper.box     => true
@@ -228,11 +236,17 @@ class TableauEncoder(
                 val auxVarInitEx = builder.eql(auxVarEx, builder.bool(initialValue))
                 val prevAuxVarInitEx = builder.eql(prevAuxVarEx, builder.bool(initialValue))
 
+                val nextAuxVarInitEx = builder.in(nextAuxVarEx, builder.booleanSet())
+
                 /* update __temporal_curNode:
 
                   /\ __temporal_curNode' \in BOOLEAN
-                  /\ __temporal_curNode_globally' \in BOOLEAN or __temporal_curNode_finally' \in BOOLEAN
                   /\ __temporal_curNode_globally_prev' = __temporal_curNode_globally or __temporal_curNode_finally_prev' = __temporal_curNode_finally
+                  /\ __temporal_curNode_globally_next' \in BOOLEAN or __temporal_curNode_finally_next' \in BOOLEAN
+
+                  /\ __temporal_curNode_globally' = __temporal_curNode_globally_next
+                  or
+                  /\ __temporal_curNode_finally' = __temporal_curNode_finally_next
 
                                            outerOp                                          outerOp
                   /\ __temporal_curNode <=> A /\ __temporal_curNode' or __temporal_curNode <=> A \/ __temporal_curNode'
@@ -264,9 +278,16 @@ class TableauEncoder(
                 def outerOp(args: TBuilderInstruction*): TBuilderInstruction = outerOpTmp(args)
                 def innerOp(args: TBuilderInstruction*): TBuilderInstruction = innerOpTmp(args)
 
-                /* __temporal_curNode_unroll' \in BOOLEAN */
-                val auxVarUpdateAssignmentEx = inBoolSet(builder.prime(auxVarEx))
-                val prevAuxVarUpdateEx = builder.eql(builder.prime(prevAuxVarEx), auxVarEx)
+                /* __temporal_curNode_unroll_next' \in BOOLEAN */
+                val nextAuxVarUpdateEx =
+                  builder.ite(builder.eql(nextAuxVarEx, builder.bool(!initialValue)),
+                      builder.unchanged(nextAuxVarEx), inBoolSet(builder.prime(nextAuxVarEx)))
+
+                /* __temporal_curNode_unroll' = __temporal_curNode_unroll_next */
+                val auxVarUpdateAssignmentEx = builder.primeEq(auxVarEx, nextAuxVarEx)
+
+                /* __temporal_curNode_unroll_prev' =  __temporal_curNode_unroll */
+                val prevAuxVarUpdateEx = builder.primeEq(prevAuxVarEx, auxVarEx)
 
                 /* __temporal_curNode <=> A /\ __temporal_curNode' */
                 val nodeVarUpdateConditionEx = builder.equiv(
@@ -281,7 +302,7 @@ class TableauEncoder(
                 /* __temporal_curNode_unroll <=>   /\ __temporal_curNode_unroll_prev
                                                     /\ (~InLoop \/ A)
                  */
-                val auxVarUpdateConditionEx = builder.equiv(
+                val auxVarUpdateOkEx = builder.equiv(
                     auxVarEx,
                     outerOp(
                         prevAuxVarEx,
@@ -293,7 +314,7 @@ class TableauEncoder(
                 )
 
                 /* update loopOK:
-                  (__temporal_curNode_unroll => __temporal_curNode) or (__temporal_curNode => __temporal_curNode_finally)
+                  (__temporal_curNode_globally => __temporal_curNode) or (__temporal_curNode => __temporal_curNode_finally)
                  */
                 val auxVarLoopOKEx =
                   oper match {
@@ -307,17 +328,20 @@ class TableauEncoder(
                         nodeLoopVarDecl,
                         auxVarDecl,
                         prevAuxVarDecl,
+                        nextAuxVarDecl,
                     ) ++ argVarDecls.flatten,
                     argsPredsUnion ++
                       PredExs(
                           initExs = Seq(
+                              nextAuxVarInitEx,
                               auxVarInitEx,
                               prevAuxVarInitEx,
                           ),
                           nextExs = Seq(
+                              nextAuxVarUpdateEx,
                               auxVarUpdateAssignmentEx,
                               nodeVarUpdateConditionEx,
-                              auxVarUpdateConditionEx,
+                              auxVarUpdateOkEx,
                               prevAuxVarUpdateEx,
                           ),
                           loopOKExs = Seq(
@@ -453,4 +477,5 @@ object TableauEncoder {
   val BOX_SUFFIX = "_unroll"
   val DIAMOND_SUFFIX = "_unroll"
   val LOOKBACK_SUFFIX = "_prev"
+  val LOOKAHEAD_SUFFIX = "_next"
 }
