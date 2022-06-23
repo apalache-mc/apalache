@@ -13,4 +13,12 @@ class SimulateCmd extends CheckCmd(name = "simulate", "Symbolically simulate a T
     opt[Boolean](name = "save-runs", description = "save an example trace for each simulated run, default: false",
         default = false)
 
+  override def collectTuningOptions(): Map[String, String] = {
+    super.collectTuningOptions() ++ Map(
+        "search.simulation" -> "true",
+        "search.simulation.maxRun" -> maxRun.toString,
+        "search.simulation.saveRuns" -> saveRuns.toString,
+    )
+  }
+
 }

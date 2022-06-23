@@ -42,12 +42,9 @@ trait FunBuilder extends UnsafeFunBuilder {
   def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { _seq }
 
   /** [x \in S |-> e] */
-  def funDef(e: TBuilderInstruction, x: TBuilderInstruction, S: TBuilderInstruction): TBuilderInstruction = for {
-    eEx <- e
-    xEx <- x
-    setEx <- S
-    _ <- markAsBound(xEx)
-  } yield _funDef(eEx, xEx, setEx)
+  def funDef(e: TBuilderInstruction, x: TBuilderInstruction, S: TBuilderInstruction): TBuilderInstruction =
+    // funDef args are ordered differently than quantifiers
+    boundVarIntroductionTernary { case (variable, set, expr) => _funDef(expr, variable, set) }(x, S, e)
 
   //////////////////
   // APP overload //

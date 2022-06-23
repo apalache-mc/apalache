@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecomp.subbuilder
 
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.{binaryFromUnsafe, buildSeq, ternaryFromUnsafe}
+import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeBaseBuilder
 
@@ -28,11 +28,11 @@ trait BaseBuilder extends UnsafeBaseBuilder {
 
   /** CHOOSE x: p */
   def choose(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(x, p)(_choose)
+    boundVarIntroductionBinary(_choose)(x, p)
 
   /** CHOOSE x \in set: p */
   def choose(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(x, set, p)(_choose)
+    boundVarIntroductionTernary(_choose)(x, set, p)
 
   /** args[0](args[1], ..., args[n]) :: ex */
   def label(ex: TBuilderInstruction, args: String*): TBuilderInstruction =

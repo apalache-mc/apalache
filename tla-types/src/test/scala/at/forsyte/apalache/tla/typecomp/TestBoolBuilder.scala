@@ -8,6 +8,8 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestBoolBuilder extends BuilderTest {
 
+  // TODO: Update with BuilderTest framework.
+
   def argGen(n: Int): Seq[TBuilderInstruction] = Seq.fill(n)(builder.bool(true))
 
   def testCmpOKAndMistyped[T](

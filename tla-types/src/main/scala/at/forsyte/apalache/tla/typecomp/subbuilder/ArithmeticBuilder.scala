@@ -30,7 +30,7 @@ trait ArithmeticBuilder extends UnsafeArithmeticBuilder {
   /** x % y */
   def mod(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_mod)
 
-  /** x^y */
+  /** {{{x^y}}} */
   def exp(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_exp)
 
   /** x .. y */
