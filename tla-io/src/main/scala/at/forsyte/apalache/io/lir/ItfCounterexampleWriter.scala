@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import java.io.PrintWriter
 import java.util.Calendar
 import scala.collection.mutable
+import scala.collection.immutable.Map
 
 /**
  * This class produces counterexamples in the Informal Trace Format.
@@ -49,11 +50,24 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     val mappedStates = state0 :: states.drop(2).map(_._2)
     // construct the root JSON object
     val rootMap: mutable.LinkedHashMap[String, ujson.Value] = mutable.LinkedHashMap()
+
+    val metaInformation: Map[String, ujson.Value] = {
+      val descriptions = Map[String, ujson.Value](
+          "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+      )
+
+      (if (NameReplacementMap.store.isEmpty)
+         descriptions
+       else
+         descriptions ++
+           Map("variables-to-expressions" -> NameReplacementMap.store))
+    }
+
     rootMap.put("#meta",
         ujson.Obj(
             "format" -> "ITF",
-            "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-            "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+            metaInformation.toSeq: _*
         ))
     paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
     rootMap.put("vars", varsToJson(rootModule))
