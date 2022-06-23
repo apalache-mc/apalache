@@ -48,6 +48,10 @@ We wan write the property like this:
 ```
 {{#include TrafficLight.tla:prop}}
 ```
+Intuitively, the property says: 
+"Check that at all points in time ([]),
+if right now, `RequestGreen` is true, 
+then at some future point in time, `IsGreen` is true."
 
 Let's run Apalache to check this property:
 
