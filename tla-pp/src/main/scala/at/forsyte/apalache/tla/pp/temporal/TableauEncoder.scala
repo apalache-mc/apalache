@@ -182,44 +182,52 @@ class TableauEncoder(
              */
             oper match {
               case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
-                /* create new auxiliary variable curNode_unroll or curNode_finally */
+                /* create new auxiliary variables curNode_globally or curNode_finally,
+                and curNode_globally_prev or curNode_finally_prev */
                 val nameSuffix = oper match {
                   case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
                   case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
                 }
                 val auxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
+                val prevAuxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix + "_prev")(Typed(BoolT1))
 
                 val auxVarEx = builder.varDeclAsNameEx(auxVarDecl)
-                val auxVarExPrime = builder.prime(auxVarEx)
+
+                // variable needed for a technicality: TLA+ doesn't allow double-priming,
+                // so instead, we look one step forward and one step backward to avoid it.
+                val prevAuxVarEx = builder.varDeclAsNameEx(prevAuxVarDecl)
 
                 /*
                   initialize __temporal_curNode
 
                   /\ __temporal_curNode \in BOOLEAN
                   /\ __temporal_curNode_globally = TRUE or /\ __temporal_curNode_finally = FALSE
+                  /\ __temporal_curNode_globally_prev = TRUE or /\ __temporal_curNode_finally_prev = FALSE
                  */
                 val initialValue = oper match {
                   case TlaTempOper.box     => true
                   case TlaTempOper.diamond => false
                 }
                 val auxVarInitEx = builder.eql(auxVarEx, builder.bool(initialValue))
+                val prevAuxVarInitEx = builder.eql(prevAuxVarEx, builder.bool(initialValue))
 
                 /* update __temporal_curNode:
 
                   /\ __temporal_curNode' \in BOOLEAN
                   /\ __temporal_curNode_globally' \in BOOLEAN or __temporal_curNode_finally' \in BOOLEAN
+                  /\ __temporal_curNode_globally_prev' = __temporal_curNode_globally or __temporal_curNode_finally_prev' = __temporal_curNode_finally
 
                                            outerOp                                          outerOp
                   /\ __temporal_curNode <=> A /\ __temporal_curNode' or __temporal_curNode <=> A \/ __temporal_curNode'
 
                                                     outerOp
-                  /\ __temporal_curNode_globally' <=> /\ __temporal_curNode_globally
-                                                      /\ (~InLoop' \/ A')
+                  /\ __temporal_curNode_globally <=> /\ __temporal_curNode_globally_prev
+                                                      /\ (~InLoop \/ A)
                                                     outerOp      innerOp
                   or
                                                    outerOp
-                  /\ __temporal_curNode_finally' <=>  \/ __temporal_curNode_finally
-                                                      \/  (InLoop' /\ A')
+                  /\ __temporal_curNode_finally <=>  \/ __temporal_curNode_finally_prev
+                                                      \/  (InLoop /\ A)
                                                     outerOp      innerOp
                  */
 
@@ -228,8 +236,8 @@ class TableauEncoder(
                 and whether the InLoop variable is negated in the conjunction
                  */
                 val (outerOpTmp, innerOpTmp, innerInLoopEx) = oper match {
-                  case TlaTempOper.box     => (builder.and _, builder.or _, builder.not(loopEnc.inLoopPrime))
-                  case TlaTempOper.diamond => (builder.or _, builder.and _, loopEnc.inLoopPrime)
+                  case TlaTempOper.box     => (builder.and _, builder.or _, builder.not(loopEnc.inLoop))
+                  case TlaTempOper.diamond => (builder.or _, builder.and _, loopEnc.inLoop)
                 }
 
                 /*
@@ -241,6 +249,7 @@ class TableauEncoder(
 
                 /* __temporal_curNode_unroll' \in BOOLEAN */
                 val auxVarUpdateAssignmentEx = inBoolSet(builder.prime(auxVarEx))
+                val prevAuxVarUpdateEx = builder.eql(builder.prime(prevAuxVarEx), auxVarEx)
 
                 /* __temporal_curNode <=> A /\ __temporal_curNode' */
                 val nodeVarUpdateConditionEx = builder.equiv(
@@ -252,16 +261,16 @@ class TableauEncoder(
                     ),
                 )
 
-                /* __temporal_curNode_unroll' <=>   /\ __temporal_curNode_unroll
-                                                    /\ (~InLoop' \/ A')
+                /* __temporal_curNode_unroll <=>   /\ __temporal_curNode_unroll_prev
+                                                    /\ (~InLoop \/ A)
                  */
                 val auxVarUpdateConditionEx = builder.equiv(
-                    auxVarExPrime,
+                    auxVarEx,
                     outerOp(
-                        auxVarEx,
+                        prevAuxVarEx,
                         innerOp(
                             innerInLoopEx,
-                            builder.prime(argExs(0)),
+                            argExs(0),
                         ),
                     ),
                 )
@@ -280,16 +289,19 @@ class TableauEncoder(
                         nodeVarDecl,
                         nodeLoopVarDecl,
                         auxVarDecl,
+                        prevAuxVarDecl
                     ) ++ argVarDecls.flatten,
                     argsPredsUnion ++
                       PredExs(
                           initExs = Seq(
-                              auxVarInitEx
+                              auxVarInitEx,
+                              prevAuxVarInitEx
                           ),
                           nextExs = Seq(
                               auxVarUpdateAssignmentEx,
                               nodeVarUpdateConditionEx,
                               auxVarUpdateConditionEx,
+                              prevAuxVarUpdateEx
                           ),
                           loopOKExs = Seq(
                               auxVarLoopOKEx
