@@ -9,15 +9,12 @@ VARIABLE
 Init ==
     x = 0
 
-IncrementX == x' = IF x < 3 THEN x + 1 ELSE 0
-DecrementX == x > 0 /\ x' = x - 1
-
 Next ==
-    IncrementX \/ DecrementX
+    x' = IF x < 3 THEN x + 1 ELSE 0
     
 Liveness ==
-    <>(<<x' = x>>_x)
+    <>(<<x' = x + 1>>_x)
 
 FalseLiveness ==
-    ([DecrementX]_x)
+    <>[]([x' = x + 1]_x)
 ====
