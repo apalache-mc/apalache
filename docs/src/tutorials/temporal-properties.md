@@ -1,6 +1,6 @@
 # Temporal properties and counterexamples
 
-**Difficulty: Blue trail – Easy**
+**Difficulty: Red trail – Medium**
 
 In this tutorial, we will show how Apalache can be used to decide temporal
 properties that are more general than invariants.
@@ -364,6 +364,10 @@ That's what `RequestWillBeFulfilled_init` is for:
 it tells us whether in the first state of the execution, our temporal
 property holds true
 (recall that we named the property "RequestWillBeFulfilled").
+To understand why this is necessary, imagine you only knew whether the formula holds from *the current state* onward. 
+Then at the end of the trace, there is no way to know whether the formula held in the very first state.
+But in the very first state, no loop has been closed, thus the trace cannot be a counterexample yet.
+Since when we check temporal properties, we want to know whether they hold in the first state, we need this additional variable to remember that fact.
 
 ## Further reading
 
