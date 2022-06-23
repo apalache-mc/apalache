@@ -4,7 +4,11 @@
 
 In this tutorial, we will show how Apalache can be used to decide temporal
 properties that are more general than invariants.
-We will use a simple example specification, modelling a
+This tutorial will be most useful to you if you have a basic understanding of
+linear temporal logic, e.g. the semantics of `<>` and `[]` operators.
+Further, we assume you are familiar with TLA+, but expert knowledge is not necessary.
+
+As a running example, the tutorial uses a simple example specification, modelling a
 devious nondeterministic traffic light.
 
 ## Specifying temporal properties
