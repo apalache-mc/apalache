@@ -261,7 +261,7 @@ These are the following variables with their valuations in state 0:
 ```
 There are three groups of variables: those that look like formulas, e.g. `☐(requestedGreen ⇒ ♢isGreen)`,
 those that look like formulas and end with `_unroll`,
-e.g. , and the variable `RequestWillBeFulfilled_init`.
+e.g. `☐(requestedGreen ⇒ ♢isGreen)_unroll`, and the variable `RequestWillBeFulfilled_init`.
 
 Let's focus on the non-`_unroll` variables that look like formulas
 first.
@@ -355,15 +355,10 @@ original variables of the model, as explained above.
     /\ __loop_requestedGreen = FALSE
 ```
 
-Finally, let's discuss `RequestWillBeFulfilled_init`.
-Recall that the variables for subformulas store
-the evaluations of the subformulas at the current point in the execution.
-This means that when we are at the end of the execution, we don't know
-whether the variable for the whole formula, e.g. `☐(requestedGreen ⇒ ♢isGreen)`, was true in the first state.
-That's what `RequestWillBeFulfilled_init` is for:
-it tells us whether in the first state of the execution, our temporal
-property holds true
-(recall that we named the property "RequestWillBeFulfilled").
+Finally, `RequestWillBeFulfilled_init` is an artifact
+of the internal translation of temporal properties.
+Intuitively, in each state, `RequestWillBeFulfilled_init` if
+the formula `RequestWillBeFulfilled` holds true in the first state of the trace.
 
 ## Specifying Fairness
 
