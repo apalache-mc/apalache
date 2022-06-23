@@ -1384,10 +1384,19 @@ Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set
 EXITCODE: ERROR (75)
 ```
 
-### check FalseLiveness fails (temporal)
+### check --inv with a temporal property fails (temporal)
 
 ```sh
 $ apalache-mc check --inv=FalseLiveness LongPrefix.tla
+...
+EXITCODE: ERROR (255)
+[255]
+```
+
+### check FalseLiveness fails (temporal)
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness LongPrefix.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1396,7 +1405,7 @@ EXITCODE: ERROR (12)
 ### check Liveness succeeds (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness LongPrefix.tla
+$ apalache-mc check --temporal=Liveness LongPrefix.tla
 ...
 EXITCODE: OK
 ```
@@ -1404,7 +1413,7 @@ EXITCODE: OK
 ### check LongLoops: Liveness succeeds (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness LongLoops.tla
+$ apalache-mc check --temporal=Liveness LongLoops.tla
 ...
 EXITCODE: OK
 ```
@@ -1412,7 +1421,7 @@ EXITCODE: OK
 ### check LongLoops: FalseLiveness fails (temporal)
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness LongLoops.tla
+$ apalache-mc check --temporal=FalseLiveness LongLoops.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1421,13 +1430,13 @@ EXITCODE: ERROR (12)
 ### check NoLoopsNoProblems succeeds (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness NoLoopsNoProblems.tla
+$ apalache-mc check --temporal=Liveness NoLoopsNoProblems.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness NoLoopsNoProblems.tla
+$ apalache-mc check --temporal=FalseLiveness NoLoopsNoProblems.tla
 ...
 EXITCODE: OK
 ```
@@ -1435,13 +1444,13 @@ EXITCODE: OK
 ### check ManyBoxes (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness ManyBoxes.tla
+$ apalache-mc check --temporal=Liveness ManyBoxes.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness ManyBoxes.tla
+$ apalache-mc check --temporal=FalseLiveness ManyBoxes.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1450,13 +1459,13 @@ EXITCODE: ERROR (12)
 ### check ManyDiamonds (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness ManyDiamonds.tla
+$ apalache-mc check --temporal=Liveness ManyDiamonds.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness ManyDiamonds.tla
+$ apalache-mc check --temporal=FalseLiveness ManyDiamonds.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1465,13 +1474,13 @@ EXITCODE: ERROR (12)
 ### check DiamondBox (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness DiamondBox.tla
+$ apalache-mc check --temporal=Liveness DiamondBox.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness DiamondBox.tla
+$ apalache-mc check --temporal=FalseLiveness DiamondBox.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1480,13 +1489,13 @@ EXITCODE: ERROR (12)
 ### check BoxDiamond (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness BoxDiamond.tla
+$ apalache-mc check --temporal=Liveness BoxDiamond.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness BoxDiamond.tla
+$ apalache-mc check --temporal=FalseLiveness BoxDiamond.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1495,13 +1504,34 @@ EXITCODE: ERROR (12)
 ### check NestedTemporalInBool (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness NestedTemporalInBool.tla
+$ apalache-mc check --temporal=Liveness NestedTemporalInBool.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness NestedTemporalInBool.tla
+$ apalache-mc check --temporal=FalseLiveness NestedTemporalInBool.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check NoTemporalOperatorsInTemporalProp (temporal)
+
+```sh
+$ apalache-mc check --temporal=Property NoTemporalOperatorsInTemporalProp.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=PropertyWithTemporal NoTemporalOperatorsInTemporalProp.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=ExplicitInvariant NoTemporalOperatorsInTemporalProp.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1510,13 +1540,13 @@ EXITCODE: ERROR (12)
 ### check LetIn (temporal)
 
 ```sh
-$ apalache-mc check --inv=Liveness LetIn.tla
+$ apalache-mc check --temporal=Liveness LetIn.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --inv=FalseLiveness LetIn.tla
+$ apalache-mc check --temporal=FalseLiveness LetIn.tla
 ...
 EXITCODE: ERROR (12)
 [12]
@@ -1660,15 +1690,12 @@ $ apalache-mc check --config=Config1.cfg Config.tla | sed 's/[IEW]@.*//'
 ...
   > Config1.cfg: Loading TLC configuration
 ...
-  > Config1.cfg: PROPERTY AwesomeLiveness is ignored. Only INVARIANTS are supported.
-...
   > Set the initialization predicate to Init1
   > Set the transition predicate to Next1
   > Set an invariant to Inv1
+  > Set a temporal property to AwesomeLiveness
 ...
-Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
-...
-EXITCODE: ERROR (75)
+EXITCODE: OK
 ```
 
 ### configure via TLC config and override it via CLI
@@ -1682,9 +1709,13 @@ $ apalache-mc check --config=Config1.cfg --init=Init2 --next=Next2 Config.tla | 
   > Set the transition predicate to Next2
   > Set an invariant to Inv1
 ...
-Config.tla:58:5-58:14: unsupported expression: ♢(x > 10)
 ...
-EXITCODE: ERROR (75)
+State 7: state invariant 0 violated.
+Found 1 error(s)
+The outcome is: Error
+Checker has found an error
+...
+EXITCODE: ERROR (12)
 ```
 
 ### configure missing property in TLC config
