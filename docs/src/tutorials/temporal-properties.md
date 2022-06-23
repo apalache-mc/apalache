@@ -41,6 +41,11 @@ We have three possible actions:
 {{#include TrafficLight.tla:actions}}
 ```
 
+In the interest of simplicity, we'll assume that
+the button cannot be pushed when green is already requested, and
+that similarly it's not possible to push the button when the light is
+already green.
+
 Now, we are ready to specify properties we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
 We wan write the property like this:
