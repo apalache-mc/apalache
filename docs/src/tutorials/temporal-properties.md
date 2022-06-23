@@ -225,8 +225,7 @@ Further, `__loop_InLoop` is false, and the copies of `isGreen` and `requestedGre
 `__loop_isGreen` and `__loop_requestedGreen`, are equal to the values of `isGreen` and `requestedGreen`.
 
 From state 0 to state 1, `requestedGreen` changes from false to true.
-From state 1 to state 2, the system stutters, and nothing seems to change (in fact,
-some auxiliary variables 'under the hood' change, which we will dive into later).
+From state 1 to state 2, the system stutters, and the valuation of model variables remains unchanged.
 Finally, in state 3 `__loop_InLoop` is set to true, which means that
 the loop starts in state 2, and the trace from state 3 onward is inside the loop.
 However, since state 3 is the last state, this means simply that the trace loops in state 2.
