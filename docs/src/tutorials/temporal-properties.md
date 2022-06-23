@@ -162,7 +162,7 @@ We'll go explain the counterexample in the following.
 
 ## Counterexamples encode traces with a loop
 
-First, it's important to know that counterexamples to temporal properties are in general traces with a loop.
+First, it's important to know that counterexamples to temporal properties are, in general, traces ending in a loop.
 A loop is a partial trace that starts and ends with the same state. 
 A trace containing a loop describes a possible infinite execution that repeats the loop forever.
 
