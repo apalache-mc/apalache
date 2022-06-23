@@ -40,7 +40,12 @@ We have three possible actions:
 {{#include TrafficLight.tla:actions}}
 ```
 
-Now, we are ready to specify properties that we are interested in.
+In the interest of simplicity, we'll assume that
+the button cannot be pushed when green is already requested, and
+that similarly it's not possible to push the button when the light is
+already green.
+
+Now, we are ready to specify properties we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
 We can write the property like this:
 
@@ -261,17 +266,11 @@ These are the following variables with their valuations in the initial state:
     /\ ♢isGreen_unroll = FALSE
     ...
 ```
-<<<<<<< HEAD
-There are three groups of variables: those that look like formulas, e.g. `☐(requestedGreen ⇒ ♢isGreen)`,
-those that look like formulas and end with `_unroll`,
-e.g., and the variable `RequestWillBeFulfilled_init`.
-=======
 There are three groups of variables: 
 * Variables that look like formulas, e.g. `☐(requestedGreen ⇒ ♢isGreen)`
 * Variables that look like formulas and end with `_unroll`,
 e.g. `☐(requestedGreen ⇒ ♢isGreen)_unroll`
 * The variable `RequestWillBeFulfilled_init`.
->>>>>>> 3bb3bab4f... Introduce bullet points for aux var groups
 
 Let's focus on the non-`_unroll` variables that look like formulas
 first.
