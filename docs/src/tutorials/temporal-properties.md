@@ -314,9 +314,9 @@ For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable 
 leading box operator. 
 
 To illustrate why these are necessary, consider the formula
-`[]isGreen`. To decide whether this formula holds in the last state of the loop, we need to know whether
-`isGreen` holds in all states of the loop. So we need to store this information when we traverse the loop.
-That's why we have an extra variable, which tells us whether `isGreen` holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
+`[]isGreen`. To decide whether this formula holds in the last state of the loop, the algorithm needs to know whether
+`isGreen` holds in all states of the loop. So it needs to store this information when it traverses the loop.
+That's why there is an extra variable, which stores whether `isGreen` holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
 Similarly, the unroll-variable `♢isGreen_unroll` holds true
 if there is a state on the loop such that `isGreen` is true.
 
