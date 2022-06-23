@@ -182,10 +182,16 @@ For example, a counterexample trace might visually look like this:
 
 In contrast, as long as the model checking engine has not found a loop, there may still exist some future state satisfying `isGreen`.
 
-Apalache can identify looping executions by using auxiliary variables.
-The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
-Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
-we store the valuation of all variables in an auxiliary copy whose name is prefixed by `__loop_`.
+## Utilizing auxiliary variables to find loops
+
+The encoding for temporal properties involves lots of auxiliary variables.
+While some can be very helpful to understand counterexamples,
+many are mostly noise.
+
+Let's first understand how Apalache can identify looping executions using auxiliary variables.
+The auxiliary variable `__loop_InLoop` is true when the trace has started the loop, and false otherwise.
+Additionally, when the loop is started, so `__loop_InLoop` switches from true to false,
+the current status of variables of the model is stored in an extra copy of those variables.
 In our example, it looks like this:
 ```
 (* State0 ==
