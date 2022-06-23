@@ -1,4 +1,5 @@
 ---- MODULE TrafficLight ----
+\* ANCHOR: vars
 VARIABLES 
     \* If true, the traffic light is green. If false, it is red.
     \* @type: Bool;
@@ -10,14 +11,14 @@ VARIABLES
     \* or the button has never been pushed.
     \* @type: Bool;
     requestedGreen
+\* ANCHOR_END: vars
 
-\* @type: <<Bool, Bool>>;
-vars == << isGreen, requestedGreen >>
-
+\* ANCHOR: init
 \* The light is initially red, and the button was not pressed.
 Init ==
     /\ isGreen = FALSE
     /\ requestedGreen = FALSE
+\* ANCHOR_END: init
 
 \* ANCHOR: actions
 (* ---------------------- *)
@@ -74,6 +75,9 @@ RequestWillBeFulfilled ==
 \* ANCHOR_END: prop
 
 \* ANCHOR: stutternext
+\* @type: <<Bool, Bool>>;
+vars == << isGreen, requestedGreen >>
+
 StutteringNext ==
     [Next]_vars
 \* ANCHOR_END: stutternext
