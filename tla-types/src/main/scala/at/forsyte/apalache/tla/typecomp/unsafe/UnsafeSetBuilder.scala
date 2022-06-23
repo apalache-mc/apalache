@@ -46,7 +46,6 @@ trait UnsafeSetBuilder extends ProtoBuilder {
     buildBySignatureLookup(TlaSetOper.filter, x, set, p)
   }
 
-  // TODO: Consider removing, since map in the safe builder calls  mapMixed (and _mapMixed under the hood).
   /** { e: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair */
   protected def _map(
       e: TlaEx,

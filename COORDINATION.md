@@ -96,25 +96,9 @@ nothing is a priority".
 
 ###### How do we prioritize work?
 
-We considered 3 different prioritization schemes:
-
-1. Action Priority Matrix: This works by us placing our tasks on a matrix
-   according to _impact_ and _effort_. Then we analyze the resulting matrix and
-   choose what to prioritize, which should be the highest impact and lowest
-   effort in general. Here's another explanation
-   https://www.mindtools.com/pages/article/newHTE_95.htm
-2. Another methodology is [Cost of Delay
-   (CoD)](https://kanbanize.com/lean-management/value-waste/cost-of-delay) but
-   maybe it is not a good fit for us since it is very tied to economical impact
-   of the product. Basically works by asking "What is the (financial) impact of
-   this not being completed today?"
-3. Finally, perhaps a more subjective strategy would be to have people voting on
-   tasks they think are more important and using that as a basis for
-   prioritizing.
-
-In the end, we've opted to adopt the Action Priority Matrix. However, we have
-yet to work out the process by which this prioritization will be applied to
-issues.
+We use a modified action-priority matrix. Our prioritization process is
+recorded in
+[RFC-21](https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/021rfc-prioritization.md)
 
 ### Milestones
 
