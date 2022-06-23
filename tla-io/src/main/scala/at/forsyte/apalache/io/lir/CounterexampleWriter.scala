@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
 
 import java.io.PrintWriter
 import java.util.Calendar
@@ -22,7 +23,8 @@ trait CounterexampleWriter {
   def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit
 }
 
-class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class TlaCounterexampleWriter(writer: PrintWriter, nameReplacementMap: NameReplacementMap)
+    extends CounterexampleWriter {
 
   import CounterexampleWriter.stateToEx
 
@@ -58,10 +60,13 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
           pretty.writeComment(s"Transition ${state._1} to State$i")
         }
         val decl = tla.declOp(s"State$i", stateToEx(state._2))
-        pretty.writeWithNameReplacementComment(decl)
+        pretty.writeWithNameReplacementComment(decl, nameReplacementMap)
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
-    pretty.writeWithNameReplacementComment(TlaOperDecl("InvariantViolation", List(), notInvariant))
+    pretty.writeWithNameReplacementComment(
+        TlaOperDecl("InvariantViolation", List(), notInvariant),
+        nameReplacementMap,
+    )
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
@@ -70,7 +75,8 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   }
 }
 
-class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
+class TlcCounterexampleWriter(writer: PrintWriter, nameReplacementMap: NameReplacementMap)
+    extends TlaCounterexampleWriter(writer, nameReplacementMap) {
   override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
     // `states` must always contain at least 1 state: the constant initialization
     // This makes `states.tail` safe, since we have a nonempty sequence
@@ -156,9 +162,10 @@ object CounterexampleWriter extends LazyLogging {
       suffix: String,
       rootModule: TlaModule,
       notInvariant: NotInvariant,
-      states: List[NextState]): List[String] = {
+      states: List[NextState],
+      nameReplacementMap: NameReplacementMap): List[String] = {
     val writerHelper: String => PrintWriter => Unit =
-      kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
+      kind => writer => apply(kind, writer, nameReplacementMap).write(rootModule, notInvariant, states)
 
     val fileNames = List(
         ("tla", s"$prefix$suffix.tla"),
@@ -177,12 +184,15 @@ object CounterexampleWriter extends LazyLogging {
   }
 
   // factory method to get the desired CE writer
-  def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
+  def apply(
+      kind: String,
+      writer: PrintWriter,
+      nameReplacementMap: NameReplacementMap): CounterexampleWriter = {
     kind match {
-      case "tla"      => new TlaCounterexampleWriter(writer)
-      case "tlc"      => new TlcCounterexampleWriter(writer)
+      case "tla"      => new TlaCounterexampleWriter(writer, nameReplacementMap)
+      case "tlc"      => new TlcCounterexampleWriter(writer, nameReplacementMap)
       case "json"     => new JsonCounterexampleWriter(writer)
-      case "itf.json" => new ItfCounterexampleWriter(writer)
+      case "itf.json" => new ItfCounterexampleWriter(writer, nameReplacementMap)
       case fmt        => throw new Exception(s"unknown counterexample format requested: $fmt")
     }
   }

@@ -9,12 +9,12 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
-import at.forsyte.apalache.io.lir.NameReplacementMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
 
 /**
  * Encodes temporal formulas as invariants.
@@ -27,7 +27,8 @@ class TableauEncoder(
     module: TlaModule,
     gen: UniqueNameGenerator,
     loopEnc: LoopEncoder,
-    tracker: TransformationTracker)
+    tracker: TransformationTracker,
+    nameReplacementMap: NameReplacementMap)
     extends LazyLogging {
   val levelFinder = new TlaLevelFinder(module)
 
@@ -141,7 +142,7 @@ class TableauEncoder(
                 "Expected to find no LET-IN expressions. They should have been rewritten by the inliner.")
           case OperEx(oper, args @ _*) =>
             val nodeIdentifier = TableauEncoder.NAME_PREFIX + gen.newName()
-            NameReplacementMap.store = NameReplacementMap.store
+            nameReplacementMap
               .addOne(nodeIdentifier, curNode.toString().replace("\"", "\'"))
 
             /* create a new variable for this node.
@@ -159,7 +160,7 @@ class TableauEncoder(
              */
             val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
 
-            NameReplacementMap.store = NameReplacementMap.store
+            nameReplacementMap
               .addOne(nodeLoopVarDecl.name, LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"))
 
             val nodeVarEx = builder.varDeclAsNameEx(nodeVarDecl)

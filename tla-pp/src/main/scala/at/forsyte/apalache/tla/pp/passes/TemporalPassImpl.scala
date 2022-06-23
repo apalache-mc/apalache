@@ -12,6 +12,7 @@ import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -23,7 +24,8 @@ class TemporalPassImpl @Inject() (
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory,
-    renaming: IncrementalRenaming)
+    renaming: IncrementalRenaming,
+    nameReplacementMap: NameReplacementMap)
     extends TemporalPass with LazyLogging {
 
   override def name: String = "TemporalPass"
@@ -90,7 +92,7 @@ class TemporalPassImpl @Inject() (
       val inlinedTemporalFormulas =
         temporalFormulas.map(operDecl => operDecl.copy(body = transformation(operDecl.body)))
 
-      val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
+      val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker, nameReplacementMap)
       tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas: _*)
     }
   }

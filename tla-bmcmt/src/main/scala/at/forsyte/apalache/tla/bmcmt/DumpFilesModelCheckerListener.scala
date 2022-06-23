@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx, TlaModule}
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
 
 /**
  * Observer to [[SeqModelChecker]] that dumps example and counterexample traces to files.
@@ -24,12 +25,17 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
       rootModule: TlaModule,
       trace: DecodedExecution,
       invViolated: TlaEx,
-      errorIndex: Int): Unit = {
-    dump(rootModule, trace, invViolated, errorIndex, "violation")
+      errorIndex: Int,
+      nameReplacementMap: NameReplacementMap): Unit = {
+    dump(rootModule, trace, invViolated, errorIndex, "violation", nameReplacementMap)
   }
 
-  override def onExample(rootModule: TlaModule, trace: DecodedExecution, exampleIndex: Int): Unit = {
-    dump(rootModule, trace, tla.bool(true).as(BoolT1), exampleIndex, "example")
+  override def onExample(
+      rootModule: TlaModule,
+      trace: DecodedExecution,
+      exampleIndex: Int,
+      nameReplacementMap: NameReplacementMap): Unit = {
+    dump(rootModule, trace, tla.bool(true).as(BoolT1), exampleIndex, "example", nameReplacementMap)
   }
 
   private def dump(
@@ -37,11 +43,12 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
       trace: DecodedExecution,
       invViolated: TlaEx,
       index: Int,
-      prefix: String): Unit = {
+      prefix: String,
+      nameReplacementMap: NameReplacementMap): Unit = {
     val states = trace.path.map(p => (p._2.toString, p._1))
 
     def dump(suffix: String): List[String] = {
-      CounterexampleWriter.writeAllFormats(prefix, suffix, rootModule, invViolated, states)
+      CounterexampleWriter.writeAllFormats(prefix, suffix, rootModule, invViolated, states, nameReplacementMap)
     }
 
     // for a human user, write the latest (counter)example into ${prefix}.{tla,json,...}

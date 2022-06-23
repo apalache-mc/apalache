@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
 
 import scala.collection.immutable.{HashMap, HashSet}
 import at.forsyte.apalache.io.PrettyPrinterError
@@ -73,12 +74,12 @@ class PrettyWriter(
    * @see
    *   NameReplacementMap
    */
-  def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
+  def writeWithNameReplacementComment(decl: TlaDecl, nameReplacementMap: NameReplacementMap): Unit = {
     val declDoc = declToDoc(decl) <> line <> line
-    if (NameReplacementMap.store.isEmpty) {
+    if (nameReplacementMap.isEmpty) {
       prettyWriteDoc(declDoc)
     } else {
-      val declComment = toCommentDoc(decl)
+      val declComment = toCommentDoc(decl, nameReplacementMap)
       prettyWriteDoc(declComment <> line <> declDoc)
     }
   }
@@ -531,10 +532,10 @@ class PrettyWriter(
    * Pretty-writes the given decl, while replacing names with the values in the NameReplacementMap. Then, wrap the
    * result as a comment, since the substituted names might not be valid TLA.
    */
-  def toCommentDoc(decl: TlaDecl): Doc = {
+  def toCommentDoc(decl: TlaDecl, nameReplacementMap: NameReplacementMap): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
-          NameReplacementMap.store.getOrElse(x, x)
+          nameReplacementMap.getOrElse(x, x)
         }))
   }
 

@@ -26,6 +26,7 @@ import org.scalacheck.Prop.forAll
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
+import scala.collection.mutable
 
 @RunWith(classOf[JUnitRunner])
 class TestTableauEncoder extends AnyFunSuite with Checkers {
@@ -45,6 +46,7 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
         new UniqueNameGenerator(),
         loopEncoder,
         new IdleTracker(),
+        new mutable.HashMap[String, String]()
     )
 
   // ad hoc builder for well-typed temporal expressions (everything is typed boolean)

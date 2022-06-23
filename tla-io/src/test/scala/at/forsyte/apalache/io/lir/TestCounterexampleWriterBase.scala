@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TlaModule
+import scala.collection.mutable
 
 import java.io.{PrintWriter, StringWriter}
 
@@ -29,7 +30,7 @@ trait TestCounterexampleWriterBase {
 
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
-    val writer = CounterexampleWriter(kind, printWriter)
+    val writer = CounterexampleWriter(kind, printWriter, new mutable.HashMap[String, String]())
     writer.write(rootModule, notInvariant, states)
     printWriter.flush()
     val dateErasure = stringWriter.toString.replaceFirst(

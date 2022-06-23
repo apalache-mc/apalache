@@ -9,6 +9,7 @@ import java.io.PrintWriter
 import java.util.Calendar
 import scala.collection.mutable
 import scala.collection.immutable.Map
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
 
 /**
  * This class produces counterexamples in the Informal Trace Format.
@@ -18,7 +19,8 @@ import scala.collection.immutable.Map
  * @author
  *   Igor Konnov
  */
-class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class ItfCounterexampleWriter(writer: PrintWriter, nameReplacementMap: NameReplacementMap)
+    extends CounterexampleWriter {
 
   /**
    * The minimal value that can be reliably represented with Double in JavaScript.
@@ -57,11 +59,11 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
           "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
       )
 
-      (if (NameReplacementMap.store.isEmpty)
+      (if (nameReplacementMap.isEmpty)
          descriptions
        else
          descriptions ++
-           Map("variables-to-expressions" -> NameReplacementMap.store))
+           Map("variables-to-expressions" -> nameReplacementMap))
     }
 
     rootMap.put("#meta",

@@ -14,6 +14,9 @@ import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, Tran
 import at.forsyte.apalache.tla.pp.passes._
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMapFactory
+import at.forsyte.apalache.tla.lir.storage.NameReplacementMap
+
 
 /**
  * A configuration that binds all the passes from the parser to the checker. If you are not sure how the binding works,
@@ -36,6 +39,10 @@ class CheckerModule extends ToolModule {
     // We have to use TypeLiteral, as otherwise Guice is getting confused by type erasure.
     bind(new TypeLiteral[AnnotationStore]() {})
       .toProvider(classOf[AnnotationStoreProvider])
+
+    bind(new TypeLiteral[NameReplacementMap]() {})
+      .toProvider(classOf[NameReplacementMapFactory])
+
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
 
