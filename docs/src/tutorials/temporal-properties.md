@@ -313,7 +313,7 @@ As mentioned before, the value of
 an auxiliary variable in a state tells us whether from that state, the corresponding subformula is true.
 In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
 
-What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
+What about the `_unroll` variables? There is one `_unroll` variable for each immediate application of a temporal operator in the formula.
 For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable for the
 leading box operator. 
 
