@@ -350,18 +350,11 @@ original variables of the model, i.e., retaining the state of variables from the
 ```
 
 Finally, let's discuss `RequestWillBeFulfilled_init`.
-Recall that the variables for subformulas store
-the evaluations of the subformulas at the current point in the execution.
-This means that when we are at the end of the execution, we don't know
-whether the variable for the whole formula, e.g. `☐(requestedGreen ⇒ ♢isGreen)`, was true in the first state.
-That's what `RequestWillBeFulfilled_init` is for:
-it tells us whether in the first state of the execution, our temporal
-property holds true
-(recall that we named the property "RequestWillBeFulfilled").
-To understand why this is necessary, imagine you only knew whether the formula holds from *the current state* onward. 
-Then at the end of the trace, there is no way to know whether the formula held in the very first state.
-But in the very first state, no loop has been closed, thus the trace cannot be a counterexample yet.
-Since when we check temporal properties, we want to know whether they hold in the first state, we need this additional variable to remember that fact.
+This variable is an artifact of the translation for temporal properties.
+Intuitively, in any state, the variable will be true if the variable encoding the formula `RequestWillBeFulfilled`
+is true in the first state.
+A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state, so `RequestWillBeFulfilled_init` is false,
+and a loop satisfying requirements on the auxiliary variables is found.
 
 ## Further reading
 
