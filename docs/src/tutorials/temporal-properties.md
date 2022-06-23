@@ -194,8 +194,8 @@ many are mostly noise.
 
 Let's first understand how Apalache can identify looping executions using auxiliary variables.
 The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
-Additionally, when the loop is started, so `__loop_InLoop` switches from true to false,
-the current status of variables of the model is stored in an extra copy of those variables.
+Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
+we store the valuation of all variables in an auxiliary copy whose name is prefixed by `__loop_`.
 In our example, it looks like this:
 ```
 (* State0 ==
