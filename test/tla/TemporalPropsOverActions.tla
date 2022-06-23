@@ -1,4 +1,4 @@
----- MODULE Enabled ----
+---- MODULE TemporalPropsOverActions ----
 
 EXTENDS Integers
 
@@ -9,18 +9,15 @@ VARIABLE
 Init ==
     x = 0
 
-IncrementX == x' = x +1
+IncrementX == x' = IF x < 3 THEN x + 1 ELSE 0
 DecrementX == x > 0 /\ x' = x - 1
 
 Next ==
     IncrementX \/ DecrementX
     
-
-
 Liveness ==
-    <>(<<IncrementX>>_x)
+    <>(<<x' = x>>_x)
 
 FalseLiveness ==
-    []([DecrementX]_x)
-
+    ([DecrementX]_x)
 ====

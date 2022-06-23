@@ -1576,15 +1576,57 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
-### check temporal properties over actions work
+<!-- ### check Fairness (temporal)
+
 ```sh
-$ apalache-mc check --temporal Liveness TemporalNostutter.tla
+$ apalache-mc check --temporal=WF_Liveness Fairness.tla
 ...
 EXITCODE: OK
 ```
 
 ```sh
-$ apalache-mc check --temporal Liveness TemporalNostutter.tla
+$ apalache-mc check --temporal=SF_Liveness Fairness.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=WF_FalseLiveness Fairness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+```sh
+$ apalache-mc check --temporal=SF_FalseLiveness Fairness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+``` -->
+
+### check temporal properties over no-stuttering/stuttering actions work (temporal)
+```sh
+$ apalache-mc check --temporal=Liveness Stuttering.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness Stuttering.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check safety for no-stuttering/stuttering invariants
+```sh
+$ apalache-mc check --inv=Safety Stuttering.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseSafety Stuttering.tla
 ...
 EXITCODE: ERROR (12)
 [12]
