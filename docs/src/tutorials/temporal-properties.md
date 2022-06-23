@@ -196,7 +196,7 @@ Let's first understand how Apalache can identify looping executions using auxili
 The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
 Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
 we store the valuation of all variables in an auxiliary copy whose name is prefixed by `__loop_`.
-Before the first state of the loop, the values of the `__loop_` variables is unspecified.
+Before the first state of the loop, the values of the `__loop_` variables are unspecified.
 In our example, it looks like this:
 ```
 (* State0 ==
