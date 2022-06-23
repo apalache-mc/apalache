@@ -196,6 +196,7 @@ Let's first understand how Apalache can identify looping executions using auxili
 The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
 Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
 we store the valuation of all variables in an auxiliary copy whose name is prefixed by `__loop_`.
+Before the first state of the loop, the values of the `__loop_` variables is unspecified.
 In our example, it looks like this:
 ```
 (* State0 ==
@@ -324,7 +325,7 @@ That's why there is an extra variable, which stores whether `isGreen` holds on a
 Similarly, the unroll-variable `♢isGreen_unroll` holds true
 if there is a state on the loop such that `isGreen` is true.
 
-Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along the execution to see this.
+Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along our counterexample to see this.
 
 ```
 (* State0 ==
