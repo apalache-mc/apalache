@@ -257,9 +257,17 @@ These are the following variables with their valuations in the initial state:
     /\ ♢isGreen_unroll = FALSE
     ...
 ```
+<<<<<<< HEAD
 There are three groups of variables: those that look like formulas, e.g. `☐(requestedGreen ⇒ ♢isGreen)`,
 those that look like formulas and end with `_unroll`,
 e.g., and the variable `RequestWillBeFulfilled_init`.
+=======
+There are three groups of variables: 
+* Variables that look like formulas, e.g. `☐(requestedGreen ⇒ ♢isGreen)`
+* Variables that look like formulas and end with `_unroll`,
+e.g. `☐(requestedGreen ⇒ ♢isGreen)_unroll`
+* The variable `RequestWillBeFulfilled_init`.
+>>>>>>> 3bb3bab4f... Introduce bullet points for aux var groups
 
 Let's focus on the non-`_unroll` variables that look like formulas
 first.
