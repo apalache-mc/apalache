@@ -284,8 +284,13 @@ The syntax tree of this formula looks like this:
 ![The syntax tree for the formula [](requestedGreen => <>isGreen)](img/syntaxtree.png)
 
 For each node of the syntax tree where the formula contains a temporal operator,
-there is an auxiliary variable. And as mentioned before, the value of 
-the variable in a state tells us whether from that state, the subformula is true. In this particular example, the formulas that correspond to auxiliary variables in the encoding are filled with orange in the syntax tree.
+there is an auxiliary variable. 
+For example, there would be auxiliary variables for the formulas `[]isGreen`
+and `(<>isGreen) /\ ([]requestedGreen)`, but not for the formula `isGreen /\ requestedGreen`.
+
+As mentioned before, the value of 
+an auxiliary variable in a state tells us whether from that state, the corresponding subformula is true.
+In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
 
 What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
 For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable for the
