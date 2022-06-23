@@ -189,7 +189,8 @@ class TableauEncoder(
                   case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
                 }
                 val auxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
-                val prevAuxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix + "_prev")(Typed(BoolT1))
+                val prevAuxVarDecl =
+                  new TlaVarDecl(nodeIdentifier + nameSuffix + TableauEncoder.LOOKBACK_SUFFIX)(Typed(BoolT1))
 
                 val auxVarEx = builder.varDeclAsNameEx(auxVarDecl)
 
@@ -289,19 +290,19 @@ class TableauEncoder(
                         nodeVarDecl,
                         nodeLoopVarDecl,
                         auxVarDecl,
-                        prevAuxVarDecl
+                        prevAuxVarDecl,
                     ) ++ argVarDecls.flatten,
                     argsPredsUnion ++
                       PredExs(
                           initExs = Seq(
                               auxVarInitEx,
-                              prevAuxVarInitEx
+                              prevAuxVarInitEx,
                           ),
                           nextExs = Seq(
                               auxVarUpdateAssignmentEx,
                               nodeVarUpdateConditionEx,
                               auxVarUpdateConditionEx,
-                              prevAuxVarUpdateEx
+                              prevAuxVarUpdateEx,
                           ),
                           loopOKExs = Seq(
                               auxVarLoopOKEx
@@ -434,4 +435,5 @@ object TableauEncoder {
   val PREDS_TO_VARS_MAPPING_NAME = "__preds_to_vars"
   val BOX_SUFFIX = "_unroll"
   val DIAMOND_SUFFIX = "_unroll"
+  val LOOKBACK_SUFFIX = "_prev"
 }
