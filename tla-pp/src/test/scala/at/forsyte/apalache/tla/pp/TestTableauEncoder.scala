@@ -104,8 +104,8 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
           .filter(decl =>
             decl.name.startsWith(TableauEncoder.NAME_PREFIX)
               && !decl.name.contains(LoopEncoder.NAME_PREFIX)
-              && !decl.name.endsWith(TableauEncoder.BOX_SUFFIX)
-              && !decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
+              && !decl.name.contains(TableauEncoder.BOX_SUFFIX)
+              && !decl.name.contains(TableauEncoder.DIAMOND_SUFFIX))
           .length
 
         nodesInFormulaSyntaxTree ?= predicateVariables
