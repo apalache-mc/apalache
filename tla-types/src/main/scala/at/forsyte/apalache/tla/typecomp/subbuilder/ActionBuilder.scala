@@ -18,7 +18,7 @@ trait ActionBuilder extends UnsafeActionBuilder {
   /** [A]_e */
   def stutt(A: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(A, e)(_stutt)
 
-  /** <A>_e */
+  /** {{{<A>_e}}} */
   def nostutt(A: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(A, e)(_nostutt)
 
   /** ENABLED A */

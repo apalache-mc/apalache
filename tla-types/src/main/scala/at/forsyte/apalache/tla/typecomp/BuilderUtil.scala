@@ -26,8 +26,64 @@ object BuilderUtil {
   /** Removes elem from the scope, as the scope only contains types of free variables */
   def markAsBound(elem: TlaEx): TBuilderInternalState[Unit] = State[TBuilderContext, Unit] { mi: TBuilderContext =>
     require(elem.isInstanceOf[NameEx])
-    (mi.copy(nameScope = mi.nameScope - elem.asInstanceOf[NameEx].name), ())
+    (mi.copy(freeNameScope = mi.freeNameScope - elem.asInstanceOf[NameEx].name), ())
   }
+
+  /**
+   * Some (ternary) operators introduce bound variables (e.g. choose, exists, forall). This method constructs the
+   * expressions associated with the operator, and additionally performs shadowing checks and bound-variable tagging.
+   */
+  def boundVarIntroductionTernary(
+      rawMethod: (TlaEx, TlaEx, TlaEx) => TlaEx // argument order: (variable, set, expression)
+    )(variable: TBuilderInstruction,
+      set: TBuilderInstruction,
+      expr: TBuilderInstruction): TBuilderInstruction = for {
+    setEx <- set
+    usedInSet <- allUsed // variable may not appear as bound or free in set
+    exprEx <- expr
+    boundAfterExpr <- allBound // variable may not appear as bound in expr
+    varEx <- variable
+    _ <- markAsBound(varEx)
+    // variable is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfrerExpr
+    boundAfterVar <- allBound
+  } yield {
+    val ret = rawMethod(varEx, setEx, exprEx)
+    if (boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
+      val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
+      throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
+    } else ret
+  }
+
+  /**
+   * Some (binary) operators introduce bound variables (e.g. chooseUnbounded, existsUnbounded, forallUnbounded). This
+   * method constructs the expressions associated with the operator, and additionally performs shadowing checks and
+   * bound-variable tagging.
+   */
+  def boundVarIntroductionBinary(
+      rawMethod: (TlaEx, TlaEx) => TlaEx // argument order: (variable, expression)
+    )(variable: TBuilderInstruction,
+      expr: TBuilderInstruction): TBuilderInstruction = for {
+    exprEx <- expr
+    boundAfterExpr <- allBound // variable may not appear as bound in expr
+    varEx <- variable
+    _ <- markAsBound(varEx)
+    // variable is shadowed iff boundAfterVar \subseteq boundAfterExpr
+    boundAfterVar <- allBound
+  } yield {
+    val ret = rawMethod(varEx, exprEx)
+    if (boundAfterVar.subsetOf(boundAfterExpr)) {
+      val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
+      throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
+    } else ret
+  }
+
+  /** Convenience shorthand to access the set of used names. */
+  def allUsed: TBuilderInternalState[Set[String]] =
+    gets[TBuilderContext, Set[String]] { _.usedNames }
+
+  /** Convenience shorthand to access the set of bound names. */
+  def allBound: TBuilderInternalState[Set[String]] =
+    gets[TBuilderContext, Set[String]] { ctx => ctx.usedNames -- ctx.freeNameScope.keySet }
 
   /**
    * Given a sequence of computations, generates a computation that runs them in order and accumulates results to a

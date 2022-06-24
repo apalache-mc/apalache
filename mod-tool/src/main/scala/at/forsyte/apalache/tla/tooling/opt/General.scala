@@ -2,20 +2,22 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.io.CliConfig
 import at.forsyte.apalache.tla.lir.Feature
+import at.forsyte.apalache.infra.ExitCodes
 
 import java.io.File
 import org.backuity.clist._
 import org.backuity.clist.util.Read
 
 /**
- * The general commands.
+ * The base class used by all Apalache CLI subcommands.
  *
  * See: https://github.com/backuity/clist
  *
  * @author
- *   Igor Konnov
+ *   Igor Konnov, Shon Feder
  */
-trait General extends Command with CliConfig {
+abstract class ApalacheCommand(name: String, description: String)
+    extends Command(name: String, description: String) with CliConfig {
   // TODO Fix excessively long strings
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
@@ -39,6 +41,18 @@ trait General extends Command with CliConfig {
         val featureDescriptions = Feature.all.map(f => s"  ${f.name}: ${f.description}")
         ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
       })
+
+  /**
+   * Run the process corresponding to the specified subcommand
+   *
+   * All execution logic specific to the subcommand should be triggered encapsulated in the [[run]] method.
+   *
+   * @return
+   *   `Right(msg)` on a successful execution or `Left((errCode, msg))` if the process fails, where `errCode` is the
+   *   return code with the which the program will be terminated. In either case `msg` is the final message reported to
+   *   the user.
+   */
+  def run(): Either[(ExitCodes.TExitCode, String), String]
 
   private var _invocation = ""
   private var _env = ""
