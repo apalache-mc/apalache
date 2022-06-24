@@ -176,11 +176,20 @@ If you are interested in the technical details, the encoding is described in sec
 However, to understand the counterexample, you don't need to go into the technical details of the encoding.
 We'll go explain the counterexample in the following.
 
-## Counterexamples encode traces with a loop
+We will talk about traces in the following.
+You can find more information about (symbolic) traces [here](/tutorials/symbmc.html?highlight=trace#symbolic-traces).
+For the purpose of this tutorial, however, it will be enough to think of a trace as a sequence of states
+that were encountered by Apalache, and that demonstrate a violation of the property that is checked.
 
-First, it's important to know that counterexamples to temporal properties are, in general, traces ending in a loop.
+## Counterexamples encode lassos
+
+First, it's important to know that for finite-state systems, counterexamples to temporal properties are traces ending in a loop,
+which we'll call lassos in the following. If you want to learn more about why this is the case,
+have a look at [this book on model checking](https://mitpress.mit.edu/books/model-checking-second-edition).
+
 A loop is a partial trace that starts and ends with the same state. 
-A trace containing a loop describes a possible infinite execution that repeats the loop forever.
+A lasso is made up of two parts: A prefix, followed by a loop.
+It describes a possible infinite execution: first it goes through the prefix, and then repeats the loop forever.
 
 For example, what is a trace that is a counterexample to the property `♢isGreen`?
 It's an execution that loops without ever finding a state that satisfies `isGreen`.
