@@ -306,10 +306,6 @@ class TableauEncoder(
 
                 /* update loopOK:
                   /\ (__temporal_curNode_globally => __temporal_curNode) or (__temporal_curNode => __temporal_curNode_finally)
-
-                  \* necessary to ensure the value of __temporal_curNode_unroll is fine in the very last state,
-                  \* which is not checked by the next predicate, since it can reason only about the current state
-                  /\ (__temporal_curNode_unroll_prev = __temporal_curNode_unroll)
                  */
                 val auxVarLoopOKEx =
                   oper match {
@@ -317,11 +313,13 @@ class TableauEncoder(
                     case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
                   }
 
+                /* necessary to ensure the value of __temporal_curNode_unroll is fine in the very last state,
+                   which is not checked by the next predicate, since it can reason only about the current state
+
+                  /\ (__temporal_curNode_unroll_prev = __temporal_curNode_unroll)
+                 */
                 val prevAuxVarLoopOKEx =
-                  oper match {
-                    case TlaTempOper.box     => builder.impl(auxVarEx, nodeVarEx)
-                    case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
-                  }
+                  builder.eql(prevAuxVarEx, auxVarEx)
 
                 (
                     Seq(
