@@ -185,7 +185,7 @@ that were encountered by Apalache, and that demonstrate a violation of the prope
 
 First, it's important to know that for finite-state systems, counterexamples to temporal properties are traces ending in a loop,
 which we'll call lassos in the following. If you want to learn more about why this is the case,
-have a look at [this book on model checking](https://mitpress.mit.edu/books/model-checking-second-edition).
+have a look at the book on [model checking](https://mitpress.mit.edu/books/model-checking-second-edition).
 
 A loop is a partial trace that starts and ends with the same state. 
 A lasso is made up of two parts: A prefix, followed by a loop.
@@ -197,19 +197,19 @@ For example, a counterexample trace might visually look like this:
 
 ![A counterexample trace for the property <>isGreen](img/looping_trace.png)
 
-In contrast, as long as the model checking engine has not found a loop, there may still exist some future state satisfying `isGreen`.
+In contrast, as long as the model checking engine has not found a lasso, there may still exist some future state satisfying `isGreen`.
 
-## Utilizing auxiliary variables to find loops
+## Utilizing auxiliary variables to find lassos
 
 The encoding for temporal properties involves lots of auxiliary variables.
 While some can be very helpful to understand counterexamples,
 many are mostly noise.
 
-Let's first understand how Apalache can identify looping executions using auxiliary variables.
+Let's first understand how Apalache can identify lassos using auxiliary variables.
 The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
 Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
-we store the valuation of all variables in an auxiliary copy whose name is prefixed by `__loop_`.
-Before the first state of the loop, the values of the `__loop_` variables are unspecified.
+we store the valuation of each variable in a shadow copy whose name is prefixed by `__loop_`.
+Before the first state of the loop, the `__loop_` carry arbitrary values.
 In our example, it looks like this:
 ```
 (* State0 ==
@@ -265,7 +265,7 @@ Since the loop starts, the copies of the system variables are also set to the va
 so ` __loop_isGreen = FALSE` and `__loop_requestedGreen = TRUE`.
 
 
-The looping trace in this case can be visualized like this:
+The lasso in this case can be visualized like this:
 
 ![A counterexample trace for the property [](requestedGreen => <>isGreen)](img/counterexample.png)
 
