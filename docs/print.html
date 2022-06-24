@@ -2785,7 +2785,7 @@ It terminates successfully, if there are no invariant violations.</p>
 <h3><a class="header" href="#11-model-checker-command-line-parameters" id="11-model-checker-command-line-parameters">1.1. Model checker command-line parameters</a></h3>
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
+    [--next=Next] [--inv=Inv] [--length=10] [--temporal=TemporalProp] [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-encoding=(oopsla19|arrays)] \
@@ -2806,6 +2806,7 @@ It terminates successfully, if there are no invariant violations.</p>
 <li><code>--cinit</code> specifies the constant initialization predicate, <em>optional</em></li>
 <li><code>--inv</code> specifies the invariant to check, <em>optional</em></li>
 <li><code>--length</code> specifies the maximal number of <code>Next</code> steps, <em>10 by default</em></li>
+<li><code>--temporal</code> specifies the temporal property to check, <em>optional</em></li>
 </ul>
 </li>
 <li>
@@ -4278,12 +4279,9 @@ Type checker [FAILED]
 <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
 <h2><a class="header" href="#safety-vs-liveness" id="safety-vs-liveness">Safety vs. Liveness</a></h2>
 <p>At the moment, Apalache is able to check state invariants, action invariants,
-trace invariants as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/principles/invariants.html">page on
+temporal properties, trace invariants as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/principles/invariants.html">page on
 invariants</a> in
-the manual.) Which means that you can only check safety properties with
-Apalache, unless you employ a <a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation in your spec.
-In general, we do not support checking liveness properties.  If you would like
-to see liveness implemented, upvote the <a href="https://github.com/informalsystems/apalache/issues/488">liveness feature</a>.</p>
+the manual.) To check liveness/temporal properties, we employ a <a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation.</p>
 <h2><a class="header" href="#language" id="language">Language</a></h2>
 <h3><a class="header" href="#module-level-constructs" id="module-level-constructs">Module-Level constructs</a></h3>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
@@ -4370,17 +4368,25 @@ system distinguishes records from general functions.</p>
 <h3><a class="header" href="#the-action-operators" id="the-action-operators">The Action Operators</a></h3>
 <table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>e'</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>[A]_e</code></td><td align="center">✖</td><td align="center">-</td><td>It does not matter for safety</td></tr>
-<tr><td><code>&lt; A &gt;_e</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
-<tr><td><code>ENABLED A</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>[A]_e</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>&lt; A &gt;_e</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>ENABLED A</code></td><td align="center">✖</td><td align="center">-</td><td>Has to be specified manually</td></tr>
 <tr><td><code>UNCHANGED &lt;&lt;e_1, ..., e_k&gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Always replaced with <code>e_1' = e_1 /\ ... /\ e_k' = e_k</code></td></tr>
 <tr><td><code>A ∙ B</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h3><a class="header" href="#the-temporal-operators" id="the-temporal-operators">The Temporal Operators</a></h3>
-<p>The model checker assumes that the specification has the form <code>Init /\ [][Next]_e</code>. Given an invariant candidate <code>Inv</code>, the tool checks, whether
-<code>Inv</code> is violated by an execution whose length is bounded by the given
-argument.</p>
-<p>Except the standard form <code>Init /\ [][Next]_e</code>, no temporal operators are supported.</p>
+<table><thead><tr><th>Construct</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
+<tr><td><code>[]F</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>&lt;&gt;F</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
+<tr><td><code>WF_e(A)</code></td><td align="center">✖</td><td align="center">-</td><td>Has to be specified manually (see ENABLED)</td></tr>
+<tr><td><code>SF_e(A)</code></td><td align="center">✖</td><td align="center">-</td><td>Has to be specified manually (see ENABLED)</td></tr>
+<tr><td><code>F ~&gt; G</code></td><td align="center">✔</td><td align="center">-</td><td>Always replaced with <code>[](F =&gt; &lt;&gt;G)</code></td></tr>
+<tr><td><code>F -+-&gt; G</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>\EE x: F</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+<tr><td><code>\AA x: F</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
+</tbody></table>
+<p>The model checker assumes that the specification has the form <code>Init /\ [][Next]_e</code>. Other than that, temporal operators 
+may only appear in temporal properties, not in e.g. actions.</p>
 <h2><a class="header" href="#standard-modules" id="standard-modules">Standard modules</a></h2>
 <h3><a class="header" href="#integers-and-naturals" id="integers-and-naturals">Integers and Naturals</a></h3>
 <p>For the moment, the model checker does not differentiate between integers and naturals. They are all translated as integers in SMT.</p>
