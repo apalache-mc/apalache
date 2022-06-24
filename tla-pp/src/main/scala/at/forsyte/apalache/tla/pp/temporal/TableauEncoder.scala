@@ -200,7 +200,7 @@ class TableauEncoder(
               case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
                 /* create new auxiliary variables curNode_globally or curNode_finally,
                 and curNode_globally_prev or curNode_finally_prev
-                when it doesn't matter whether variable is for a [] or <> operator, we'll call it curNode_unroll in the comments
+                when it doesn't matter whether a variable is for a [] or <> operator, we'll call it curNode_unroll in the comments
                  */
                 val nameSuffix = oper match {
                   case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
