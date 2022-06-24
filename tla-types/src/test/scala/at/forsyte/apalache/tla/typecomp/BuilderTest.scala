@@ -269,4 +269,57 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     )(tparam)
   }
 
+  def assertThrowsBoundVarIntroductionTernary(
+      // order: variable, set, expr
+      method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.str("x"), // got ValEx(TlaStr), expected NameEx
+              builder.name("S", SetT1(StrT1)),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          method(
+              builder.name("x", StrT1), // x: Str
+              builder.name("S", SetT1(StrT1)),
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)), // x: Int
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op(x, {x}, TRUE)
+          method(
+              builder.name("x", StrT1),
+              builder.enumSet(builder.name("x", StrT1)),
+              builder.bool(true),
+          )
+      )
+    }
+
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op( x, S, \E x \in S: TRUE)
+          method(
+              builder.name("x", StrT1),
+              builder.name("S", SetT1(StrT1)),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("S", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
+  }
+
 }
