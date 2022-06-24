@@ -384,6 +384,18 @@ class TableauEncoder(
    * Encodes a given formula, using the Tableau encoding by adjusting init, next, loopOK and the given formula.
    */
   def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
+
+    /* formula is a temporal property, never an action, so removing assignments never hurts.
+    It's necessary to remove assignments when the formula uses an action as a condition. For example,
+    {{{Action == x' := 2
+
+    Property == <>[Action]_x
+    }}}
+    Encoding the property as an invariant would produce an assignment for an auxiliary variable like
+    {{{
+      auxVar := (x := 2)
+    }}}, which is invalid for the transition finder
+     */
     val assignmentlessBody = rewriteAssignmentsAsEquality(formula.body)
 
     var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(assignmentlessBody)
