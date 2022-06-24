@@ -476,5 +476,4 @@ object TableauEncoder {
   val BOX_SUFFIX = "_unroll"
   val DIAMOND_SUFFIX = "_unroll"
   val LOOKBACK_SUFFIX = "_prev"
-  val LOOKAHEAD_SUFFIX = "_next"
 }
