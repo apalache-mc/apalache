@@ -302,8 +302,8 @@ first.
 Recall that the temporal property we want to check is `[](requestedGreen => <>isGreen)`.
 That's also the name of one of the variables: The value of the variable 
 `☐(requestedGreen ⇒ ♢isGreen)` tells us whether starting in the current state, the
-formula `[](requestedGreen => <>isGreen)` holds. Since we are looking at a counterexample, it is not
-surprising that the formula does not hold in state 0.
+formula `[](requestedGreen => <>isGreen)` holds. Since we are looking at a counterexample to this formula, it is not
+surprising that the formula does not hold in the initial state of the counterexample.
 
 Similarly, the variable `requestedGreen ⇒ ♢isGreen` tells us whether
 the property `requestedGreen ⇒ ♢isGreen` holds at the current state.
