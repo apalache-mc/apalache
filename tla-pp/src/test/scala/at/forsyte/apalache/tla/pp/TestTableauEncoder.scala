@@ -140,7 +140,7 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
 
   if (TableauEncoder.DIAMOND_SUFFIX != TableauEncoder.BOX_SUFFIX) {
 
-    test("test: for each box operator, there is an extra variable") {
+    test("test: for each box operator, there are two extra variables") {
       val prop = forAll(formulaGen) { formula =>
         if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
           Prop.undecided
@@ -157,11 +157,17 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
           .length
 
         boxApplications ?= boxVariables
+
+        val prevBoxVariables = output.varDeclarations
+          .filter(decl => decl.name.endsWith(TableauEncoder.BOX_SUFFIX + TableauEncoder.LOOKBACK_SUFFIX))
+          .length
+
+        boxApplications ?= prevBoxVariables
       }
       check(prop, minSuccessful(500), sizeRange(4))
     }
 
-    test("test: for each diamond operator, there is an extra variable") {
+    test("test: for each diamond operator, there are two extra variables") {
       val prop = forAll(formulaGen) { formula =>
         if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
           Prop.undecided
@@ -178,11 +184,17 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
           .length
 
         diamondApplications ?= diamondVariables
+
+        val prevDiamondVariables = output.varDeclarations
+          .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX + TableauEncoder.LOOKBACK_SUFFIX))
+          .length
+
+        diamondApplications ?= prevDiamondVariables
       }
       check(prop, minSuccessful(500), sizeRange(4))
     }
   } else { // TableauEncoder.DIAMOND_SUFFIX == TableauEncoder.BOX_SUFFIX)
-    test("test: for each diamond and box operator, there is an extra variable") {
+    test("test: for each diamond and box operator, there are two extra variables") {
       val prop = forAll(formulaGen) { formula =>
         if (levelFinder.getLevelOfExpression(Set.empty, formula) != TlaLevelTemporal) {
           Prop.undecided
@@ -196,10 +208,17 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
 
         // identify predicate variables by the variable names
         val temporalAuxVars = output.varDeclarations
+          // since BOX_SUFFIX and DIAMOND_SUFFIX are the same, doesn't matter which we choose
           .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX))
           .length
 
         temporalApplications ?= temporalAuxVars
+
+        val prevTemporalAuxVars = output.varDeclarations
+          .filter(decl => decl.name.endsWith(TableauEncoder.DIAMOND_SUFFIX + TableauEncoder.LOOKBACK_SUFFIX))
+          .length
+
+        temporalApplications ?= prevTemporalAuxVars
       }
       check(prop, minSuccessful(500), sizeRange(4))
     }
