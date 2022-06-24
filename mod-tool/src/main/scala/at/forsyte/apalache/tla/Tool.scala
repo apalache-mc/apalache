@@ -246,7 +246,6 @@ object Tool extends LazyLogging {
 
   private def runCheck(executor: PassChainExecutor, check: CheckCmd): Int = {
     setCoreOptions(executor, check)
-    print(executor.options.get[List[String]]("checker", "temporal"))
 
     var tuning =
       if (check.tuningOptionsFile != "") loadProperties(check.tuningOptionsFile) else Map[String, String]()

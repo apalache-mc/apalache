@@ -1,10 +1,18 @@
 # Temporal properties and counterexamples
 
-**Difficulty: Blue trail – Easy**
+**Difficulty: Red trail – Medium**
+
+**Author:** Philip Offtermatt, 2022
 
 In this tutorial, we will show how Apalache can be used to decide temporal
 properties that are more general than invariants.
-We will use a simple example specification, modelling a
+This tutorial will be most useful to you if you have a basic understanding of
+linear temporal logic, e.g. the semantics of `<>` and `[]` operators.
+See a writeup of temporal operators [here](https://learntla.com/temporal-logic/operators/).
+
+Further, we assume you are familiar with TLA+, but expert knowledge is not necessary.
+
+As a running example, the tutorial uses a simple example specification, modelling a
 devious nondeterministic traffic light.
 
 ## Specifying temporal properties
@@ -16,17 +24,16 @@ the current state of the light (either green or red),
 and whether the button has been pushed that requests the traffic light to switch from red to green.
 
 The full specification of the traffic light is here:
-[TrafficLight.tla](TrafficLight.tla)
+[TrafficLight.tla](TrafficLight.tla).  
 But don't worry - we will dissect the spec in the following.
 
-In the TLA specification, this corresponds to
-two variables:
+In the TLA specification, we declare two variables:
 
 ```
 {{#include TrafficLight.tla:vars}}
 ```
 
-Initially, the light should be red and green should not be requested:
+Initially, the light is red and green has not yet been requested:
 
 ```
 {{#include TrafficLight.tla:init}}
@@ -46,9 +53,9 @@ the button cannot be pushed when green is already requested, and
 that similarly it's not possible to push the button when the light is
 already green.
 
-Now, we are ready to specify properties we are interested in.
+Now, we are ready to specify the properties that we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
-We wan write the property like this:
+We can write the property like this:
 
 ```
 {{#include TrafficLight.tla:prop}}
@@ -92,7 +99,7 @@ stuttering like this:
 {{#include TrafficLight.tla:stutternext}}
 ```
 
-Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED << vars >>`. Now, let us try to verify the property once again,
+Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED vars`. Now, let us try to verify the property once again,
 using the modified next predicate:
 
 ```
@@ -154,13 +161,13 @@ State0 ==
 ```
 
 Two things are notable:
-1. The initial state formula appears twice, once as a comment and once in TLA.
+1. The initial state formula appears twice, once as a comment and once in TLA+.
 2. There are way more variables than the two variables we specified.
 
-The comment and the TLA express the same state, but in the comment, some variable names from the encoding have been replaced
+The comment and the TLA+ specification express the same state, but in the comment, some variable names from the encoding have been replaced
 with more human-readable names.
 For example, there is a variable called `☐(requestedGreen ⇒ ♢isGreen)` in the comment,
-which is called `__temporal_t_1` in TLA.
+which is called `__temporal_t_1` in TLA+.
 In the following, let's focus on the content of the comment, since it's easier to understand what's going on.
 
 There are many additional variables in the counterexample because to check temporal formulas, Apalache uses an
@@ -169,11 +176,20 @@ If you are interested in the technical details, the encoding is described in sec
 However, to understand the counterexample, you don't need to go into the technical details of the encoding.
 We'll go explain the counterexample in the following.
 
-## Counterexamples encode traces with a loop
+We will talk about traces in the following.
+You can find more information about (symbolic) traces [here](/tutorials/symbmc.html?highlight=trace#symbolic-traces).
+For the purpose of this tutorial, however, it will be enough to think of a trace as a sequence of states
+that were encountered by Apalache, and that demonstrate a violation of the property that is checked.
 
-First, it's important to know that counterexamples to temporal properties are in general traces with a loop.
-A loop is a subtrace that starts and ends with the same state. A trace with a loop describes
-a possible infinite execution that repeats the loop forever.
+## Counterexamples encode lassos
+
+First, it's important to know that for finite-state systems, counterexamples to temporal properties are traces ending in a loop,
+which we'll call lassos in the following. If you want to learn more about why this is the case,
+have a look at the book on [model checking](https://mitpress.mit.edu/books/model-checking-second-edition).
+
+A loop is a partial trace that starts and ends with the same state. 
+A lasso is made up of two parts: A prefix, followed by a loop.
+It describes a possible infinite execution: first it goes through the prefix, and then repeats the loop forever.
 
 For example, what is a trace that is a counterexample to the property `♢isGreen`?
 It's an execution that loops without ever finding a state that satisfies `isGreen`.
@@ -181,18 +197,19 @@ For example, a counterexample trace might visually look like this:
 
 ![A counterexample trace for the property <>isGreen](img/looping_trace.png)
 
-If the execution doesn't loop, then we'd never be sure that there isn't some future state that satisfies `isGreen`.
+In contrast, as long as the model checking engine has not found a lasso, there may still exist some future state satisfying `isGreen`.
 
-## Utilizing auxiliary variables to find loops
+## Utilizing auxiliary variables to find lassos
 
 The encoding for temporal properties involves lots of auxiliary variables.
 While some can be very helpful to understand counterexamples,
 many are mostly noise.
 
-Let's first understand how Apalache can identify looping executions using auxiliary variables.
-The auxiliary variable `__loop_InLoop` is true when the trace has started the loop, and false otherwise.
-Additionally, when the loop is started, so `__loop_InLoop` switches from true to false,
-the current status of variables of the model is stored in an extra copy of those variables.
+Let's first understand how Apalache can identify lassos using auxiliary variables.
+The auxiliary variable `__loop_InLoop` is true in exactly the states belonging to the loop.
+Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switches from false to true,
+we store the valuation of each variable in a shadow copy whose name is prefixed by `__loop_`.
+Before the first state of the loop, the `__loop_` carry arbitrary values.
 In our example, it looks like this:
 ```
 (* State0 ==
@@ -240,8 +257,7 @@ Further, `__loop_InLoop` is false, and the copies of `isGreen` and `requestedGre
 `__loop_isGreen` and `__loop_requestedGreen`, are equal to the values of `isGreen` and `requestedGreen`.
 
 From state 0 to state 1, `requestedGreen` changes from false to true.
-From state 1 to state 2, the system stutters, and nothing seems to change (in fact,
-some auxiliary variables 'under the hood' change, which we will dive into later).
+From state 1 to state 2, the system stutters, and the valuation of model variables remains unchanged.
 Finally, in state 3 `__loop_InLoop` is set to true, which means that
 the loop starts in state 2, and the trace from state 3 onward is inside the loop.
 However, since state 3 is the last state, this means simply that the trace loops in state 2.
@@ -249,7 +265,7 @@ Since the loop starts, the copies of the system variables are also set to the va
 so ` __loop_isGreen = FALSE` and `__loop_requestedGreen = TRUE`.
 
 
-The looping trace in this case can be visualized like this:
+The lasso in this case can be visualized like this:
 
 ![A counterexample trace for the property [](requestedGreen => <>isGreen)](img/counterexample.png)
 
@@ -257,11 +273,11 @@ It is also clear why this trace violates the property:
 `requestedGreen` holds in state 1, but `isGreen` never holds,
 so in state 1 the property `requestedGreen => <>isGreen` is violated.
 
-## Auxiliary variables encode subformula evaluations along the trace
+## Auxiliary variables encode evaluations of subformulas along the trace
 
 Next, let us discuss the other auxiliary variables that are introduced by Apalache to check the temporal property.
 These extra variables correspond to parts of the temporal property we want to check.
-These are the following variables with their valuations in state 0:
+These are the following variables with their valuations in the initial state:
 
 ```
 (* State0 ==
@@ -286,8 +302,8 @@ first.
 Recall that the temporal property we want to check is `[](requestedGreen => <>isGreen)`.
 That's also the name of one of the variables: The value of the variable 
 `☐(requestedGreen ⇒ ♢isGreen)` tells us whether starting in the current state, the
-formula `[](requestedGreen => <>isGreen)` holds. Since we are looking at a counterexample, it is not
-surprising that the formula does not hold in state 0.
+formula `[](requestedGreen => <>isGreen)` holds. Since we are looking at a counterexample to this formula, it is not
+surprising that the formula does not hold in the initial state of the counterexample.
 
 Similarly, the variable `requestedGreen ⇒ ♢isGreen` tells us whether
 the property `requestedGreen ⇒ ♢isGreen` holds at the current state.
@@ -311,18 +327,18 @@ As mentioned before, the value of
 an auxiliary variable in a state tells us whether from that state, the corresponding subformula is true.
 In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.
 
-What about the `_unroll` variables? There is one `_unroll` variable for each temporal operator in the formula.
+What about the `_unroll` variables? There is one `_unroll` variable for each immediate application of a temporal operator in the formula.
 For example, `☐(requestedGreen ⇒ ♢isGreen)_unroll` is the unroll-variable for the
 leading box operator. 
 
 To illustrate why these are necessary, consider the formula
-`[]isGreen`. To decide whether this formula holds in the last state of the loop, we need to know whether
-`isGreen` holds in all states of the loop. So we need to store this information when we traverse the loop.
-That's why we have an extra variable, which essentially tells us whether `isGreen` holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
+`[]isGreen`. To decide whether this formula holds in the last state of the loop, the algorithm needs to know whether
+`isGreen` holds in all states of the loop. So it needs to store this information when it traverses the loop.
+That's why there is an extra variable, which stores whether `isGreen` holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
 Similarly, the unroll-variable `♢isGreen_unroll` holds true
-if in any state on the loop, `isGreen` is true.
+if there is a state on the loop such that `isGreen` is true.
 
-Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along the execution to see this.
+Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along our counterexample to see this.
 
 ```
 (* State0 ==
@@ -362,14 +378,10 @@ So in the last state, `☐(requestedGreen ⇒ ♢isGreen)_unroll`
 is not true, since `☐(requestedGreen ⇒ ♢isGreen)`
 does not hold in state 2, which is on the loop.
 
-Notice that for the variables corresponding to nodes in the
-syntax tree, e.g. `☐(requestedGreen ⇒ ♢isGreen)`,
-we have loop copies, e.g. `__loop_☐(requestedGreen ⇒ ♢isGreen)`.
-
-
-
+Similar to the `__loop_` copies for model variables,
+we also introduce copies for all (temporal) subformulas, e.g., `__loop_☐(requestedGreen ⇒ ♢isGreen)` for `☐(requestedGreen ⇒ ♢isGreen)`.
 These fulfill the same function as the `__loop_` copies for the
-original variables of the model, as explained above.
+original variables of the model, i.e., retaining the state of variables from the first state of the loop, e.g.,
 
 ```
 (* State0 ==
@@ -381,11 +393,11 @@ original variables of the model, as explained above.
     /\ __loop_requestedGreen = FALSE
 ```
 
-Finally, `RequestWillBeFulfilled_init` is an artifact
-of the internal translation of temporal properties.
-Intuitively, in each state, `RequestWillBeFulfilled_init` if
-the formula `RequestWillBeFulfilled` holds true in the first state of the trace.
-
+Finally, the variable `RequestWillBeFulfilled_init` is an artifact of the translation for temporal properties.
+Intuitively, in any state, the variable will be true if the variable encoding the formula `RequestWillBeFulfilled`
+is true in the first state.
+A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state, so `RequestWillBeFulfilled_init` is false,
+and a loop satisfying requirements on the auxiliary variables is found.
 ## Specifying Fairness
 
 The latest version of our traffic light is quite malicious:
