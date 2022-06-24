@@ -2,10 +2,14 @@
 
 **Difficulty: Red trail – Medium**
 
+**Author:** Philip Offtermatt, 2022
+
 In this tutorial, we will show how Apalache can be used to decide temporal
 properties that are more general than invariants.
 This tutorial will be most useful to you if you have a basic understanding of
 linear temporal logic, e.g. the semantics of `<>` and `[]` operators.
+See a writeup of temporal operators [here](https://learntla.com/temporal-logic/operators/).
+
 Further, we assume you are familiar with TLA+, but expert knowledge is not necessary.
 
 As a running example, the tutorial uses a simple example specification, modelling a
