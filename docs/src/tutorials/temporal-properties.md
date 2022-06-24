@@ -95,7 +95,7 @@ stuttering like this:
 {{#include TrafficLight.tla:stutternext}}
 ```
 
-Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED << vars >>`. Now, let us try to verify the property once again,
+Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED vars`. Now, let us try to verify the property once again,
 using the modified next predicate:
 
 ```
