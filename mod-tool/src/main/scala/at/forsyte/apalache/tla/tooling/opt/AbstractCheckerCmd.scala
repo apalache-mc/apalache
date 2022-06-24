@@ -20,6 +20,8 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     opt[String](name = "next", default = "", description = "the name of a transition operator, default: Next")
   var inv: String =
     opt[String](name = "inv", default = "", description = "the name of an invariant operator, e.g., Inv")
+  var temporal: String =
+    opt[String](name = "temporal", default = "", description = "the name of a temporal property, e.g. Property")
   var length: Int =
     opt[Int](name = "length", default = 10, description = "maximal number of Next steps, default: 10")
 
@@ -38,6 +40,8 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
       executor.passOptions.set("checker.next", next)
     if (inv != "")
       executor.passOptions.set("checker.inv", List(inv))
+    if (temporal != "")
+      executor.passOptions.set("checker.temporal", List(temporal))
     if (cinit != "")
       executor.passOptions.set("checker.cinit", cinit)
     executor.passOptions.set("checker.length", length)

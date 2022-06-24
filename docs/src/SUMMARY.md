@@ -10,6 +10,7 @@
 - [Checking Pluscal specifications](./tutorials/pluscal-tutorial.md)
 - [Apalache trail tips: how to check your specs faster](./tutorials/trail-tips.md)
 - [Symbolic Model Checking](./tutorials/symbmc.md)
+- [Specifying temporal properties and understanding counterexamples](./tutorials/temporal-properties.md)
 
 # Apalache User Manual
 
