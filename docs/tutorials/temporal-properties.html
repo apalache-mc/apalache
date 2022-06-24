@@ -1,0 +1,650 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Specifying temporal properties and understanding counterexamples - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded "><a href="../tutorials/temporal-properties.html" class="active"><strong aria-hidden="true">7.</strong> Specifying temporal properties and understanding counterexamples</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">8.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">8.1.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">8.1.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">8.1.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">8.1.3.</strong> Build from Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">8.2.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">8.3.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">8.4.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">8.5.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">8.5.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">8.5.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">8.5.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">8.5.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">8.5.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">8.5.6.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">8.6.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">8.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">8.8.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">8.9.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">9.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">10.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">11.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">12.</strong> Obsolete: Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">13.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">14.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">15.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">16.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">17.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">18.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">19.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">20.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">21.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">23.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">23.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">23.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">23.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">23.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">23.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">23.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">23.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">23.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">23.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">23.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">23.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">24.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">24.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">24.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">24.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">24.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">24.5.</strong> Local operator definitions</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">25.</strong> Apalache operators</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">26.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">27.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">28.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">29.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">30.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">31.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">32.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">33.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">34.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">35.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">36.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">37.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">38.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">39.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">40.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">41.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">42.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">43.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017pdr-temporal.html"><strong aria-hidden="true">44.</strong> PDR-017: Checking temporal properties</a></li><li class="chapter-item expanded "><a href="../adr/018adr-inlining.html"><strong aria-hidden="true">45.</strong> ADR-018: Inlining in Apalache</a></li><li class="chapter-item expanded "><a href="../adr/020adr-arenas.html"><strong aria-hidden="true">46.</strong> ADR-020: Improving membership in arenas</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#temporal-properties-and-counterexamples" id="temporal-properties-and-counterexamples">Temporal properties and counterexamples</a></h1>
+<p><strong>Difficulty: Red trail – Medium</strong></p>
+<p><strong>Author:</strong> Philip Offtermatt, 2022</p>
+<p>In this tutorial, we will show how Apalache can be used to decide temporal
+properties that are more general than invariants.
+This tutorial will be most useful to you if you have a basic understanding of
+linear temporal logic, e.g. the semantics of <code>&lt;&gt;</code> and <code>[]</code> operators.
+See a writeup of temporal operators <a href="https://learntla.com/temporal-logic/operators/">here</a>.</p>
+<p>Further, we assume you are familiar with TLA+, but expert knowledge is not necessary.</p>
+<p>As a running example, the tutorial uses a simple example specification, modelling a
+devious nondeterministic traffic light.</p>
+<h2><a class="header" href="#specifying-temporal-properties" id="specifying-temporal-properties">Specifying temporal properties</a></h2>
+<p>The traffic light has two main components: A lamp which can be either red or green,
+and a button which can be pushed to request the traffic light to become green.
+Consequently, there are two variables:
+the current state of the light (either green or red),
+and whether the button has been pushed that requests the traffic light to switch from red to green.</p>
+<p>The full specification of the traffic light is here:
+<a href="TrafficLight.tla">TrafficLight.tla</a>.<br />
+But don't worry - we will dissect the spec in the following.</p>
+<p>In the TLA specification, we declare two variables:</p>
+<pre><code>VARIABLES 
+    \* If true, the traffic light is green. If false, it is red.
+    \* @type: Bool;
+    isGreen,
+
+    \* If true, the button has been pushed to request the light to become green, but the light has
+    \* not become green since then.
+    \* If false, the light has become green since the button has last been pushed
+    \* or the button has never been pushed.
+    \* @type: Bool;
+    requestedGreen
+</code></pre>
+<p>Initially, the light is red and green has not yet been requested:</p>
+<pre><code>\* The light is initially red, and the button was not pressed.
+Init ==
+    /\ isGreen = FALSE
+    /\ requestedGreen = FALSE
+</code></pre>
+<p>We have three possible actions: </p>
+<ol>
+<li>The traffic light can switch from red to green, </li>
+<li>The traffic light can switch from green to red, or</li>
+<li>The button can be pushed, thus requesting that the traffic light becomes green.</li>
+</ol>
+<pre><code>(* ---------------------- *)
+(* requesting green light *)
+\* The switch to green can only be requested when the light is not green, and
+\* the switch has not *already* been requested since the light last turned green.
+RequestGreen_Guard ==
+    /\ ~isGreen
+    /\ ~requestedGreen
+
+RequestGreen_Effect == 
+    /\ requestedGreen' = TRUE
+    /\ UNCHANGED &lt;&lt; isGreen &gt;&gt;
+
+RequestGreen ==
+    RequestGreen_Guard /\ RequestGreen_Effect
+
+(* ---------------------- *)
+(* switching to red light *)
+\* The light can switch to red at any time if it is currently green.
+SwitchToRed_Guard == isGreen
+
+SwitchToRed_Effect ==
+    /\ isGreen' = FALSE
+    /\ UNCHANGED &lt;&lt; requestedGreen &gt;&gt;
+
+SwitchToRed ==
+    SwitchToRed_Guard /\ SwitchToRed_Effect
+
+(* ------------------------ *)
+(* switching to green light *)
+\* The light can switch to green if it is currently red, and
+\* the button to request the switch to green has been pressed.
+SwitchToGreen_Guard == 
+    /\ ~isGreen
+    /\ requestedGreen
+
+SwitchToGreen_Effect ==
+    /\ isGreen' = TRUE
+    /\ requestedGreen' = FALSE
+
+SwitchToGreen ==
+    SwitchToGreen_Guard /\ SwitchToGreen_Effect
+
+Next ==
+    \/ RequestGreen
+    \/ SwitchToRed
+    \/ SwitchToGreen
+</code></pre>
+<p>In the interest of simplicity, we'll assume that
+the button cannot be pushed when green is already requested, and
+that similarly it's not possible to push the button when the light is
+already green.</p>
+<p>Now, we are ready to specify the properties that we are interested in.
+For example, when green is requested, at some point afterwards the light should actually turn green.
+We can write the property like this:</p>
+<pre><code>RequestWillBeFulfilled ==
+    [](requestedGreen =&gt; &lt;&gt;isGreen)
+</code></pre>
+<p>Intuitively, the property says: 
+&quot;Check that at all points in time ([]),
+if right now, <code>RequestGreen</code> is true, 
+then at some future point in time, <code>IsGreen</code> is true.&quot;</p>
+<p>Let's run Apalache to check this property:</p>
+<pre><code>apalache-mc check --temporal=RequestWillBeFulfilled TrafficLight.tla
+</code></pre>
+<pre><code>...
+The outcome is: NoError       
+Checker reports no error up to computation length 10
+It took me 0 days  0 hours  0 min  2 sec
+Total time: 2.276 sec
+EXITCODE: OK
+</code></pre>
+<p>This is because our traffic watch is actually 
+deterministic: 
+If it is red and green has not been requested,
+the only enabled action is <code>RequestGreen</code>.
+If it is red and green has been requested,
+only <code>SwitchToGreen</code> is enabled.
+And finally, if the light is green,
+only <code>SwitchToRed</code> is enabled.</p>
+<p>However, we want to make our traffic light more devious.
+We will allow the model to stutter, that is,
+just let time pass and take no action.</p>
+<p>We can write a new next predicate that explicitly allows
+stuttering like this:</p>
+<pre><code>\* @type: &lt;&lt;Bool, Bool&gt;&gt;;
+vars == &lt;&lt; isGreen, requestedGreen &gt;&gt;
+
+StutteringNext ==
+    [Next]_vars
+</code></pre>
+<p>Recall that <code>[Next]_vars</code> is shorthand for <code>Next \/ UNCHANGED vars</code>. Now, let us try to verify the property once again,
+using the modified next predicate:</p>
+<pre><code>apalache-mc check --next=StutteringNext \
+    --temporal=RequestWillBeFulfilled TrafficLight.tla
+</code></pre>
+<pre><code>Step 2: picking a transition out of 3 transition(s)               I@18:04:16.132
+State 3: Checking 1 state invariants                              I@18:04:16.150
+State 3: Checking 1 state invariants                              I@18:04:16.164
+State 3: Checking 1 state invariants                              I@18:04:16.175
+State 3: Checking 1 state invariants                              I@18:04:16.186
+Check an example state in: /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.tla, /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/MC1.out, /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.json, /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.itf.json E@18:04:16.346
+State 3: state invariant 0 violated.                              E@18:04:16.346
+Found 1 error(s)                                                  I@18:04:16.347
+The outcome is: Error                                             I@18:04:16.353
+Checker has found an error                                        I@18:04:16.354
+It took me 0 days  0 hours  0 min  2 sec                          I@18:04:16.354
+Total time: 2.542 sec                                             I@18:04:16.354
+</code></pre>
+<p>This time, we get a counterexample.
+Let's take a look at <code>/home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.tla</code>.</p>
+<p>Let's first focus on the initial state.</p>
+<pre><code>(* Initial state *)
+(* State0 ==
+  RequestWillBeFulfilled_init = FALSE
+    /\ __loop_InLoop = FALSE
+    /\ __loop_☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ __loop_requestedGreen ⇒ ♢isGreen = TRUE
+    /\ __loop_♢isGreen = FALSE
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen)_unroll = TRUE
+    /\ requestedGreen ⇒ ♢isGreen = TRUE
+    /\ ♢isGreen = FALSE
+    /\ ♢isGreen_unroll = FALSE
+    /\ isGreen = FALSE
+    /\ requestedGreen = FALSE *)
+State0 ==
+  RequestWillBeFulfilled_init = FALSE
+    /\ __loop_InLoop = FALSE
+    /\ __loop___temporal_t_1 = FALSE
+    /\ __loop___temporal_t_2 = TRUE
+    /\ __loop___temporal_t_3 = FALSE
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = FALSE
+    /\ __temporal_t_1 = FALSE
+    /\ __temporal_t_1_unroll = TRUE
+    /\ __temporal_t_2 = TRUE
+    /\ __temporal_t_3 = FALSE
+    /\ __temporal_t_3_unroll = FALSE
+    /\ isGreen = FALSE
+    /\ requestedGreen = FALSE
+</code></pre>
+<p>Two things are notable:</p>
+<ol>
+<li>The initial state formula appears twice, once as a comment and once in TLA+.</li>
+<li>There are way more variables than the two variables we specified.</li>
+</ol>
+<p>The comment and the TLA+ specification express the same state, but in the comment, some variable names from the encoding have been replaced
+with more human-readable names.
+For example, there is a variable called <code>☐(requestedGreen ⇒ ♢isGreen)</code> in the comment,
+which is called <code>__temporal_t_1</code> in TLA+.
+In the following, let's focus on the content of the comment, since it's easier to understand what's going on.</p>
+<p>There are many additional variables in the counterexample because to check temporal formulas, Apalache uses an
+encoding that transforms temporal properties to invariants.
+If you are interested in the technical details, the encoding is described in sections 3.2 and 4 of <a href="https://lmcs.episciences.org/2236">Biere et al.</a>.
+However, to understand the counterexample, you don't need to go into the technical details of the encoding.
+We'll go explain the counterexample in the following.</p>
+<p>We will talk about traces in the following.
+You can find more information about (symbolic) traces <a href="/tutorials/symbmc.html?highlight=trace#symbolic-traces">here</a>.
+For the purpose of this tutorial, however, it will be enough to think of a trace as a sequence of states
+that were encountered by Apalache, and that demonstrate a violation of the property that is checked.</p>
+<h2><a class="header" href="#counterexamples-encode-lassos" id="counterexamples-encode-lassos">Counterexamples encode lassos</a></h2>
+<p>First, it's important to know that for finite-state systems, counterexamples to temporal properties are traces ending in a loop,
+which we'll call lassos in the following. If you want to learn more about why this is the case,
+have a look at the book on <a href="https://mitpress.mit.edu/books/model-checking-second-edition">model checking</a>.</p>
+<p>A loop is a partial trace that starts and ends with the same state. 
+A lasso is made up of two parts: A prefix, followed by a loop.
+It describes a possible infinite execution: first it goes through the prefix, and then repeats the loop forever.</p>
+<p>For example, what is a trace that is a counterexample to the property <code>♢isGreen</code>?
+It's an execution that loops without ever finding a state that satisfies <code>isGreen</code>.
+For example, a counterexample trace might visually look like this:</p>
+<p><img src="img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen" /></p>
+<p>In contrast, as long as the model checking engine has not found a lasso, there may still exist some future state satisfying <code>isGreen</code>.</p>
+<h2><a class="header" href="#utilizing-auxiliary-variables-to-find-lassos" id="utilizing-auxiliary-variables-to-find-lassos">Utilizing auxiliary variables to find lassos</a></h2>
+<p>The encoding for temporal properties involves lots of auxiliary variables.
+While some can be very helpful to understand counterexamples,
+many are mostly noise.</p>
+<p>Let's first understand how Apalache can identify lassos using auxiliary variables.
+The auxiliary variable <code>__loop_InLoop</code> is true in exactly the states belonging to the loop.
+Additionally, at the first state of the loop, i.e., when <code>__loop_InLoop</code> switches from false to true,
+we store the valuation of each variable in a shadow copy whose name is prefixed by <code>__loop_</code>.
+Before the first state of the loop, the <code>__loop_</code> carry arbitrary values.
+In our example, it looks like this:</p>
+<pre><code>(* State0 ==
+    ...
+    /\ __loop_InLoop = FALSE
+    ...
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = FALSE
+    ...
+    /\ isGreen = FALSE
+    /\ requestedGreen = FALSE *)
+
+(* State1 ==
+    ...
+    /\ __loop_InLoop = FALSE
+    ...
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = FALSE
+    ...
+    /\ isGreen = FALSE
+    /\ requestedGreen = TRUE *)
+
+(* State2 ==
+    ...
+    /\ __loop_InLoop = FALSE
+    ...
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = FALSE
+    ...
+    /\ isGreen = FALSE
+    /\ requestedGreen = TRUE *)
+
+(* State3 ==
+    ...
+    /\ __loop_InLoop = TRUE
+    ...
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = TRUE
+    ...
+    /\ isGreen = FALSE
+    /\ requestedGreen = TRUE *)
+</code></pre>
+<p>So, initially, <code>isGreen</code> and <code>requestedGreen</code> are both false.
+Further, <code>__loop_InLoop</code> is false, and the copies of <code>isGreen</code> and <code>requestedGreen</code>, which are called
+<code>__loop_isGreen</code> and <code>__loop_requestedGreen</code>, are equal to the values of <code>isGreen</code> and <code>requestedGreen</code>.</p>
+<p>From state 0 to state 1, <code>requestedGreen</code> changes from false to true.
+From state 1 to state 2, the system stutters, and the valuation of model variables remains unchanged.
+Finally, in state 3 <code>__loop_InLoop</code> is set to true, which means that
+the loop starts in state 2, and the trace from state 3 onward is inside the loop.
+However, since state 3 is the last state, this means simply that the trace loops in state 2.
+Since the loop starts, the copies of the system variables are also set to the values of the variables in state 2,
+so <code> __loop_isGreen = FALSE</code> and <code>__loop_requestedGreen = TRUE</code>.</p>
+<p>The lasso in this case can be visualized like this:</p>
+<p><img src="img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)" /></p>
+<p>It is also clear why this trace violates the property:
+<code>requestedGreen</code> holds in state 1, but <code>isGreen</code> never holds,
+so in state 1 the property <code>requestedGreen =&gt; &lt;&gt;isGreen</code> is violated.</p>
+<h2><a class="header" href="#auxiliary-variables-encode-evaluations-of-subformulas-along-the-trace" id="auxiliary-variables-encode-evaluations-of-subformulas-along-the-trace">Auxiliary variables encode evaluations of subformulas along the trace</a></h2>
+<p>Next, let us discuss the other auxiliary variables that are introduced by Apalache to check the temporal property.
+These extra variables correspond to parts of the temporal property we want to check.
+These are the following variables with their valuations in the initial state:</p>
+<pre><code>(* State0 ==
+  RequestWillBeFulfilled_init = FALSE
+    ...
+    /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen)_unroll = TRUE
+    /\ requestedGreen ⇒ ♢isGreen = TRUE
+    /\ ♢isGreen = FALSE
+    /\ ♢isGreen_unroll = FALSE
+    ...
+</code></pre>
+<p>There are three groups of variables: </p>
+<ul>
+<li>Variables that look like formulas, e.g. <code>☐(requestedGreen ⇒ ♢isGreen)</code></li>
+<li>Variables that look like formulas and end with <code>_unroll</code>,
+e.g. <code>☐(requestedGreen ⇒ ♢isGreen)_unroll</code></li>
+<li>The variable <code>RequestWillBeFulfilled_init</code>.</li>
+</ul>
+<p>Let's focus on the non-<code>_unroll</code> variables that look like formulas
+first.</p>
+<p>Recall that the temporal property we want to check is <code>[](requestedGreen =&gt; &lt;&gt;isGreen)</code>.
+That's also the name of one of the variables: The value of the variable 
+<code>☐(requestedGreen ⇒ ♢isGreen)</code> tells us whether starting in the current state, the
+formula <code>[](requestedGreen =&gt; &lt;&gt;isGreen)</code> holds. Since we are looking at a counterexample to this formula, it is not
+surprising that the formula does not hold in the initial state of the counterexample.</p>
+<p>Similarly, the variable <code>requestedGreen ⇒ ♢isGreen</code> tells us whether
+the property <code>requestedGreen ⇒ ♢isGreen</code> holds at the current state.
+It might be surprising to see that the property holds
+but recall that in state 0, <code>requestedGreen = FALSE</code>, so the implication is satisfied.
+Finally, we have the variable <code>♢isGreen</code>, which is false, telling
+us that along the execution, <code>isGreen</code> will never be true.</p>
+<p>You might already have noticed the pattern of which formulas appear as variables.
+Take our property <code>[](requestedGreen =&gt; &lt;&gt;isGreen)</code>.
+The syntax tree of this formula looks like this:</p>
+<p><img src="img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)" /></p>
+<p>For each node of the syntax tree where the formula contains a temporal operator,
+there is an auxiliary variable. 
+For example, there would be auxiliary variables for the formulas <code>[]isGreen</code>
+and <code>(&lt;&gt;isGreen) /\ ([]requestedGreen)</code>, but not for the formula <code>isGreen /\ requestedGreen</code>.</p>
+<p>As mentioned before, the value of 
+an auxiliary variable in a state tells us whether from that state, the corresponding subformula is true.
+In this particular example, the formulas that correspond to variables in the encoding are filled with orange in the syntax tree.</p>
+<p>What about the <code>_unroll</code> variables? There is one <code>_unroll</code> variable for each immediate application of a temporal operator in the formula.
+For example, <code>☐(requestedGreen ⇒ ♢isGreen)_unroll</code> is the unroll-variable for the
+leading box operator. </p>
+<p>To illustrate why these are necessary, consider the formula
+<code>[]isGreen</code>. To decide whether this formula holds in the last state of the loop, the algorithm needs to know whether
+<code>isGreen</code> holds in all states of the loop. So it needs to store this information when it traverses the loop.
+That's why there is an extra variable, which stores whether <code>isGreen</code> holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
+Similarly, the unroll-variable <code>♢isGreen_unroll</code> holds true
+if there is a state on the loop such that <code>isGreen</code> is true.</p>
+<p>Let us take a look at the valuations of <code>☐(requestedGreen ⇒ ♢isGreen)_unroll</code> along our counterexample to see this.</p>
+<pre><code>(* State0 ==
+    ...
+    /\ __loop_InLoop = FALSE
+    ...
+    /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen)_unroll = TRUE
+    ...
+
+(* State1 ==
+    ...
+    /\ __loop_InLoop = FALSE
+    ...
+    /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen)_unroll = TRUE
+    ...
+
+(* State2 ==
+    ...
+    /\ __loop_InLoop = FALSE
+    ...
+    /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen)_unroll = TRUE
+    ...
+
+(* State3 ==
+    ...
+    /\ __loop_InLoop = TRUE
+    ...
+    /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ ☐(requestedGreen ⇒ ♢isGreen)_unroll = FALSE
+    ...
+</code></pre>
+<p>So in the last state, <code>☐(requestedGreen ⇒ ♢isGreen)_unroll</code>
+is not true, since <code>☐(requestedGreen ⇒ ♢isGreen)</code>
+does not hold in state 2, which is on the loop.</p>
+<p>Similar to the <code>__loop_</code> copies for model variables,
+we also introduce copies for all (temporal) subformulas, e.g., <code>__loop_☐(requestedGreen ⇒ ♢isGreen)</code> for <code>☐(requestedGreen ⇒ ♢isGreen)</code>.
+These fulfill the same function as the <code>__loop_</code> copies for the
+original variables of the model, i.e., retaining the state of variables from the first state of the loop, e.g.,</p>
+<pre><code>(* State0 ==
+    ...
+    /\ __loop_☐(requestedGreen ⇒ ♢isGreen) = FALSE
+    /\ __loop_requestedGreen ⇒ ♢isGreen = TRUE
+    /\ __loop_♢isGreen = FALSE
+    /\ __loop_isGreen = FALSE
+    /\ __loop_requestedGreen = FALSE
+</code></pre>
+<p>Finally, let's discuss <code>RequestWillBeFulfilled_init</code>.
+This variable is an artifact of the translation for temporal properties.
+Intuitively, in any state, the variable will be true if the variable encoding the formula <code>RequestWillBeFulfilled</code>
+is true in the first state.
+A trace is a counterexample if <code>RequestWillBeFulfilled</code> is false in the first state, so <code>RequestWillBeFulfilled_init</code> is false,
+and a loop satisfying requirements on the auxiliary variables is found.</p>
+<h2><a class="header" href="#further-reading" id="further-reading">Further reading</a></h2>
+<p>In this tutorial, we learned how to specify temporal properties
+in Apalache, and how to read counterexamples for such properties.</p>
+<p>If you want to dive deeper into the
+encoding, it is formally explained in sections 3.2 and 4 of
+<a href="https://lmcs.episciences.org/2236">Biere et al.</a>. To understand why this encoding was chosen,
+you can read the <a href="../adr/017pdr-temporal.html">ADR on temporal properties</a>.
+Finally, if you want to go into the nitty-gritty details and see
+the encoding in action,
+you can look at the intermediate TLA specifying the encoding.</p>
+<p>Run</p>
+<pre><code>apalache-mc check --next=StutteringNext \
+    --write-intermediate=yes --temporal=RequestWillBeFulfilled TrafficLight.tla
+</code></pre>
+<p>You will get intermediate output in a folder named like
+<code>_apalache_out/TrafficLight/TIMESTAMP/intermediate/</code>.
+There, take a look at <code>0X_OutTemporalPass.tla</code>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../tutorials/symbmc.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../apalache/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../tutorials/symbmc.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../apalache/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
