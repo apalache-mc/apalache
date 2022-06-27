@@ -34,7 +34,8 @@ class TableauEncoder(
 
   private def inBoolSet(element: TBuilderInstruction): TBuilderInstruction = builder.in(element, builder.booleanSet())
 
-  /* replaces all occurences of foo := bar with foo = bar */
+  /* replaces all occurences of := with =.
+  For example, x' := foo becomes x' = foo. */
   private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
     ex match {
       case OperEx(oper, args @ _*) =>
