@@ -12,19 +12,24 @@ VARIABLES
 Init ==
     /\ x = 0
 
-IncrementX == x' = x + 1
+IncrementX == 
+    x' = x + 1 /\ x < 3
 
-DecrementX == x' = x - 1
+DecrementX == 
+    x' = x - 1 /\ x > -3
+
+LeaveX ==
+    UNCHANGED x
     
 
 Next ==
-    IncrementX \/ DecrementX
+    IncrementX \/ DecrementX \/ LeaveX
 
 Fairness ==
     WF_x(IncrementX)
 
 LiveIfFair ==
-    x > 5
+    <><<IncrementX>>_x
 
 FairnessImpliesLiveIfFair ==
     Fairness => LiveIfFair
