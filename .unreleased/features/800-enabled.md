@@ -1,0 +1,1 @@
+Add support for ENABLED by rewriting it in preprocessing, see #800
