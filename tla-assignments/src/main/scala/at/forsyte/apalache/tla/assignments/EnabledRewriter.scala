@@ -255,7 +255,7 @@ class EnabledRewriter(
         // val res = constSimplifier(exWithQuantifiersOutside)
         // println("res: " + res)
         // res
-        exWithQuantifiersOutside
+        constSimplifier(exWithQuantifiersOutside)
       })
 
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
