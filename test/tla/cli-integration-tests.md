@@ -1590,6 +1590,14 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check quantification inside Enabled (temporal)
+
+```sh
+$ apalache-mc check --temporal=Liveness QuantifiersInEnabled.tla.tla
+...
+EXITCODE: OK
+```
+
 ### check Weak Fairness (temporal)
 
 ```sh
