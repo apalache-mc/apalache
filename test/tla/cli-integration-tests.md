@@ -1613,6 +1613,21 @@ $ apalache-mc check --temporal=FairnessImpliesLiveIfFair Fairness.tla
 EXITCODE: OK
 ```
 
+### check Weak Fairness (temporal)
+
+```sh
+$ apalache-mc check --temporal=LiveIfFair WeakFairness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+```sh
+$ apalache-mc check --temporal=FairnessImpliesLiveIfFair WeakFairness.tla
+...
+EXITCODE: OK
+```
+
 ### check temporal properties over no-stuttering/stuttering actions work (temporal)
 ```sh
 $ apalache-mc check --temporal=Liveness Stuttering.tla

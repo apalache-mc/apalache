@@ -1,4 +1,4 @@
----- MODULE Fairness ----
+---- MODULE WeakFairness ----
 
 \* Tests behaviour when there are 
 \* fairness operators.
