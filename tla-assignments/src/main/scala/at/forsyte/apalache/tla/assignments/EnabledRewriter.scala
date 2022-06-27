@@ -221,23 +221,15 @@ class EnabledRewriter(
       .map(symbTrans => {
         val assignmentEx = symbTrans._2
 
-        println("assignments: " + assignmentEx)
-
         // extract assignments of the form x' := expression_x, y' := expression_y and
         // flatten them, i.e. x' := y' + 2, y' := 1 is simplified to x' := 1 + 2, y' := 1
         val assignments = flattenAssignments(extractAssignmentsFromExpression(assignmentEx))
-
-        println("assignments flattened: " + assignmentEx)
-
 
         // replace the assignments in the expression with TRUE,
         // then replace occurences of primed variables by their assigned expressions.
         // for example, x' := 1 /\ y' := 2 /\ (x' = 2 => y' > x')
         // becomes TRUE /\ TRUE /\ (1 = 2 => 2 > 1)
         val modifiedEx = flattenEx(removeAssignmentsFromExpression(assignmentEx), assignments)
-
-        println("modified ex: " + assignmentEx)
-
 
         /**
          * Consider the following expression:
@@ -258,9 +250,6 @@ class EnabledRewriter(
          */
         val exWithQuantifiersOutside = putQuantificationsOutward(modifiedEx)
 
-        println("ex with quant outside: " + assignmentEx)
-
-
         // simplify the expression, since many terms become trivial after replacement:
         // e.g. TRUE /\ TRUE /\ (1 = 2 => 2 > 1) becomes TRUE
         // val res = constSimplifier(exWithQuantifiersOutside)
@@ -276,7 +265,6 @@ class EnabledRewriter(
     ex match {
       case OperEx(TlaActionOper.enabled, arg) =>
         val body = utils.rewriteAssignmentsAsEquality(arg)
-        println("assignmentless body: " + body)
         transformEnabled(body, module.varDeclarations, module.operDeclarations)
       case OperEx(oper, args @ _*) =>
         new OperEx(oper, args.map(arg => this(arg, module)): _*)(ex.typeTag)
