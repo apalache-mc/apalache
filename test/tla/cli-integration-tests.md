@@ -1384,6 +1384,14 @@ Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set
 EXITCODE: ERROR (75)
 ```
 
+### check Enabled as an invariant succeeds
+
+```sh
+$ apalache-mc check --inv=Inv Enabled.tla
+...
+EXITCODE: OK
+```
+
 ### check --inv with a temporal property fails (temporal)
 
 ```sh
@@ -1562,6 +1570,77 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --temporal=FalseLiveness LetIn.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check Enabled (temporal)
+
+```sh
+$ apalache-mc check --temporal=Liveness Enabled.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness Enabled.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+<!-- ### check Fairness (temporal)
+
+```sh
+$ apalache-mc check --temporal=WF_Liveness Fairness.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=SF_Liveness Fairness.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=WF_FalseLiveness Fairness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+```sh
+$ apalache-mc check --temporal=SF_FalseLiveness Fairness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+``` -->
+
+### check temporal properties over no-stuttering/stuttering actions work (temporal)
+```sh
+$ apalache-mc check --temporal=Liveness Stuttering.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness Stuttering.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+### check safety for no-stuttering/stuttering invariants
+```sh
+$ apalache-mc check --inv=Safety Stuttering.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --inv=FalseSafety Stuttering.tla
 ...
 EXITCODE: ERROR (12)
 [12]

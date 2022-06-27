@@ -82,4 +82,12 @@ StutteringNext ==
     [Next]_vars
 \* ANCHOR_END: stutternext
 
+\* ANCHOR: fairprop
+Fairness ==
+    WF_vars(SwitchToGreen) /\ WF_vars(SwitchToRed)
+
+RequestsFulfilledIfFair ==
+    Fairness => RequestWillBeFulfilled
+\* ANCHOR_END: fairprop
+
 ====
