@@ -36,10 +36,6 @@ Liveness ==
     <>(ENABLED TightlyConstrainedAction)
 
 FalseLiveness ==
-<<<<<<< HEAD
     <>(~ENABLED LooselyConstrainedAction)
-=======
-    []<>(ENABLED LooselyConstrainedAction)
->>>>>>> Start adding rewriting for enabled
 
 ====
