@@ -226,8 +226,6 @@ class LoopEncoder(tracker: TransformationTracker) extends LazyLogging {
         case _         => decl
       })
 
-    TemporalAuxVarStore.store = TemporalAuxVarStore.store ++ loopVariables.map(_.name).toSet + inLoopDecl.name
-
     new ModWithPreds(new TlaModule(module.name, (loopVariables :+ inLoopDecl) ++ (newDeclarations :+ loopOk)), newInit,
         newNext, loopOk)
   }
