@@ -803,16 +803,11 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
 
     val expected =
-<<<<<<< HEAD
-      desugarer.transform(
-          tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1))
-=======
       // transform expected output, since desugarer may rewrite more
       desugarer.transform(
           tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1)
       )
 
->>>>>>> 800-feature-support-for-enabled
     assert(expected.eqTyped(output))
   }
 
