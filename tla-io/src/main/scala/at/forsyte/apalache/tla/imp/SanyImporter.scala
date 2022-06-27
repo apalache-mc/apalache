@@ -87,20 +87,35 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     (specObj.getName, modmap)
   }
 
+  // Regex to match the module line and capture the module name
+  val MODULE_LINE_RE = """-+ +MODULE +(\w*) -+""".r
+
+  // Extract the name of a module from the source specifying it
+  // This function copies the Source [s] and doesn't consume it.
+  def moduleNameOfSource(s: Source): Option[String] = {
+    // Copy the source so we don't consume iterator
+    val copy = s.reset()
+    copy.getLines().find(MODULE_LINE_RE.matches(_)).flatMap {
+      case MODULE_LINE_RE(name) => Some(name)
+      case _                    => None
+    }
+  }
+
   /**
    * Load a TLA+ specification from a text source. This method creates a temporary file and saves the source's contents
    * into it, in order to call SANY.
    *
-   * @param moduleName
-   *   the name of the root module (SANY compares it against the filename, so we have to know it)
    * @param source
    *   the text source
    * @return
    *   the pair (the root module name, a map of modules)
    */
-  def loadFromSource(
-      moduleName: String,
-      source: Source): (String, Map[String, TlaModule]) = {
+  def loadFromSource(source: Source): (String, Map[String, TlaModule]) = {
+    val moduleName = moduleNameOfSource(source) match {
+      case Some(n) => n
+      case None    => throw new SanyImporterException(s"No module name found in given source")
+    }
+
     val tempDir = Files.createTempDirectory("sanyimp").toFile
     val temp = new File(tempDir, moduleName + ".tla")
     try {
