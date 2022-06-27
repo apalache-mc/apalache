@@ -1590,33 +1590,20 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
-<!-- ### check Fairness (temporal)
+### check Weak Fairness (temporal)
 
 ```sh
-$ apalache-mc check --temporal=WF_Liveness Fairness.tla
-...
-EXITCODE: OK
-```
-
-```sh
-$ apalache-mc check --temporal=SF_Liveness Fairness.tla
-...
-EXITCODE: OK
-```
-
-```sh
-$ apalache-mc check --temporal=WF_FalseLiveness Fairness.tla
+$ apalache-mc check --temporal=LiveIfFair Fairness.tla
 ...
 EXITCODE: ERROR (12)
 [12]
 ```
 
 ```sh
-$ apalache-mc check --temporal=SF_FalseLiveness Fairness.tla
+$ apalache-mc check --temporal=FairnessImpliesLiveIfFair Fairness.tla
 ...
-EXITCODE: ERROR (12)
-[12]
-``` -->
+EXITCODE: OK
+```
 
 ### check temporal properties over no-stuttering/stuttering actions work (temporal)
 ```sh
