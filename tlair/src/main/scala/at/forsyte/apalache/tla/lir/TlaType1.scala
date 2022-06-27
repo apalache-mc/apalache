@@ -40,7 +40,7 @@ object TlaType1 {
     }
   }
 
-  // returns true iff the type is a monotype, i.e. if it contains on type variables
+  // returns true iff the type is a monotype, i.e. if it contains no type variables
   def isMono(tt: TlaType1): Boolean = tt match {
     case _: VarT1                 => false
     case FunT1(arg, res)          => isMono(arg) && isMono(res)

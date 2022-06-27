@@ -90,7 +90,7 @@ class Inliner(
     case _                         => false
   }
 
-  // Default scope filter, we add nullary operators if keepNullary is disabled or if they're polymorphic
+  // Default scope filter, we add nullary operators if keepNullaryMono is disabled or if they're polymorphic
   private def nonNullaryFilter(d: TlaOperDecl): Boolean =
     !keepNullaryMono || isPolyTag(d.typeTag) || d.formalParams.nonEmpty
 
