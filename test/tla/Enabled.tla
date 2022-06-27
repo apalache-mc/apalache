@@ -36,6 +36,6 @@ Liveness ==
     <>(ENABLED TightlyConstrainedAction)
 
 FalseLiveness ==
-    []<>(ENABLED LooselyConstrainedAction)
+    <>(~ENABLED LooselyConstrainedAction)
 
 ====
