@@ -18,6 +18,8 @@ sealed trait TlaType1 {
    *   the set of variable names (actually, integers) that are used in the type.
    */
   def usedNames: Set[Int]
+
+  def isMono: Boolean = TlaType1.isMono(this)
 }
 
 /**
@@ -36,6 +38,22 @@ object TlaType1 {
       case Typed(tt: TlaType1) => tt
       case _ => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag, UID.nullId)
     }
+  }
+
+  // returns true iff the type is a monotype, i.e. if it contains on type variables
+  def isMono(tt: TlaType1): Boolean = tt match {
+    case _: VarT1                 => false
+    case FunT1(arg, res)          => isMono(arg) && isMono(res)
+    case SetT1(elem)              => isMono(elem)
+    case SeqT1(elem)              => isMono(elem)
+    case TupT1(elems @ _*)        => elems.forall(isMono)
+    case SparseTupT1(fieldTypes)  => fieldTypes.values.forall(isMono)
+    case RecT1(fieldTypes)        => fieldTypes.values.forall(isMono)
+    case OperT1(args, res)        => (res +: args).forall(isMono)
+    case RowT1(fieldTypes, other) => (other ++ fieldTypes.values).forall(isMono)
+    case RecRowT1(row)            => isMono(row)
+    case VariantT1(row)           => isMono(row)
+    case _                        => true
   }
 }
 

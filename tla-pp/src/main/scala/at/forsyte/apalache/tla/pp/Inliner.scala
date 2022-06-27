@@ -31,7 +31,8 @@ import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVar
 class Inliner(
     tracker: TransformationTracker,
     renaming: IncrementalRenaming,
-    keepNullary: Boolean = true,
+    // Nullary polymorphic operators are _always_ inlined. This flag only governs non-nullary operators. See #1880
+    keepNullaryMono: Boolean = true,
     moduleLevelFilter: DeclFilter = FilterFun.ALL) {
 
   private val deepcopy = DeepCopy(tracker)
@@ -83,8 +84,15 @@ class Inliner(
       }
     }
 
-  // Default scope filter, we add nullary operators only if keepNullary is disabled
-  private def nonNullaryFilter(d: TlaOperDecl): Boolean = !keepNullary || d.formalParams.nonEmpty
+  // Lifts TlaType1.isMono to tags
+  private def isPolyTag(tag: TypeTag) = tag match {
+    case Typed(tlaType1: TlaType1) => !tlaType1.isMono
+    case _                         => false
+  }
+
+  // Default scope filter, we add nullary operators if keepNullary is disabled or if they're polymorphic
+  private def nonNullaryFilter(d: TlaOperDecl): Boolean =
+    !keepNullaryMono || isPolyTag(d.typeTag) || d.formalParams.nonEmpty
 
   // Given a declaration (possibly holding a polymorphic type) and a monotyped target, computes
   // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
@@ -128,7 +136,7 @@ class Inliner(
     // If the operator has a parametric signature, we have to substitute type parameters with concrete parameters
     // 1. Unify the operator type with the arguments.
     // 2. Apply the resulting substitution to the types in all subexpressions.
-    val actualType = OperT1(args.map(_.typeTag.asTlaType1()), freshBody.typeTag.asTlaType1())
+    val actualType = nameEx.typeTag.asTlaType1()
 
     val (substitution, _) = getSubstitution(actualType, decl)
 
