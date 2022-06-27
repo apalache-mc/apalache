@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.25.8 - 2022-06-27
+
+### Bug fixes
+
+- Fix crash with infinite sets in the arrays encoding, see #1802
+
 ## 0.25.7 - 2022-06-13
 
 ### Features
