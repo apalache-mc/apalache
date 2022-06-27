@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.pp.IrrecoverablePreprocessingError
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
+import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
 import at.forsyte.apalache.io.lir.NameReplacementMap
 import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction

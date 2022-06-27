@@ -393,12 +393,54 @@ original variables of the model, i.e., retaining the state of variables from the
     /\ __loop_requestedGreen = FALSE
 ```
 
-Finally, let's discuss `RequestWillBeFulfilled_init`.
-This variable is an artifact of the translation for temporal properties.
+Finally, the variable `RequestWillBeFulfilled_init` is an artifact of the translation for temporal properties.
 Intuitively, in any state, the variable will be true if the variable encoding the formula `RequestWillBeFulfilled`
 is true in the first state.
 A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state, so `RequestWillBeFulfilled_init` is false,
 and a loop satisfying requirements on the auxiliary variables is found.
+## Specifying Fairness
+
+The latest version of our traffic light is quite malicious:
+It can delay the switch to green forever, even after the green light has been requested.
+This doesn't seem particularly realistic.
+Suppose we want to change this behaviour:
+After green is requested, the light must eventually turn green, but there can be an arbitrary finite delay.
+
+We can use *fairness* for this. 
+In particular, we will use *weak fairness*.
+Formally, weak fairness is defined as follows:
+```
+WF_vars(SwitchToGreen) <=> <>[](ENABLED <<SwitchToGreem>>_vars) => []<><<SwitchToGreen>>_vars
+```
+where `<<SwitchToGreen>>_vars <=> SwitchToGreen /\ ~(UNCHANGED vars)`.
+The formal definition may look intimidating, but the meaning is intuitive:
+"If `SwitchToGreen` is enabled forever from some point onwards, then we should also infinitely often use `SwitchToGreen`".
+So if your traffic light is forever able to turn on the green light, then it must eventually also do so.
+This exactly disallows the case where the switch to green is delayed forever.
+
+In addition to having fairness on `SwitchToGreen`, let's also add fairness for the switch to red to our model.
+It would be quite unfair for other people in traffic if the light must switch to green if it is requested to do so,
+but does not in turn eventually also switch back to red.
+
+Lastly, our model should be perfectly fine if noone ever requests the green light.
+So having fairness on `RequestGreen` does not seem necessary.
+
+---
+**TIP**
+
+The translation of fairness internally can be expensive for large actions.
+Thus, fairness should only range over actions that we actually want to be fair.
+So when it is possible, prefer `WF_vars(subaction1) /\ WF_vars(subaction2)` to `WF_vars(Next)`.
+
+---
+
+
+Overall, let's adjust our temporal property as follows:
+
+```
+{{#include TrafficLight.tla:fairprop}}
+```
+This says that if a trace is fair, it should satisfy `RequestWillBeFulfilled`.
 
 ## Further reading
 

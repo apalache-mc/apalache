@@ -202,7 +202,7 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
 
 ## The "TL" Operators in TLA+
 
-### Temporal operators :soon:
+### Temporal operators :clock230:
 
  _Talking about computations, finite and infinite_
 

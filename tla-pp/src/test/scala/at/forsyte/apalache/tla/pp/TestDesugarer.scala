@@ -803,8 +803,16 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
 
     val expected =
+<<<<<<< HEAD
       desugarer.transform(
           tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1))
+=======
+      // transform expected output, since desugarer may rewrite more
+      desugarer.transform(
+          tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1)
+      )
+
+>>>>>>> 800-feature-support-for-enabled
     assert(expected.eqTyped(output))
   }
 
@@ -826,5 +834,79 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
             )
             .typed(BoolT1))
     assert(expected.eqTyped(output))
+  }
+
+  test("""rewrite WF_e(A) to []<>~(ENABLED <<A>>_e) \/ []<>(<<A_e>>)""") {
+    val input: TlaEx =
+      tla.WF(tla.name("e").typed(IntT1), tla.name("A").typed(BoolT1)).typed(BoolT1)
+
+    val output = desugarer.transform(input)
+
+    val nostutt_A_e = tla.nostutt(tla.name("A").typed(BoolT1), tla.name("e").typed(IntT1)).typed(BoolT1)
+
+    val expectedLHS =
+      tla
+        .box(
+            tla
+              .diamond(
+                  tla
+                    .not(
+                        tla.enabled(nostutt_A_e).typed(BoolT1)
+                    )
+                    .typed(BoolT1)
+              )
+              .typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    val expectedRHS =
+      tla
+        .box(
+            tla.diamond(nostutt_A_e).typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    // desugar to get rid of nostutt, ...
+    val expected =
+      desugarer.transform(tla.or(expectedLHS, expectedRHS).typed(BoolT1))
+
+    assert(expected.eqTyped(output), s"Actual is ${output.toString()}, but expected was ${expected.toString()}")
+  }
+
+  test("""rewrite SF_e(A) to <>[]~(ENABLED <<A>>_e) \/ []<>(<<A_e>>)""") {
+    val input: TlaEx =
+      tla.SF(tla.name("e").typed(IntT1), tla.name("A").typed(BoolT1)).typed(BoolT1)
+
+    val output = desugarer.transform(input)
+
+    val nostutt_A_e = tla.nostutt(tla.name("A").typed(BoolT1), tla.name("e").typed(IntT1)).typed(BoolT1)
+
+    val expectedLHS =
+      tla
+        .diamond(
+            tla
+              .box(
+                  tla
+                    .not(
+                        tla.enabled(nostutt_A_e).typed(BoolT1)
+                    )
+                    .typed(BoolT1)
+              )
+              .typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    val expectedRHS =
+      tla
+        .box(
+            tla.diamond(nostutt_A_e).typed(BoolT1)
+        )
+        .typed(BoolT1)
+
+    // desugar to get rid of nostutt, ...
+    val expected =
+      desugarer.transform(tla.or(expectedLHS, expectedRHS).typed(BoolT1))
+
+    assert(expected.eqTyped(output), s"Actual is ${output.toString()}, but expected was ${expected.toString()}")
   }
 }
