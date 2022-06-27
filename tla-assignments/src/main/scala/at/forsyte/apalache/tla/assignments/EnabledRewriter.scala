@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -41,8 +40,58 @@ class EnabledRewriter(
     }
   }
 
-  // TODO: support set assignment, e.g. primeVar \in SET
-  // rewrite to \e auxVar \in SET: and then replace primeVar with auxVar whereever it is used
+  /**
+   * Transforms an expression by moving all boolean quantification to the very outside.
+   * For example
+   *   {{{
+   *   (∃i$2 ∈ (1 .. 5): (x' = i$2)) ∧ (x' ≥ 0)
+   *   }}} becomes
+   * {{{
+   *   ∃i$2 ∈ (1 .. 5): ((x' = i$2) ∧ (x' ≥ 0))
+   *   }}}.
+   *
+   * The order is kept, in that afterwards, inner quantifiers are still inside:
+   *    {{{
+   *   (∃i$2 ∈ (1 .. 5): (x' = i$2) /\ ∃i$3 ∈ (1 .. 4): (y' = i$3)) ∧ (x' ≥ 0)
+   *   }}}
+   * becomes
+   *   {{{
+   *   ∃i$2 ∈ (1 .. 5): ∃i$3 ∈ (1 .. 4): (((x' = i$2) /\ (y' = i$3)) ∧ (x' ≥ 0))
+   *   }}}
+   */
+  private def putQuantificationsOutward(ex: TlaEx): TlaEx = {
+    def collectAndRemoveQuantifications(ex: TlaEx): (Seq[OperEx], TlaEx) = {
+      ex match {
+        case OperEx(oper, args @ _*) =>
+          oper match {
+            case TlaBoolOper.forallUnbounded | TlaBoolOper.existsUnbounded | TlaBoolOper.forall | TlaBoolOper.exists =>
+              // in each case, the body is the last argument
+              val body = args.last
+
+              // remove quantifications from body
+              val (quantifications, transformedBody) = collectAndRemoveQuantifications(body)
+
+              (
+                  // add this quantification to seq of quantifications
+                  ex.asInstanceOf[OperEx] +: quantifications,
+                  // remove this quantification from the expression by returning the body
+                  transformedBody,
+              )
+            case _ =>
+              // remove quantifications from arguments
+              val (quantificationSeqs, bodySeqs) = args.map(collectAndRemoveQuantifications(_)).unzip
+              (quantificationSeqs.flatten, OperEx(oper, bodySeqs: _*)(ex.typeTag))
+          }
+        case _ =>
+          // no oper, so has no arguments; no need to go deeper
+          (Seq.empty, ex)
+      }
+    }
+    val (quantifications, quantificationlessBody) = collectAndRemoveQuantifications(ex)
+    quantifications.foldLeft(quantificationlessBody)((body, quantification) =>
+      OperEx(quantification.oper, (quantification.args.take(quantification.args.length - 1) :+ body): _*)(ex.typeTag))
+  }
+
   /**
    * Extracts a map of assignments primeVar := foo from an expression
    */
@@ -158,14 +207,14 @@ class EnabledRewriter(
    * @param varDecls:
    */
   private def transformEnabled(ex: TlaEx, varDecls: Seq[TlaVarDecl], operDecls: Seq[TlaOperDecl]): TlaEx = {
-    val nonTemporalVars = varDecls.map(_.name).filterNot(TemporalAuxVarStore.store.contains(_))
     val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
     val constSimplifier = new ConstSimplifier(tracker)
     val operMap = BodyMapFactory.makeFromDecls(operDecls)
 
     // splits the sequence into symbolic transitions.
     // notably, afterwards it is possible to differentiate between assignments (x' := 5) and conditionals (x' = 5)
-    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(nonTemporalVars.toSet, ex, operMap)
+    val transitionPairs =
+      SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(varDecls.map(_.name).toSet, ex, operMap)
 
     val transitionsWithoutAssignments = transitionPairs
       .map(symbTrans => {
@@ -181,9 +230,28 @@ class EnabledRewriter(
         // becomes TRUE /\ TRUE /\ (1 = 2 => 2 > 1)
         val modifiedEx = flattenEx(removeAssignmentsFromExpression(assignmentEx), assignments)
 
+        /**
+         * Consider the following expression:
+         *   {{{
+         *   (∃i$2 ∈ (1 .. 5): (x' = i$2)) ∧ (x' ≥ 0)
+         *   }}} We would like to replace all occurrences of x' by
+         * i$2, but this would leave us with the following:
+         *    {{{
+         *   (∃i$2 ∈ (1 .. 5): TRUE) ∧ (i$2 ≥ 0)
+         *  }}}
+         *  Note that the scope of i$2 is not sufficiently large to cover i$2 >= 0.
+         *  We can fix this by simply moving all quantification outward, so that the whole expression is in scope.
+         *  Because all quantified variables are disambiguated (i$2 instead of i), this is okay to do.
+         * The expression would thus become
+         * {{{
+         *   ∃i$2 ∈ (1 .. 5): (TRUE ∧ i$2 ≥ 0)
+         *   }}}
+         */
+        val exWithQuantifiersOutside = putQuantificationsOutward(modifiedEx)
+
         // simplify the expression, since many terms become trivial after replacement:
         // e.g. TRUE /\ TRUE /\ (1 = 2 => 2 > 1) becomes TRUE
-        constSimplifier(modifiedEx)
+        constSimplifier(exWithQuantifiersOutside)
       })
 
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
@@ -194,6 +262,7 @@ class EnabledRewriter(
       case OperEx(TlaActionOper.enabled, arg) =>
         // val body = rewriteAssignmentsAsEquality(arg)
         val body = arg
+        println("body: " + body.toString())
         transformEnabled(body, module.varDeclarations, module.operDeclarations)
       case OperEx(oper, args @ _*) =>
         new OperEx(oper, args.map(arg => this(arg, module)): _*)(ex.typeTag)
