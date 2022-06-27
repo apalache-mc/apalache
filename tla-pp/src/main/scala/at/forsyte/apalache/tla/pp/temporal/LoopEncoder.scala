@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.io.TemporalAuxVarStore
 
 /**
  * A class for adding loop logic to a TLA Module: An extra variable InLoop is added, which, in each step, can
