@@ -7,18 +7,27 @@ EXTENDS Integers
 
 VARIABLES
     \* @type: Int;
-    x,
-    \* @type: Int;
-    y
+    x
 
 Init ==
     /\ x = 0
-    /\ y = 1
+
+IncrementX == x' = x + 1
+
+DecrementX == x' = x - 1
+    
 
 Next ==
-    /\ x' = IF y > 5 THEN 10 ELSE y + 1
-    /\ y' = IF x > 5 THEN 10 ELSE x + 1
+    IncrementX \/ DecrementX
 
-Liveness == 
+Fairness ==
+    WF_x(IncrementX)
+
+LiveIfFair ==
+    x > 5
+
+FairnessImpliesLiveIfFair ==
+    Fairness => LiveIfFair
+    
 
 ====
