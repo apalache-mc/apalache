@@ -5,21 +5,25 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * An abstract error message.
  */
-sealed abstract class ErrorMessage
+sealed abstract class ErrorMessage {
+
+  /** The concrete content of a message */
+  val msg: String
+}
 
 /**
  * A normal error that does not require a stack trace.
  * @param msg
  *   the message text
  */
-case class NormalErrorMessage(msg: String) extends ErrorMessage
+case class NormalErrorMessage(val msg: String) extends ErrorMessage
 
 /**
  * A failure message that should be printed along with a stack trace.
  * @param msg
  *   the message text
  */
-case class FailureMessage(msg: String) extends ErrorMessage
+case class FailureMessage(val msg: String) extends ErrorMessage
 
 /**
  * ExceptionAdapter allows us to convert an exception into a message string. The purpose of the adapter is to push the

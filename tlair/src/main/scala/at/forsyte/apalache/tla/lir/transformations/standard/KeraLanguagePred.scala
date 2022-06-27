@@ -128,11 +128,10 @@ object KeraLanguagePred {
         ApalacheOper.setAsFun,
         ApalacheOper.guess,
         ApalacheInternalOper.apalacheSeqCapacity,
-        // for the future
-        //    TlaActionOper.enabled,
-        //    TlaActionOper.unchanged,
-        //    TlaTempOper.box,
-        //    TlaTempOper.diamond
+        TlaActionOper.enabled,
+        TlaActionOper.unchanged,
+        TlaTempOper.box,
+        TlaTempOper.diamond,
     ) ////
 
   protected val binaryOps: HashSet[TlaOper] =

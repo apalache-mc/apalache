@@ -34,7 +34,7 @@ class TemporalPassImpl @Inject() (
     val temporalProps = options.get[List[String]]("checker", "temporal")
     val newModule = temporalProps match {
       case None =>
-        logger.info("  > No formula specified, nothing to encode")
+        logger.info("  > No temporal property specified, nothing to encode")
         tlaModule
       case Some(formulas) =>
         val init = options.get[String]("checker", "init")
@@ -105,7 +105,7 @@ class TemporalPassImpl @Inject() (
     }
   }
 
-  override def dependencies = Set(ModuleProperty.TypeChecked)
+  override def dependencies = Set(ModuleProperty.Inlined, ModuleProperty.EnabledRewritten)
 
   override def transformations = Set(ModuleProperty.TemporalEncoded)
 }

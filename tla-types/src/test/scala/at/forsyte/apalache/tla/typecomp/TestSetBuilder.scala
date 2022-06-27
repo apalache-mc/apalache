@@ -241,17 +241,7 @@ class TestSetBuilder extends BuilderTest {
         )
     )
 
-    // thorws on non-name
-    assertThrows[IllegalArgumentException] {
-      build(
-          builder.filter(
-              builder.str("x"),
-              builder.name("S", SetT1(StrT1)),
-              builder.name("p", BoolT1),
-          )
-      )
-    }
-
+    assertThrowsBoundVarIntroductionTernary(builder.filter)
   }
 
   test("map") {
@@ -323,6 +313,33 @@ class TestSetBuilder extends BuilderTest {
       build(builder.mapMixed(builder.name("x", IntT1)))
     }
 
+    // test fail on n = 1
+    assertThrows[IllegalArgumentException] {
+      build(builder.mapMixed(builder.name("x", IntT1), builder.name("x", IntT1)))
+    }
+
+    assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) =>
+      builder.mapMixed(expr, variable, set)
+    }
+
+    // throws on shadowing: multi-arity
+    assertThrows[TBuilderScopeException] {
+      build(
+          // { \E y \in T: TRUE : x \in S, y \in T }
+          builder.mapMixed(
+              builder.exists(
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
+                  builder.bool(true),
+              ),
+              builder.name("x", StrT1),
+              builder.name("S", SetT1(StrT1)),
+              builder.name("y", IntT1),
+              builder.name("T", SetT1(IntT1)),
+          )
+      )
+    }
+
     // now for builder.map (not mapMixed)
 
     type T2 = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
@@ -379,6 +396,26 @@ class TestSetBuilder extends BuilderTest {
       build(builder.map(builder.name("x", IntT1)))
     }
 
+    assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) =>
+      builder.map(expr, (variable, set))
+    }
+
+    // throws on shadowing: multi-arity
+    assertThrows[TBuilderScopeException] {
+      build(
+          // { \E y \in T: TRUE : x \in S, y \in T }
+          builder.map(
+              builder.exists(
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
+                  builder.bool(true),
+              ),
+              (builder.name("x", StrT1), builder.name("S", SetT1(StrT1))),
+              (builder.name("y", IntT1), builder.name("T", SetT1(IntT1))),
+          )
+      )
+    }
+
   }
 
   test("funSet") {
@@ -419,7 +456,6 @@ class TestSetBuilder extends BuilderTest {
             resultIsExpected,
         )
     )
-
   }
 
   test("recSet") {
@@ -489,6 +525,14 @@ class TestSetBuilder extends BuilderTest {
               builder.name("S", SetT1(IntT1)),
               builder.str("k"),
               builder.name("T", SetT1(IntT1)),
+          ))
+    }
+
+    // test fail on non-literal key
+    assertThrows[IllegalArgumentException] {
+      build(builder.recSetMixed(
+              builder.name("k", StrT1),
+              builder.name("S", SetT1(IntT1)),
           ))
     }
 
