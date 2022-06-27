@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 /**
  * Encodes temporal formulas as invariants.
@@ -32,6 +33,22 @@ class TableauEncoder(
   val levelFinder = new TlaLevelFinder(module)
 
   private def inBoolSet(element: TBuilderInstruction): TBuilderInstruction = builder.in(element, builder.booleanSet())
+
+  /* replaces all occurences of := with =.
+  For example, x' := foo becomes x' = foo. */
+  private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
+    ex match {
+      case OperEx(oper, args @ _*) =>
+        oper match {
+          case ApalacheOper.assign =>
+            OperEx(TlaOper.eq, args: _*)(ex.typeTag)
+          case _ =>
+            OperEx(oper, args.map(rewriteAssignmentsAsEquality): _*)(ex.typeTag)
+        }
+      case _ =>
+        ex
+    }
+  }
 
   /**
    * Creates PredExs for a given propositional operator application of the form OperEx(oper, argExs)(typeTag). The
@@ -182,45 +199,64 @@ class TableauEncoder(
              */
             oper match {
               case TlaTempOper.box | TlaTempOper.diamond => /* curNode has the form []A or <>A */
-                /* create new auxiliary variable curNode_unroll or curNode_finally */
+                /* create new auxiliary variables curNode_globally or curNode_finally,
+                and curNode_globally_prev or curNode_finally_prev
+                when it doesn't matter whether a variable is for a [] or <> operator, we'll call it curNode_unroll in the comments
+                 */
                 val nameSuffix = oper match {
                   case TlaTempOper.box     => TableauEncoder.BOX_SUFFIX
                   case TlaTempOper.diamond => TableauEncoder.DIAMOND_SUFFIX
                 }
                 val auxVarDecl = new TlaVarDecl(nodeIdentifier + nameSuffix)(Typed(BoolT1))
+                val prevAuxVarDecl =
+                  new TlaVarDecl(nodeIdentifier + nameSuffix + TableauEncoder.LOOKBACK_SUFFIX)(Typed(BoolT1))
 
                 val auxVarEx = builder.varDeclAsNameEx(auxVarDecl)
-                val auxVarExPrime = builder.prime(auxVarEx)
+
+                // variables needed for a technicality: TLA+ doesn't allow double-priming,
+                // so instead, we look one step forward and one step backward to avoid it.
+                val prevAuxVarEx = builder.varDeclAsNameEx(prevAuxVarDecl)
 
                 /*
                   initialize __temporal_curNode
 
                   /\ __temporal_curNode \in BOOLEAN
                   /\ __temporal_curNode_globally = TRUE or /\ __temporal_curNode_finally = FALSE
+                  /\ __temporal_curNode_globally_prev = TRUE or /\ __temporal_curNode_finally_prev = FALSE
+                  /\ __temporal_curNode_globally_next \in BOOLEAN or /\ __temporal_curNode_globally_next \in BOOLEAN
                  */
                 val initialValue = oper match {
                   case TlaTempOper.box     => true
                   case TlaTempOper.diamond => false
                 }
                 val auxVarInitEx = builder.eql(auxVarEx, builder.bool(initialValue))
+                val prevAuxVarInitEx = builder.eql(prevAuxVarEx, builder.bool(initialValue))
 
                 /* update __temporal_curNode:
 
                   /\ __temporal_curNode' \in BOOLEAN
-                  /\ __temporal_curNode_globally' \in BOOLEAN or __temporal_curNode_finally' \in BOOLEAN
+                  /\ __temporal_curNode_globally_prev' = __temporal_curNode_globally or __temporal_curNode_finally_prev' = __temporal_curNode_finally
+
+                  /\ __temporal_curNode_globally' = __temporal_curNode_globally_next
+                  or
+                  /\ __temporal_curNode_finally' = __temporal_curNode_finally_next
 
                                            outerOp                                          outerOp
                   /\ __temporal_curNode <=> A /\ __temporal_curNode' or __temporal_curNode <=> A \/ __temporal_curNode'
 
                                                     outerOp
-                  /\ __temporal_curNode_globally' <=> /\ __temporal_curNode_globally
-                                                      /\ (~InLoop' \/ A')
+                  /\ __temporal_curNode_globally <=> /\ __temporal_curNode_globally_prev
+                                                      /\ (~InLoop' \/ A)
                                                     outerOp      innerOp
                   or
                                                    outerOp
-                  /\ __temporal_curNode_finally' <=>  \/ __temporal_curNode_finally
-                                                      \/  (InLoop' /\ A')
+                  /\ __temporal_curNode_finally <=>  \/ __temporal_curNode_finally_prev
+                                                      \/  (InLoop' /\ A)
                                                     outerOp      innerOp
+
+                  Subtle difference to the encoding in the paper: argue about InLoop', not InLoop
+                  Sound because InLoop starts being true in the first state AFTER the start of the loop,
+                  so updating the _unroll variables already one state before InLoop is true is proper
                  */
 
                 /*
@@ -228,8 +264,8 @@ class TableauEncoder(
                 and whether the InLoop variable is negated in the conjunction
                  */
                 val (outerOpTmp, innerOpTmp, innerInLoopEx) = oper match {
-                  case TlaTempOper.box     => (builder.and _, builder.or _, builder.not(loopEnc.inLoopPrime))
-                  case TlaTempOper.diamond => (builder.or _, builder.and _, loopEnc.inLoopPrime)
+                  case TlaTempOper.box     => (builder.and _, builder.or _, builder.not(builder.prime(loopEnc.inLoop)))
+                  case TlaTempOper.diamond => (builder.or _, builder.and _, builder.prime(loopEnc.inLoop))
                 }
 
                 /*
@@ -242,6 +278,9 @@ class TableauEncoder(
                 /* __temporal_curNode_unroll' \in BOOLEAN */
                 val auxVarUpdateAssignmentEx = inBoolSet(builder.prime(auxVarEx))
 
+                /* __temporal_curNode_unroll_prev' =  __temporal_curNode_unroll */
+                val prevAuxVarUpdateEx = builder.primeEq(prevAuxVarEx, auxVarEx)
+
                 /* __temporal_curNode <=> A /\ __temporal_curNode' */
                 val nodeVarUpdateConditionEx = builder.equiv(
                     nodeVarEx,
@@ -252,22 +291,22 @@ class TableauEncoder(
                     ),
                 )
 
-                /* __temporal_curNode_unroll' <=>   /\ __temporal_curNode_unroll
-                                                    /\ (~InLoop' \/ A')
+                /* __temporal_curNode_unroll <=>   /\ __temporal_curNode_unroll_prev
+                                                    /\ (~InLoop' \/ A)
                  */
-                val auxVarUpdateConditionEx = builder.equiv(
-                    auxVarExPrime,
+                val auxVarUpdateOkEx = builder.equiv(
+                    auxVarEx,
                     outerOp(
-                        auxVarEx,
+                        prevAuxVarEx,
                         innerOp(
                             innerInLoopEx,
-                            builder.prime(argExs(0)),
+                            argExs(0),
                         ),
                     ),
                 )
 
                 /* update loopOK:
-                  (__temporal_curNode_unroll => __temporal_curNode) or (__temporal_curNode => __temporal_curNode_finally)
+                  /\ (__temporal_curNode_globally => __temporal_curNode) or (__temporal_curNode => __temporal_curNode_finally)
                  */
                 val auxVarLoopOKEx =
                   oper match {
@@ -275,24 +314,36 @@ class TableauEncoder(
                     case TlaTempOper.diamond => builder.impl(nodeVarEx, auxVarEx)
                   }
 
+                /* necessary to ensure the value of __temporal_curNode_unroll is fine in the very last state,
+                   which is not checked by the next predicate, since it can reason only about the current state
+
+                  /\ (__temporal_curNode_unroll_prev = __temporal_curNode_unroll)
+                 */
+                val prevAuxVarLoopOKEx =
+                  builder.eql(prevAuxVarEx, auxVarEx)
+
                 (
                     Seq(
                         nodeVarDecl,
                         nodeLoopVarDecl,
                         auxVarDecl,
+                        prevAuxVarDecl,
                     ) ++ argVarDecls.flatten,
                     argsPredsUnion ++
                       PredExs(
                           initExs = Seq(
-                              auxVarInitEx
+                              auxVarInitEx,
+                              prevAuxVarInitEx,
                           ),
                           nextExs = Seq(
                               auxVarUpdateAssignmentEx,
                               nodeVarUpdateConditionEx,
-                              auxVarUpdateConditionEx,
+                              auxVarUpdateOkEx,
+                              prevAuxVarUpdateEx,
                           ),
                           loopOKExs = Seq(
-                              auxVarLoopOKEx
+                              auxVarLoopOKEx,
+                              prevAuxVarLoopOKEx,
                           ),
                       ),
                     nodeVarEx,
@@ -335,7 +386,24 @@ class TableauEncoder(
    */
   def singleTemporalToInvariant(formula: TlaOperDecl): (Seq[TlaVarDecl], PredExs, TlaVarDecl) = {
 
-    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(formula.body)
+    /* formula is a temporal property, never an action, so removing assignments never hurts.
+    It's necessary to remove assignments when the formula uses an action as a condition. For example,
+    {{{Action == x' := 2
+
+    Property == <>[Action]_x
+    }}}
+    Encoding the property as an invariant would produce an assignment for an auxiliary variable like
+    {{{
+      auxVar := (x' := 2)
+    }}}, which is invalid for the transition finder.
+    So we rewrite this as
+    {{{
+      auxVar := (x' = 2)
+    }}}
+     */
+    val assignmentlessBody = rewriteAssignmentsAsEquality(formula.body)
+
+    var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(assignmentlessBody)
 
     // create a new variable that stores whether the formula evaluated to true in the first state
     // this is necessary because a temporal formula on a sequence of states should be satisfied
@@ -422,4 +490,5 @@ object TableauEncoder {
   val PREDS_TO_VARS_MAPPING_NAME = "__preds_to_vars"
   val BOX_SUFFIX = "_unroll"
   val DIAMOND_SUFFIX = "_unroll"
+  val LOOKBACK_SUFFIX = "_prev"
 }
