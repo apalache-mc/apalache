@@ -393,8 +393,12 @@ class TableauEncoder(
     }}}
     Encoding the property as an invariant would produce an assignment for an auxiliary variable like
     {{{
-      auxVar := (x := 2)
-    }}}, which is invalid for the transition finder
+      auxVar := (x' := 2)
+    }}}, which is invalid for the transition finder.
+    So we rewrite this as
+    {{{
+      auxVar := (x' = 2)
+    }}}
      */
     val assignmentlessBody = rewriteAssignmentsAsEquality(formula.body)
 
