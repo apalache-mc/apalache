@@ -1601,21 +1601,6 @@ EXITCODE: OK
 ### check Weak Fairness (temporal)
 
 ```sh
-$ apalache-mc check --temporal=LiveIfFair Fairness.tla
-...
-EXITCODE: ERROR (12)
-[12]
-```
-
-```sh
-$ apalache-mc check --temporal=FairnessImpliesLiveIfFair Fairness.tla
-...
-EXITCODE: OK
-```
-
-### check Weak Fairness (temporal)
-
-```sh
 $ apalache-mc check --temporal=LiveIfFair WeakFairness.tla
 ...
 EXITCODE: ERROR (12)
@@ -1624,6 +1609,21 @@ EXITCODE: ERROR (12)
 
 ```sh
 $ apalache-mc check --temporal=FairnessImpliesLiveIfFair WeakFairness.tla
+...
+EXITCODE: OK
+```
+
+### check Strong Fairness (temporal)
+
+```sh
+$ apalache-mc check --temporal=LiveIfFair StrongFairness.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
+```sh
+$ apalache-mc check --temporal=FairnessImpliesLiveIfFair StrongFairness.tla
 ...
 EXITCODE: OK
 ```
