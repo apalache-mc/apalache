@@ -483,7 +483,7 @@ EXITCODE: OK
 In this case, it took just over a quarter as long to check 
 the property under the manual fairness requirement than under weak fairness.
 In general, when using fairness, it's worth spending some effort to simplify
-particularly the fairness condition.
+the fairness condition.
 
 ## Further reading
 
