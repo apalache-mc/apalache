@@ -15,6 +15,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.pp.NotInKeraError
 import at.forsyte.apalache.tla.pp.ConstSimplifier
+import at.forsyte.apalache.tla.pp.Normalizer
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -268,7 +269,8 @@ class EnabledRewriter(
 
   def transform: TlaExTransformation = tracker.trackEx {
     case OperEx(TlaActionOper.enabled, arg) =>
-      val body = utils.rewriteAssignmentsAsEquality(arg)
+      val normalizer = Normalizer(tracker)
+      val body = normalizer(utils.rewriteAssignmentsAsEquality(arg))
       transformEnabled(body, module.varDeclarations, module.operDeclarations)
     case ex @ OperEx(oper, args @ _*) =>
       new OperEx(oper, args.map(arg => this(arg)): _*)(ex.typeTag)

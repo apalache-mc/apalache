@@ -1598,6 +1598,14 @@ $ apalache-mc check --temporal=Liveness QuantifiersInEnabled.tla
 EXITCODE: OK
 ```
 
+### check negated quantification inside Enabled (temporal)
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness NegatedQuantifiersInEnabled.tla
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Weak Fairness (temporal)
 
 ```sh
