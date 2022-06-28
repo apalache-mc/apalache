@@ -36,7 +36,7 @@ class EnabledRewriterPassImpl @Inject() (
                 operDecl.name,
                 operDecl.formalParams,
                 enabledRewriter(operDecl.body, tlaModule),
-            )),
+            )(operDecl.typeTag)),
     )
 
     writeOut(writerFactory, newModule)
