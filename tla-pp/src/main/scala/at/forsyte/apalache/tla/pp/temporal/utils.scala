@@ -4,6 +4,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.Flatten
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 
 /**
  * A convenience class storing a module, together with the init, next and loopOK predicates of that module. Useful to
@@ -35,6 +37,22 @@ case class PredExs(
 
 package object utils {
   val builder: ScopedBuilder = new ScopedBuilder()
+
+  /* replaces all occurences of := with =.
+  For example, x' := foo becomes x' = foo. */
+  def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
+    ex match {
+      case OperEx(oper, args @ _*) =>
+        oper match {
+          case ApalacheOper.assign =>
+            OperEx(TlaOper.eq, args: _*)(ex.typeTag)
+          case _ =>
+            OperEx(oper, args.map(rewriteAssignmentsAsEquality): _*)(ex.typeTag)
+        }
+      case _ =>
+        ex
+    }
+  }
 }
 
 object DeclUtils {

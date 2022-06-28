@@ -15,7 +15,6 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 
 /**
  * Encodes temporal formulas as invariants.
@@ -33,22 +32,6 @@ class TableauEncoder(
   val levelFinder = new TlaLevelFinder(module)
 
   private def inBoolSet(element: TBuilderInstruction): TBuilderInstruction = builder.in(element, builder.booleanSet())
-
-  /* replaces all occurences of := with =.
-  For example, x' := foo becomes x' = foo. */
-  private def rewriteAssignmentsAsEquality(ex: TlaEx): TlaEx = {
-    ex match {
-      case OperEx(oper, args @ _*) =>
-        oper match {
-          case ApalacheOper.assign =>
-            OperEx(TlaOper.eq, args: _*)(ex.typeTag)
-          case _ =>
-            OperEx(oper, args.map(rewriteAssignmentsAsEquality): _*)(ex.typeTag)
-        }
-      case _ =>
-        ex
-    }
-  }
 
   /**
    * Creates PredExs for a given propositional operator application of the form OperEx(oper, argExs)(typeTag). The
@@ -401,7 +384,7 @@ class TableauEncoder(
       auxVar := (x' = 2)
     }}}
      */
-    val assignmentlessBody = rewriteAssignmentsAsEquality(formula.body)
+    val assignmentlessBody = utils.rewriteAssignmentsAsEquality(formula.body)
 
     var (varDecls, preds, (formulaEx)) = encodeSyntaxTreeInPredicates(assignmentlessBody)
 

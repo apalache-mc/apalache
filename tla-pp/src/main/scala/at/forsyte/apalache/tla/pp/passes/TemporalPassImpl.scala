@@ -105,7 +105,10 @@ class TemporalPassImpl @Inject() (
     }
   }
 
-  override def dependencies = Set(ModuleProperty.TypeChecked)
+  override def dependencies = Set(
+      ModuleProperty.Inlined,
+      ModuleProperty.EnabledRewritten,
+  )
 
   override def transformations = Set(ModuleProperty.TemporalEncoded)
 }

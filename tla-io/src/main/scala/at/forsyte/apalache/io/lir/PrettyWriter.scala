@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.io.lir.NameReplacementMap
 
 import scala.collection.immutable.{HashMap, HashSet}
 import at.forsyte.apalache.io.PrettyPrinterError

@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.io.lir.NameReplacementMap
 
 import java.io.PrintWriter
 import java.util.Calendar

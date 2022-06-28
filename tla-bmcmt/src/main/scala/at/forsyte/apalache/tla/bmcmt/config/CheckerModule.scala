@@ -61,6 +61,7 @@ class CheckerModule extends ToolModule {
     bind(classOf[VCGenPass]).to(classOf[VCGenPassImpl])
     bind(classOf[PreproPass]).to(classOf[PreproPassImpl])
     bind(classOf[TransitionPass]).to(classOf[TransitionPassImpl])
+    bind(classOf[EnabledRewriterPass]).to(classOf[EnabledRewriterPassImpl])
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
     bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
     bind(classOf[BoundedCheckerPass]).to(classOf[BoundedCheckerPassImpl])
@@ -75,6 +76,7 @@ class CheckerModule extends ToolModule {
         classOf[ConfigurationPass],
         classOf[DesugarerPass],
         classOf[InlinePass],
+        classOf[EnabledRewriterPass],
         classOf[TemporalPass],
         classOf[InlinePass],
         classOf[PrimingPass],
