@@ -4,11 +4,11 @@ import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
@@ -83,8 +83,6 @@ class CheckerModule extends ToolModule {
         classOf[TransitionPass],
         classOf[OptPass],
         classOf[AnalysisPass],
-        // do the final type checking again, as preprocessing may have introduced gaps in the expression types
-        classOf[PostTypeCheckerPassImpl],
         // BoundedCheckerPass is in the very end of the pipeline
         classOf[BoundedCheckerPass],
     )
