@@ -2184,7 +2184,7 @@ Test that the model checker nicely complains about unresolved polymorphism.
 ```sh
 $ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
 ...
-Bug931.tla:6:20-6:21: type input error: Found a polymorphic type: Set(b)
+Bug931.tla:6:20-6:21: unexpected expression: Expected a non-polymorphic type, found: Set(b)
 ...
 EXITCODE: ERROR (255)
 ```
@@ -2306,9 +2306,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc check --inv=Fail --length=1 Test928.tla | sed 's/[IEW]@.*//'
 ...
-Found a polymorphic type: Set(a)
-Probable causes: an empty set { } needs a type annotation or an incorrect record field is used
-Test928.tla:20:23-20:24: type input error: Found a polymorphic type: Set(a)
+Test928.tla:20:10-20:30: unexpected expression: Expected a non-polymorphic type, found: a
 ...
 EXITCODE: ERROR (255)
 ```
