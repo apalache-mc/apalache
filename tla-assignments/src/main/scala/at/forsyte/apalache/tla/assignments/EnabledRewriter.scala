@@ -272,7 +272,7 @@ class EnabledRewriter(
         new OperEx(oper, args.map(arg => this(arg)): _*)(ex.typeTag)
       case ex @  LetInEx(_, _) =>
         logger.warn("   > Rewriting enabled is not supported inside let-in expressions.")
-        logger.warn("   > This is not a concern, unless your specification uses ENABLED.")
+        logger.warn("   > This is not a concern, unless your specification uses LET-IN expressions inside ENABLED, WF or SF.")
         ex
       case ex => ex
   }
