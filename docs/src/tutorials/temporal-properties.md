@@ -407,14 +407,15 @@ After green is requested, the light must eventually turn green, but there can be
 
 We can use *fairness* for this. 
 In particular, we will use *weak fairness*.
-Formally, weak fairness is defined as follows:
+Formally, `WF_vars(Action)` is defined as
 ```
-WF_vars(SwitchToGreen) <=> <>[](ENABLED <<SwitchToGreem>>_vars) => []<><<SwitchToGreen>>_vars
+<>[](ENABLED <<Action>>_vars) => []<><<Action>>_vars
 ```
-where `<<SwitchToGreen>>_vars <=> SwitchToGreen /\ ~(UNCHANGED vars)`.
+where `<<Action>>_vars` is defined as `Action /\ ~(UNCHANGED vars)`.
 The formal definition may look intimidating, but the meaning is intuitive:
-"If `SwitchToGreen` is enabled forever from some point onwards, then we should also infinitely often use `SwitchToGreen`".
-So if your traffic light is forever able to turn on the green light, then it must eventually do so.
+"If `Action` is enabled forever from some point onwards, then we should also infinitely often use `Action`".
+
+So if we add `WF_vars(SwitchToGreen)` to our specification, then if our traffic light is forever able to turn on the green light, it must eventually do so.
 This exactly disallows the case where the switch to green is delayed forever.
 
 In addition to having fairness on `SwitchToGreen`, let's also add fairness for the switch to red to our model.
