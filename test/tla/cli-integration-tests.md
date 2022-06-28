@@ -2168,6 +2168,16 @@ $ apalache-mc check --inv=TCConsistent MC3_TwoPhaseUFO.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check MC3_TwoPhaseTyped.tla succeeds
+
+Test that variants are working as expected.
+
+```sh
+$ apalache-mc check --features=rows --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check PolyFold.tla reports no error: regression for #1085
 
 ```sh
@@ -2618,7 +2628,7 @@ EXITCODE: OK
 ### typecheck TwoPhaseTyped.tla
 
 ```sh
-$ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
