@@ -7,7 +7,7 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
-import at.forsyte.apalache.tla.pp.EnabledRewriter
+import at.forsyte.apalache.tla.assignments.EnabledRewriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
 /**
