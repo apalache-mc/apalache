@@ -480,8 +480,9 @@ Total time: 36.116 sec
 EXITCODE: OK
 ```
 
-In this case, it took just over a quarter as long to check 
-the property under the manual fairness requirement than under weak fairness.
+In this case, it took just over 30 seconds to check 
+the property under the manual fairness requirement,
+whereas it took over two minutes using under weak fairness.
 In general, when using fairness, it's worth spending some effort to simplify
 the fairness condition.
 
