@@ -1387,7 +1387,7 @@ EXITCODE: ERROR (75)
 ### check Enabled as an invariant succeeds
 
 ```sh
-$ apalache-mc check --inv=Inv Enabled.tla
+$ apalache-mc check --inv=InvLooselyConstrainedAction Enabled.tla
 ...
 EXITCODE: OK
 ```
@@ -2362,6 +2362,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSequencesExt.tla | sed 's/[IEW]@.*//'
 ...
+
 EXITCODE: OK
 ```
 
