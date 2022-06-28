@@ -14,7 +14,6 @@ import at.forsyte.apalache.tla.pp.temporal.utils
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.typesafe.scalalogging.LazyLogging
 
-
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
  *
@@ -24,7 +23,8 @@ import com.typesafe.scalalogging.LazyLogging
 class EnabledRewriter(
     tracker: TransformationTracker,
     sourceStore: SourceStore,
-    changeListener: ChangeListener) extends LazyLogging {
+    changeListener: ChangeListener)
+    extends LazyLogging {
 
   /**
    * Removes the assignments x' := foo from an expression by replacing them with TRUE
