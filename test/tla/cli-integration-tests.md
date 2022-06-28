@@ -1593,7 +1593,7 @@ EXITCODE: ERROR (12)
 ### check quantification inside Enabled (temporal)
 
 ```sh
-$ apalache-mc check --temporal=Liveness QuantifiersInEnabled.tla.tla
+$ apalache-mc check --temporal=Liveness QuantifiersInEnabled.tla
 ...
 EXITCODE: OK
 ```
