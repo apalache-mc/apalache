@@ -21,14 +21,14 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
   var renaming = new IncrementalRenaming(new IdleTracker)
   var inlinerKeepNullary = new Inliner(new IdleTracker, renaming)
-  var inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullary = false)
+  var inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullaryMono = false)
 
   def runFresh[T](scopeFn: Scope => T): T = scopeFn(Inliner.emptyScope)
 
   override def beforeEach(): Unit = {
     renaming = new IncrementalRenaming(new IdleTracker)
     inlinerKeepNullary = new Inliner(new IdleTracker, renaming)
-    inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullary = false)
+    inlinerInlineNullary = new Inliner(new IdleTracker, renaming, keepNullaryMono = false)
   }
 
   test("LET inline: LET A(p) == e IN A(x) ~~> e[x/p]") {
