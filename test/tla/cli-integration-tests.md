@@ -1537,6 +1537,21 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check actions in temporal operators (temporal)
+
+```sh
+$ apalache-mc check --temporal=Liveness TemporalPropsOverActions.tla
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=FalseLiveness TemporalPropsOverActions.tla
+...
+EXITCODE: ERROR (12)
+[12]
+```
+
 ### check LetIn (temporal)
 
 ```sh
@@ -2097,6 +2112,14 @@ EXITCODE: ERROR (12)
 
 ```sh
 $ apalache-mc check --length=1 Bug1794.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Bug1880.tla
+
+```sh
+$ apalache-mc check --length=1 Bug1880.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

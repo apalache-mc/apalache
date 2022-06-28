@@ -803,7 +803,8 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
 
     val expected =
-      tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1)
+      desugarer.transform(
+          tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1))
     assert(expected.eqTyped(output))
   }
 
@@ -814,16 +815,16 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
 
     val expected =
-      tla
-        .and(
-            tla.name("A").typed(BoolT1),
-            tla
-              .not(
-                  tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)
-              )
-              .typed(BoolT1),
-        )
-        .typed(BoolT1)
+      desugarer.transform(tla
+            .and(
+                tla.name("A").typed(BoolT1),
+                tla
+                  .not(
+                      tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)
+                  )
+                  .typed(BoolT1),
+            )
+            .typed(BoolT1))
     assert(expected.eqTyped(output))
   }
 }
