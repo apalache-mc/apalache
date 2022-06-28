@@ -1604,6 +1604,7 @@ EXITCODE: OK
 $ apalache-mc check --temporal=FalseLiveness NegatedQuantifiersInEnabled.tla
 ...
 EXITCODE: ERROR (12)
+[12]
 ```
 
 ### check Weak Fairness (temporal)
