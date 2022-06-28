@@ -3,12 +3,9 @@ Here is the list of the TLA+ language features that are currently supported by A
 ## Safety vs. Liveness
 
 At the moment, Apalache is able to check state invariants, action invariants,
-trace invariants as well as inductive invariants. (See the [page on
+temporal properties, trace invariants, as well as inductive invariants. (See the [page on
 invariants](https://apalache.informal.systems/docs/apalache/principles/invariants.html) in
-the manual.) Which means that you can only check safety properties with
-Apalache, unless you employ a [liveness-to-safety] transformation in your spec.
-In general, we do not support checking liveness properties.  If you would like
-to see liveness implemented, upvote the [liveness feature].
+the manual.) To check liveness/temporal properties, we employ a [liveness-to-safety][] transformation.
 
 ## Language
 
@@ -120,20 +117,28 @@ multi-line `/\` and `\/` | ✔ | - |
 Construct  | Supported? | Milestone | Comment
 ------------------------|:------------------:|:---------------:|--------------
 `e'` | ✔ | - |
-`[A]_e` | ✖ | - | It does not matter for safety
-`< A >_e` | ✖ | - |
-`ENABLED A` | ✖ | - |
+`[A]_e` | ✔ | - |
+`< A >_e` | ✔ | - |
+`ENABLED A` | ✖ | - | Has to be specified manually
 `UNCHANGED <<e_1, ..., e_k>>` | ✔ | - |Always replaced with `e_1' = e_1 /\ ... /\ e_k' = e_k`
 `A ∙ B` | ✖ | - |
 
 ### The Temporal Operators
 
-The model checker assumes that the specification has the form `Init /\
-[][Next]_e`. Given an invariant candidate `Inv`, the tool checks, whether
-`Inv` is violated by an execution whose length is bounded by the given
-argument.
+Construct  | Supported? | Milestone | Comment
+------------------------|:------------------:|:---------------:|--------------
+`[]F` | ✔ | - | 
+`<>F` | ✔ | - |
+`WF_e(A)` | ✖ | - | Has to be specified manually (see ENABLED)
+`SF_e(A)` | ✖ | - | Has to be specified manually (see ENABLED)
+`F ~> G` | ✔ | - | Always replaced with `[](F => <>G)`
+`F -+-> G` | ✖ | - |
+`\EE x: F` | ✖ | - |
+`\AA x: F` | ✖ | - |
 
-Except the standard form `Init /\ [][Next]_e`, no temporal operators are supported.
+The model checker assumes that the specification has the form `Init /\
+[][Next]_e`. Other than that, temporal operators 
+may only appear in temporal properties, not in e.g. actions.
 
 ## Standard modules
 
