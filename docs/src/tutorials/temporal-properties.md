@@ -396,8 +396,7 @@ original variables of the model, i.e., retaining the state of variables from the
 Finally, the variable `RequestWillBeFulfilled_init` is an artifact of the translation for temporal properties.
 Intuitively, in any state, the variable will be true if the variable encoding the formula `RequestWillBeFulfilled`
 is true in the first state.
-A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state, so `RequestWillBeFulfilled_init` is false,
-and a loop satisfying requirements on the auxiliary variables is found.
+A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state and a loop satisfying requirements on the auxiliary variables is found.
 ## Specifying Fairness
 
 The latest version of our traffic light is quite malicious:
