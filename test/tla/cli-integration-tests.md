@@ -2362,7 +2362,6 @@ EXITCODE: OK
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSequencesExt.tla | sed 's/[IEW]@.*//'
 ...
-
 EXITCODE: OK
 ```
 
