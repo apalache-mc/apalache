@@ -29,20 +29,25 @@ Init ==
 
 SendRequest(ask) ==
     /\ ask > 0
-    /\ LET m == Variant("Req", [ ask |-> ask ]) IN
+    /\ LET \* @type: MESSAGE;
+           m == Variant("Req", [ ask |-> ask ]) IN
        msgs' = msgs \union { m }
     /\ UNCHANGED <<balance, log>>
 
 
 ProcessRequest(ask) ==
     /\  IF balance >= ask
-        THEN LET entry == Variant("Withdraw", ask) IN
-             LET ack == Variant("Ack", [ success |-> TRUE ]) IN
+        THEN LET \* @type: EVENT;
+                 entry == Variant("Withdraw", ask) IN
+             LET \* @type: MESSAGE;
+                 ack == Variant("Ack", [ success |-> TRUE ]) IN
             /\ balance' = balance - ask
             /\ log' = Append(log, entry)
             /\ msgs' = (msgs \ { Variant("Req", [ ask |-> ask]) }) \union { ack }
-        ELSE LET entry == Variant("Lacking", ask - balance) IN
-             LET ack == Variant("Ack", [ success |-> FALSE ]) IN
+        ELSE LET \* @type: EVENT;
+                 entry == Variant("Lacking", ask - balance) IN
+             LET \* @type: MESSAGE;
+                 ack == Variant("Ack", [ success |-> FALSE ]) IN
             /\ log' = Append(log, entry)
             /\ msgs' = (msgs \ { Variant("Req", [ ask |-> ask]) }) \union { ack }
             /\ UNCHANGED balance

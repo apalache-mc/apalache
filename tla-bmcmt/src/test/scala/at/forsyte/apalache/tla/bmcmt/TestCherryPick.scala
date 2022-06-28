@@ -252,6 +252,27 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     assertTlaExAndRestore(rewriter, state.setRex(eq1or2))
   }
 
+  test("""CHERRY-PICK { Variant("A", 2), Variant("B", FALSE) }""") { rewriterType: SMTEncoding =>
+    val variantT = parser("A(Int) | B(Bool)")
+    val rewriter = create(rewriterType)
+    var state = new SymbState(bool(true).typed(), arena, Binding())
+    // introduce an oracle that tells us which element to pick
+    val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
+    state = oracleState
+
+    state = rewriter.rewriteUntilDone(state.setRex(variant("A", int(33)).as(variantT)))
+    val vrtA = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(variant("B", bool(false)).as(variantT)))
+    val vrtB = state.asCell
+
+    val variants = Seq(vrtA, vrtB)
+    state = new CherryPick(rewriter).pickVariant(state, oracle, variants, state.arena.cellFalse().toNameEx)
+    assert(solverContext.sat())
+
+    assertEqWhenChosen(rewriter, state, oracle, 0, variants(0).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 1, variants(1).toNameEx)
+  }
+
   test("""CHERRY-PICK { {1, 2}, {3, 4} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     var state = new SymbState(bool(true).typed(), arena, Binding())

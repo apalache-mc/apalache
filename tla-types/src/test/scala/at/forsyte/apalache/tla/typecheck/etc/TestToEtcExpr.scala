@@ -376,7 +376,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     }
   }
 
-  test("""FilterByTag("T1a", set)""") {
+  test("""VariantFilter("T1a", set)""") {
     val operType = parser("""(Str, Set(T1a(a) | b)) => Set(a)""")
     val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("set"))
     val filterEx = tla.variantFilter("T1a", tla.name("set"))
@@ -384,14 +384,14 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     produced should equal(expected)
   }
 
-  test("""FilterByTag(foo, set)""") {
+  test("""VariantFilter(foo, set)""") {
     val filterEx = OperEx(VariantOper.variantFilter, tla.name("foo"), tla.name("set"))
     assertThrows[TypingInputException] {
       gen(filterEx)
     }
   }
 
-  test("""MatchTag("T1a", v, ThenOper, ElseOper)""") {
+  test("""VariantMatch("T1a", v, ThenOper, ElseOper)""") {
     val thenType = parser("a => c")
     val elseType = parser("Variant(b) => c")
     val operType = parser(s"""(Str, T1a(a) | b, $thenType, $elseType) => c""")
@@ -403,10 +403,26 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     produced should equal(expected)
   }
 
-  test("""VariantGet("T1a", v)""") {
+  test("""VariantUnwrap("T1a", v)""") {
     val operType = parser(s"""(Str, T1a(a)) => a""")
     val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"))
-    val matchEx = tla.variantGet("T1a", tla.name("v"))
+    val matchEx = tla.variantUnwrap("T1a", tla.name("v"))
+    val produced = gen(matchEx)
+    produced should equal(expected)
+  }
+
+  test("""VariantGetUnsafe("T1a", v)""") {
+    val operType = parser(s"""(Str, T1a(a) | b) => a""")
+    val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"))
+    val matchEx = tla.variantGetUnsafe("T1a", tla.name("v"))
+    val produced = gen(matchEx)
+    produced should equal(expected)
+  }
+
+  test("""VariantGetOrElse("T1a", v, d)""") {
+    val operType = parser(s"""(Str, T1a(a) | b, a) => a""")
+    val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"), mkUniqName("d"))
+    val matchEx = tla.variantGetOrElse("T1a", tla.name("v"), tla.name("d"))
     val produced = gen(matchEx)
     produced should equal(expected)
   }

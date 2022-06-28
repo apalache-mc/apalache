@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla._
 
 trait TestSymbStateDecoder extends RewriterBase {
   private val parser = DefaultType1Parser
@@ -259,5 +259,18 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
     assert(recEx == decodedEx)
+  }
+
+  test("decode variant") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val vrt1 = variant("Foo", int(33)).as(variantT)
+    val state = new SymbState(vrt1, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    val cell = nextState.asCell
+    val decoder = new SymbStateDecoder(solverContext, rewriter)
+    val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
+    assert(vrt1 == decodedEx)
   }
 }

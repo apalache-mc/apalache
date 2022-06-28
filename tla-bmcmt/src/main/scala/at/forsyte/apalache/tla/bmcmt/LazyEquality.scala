@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import scalaz.unused
 
 import scala.collection.immutable.SortedMap
@@ -27,7 +27,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   private val eqCache = new EqCache()
   private val protoSeqOps = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
 
   /**
    * This method ensure that a pair of its arguments can be safely compared by the SMT equality, that is, all the
@@ -153,6 +153,10 @@ class LazyEquality(rewriter: SymbStateRewriter)
           case (CellTFrom(RecRowT1(RowT1(fieldTypes, None))), CellTFrom(RecRowT1(RowT1(fieldTypes2, None)))) =>
             assert(fieldTypes == fieldTypes2)
             mkRowRecordEq(state, fieldTypes, left, right)
+
+          case (CellTFrom(VariantT1(RowT1(options1, None))), CellTFrom(VariantT1(RowT1(options2, None)))) =>
+            assert(options1 == options2)
+            mkVariantEq(state, options1, left, right)
 
           case (CellTFrom(TupT1(_ @_*)), CellTFrom(TupT1(_ @_*))) =>
             mkTupleEq(state, left, right)
@@ -517,16 +521,49 @@ class LazyEquality(rewriter: SymbStateRewriter)
       fieldTypes: SortedMap[String, TlaType1],
       leftRec: ArenaCell,
       rightRec: ArenaCell): SymbState = {
+    var nextState = state
     def fieldsEq(name: String): TlaEx = {
-      val leftField = recordOps.getField(state.arena, leftRec, name)
-      val rightField = recordOps.getField(state.arena, rightRec, name)
-      tla.eql(leftField.toNameEx, rightField.toNameEx).as(BoolT1)
+      val leftField = recordOps.getField(nextState.arena, leftRec, name)
+      val rightField = recordOps.getField(nextState.arena, rightRec, name)
+      // The field values may be non-basic expressions. Use lazy equality over them too.
+      nextState = cacheOneEqConstraint(nextState, leftField, rightField)
+      safeEq(leftField, rightField)
     }
 
     val allFieldsEq = tla.and(fieldTypes.keys.map { n => tla.fromTlaEx(fieldsEq(n)) }.toSeq: _*).as(BoolT1)
     rewriter.solverContext.assertGroundExpr(tla.eql(tla.eql(leftRec.toNameEx, rightRec.toNameEx), allFieldsEq))
     eqCache.put(leftRec, rightRec, EqCache.EqEntry())
-    state
+    nextState
+  }
+
+  private def mkVariantEq(
+      state: SymbState,
+      options: SortedMap[String, TlaType1],
+      leftVar: ArenaCell,
+      rightVar: ArenaCell): SymbState = {
+    var nextState = state
+    val leftTag = recordOps.getVariantTag(nextState.arena, leftVar)
+    val rightTag = recordOps.getVariantTag(nextState.arena, rightVar)
+
+    def valuesEq(tagName: String): TlaEx = {
+      val leftValue = recordOps.getUnsafeVariantValue(nextState.arena, leftVar, tagName)
+      val rightValue = recordOps.getUnsafeVariantValue(nextState.arena, rightVar, tagName)
+      // The field values may be non-basic expressions. Use lazy equality over them too.
+      nextState = cacheOneEqConstraint(nextState, leftValue, rightValue)
+      // Get the tag as a cell
+      nextState = recordOps.getOrCreateVariantTag(nextState, tagName)
+      val tagAsCell = nextState.asCell
+      // tag = leftTag => leftValue = rightValue
+      tla
+        .or(tla.not(tla.eql(tagAsCell.toNameEx, leftTag.toNameEx).as(BoolT1)).as(BoolT1), safeEq(leftValue, rightValue))
+    }
+
+    val tagsEq = tla.eql(leftTag.toNameEx, rightTag.toNameEx).as(BoolT1)
+    val tagsAndValuesEq =
+      tla.and(tagsEq +: options.keys.map { n => tla.fromTlaEx(valuesEq(n)).as(BoolT1) }.toSeq: _*).as(BoolT1)
+    rewriter.solverContext.assertGroundExpr(tla.eql(tla.eql(leftVar.toNameEx, rightVar.toNameEx), tagsAndValuesEq))
+    eqCache.put(leftVar, rightVar, EqCache.EqEntry())
+    nextState
   }
 
   private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
