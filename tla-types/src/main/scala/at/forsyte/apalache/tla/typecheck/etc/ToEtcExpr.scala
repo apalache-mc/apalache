@@ -783,7 +783,7 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, setEx))
 
       case ex @ OperEx(VariantOper.variantFilter, tag @ _, _) =>
-        throw new TypingInputException(s"The first argument of FilterByTag must be a string, found: $tag", ex.ID)
+        throw new TypingInputException(s"The first argument of VariantFilter must be a string, found: $tag", ex.ID)
 
       case OperEx(VariantOper.variantMatch, v @ ValEx(TlaStr(tagName)), variantEx, thenOper, elseOper) =>
         val a = varPool.fresh
@@ -806,9 +806,9 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, variantEx, thenOper, elseOper))
 
       case OperEx(VariantOper.variantMatch, tag @ _, _, _, _) =>
-        throw new TypingInputException(s"The first argument of MatchTag must be a string, found: $tag", ex.ID)
+        throw new TypingInputException(s"The first argument of VariantMatch must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.variantGet, v @ ValEx(TlaStr(tagName)), variantEx) =>
+      case OperEx(VariantOper.variantUnwrap, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
         // (Str, T1a(a)) => a
         val operArgs =
@@ -819,6 +819,39 @@ class ToEtcExpr(
 
         val opsig = OperT1(operArgs, a)
         mkExRefApp(opsig, Seq(v, variantEx))
+
+      case OperEx(VariantOper.variantUnwrap, tag @ _, _) =>
+        throw new TypingInputException(s"The first argument of VariantGetOnly must be a string, found: $tag", ex.ID)
+
+      case OperEx(VariantOper.variantGetUnsafe, v @ ValEx(TlaStr(tagName)), variantEx) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // (Str, T1a(a) | b) => a
+        val operArgs =
+          Seq(
+              StrT1,
+              VariantT1(RowT1(b, tagName -> a)),
+          )
+
+        val opsig = OperT1(operArgs, a)
+        mkExRefApp(opsig, Seq(v, variantEx))
+
+      case OperEx(VariantOper.variantGetUnsafe, tag @ _, _) =>
+        throw new TypingInputException(s"The first argument of VariantGetUnsafe must be a string, found: $tag", ex.ID)
+
+      case OperEx(VariantOper.variantGetOrElse, v @ ValEx(TlaStr(tagName)), variantEx, defaultEx) =>
+        val a = varPool.fresh
+        val b = varPool.fresh
+        // (Str, T1a(a) | b, a) => a
+        val operArgs =
+          Seq(
+              StrT1,
+              VariantT1(RowT1(b, tagName -> a)),
+              a,
+          )
+
+        val opsig = OperT1(operArgs, a)
+        mkExRefApp(opsig, Seq(v, variantEx, defaultEx))
 
       // ******************************************** Apalache **************************************************
       case OperEx(ApalacheOper.mkSeq, len, ctor) =>

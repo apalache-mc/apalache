@@ -578,8 +578,16 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |  VariantMatch("T1a", var, ThenOper, ElseOper)
         |
         |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
-        |MO(var) ==
-        |  VariantGet("T1a", var)
+        |TestVariantUnwrap(var) ==
+        |  VariantUnwrap("T1a", var)
+        |
+        |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
+        |TestVariantGetUnsafe(var) ==
+        |  VariantGetUnsafe("T1a", var)
+        |
+        |\* @type: (T1a({ val: Int, found: Bool }), { val: Int, found: Bool }) => { val: Int, found: Bool };
+        |TestVariantGetOrElse(var) ==
+        |  VariantGetOrElse("T1a", var, [ val |-> 0, found |-> FALSE])
         |================================
       """.stripMargin
 
@@ -640,18 +648,43 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         OperParam("var"),
     )
 
-    // MO(var) ==
-    //   VariantGet("T1a", var)
+    // TestVariantUnwrap(var) ==
+    //   VariantUnwrap("T1a", var)
     val applyMatchOnly =
       OperEx(
-          VariantOper.variantGet,
+          VariantOper.variantUnwrap,
           str("T1a"),
           name("var"),
       )
 
     expectDecl(
-        "MO",
+        "TestVariantUnwrap",
         applyMatchOnly,
+        OperParam("var"),
+    )
+
+    // TestVariantGetUnsafe(var) == VariantGetUnsafe("T1a", var)
+    expectDecl(
+        "TestVariantGetUnsafe",
+        OperEx(
+            VariantOper.variantGetUnsafe,
+            ValEx(TlaStr("T1a")),
+            NameEx("var"),
+        ),
+        OperParam("var"),
+    )
+
+    // TestVariantGetOrElse(var) ==
+    //  VariantGetOrElse("T1a", var, [ val |-> 0, found |-> FALSE])
+    expectDecl(
+        "TestVariantGetOrElse",
+        OperEx(
+            VariantOper.variantGetOrElse,
+            ValEx(TlaStr("T1a")),
+            NameEx("var"),
+            OperEx(TlaFunOper.rec, ValEx(TlaStr("val")), ValEx(TlaInt(0)), ValEx(TlaStr("found")),
+                ValEx(TlaBool(false))),
+        ),
         OperParam("var"),
     )
   }

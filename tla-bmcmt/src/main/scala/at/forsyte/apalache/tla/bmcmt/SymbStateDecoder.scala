@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -23,7 +23,7 @@ import scala.collection.immutable.SortedMap
  */
 class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter) extends LazyLogging {
   private val protoSeqOps = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
 
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
     state.binding.toMap.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
@@ -113,6 +113,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case CellTFrom(RecRowT1(RowT1(fieldTypes, None))) =>
       decodeRecordToTlaEx(arena, cell, fieldTypes)
 
+    case CellTFrom(VariantT1(RowT1(options, None))) =>
+      decodeVariantToTlaEx(arena, cell, options)
+
     case CellTFrom(t @ TupT1(_ @_*)) =>
       val tupleElems = arena.getHas(cell)
       val elemAsExprs = tupleElems.map(c => decodeCellToTlaEx(arena, c))
@@ -173,6 +176,17 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     val typeTag = Typed(RecRowT1(RowT1(fieldTypes, None)))
     OperEx(TlaFunOper.rec, TlaOper.interleave(fieldNames, fieldValues): _*)(typeTag)
+  }
+
+  private def decodeVariantToTlaEx(arena: Arena, cell: ArenaCell, options: SortedMap[String, TlaType1]): TlaEx = {
+    val tagName = decodeCellToTlaEx(arena, recordOps.getVariantTag(arena, cell)) match {
+      case ValEx(TlaStr(name)) if ModelValueHandler.isModelValue(name) =>
+        ModelValueHandler.typeAndIndex(name).get._2
+
+      case e => throw new RewriterException(s"Expected a tag name in a variant $cell, found: $e", NullEx)
+    }
+    val value = decodeCellToTlaEx(arena, recordOps.getUnsafeVariantValue(arena, cell, tagName))
+    tla.variant(tagName, value).as(VariantT1(RowT1(options, None)))
   }
 
   private def decodeFunToTlaEx(arena: Arena, cell: ArenaCell, funT1: FunT1): TlaEx = {
