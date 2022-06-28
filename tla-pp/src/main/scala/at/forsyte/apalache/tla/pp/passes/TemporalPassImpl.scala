@@ -90,7 +90,7 @@ class TemporalPassImpl @Inject() (
 
       // let-in expressions are hard to handle in temporal formulas,
       // so they are inlined here
-      val inliner = new Inliner(tracker, renaming, keepNullary = false)
+      val inliner = new Inliner(tracker, renaming, keepNullaryMono = false)
       val transformation = inliner.transform(scope = Inliner.emptyScope)
       val inlinedTemporalFormulas =
         temporalFormulas.map(operDecl => operDecl.copy(body = transformation(operDecl.body)))
