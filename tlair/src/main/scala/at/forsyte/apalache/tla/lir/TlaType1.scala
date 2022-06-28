@@ -42,18 +42,18 @@ object TlaType1 {
 
   // returns true iff the type is a monotype, i.e. if it contains no type variables
   def isMono(tt: TlaType1): Boolean = tt match {
-    case _: VarT1                 => false
-    case FunT1(arg, res)          => isMono(arg) && isMono(res)
-    case SetT1(elem)              => isMono(elem)
-    case SeqT1(elem)              => isMono(elem)
-    case TupT1(elems @ _*)        => elems.forall(isMono)
-    case SparseTupT1(fieldTypes)  => fieldTypes.values.forall(isMono)
-    case RecT1(fieldTypes)        => fieldTypes.values.forall(isMono)
-    case OperT1(args, res)        => (res +: args).forall(isMono)
-    case RowT1(fieldTypes, other) => (other ++ fieldTypes.values).forall(isMono)
-    case RecRowT1(row)            => isMono(row)
-    case VariantT1(row)           => isMono(row)
-    case _                        => true
+    case IntT1 | RealT1 | BoolT1 | StrT1 | ConstT1(_) => true
+    case _: VarT1                                     => false
+    case FunT1(arg, res)                              => isMono(arg) && isMono(res)
+    case SetT1(elem)                                  => isMono(elem)
+    case SeqT1(elem)                                  => isMono(elem)
+    case TupT1(elems @ _*)                            => elems.forall(isMono)
+    case SparseTupT1(fieldTypes)                      => fieldTypes.values.forall(isMono)
+    case RecT1(fieldTypes)                            => fieldTypes.values.forall(isMono)
+    case OperT1(args, res)                            => (res +: args).forall(isMono)
+    case RowT1(fieldTypes, other)                     => (other ++ fieldTypes.values).forall(isMono)
+    case RecRowT1(row)                                => isMono(row)
+    case VariantT1(row)                               => isMono(row)
   }
 }
 
