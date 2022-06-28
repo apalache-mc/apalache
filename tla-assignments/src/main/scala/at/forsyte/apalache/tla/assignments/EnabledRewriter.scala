@@ -12,6 +12,8 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.pp.temporal.utils
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import com.typesafe.scalalogging.LazyLogging
+
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -22,7 +24,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 class EnabledRewriter(
     tracker: TransformationTracker,
     sourceStore: SourceStore,
-    changeListener: ChangeListener) {
+    changeListener: ChangeListener) extends LazyLogging {
 
   /**
    * Removes the assignments x' := foo from an expression by replacing them with TRUE
@@ -269,7 +271,9 @@ class EnabledRewriter(
       case OperEx(oper, args @ _*) =>
         new OperEx(oper, args.map(arg => this(arg, module)): _*)(ex.typeTag)
       case LetInEx(_, _) =>
-        throw new NotInKeraError("There should be no let-in expressions left after inlining", ex)
+        logger.warn("   > Rewriting enabled is not supported inside let-in expressions.")
+        logger.warn("   > This is not a concern, unless your specification uses ENABLED.")
+        ex
       case _ => ex
     }
   }
