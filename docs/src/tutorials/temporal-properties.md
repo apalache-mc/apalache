@@ -107,18 +107,18 @@ apalache-mc check --next=StutteringNext \
     --temporal=RequestWillBeFulfilled TrafficLight.tla
 ```
 ```
-Step 2: picking a transition out of 3 transition(s)               I@18:04:16.132
-State 3: Checking 1 state invariants                              I@18:04:16.150
-State 3: Checking 1 state invariants                              I@18:04:16.164
-State 3: Checking 1 state invariants                              I@18:04:16.175
-State 3: Checking 1 state invariants                              I@18:04:16.186
+Step 2: picking a transition out of 3 transition(s)
+State 3: Checking 1 state invariants
+State 3: Checking 1 state invariants
+State 3: Checking 1 state invariants
+State 3: Checking 1 state invariants
 Check an example state in: /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.tla, /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/MC1.out, /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.json, /home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.itf.json E@18:04:16.346
-State 3: state invariant 0 violated.                              E@18:04:16.346
-Found 1 error(s)                                                  I@18:04:16.347
-The outcome is: Error                                             I@18:04:16.353
-Checker has found an error                                        I@18:04:16.354
-It took me 0 days  0 hours  0 min  2 sec                          I@18:04:16.354
-Total time: 2.542 sec                                             I@18:04:16.354
+State 3: state invariant 0 violated.
+Found 1 error(s)
+The outcome is: Error
+Checker has found an error
+It took me 0 days  0 hours  0 min  2 sec
+Total time: 2.542 sec
 ```
 
 This time, we get a counterexample.
@@ -415,25 +415,15 @@ WF_vars(SwitchToGreen) <=> <>[](ENABLED <<SwitchToGreem>>_vars) => []<><<SwitchT
 where `<<SwitchToGreen>>_vars <=> SwitchToGreen /\ ~(UNCHANGED vars)`.
 The formal definition may look intimidating, but the meaning is intuitive:
 "If `SwitchToGreen` is enabled forever from some point onwards, then we should also infinitely often use `SwitchToGreen`".
-So if your traffic light is forever able to turn on the green light, then it must eventually also do so.
+So if your traffic light is forever able to turn on the green light, then it must eventually do so.
 This exactly disallows the case where the switch to green is delayed forever.
 
 In addition to having fairness on `SwitchToGreen`, let's also add fairness for the switch to red to our model.
 It would be quite unfair for other people in traffic if the light must switch to green if it is requested to do so,
-but does not in turn eventually also switch back to red.
+but does not in turn eventually switch back to red.
 
-Lastly, our model should be perfectly fine if noone ever requests the green light.
+Lastly, our model should be perfectly fine if the green light is never requested.
 So having fairness on `RequestGreen` does not seem necessary.
-
----
-**TIP**
-
-The translation of fairness internally can be expensive for large actions.
-Thus, fairness should only range over actions that we actually want to be fair.
-So when it is possible, prefer `WF_vars(subaction1) /\ WF_vars(subaction2)` to `WF_vars(Next)`.
-
----
-
 
 Overall, let's adjust our temporal property as follows:
 
@@ -441,6 +431,59 @@ Overall, let's adjust our temporal property as follows:
 {{#include TrafficLight.tla:fairprop}}
 ```
 This says that if a trace is fair, it should satisfy `RequestWillBeFulfilled`.
+
+Let us check this property with Apalache:
+
+```
+apalache-mc check --next=StutteringNext \
+    --temporal=RequestsFulfilledIfFair TrafficLight.tla
+```
+
+You should see output like this:
+
+```
+The outcome is: NoError
+Checker reports no error up to computation length 10
+It took me 0 days  0 hours  2 min  2 sec
+Total time: 122.10 sec
+EXITCODE: OK
+```
+
+You might notice a hefty slowdown, compared to the version without fairness. 
+Unfortunately, the translation of enabledness and fairness internally can be expensive for large actions.
+Often, it is possible to manually specify fairness conditions more succinctly.
+For example, notice that all we want is that it shouldn't be the case that
+from some point onward, 
+either of `SwitchToGreen` or `SwitchToRed` is enabled forever.
+If either was enabled forever, the corresponding action should be used,
+which then disables it (until it may later again be enabled).
+Instead of using fairness, we can write the property like this:
+
+```
+{{#include TrafficLight.tla:nicefair}}
+```
+
+Now, let us once again check the property with Apalache:
+
+```
+apalache-mc check --next=StutteringNext \
+    --temporal=RequestManualFairness TrafficLight.tla
+```
+
+This time, you should get a result much faster:
+
+```
+The outcome is: NoError
+Checker reports no error up to computation length 10
+It took me 0 days  0 hours  0 min 36 sec
+Total time: 36.116 sec
+EXITCODE: OK
+```
+
+In this case, it took just over a quarter as long to check 
+the property under the manual fairness requirement than under weak fairness.
+In general, when using fairness, it's worth spending some effort to simplify
+particularly the fairness condition.
 
 ## Further reading
 
