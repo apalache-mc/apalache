@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.assignments.passes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -24,7 +23,7 @@ class EnabledRewriterPassImpl @Inject() (
   override def name: String = "EnabledRewriterPass"
 
   override def execute(tlaModule: TlaModule): PassResult = {
-    val enabledRewriter = new EnabledRewriter(tracker, sourceStore, changeListener)
+    val enabledRewriter = new EnabledRewriter(tracker, sourceStore, changeListener, tlaModule)
 
     val newModule = new TlaModule(
         tlaModule.name,
@@ -35,7 +34,7 @@ class EnabledRewriterPassImpl @Inject() (
             new TlaOperDecl(
                 operDecl.name,
                 operDecl.formalParams,
-                enabledRewriter(operDecl.body, tlaModule),
+                enabledRewriter(operDecl.body),
             )(operDecl.typeTag)),
     )
 

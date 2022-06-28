@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.pp.temporal.utils
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -23,8 +23,9 @@ import com.typesafe.scalalogging.LazyLogging
 class EnabledRewriter(
     tracker: TransformationTracker,
     sourceStore: SourceStore,
-    changeListener: ChangeListener)
-    extends LazyLogging {
+    changeListener: ChangeListener,
+    module: TlaModule)
+    extends TlaExTransformation with LazyLogging {
 
   /**
    * Removes the assignments x' := foo from an expression by replacing them with TRUE
@@ -263,18 +264,20 @@ class EnabledRewriter(
     OperEx(TlaBoolOper.or, transitionsWithoutAssignments: _*)(Typed(BoolT1))
   }
 
-  def apply(ex: TlaEx, module: TlaModule): TlaEx = {
-    ex match {
+  def transform: TlaExTransformation = tracker.trackEx {
       case OperEx(TlaActionOper.enabled, arg) =>
         val body = utils.rewriteAssignmentsAsEquality(arg)
         transformEnabled(body, module.varDeclarations, module.operDeclarations)
-      case OperEx(oper, args @ _*) =>
-        new OperEx(oper, args.map(arg => this(arg, module)): _*)(ex.typeTag)
-      case LetInEx(_, _) =>
+      case ex @ OperEx(oper, args @ _*) =>
+        new OperEx(oper, args.map(arg => this(arg)): _*)(ex.typeTag)
+      case ex @  LetInEx(_, _) =>
         logger.warn("   > Rewriting enabled is not supported inside let-in expressions.")
         logger.warn("   > This is not a concern, unless your specification uses ENABLED.")
         ex
-      case _ => ex
-    }
+      case ex => ex
+  }
+
+  override def apply(ex: TlaEx): TlaEx = {
+    transform(ex)
   }
 }
