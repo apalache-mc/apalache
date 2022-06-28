@@ -3290,8 +3290,6 @@ $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 12_OutOptimizationPass.tla
 13_OutAnalysisPass.json
 13_OutAnalysisPass.tla
-14_OutPostTypeCheckerSnowcat.json
-14_OutPostTypeCheckerSnowcat.tla
 detailed.log
 example0.itf.json
 example0.json
@@ -3372,8 +3370,6 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 12_OutOptimizationPass.tla
 13_OutAnalysisPass.json
 13_OutAnalysisPass.tla
-14_OutPostTypeCheckerSnowcat.json
-14_OutPostTypeCheckerSnowcat.tla
 detailed.log
 example0.itf.json
 example0.json
