@@ -30,48 +30,62 @@ class SanyParserPassImpl @Inject() (
 
   override def name: String = "SanyParser"
 
+  private def loadFromJson(filename: String): PassResult = {
+    try {
+      val moduleJson = UJsonRep(ujson.read(new File(filename)))
+      val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
+      modules match {
+        case rMod +: Nil => Right(rMod)
+        case _ => {
+          logger.error("  > Error parsing file " + filename)
+          Left(ExitCodes.ERROR_SPEC_PARSE)
+        }
+      }
+    } catch {
+      case e: Exception =>
+        logger.error("  > Error parsing file " + filename)
+        logger.error("  > " + e.getMessage)
+        Left(ExitCodes.ERROR_SPEC_PARSE)
+    }
+  }
+
+  private def loadFromFile(filename: String): PassResult = {
+    val (rootName, modules) =
+      new SanyImporter(sourceStore, annotationStore)
+        .loadFromFile(new File(filename))
+    Right(modules.get(rootName).get)
+  }
+
+  private def saveLoadedModule(module: TlaModule): Either[ExitCodes.TExitCode, Unit] = {
+    // save the output
+    writeOut(writerFactory, module)
+    // write parser output to specified destination, if requested
+    utils.writeToOutput(module, options, writerFactory, logger, sourceStore)
+    Right(())
+  }
+
+  protected def sortDeclarations(module: TlaModule): PassResult = {
+    try {
+      Right(DeclarationSorter.instance(module))
+    } catch {
+      case e: CyclicDependencyError =>
+        // re-throw the error for the nice error message
+        throw new SanyImporterException(e.getMessage)
+    }
+  }
+
   override def execute(module: TlaModule): PassResult = {
     val filename = options.getOrError[String]("parser", "filename")
-    var rootModule: TlaModule = if (filename.endsWith(".json")) {
-      try {
-        val moduleJson = UJsonRep(ujson.read(new File(filename)))
-        val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
-        modules match {
-          case rMod +: Nil => rMod
-          case _ => {
-            logger.error("  > Error parsing file " + filename)
-            return Left(ExitCodes.ERROR_SPEC_PARSE)
-          }
-        }
-      } catch {
-        case e: Exception =>
-          logger.error("  > Error parsing file " + filename)
-          logger.error("  > " + e.getMessage)
-          return Left(ExitCodes.ERROR_SPEC_PARSE)
-      }
-    } else {
-      val (rootName, modules) =
-        new SanyImporter(sourceStore, annotationStore)
-          .loadFromFile(new File(filename))
-      modules.get(rootName).get
-    }
+    for {
+      rootModule <-
+        if (filename.endsWith(".json")) {
+          loadFromJson(filename)
+        } else {
+          loadFromFile(filename)
+        }.flatMap(sortDeclarations)
 
-    rootModule =
-      try {
-        DeclarationSorter.instance(rootModule)
-      } catch {
-        case e: CyclicDependencyError =>
-          // re-throw the error for the nice error message
-          throw new SanyImporterException(e.getMessage)
-      }
-
-    // save the output
-    writeOut(writerFactory, rootModule)
-
-    // write parser output to specified destination, if requested
-    utils.writeToOutput(rootModule, options, writerFactory, logger, sourceStore)
-
-    Right(rootModule)
+      _ <- saveLoadedModule(rootModule)
+    } yield rootModule
   }
 
   override def dependencies = Set()
