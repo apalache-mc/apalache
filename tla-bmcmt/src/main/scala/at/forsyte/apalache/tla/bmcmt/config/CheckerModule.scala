@@ -76,7 +76,6 @@ class CheckerModule extends ToolModule {
         classOf[ConfigurationPass],
         classOf[DesugarerPass],
         classOf[InlinePass],
-        classOf[PreproPass],
         classOf[EnabledRewriterPass],
         classOf[TemporalPass],
         classOf[InlinePass],
