@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.oper.VariantOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
 /**
- * Variant operations: Variant, VariantFilter, VariantMatch, VariantGet.
+ * Operators on variants that let the user to construct and destruct variants, as well as filter sets of variants.
  *
  * @author
  *   Igor Konnov
@@ -37,8 +37,8 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // This should work independently of the tag associated with the variant.
         translateVariantGetUnsafe(state, tagName, variantEx)
 
-      case OperEx(VariantOper.`variantUnwrap`, ValEx(TlaStr(tagName)), variantEx) =>
-        // At this point, there is no difference between VariantGetUnsafe and VariantGetOnly.
+      case OperEx(VariantOper.variantUnwrap, ValEx(TlaStr(tagName)), variantEx) =>
+        // At this point, there is no difference between VariantGetUnsafe and VariantUnwrap.
         // The type checker has to make sure that the variant has only one option.
         assertSingletonVariant(variantEx)
         translateVariantGetUnsafe(state, tagName, variantEx)

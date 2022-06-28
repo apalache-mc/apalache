@@ -820,7 +820,7 @@ class ToEtcExpr(
         val opsig = OperT1(operArgs, a)
         mkExRefApp(opsig, Seq(v, variantEx))
 
-      case OperEx(VariantOper.`variantUnwrap`, tag @ _, _) =>
+      case OperEx(VariantOper.variantUnwrap, tag @ _, _) =>
         throw new TypingInputException(s"The first argument of VariantGetOnly must be a string, found: $tag", ex.ID)
 
       case OperEx(VariantOper.variantGetUnsafe, v @ ValEx(TlaStr(tagName)), variantEx) =>
