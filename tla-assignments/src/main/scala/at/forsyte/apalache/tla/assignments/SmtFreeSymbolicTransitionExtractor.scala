@@ -24,7 +24,6 @@ class SmtFreeSymbolicTransitionExtractor(
     /** Manual assignments at such locations throw exceptions */
     case ex @ OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) =>
       val locString = getLocString(ex)
-      print(ex.toString())
       throw new AssignmentException(
           s"$locString: Illegal assignment inside an assignment-free expression. See ${SmtFreeSymbolicTransitionExtractor.MANUAL_LINK}"
       )
