@@ -2095,7 +2095,7 @@ EXITCODE: ERROR (255)
 ### check Bug1682.tla
 
 ```sh
-$ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --features=rows --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
