@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps, RecordOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{FunT1, OperEx, RecRowT1, RecT1, SeqT1, TlaEx, TlaType1, TupT1, ValEx}
+import at.forsyte.apalache.tla.lir._
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -18,7 +18,7 @@ import at.forsyte.apalache.tla.lir.{FunT1, OperEx, RecRowT1, RecT1, SeqT1, TlaEx
 class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
   protected val picker = new CherryPick(rewriter)
   private val proto = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

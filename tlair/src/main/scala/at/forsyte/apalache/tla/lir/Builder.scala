@@ -727,10 +727,46 @@ class Builder {
    * @return
    *   the value extracted from the variant
    */
-  def variantGet(
+  def variantUnwrap(
       tagName: String,
       variantEx: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.variantGet, str(tagName), variantEx)
+    BuilderOper(VariantOper.variantUnwrap, str(tagName), variantEx)
+  }
+
+  /**
+   * Unsafely extract the value associated with a tag. If the tag name is different from the actual tag, return some
+   * value of proper type.
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @return
+   *   the value extracted from the variant, when tagged with tagName; otherwise, return some value
+   */
+  def variantGetUnsafe(
+      tagName: String,
+      variantEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantGetUnsafe, str(tagName), variantEx)
+  }
+
+  /**
+   * Return the value associated with the tag, when the tag equals to __tagName. Otherwise, return __elseValue.
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @param defaultEx
+   *   default expression
+   * @return
+   *   the value extracted from the variant
+   */
+  def variantGetOrElse(
+      tagName: String,
+      variantEx: BuilderEx,
+      defaultEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantGetOrElse, str(tagName), variantEx, defaultEx)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -828,7 +864,9 @@ class Builder {
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
         VariantOper.variant.name -> VariantOper.variant,
-        VariantOper.variantGet.name -> VariantOper.variantGet,
+        VariantOper.variantUnwrap.name -> VariantOper.variantUnwrap,
+        VariantOper.variantGetUnsafe.name -> VariantOper.variantGetUnsafe,
+        VariantOper.variantGetOrElse.name -> VariantOper.variantGetOrElse,
         VariantOper.variantMatch.name -> VariantOper.variantMatch,
         VariantOper.variantFilter.name -> VariantOper.variantFilter,
     )

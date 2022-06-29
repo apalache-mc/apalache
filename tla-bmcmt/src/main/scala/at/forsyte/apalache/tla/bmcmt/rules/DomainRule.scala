@@ -2,13 +2,13 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
-import at.forsyte.apalache.tla.lir._
 
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
@@ -18,7 +18,7 @@ import at.forsyte.apalache.tla.lir._
  */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {

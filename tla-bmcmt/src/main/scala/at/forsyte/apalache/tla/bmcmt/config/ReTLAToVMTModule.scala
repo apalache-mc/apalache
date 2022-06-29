@@ -4,13 +4,12 @@ import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
+import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
-import at.forsyte.apalache.tla.lir.transformations.standard.ReTLALanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
@@ -32,7 +31,7 @@ class ReTLAToVMTModule extends ToolModule {
       .to(classOf[CheckerExceptionAdapter])
 
     bind(classOf[LanguagePred])
-      .to(classOf[ReTLALanguagePred])
+      .to(classOf[ReTLACombinedPredicate])
 
     // stores
     // Create an annotation store with the custom provider.
@@ -80,8 +79,6 @@ class ReTLAToVMTModule extends ToolModule {
         classOf[WatchdogPassImpl],
         classOf[TransitionPass],
         classOf[OptPass],
-        // do the final type checking again, as preprocessing may have introduced gaps in the expression types
-        classOf[PostTypeCheckerPassImpl],
         // ConstraintGenPass is in the very end of the pipeline
         classOf[TranspilePass],
     )

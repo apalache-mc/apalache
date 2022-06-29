@@ -8,7 +8,7 @@
  * Apalache treats these operators as typed, so it enforces type safety of
  * variants.
  *
- * Igor Konnov, Informal Systems, 2021
+ * Igor Konnov, Informal Systems, 2021-2022
  *)
 
 (**
@@ -42,6 +42,9 @@ VariantFilter(__tagName, __S) ==
 
 
 (**
+ * WARNING: This operator is not supported by the Apalache model checker yet.
+ * We are thinking about a reasonably simple implementation of it.
+ *
  * Test the tag of `variant` against the value `tagValue`.
  * If `variant.tag = tagValue`, then apply `ThenOper(rec)`,
  * where `rec` is a record extracted from `variant`.
@@ -85,10 +88,49 @@ VariantMatch(__tagName, __variant, __ThenOper(_), __ElseOper(_)) ==
  *
  *   (Str, Tag(a)) => a
  *)
-VariantGet(__tagName, __variant) ==
+VariantUnwrap(__tagName, __variant) ==
     \* default untyped implementation
     IF __variant.tag = __tagName
     THEN __variant.value
-    ELSE \* trigger an error in TLC by choosing a non-existant element
+    ELSE \* trigger an error in TLC by choosing a non-existent element
          CHOOSE x \in { __variant }: x.tag = __tagName
+
+(**
+ * Return the value associated with the tag, when the tag equals to __tagName.
+ * Otherwise, return __elseValue.
+ *
+ * @param `__tagName` the tag attached to the variant
+ * @param `__variant` a variant that is constructed with `Variant(...)`
+ * @param `__defaultValue` the default value to return, if not tagged with __tagName
+ * @return the value extracted from the variant, or the __defaultValue
+ *
+ * Its type could look like follows:
+ *
+ *   (Str, Tag(a) | b, a) => a
+ *)
+VariantGetOrElse(__tagName, __variant, __defaultValue) ==
+    \* default untyped implementation
+    IF __variant.tag = __tagName
+    THEN __variant.value
+    ELSE __defaultValue
+
+
+(**
+ * Unsafely return a value of the type associated with __tagName.
+ * If the variant is tagged with __tagName, then return the associated value.
+ * Otherwise, return some value of the type associated with __tagName.
+ *
+ * @param `tagValue` the tag attached to the variant
+ * @param `variant` a variant that is constructed with `Variant(...)`
+ * @return the value extracted from the variant, when tagged __tagName;
+ *         otherwise, return some value
+ *
+ * Its type could look like follows:
+ *
+ *   (Str, Tag(a) | b) => a
+ *)
+VariantGetUnsafe(__tagName, __variant) ==
+    \* the default untyped implementation
+    __variant.value
+
 ===============================================================================

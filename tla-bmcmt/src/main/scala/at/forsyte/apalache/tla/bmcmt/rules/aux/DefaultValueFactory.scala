@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps.tagSort
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, NullEx, RecRowT1, RecT1, RowT1, SeqT1, SetT1, StrT1, TlaType1, TupT1,
-}
+import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedSet
 
@@ -89,6 +88,26 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val (arena2, protoSeq) = protoSeqOps.makeEmptyProtoSeq(arena)
         val (arena3, zero) = rewriter.intValueCache.create(arena2, 0)
         protoSeqOps.mkSeqCell(arena3, tp, protoSeq, zero)
+
+      case variantT @ VariantT1(RowT1(options, None)) if options.nonEmpty =>
+        // it would be better to call RecordAndVariantOps.makeVariant, but that would produce a circular dependency
+        val tagName = options.head._1
+        val (arena2, tagAsCell) = rewriter.modelValueCache.getOrCreate(arena, (tagSort, tagName))
+        var nextArena = arena2
+        // introduce default values for all variant options
+        val variantValues = options.map { case (t, tp) =>
+          val (newArena, defaultValue) = makeUpValue(nextArena, tp)
+          nextArena = newArena
+          (t, defaultValue)
+        }
+        // introduce a cell for the variant and wire the values to it
+        nextArena = nextArena.appendCell(variantT)
+        val variantCell = nextArena.topCell
+        for (fieldCell <- (variantValues + (RecordAndVariantOps.variantTagField -> tagAsCell)).valuesIterator) {
+          nextArena = nextArena.appendHasNoSmt(variantCell, fieldCell)
+        }
+
+        (nextArena, variantCell)
 
       case tp @ _ =>
         throw new RewriterException(s"Unexpected type $tp when generating a default value", NullEx)

@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordOps}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, RecRowT1, RecT1, SeqT1, SetT1, TlaEx, TlaType1, TupT1, ValEx}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import scalaz.unused
 
 /**
@@ -17,7 +17,7 @@ import scalaz.unused
  */
 class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val proto = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordOps(rewriter)
+  private val recordOps = new RecordAndVariantOps(rewriter)
 
   private def cacheEq(s: SymbState, l: ArenaCell, r: ArenaCell) = rewriter.lazyEq.cacheOneEqConstraint(s, l, r)
 

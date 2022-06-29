@@ -53,14 +53,17 @@ package object types {
           // all operators are inlined
           throw new TypingException("Unexpected operator type OperT1", UID.nullId)
 
-        case RecRowT1(RowT1(_, None)) =>
+        case RecRowT1(RowT1(_, None)) | VariantT1(RowT1(_, None)) =>
           CellTFrom(tt)
 
         case RecRowT1(RowT1(_, _)) =>
           throw new TypingException("Polymorphic records are not supported by the model checker", UID.nullId)
 
-        case RowT1(_, _) | VariantT1(_) =>
-          throw new NotImplementedError("Row types are not supported by the model checker yet")
+        case VariantT1(RowT1(_, _)) =>
+          throw new TypingException("Polymorphic variants are not supported by the model checker", UID.nullId)
+
+        case RowT1(_, _) =>
+          throw new TypingException("Polymorphic rows are not supported by the model checker", UID.nullId)
 
         case tt => CellTFrom(tt)
       }

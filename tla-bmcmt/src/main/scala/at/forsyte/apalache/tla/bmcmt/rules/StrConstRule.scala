@@ -6,7 +6,8 @@ import at.forsyte.apalache.tla.lir.{StrT1, ValEx}
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 /**
- * Rewrites a string literal, e.g., "hello".
+ * Rewrites a string literal, e.g., "hello", which is translated as a constant of the uninterpreted sort Str, or a
+ * string literal of the form "foo_OF_BAR", which is translated to as a constant of the uninterpreted sort BAR.
  *
  * @author
  *   Igor Konnov
