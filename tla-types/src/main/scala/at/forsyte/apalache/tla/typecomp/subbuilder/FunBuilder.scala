@@ -41,10 +41,23 @@ trait FunBuilder extends UnsafeFunBuilder {
   /** {{{<<t1, ..., tn>>}}} with a sequence-type. Must be nonempty. */
   def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { _seq }
 
-  /** [x \in S |-> e] */
-  def funDef(e: TBuilderInstruction, x: TBuilderInstruction, S: TBuilderInstruction): TBuilderInstruction =
-    // funDef args are ordered differently than quantifiers
-    boundVarIntroductionTernary { case (variable, set, expr) => _funDef(expr, variable, set) }(x, S, e)
+  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
+  def funDef(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
+    boundVarIntroductionVariadic(_funDef)(e, varSetPairs: _*)
+
+  /**
+   * Alternate call method, where pairs are passed interleaved
+   *
+   * @see
+   *   funDef[[funDef(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*)]]
+   */
+  def funDefMixed(e: TBuilderInstruction, varSetPairs: TBuilderInstruction*): TBuilderInstruction = {
+    require(varSetPairs.size % 2 == 0)
+    val asPairs = varSetPairs.grouped(2).toSeq.map { case Seq(a, b) =>
+      (a, b)
+    }
+    funDef(e, asPairs: _*)
+  }
 
   //////////////////
   // APP overload //

@@ -47,9 +47,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
   }
 
   /** { e: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair */
-  protected def _map(
-      e: TlaEx,
-      varSetPairs: (TlaEx, TlaEx)*): TlaEx = {
+  protected def _map(e: TlaEx, varSetPairs: (TlaEx, TlaEx)*): TlaEx = {
     // the other _map does all the require checks
     val args = varSetPairs.flatMap { case (k, v) =>
       Seq(k, v)
@@ -61,11 +59,9 @@ trait UnsafeSetBuilder extends ProtoBuilder {
    * Alternate call method, where pairs are passed interleaved
    *
    * @see
-   *   _map[[_map(e: TlaEx, varSetPairs: (NameEx, TlaEx)*)]]
+   *   _map[[_map(e: TlaEx, varSetPairs: (TlaEx, TlaEx)*)]]
    */
-  protected def _mapMixed(
-      e: TlaEx,
-      varSetPairs: TlaEx*): TlaEx = {
+  protected def _mapMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
     // Even, nonzero # of args and every other argument is NameEx
     require(varSetPairs.nonEmpty)
     require(varSetPairs.size % 2 == 0)

@@ -80,7 +80,7 @@ class TestHybrid extends BuilderTest {
     // A(p1,...,pn) == CHOOSE x: p1 /\  p2 >= 0 /\ ... /\ pn = pn
     def mkWellTyped(tparam: TParam): (T, T) = {
       val (t, ts) = tparam
-      val tParams = ts.zipWithIndex.map { case ((tt, arity), i) => builder.param(s"p$i", tt, arity) }
+      val tParams = ts.zipWithIndex.map { case ((tt, _), i) => builder.param(s"p$i", tt) }
       val paramConds = tParams.map { case (OperParam(pName, _), tt) =>
         def n: TBuilderInstruction = builder.name(pName, tt)
         // We can try different expressions for different parameter types, as long as each name is used at least once
@@ -114,7 +114,7 @@ class TestHybrid extends BuilderTest {
     def forceScopeException(tparam: TParam): Seq[T] = {
       val (t, ts) = tparam
       ts.indices.map { j =>
-        val tParams = ts.zipWithIndex.map { case ((tt, arity), i) => builder.param(s"p$i", tt, arity) }
+        val tParams = ts.zipWithIndex.map { case ((tt, _), i) => builder.param(s"p$i", tt) }
         val eqls = tParams.zipWithIndex.map { case ((OperParam(pName, _), tt), i) =>
           // We use the j-th parameter inconsistently w.r.t. types
           val n = builder.name(pName, if (i != j) tt else InvalidTypeMethods.differentFrom(tt))
@@ -195,6 +195,18 @@ class TestHybrid extends BuilderTest {
 
     checkRun(run)
 
+    // throws on illegal parameter type
+
+    assertThrows[TBuilderTypeException] {
+      builder.param("x", OperT1(Seq(IntT1), OperT1(Seq.empty, IntT1)))
+    }
+
+    assertThrows[TBuilderTypeException] {
+      builder.param("x", OperT1(Seq.empty, IntT1))
+    }
+
+    // throws if parameter type not in scope
+
     assertThrows[TBuilderScopeException] {
       build(
           builder.declWithInferredParameterTypes(
@@ -207,5 +219,113 @@ class TestHybrid extends BuilderTest {
 
   }
 
-  // TODO: test hybrid FunOper methods (except/funDef)
+  test("except") {
+    type T = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
+    type TParam = (TlaType1, Seq[(TBuilderInstruction, TlaType1)])
+
+    var ctr: Int = 0
+    // unsafe for non-applicative
+    def argAndCdmTypeGen(appT: TlaType1): Gen[(TBuilderInstruction, TlaType1)] = {
+      ctr += 1
+      (appT: @unchecked) match {
+        case FunT1(a, b) => Gen.const((builder.name(s"x$ctr", a), b))
+        case TupT1(args @ _*) => // assume nonempty
+          Gen.choose[BigInt](1, args.size).map(i => (builder.int(i), args((i - 1).toInt)))
+        case RecT1(flds) => // assume nonempty
+          Gen.oneOf(flds.keys).map(k => (builder.str(k), flds(k)))
+        case SeqT1(t) => Gen.const((builder.name(s"x$ctr", IntT1), t))
+      }
+    }
+
+    implicit val typeSeqGen: Gen[TParam] = for {
+      t <- Gen.oneOf(tt1gen.genFun, tt1gen.genRec, tt1gen.genSeq, tt1gen.genTup)
+      n <- Gen.choose(1, 5)
+      seq <- Gen.listOfN(n, argAndCdmTypeGen(t))
+    } yield (t, seq)
+
+    def mkWellTyped(tparam: TParam): T = {
+      val (t, ts) = tparam
+      (
+          builder.name("e", t),
+          ts.zipWithIndex.map { case ((arg, cdmT), i) =>
+            (
+                arg,
+                builder.name(s"v$i", cdmT),
+            )
+          },
+      )
+    }
+
+    def nonLiteral(bi: TBuilderInstruction): TBuilderInstruction = bi.map {
+      case ex: ValEx => NameEx("x")(ex.typeTag)
+      case ex        => ex
+    }
+
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (t, ts) = tparam
+      ts.indices.flatMap { j =>
+        val nonLiteralOpt =
+          if (t.isInstanceOf[RecT1] || t.isInstanceOf[TupT1])
+            Some(
+                (
+                    builder.name("e", t),
+                    ts.zipWithIndex.map { case ((arg, cdmT), i) =>
+                      (
+                          if (i == j) nonLiteral(arg)
+                          else arg,
+                          builder.name(s"S$i", cdmT),
+                      )
+                    },
+                )
+            )
+          else None
+
+        nonLiteralOpt ++
+          Seq(
+              (
+                  builder.name("e", t),
+                  ts.zipWithIndex.map { case ((arg, cdmT), i) =>
+                    (
+                        arg,
+                        builder.name(s"S$i",
+                            if (i == j) InvalidTypeMethods.differentFrom(cdmT)
+                            else cdmT),
+                    )
+                  },
+              )
+          )
+      }
+    }
+
+    def resultIsExpected(tparam: TParam)(res: TBuilderResult): Boolean = {
+      val (t, ts) = tparam
+      val expected = ts.zipWithIndex.foldLeft(builder.name("e", t)) { case (partial, ((arg, cdmT), i)) =>
+        builder.except(
+            partial,
+            arg,
+            builder.name(s"v$i", cdmT),
+        )
+      }
+      res.eqTyped(expected)
+    }
+
+    checkRun(
+        runVariadicWithDistinguishedFirst(
+            builder.exceptMany,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // throws on n = 0
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.exceptMany(builder.name("f", builder.parseType("Int -> Int")))
+      )
+    }
+  }
+
+  // TODO: test multi-depth except if we choose to keep the methods after the builder transition.
+
 }

@@ -46,41 +46,16 @@ trait SetBuilder extends UnsafeSetBuilder {
     boundVarIntroductionTernary(_filter)(x, set, p)
 
   /** { mapExpr: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair */
-  def map(
-      e: TBuilderInstruction,
-      varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
-    for {
-      mapExpr <- e
-      boundAfterMapExpr <- allBound // xi may not appear as bound in mapExpr
-      pairs <- varSetPairs.foldLeft(Seq.empty[(TlaEx, TlaEx)].point[TBuilderInternalState]) {
-        case (cmp, (variable, set)) =>
-          for {
-            seq <- cmp
-            setEx <- set
-            usedInS <- allUsed // xi may not appear as bound or free in S
-            xEx <- variable
-            _ = require(xEx.isInstanceOf[NameEx])
-            _ <- markAsBound(xEx)
-            // xi is shadowed iff boundAfterX \subseteq usedInS \union boundAfterMapExpr
-            boundAfterX <- allBound
-          } yield
-            if (boundAfterX.subsetOf(usedInS.union(boundAfterMapExpr))) {
-              val name = xEx.asInstanceOf[NameEx].name // require would have already thrown if not NameEx
-              throw new TBuilderScopeException(s"Variable $name is shadowed in $mapExpr or $setEx.")
-            } else seq :+ (xEx, setEx)
-      }
-    } yield _map(mapExpr, pairs: _*)
-  }
+  def map(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
+    boundVarIntroductionVariadic(_map)(e, varSetPairs: _*)
 
   /**
    * Alternate call method, where pairs are passed interleaved
    *
    * @see
-   *   map[[mapMixed(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*)]]
+   *   map[[map(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*)]]
    */
-  def mapMixed(
-      e: TBuilderInstruction,
-      varSetPairs: TBuilderInstruction*): TBuilderInstruction = {
+  def mapMixed(e: TBuilderInstruction, varSetPairs: TBuilderInstruction*): TBuilderInstruction = {
     require(varSetPairs.size % 2 == 0)
     val asPairs = varSetPairs.grouped(2).toSeq.map { case Seq(a, b) =>
       (a, b)
