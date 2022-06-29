@@ -16,6 +16,7 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.pp.NotInKeraError
 import at.forsyte.apalache.tla.pp.ConstSimplifier
 import at.forsyte.apalache.tla.pp.Normalizer
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -194,7 +195,7 @@ class EnabledRewriter(
    * i.e. the result of {{{assignmentMap.getOrElse(name, ex)}}}
    */
   private def flattenEx(ex: TlaEx, assignmentMap: Map[String, TlaEx]): TlaEx = {
-    assignmentMap.foldLeft(ex){ case (k,v) =>ReplaceFixed(builder.prime(builder.name(k, kType), v))}
+    assignmentMap.foldLeft(ex) { case (k, v) => ReplaceFixed(utils.builder.prime(utils.builder.name(k, kType)), v) }
   }
 
   /**
