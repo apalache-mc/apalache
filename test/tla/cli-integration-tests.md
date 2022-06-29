@@ -2095,7 +2095,7 @@ EXITCODE: ERROR (255)
 ### check Bug1682.tla
 
 ```sh
-$ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --features=rows --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2164,6 +2164,16 @@ Test that advanced use of model values is working.
 
 ```sh
 $ apalache-mc check --inv=TCConsistent MC3_TwoPhaseUFO.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check MC3_TwoPhaseTyped.tla succeeds
+
+Test that variants are working as expected.
+
+```sh
+$ apalache-mc check --features=rows --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2618,7 +2628,7 @@ EXITCODE: OK
 ### typecheck TwoPhaseTyped.tla
 
 ```sh
-$ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
