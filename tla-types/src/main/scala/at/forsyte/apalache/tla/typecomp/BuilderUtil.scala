@@ -77,6 +77,10 @@ object BuilderUtil {
     } else ret
   }
 
+  /**
+   * Some (variadic) operators introduce bound variables (e.g. map, funDef). This method constructs the expressions
+   * associated with the operator, and additionally performs shadowing checks and bound-variable tagging.
+   */
   def boundVarIntroductionVariadic(
       rawMethod: (TlaEx, Seq[(TlaEx, TlaEx)]) => TlaEx
     )(ex: TBuilderInstruction,
