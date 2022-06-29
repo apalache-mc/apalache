@@ -27,7 +27,7 @@ class EnabledRewriterPassImpl @Inject() (
 
     val newModule = tlaModule.copy(
       declarations = tlaModule.declarations.map {
-       case d: TlaOperDecl => d.copy(body = enabledRewriter(d.body)
+       case d: TlaOperDecl => d.copy(body = enabledRewriter(d.body))
        case d => d
       }
     )
