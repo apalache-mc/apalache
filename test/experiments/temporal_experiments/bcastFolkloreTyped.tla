@@ -22,7 +22,7 @@ EXTENDS Naturals (*, FiniteSets *)
 
 N == 3
 T == 1
-F == 2
+F == 1
 
 VARIABLES 
         \* @type: Set(Int);
@@ -51,20 +51,11 @@ Init ==
                                            or all processes are correct. *)
   /\ Corr = 1 .. N                                           
   /\ sent = {}                          (* No messages are sent. *)
-  /\ pc = [ i \in Proc |-> "V1" ]    (* If process p received an INIT message,
+  /\ pc \in [ Proc -> {"V0", "V1"} ]    (* If process p received an INIT message,
                                            process p is initialized with V1. Otherwise,
                                            it is initialized with V0. *)
   /\ rcvd = [ i \in Proc |-> {} ]       (* No messages are received. *)        
-  
-
-InitNoBcast == 
-  /\ nCrashed = 0                       (* Initially, there is no crashed process  
-                                           or all processes are correct. *)
-  /\ Corr = 1 .. N                                           
-  /\ sent = {}                          (* No messages are sent. *)
-  /\ pc = [ p \in Proc |-> "V0" ]       (* Nothing is broadcasted and 
-                                           no process receives an INIT message. *)
-  /\ rcvd = [ i \in Proc |-> {} ]       (* No messages are received. *)  
+   
 
 Receive(self) ==                        (* a correct process self receives new messages *)
   /\ pc[self] # "CR"
@@ -73,12 +64,12 @@ Receive(self) ==                        (* a correct process self receives new m
         rcvd' = [rcvd EXCEPT ![self] = rcvd[self] \cup {msg} ]
     \/ UNCHANGED rcvd
 
-UponV1Enabled ==
-    \E i \in Proc: pc[i] = "V1"
 
 (* If a correct process received an INIT message or was initialized with V1, 
    it accepts this message and then broadcasts ECHO to all.  
  *)
+UponV1Enabled ==
+    \E i \in Proc: pc[i] = "V1"
 UponV1(self) ==                                 
   /\ pc[self] = "V1"                        
   /\ pc' = [pc EXCEPT ![self] = "AC"]       
@@ -86,12 +77,12 @@ UponV1(self) ==
   /\ nCrashed' = nCrashed
   /\ Corr' = Corr
 
-UponAcceptEnabled ==
-    \E i \in Proc: pc[i] \in {"V0", "V1"} 
     
 
-(* If a correct process received an ECHO messageaccepts, it accepts and then 
+(* If a correct process received an ECHO message, it accepts and then 
    broadcasts ECHO to all.  *)
+UponAcceptEnabled ==
+    \E i \in Proc: pc[i] \in {"V0", "V1"} 
 UponAccept(self) ==                                 
   /\ (pc[self] = "V0" \/ pc[self] = "V1")     
   /\ rcvd'[self] # {}
@@ -120,54 +111,15 @@ Step(self) ==
 (* the transition step *)    
 Next ==  (\E self \in Corr: Step(self))
 
-(* Add the weak fairness condition since we want to check the liveness condition. *)
-Spec == Init /\ [][Next]_vars
-             /\ WF_vars(\E self \in Corr: /\ Receive(self)
-                                          /\ \/ UponV1(self)                                             
-                                             \/ UponAccept(self)
-                                             \/ UNCHANGED << pc, sent, nCrashed, Corr >> )
-                                             
-                                       
-SpecNoBcast == InitNoBcast /\ [][Next]_vars
-                           /\ WF_vars(\E self \in Corr: /\ Receive(self)
-                                                        /\ \/ UponV1(self)
-                                                           \/ UponAccept(self)
-                                                           \/ UNCHANGED << pc, sent, nCrashed, Corr >> )
-
-(* V0 - a process did not received an INIT message 
-   V1 - a process received an INIT message 
-   AC - a process accepted and sent the message to everybody  
-   CR - a process is crashed 
- *)
-TypeOK == 
-  /\ sent \in SUBSET (Proc \times M)
-  /\ pc \in [ Proc -> {"V0", "V1", "AC", "CR"} ]   
-  /\ rcvd \in [ Proc -> SUBSET (Proc \times M) ]
-  /\ nCrashed \in 0..N
-  /\ Corr \in SUBSET Proc   
-          
-(* If no correct process does not broadcast then no correct processes accepts. *)  
-UnforgLtl == (\A i \in Corr: pc[i] = "V0") => [](\A i \in Corr: pc[i] /= "AC")
-
-(* Unforg is correct iff the initial state is InitNoBcast. *)          
-Unforg == (\A self \in Corr: (pc[self] /= "AC")) 
-
-Fairness ==
-    ~<>[](UponAcceptEnabled \/ UponV1Enabled)
-
-(* If a correct process broadcasts, then every correct process eventually accepts. *)
-CorrLtl == (\A i \in Corr: pc[i] = "V1") => <>(\E i \in Corr: pc[i] = "AC")
-
 (* If a correct process accepts, then every correct process eventually accepts.  *)
 RelayLtl == []((\E i \in Corr: pc[i] = "AC") => <>(\A i \in Corr: pc[i] = "AC"))
 
-(* If a message is sent by a correct process, then every correct processes eventually
-   receives this message. *)
-ReliableChan == 
-  []( \E sndr \in 1..N : (<<sndr, "ECHO">> \in sent 
-                            => <>[](\A p \in Corr : <<sndr, "ECHO">> \in rcvd[p]))) 
+(* if UponAccept or UponV1 is enabled, it should eventually be fired, and thus no longer be enabled. *)
+Fairness ==
+    ~<>[](UponV1Enabled \/ UponAcceptEnabled)
 
-Prop ==
+(* RelayLtl should hold when we assume fairness. *)
+FairRelayLtl ==
     Fairness => RelayLtl
 
 =============================================================================
