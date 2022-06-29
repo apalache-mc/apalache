@@ -194,17 +194,7 @@ class EnabledRewriter(
    * i.e. the result of {{{assignmentMap.getOrElse(name, ex)}}}
    */
   private def flattenEx(ex: TlaEx, assignmentMap: Map[String, TlaEx]): TlaEx = {
-    ex match {
-      case OperEx(TlaActionOper.prime, NameEx(name)) =>
-        // replace a name expression by its assignment
-        // or leave it if no assignment exists for the name expression
-        assignmentMap.getOrElse(name, ex)
-      case OperEx(oper, args @ _*) =>
-        OperEx(oper, args.map(arg => flattenEx(arg, assignmentMap)): _*)(ex.typeTag)
-      case LetInEx(_, _) =>
-        throw new NotInKeraError("There should be no let-in expressions left after inlining", ex)
-      case _ => ex
-    }
+    assignmentMap.foldLeft(ex){ case (k,v) =>ReplaceFixed(builder.prime(builder.name(k, kType), v))}
   }
 
   /**
