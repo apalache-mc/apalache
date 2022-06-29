@@ -25,17 +25,11 @@ class EnabledRewriterPassImpl @Inject() (
   override def execute(tlaModule: TlaModule): PassResult = {
     val enabledRewriter = new EnabledRewriter(tracker, sourceStore, changeListener, tlaModule)
 
-    val newModule = new TlaModule(
-        tlaModule.name,
-        tlaModule.varDeclarations ++
-          tlaModule.constDeclarations ++
-          tlaModule.assumeDeclarations ++
-          tlaModule.operDeclarations.map(operDecl =>
-            new TlaOperDecl(
-                operDecl.name,
-                operDecl.formalParams,
-                enabledRewriter(operDecl.body),
-            )(operDecl.typeTag)),
+    val newModule = tlaModule.copy(
+      declarations = tlaModule.declarations.map {
+       case d: TlaOperDecl => d.copy(body = enabledRewriter(d.body)
+       case d => d
+      }
     )
 
     writeOut(writerFactory, newModule)
