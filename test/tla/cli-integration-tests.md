@@ -536,7 +536,8 @@ EXITCODE: OK
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --features=rows --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --cinit=AvoidBug --length=5 \
+    --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -546,7 +547,8 @@ EXITCODE: OK
 ### check mis_bug.tla errors
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=AvoidBug --length=5 \
+  --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error

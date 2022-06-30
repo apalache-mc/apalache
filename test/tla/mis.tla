@@ -1,6 +1,16 @@
 -------------------------------- MODULE mis --------------------------------
 EXTENDS Integers, TLC, Variants
 
+CONSTANT
+    \* @type: Bool;
+    HAS_BUG
+
+IntroBug ==
+    HAS_BUG = TRUE
+
+AvoidBug ==
+    HAS_BUG = FALSE
+
 N == 3
 N4 == 81
 Nodes == 1..N
@@ -58,7 +68,9 @@ SentValues(u) == { Val(w, val'[w]): w \in Senders(u) }
     
 IsWinner(u) ==
     \A m \in VariantFilter("Val", msgs'[u]):
-        val'[u] > m.val \* replace with TRUE to introduce a bug
+        IF HAS_BUG
+        THEN TRUE \* introduce a buggy condition
+        ELSE val'[u] > m.val
     
 Round1 ==
     /\ round = 1
