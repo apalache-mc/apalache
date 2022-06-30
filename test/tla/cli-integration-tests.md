@@ -544,11 +544,11 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check mis_bug.tla errors
+### check mis.tla errors on IntroBug
 
 ```sh
-$ apalache-mc check --cinit=AvoidBug --length=5 \
-  --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=IntroBug --length=5 \
+  --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
