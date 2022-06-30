@@ -13,7 +13,6 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.pp.temporal.utils
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.pp.NotInKeraError
 import at.forsyte.apalache.tla.pp.ConstSimplifier
 import at.forsyte.apalache.tla.pp.Normalizer
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
@@ -118,31 +117,6 @@ class EnabledRewriter(
           }
       case _ =>
         Map.empty[String, TlaEx]
-    }
-  }
-
-  /*
-   * Finds some occurence of a primed variable in the expression and returns its name.
-   * Throws an exception if there are multiple primed variables in the expression.
-   */
-  private def findPrimedVariableInExpression(ex: TlaEx): Option[String] = {
-    ex match {
-      case NameEx(_) => None
-      case LetInEx(_, _) =>
-        throw new NotInKeraError("There should be no let-in expressions left after inlining", ex)
-      case OperEx(TlaActionOper.prime, NameEx(name)) => Some(name)
-      case OperEx(_, args @ _*) =>
-        args.map(findPrimedVariableInExpression).foldLeft(None: Option[String]) { case (curOption, newOption) =>
-          (curOption, newOption) match {
-            case (None, None)      => None
-            case (Some(str), None) => Some(str)
-            case (None, Some(str)) => Some(str)
-            case (Some(str), Some(otherstr)) =>
-              throw new LirError("Expect to find only one primed variable" +
-                s"in the expression, but found these two variables primed: ${str}, ${otherstr}")
-          }
-        }
-      case _ => None
     }
   }
 
