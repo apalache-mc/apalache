@@ -20,10 +20,6 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 /**
- * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
- * It is important for this rewriting that the expression it is applied to is free from let-in expressions
- * and fully inlined.
- *
  * @author
  *   Philip Offtermatt
  */
@@ -108,31 +104,22 @@ class EnabledRewriter(
    */
   private def extractAssignmentsFromExpression(ex: TlaEx): Map[String, TlaEx] = {
     ex match {
-      case OperEx(oper, args @ _*) =>
-        oper match {
-          case ApalacheOper.assign =>
-            // by the meaning of the assign operator, will be the name of a (primed) variables
-            // there should not be none, so we'll throw an exception if it is the case
-            val varName = findPrimedVariableInExpression(args(0))
-            if (varName.isEmpty) {
-              throw new LirError("Unexpected: did not find a primed variable on the left-hand side" +
-                "of the assign statement: " + ex.toString())
-            }
-            return Map[String, TlaEx](
-                (
-                    varName.get,
-                    args(1),
-                )
+      case OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(varName)), rhs) =>
+        return Map[String, TlaEx](
+            (
+                varName,
+                rhs,
             )
-          case _ =>
-            return args
-              .map(extractAssignmentsFromExpression)
-              .foldLeft(
-                  Map.empty[String, TlaEx]
-              ) { case (acc, newMap) =>
-                acc.++(newMap)
-              }
-        }
+        )
+
+      case OperEx(_, args @ _*) =>
+        return args
+          .map(extractAssignmentsFromExpression)
+          .foldLeft(
+              Map.empty[String, TlaEx]
+          ) { case (acc, newMap) =>
+            acc.++(newMap)
+          }
       case _ =>
         Map.empty[String, TlaEx]
     }

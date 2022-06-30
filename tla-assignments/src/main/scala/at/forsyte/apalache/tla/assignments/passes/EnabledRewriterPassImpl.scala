@@ -27,13 +27,9 @@ class EnabledRewriterPassImpl @Inject() (
 
   override def execute(tlaModule: TlaModule): PassResult = {
     val enabledRewriter = new EnabledRewriter(tracker, sourceStore, changeListener, tlaModule)
-    val inliner = new Inliner(tracker, renaming, keepNullaryMono = false)
 
-    // EnabledRewriter relies on LET-IN freedom and total inlining, even of nullary operators
-    val inlinedModule = inliner.transformModule(tlaModule)
-
-    val newModule = inlinedModule.copy(
-        declarations = inlinedModule.declarations.map {
+    val newModule = tlaModule.copy(
+        declarations = tlaModule.declarations.map {
           case d: TlaOperDecl => d.copy(body = enabledRewriter(d.body))
           case d              => d
         }
