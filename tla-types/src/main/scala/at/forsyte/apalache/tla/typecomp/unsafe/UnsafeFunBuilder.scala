@@ -30,10 +30,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where pairs are passed interleaved.
-   *
-   * @see
-   *   _rec[[_rec(args: (String, TlaEx)*)]]
+   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
    */
   protected def _recMixed(args: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
@@ -85,10 +82,22 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
   }
 
-  /** [x \in S |-> e] */
-  protected def _funDef(e: TlaEx, x: TlaEx, S: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
-    buildBySignatureLookup(TlaFunOper.funDef, e, x, S)
+  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
+  protected def _funDef(e: TlaEx, varSetPairs: (TlaEx, TlaEx)*): TlaEx = {
+    // the other _funDef does all the require checks
+    val args = varSetPairs.flatMap { case (k, v) =>
+      Seq(k, v)
+    }
+    _funDefMixed(e, args: _*)
+  }
+
+  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
+  protected def _funDefMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
+    // Even, non-zero number of args and every other argument is NameEx
+    require(varSetPairs.nonEmpty)
+    require(varSetPairs.size % 2 == 0)
+    require(TlaOper.deinterleave(varSetPairs)._1.forall { _.isInstanceOf[NameEx] })
+    buildBySignatureLookup(TlaFunOper.funDef, e +: varSetPairs: _*)
   }
 
   // The rest of the operators are overloaded, so buildBySignatureLookup doesn't work
