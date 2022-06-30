@@ -219,49 +219,69 @@ class TestFunBuilder extends BuilderTest {
   }
 
   test("funDef") {
-    type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
+    type T = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
 
-    type TParam = (TlaType1, TlaType1)
+    type TParam = (TlaType1, Seq[TlaType1])
+
+    implicit val typeSeqGen: Gen[TParam] = for {
+      t <- singleTypeGen
+      n <- Gen.choose(1, 5)
+      seq <- Gen.listOfN(n, singleTypeGen)
+    } yield (t, seq)
 
     def mkWellTyped(tparam: TParam): T = {
-      val (t, tt) = tparam
+      val (t, ts) = tparam
       (
           builder.name("e", t),
-          builder.name("x", tt),
-          builder.name("S", SetT1(tt)),
+          ts.zipWithIndex.map { case (tt, i) =>
+            (
+                builder.name(s"x$i", tt),
+                builder.name(s"S$i", SetT1(tt)),
+            )
+          },
       )
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
-      val (t, tt) = tparam
-      Seq(
-          (
-              builder.name("e", t),
-              builder.name("x", InvalidTypeMethods.differentFrom(tt)),
-              builder.name("S", SetT1(tt)),
-          ),
-          (
-              builder.name("e", t),
-              builder.name("x", tt),
-              builder.name("S", InvalidTypeMethods.notSet),
-          ),
-          (
-              builder.name("e", t),
-              builder.name("x", tt),
-              builder.name("S", SetT1(InvalidTypeMethods.differentFrom(tt))),
-          ),
-      )
+      val (t, ts) = tparam
+      ts.indices.flatMap { j =>
+        Seq(
+            (
+                builder.name("e", t),
+                ts.zipWithIndex.map { case (tt, i) =>
+                  (
+                      builder.name(s"x$i", if (i == j) InvalidTypeMethods.differentFrom(tt) else tt),
+                      builder.name(s"S$i", SetT1(tt)),
+                  )
+                },
+            ),
+            (
+                builder.name("e", t),
+                ts.zipWithIndex.map { case (tt, i) =>
+                  (
+                      builder.name(s"x$i", tt),
+                      builder.name(s"S$i", if (i == j) InvalidTypeMethods.notSet else SetT1(tt)),
+                  )
+                },
+            ),
+        )
+      }
     }
 
-    def resultIsExpected = expectEqTyped[TParam, T](
+    def funT(t: TlaType1, ts: Seq[TlaType1]): TlaType1 = ts match {
+      case Seq(elem) => FunT1(elem, t)
+      case seq       => FunT1(TupT1(seq: _*), t)
+    }
+
+    val resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.funDef,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
-        { case (a, b) => FunT1(b, a) },
+        { case (a, seq) => liftBuildToSeq(a +: seq.flatMap { case (a, b) => Seq(a, b) }) },
+        { case (t, ts) => funT(t, ts) },
     )
 
     checkRun(
-        runTernary(
+        runVariadicWithDistinguishedFirst(
             builder.funDef,
             mkWellTyped,
             mkIllTyped,
@@ -269,47 +289,122 @@ class TestFunBuilder extends BuilderTest {
         )
     )
 
-    // test fail on non-name
+    // throws on n = 0
     assertThrows[IllegalArgumentException] {
-      // [1 \in S |-> x]
-      build(builder.funDef(
-              builder.name("x", IntT1),
-              builder.int(1),
-              builder.name("S", SetT1(IntT1)),
-          ))
+      build(
+          builder.funDef(builder.int(1))
+      )
     }
 
-    // test fail on scope error
-    assertThrows[TBuilderScopeException] {
-      // [x \in S |-> x]
-      build(builder.funDef(
-              builder.name("x", StrT1),
-              builder.name("x", IntT1),
-              builder.name("S", SetT1(IntT1)),
-          ))
-    }
+    assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) => builder.funDef(expr, (variable, set)) }
 
-    // test fail on shadowing
+    // throws on shadowing: multi-arity
     assertThrows[TBuilderScopeException] {
-      // [x \in {x} |-> x]
-      build(builder.funDef(
-              builder.name("x", IntT1),
-              builder.name("x", IntT1),
-              builder.enumSet(builder.name("x", IntT1)),
-          ))
-    }
-    assertThrows[TBuilderScopeException] {
-      // [x \in S |-> \E x \in S: TRUE]
-      build(builder.funDef(
+      build(
+          // { \E y \in T: TRUE : x \in S, y \in T }
+          builder.funDef(
               builder.exists(
-                  builder.name("x", IntT1),
-                  builder.name("S", SetT1(IntT1)),
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
                   builder.bool(true),
               ),
-              builder.name("x", IntT1),
-              builder.name("S", SetT1(IntT1)),
-          ))
+              (
+                  builder.name("x", StrT1),
+                  builder.name("S", SetT1(StrT1)),
+              ),
+              (
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
+              ),
+          )
+      )
     }
+
+    // funDefMixed
+    type T2 = (TBuilderInstruction, Seq[TBuilderInstruction])
+
+    def mkWellTyped2(tparam: TParam): T2 = {
+      val (t, ts) = tparam
+      (
+          builder.name("e", t),
+          ts.zipWithIndex.flatMap { case (tt, i) =>
+            Seq(
+                builder.name(s"x$i", tt),
+                builder.name(s"S$i", SetT1(tt)),
+            )
+          },
+      )
+    }
+
+    def mkIllTyped2(tparam: TParam): Seq[T2] = {
+      val (t, ts) = tparam
+      ts.indices.flatMap { j =>
+        Seq(
+            (
+                builder.name("e", t),
+                ts.zipWithIndex.flatMap { case (tt, i) =>
+                  Seq(
+                      builder.name(s"x$i", if (i == j) InvalidTypeMethods.differentFrom(tt) else tt),
+                      builder.name(s"S$i", SetT1(tt)),
+                  )
+                },
+            ),
+            (
+                builder.name("e", t),
+                ts.zipWithIndex.flatMap { case (tt, i) =>
+                  Seq(
+                      builder.name(s"x$i", tt),
+                      builder.name(s"S$i", if (i == j) InvalidTypeMethods.notSet else SetT1(tt)),
+                  )
+                },
+            ),
+        )
+      }
+    }
+
+    val resultIsExpected2 = expectEqTyped[TParam, T2](
+        TlaFunOper.funDef,
+        mkWellTyped2,
+        { case (a, seq) => liftBuildToSeq(a +: seq) },
+        { case (t, ts) => funT(t, ts) },
+    )
+
+    checkRun(
+        runVariadicWithDistinguishedFirst(
+            builder.funDefMixed,
+            mkWellTyped2,
+            mkIllTyped2,
+            resultIsExpected2,
+        )
+    )
+
+    // throws on n = 0
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.funDefMixed(builder.int(1))
+      )
+    }
+
+    assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) => builder.funDefMixed(expr, variable, set) }
+
+    // throws on shadowing: multi-arity
+    assertThrows[TBuilderScopeException] {
+      build(
+          // { \E y \in T: TRUE : x \in S, y \in T }
+          builder.funDefMixed(
+              builder.exists(
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
+                  builder.bool(true),
+              ),
+              builder.name("x", StrT1),
+              builder.name("S", SetT1(StrT1)),
+              builder.name("y", IntT1),
+              builder.name("T", SetT1(IntT1)),
+          )
+      )
+    }
+
   }
 
   /////////////////////////////

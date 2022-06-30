@@ -590,7 +590,7 @@ EXITCODE: OK
 ### check Paxos.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

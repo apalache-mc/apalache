@@ -21,12 +21,7 @@ trait ControlBuilder extends UnsafeControlBuilder {
   def caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseSplitMixed(pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
-  /**
-   * Alternate call method, where pairs are passed interleaved
-   *
-   * @see
-   *   caseSplit[[caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*)]]
-   */
+  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
   def caseSplitMixed(pairs: TBuilderInstruction*): TBuilderInstruction =
     buildSeq(pairs).map(_caseSplitMixed(_: _*))
 
@@ -34,12 +29,7 @@ trait ControlBuilder extends UnsafeControlBuilder {
   def caseOther(other: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseOtherMixed(other, pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
-  /**
-   * Alternate call method, where pairs are passed interleaved
-   *
-   * @see
-   *   caseOther[[caseOther(other: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*)]]
-   */
+  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
   def caseOtherMixed(other: TBuilderInstruction, pairs: TBuilderInstruction*): TBuilderInstruction = for {
     otherEx <- other
     pairsExs <- buildSeq(pairs)

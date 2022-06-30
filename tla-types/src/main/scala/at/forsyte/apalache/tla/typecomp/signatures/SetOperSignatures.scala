@@ -37,7 +37,7 @@ object SetOperSignatures {
     ).map { signatureMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 }) }.toMap
 
     val mapPartial: PartialSignature = {
-      case t +: pairs if pairs.size % 2 == 0 && pairs.grouped(2).forall {
+      case t +: pairs if pairs.nonEmpty && pairs.size % 2 == 0 && pairs.grouped(2).forall {
             case Seq(tt, SetT1(tt2)) => tt == tt2
             case _                   => false
           } =>
