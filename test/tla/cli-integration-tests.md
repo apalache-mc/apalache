@@ -536,7 +536,7 @@ EXITCODE: OK
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
