@@ -101,7 +101,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
    *   _funDef[[_funDef(e: TlaEx, varSetPairs: (NameEx, TlaEx)*)]]
    */
   protected def _funDefMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
-    // Even, nonzero # of args and every other argument is NameEx
+    // Even, non-zero number of args and every other argument is NameEx
     require(varSetPairs.nonEmpty)
     require(varSetPairs.size % 2 == 0)
     require(TlaOper.deinterleave(varSetPairs)._1.forall { _.isInstanceOf[NameEx] })
