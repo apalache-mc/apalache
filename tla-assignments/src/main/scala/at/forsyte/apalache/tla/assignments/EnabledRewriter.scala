@@ -69,17 +69,16 @@ class EnabledRewriter(
   private def putQuantificationsOutward(ex: TlaEx): TlaEx = {
     def collectAndRemoveQuantifications(ex: TlaEx): (Seq[OperEx], TlaEx) = {
       ex match {
-        case OperEx(TlaBoolOper.forall | TlaBoolOper.exists, varName, set, body) =>
+        case OperEx(TlaBoolOper.forall | TlaBoolOper.exists, _, _, body) =>
           // remove quantifications from body
           val (quantifications, transformedBody) = collectAndRemoveQuantifications(body)
-
           (
               // add this quantification to seq of quantifications
               ex.asInstanceOf[OperEx] +: quantifications,
               // remove this quantification from the expression by returning the body
               transformedBody,
           )
-        case OperEx(TlaBoolOper, args @ _*) =>
+        case OperEx(oper: TlaBoolOper, args @ _*) =>
           // remove quantifications from arguments
           val (quantificationSeqs, bodySeqs) = args.map(collectAndRemoveQuantifications(_)).unzip
           (quantificationSeqs.flatten, OperEx(oper, bodySeqs: _*)(ex.typeTag))
