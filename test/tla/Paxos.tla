@@ -66,7 +66,7 @@ Message ==
     { M1b(acc, bal, mbal, mval):
         acc \in Acceptor,
         bal \in Ballot,
-        mbal \in Ballot \union {-1},
+        mbal \in Ballot \union {BNone},
         mval \in Value \union {VNone} }
             \union
     { M2a(bal, val): bal \in Ballot, val \in Value }
@@ -112,8 +112,8 @@ vars == <<maxBal, maxVBal, maxVal, msgs>>
 (***************************************************************************)
 (* The type invariant and initial predicate.                               *)
 (***************************************************************************)
-TypeOK == /\ maxBal \in [Acceptor -> Ballot \union {-1}]
-          /\ maxVBal \in [Acceptor -> Ballot \union {-1}]
+TypeOK == /\ maxBal \in [Acceptor -> Ballot \union {BNone}]
+          /\ maxVBal \in [Acceptor -> Ballot \union {BNone}]
           /\ maxVal \in [Acceptor -> Value \union {VNone}]
           /\ msgs \subseteq Message
 
@@ -130,8 +130,8 @@ votes == [a \in Acceptor |->
             }}]
 
 
-Init == /\ maxBal = [a \in Acceptor |-> -1]
-        /\ maxVBal = [a \in Acceptor |-> -1]
+Init == /\ maxBal = [a \in Acceptor |-> BNone]
+        /\ maxVBal = [a \in Acceptor |-> BNone]
         /\ maxVal = [a \in Acceptor |-> VNone]
         /\ msgs = {}
 
@@ -189,7 +189,7 @@ Phase2a(b, v) ==
         LET Q1b == {m \in VariantFilter("M1b", msgs):
                                  /\ m.acc \in Q
                                  /\ m.bal = b}
-            Q1bv == {m \in Q1b : m.mbal \geq 0}
+            Q1bv == {m \in Q1b : m.mbal /= BNone}
         IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
             /\ \/ Q1bv = {}
                \/ \E m \in Q1bv : 
@@ -269,12 +269,12 @@ ShowsSafeAt(Q, b, v) ==
 (* theorem.                                                                *)
 (***************************************************************************)
 Inv == (*/\ TypeOK*)
-       /\ \A a \in Acceptor : IF maxVBal[a] = -1
+       /\ \A a \in Acceptor : IF maxVBal[a] = BNone
                                 THEN maxVal[a] = VNone
                                 ELSE <<maxVBal[a], maxVal[a]>> \in votes[a]
        /\ \A m \in VariantFilter("M1b", msgs):
              /\ maxBal[m.acc] \geq m.bal
-             /\ (m.mbal \geq 0) =>
+             /\ (m.mbal /= BNone) =>
                     <<m.mbal, m.mval>> \in votes[m.acc]
        /\ \A m \in VariantFilter("M2a", msgs):
              /\ \E Q \in Quorum :
