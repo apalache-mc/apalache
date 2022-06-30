@@ -488,7 +488,7 @@ EXITCODE: OK
 ### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
 
 ```sh
-$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -526,7 +526,7 @@ EXITCODE: ERROR (255)
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
