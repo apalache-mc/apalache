@@ -600,7 +600,7 @@ EXITCODE: OK
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=1 Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
