@@ -2259,7 +2259,7 @@ EXITCODE: OK
 ### check MegaSpec1.tla reports no error with `--debug`: regression for #1313
 
 ```sh
-$ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --features=rows --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
