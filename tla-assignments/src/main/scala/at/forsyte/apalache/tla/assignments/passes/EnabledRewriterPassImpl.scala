@@ -9,8 +9,6 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.assignments.EnabledRewriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.pp.Inliner
-import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
  * Rewrites ENABLED conditions
@@ -19,8 +17,7 @@ class EnabledRewriterPassImpl @Inject() (
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory,
     sourceStore: SourceStore,
-    changeListener: ChangeListener,
-    renaming: IncrementalRenaming)
+    changeListener: ChangeListener)
     extends EnabledRewriterPass with LazyLogging {
 
   override def name: String = "EnabledRewriterPass"
