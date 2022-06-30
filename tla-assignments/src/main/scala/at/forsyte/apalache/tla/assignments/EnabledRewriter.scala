@@ -16,6 +16,8 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.pp.NotInKeraError
 import at.forsyte.apalache.tla.pp.ConstSimplifier
 import at.forsyte.apalache.tla.pp.Normalizer
+import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
@@ -194,16 +196,15 @@ class EnabledRewriter(
    * i.e. the result of {{{assignmentMap.getOrElse(name, ex)}}}
    */
   private def flattenEx(ex: TlaEx, assignmentMap: Map[String, TlaEx]): TlaEx = {
-    ex match {
-      case OperEx(TlaActionOper.prime, NameEx(name)) =>
-        // replace a name expression by its assignment
-        // or leave it if no assignment exists for the name expression
-        assignmentMap.getOrElse(name, ex)
-      case OperEx(oper, args @ _*) =>
-        OperEx(oper, args.map(arg => flattenEx(arg, assignmentMap)): _*)(ex.typeTag)
-      case LetInEx(_, _) =>
-        throw new NotInKeraError("There should be no let-in expressions left after inlining", ex)
-      case _ => ex
+    assignmentMap.foldLeft(ex) { case (ex, (varName, replacementEx)) =>
+      ReplaceFixed(tracker)
+        .whenEqualsTo(
+            utils.builder.prime(utils.builder.name(
+                    varName,
+                    replacementEx.typeTag.asTlaType1(),
+                )),
+            replacementEx,
+        )(ex)
     }
   }
 
