@@ -2,12 +2,7 @@
 \* this is a minimal working example that caused a bug
 \* it stems from TwoPhase.tla
 
-(* BMCMT extensions *)
 RM == {"r1", "r2"}
-
-\* new: a message type
-MT == [type |-> STRING, rm |-> STRING]
-(* END OF BMCMT extensions *)
 
 VARIABLES
   \* @type: Str -> Str;
