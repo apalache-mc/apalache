@@ -49,12 +49,7 @@ trait SetBuilder extends UnsafeSetBuilder {
   def map(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     boundVarIntroductionVariadic(_map)(e, varSetPairs: _*)
 
-  /**
-   * Alternate call method, where pairs are passed interleaved
-   *
-   * @see
-   *   map[[map(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*)]]
-   */
+  /** { mapExpr: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair */
   def mapMixed(e: TBuilderInstruction, varSetPairs: TBuilderInstruction*): TBuilderInstruction = {
     require(varSetPairs.size % 2 == 0)
     val asPairs = varSetPairs.grouped(2).toSeq.map { case Seq(a, b) =>
@@ -74,12 +69,7 @@ trait SetBuilder extends UnsafeSetBuilder {
       ks = kvs.map(_._1)
     } yield _recSet(ks.zip(vs): _*)
 
-  /**
-   * Alternate call method, where pairs are passed interleaved.
-   *
-   * @see
-   *   recSet[[recSet(kvs: (String, TBuilderInstruction)*)]]
-   */
+  /** Record set constructor [ k1: v1, ... , kN: vN ], must have at least 1 key-value pair */
   def recSetMixed(kvs: TBuilderInstruction*): TBuilderInstruction = buildSeq(kvs).map { _recSetMixed(_: _*) }
 
   /** Seq(set) */

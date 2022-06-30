@@ -30,10 +30,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where pairs are passed interleaved.
-   *
-   * @see
-   *   _rec[[_rec(args: (String, TlaEx)*)]]
+   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
    */
   protected def _recMixed(args: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
@@ -94,12 +91,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     _funDefMixed(e, args: _*)
   }
 
-  /**
-   * Alternate call method, where pairs are passed interleaved
-   *
-   * @see
-   *   _funDef[[_funDef(e: TlaEx, varSetPairs: (NameEx, TlaEx)*)]]
-   */
+  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
   protected def _funDefMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
     // Even, non-zero number of args and every other argument is NameEx
     require(varSetPairs.nonEmpty)

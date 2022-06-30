@@ -55,14 +55,9 @@ trait UnsafeSetBuilder extends ProtoBuilder {
     _mapMixed(e, args: _*)
   }
 
-  /**
-   * Alternate call method, where pairs are passed interleaved
-   *
-   * @see
-   *   _map[[_map(e: TlaEx, varSetPairs: (TlaEx, TlaEx)*)]]
-   */
+  /** { e: x1 \in set1 , ..., xN \in setN }, must have at least 1 var-set pair */
   protected def _mapMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
-    // Even, nonzero # of args and every other argument is NameEx
+    // Even, non-zero number of args and every other argument is NameEx
     require(varSetPairs.nonEmpty)
     require(varSetPairs.size % 2 == 0)
     require(TlaOper.deinterleave(varSetPairs)._1.forall { _.isInstanceOf[NameEx] })
@@ -84,10 +79,7 @@ trait UnsafeSetBuilder extends ProtoBuilder {
   }
 
   /**
-   * Alternate call method, where pairs are passed interleaved.
-   *
-   * @see
-   *   _recSet[[_recSet(kvs: (String, TlaEx)*)]]
+   * Record set constructor [ k1: v1, ... , kN: vN ]; must have at least 1 key-value pair and all keys must be unique
    */
   protected def _recSetMixed(kvs: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
