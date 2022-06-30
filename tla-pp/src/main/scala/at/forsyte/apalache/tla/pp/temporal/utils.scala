@@ -48,7 +48,7 @@ object DeclUtils {
     val newBody =
       Flatten(tracker)(Typed(BoolT1))(
           builder.and(
-              builder.useTrustedEx(decl.body),
+              builder.unchecked(decl.body),
               ex,
           )
       )

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.typecomp
 
+import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.markAsBound
@@ -27,7 +28,7 @@ import scalaz.Scalaz._
  *     not be scope-correct, since x would have to be typed as Int within the scope defined by this \A operator. Thus,
  *     such an expression cannot be constructed by the builder.
  *
- * These guarantees are void if [[useTrustedEx]] is used.
+ * These guarantees are void if [[unchecked]] is used.
  *
  * @author
  *   Jure Kukovec
@@ -36,18 +37,23 @@ class ScopedBuilder
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with SeqBuilder with ActionBuilder
     with FunBuilder with ControlBuilder with LiteralAndNameBuilder {
 
+  private def parser = DefaultType1Parser
+
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.
    *
    * Use sparingly, and only for expressions that have already passed static analysis.
    *
    * To use the builder outside of testing scenarios, where the expressions aren't written from scratch, it is necessary
-   * to be able to mark certain expressions as "trusted", e.g. when transforming and recombining invariants, or parts of
+   * to be able to use preexisting expressions, e.g. when transforming and recombining invariants, or parts of
    * Init/Next. While `build` is safe as a unidirectional implicit conversion from `TBuilderInstruction` to TlaEx, the
-   * inverse, `useTrustedEx`, needs to be explicit, to stress the fact that it should be used rarely, typically at most
+   * inverse, `unchecked`, needs to be explicit, to stress the fact that it should be used rarely, typically at most
    * once per transformation on the initial input.
    */
-  def useTrustedEx(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
+  def unchecked(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
+
+  /** Allows the use of type strings in the builder, to simplify writing complex types. */
+  def parseType(typeAsString: String): TlaType1 = parser.parseType(typeAsString)
 
   ////////////////////
   // HYBRID METHODS //
@@ -83,7 +89,7 @@ class ScopedBuilder
     case RowT1(fieldTypes, _) => fieldTypes.values.forall(isAcceptableParamType(false))
     case RecRowT1(row)        => isAcceptableParamType(false)(row)
     case VariantT1(row)       => isAcceptableParamType(false)(row)
-    case _                    => true
+    case IntT1 | StrT1 | BoolT1 | RealT1 | VarT1(_) | ConstT1(_) => true
   }
 
   /**
@@ -99,9 +105,23 @@ class ScopedBuilder
   }
 
   /**
+   * Determines the parameter arity, if the type is an operator type. We distinguish nullary operators from
+   * non-operators in this method.
+   */
+  private def typeAsOperArity(tt: TlaType1): Option[Int] = tt match {
+    case OperT1(args, _) => Some(args.size)
+    case _               => None
+  }
+
+  /**
    * Operator parameter with type information. Checks that parameters have permissible types.
    */
-  def param(name: String, tt: TlaType1, arity: Int = 0): TypedParam = {
+  def param(name: String, tt: TlaType1): TypedParam = {
+    val arityOpt = typeAsOperArity(tt)
+    // operator parameters may not be nullary operators
+    if (arityOpt.contains(0))
+      throw new TBuilderTypeException(s"Parameter $name may not have a nullary operator type $tt.")
+    val arity = arityOpt.getOrElse(0) // 0 here means not-an-operator
     val ret = (OperParam(name, arity), tt)
     validateParamType(ret)
     ret
@@ -172,6 +192,7 @@ class ScopedBuilder
    * The use of this constructor is discouraged in non-legacy code, as deep-EXCEPT syntax impedes readability, since the
    * types of intermediate objects are obfuscated.
    */
+  @deprecated
   def exceptDeep(
       f: TBuilderInstruction,
       e: TBuilderInstruction,
@@ -198,6 +219,7 @@ class ScopedBuilder
    * The use of this constructor is discouraged in non-legacy code, as deep-EXCEPT syntax impedes readability, since the
    * types of intermediate objects are obfuscated.
    */
+  @deprecated
   def exceptGeneral(
       f: TBuilderInstruction,
       args: (TBuilderInstruction, Seq[TBuilderInstruction])*): TBuilderInstruction = {
@@ -206,17 +228,6 @@ class ScopedBuilder
     args.foldLeft(f) { case (fn, (e, as)) =>
       exceptDeep(fn, e, as: _*)
     }
-  }
-
-  /**
-   * [x1 \in S1, ..., xn \in Sn |-> e]
-   *
-   * Is equivalent to {{{[<<x1,...,xn>> \in S1 \X ... \X Sn |-> e]}}}
-   */
-  def funDef(e: TBuilderInstruction, args: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
-    require(args.nonEmpty)
-    val (elems, sets) = args.unzip
-    funDef(e, tuple(elems: _*), times(sets: _*))
   }
 
   /**

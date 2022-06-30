@@ -66,7 +66,7 @@ class TableauEncoder(
     val nodeVarInitConditionEx =
       builder.eql(
           nodeVarEx,
-          builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
+          builder.unchecked(OperEx(oper, argExs: _*)(typeTag)),
       )
 
     /* update the variable for this node
@@ -74,7 +74,7 @@ class TableauEncoder(
      */
     val nodeVarUpdateConditionEx = builder.eql(
         builder.prime(nodeVarEx),
-        builder.useTrustedEx(OperEx(oper, argExs: _*)(typeTag)),
+        builder.unchecked(OperEx(oper, argExs: _*)(typeTag)),
     )
 
     PredExs(Seq(nodeVarInitConditionEx), Seq(nodeVarUpdateConditionEx))
@@ -377,7 +377,7 @@ class TableauEncoder(
                 s"Cannot handle expression ${curNode.toString()} of type ${curNode.getClass()}")
         }
       case _ => /* a propositional expression - used as-is in the formula encoding the syntax tree */
-        (Seq.empty[TlaVarDecl], PredExs(), builder.useTrustedEx(curNode))
+        (Seq.empty[TlaVarDecl], PredExs(), builder.unchecked(curNode))
     }
   }
 
@@ -414,7 +414,7 @@ class TableauEncoder(
     // __foo_init = [inital evaluation of foo]
     val initExVarEx = builder.eql(
         exVar,
-        builder.useTrustedEx(formulaEx),
+        builder.unchecked(formulaEx),
     )
 
     // UNCHANGED << __foo_init >>

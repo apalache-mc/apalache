@@ -63,8 +63,8 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
         }
       args <- Gen.containerOfN[List, TlaEx](if (op == TlaBoolOper.and || op == TlaBoolOper.or) 2 else 1, innerGen)
     } yield op match {
-      case TlaBoolOper.and => builder.and(args.map(ex => builder.useTrustedEx(ex)): _*)
-      case TlaBoolOper.or  => builder.or(args.map(ex => builder.useTrustedEx(ex)): _*)
+      case TlaBoolOper.and => builder.and(args.map(ex => builder.unchecked(ex)): _*)
+      case TlaBoolOper.or  => builder.or(args.map(ex => builder.unchecked(ex)): _*)
       case _: TlaTempOper  => OperEx(op, args: _*)(Typed(BoolT1))
     }
   }

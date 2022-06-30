@@ -34,7 +34,7 @@ object BuilderUtil {
    * expressions associated with the operator, and additionally performs shadowing checks and bound-variable tagging.
    */
   def boundVarIntroductionTernary(
-      rawMethod: (TlaEx, TlaEx, TlaEx) => TlaEx // argument order: (variable, set, expression)
+      unsafeMethod: (TlaEx, TlaEx, TlaEx) => TlaEx // argument order: (variable, set, expression)
     )(variable: TBuilderInstruction,
       set: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
@@ -47,7 +47,7 @@ object BuilderUtil {
     // variable is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfrerExpr
     boundAfterVar <- allBound
   } yield {
-    val ret = rawMethod(varEx, setEx, exprEx)
+    val ret = unsafeMethod(varEx, setEx, exprEx)
     if (boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
       val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
       throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
@@ -60,7 +60,7 @@ object BuilderUtil {
    * bound-variable tagging.
    */
   def boundVarIntroductionBinary(
-      rawMethod: (TlaEx, TlaEx) => TlaEx // argument order: (variable, expression)
+      unsafeMethod: (TlaEx, TlaEx) => TlaEx // argument order: (variable, expression)
     )(variable: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
     exprEx <- expr
@@ -70,12 +70,40 @@ object BuilderUtil {
     // variable is shadowed iff boundAfterVar \subseteq boundAfterExpr
     boundAfterVar <- allBound
   } yield {
-    val ret = rawMethod(varEx, exprEx)
+    val ret = unsafeMethod(varEx, exprEx)
     if (boundAfterVar.subsetOf(boundAfterExpr)) {
       val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
       throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
     } else ret
   }
+
+  /**
+   * Some (variadic) operators introduce bound variables (e.g. map, funDef). This method constructs the expressions
+   * associated with the operator, and additionally performs shadowing checks and bound-variable tagging.
+   */
+  def boundVarIntroductionVariadic(
+      unsafeMethod: (TlaEx, Seq[(TlaEx, TlaEx)]) => TlaEx
+    )(ex: TBuilderInstruction,
+      varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = for {
+    bodyEx <- ex
+    boundAfterBodyEx <- allBound // variables may not appear as bound in bodyEx
+    pairs <- varSetPairs.foldLeft(Seq.empty[(TlaEx, TlaEx)].point[TBuilderInternalState]) {
+      case (cmp, (variable, set)) =>
+        for {
+          seq <- cmp
+          setEx <- set
+          usedInSet <- allUsed // variable_i may not appear as bound or free in set_i
+          varEx <- variable
+          _ = require(varEx.isInstanceOf[NameEx])
+          _ <- markAsBound(varEx)
+          // variable_i is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfterBodyEx
+          boundAfterVar <- allBound
+        } yield
+          if (boundAfterVar.subsetOf(usedInSet.union(boundAfterBodyEx))) {
+            throw new TBuilderScopeException(s"Variable $varEx is shadowed in $bodyEx or $setEx.")
+          } else seq :+ (varEx, setEx)
+    }
+  } yield unsafeMethod(bodyEx, pairs)
 
   /** Convenience shorthand to access the set of used names. */
   def allUsed: TBuilderInternalState[Set[String]] =
