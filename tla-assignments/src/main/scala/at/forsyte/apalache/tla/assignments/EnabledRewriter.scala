@@ -69,28 +69,25 @@ class EnabledRewriter(
   private def putQuantificationsOutward(ex: TlaEx): TlaEx = {
     def collectAndRemoveQuantifications(ex: TlaEx): (Seq[OperEx], TlaEx) = {
       ex match {
-        case OperEx(oper, args @ _*) =>
-          oper match {
-            case TlaBoolOper.forallUnbounded | TlaBoolOper.existsUnbounded | TlaBoolOper.forall | TlaBoolOper.exists =>
-              // in each case, the body is the last argument
-              val body = args.last
+        case OperEx(TlaBoolOper.forall | TlaBoolOper.exists, varName, set, body) =>
+          // remove quantifications from body
+          val (quantifications, transformedBody) = collectAndRemoveQuantifications(body)
 
-              // remove quantifications from body
-              val (quantifications, transformedBody) = collectAndRemoveQuantifications(body)
+          (
+              // add this quantification to seq of quantifications
+              ex.asInstanceOf[OperEx] +: quantifications,
+              // remove this quantification from the expression by returning the body
+              transformedBody,
+          )
+        case OperEx(TlaBoolOper, args @ _*) =>
+          // remove quantifications from arguments
+          val (quantificationSeqs, bodySeqs) = args.map(collectAndRemoveQuantifications(_)).unzip
+          (quantificationSeqs.flatten, OperEx(oper, bodySeqs: _*)(ex.typeTag))
 
-              (
-                  // add this quantification to seq of quantifications
-                  ex.asInstanceOf[OperEx] +: quantifications,
-                  // remove this quantification from the expression by returning the body
-                  transformedBody,
-              )
-            case _ =>
-              // remove quantifications from arguments
-              val (quantificationSeqs, bodySeqs) = args.map(collectAndRemoveQuantifications(_)).unzip
-              (quantificationSeqs.flatten, OperEx(oper, bodySeqs: _*)(ex.typeTag))
-          }
         case _ =>
-          // no oper, so has no arguments; no need to go deeper
+          /* no bool oper, so we shouldn't go deeper. this avoids turning
+          {x \in S: \E y \in T: P} into \E y \in T: {x \in S: P}
+           */
           (Seq.empty, ex)
       }
     }
