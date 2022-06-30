@@ -547,7 +547,7 @@ EXITCODE: OK
 ### check mis.tla errors on IntroBug
 
 ```sh
-$ apalache-mc check --cinit=IntroBug --length=5 \
+$ apalache-mc check --features=rows --cinit=IntroBug --length=5 \
   --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
