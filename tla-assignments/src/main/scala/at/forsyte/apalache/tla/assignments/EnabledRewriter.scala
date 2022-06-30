@@ -21,6 +21,8 @@ import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 
 /**
  * Attempts to rewrite `ENABLED foo` operators into formulas that are true when action `foo` is enabled.
+ * It is important for this rewriting that the expression it is applied to is free from let-in expressions
+ * and fully inlined.
  *
  * @author
  *   Philip Offtermatt

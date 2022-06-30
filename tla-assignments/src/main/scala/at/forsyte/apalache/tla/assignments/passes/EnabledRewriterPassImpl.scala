@@ -9,6 +9,8 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.assignments.EnabledRewriter
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.pp.Inliner
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
  * Rewrites ENABLED conditions
@@ -17,16 +19,21 @@ class EnabledRewriterPassImpl @Inject() (
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory,
     sourceStore: SourceStore,
-    changeListener: ChangeListener)
+    changeListener: ChangeListener,
+    renaming: IncrementalRenaming)
     extends EnabledRewriterPass with LazyLogging {
 
   override def name: String = "EnabledRewriterPass"
 
   override def execute(tlaModule: TlaModule): PassResult = {
     val enabledRewriter = new EnabledRewriter(tracker, sourceStore, changeListener, tlaModule)
+    val inliner = new Inliner(tracker, renaming, keepNullaryMono = false)
 
-    val newModule = tlaModule.copy(
-        declarations = tlaModule.declarations.map {
+    // EnabledRewriter relies on LET-IN freedom and total inlining, even of nullary operators
+    val inlinedModule = inliner.transformModule(tlaModule)
+
+    val newModule = inlinedModule.copy(
+        declarations = inlinedModule.declarations.map {
           case d: TlaOperDecl => d.copy(body = enabledRewriter(d.body))
           case d              => d
         }
