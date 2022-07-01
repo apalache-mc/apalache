@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
-import at.forsyte.apalache.tla.bmcmt.{
-  arraysEncoding, oopsla19Encoding, ArenaCell, RewriterException, SymbState, SymbStateRewriter,
-}
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import scalaz.unused
 
 import scala.collection.immutable.{SortedMap, SortedSet}
@@ -23,6 +21,7 @@ import scala.collection.immutable.{SortedMap, SortedSet}
  */
 class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   private val proto = new ProtoSeqOps(rewriter)
+  private val recordAndVariantOps = new RecordAndVariantOps(rewriter)
 
   def gen(state: SymbState, resultType: TlaType1): SymbState = {
     rewriter.solverContext.log(s"; GEN $resultType up to $bound {")
@@ -44,6 +43,9 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
         case RecRowT1(RowT1(fieldTypes, None)) =>
           genRowRecord(state, fieldTypes)
+
+        case VariantT1(RowT1(options, None)) =>
+          genVariant(state, options)
 
         case tt @ TupT1(_ @_*) =>
           genTuple(state, tt)
@@ -97,6 +99,33 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       }
     nextState = nextState.updateArena(a => a.appendHasNoSmt(recCell, elemCells: _*))
     nextState.setRex(recCell.toNameEx.withTag(Typed(CellTFrom(recordT))))
+  }
+
+  private def genVariant(state: SymbState, options: SortedMap[String, TlaType1]): SymbState = {
+    // generate the tag name
+    var nextState = genBasic(state, ConstT1(RecordAndVariantOps.tagSort))
+    val tagCell = nextState.asCell
+    // assert that one of the options is selected
+    val tags = options.keys.map { name =>
+      nextState = recordAndVariantOps.getOrCreateVariantTag(nextState, name)
+      tla.fromTlaEx(tla.eql(nextState.asCell.toNameEx, tagCell.toNameEx).as(BoolT1))
+    }.toSeq
+    rewriter.solverContext.assertGroundExpr(tla.or(tags: _*).as(BoolT1))
+    // generate the possible values
+    val namedValues = options.map { case (key, tt) =>
+      nextState = gen(nextState, tt)
+      (key, nextState.asCell)
+    }
+    // create a variant cell and connect values to it
+    val variantFields = namedValues + (RecordAndVariantOps.variantTagField -> tagCell)
+    nextState = nextState.updateArena(_.appendCell(VariantT1(RowT1(options, None))))
+    val variantCell = nextState.arena.topCell
+    // add the fields in the order of their names
+    for (fieldCell <- variantFields.valuesIterator) {
+      nextState = nextState.updateArena(_.appendHasNoSmt(variantCell, fieldCell))
+    }
+
+    nextState.setRex(variantCell.toNameEx)
   }
 
   private def genTuple(state: SymbState, tupleType: TupT1): SymbState = {

@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperEx, SeqT1, SetT1, StrT1, TupT1, Typed}
+import at.forsyte.apalache.tla.lir._
 
 trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   private val types = Map("i" -> IntT1, "I" -> SetT1(IntT1), "b" -> BoolT1, "s" -> StrT1)
@@ -121,6 +121,22 @@ trait TestSymbStateRewriterApalacheGen extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
+    assert(solverContext.sat())
+  }
+
+  test("""Gen(3) for Foo(Int) | Bar(Bool)""") { rewriterType: SMTEncoding =>
+    val variantT = parser("Foo(Int) | Bar(Bool)")
+    val gen = OperEx(ApalacheOper.gen, int(3).typed())(Typed(variantT))
+
+    val state = new SymbState(gen, arena, Binding())
+    val rewriter = create(rewriterType)
+    // check that both options are possible
+    val eqFoo = eql(gen, variant("Foo", int(3)).as(variantT)).as(BoolT1)
+    val eqBar = eql(gen, variant("Bar", bool(true)).as(variantT)).as(BoolT1)
+    // we do not check if-and-only-if, as every option is only possible but not required
+    var nextState = rewriter.rewriteUntilDone(state.setRex(eqFoo))
+    assert(solverContext.sat())
+    nextState = rewriter.rewriteUntilDone(nextState.setRex(eqBar))
     assert(solverContext.sat())
   }
 
