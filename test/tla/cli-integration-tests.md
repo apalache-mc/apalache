@@ -488,7 +488,7 @@ EXITCODE: OK
 ### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
 
 ```sh
-$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -526,7 +526,7 @@ EXITCODE: ERROR (255)
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -536,17 +536,17 @@ EXITCODE: OK
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --cinit=AvoidBug --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
 EXITCODE: OK
 ```
 
-### check mis_bug.tla errors
+### check mis.tla errors on IntroBug
 
 ```sh
-$ apalache-mc check --length=5 --inv=IsIndependent mis_bug.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --cinit=IntroBug --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -588,7 +588,7 @@ EXITCODE: OK
 ### check Paxos.tla succeeds
 
 ```sh
-$ apalache-mc check --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -598,7 +598,7 @@ EXITCODE: OK
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --length=1 Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --features=rows --length=1 Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -1255,19 +1255,6 @@ do an assignment to a variable. As it requires tricky operator inlining, here is
 
 ```sh
 $ apalache-mc check Callback.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
-EXITCODE: OK
-```
-
-### check SimpT1 succeeds (array-encoding)
-
-This test was moved from a unit test of SymbTransGenerator. The goal of the test is to check that symbolic transitions
-are extracted from the spec. Hence, we run model checking only against the initial states.
-
-```sh
-$ apalache-mc check --length=0 SimpT1.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -2259,7 +2246,7 @@ EXITCODE: OK
 ### check MegaSpec1.tla reports no error with `--debug`: regression for #1313
 
 ```sh
-$ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --features=rows --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
