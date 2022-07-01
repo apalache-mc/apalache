@@ -1,8 +1,13 @@
 ------------ MODULE Bug20201118 ---------------------------
 EXTENDS Integers
 
+(*
+ * @typeAlias: P = { sender: Str, data: { amount: Int } };
+ *)
+Bug20201118_typedefs == TRUE
+
 VARIABLES
-    \* @type: [sender: Str, data: [amount: Int]];
+    \* @type: P;
     p,
     \* @type: Bool;
     error
@@ -18,12 +23,12 @@ Packets == [
   data: Data
 ]
 
-\* @type: [sender: Str, data: [amount: Int]] => Bool;
+\* @type: P => Bool;
 WellFormed(packet) ==
   /\ packet.sender /= ""
   /\ packet.data.amount > 0
 
-\* @type: [sender: Str, data: [amount: Int]] => Bool;
+\* @type: P => Bool;
 Pre(packet) ==
   LET data == packet.data IN
   WellFormed(packet)
