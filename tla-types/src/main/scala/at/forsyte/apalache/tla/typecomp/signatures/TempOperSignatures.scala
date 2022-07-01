@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.typecomp.signatures
 
-//import at.forsyte.apalache.tla.lir.oper.TlaTempOper
-//import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.typecomp.SignatureMap
+import at.forsyte.apalache.tla.lir.oper.TlaTempOper
+import at.forsyte.apalache.tla.lir.BoolT1
+import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
 
 /**
  * Produces a SignatureMap for all temporal operators
@@ -11,10 +11,32 @@ import at.forsyte.apalache.tla.typecomp.SignatureMap
  *   Jure Kukovec
  */
 object TempOperSignatures {
-//  import BuilderUtil._
-//  import TlaTempOper._
+  import BuilderUtil._
+  import TlaTempOper._
 
-  def getMap: SignatureMap =
-    Map.empty
+  def getMap: SignatureMap = {
+
+    // (Bool) => Bool
+    val unary: SignatureMap = Seq(
+        box,
+        diamond,
+    ).map { signatureMapEntry(_, { case Seq(BoolT1) => BoolT1 }) }.toMap
+
+    // (Bool, Bool) => Bool
+    val binaryBool: SignatureMap = Seq(
+        leadsTo,
+        guarantees,
+    ).map { signatureMapEntry(_, { case Seq(BoolT1, BoolT1) => BoolT1 }) }.toMap
+
+    // (t, Bool) => Bool
+    val binaryAnyBool: SignatureMap = Seq(
+        weakFairness,
+        strongFairness,
+        EE,
+        AA,
+    ).map { signatureMapEntry(_, { case Seq(_, BoolT1) => BoolT1 }) }.toMap
+
+    unary ++ binaryBool ++ binaryAnyBool
+  }
 
 }
