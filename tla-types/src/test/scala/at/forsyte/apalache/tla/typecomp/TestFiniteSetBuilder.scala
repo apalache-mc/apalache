@@ -37,7 +37,7 @@ class TestFiniteSetBuilder extends BuilderTest {
     )
   }
 
-  test("card") {
+  test("cardinality") {
 
     type T = TBuilderInstruction
 
@@ -57,7 +57,7 @@ class TestFiniteSetBuilder extends BuilderTest {
 
     checkRun(
         runUnary(
-            builder.card,
+            builder.cardinality,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,

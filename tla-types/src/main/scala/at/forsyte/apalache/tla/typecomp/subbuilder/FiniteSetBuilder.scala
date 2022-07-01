@@ -15,5 +15,5 @@ trait FiniteSetBuilder extends UnsafeFiniteSetBuilder {
   def isFiniteSet(set: TBuilderInstruction): TBuilderInstruction = set.map(_isFiniteSet)
 
   /** Cardinality(set) */
-  def card(set: TBuilderInstruction): TBuilderInstruction = set.map(_card)
+  def cardinality(set: TBuilderInstruction): TBuilderInstruction = set.map(_cardinality)
 }

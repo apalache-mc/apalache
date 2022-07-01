@@ -15,5 +15,5 @@ trait UnsafeFiniteSetBuilder extends ProtoBuilder {
   protected def _isFiniteSet(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.isFiniteSet, set)
 
   /** Cardinality(set) */
-  protected def _card(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.cardinality, set)
+  protected def _cardinality(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.cardinality, set)
 }

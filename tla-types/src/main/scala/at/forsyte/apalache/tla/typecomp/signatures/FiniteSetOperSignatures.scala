@@ -21,11 +21,11 @@ object FiniteSetOperSignatures {
   def getMap: SignatureMap = {
 
     // (Set(t)) => Bool
-    val isFSSig = signatureMapEntry(isFiniteSet, { case Seq(SetT1(_)) => BoolT1 })
+    val isFiniteSetSig = signatureMapEntry(isFiniteSet, { case Seq(SetT1(_)) => BoolT1 })
 
     // (Set(t)) => Int
-    val cardSig = signatureMapEntry(cardinality, { case Seq(SetT1(_)) => IntT1 })
+    val cardinalitySig = signatureMapEntry(cardinality, { case Seq(SetT1(_)) => IntT1 })
 
-    Map(isFSSig, cardSig)
+    Map(isFiniteSetSig, cardinalitySig)
   }
 }
