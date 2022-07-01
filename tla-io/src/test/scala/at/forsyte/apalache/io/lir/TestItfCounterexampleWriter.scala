@@ -67,8 +67,11 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
     val fooBar = RecT1("foo" -> IntT1, "bar" -> BoolT1)
     val intToStr = FunT1(IntT1, StrT1)
     val boolToInt = FunT1(BoolT1, IntT1)
+    val fooBarRow = RecRowT1(RowT1("foo" -> IntT1, "bar" -> BoolT1))
+    val variantT = VariantT1(RowT1("Baz" -> fooBarRow, "Boo" -> IntT1))
 
     def pair(i: Int, s: String) = tuple(int(i), str(s)).as(intAndStr)
+
     val decls = List(
         TlaVarDecl("a")(Typed(IntT1)),
         TlaVarDecl("b")(Typed(StrT1)),
@@ -78,7 +81,11 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
         TlaVarDecl("f")(Typed(intAndStr)),
         TlaVarDecl("g")(Typed(intToStr)),
         TlaVarDecl("h")(Typed(intToStr)),
+        TlaVarDecl("n")(Typed(fooBarRow)),
+        TlaVarDecl("o")(Typed(variantT)),
     )
+
+    val fooBarEx = enumFun(str("foo"), int(3), str("bar"), bool(true))
 
     compareJson(
         TlaModule("test", decls),
@@ -96,8 +103,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
                     "d" -> enumSet(int(5), int(6))
                       .as(intSetT),
                     // [ foo |-> 3, bar |-> TRUE ]
-                    "e" -> enumFun(str("foo"), int(3), str("bar"), bool(true))
-                      .as(fooBar),
+                    "e" -> fooBarEx.as(fooBar),
                     // <<7, "myStr">>
                     "f" -> tuple(int(7), str("myStr"))
                       .as(intAndStr),
@@ -116,34 +122,40 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
                     "l" -> intSet().as(intSetT),
                     // Nat
                     "m" -> natSet().as(intSetT),
+                    // [ foo |-> 3, bar |-> TRUE ]
+                    "n" -> fooBarEx.as(fooBarRow),
+                    // Variant("Baz", [ foo |-> 3, bar |-> TRUE ])
+                    "o" -> variant("Baz", fooBarEx.as(fooBarRow)).as(variantT),
                 )),
         ),
         """{
-          |  "#meta": {
-          |    "format": "ITF",
-          |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-          |    "description": "Created by Apalache"
-          |  },
-          |  "vars": [ "a", "b", "c", "d", "e", "f", "g", "h" ],
-          |  "states": [
-          |    {
-          |      "#meta": { "index": 0 },
-          |      "a": 2,
-          |      "b": "hello",
-          |      "c": [ 3, { "#bigint": "1000000000000000000" } ],
-          |      "d": { "#set": [ 5, 6 ] },
-          |      "e": { "foo": 3, "bar": true },
-          |      "f": { "#tup": [ 7, "myStr" ] },
-          |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
-          |      "h": { "#map": [] },
-          |      "i": { "#map": [[1, "a"]] },
-          |      "j": { "#unserializable": "[BOOLEAN → Int]" },
-          |      "k": { "#unserializable": "SUBSET BOOLEAN" },
-          |      "l": { "#unserializable": "Int" },
-          |      "m": { "#unserializable": "Nat" }
-          |    }
-          |  ]
-          |}""".stripMargin,
+        |  "#meta": {
+        |    "format": "ITF",
+        |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+        |    "description": "Created by Apalache"
+        |  },
+        |  "vars": [ "a", "b", "c", "d", "e", "f", "g", "h", "n", "o" ],
+        |  "states": [
+        |    {
+        |      "#meta": { "index": 0 },
+        |      "a": 2,
+        |      "b": "hello",
+        |      "c": [ 3, { "#bigint": "1000000000000000000" } ],
+        |      "d": { "#set": [ 5, 6 ] },
+        |      "e": { "foo": 3, "bar": true },
+        |      "f": { "#tup": [ 7, "myStr" ] },
+        |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
+        |      "h": { "#map": [] },
+        |      "i": { "#map": [[1, "a"]] },
+        |      "j": { "#unserializable": "[BOOLEAN → Int]" },
+        |      "k": { "#unserializable": "SUBSET BOOLEAN" },
+        |      "l": { "#unserializable": "Int" },
+        |      "m": { "#unserializable": "Nat" },
+        |      "n": { "foo": 3, "bar": true },
+        |      "o": { "tag": "Baz", "value": { "foo": 3, "bar": true }}
+        |    }
+        |  ]
+        |}""".stripMargin,
     )
   }
 }
