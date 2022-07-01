@@ -1,14 +1,14 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper, VariantOper}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import java.io.PrintWriter
 import java.util.Calendar
-import scala.collection.mutable
 import scala.collection.immutable.Map
+import scala.collection.mutable
 
 /**
  * This class produces counterexamples in the Informal Trace Format.
@@ -130,6 +130,9 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
+
+    case OperEx(VariantOper.variant, ValEx(TlaStr(tagName)), valueEx) =>
+      ujson.Obj(mutable.LinkedHashMap("tag" -> ujson.Str(tagName), "value" -> exToJson(valueEx)))
 
     case OperEx(ApalacheOper.setAsFun, OperEx(TlaSetOper.enumSet, args @ _*)) =>
       val keyValueArrays = args.collect { case OperEx(TlaFunOper.tuple, key, value) =>
