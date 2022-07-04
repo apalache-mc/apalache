@@ -1,15 +1,70 @@
 package at.forsyte.apalache.tla
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir._
-
-import scala.language.implicitConversions
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import scalaz._
 
-// Contains classes, typedefs and implicit conversion methods used in the package
+import scala.language.implicitConversions
+
+/**
+ * The key definitions related to the typed builder. The most important ones for the users of this API are the methods:
+ *
+ *   - an implicit conversion `build` that converts a builder state to its final form, e.g., to `TlaEx`.
+ *   - an implicit conversion `liftBuildToSeq` that applies `build` to a sequence.
+ *
+ * To use the above methods in your code, import the implicit conversions as follows:
+ *
+ * {{{
+ *  import at.forsyte.apalache.tla.typecomp._
+ * }}}
+ */
 package object typecomp {
 
+  /**
+   * Build a data structure (e.g., `TlaEx` or `TlaOperDecl`), given a state of the builder.
+   *
+   * @param builderState
+   *   the internal state of the builder, which captures a data structure made so far
+   * @tparam T
+   *   the type of a data structure to build, e.g., `TlaEx` or `TlaOperDecl`.
+   * @return
+   *   the constructed data structure of type `T`
+   * @throws TBuilderTypeException
+   *   when a constructed expression is ill-typed
+   * @throws TBuilderScopeException
+   *   when a constructed expression has an incorrect scope
+   */
+  implicit def build[T](builderState: TBuilderInternalState[T]): T = builderState.run(TBuilderContext.empty)._2
+
+  /**
+   * An implicit conversion via a class that works as [[build]], but via a method call to `.build()`.
+   *
+   * @param builderState
+   *   the internal state of the builder, which captures a data structure made so far
+   * @tparam T
+   *   the type of a data structure to build, e.g., `TlaEx` or `TlaOperDecl`.
+   */
+  implicit class BuildViaMethod[T](builderState: TBuilderInternalState[T]) {
+    def build: T = {
+      builderState.run(TBuilderContext.empty)._2
+    }
+  }
+
+  /**
+   * Apply the `build` method to a sequence.
+   *
+   * @param builderStates
+   *   a sequence of
+   * @tparam T
+   *   the type of a data structure to build, e.g., `TlaEx` or `TlaOperDecl`.
+   * @return
+   *   the sequence of constructed data structured of type `T`
+   */
+  implicit def liftBuildToSeq[T](builderStates: Seq[TBuilderInternalState[T]]): Seq[T] =
+    builderStates.map(build)
+
   // Builder-thrown exceptions
+
   /** Thrown if a TypeComputation finds fault with types */
   class TBuilderTypeException(message: String) extends Exception(message)
 
@@ -69,11 +124,6 @@ package object typecomp {
 
   // convenience implicit, so we can avoid typing Right
   implicit def liftRet(tt: TlaType1): TypeComputationResult = Right(tt)
-
-  // Allows for the seamless conversion of -Instruction expressions to TlaEx, when the latter is required
-  implicit def build[T](wrap: TBuilderInternalState[T]): T = wrap.run(TBuilderContext.empty)._2
-  implicit def liftBuildToSeq[T](wrapCollection: Seq[TBuilderInternalState[T]]): Seq[T] =
-    wrapCollection.map(build)
 
   /**
    * A signature, if it exists, is as a function from domain types to either a codomain type or an exception (i.e. a
