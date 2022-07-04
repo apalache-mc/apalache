@@ -2,7 +2,7 @@
 
 | authors                                | revision | revision date  |
 | -------------------------------------- | --------:| --------------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        5 | April 08, 2022 |
+| Shon Feder, Igor Konnov, Jure Kukovec  |        6 | July 01, 2022 |
 
 *This is an architectural decision record. For user documentation, check the
 [Snowcat tutorial][] and [Snowcat HOWTO][].*
@@ -12,7 +12,7 @@ alternative solutions. In this __ADR-002__, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
 discussed in a separate ADR.
 
-1. How to write types in TLA+ (Type System 1).
+1. How to write types in TLA+ (Type Systems 1 and 1.2).
 1. How to write type annotations (as a user).
 
 This document assumes that one can write a simple type checker that computes
@@ -20,18 +20,15 @@ the types of all expressions based on the annotations provided by the user.
 Such an implementation is provided by the type checker Snowcat.
 See the [manual chapter](../apalache/typechecker-snowcat.md) on Snowcat.
 
-In contrast, the [type inference
-algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec
-is fully automatic and thus it eliminates the need for type annotations.
-Jure's algorithm is using Type System 1 too. The type inference algorithm
-is still in the prototype phase.
-
 System engineers often want to write type annotations and quickly check types
 when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
 ### 1.1. Type grammar (Type System 1, or TS1)
+
+**Upgrade warning.** This system will be replaced with [Type System 1.2](#ts12)
+in September of 2022.
 
 We simply write types as strings that follow the type grammar:
 
@@ -41,6 +38,7 @@ T ::=   'Bool' | 'Int' | 'Str'
       | 'Set' '(' T ')'
       | 'Seq' '(' T ')'
       | '<<' T ',' ...',' T '>>'
+        // warning: the following type will be removed in Type System 1.2
       | '[' field ':' T ',' ...',' field ':' T ']'
       | '(' T ',' ...',' T ')' '=>' T
       | typeConst
@@ -63,7 +61,8 @@ The type rules have the following meaning:
 - The rule `<<T, ..., T>>` produces a tuple type over types that
     are produced by `T`. *Types at different positions may differ*.
 - The rule `[field: T, ..., field: T]` produces a record type over types that
-    are produced by `T`. *Types at different positions may differ*.
+    are produced by `T`. Types at different positions may differ.
+    *This syntax will change in [Type System 1.2](#ts12).*
 - The rule `(T, ..., T) => T` defines an operator whose result type and parameter types are produced by `T`.
 - The rule `typeConst` defines an uninterpreted type (or a reference to a type alias), look for an explanation below.
 - The rule `typeVar` defines a type variable, look for an explanation below.
@@ -127,17 +126,24 @@ of `typeConst`, the name should be an identifier in the upper case. The type che
 of the constant type. For examples, see [Section 2.4](#useTypeAlias).
 
 <a id="rows"></a>
-### <a id="ts-1.2"></a>1.3. Type System 1.2, including precise records, variants, and rows
+<a id="ts12"></a>
+### 1.3. Type System 1.2, including precise records, variants, and rows
 
-**This is work in progress.** You can track the progress of this work in [Issue
-401][]. Once this work is complete, we will switch to Type System 1.2.
+**Feature under test.** By default, Snowcat is using Type System 1. To enable
+Type System 1.2, pass the following argument to `typecheck` or another command,
+e.g., `check`:
+
+```sh
+$ apalache-mc typecheck --features=rows MySpec.tla
+```
 
 As discussed in [ADR014][], many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
 given in [ADR014][], we discuss the extension of the type grammar in this
-ADR-002.  To this end, we extend the grammar with new records, variants, and
-rows as follows:
+ADR-002. If you do not know about row typing, it may be useful to check the
+Wikipedia page on  [Row polymorphism][]. We extend the grammar with new
+records, variants, and rows as follows:
 
 ```
 // Type System 1.2
@@ -159,11 +165,9 @@ T2 ::=
     | 'Variant' '(' ')'
 
 variantOption ::=
-    // A variant option with a fully defined structure.
-    | { tag: stringLiteral, field: T2, ..., field: T2 }
-    // a variant option with a partially defined structure
-    //   (a variant option over a row).
-    | { tag: stringLiteral, field: T2, ..., field: T2, typeVar }
+    // A variant option with a fully defined structure,
+    // tagged with a name that is defined with 'identifier'
+    identifier '(' T2 ')'
 
 // Special syntax for the rows, which is internal to the type checker.
 row ::=
@@ -186,12 +190,8 @@ row ::=
   Int, b: Str, f: Bool, g: Set(Int) }`.
 
 * `v1` is a variant that has one of the two possible shapes:
- 
-   - It has the fields `tag` of type `Str` and `a` of type `Int` (if the field
-     `tag` is equal to `"A"`).
-
-   - It has the fields `tag` of type `Str` and `b` of type `Bool` (if the field
-     `tag` is equal to `"B"`).
+  - It is tagged with `A` and is associated a value of type `Int`.
+  - It is tagged with `B` and is associated a value of type `B`.
 
 * `v2` is an empty variant, which admits no options. It has the type
   `Variant()`.
@@ -252,7 +252,7 @@ better tests the field `type` carefully.
  [tag |-> "2a", bal |-> 2, val |-> 3]}
 ```
 
-In Type System 1.2 ([Section 1.3](#ts-1.2)), this set has the type of a set over a variant
+In Type System 1.2 ([Section 1.3](#ts12)), this set has the type of a set over a variant
 type:
 
 ```tla
@@ -275,7 +275,7 @@ which is used internally by
 types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
 We expect that this type system will evolve in the future. That is why we call
-it __Type System 1__. [Section 1.3](#ts-1.2) presents its extension to __Type System
+it __Type System 1__. [Section 1.3](#ts12) presents its extension to __Type System
 1.2__. Feel free to suggest __Type System 2.0__ :-)
 
 ## 2. How to write type annotations (as a user)
@@ -529,3 +529,4 @@ AtMostOne ==
 [Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
 [ADR014]: https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
+[Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism
