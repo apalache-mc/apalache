@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.convenience.{tla => tlaLegacy}
+import at.forsyte.apalache.tla.types.tla
 import scalaz.unused
 
 import scala.collection.immutable.{SortedMap, SortedSet}
@@ -108,9 +109,9 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     // assert that one of the options is selected
     val tags = options.keys.map { name =>
       nextState = recordAndVariantOps.getOrCreateVariantTag(nextState, name)
-      tla.fromTlaEx(tla.eql(nextState.asCell.toNameEx, tagCell.toNameEx).as(BoolT1))
+      tla.eql(nextState.asCell.toBuilder, tagCell.toBuilder)
     }.toSeq
-    rewriter.solverContext.assertGroundExpr(tla.or(tags: _*).as(BoolT1))
+    rewriter.solverContext.assertGroundExpr(tla.or(tags: _*))
     // generate the possible values
     val namedValues = options.map { case (key, tt) =>
       nextState = gen(nextState, tt)
@@ -157,10 +158,11 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       for (elem <- elems) {
         nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
-        val storeElem = tla.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
-        val notStoreElem = tla.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
+        // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
+        val storeElem = tlaLegacy.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
+        val notStoreElem = tlaLegacy.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
         // elem is added to setCell based on the unconstrained predicate pred
-        val ite = tla.ite(pred, storeElem, notStoreElem).typed(SetT1(elemType))
+        val ite = tlaLegacy.ite(pred, storeElem, notStoreElem).typed(SetT1(elemType))
         rewriter.solverContext.assertGroundExpr(ite)
       }
     }
@@ -181,8 +183,8 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     nextState = genBasic(nextState, IntT1)
     val len = nextState.asCell
     // assert that 0 <= len /\ len <= bound
-    rewriter.solverContext.assertGroundExpr(tla.le(len.toNameEx.as(IntT1), tla.int(bound)).as(BoolT1))
-    rewriter.solverContext.assertGroundExpr(tla.ge(len.toNameEx.as(IntT1), tla.int(0)).as(BoolT1))
+    rewriter.solverContext.assertGroundExpr(tla.le(len.toBuilder, tla.int(bound)))
+    rewriter.solverContext.assertGroundExpr(tla.ge(len.toBuilder, tla.int(0)))
     // create the sequence out of the proto sequence and its length
     proto.mkSeq(nextState, SeqT1(elemType), newProtoSeq, nextState.asCell)
   }
@@ -216,17 +218,20 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         nextState = nextState.updateArena(_.appendHas(domainCell, domainCells: _*))
         // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
         for (domainElem <- domainCells) {
-          val inExpr = tla.apalacheStoreInSet(domainElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+          // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
+          val inExpr = tlaLegacy.apalacheStoreInSet(domainElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
         nextState = nextState.updateArena(_.setDom(funCell, domainCell))
 
         def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-          val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
-          val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
-          val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1)
+          // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
+          val inDomain = tlaLegacy.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+          val inRange =
+            tlaLegacy.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
+          val notInRange = tlaLegacy.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1)
           // function updates are guarded by the inDomain predicate
-          val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1)
+          val ite = tlaLegacy.ite(inDomain, inRange, notInRange).as(BoolT1)
           rewriter.solverContext.assertGroundExpr(ite)
         }
 
@@ -257,16 +262,10 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
               val a2 = nextState.arena.getHas(p2).head
               // if two pairs belong to the relation, their arguments must be unequal
               nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((a1, a2)))
-              val not1 = tla
-                .not(tla.in(p1.toNameEx ? "p", relationCell.toNameEx ? "R") ? "b")
-                .typed(types, "b")
-              val not2 = tla
-                .not(tla.in(p2.toNameEx ? "p", relationCell.toNameEx ? "R") ? "b")
-                .typed(types, "b")
-              val neq = tla
-                .not(tla.eql(a1.toNameEx ? "a", a2.toNameEx ? "a") ? "b")
-                .typed(types, "b")
-              rewriter.solverContext.assertGroundExpr(tla.or(not1, not2, neq).typed(BoolT1))
+              val not1 = tla.not(tla.in(p1.toBuilder, relationCell.toBuilder))
+              val not2 = tla.not(tla.in(p2.toBuilder, relationCell.toBuilder))
+              val neq = tla.not(tla.eql(a1.toBuilder, a2.toBuilder))
+              rewriter.solverContext.assertGroundExpr(tla.or(not1, not2, neq))
             }
           }
         }
