@@ -138,7 +138,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
    * Incrementally rename all declarations in a module, so every variable is declared only once.
    */
   def renameInModule: TlaModuleTransformation = { mod =>
-    new TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
+    TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
   }
 
   /**
@@ -400,7 +400,22 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
   // Lifted to decls
   def syncAndNormalizeDs(ds: Iterable[TlaDecl]): Iterable[TlaDecl] = {
     syncFromDs(ds)
-    normalizeDs(ds.map(d => tracker.fromExToDeclTransformation(this)(d)))
+    normalizeDs(ds.map(d =>
+          tracker.trackDecl {
+        // We need to also rename operator parameters, see #1903
+        case decl @ TlaOperDecl(_, formalParams, b) =>
+          val (renamedParams, paramRenamedBody) = formalParams.foldLeft((List.empty[OperParam], b)) {
+            case ((newParams, ex), OperParam(paramName, arity)) =>
+              // TODO: move out of lir, use builder
+              val newParamName = getNextUniqueFromBase(paramName)
+              val newRenamed = Map(paramName -> newParamName)
+              val newBody = rename(newRenamed)(ex)
+              (newParams :+ OperParam(newParamName, arity), newBody)
+          }
+          decl.copy(formalParams = renamedParams, body = this(paramRenamedBody))
+
+        case decl => decl
+      }(d)))
   }
 
 }
