@@ -17,13 +17,14 @@ class TypeComputationFactory {
   private val arithOperMap: SignatureMap = ArithOperSignatures.getMap
   private val boolOperMap: SignatureMap = BoolOperSignatures.getMap
   private val setOperMap: SignatureMap = SetOperSignatures.getMap
+  private val finSetOperMap: SignatureMap = FiniteSetOperSignatures.getMap
   private val seqOperMap: SignatureMap = SeqOperSignatures.getMap
   private val actionOperMap: SignatureMap = ActionOperSignatures.getMap
   private val controlOperMap: SignatureMap = ControlOperSignatures.getMap
   private val funOperMap: SignatureMap = FunOperSignatures.getMap
 
   private val knownSignatures: SignatureMap =
-    baseOperMap ++ arithOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++ actionOperMap ++ controlOperMap ++ funOperMap
+    baseOperMap ++ arithOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++ actionOperMap ++ controlOperMap ++ funOperMap ++ finSetOperMap
 
   /** Given an operator with a known signature, constructs a pure type computation for its return type */
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
