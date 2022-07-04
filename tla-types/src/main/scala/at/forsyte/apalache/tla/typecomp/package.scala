@@ -9,8 +9,8 @@ import scala.language.implicitConversions
 /**
  * The key definitions related to the typed builder. The most important ones for the users of this API are the methods:
  *
- *   - an implicit conversion `build` that converts a builder state to its final form, e.g., to `TlaEx`.
- *   - an implicit conversion `liftBuildToSeq` that applies `build` to a sequence.
+ *   - an implicit conversion [[build]] that converts a builder state to its final form, e.g., to `TlaEx`.
+ *   - an implicit conversion [[liftBuildToSeq]] that applies `build` to a sequence.
  *
  * To use the above methods in your code, import the implicit conversions as follows:
  *
@@ -54,11 +54,11 @@ package object typecomp {
    * Apply the `build` method to a sequence.
    *
    * @param builderStates
-   *   a sequence of
+   *   a sequence of [[TBuilderInternalState]]
    * @tparam T
    *   the type of a data structure to build, e.g., `TlaEx` or `TlaOperDecl`.
    * @return
-   *   the sequence of constructed data structured of type `T`
+   *   the sequence of constructed data structures of type `T`
    */
   implicit def liftBuildToSeq[T](builderStates: Seq[TBuilderInternalState[T]]): Seq[T] =
     builderStates.map(build)
