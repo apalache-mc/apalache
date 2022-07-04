@@ -9,8 +9,8 @@ import scala.language.implicitConversions
 /**
  * The key definitions related to the typed builder. The most important ones for the users of this API are the methods:
  *
- *   - an implicit conversion [[build]] that converts a builder state to its final form, e.g., to `TlaEx`.
- *   - an implicit conversion [[liftBuildToSeq]] that applies `build` to a sequence.
+ *   - an implicit conversion [[typecomp#build]] that converts a builder state to its final form, e.g., to `TlaEx`.
+ *   - an implicit conversion [[typecomp#liftBuildToSeq]] that applies `build` to a sequence.
  *
  * To use the above methods in your code, import the implicit conversions as follows:
  *
@@ -45,9 +45,18 @@ package object typecomp {
    *   the type of a data structure to build, e.g., `TlaEx` or `TlaOperDecl`.
    */
   implicit class BuildViaMethod[T](builderState: TBuilderInternalState[T]) {
-    def build: T = {
-      builderState.run(TBuilderContext.empty)._2
-    }
+
+    /**
+     * Build a data structure (e.g., `TlaEx` or `TlaOperDecl`) from the left-hand side.
+     *
+     * @return
+     *   the constructed data structure of type `T`
+     * @throws TBuilderTypeException
+     *   when a constructed expression is ill-typed
+     * @throws TBuilderScopeException
+     *   when a constructed expression has an incorrect scope
+     */
+    def build: T = builderState
   }
 
   /**
@@ -59,6 +68,10 @@ package object typecomp {
    *   the type of a data structure to build, e.g., `TlaEx` or `TlaOperDecl`.
    * @return
    *   the sequence of constructed data structures of type `T`
+   * @throws TBuilderTypeException
+   *   when a constructed expression is ill-typed
+   * @throws TBuilderScopeException
+   *   when a constructed expression has an incorrect scope
    */
   implicit def liftBuildToSeq[T](builderStates: Seq[TBuilderInternalState[T]]): Seq[T] =
     builderStates.map(build)
