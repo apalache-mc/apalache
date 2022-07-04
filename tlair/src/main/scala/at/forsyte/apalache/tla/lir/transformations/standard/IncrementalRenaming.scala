@@ -138,7 +138,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
    * Incrementally rename all declarations in a module, so every variable is declared only once.
    */
   def renameInModule: TlaModuleTransformation = { mod =>
-    new TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
+    TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
   }
 
   /**

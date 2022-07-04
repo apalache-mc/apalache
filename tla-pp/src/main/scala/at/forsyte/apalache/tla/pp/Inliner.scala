@@ -117,10 +117,17 @@ class Inliner(
 
     val freshBody = deepCopy(decl.body)
 
-    // Each formal parameter gets instantiated independently.
-    val replacedBody = decl.formalParams.zip(args).foldLeft(freshBody) { case (partialBody, (fParam, arg)) =>
-      ReplaceFixed(tracker).whenEqualsTo(NameEx(fParam.name)(arg.typeTag), arg)(partialBody)
-    }
+    // All formal parameters get instantiated at once, to avoid parameter-name issues, see #1903
+    val paramMap = decl.formalParams
+      .zip(args)
+      .map({ case (OperParam(name, _), arg) =>
+        name -> arg
+      })
+      .toMap
+
+    val replacedBody = ReplaceFixed(tracker).withFun {
+      case NameEx(name) if paramMap.contains(name) => paramMap(name)
+    }(freshBody)
 
     // There are two cases where the above instantiation might be incomplete:
     // a) In the case of an application of the form A(B()), `arg` will have the value `B()`, which is _not_
