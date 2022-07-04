@@ -252,8 +252,6 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         // This will guarantee that we define a function, not an arbitrary relation.
         // Note that we cannot simply require that all arguments are distinct,
         // as there may be not enough values in the universe to guarantee that.
-        val types = Map("p" -> TupT1(funType.arg, funType.res), "R" -> SetT1(TupT1(funType.arg, funType.res)),
-            "a" -> funType.arg, "b" -> BoolT1)
         for ((p1, i1) <- pairs.zipWithIndex) {
           for ((p2, i2) <- pairs.zipWithIndex) {
             if (i1 < i2) {
