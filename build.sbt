@@ -192,6 +192,7 @@ lazy val shai = (project in file("shai"))
           Deps.zio,
           Deps.grpcNetty,
           Deps.scalapbRuntimGrpc,
+          Deps.scalapbRuntime,
           Deps.zioGrpcCodgen,
           TestDeps.zioTest,
           TestDeps.zioTestSbt,
