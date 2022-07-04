@@ -4,12 +4,12 @@ import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 
 /**
- * Type-unsafe builder for TlaTempOper expressions.
+ * Type-unsafe builder for [[TlaTempOper]] expressions.
  *
  * @author
  *   Jure Kukovec
  */
-trait UnsafeTempBuilder extends ProtoBuilder {
+trait UnsafeTemporalBuilder extends ProtoBuilder {
 
   /** {{{[]P}}} */
   protected def _box(P: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.box, P)

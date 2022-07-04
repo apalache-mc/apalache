@@ -22,7 +22,7 @@ class TypeComputationFactory {
   private val actionOperMap: SignatureMap = ActionOperSignatures.getMap
   private val controlOperMap: SignatureMap = ControlOperSignatures.getMap
   private val funOperMap: SignatureMap = FunOperSignatures.getMap
-  private val tempOperMap: SignatureMap = TempOperSignatures.getMap
+  private val tempOperMap: SignatureMap = TemporalOperSignatures.getMap
 
   private val knownSignatures: SignatureMap =
     baseOperMap ++ arithOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++

@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
  * @author
  *   Jure Kukovec
  */
-object TempOperSignatures {
+object TemporalOperSignatures {
   import BuilderUtil._
   import TlaTempOper._
 

@@ -6,7 +6,7 @@ import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestTempBuilder extends BuilderTest {
+class TestTemporalBuilder extends BuilderTest {
 
   test("box/diamond") {
 
