@@ -3,10 +3,9 @@ package at.forsyte.apalache.tla.typecomp.subbuilder
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeTemporalBuilder
-import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 
 /**
- * Type-safe builder for [[TlaTempOper]] expressions.
+ * Type-safe builder for [[at.forsyte.apalache.tla.lir.oper.TlaTempOper]] expressions.
  *
  * @author
  *   Jure Kukovec
