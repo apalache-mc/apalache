@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
 
 /**
- * Produces a SignatureMap for all set operators
+ * Produces a SignatureMap for all finite set operators
  *
  * @author
  *   Jure Kukovec
@@ -14,10 +14,6 @@ object FiniteSetOperSignatures {
   import BuilderUtil._
   import TlaFiniteSetOper._
 
-  /**
-   * Returns a map that assigns a signature generator to each TlaSetOper. Because most operators are polymorphic, their
-   * signatures will contain type variables produced on-demand by varPool.
-   */
   def getMap: SignatureMap = {
 
     // (Set(t)) => Bool
