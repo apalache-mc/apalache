@@ -571,12 +571,6 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |\* @type: Set(T1a({ val: Int, found: Bool) | T2a({ bal: Int })) => Set({ val: Int, found: Bool });
         |TestVariantFilter == VariantFilter("T1a", { TestVariant })
         |
-        |\* @type: T1a({ val: Int, found: Bool }) | T2a({ bal: Int }) => Bool;
-        |TestVariantMatch(var) ==
-        |  LET ThenOper(v) == v.found IN
-        |  LET ElseOper(v) == FALSE IN
-        |  VariantMatch("T1a", var, ThenOper, ElseOper)
-        |
         |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
         |TestVariantUnwrap(var) ==
         |  VariantUnwrap("T1a", var)
@@ -623,29 +617,6 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
             ValEx(TlaStr("T1a")),
             OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("TestVariant"))),
         ),
-    )
-
-    // TestVariantMatch(var) ==
-    //   LET ThenOper(v) == v.found IN
-    //   LET ElseOper(v) == FALSE IN
-    //   VariantMatch("T1a", var, ThenOper, ElseOper)
-    val mtThen =
-      declOp("ThenOper", appFun(name("v"), str("found")), OperParam("v")).untypedOperDecl()
-    val mtElse =
-      declOp("ElseOper", bool(false), OperParam("v")).untypedOperDecl()
-    val applyMatchTag =
-      OperEx(
-          VariantOper.variantMatch,
-          ValEx(TlaStr("T1a")),
-          name("var"),
-          name("ThenOper"),
-          name("ElseOper"),
-      )
-
-    expectDecl(
-        "TestVariantMatch",
-        letIn(letIn(applyMatchTag, mtElse), mtThen),
-        OperParam("var"),
     )
 
     // TestVariantUnwrap(var) ==

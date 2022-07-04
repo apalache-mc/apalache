@@ -40,41 +40,6 @@ VariantFilter(__tagName, __S) ==
     \* default untyped implementation
     { __d \in { __e \in __S: __e.tag = __tagName }: __d.value }
 
-
-(**
- * WARNING: This operator is not supported by the Apalache model checker yet.
- * We are thinking about a reasonably simple implementation of it.
- *
- * Test the tag of `variant` against the value `tagValue`.
- * If `variant.tag = tagValue`, then apply `ThenOper(rec)`,
- * where `rec` is a record extracted from `variant`.
- * Otherwise, apply `ElseOper(reducedVariant)`,
- * where `reducedVariant` is a version of `variant` that does allow for
- * the tag `tagValue`.
- *
- * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `tagValue` a constant string that is used to extract a record
- * @param `ThenOper` an operator that is called
- *        when `variant` is tagged with `tagValue`
- * @param `ElseOper` an operator that is called
- *        when `variant` is tagged with a value different from `tagValue`
- * @return the result returned by either `ThenOper`, or `ElseOper`
- *
- * The type could look like follows, when __tagName == "Tag":
- *
- *   (
- *     Str,
- *     Tag(a) | b,
- *     a => r,
- *     Variant(b) => r
- *   ) => r
- *)
-VariantMatch(__tagName, __variant, __ThenOper(_), __ElseOper(_)) ==
-    \* default untyped implementation
-    IF __variant.tag = __tagName
-    THEN __ThenOper(__variant.value)
-    ELSE __ElseOper(__variant)
-
 (**
  * In cases where `variant` allows for one value,
  * extract the associated value and return it.
