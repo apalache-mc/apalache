@@ -61,7 +61,7 @@ The type rules have the following meaning:
 - The rule `<<T, ..., T>>` produces a tuple type over types that
     are produced by `T`. *Types at different positions may differ*.
 - The rule `[field: T, ..., field: T]` produces a record type over types that
-    are produced by `T`. Types at different positions may differ.
+    are produced by `T`. *Types at different positions may differ.*
     *This syntax will change in [Type System 1.2](#ts12).*
 - The rule `(T, ..., T) => T` defines an operator whose result type and parameter types are produced by `T`.
 - The rule `typeConst` defines an uninterpreted type (or a reference to a type alias), look for an explanation below.
@@ -130,7 +130,7 @@ of the constant type. For examples, see [Section 2.4](#useTypeAlias).
 ### 1.3. Type System 1.2, including precise records, variants, and rows
 
 **Feature under test.** By default, Snowcat is using Type System 1. To enable
-Type System 1.2, pass the following argument to `typecheck` or another command,
+Type System 1.2, pass `--features=rows` to `typecheck` or another command,
 e.g., `check`:
 
 ```sh
@@ -240,7 +240,7 @@ probably not what you expected, but it is the best type we can actually compute
 without having algebraic datatypes in TLA+. It also reminds the user that one
 better tests the field `type` carefully.
 
-In retrospect, we have found that almost every user of Apalache made a typo in
+In retrospect, we have found that almost every user of Apalache made typos in
 their record types (including the Apalache developers!). Hence, we are
 migrating to Type System 1.2.
 
@@ -445,7 +445,7 @@ Foo(ms, m) ==
 The use of the dummy operator is a convention followed to simplify reasoning
 about where type aliases belong, and to ensure all aliases are located in one
 place. The prefix such as the module name protects against name clashes when
-the  module is extended or instantiated.
+the module is extended or instantiated.
 
 The actual rules around the placement of the `@typeAlias` annotation allows more
 flexibility:
