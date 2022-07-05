@@ -35,11 +35,11 @@ trait ApalacheInternalBuilder extends UnsafeApalacheInternalBuilder {
   def storeNotInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(elem, set)(_storeNotInSet)
 
-  /** storeInSet */
+  /** storeInSet binary (sets) */
   def storeInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(elem, set)(_storeInSet)
 
-  /** storeInSet */
+  /** storeInSet ternary (functions) */
   def storeInSet(elem: TBuilderInstruction, fun: TBuilderInstruction, arg: TBuilderInstruction): TBuilderInstruction =
     ternaryFromUnsafe(elem, fun, arg)(_storeInSet)
 

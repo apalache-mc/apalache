@@ -35,7 +35,8 @@ import scalaz.Scalaz._
  */
 class ScopedBuilder
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with FiniteSetBuilder with SeqBuilder
-    with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with LiteralAndNameBuilder {
+    with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with ApalacheInternalBuilder
+    with LiteralAndNameBuilder {
 
   private def parser = DefaultType1Parser
 
