@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th><th align="right">revision date</th></tr></thead><tbody>
-<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">5</td><td align="right">April 08, 2022</td></tr>
+<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">7</td><td align="right">July 05, 2022</td></tr>
 </tbody></table>
 <p><em>This is an architectural decision record. For user documentation, check the
 <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">Snowcat tutorial</a> and <a href="https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html">Snowcat HOWTO</a>.</em></p>
@@ -181,28 +181,26 @@ alternative solutions. In this <strong>ADR-002</strong>, we fix one solution tha
 most suitable. The interchange format for the type inference tools will be
 discussed in a separate ADR.</p>
 <ol>
-<li>How to write types in TLA+ (Type System 1).</li>
+<li>How to write types in TLA+ (Type Systems 1 and 1.2).</li>
 <li>How to write type annotations (as a user).</li>
 </ol>
 <p>This document assumes that one can write a simple type checker that computes
 the types of all expressions based on the annotations provided by the user.
 Such an implementation is provided by the type checker Snowcat.
 See the <a href="../apalache/typechecker-snowcat.html">manual chapter</a> on Snowcat.</p>
-<p>In contrast, the <a href="https://github.com/informalsystems/apalache/tree/types">type inference
-algorithm</a> by @Kukovec
-is fully automatic and thus it eliminates the need for type annotations.
-Jure's algorithm is using Type System 1 too. The type inference algorithm
-is still in the prototype phase.</p>
 <p>System engineers often want to write type annotations and quickly check types
 when writing TLA+ specifications. This document is filling this gap.</p>
 <h2><a class="header" href="#1-how-to-write-types-in-tla" id="1-how-to-write-types-in-tla">1. How to write types in TLA+</a></h2>
 <h3><a class="header" href="#11-type-grammar-type-system-1-or-ts1" id="11-type-grammar-type-system-1-or-ts1">1.1. Type grammar (Type System 1, or TS1)</a></h3>
+<p><strong>Upgrade warning.</strong> This system will be replaced with <a href="#ts12">Type System 1.2</a>
+in September of 2022.</p>
 <p>We simply write types as strings that follow the type grammar:</p>
 <pre><code>T ::=   'Bool' | 'Int' | 'Str'
       | T '-&gt;' T
       | 'Set' '(' T ')'
       | 'Seq' '(' T ')'
       | '&lt;&lt;' T ',' ...',' T '&gt;&gt;'
+        // warning: the following type will be removed in Type System 1.2
       | '[' field ':' T ',' ...',' field ':' T ']'
       | '(' T ',' ...',' T ')' '=&gt;' T
       | typeConst
@@ -225,7 +223,8 @@ the Boolean type, the integer type, and the string type, respectively.</li>
 <li>The rule <code>&lt;&lt;T, ..., T&gt;&gt;</code> produces a tuple type over types that
 are produced by <code>T</code>. <em>Types at different positions may differ</em>.</li>
 <li>The rule <code>[field: T, ..., field: T]</code> produces a record type over types that
-are produced by <code>T</code>. <em>Types at different positions may differ</em>.</li>
+are produced by <code>T</code>. <em>Types at different positions may differ.</em>
+<em>This syntax will change in <a href="#ts12">Type System 1.2</a>.</em></li>
 <li>The rule <code>(T, ..., T) =&gt; T</code> defines an operator whose result type and parameter types are produced by <code>T</code>.</li>
 <li>The rule <code>typeConst</code> defines an uninterpreted type (or a reference to a type alias), look for an explanation below.</li>
 <li>The rule <code>typeVar</code> defines a type variable, look for an explanation below.</li>
@@ -277,47 +276,48 @@ Their type is <code>Set(PID)</code>.</li>
 <p>This rule binds a type (produced by <code>T</code>) to a name (produced by <code>typeConst</code>). As you can see from the definition
 of <code>typeConst</code>, the name should be an identifier in the upper case. The type checker should use the bound type instead
 of the constant type. For examples, see <a href="#useTypeAlias">Section 2.4</a>.</p>
-<p><a id="rows"></a></p>
-<h3><a class="header" href="#a-idts-12a13-type-system-12-including-precise-records-variants-and-rows" id="a-idts-12a13-type-system-12-including-precise-records-variants-and-rows"><a id="ts-1.2"></a>1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
-<p><strong>This is work in progress.</strong> You can track the progress of this work in <a href="https://github.com/informalsystems/apalache/issues/401">Issue
-401</a>. Once this work is complete, we will switch to Type System 1.2.</p>
+<p><a id="rows"></a>
+<a id="ts12"></a></p>
+<h3><a class="header" href="#13-type-system-12-including-precise-records-variants-and-rows" id="13-type-system-12-including-precise-records-variants-and-rows">1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
+<p><strong>Feature under test.</strong> By default, Snowcat is using Type System 1. To enable
+Type System 1.2, pass <code>--features=rows</code> to <code>typecheck</code> or another command,
+e.g., <code>check</code>:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck --features=rows MySpec.tla
+</code></pre>
 <p>As discussed in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
 given in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR014</a>, we discuss the extension of the type grammar in this
-ADR-002.  To this end, we extend the grammar with new records, variants, and
-rows as follows:</p>
+ADR-002. If you do not know about row typing, it may be useful to check the
+Wikipedia page on  <a href="https://en.wikipedia.org/wiki/Row_polymorphism">Row polymorphism</a>. We extend the grammar with new
+records, variants, and rows as follows:</p>
 <pre><code>// Type System 1.2
-T2 ::=
+T12 ::=
     // all types of Type System 1
     T
     // A new record type with a fully defined structure.
-    // The set of fields may be empty.
-    | '{' field ':' T2 ',' ...',' field ':' T2 '}'
-    // A new record type with a partially defined structure
-    // (the type variable should be a 'row').
-    // The set of fields may be empty.
-    | '{' field ':' T2 ',' ...',' field ':' T2 ',' typeVar '}'
-    // A variant that contains several options.
-    | variantOption '|' ... '|' variantOption
-    // A variant of undefined structure (the type variable should be a 'row')
+    // The set of fields may be empty. If typeVar is present,
+    // the record type is parameterized (typeVar must be of the 'row' kind).
+    | '{' field ':' T12 ',' ...',' field ':' T12 [',' typeVar] '}'
+    // A variant that contains several options,
+    // optionally parameterized (typeVar must be of the 'row' kind).
+    | variantOption '|' ... '|' variantOption '|' [typeVar]
+    // A purely parameterized variant (typeVar must be of the 'row' kind).
     | 'Variant' '(' typeVar ')'
-    // An empty variant
-    | 'Variant' '(' ')'
 
 variantOption ::=
-    // A variant option with a fully defined structure.
-    | { tag: stringLiteral, field: T2, ..., field: T2 }
-    // a variant option with a partially defined structure
-    //   (a variant option over a row).
-    | { tag: stringLiteral, field: T2, ..., field: T2, typeVar }
+    // A variant option with a fully defined structure,
+    // tagged with a name that is defined with 'identifier'
+    identifier '(' T12 ')'
 
 // Special syntax for the rows, which is internal to the type checker.
 row ::=
-    // A row with a fully defined structure.
-    | '(|' field ':' T2 '|' ...'|' field ':' T2 '|)'
-    // A row with a partially defined structure (ending with a row).
-    | '(|' field ':' T2 '|' ...'|' field ':' T2 '|' typeVar '|)'
+    // A row with a fully defined structure
+    //   (having at least one field).
+    | '(|' field ':' T12 '|' ...'|' field ':' T12 '|)'
+    // A row with a partially defined structure
+    //   (having at least one field and ending with a variable of the 'row' kind).
+    | '(|' field ':' T12 '|' ...'|' field ':' T12 '|' typeVar '|)'
 </code></pre>
 <p><strong>Examples.</strong></p>
 <ul>
@@ -329,31 +329,20 @@ row ::=
 <p><code>r2</code> is a record that has the fields <code>a</code> of type <code>Int</code> and <code>b</code> of type <code>Str</code>
 and other fields, whose precise structure is captured with a type variable
 <code>c</code>. The type of <code>r2</code> is <code>{ a: Int, b: Str, c }</code>.  More precisely, the
-variable <code>c</code> should be a row. For instance, <code>c</code> can be equal to the row <code>(| f: Bool | g: Set(Int) |)</code>; in this case, <code>r2</code> would be a record of type <code>{ a: Int, b: Str, f: Bool, g: Set(Int) }</code>.</p>
+variable <code>c</code> must be a row. For instance, <code>c</code> can be equal to the row <code>(| f: Bool | g: Set(Int) |)</code>; in this case, <code>r2</code> would be a record of type <code>{ a: Int, b: Str, f: Bool, g: Set(Int) }</code>.</p>
 </li>
 <li>
 <p><code>v1</code> is a variant that has one of the two possible shapes:</p>
-</li>
-</ul>
 <ul>
-<li>
-<p>It has the fields <code>tag</code> of type <code>Str</code> and <code>a</code> of type <code>Int</code> (if the field
-<code>tag</code> is equal to <code>&quot;A&quot;</code>).</p>
-</li>
-<li>
-<p>It has the fields <code>tag</code> of type <code>Str</code> and <code>b</code> of type <code>Bool</code> (if the field
-<code>tag</code> is equal to <code>&quot;B&quot;</code>).</p>
-</li>
+<li>Either it carries the tag <code>A</code> and an associated value of type <code>Int</code>, or</li>
+<li>It carries the tag <code>B</code> and an associated value of type <code>Bool</code>.</li>
+<li>The type of <code>v1</code> is <code>A(Int) | B(Bool)</code>.</li>
 </ul>
-<ul>
-<li>
-<p><code>v2</code> is an empty variant, which admits no options. It has the type
-<code>Variant()</code>.</p>
 </li>
 <li>
-<p><code>v3</code> is a variant whose structure is defined by the type variable <code>b</code>.
-The type of <code>v3</code> is <code>Variant(b)</code>. Note that <code>b</code> type variable should be
-a row. For instance, it can be equal to the type <code>(| A: { tag: Str, f: Int } | B: { tag: Str, g: Str } |)</code>.</p>
+<p><code>v2</code> is a variant whose structure is entirely defined by the type variable
+<code>b</code>. The type of <code>v2</code> is <code>Variant(b)</code>. Note that <code>b</code> must be a
+row. For instance, it could be equal to <code>(| A: Int | B: Str |)</code>.</p>
 </li>
 </ul>
 <p>Note that this syntax encapsulates rows in records and variants. We introduce
@@ -382,7 +371,7 @@ complex comments would complicate the matters.</p>
 captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
 cannot assign a reasonable type to <code>{1, TRUE}</code>.</p>
-<p><strong>Sets of records in Type System 1.</strong>
+<p><strong>Sets of tagged records in Type System 1.</strong>
 We can assign a reasonable type to <code>{[type |-&gt; &quot;1a&quot;, bal |-&gt; 1], [type |-&gt; &quot;2a&quot;, bal |-&gt; 2, val |-&gt; 3]}</code>, a pattern that often occurs in practice,
 e.g., see
 <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos</a>.
@@ -390,29 +379,49 @@ The type of that set will be <code>Set([type: Str, bal: Int, val: Int])</code>, 
 probably not what you expected, but it is the best type we can actually compute
 without having algebraic datatypes in TLA+. It also reminds the user that one
 better tests the field <code>type</code> carefully.</p>
-<p><strong>Sets of records in Type System 1.2.</strong> Consider the following set:</p>
-<pre><code class="language-tla">{[tag |-&gt; &quot;1a&quot;, bal |-&gt; 1],
- [tag |-&gt; &quot;2a&quot;, bal |-&gt; 2, val |-&gt; 3]}
+<p>In retrospect, we have found that almost every user of Apalache made typos in
+their record types (including the Apalache developers!). Hence, we are
+migrating to Type System 1.2.</p>
+<p><strong>Sets of tagged records (variants) in Type System 1.2.</strong> Apalache provides the
+user with the module <a href="https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla">Variants.tla</a> that implements operators over <a href="https://en.wikipedia.org/wiki/Tagged_union">variant
+types</a>.</p>
+<p>Using variants, we can write the above set of messages as follows:</p>
+<pre><code class="language-tla">{
+  Variant(&quot;M1a&quot;, [bal |-&gt; 1]),
+  Variant(&quot;M2a&quot;, [bal |-&gt; 2, val |-&gt; 3])
+}
 </code></pre>
-<p>In Type System 1.2 (<a href="#ts-1.2">Section 1.3</a>), this set has the type of a set over a variant
+<p>In Type System 1.2 (<a href="#ts12">Section 1.3</a>), this set has the type of a set over a variant
 type:</p>
-<pre><code class="language-tla">Set({ tag: &quot;1a&quot;, bal: Int } | { tag: &quot;2a&quot;, bal: Int, val: Int })
+<pre><code class="language-tla">  Set(
+      M1a({ bal: Int })
+    | M2a({ bal: Int, val: Int })
+    | a
+  )
 </code></pre>
-<p>The value of the field <code>tag</code> serves as a type tag. However, we have to fix a
-set of patterns that turn a variant type into a precise record type. In untyped
-TLA+, such pattern is a set comprehension, e.g., <code>{ r \in S: r.tag = &quot;1a&quot; }</code>.
-In the typed version, we define a minimal set of operators over variants in the
-module
-<a href="https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla">Variants.tla</a>.
-For instance, instead of writing the set comprehension, we have to use a filter
-over a set of variants: <code>FilterByTag(S, &quot;1a&quot;)</code>.</p>
+<p>Note that the variant type is open-ended (parameterized with <code>a</code>) in the above
+example, as we have not restricted its type. If we want to restrict the type to
+exactly two options, we have to do that explicitly:</p>
+<pre><code class="language-tla">  \* @typeAlias: MESSAGE = M1a({ bal: Int }) | M2a({ bal: Int, val: Int });
+  LET \* @type: Int =&gt; MESSAGE;
+    M1a(bal) == Variant(&quot;M1a&quot;, [bal |-&gt; bal])
+  IN
+  LET \* @type: (Int, Int) =&gt; MESSAGE;
+    M2a(bal, val) == Variant(&quot;M2a&quot;, [bal |-&gt; bal, val |-&gt; val])
+  IN
+  { M1a(1), M2a(2, 3) }
+</code></pre>
+<p>Many programming languages would automatically declare constructors such as
+<code>M2a</code> and <code>M1a</code> from the type declaration. Since we are extending TLA+ with
+types, we have to introduce some idiomatic boilerplate code. This could be
+handled better in a surface syntax that is designed with types in mind.</p>
 <p><strong>Other type systems.</strong>
 Type System 1 is also very much in line with the <a href="https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers">type system by Stephan Merz and Hernan Vanzetto</a>,
 which is used internally by
 <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a> when translating proof obligations in SMT. We introduce
 types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.</p>
 <p>We expect that this type system will evolve in the future. That is why we call
-it <strong>Type System 1</strong>. <a href="#ts-1.2">Section 1.3</a> presents its extension to <strong>Type System
+it <strong>Type System 1</strong>. <a href="#ts12">Section 1.3</a> presents its extension to <strong>Type System
 1.2</strong>. Feel free to suggest <strong>Type System 2.0</strong> :-)</p>
 <h2><a class="header" href="#2-how-to-write-type-annotations-as-a-user" id="2-how-to-write-type-annotations-as-a-user">2. How to write type annotations (as a user)</a></h2>
 <p>In the following, we discuss how to annotate different TLA+ declarations.</p>
@@ -508,10 +517,12 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 (or, of an empty sequence).</p>
 <p><a id="useTypeAlias"></a></p>
 <h3><a class="header" href="#24-introducing-and-using-type-aliases" id="24-introducing-and-using-type-aliases">2.4. Introducing and using type aliases</a></h3>
-<p>A type alias is introduced with the annotation <code>@typeAlias: &lt;ALIAS&gt; = &lt;Type&gt;;</code> 
-on a dummy operator called <code>&lt;PREFIX&gt;TypeAliases</code>. For example:</p>
-<pre><code class="language-tla">\* @typeAlias: ENTRY = [a: Int, b: Bool];
-EXTypeAliases = TRUE
+<p>A type alias is introduced with the annotation <code>@typeAlias: &lt;ALIAS&gt; = &lt;Type&gt;;</code>.
+Since it is convenient to group type aliases of a module <code>MyModule</code>
+in one place, we usually use the following idiom:</p>
+<pre><code class="language-tla">\* @typeAlias: ID = Int;
+\* @typeAlias: ENTRY = { a: ID, b: Bool };
+MyModule_typedefs == TRUE
 
 VARIABLE
     \* @type: Set(ENTRY);
@@ -523,8 +534,8 @@ Foo(ms, m) ==
 </code></pre>
 <p>The use of the dummy operator is a convention followed to simplify reasoning
 about where type aliases belong, and to ensure all aliases are located in one
-place. The <code>&lt;PREFIX&gt;</code> convention protects against name clashes when the  module
-is extended or instantiated.</p>
+place. The prefix such as the module name protects against name clashes when
+the module is extended or instantiated.</p>
 <p>The actual rules around the placement of the <code>@typeAlias</code> annotation allows more
 flexibility:</p>
 <ol>
@@ -536,7 +547,7 @@ flexibility:</p>
 </li>
 <li>
 <p>There is no scoping for aliases within a module. Even if an alias is defined
-deep in a tree of LET-IN definitions, it can be references at any level in
+deep in a tree of LET-IN definitions, it can be referenced at any level in
 the module.</p>
 </li>
 </ol>
@@ -570,7 +581,7 @@ CONSTANT
   Offers
 
 VARIABLE
-  \* @type: INGREDIENT -&gt; [smoking: Bool];
+  \* @type: INGREDIENT -&gt; { smoking: Bool };
   smokers,
   \* @type: Set(INGREDIENT);
   dealer
