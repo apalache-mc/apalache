@@ -4,6 +4,7 @@ import org.backuity.clist.{arg, opt}
 
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.SourceOption
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
@@ -31,7 +32,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
       val environment = if (env != "") s"(${env}) " else ""
       s"Checker options: ${environment}${name} ${invocation}"
     }
-    executor.passOptions.set("parser.filename", file.getAbsolutePath)
+    executor.passOptions.set("parser.source", SourceOption.FileSource(file.getAbsoluteFile))
     if (config != "")
       executor.passOptions.set("checker.config", config)
     if (init != "")

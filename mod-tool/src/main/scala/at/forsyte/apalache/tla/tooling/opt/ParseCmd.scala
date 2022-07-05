@@ -6,6 +6,7 @@ import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
+import at.forsyte.apalache.infra.passes.SourceOption
 
 /**
  * This command initiates the 'parse' command line.
@@ -25,7 +26,7 @@ class ParseCmd
   def run() = {
     logger.info("Parse " + file)
 
-    executor.passOptions.set("parser.filename", file.getAbsolutePath)
+    executor.passOptions.set("parser.source", SourceOption.FileSource(file.getAbsoluteFile))
     output.foreach(executor.passOptions.set("io.output", _))
 
     setCommonOptions()
