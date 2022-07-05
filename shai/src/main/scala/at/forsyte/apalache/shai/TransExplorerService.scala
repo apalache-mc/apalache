@@ -71,5 +71,30 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     _ <- addConnection(Conn(id))
   } yield Connection(id.toString())
 
-  private def addConnection(c: Conn): UIO[Unit] = connections.update(_ + (c.id -> c))
+  private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
+
+  private def getConnection(id: String): Result[Conn] = {
+    for {
+      uuid <-
+        try {
+          ZIO.succeed(UUID.fromString(id))
+        } catch {
+          case _: IllegalArgumentException =>
+            // TODO log for invalid conn ID
+            ZIO.fail(Status.INVALID_ARGUMENT)
+        }
+      connMap <- connections.get
+      conn <- connMap.get(uuid) match {
+        // TODO log for unregistered uuid
+        case None    => ZIO.fail(Status.FAILED_PRECONDITION)
+        case Some(c) => ZIO.succeed(c)
+      }
+    } yield conn
+  }
+
+  private def updateConnection(id: String)(f: Conn => Conn): Result[Conn] = for {
+    conn <- getConnection(id)
+    updatedConn = f(conn)
+    _ <- addConnection(updatedConn)
+  } yield updatedConn
 }
