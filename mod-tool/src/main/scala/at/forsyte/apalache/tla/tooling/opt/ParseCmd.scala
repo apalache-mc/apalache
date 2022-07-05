@@ -26,7 +26,7 @@ class ParseCmd
   def run() = {
     logger.info("Parse " + file)
 
-    executor.passOptions.set("parser.source", SourceOption.File(file))
+    executor.passOptions.set("parser.source", SourceOption.File(file.getAbsoluteFile))
     output.foreach(executor.passOptions.set("io.output", _))
 
     setCommonOptions()

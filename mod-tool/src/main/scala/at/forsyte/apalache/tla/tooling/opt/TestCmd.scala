@@ -44,7 +44,7 @@ class TestCmd
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("parser.source", SourceOption.File(file))
+    executor.passOptions.set("parser.source", SourceOption.File(file.getAbsoluteFile))
     executor.passOptions.set("checker.init", before)
     executor.passOptions.set("checker.next", action)
     executor.passOptions.set("checker.inv", List(assertion))
