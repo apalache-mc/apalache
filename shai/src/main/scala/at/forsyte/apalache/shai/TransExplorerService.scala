@@ -55,6 +55,9 @@ private case class Conn(
  */
 class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
+  /** Concurrent tasks from the service that produce values of type [[T]] */
+  type Result[T] = ZIO[ZEnv, Status, T]
+
   /**
    * Creates and registers a new connection
    *
