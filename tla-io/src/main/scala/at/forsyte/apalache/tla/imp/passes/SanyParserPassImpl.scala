@@ -84,7 +84,7 @@ class SanyParserPassImpl @Inject() (
   }
 
   override def execute(module: TlaModule): PassResult = {
-    val source = options.getOrError[SourceOption.T]("parser", "source")
+    val source = options.getOrError[SourceOption]("parser", "source")
     for {
       rootModule <-
         source match {
