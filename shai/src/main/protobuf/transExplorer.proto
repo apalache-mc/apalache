@@ -2,6 +2,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/struct.proto";
+
 option java_multiple_files = true;
 option java_package = "at.forsyte.apalache.shai.v1";
 option java_outer_classname = "TransExplorerProto";
@@ -11,7 +13,8 @@ package shai;
 
 service TransExplorer {
   rpc OpenConnection (ConnectRequest) returns (Connection);
-  // rpc Terminate (TerminateRequest) returns (TerminationReply) {}
+  // TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
+  rpc LoadModel(LoadModelRequest) returns (UninitializedModel);
 }
 
 message ConnectRequest {
@@ -19,4 +22,14 @@ message ConnectRequest {
 
 message Connection {
   string id = 1;
+}
+
+message LoadModelRequest {
+  string conn = 1;
+  string spec = 2;
+  repeated string aux = 3;
+}
+
+message UninitializedModel {
+  google.protobuf.Struct spec = 1;
 }

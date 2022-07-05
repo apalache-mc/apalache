@@ -12,35 +12,13 @@ package at.forsyte.apalache.shai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.shai.v1.transExplorer.ZioTransExplorer
-import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection}
+import at.forsyte.apalache.shai.v1.transExplorer.{
+  ConnectRequest, Connection, LoadModelRequest, UninitializedModel, ZioTransExplorer,
+}
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
-import zio.{Ref, UIO, ZEnv, ZIO}
-
-// TODO Decide on refined representation for `Transition` (see https://github.com/informalsystems/apalache/issues/1116)
-// Consider this as an abstract type for now, the representation is TBD
-case class Transition(val v: Int) extends AnyVal
-
-/**
- * Represents a model with uninitialized constants
- */
-trait UninitializedModel {
-
-  /** The specification of the model */
-  val spec: TlaModule
-
-  /** The known available transitions */
-  val transitions: List[Transition]
-}
-
-/**
- * A model that has had it's constants initialized
- */
-trait InitializedModel extends UninitializedModel {
-  val constInitPrimed: Map[String, TlaEx]
-}
+import zio.{Ref, ZEnv, ZIO}
 
 // TODO The connnection type will become enriched with more structure
 // as we build out the server
@@ -74,10 +52,18 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
    * @param req
    *   the request (isomorphic to the Unit)
    */
-  def openConnection(req: ConnectRequest): ZIO[ZEnv, Status, Connection] = for {
+  def openConnection(req: ConnectRequest): Result[Connection] = for {
     id <- ZIO.effectTotal(UUID.randomUUID())
     _ <- addConnection(Conn(id))
   } yield Connection(id.toString())
+
+  // TODO replace return with either
+  def loadModel(req: LoadModelRequest): Result[UninitializedModel] = for {
+    // TODO
+    _ <- getConnection(req.conn)
+    module = TlaModule("TODO", Seq())
+    _ <- updateConnection(req.conn)(_.setModel(module))
+  } yield UninitializedModel(spec = None) // TODO: obtain google.protobuf.Struct
 
   private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
 
