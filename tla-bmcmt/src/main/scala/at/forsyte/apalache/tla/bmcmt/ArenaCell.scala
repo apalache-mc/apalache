@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.typecomp
+import at.forsyte.apalache.tla.types.tla
 
 object ArenaCell {
   def isValidName(name: String): Boolean = {
@@ -40,6 +42,16 @@ class ArenaCell(val id: Int, val cellType: CellT, val isUnconstrained: Boolean =
 
   def toNameEx: NameEx = {
     NameEx(toString)
+  }
+
+  /**
+   * Convert the cell to a builder instruction, so it can be used to build larger IR expressions.
+   *
+   * @return
+   *   a builder instruction that can be used with the typed builder
+   */
+  def toBuilder: typecomp.TBuilderInstruction = {
+    tla.name(toString, cellType.toTlaType1)
   }
 
   def mkTlaEq(rhs: ArenaCell): TlaEx = {

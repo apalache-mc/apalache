@@ -32,7 +32,7 @@ class StrConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
           rewriter.modelValueCache.getOrCreate(state.arena, typeAndIndex)
         state
           .setArena(newArena)
-          .setRex(newCell.toNameEx)
+          .setRex(newCell.toBuilder)
       case _ =>
         throw new RewriterException(getClass.getSimpleName + " is not applicable", state.ex)
     }
