@@ -23,6 +23,12 @@ trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
   /** b: Bool */
   def bool(b: Boolean): TBuilderInstruction = _bool(b).point[TBuilderInternalState]
 
+  /** root_OF_A : A */
+  def const(root: String, A: ConstT1): TBuilderInstruction = _const(root, A).point[TBuilderInternalState]
+
+  /** v : A */
+  def constParsed(v: String): TBuilderInstruction = _constParsed(v).point[TBuilderInternalState]
+
   /** BOOLEAN */
   def booleanSet(): TBuilderInstruction = _booleanSet().point[TBuilderInternalState]
 
