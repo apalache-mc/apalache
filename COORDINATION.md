@@ -13,30 +13,41 @@ team and it may include links to resources that are not accessible publicly.
 
 ## Elements of our project coordination
 
-We currently use GitHub as the main platform for sharing the communications
-that let us coordinate our work. GitHub has a number of different features for
+We currently use GitHub as the main platform for sharing the communications that
+let us coordinate our work. GitHub has a number of different features for
 enabling cooperative work, but it's not necessarily obvious what the scope or
-intended meaning of each feature is. The following table is used to align our
+intended meaning of each feature is. We also use several communication protocols
+channels that are synchronized via git, but unrelated to GitHub's features.
+
+The following table is used to align our
 shared understanding of how to use and interpret the main features:
 
-| Feature                  | Scope                                                   | Communicates...        |
-|--------------------------|---------------------------------------------------------|------------------------|
-| [issue][issues]          | a distinct problem or task                              | what to work on        |
-| [pull request][prs]      | (part of) a solution or fulfillment of a task           | the ongoing work       |
-| [milestone][milestones]  | a distinct feature or a closely related set of problems | what work is towards   |
-| [label][labels]          | a more or less vague category/topic/quality             | attributes of the work |
-| [project board][project] | concurrent human processes with a common dynamic        | how work is done       |
-| [discussion][discussion] | free ranging and open discussion                        | whatever               |
+| Element                      | Scope                                                   | Communicates...                         |
+|------------------------------|---------------------------------------------------------|-----------------------------------------|
+| [label][labels]              | a more or less vague category/topic/quality             | attributes of the work                  |
+| [issue][issues]              | a distinct problem or task                              | what to work on                         |
+| [pull request][prs]          | (part of) a solution or fulfillment of a task           | the ongoing work                        |
+| [milestone][milestones]      | a distinct feature or a closely related set of problems | what related work items amount to       |
+| [ADRs and RFCs][adr and rfc] | a decision or design that will have broad impact        | deliberation and reasons for a decision |
+| [project board][project]     | concurrent human processes with a common dynamic        | how work is coordinated within Apalache |
+| [OKR workflow explorer][okr] | dependencies to other efforts within Informal Systems   | how work is coordinated within Informal |
+| [strategy map][strategy]     | arch of major work on a one to two year horizon         | where different work streams converge   |
+| [discussion][discussion]     | free ranging and open discussion                        | whatever                                |
 
 (For more on projects vs. milestones, see
 https://stackoverflow.com/a/47542346/1187277)
 
-[issues]: https://github.com/informalsystems/apalache/issues
-[prs]: https://github.com/informalsystems/apalache/pulls
-[milestones]: https://github.com/informalsystems/apalache/milestones
-[labels]: https://github.com/informalsystems/apalache/issues/labels
-[project]: https://github.com/orgs/informalsystems/projects/30
+[adr and rfc]: https://github.com/informalsystems/apalache/tree/unstable/docs/src/adr
 [discussion]: https://github.com/informalsystems/apalache/discussions
+[issues]: https://github.com/informalsystems/apalache/issues
+[labels]: https://github.com/informalsystems/apalache/issues/labels
+[milestones]: https://github.com/informalsystems/apalache/milestones
+[okr]: https://informal-workflow-explorer.netlify.app/
+[project]: https://github.com/orgs/informalsystems/projects/30
+[prs]: https://github.com/informalsystems/apalache/pulls
+[strategy]: https://github.com/informalsystems/strategy/blob/main/projects/apalache/yearly2021-2022/plan2022.md
+
+Some of these elements call for special discussion.
 
 ### Project board
 
