@@ -2111,6 +2111,14 @@ $ apalache-mc check --length=1 Bug1880.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug1903.tla
+
+```sh
+$ apalache-mc check --length=1 Bug1903.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in

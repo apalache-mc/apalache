@@ -224,7 +224,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       protoSeq: ArenaCell,
       len: ArenaCell): SymbState = {
     val (newArena, seqCell) = mkSeqCell(state.arena, seqT, protoSeq, len)
-    state.setArena(newArena).setRex(seqCell.toNameEx)
+    state.setArena(newArena).setRex(seqCell.toBuilder)
   }
 
   /**

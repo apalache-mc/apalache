@@ -391,18 +391,6 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     }
   }
 
-  test("""VariantMatch("T1a", v, ThenOper, ElseOper)""") {
-    val thenType = parser("a => c")
-    val elseType = parser("Variant(b) => c")
-    val operType = parser(s"""(Str, T1a(a) | b, $thenType, $elseType) => c""")
-    val expected =
-      mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"), mkUniqName("ThenOper"), mkUniqName("ElseOper"))
-    val matchEx =
-      tla.variantMatch("T1a", tla.name("v"), tla.name("ThenOper"), tla.name("ElseOper"))
-    val produced = gen(matchEx)
-    produced should equal(expected)
-  }
-
   test("""VariantUnwrap("T1a", v)""") {
     val operType = parser(s"""(Str, T1a(a)) => a""")
     val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"))
