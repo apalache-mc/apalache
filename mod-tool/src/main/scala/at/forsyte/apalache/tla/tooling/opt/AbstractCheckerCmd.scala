@@ -32,7 +32,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
       val environment = if (env != "") s"(${env}) " else ""
       s"Checker options: ${environment}${name} ${invocation}"
     }
-    executor.passOptions.set("parser.source", SourceOption.File(file.getAbsoluteFile))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(file.getAbsoluteFile))
     if (config != "")
       executor.passOptions.set("checker.config", config)
     if (init != "")

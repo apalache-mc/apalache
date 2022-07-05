@@ -27,7 +27,7 @@ class TypeCheckCmd
 
   override def run() = {
     logger.info("Type checking " + file)
-    executor.passOptions.set("parser.source", SourceOption.File(file.getAbsoluteFile))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(file.getAbsoluteFile))
     output.foreach(executor.passOptions.set("io.output", _))
     executor.passOptions.set("typechecker.inferPoly", inferPoly)
     setCommonOptions()

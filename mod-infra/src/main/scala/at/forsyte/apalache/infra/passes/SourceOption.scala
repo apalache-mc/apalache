@@ -7,8 +7,8 @@ object SourceOption {
   sealed trait T
 
   /** Data to be loaded from a file */
-  case class File(file: java.io.File) extends T
+  final case class FileSource(file: java.io.File) extends T
 
   /** Data supplied as a string */
-  case class String(content: java.lang.String) extends T
+  final case class StringSource(content: String) extends T
 }

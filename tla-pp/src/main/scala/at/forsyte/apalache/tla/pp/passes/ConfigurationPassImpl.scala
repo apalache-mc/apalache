@@ -148,10 +148,10 @@ class ConfigurationPassImpl @Inject() (
     // read a TLC config if it was passed by the user
     val configFilename = options.getOrElse[String]("checker", "config", "")
     options.getOrError[SourceOption.T]("parser", "source") match {
-      case SourceOption.String(_) =>
+      case SourceOption.StringSource(_) =>
         // NOTE: Implicit loading of .cfg files not supported when loading from a string
         ()
-      case SourceOption.File(f) =>
+      case SourceOption.FileSource(f) =>
         if (configFilename.isEmpty) {
           // The older versions of apalache were loading a TLC config file of the same basename as the spec.
           // We have flipped this behavior in version 0.25.0.

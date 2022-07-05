@@ -88,9 +88,9 @@ class SanyParserPassImpl @Inject() (
     for {
       rootModule <-
         source match {
-          case SourceOption.String(content) =>
+          case SourceOption.StringSource(content) =>
             loadFromTlaString(content)
-          case SourceOption.File(file) =>
+          case SourceOption.FileSource(file) =>
             if (file.getName().endsWith(".json")) {
               loadFromJsonFile(file)
             } else {
