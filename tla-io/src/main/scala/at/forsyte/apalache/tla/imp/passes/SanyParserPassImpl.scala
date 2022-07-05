@@ -14,6 +14,7 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
+import at.forsyte.apalache.infra.passes.SourceOption
 
 /**
  * Parsing TLA+ code with SANY.
@@ -30,29 +31,29 @@ class SanyParserPassImpl @Inject() (
 
   override def name: String = "SanyParser"
 
-  private def loadFromJson(filename: String): PassResult = {
+  private def loadFromJsonFile(file: File): PassResult = {
     try {
-      val moduleJson = UJsonRep(ujson.read(new File(filename)))
+      val moduleJson = UJsonRep(ujson.read(file))
       val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
       modules match {
         case rMod +: Nil => Right(rMod)
         case _ => {
-          logger.error("  > Error parsing file " + filename)
+          logger.error(s"  > Error parsing file ${file}")
           Left(ExitCodes.ERROR_SPEC_PARSE)
         }
       }
     } catch {
       case e: Exception =>
-        logger.error("  > Error parsing file " + filename)
+        logger.error(s"  > Error parsing file ${file}")
         logger.error("  > " + e.getMessage)
         Left(ExitCodes.ERROR_SPEC_PARSE)
     }
   }
 
-  private def loadFromFile(filename: String): PassResult = {
+  private def loadFromTlaFile(file: File): PassResult = {
     val (rootName, modules) =
       new SanyImporter(sourceStore, annotationStore)
-        .loadFromFile(new File(filename))
+        .loadFromFile(file)
     Right(modules.get(rootName).get)
   }
 
@@ -75,17 +76,20 @@ class SanyParserPassImpl @Inject() (
   }
 
   override def execute(module: TlaModule): PassResult = {
-    val filename = options.getOrError[String]("parser", "filename")
-    for {
-      rootModule <-
-        if (filename.endsWith(".json")) {
-          loadFromJson(filename)
-        } else {
-          loadFromFile(filename)
-        }.flatMap(sortDeclarations)
+    options.getOrError[SourceOption.T]("parser", "source") match {
+      case SourceOption.String(_) => throw new Exception("TODO")
+      case SourceOption.File(file) =>
+        for {
+          rootModule <-
+            if (file.getName().endsWith(".json")) {
+              loadFromJsonFile(file)
+            } else {
+              loadFromTlaFile(file)
+            }.flatMap(sortDeclarations)
 
-      _ <- saveLoadedModule(rootModule)
-    } yield rootModule
+          _ <- saveLoadedModule(rootModule)
+        } yield rootModule
+    }
   }
 
   override def dependencies = Set()

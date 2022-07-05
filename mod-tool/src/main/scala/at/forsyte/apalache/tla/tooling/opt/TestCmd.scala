@@ -6,6 +6,7 @@ import java.io.File
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.SourceOption
 
 /**
  * This command initiates the 'test' command line.
@@ -43,7 +44,7 @@ class TestCmd
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("parser.filename", file.getAbsolutePath)
+    executor.passOptions.set("parser.source", SourceOption.File(file))
     executor.passOptions.set("checker.init", before)
     executor.passOptions.set("checker.next", action)
     executor.passOptions.set("checker.inv", List(assertion))

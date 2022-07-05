@@ -6,6 +6,7 @@ import org.backuity.clist._
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.SourceOption
 
 /**
  * This command initiates the 'typecheck' command line.
@@ -26,7 +27,7 @@ class TypeCheckCmd
 
   override def run() = {
     logger.info("Type checking " + file)
-    executor.passOptions.set("parser.filename", file.getAbsolutePath)
+    executor.passOptions.set("parser.source", SourceOption.File(file))
     output.foreach(executor.passOptions.set("io.output", _))
     executor.passOptions.set("typechecker.inferPoly", inferPoly)
     setCommonOptions()

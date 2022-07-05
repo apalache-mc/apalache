@@ -17,6 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.FilenameUtils
 
 import java.io.{File, FileReader, IOException}
+import at.forsyte.apalache.infra.passes.SourceOption
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions. This pass also overrides
@@ -146,18 +147,25 @@ class ConfigurationPassImpl @Inject() (
     var configuredModule = module
     // read a TLC config if it was passed by the user
     val configFilename = options.getOrElse[String]("checker", "config", "")
-    if (configFilename.isEmpty) {
-      // The older versions of apalache were loading a TLC config file of the same basename as the spec.
-      // We have flipped this behavior in version 0.25.0.
-      // Hence, warn the user that their config is not loaded by default.
-      val stem = FilenameUtils.removeExtension(options.getOrError[String]("parser", "filename"))
-      val defaultConfig = new File(stem + ".cfg")
-      if (defaultConfig.exists()) {
-        val msg = s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
-        logger.info(msg)
-      }
-      // return immediately, with no additional declarations
-      return List()
+    options.getOrError[SourceOption.T]("parser", "source") match {
+      case SourceOption.String(_) =>
+        // NOTE: Implicit loading of .cfg files not supported when loading from a string
+        ()
+      case SourceOption.File(f) =>
+        if (configFilename.isEmpty) {
+          // The older versions of apalache were loading a TLC config file of the same basename as the spec.
+          // We have flipped this behavior in version 0.25.0.
+          // Hence, warn the user that their config is not loaded by default.
+          val stem = FilenameUtils.removeExtension(f.getName())
+          val defaultConfig = new File(stem + ".cfg")
+          if (defaultConfig.exists()) {
+            val msg =
+              s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
+            logger.info(msg)
+          }
+          // return immediately, with no additional declarations
+          return List()
+        }
     }
 
     if (!new File(configFilename).exists()) {
