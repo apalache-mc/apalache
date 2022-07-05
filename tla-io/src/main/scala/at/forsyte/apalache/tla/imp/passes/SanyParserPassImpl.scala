@@ -15,6 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
 import at.forsyte.apalache.infra.passes.SourceOption
+import scala.io.Source
 
 /**
  * Parsing TLA+ code with SANY.
@@ -57,6 +58,13 @@ class SanyParserPassImpl @Inject() (
     Right(modules.get(rootName).get)
   }
 
+  private def loadFromTlaString(content: String): PassResult = {
+    val (rootName, modules) =
+      new SanyImporter(sourceStore, annotationStore)
+        .loadFromSource(Source.fromString(content))
+    Right(modules.get(rootName).get)
+  }
+
   private def saveLoadedModule(module: TlaModule): Either[ExitCodes.TExitCode, Unit] = {
     // save the output
     writeOut(writerFactory, module)
@@ -76,20 +84,22 @@ class SanyParserPassImpl @Inject() (
   }
 
   override def execute(module: TlaModule): PassResult = {
-    options.getOrError[SourceOption.T]("parser", "source") match {
-      case SourceOption.String(_) => throw new Exception("TODO")
-      case SourceOption.File(file) =>
-        for {
-          rootModule <-
+    val source = options.getOrError[SourceOption.T]("parser", "source")
+    for {
+      rootModule <-
+        source match {
+          case SourceOption.String(content) =>
+            loadFromTlaString(content)
+          case SourceOption.File(file) =>
             if (file.getName().endsWith(".json")) {
               loadFromJsonFile(file)
             } else {
               loadFromTlaFile(file)
-            }.flatMap(sortDeclarations)
-
-          _ <- saveLoadedModule(rootModule)
-        } yield rootModule
-    }
+            }
+        }
+      sortedModule <- sortDeclarations(rootModule)
+      _ <- saveLoadedModule(sortedModule)
+    } yield sortedModule
   }
 
   override def dependencies = Set()
