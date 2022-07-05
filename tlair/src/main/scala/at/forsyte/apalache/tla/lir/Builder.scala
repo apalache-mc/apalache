@@ -697,27 +697,6 @@ class Builder {
   }
 
   /**
-   * Match a variant by a tag
-   *
-   * @param tagName
-   *   a tag value (string)
-   * @param variantEx
-   *   a variant expression
-   * @param thenOper
-   *   the operator to be applied when the variant is tagged with `tagName`; the associated value is passed to it
-   * @param elseOper
-   *   the operator te be applied when the variant is not tagged with `tagName`; the reduced invariant is passed to it
-   * @return
-   */
-  def variantMatch(
-      tagName: String,
-      variantEx: BuilderEx,
-      thenOper: BuilderEx,
-      elseOper: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.variantMatch, str(tagName), variantEx, thenOper, elseOper)
-  }
-
-  /**
    * Match a variant that admits only one option (one tag)
    *
    * @param tagName
@@ -867,7 +846,6 @@ class Builder {
         VariantOper.variantUnwrap.name -> VariantOper.variantUnwrap,
         VariantOper.variantGetUnsafe.name -> VariantOper.variantGetUnsafe,
         VariantOper.variantGetOrElse.name -> VariantOper.variantGetOrElse,
-        VariantOper.variantMatch.name -> VariantOper.variantMatch,
         VariantOper.variantFilter.name -> VariantOper.variantFilter,
     )
 

@@ -35,17 +35,6 @@ object VariantOper {
   }
 
   /**
-   * Match a variant by tag.
-   */
-  object variantMatch extends VariantOper {
-    override def name: String = "Variants!VariantMatch"
-
-    override def arity: OperArity = FixedArity(4)
-
-    override val precedence: (Int, Int) = (100, 100)
-  }
-
-  /**
    * Match a single variant.
    */
   object variantUnwrap extends VariantOper {
