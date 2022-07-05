@@ -12,8 +12,9 @@ package at.forsyte.apalache.shai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection, ZioTransExplorer}
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
+import at.forsyte.apalache.shai.v1.transExplorer.ZioTransExplorer
+import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection}
+import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
 import zio.{Ref, UIO, ZEnv, ZIO}
@@ -44,7 +45,14 @@ trait InitializedModel extends UninitializedModel {
 // TODO The connnection type will become enriched with more structure
 // as we build out the server
 private case class Conn(
-    id: UUID)
+    id: UUID,
+    model: Option[TlaModule] = None) {
+
+  def setModel(model: TlaModule): Conn = {
+    // TODO: reset all other state of Conn
+    this.copy(model = Some(model))
+  }
+}
 
 /**
  * The service enabling interaction with the symbolic model checker, via the
