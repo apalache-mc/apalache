@@ -7,12 +7,9 @@ import com.google.inject.Singleton
 import scala.collection.mutable
 
 /**
- * <p>The central store for various options given to the passes. An option is a key-value pair. By convention, a key is
- * a string of the shape pass.option, where pass is the pass name and option is the option name. A pass name does not
- * have to match exactly the name of the pass that is accessing the option, but of a class of passes. For instance, the
- * option parser.filename can be used by all parsing passes, not just the pass called 'parser'.</p>
+ * A writeable (mutable) extension of [[PassOptions]]
  *
- * <p>This class is used only internally. When you implement your own pass, use the trait PassOptions.</p>
+ * This class is used only internally. When you implement your own pass, use the trait [[PassOptions]].
  *
  * @author
  *   Igor Konnov
