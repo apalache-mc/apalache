@@ -54,6 +54,9 @@
 # TLA+ Language Manual for Engineers
 
 - [Introduction](./lang/index.md)
+- [Apalache extensions](./lang/apalache-extensions.md)
+  - [Apalache module](./lang/apalache-operators.md)
+  - [Variants](./lang/variants.md)
 - [The standard operators of TLA+](./lang/standard-operators.md)
     - [Booleans](./lang/booleans.md)
     - [Control And Nondeterminism](./lang/control-and-nondeterminism.md)
@@ -72,7 +75,6 @@
     - [Higher-order operators definitions](./lang/user/higher-order-operators.md)
     - [Anonymous operator definitions](./lang/user/lambdas.md)
     - [Local operator definitions](./lang/user/local-operators.md)
-- [Apalache operators](./lang/apalache-operators.md)
 - [Modules, Extends, and Instances]()
 
 # Idiomatic TLA+
