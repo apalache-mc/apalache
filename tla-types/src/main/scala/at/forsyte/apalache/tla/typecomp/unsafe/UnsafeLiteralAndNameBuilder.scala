@@ -38,7 +38,7 @@ trait UnsafeLiteralAndNameBuilder {
   }
 
   /** v : A */
-  protected def _const(v: String): TlaEx = {
+  protected def _constParsed(v: String): TlaEx = {
     if (!ModelValueHandler.isModelValue(v))
       throw new TBuilderTypeException(
           s"$v represents a string, not a value of an uninterpreted sort. Use [str] instead."
