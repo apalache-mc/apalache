@@ -2,7 +2,7 @@
 
 | authors                                | revision | revision date  |
 | -------------------------------------- | --------:| --------------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        5 | April 08, 2022 |
+| Shon Feder, Igor Konnov, Jure Kukovec  |        7 | July 05, 2022 |
 
 *This is an architectural decision record. For user documentation, check the
 [Snowcat tutorial][] and [Snowcat HOWTO][].*
@@ -12,7 +12,7 @@ alternative solutions. In this __ADR-002__, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
 discussed in a separate ADR.
 
-1. How to write types in TLA+ (Type System 1).
+1. How to write types in TLA+ (Type Systems 1 and 1.2).
 1. How to write type annotations (as a user).
 
 This document assumes that one can write a simple type checker that computes
@@ -20,18 +20,15 @@ the types of all expressions based on the annotations provided by the user.
 Such an implementation is provided by the type checker Snowcat.
 See the [manual chapter](../apalache/typechecker-snowcat.md) on Snowcat.
 
-In contrast, the [type inference
-algorithm](https://github.com/informalsystems/apalache/tree/types) by @Kukovec
-is fully automatic and thus it eliminates the need for type annotations.
-Jure's algorithm is using Type System 1 too. The type inference algorithm
-is still in the prototype phase.
-
 System engineers often want to write type annotations and quickly check types
 when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
 ### 1.1. Type grammar (Type System 1, or TS1)
+
+**Upgrade warning.** This system will be replaced with [Type System 1.2](#ts12)
+in September of 2022.
 
 We simply write types as strings that follow the type grammar:
 
@@ -41,6 +38,7 @@ T ::=   'Bool' | 'Int' | 'Str'
       | 'Set' '(' T ')'
       | 'Seq' '(' T ')'
       | '<<' T ',' ...',' T '>>'
+        // warning: the following type will be removed in Type System 1.2
       | '[' field ':' T ',' ...',' field ':' T ']'
       | '(' T ',' ...',' T ')' '=>' T
       | typeConst
@@ -63,7 +61,8 @@ The type rules have the following meaning:
 - The rule `<<T, ..., T>>` produces a tuple type over types that
     are produced by `T`. *Types at different positions may differ*.
 - The rule `[field: T, ..., field: T]` produces a record type over types that
-    are produced by `T`. *Types at different positions may differ*.
+    are produced by `T`. *Types at different positions may differ.*
+    *This syntax will change in [Type System 1.2](#ts12).*
 - The rule `(T, ..., T) => T` defines an operator whose result type and parameter types are produced by `T`.
 - The rule `typeConst` defines an uninterpreted type (or a reference to a type alias), look for an explanation below.
 - The rule `typeVar` defines a type variable, look for an explanation below.
@@ -127,50 +126,53 @@ of `typeConst`, the name should be an identifier in the upper case. The type che
 of the constant type. For examples, see [Section 2.4](#useTypeAlias).
 
 <a id="rows"></a>
-### <a id="ts-1.2"></a>1.3. Type System 1.2, including precise records, variants, and rows
+<a id="ts12"></a>
+### 1.3. Type System 1.2, including precise records, variants, and rows
 
-**This is work in progress.** You can track the progress of this work in [Issue
-401][]. Once this work is complete, we will switch to Type System 1.2.
+**Feature under test.** By default, Snowcat is using Type System 1. To enable
+Type System 1.2, pass `--features=rows` to `typecheck` or another command,
+e.g., `check`:
+
+```sh
+$ apalache-mc typecheck --features=rows MySpec.tla
+```
 
 As discussed in [ADR014][], many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
 given in [ADR014][], we discuss the extension of the type grammar in this
-ADR-002.  To this end, we extend the grammar with new records, variants, and
-rows as follows:
+ADR-002. If you do not know about row typing, it may be useful to check the
+Wikipedia page on  [Row polymorphism][]. We extend the grammar with new
+records, variants, and rows as follows:
 
 ```
 // Type System 1.2
-T2 ::=
+T12 ::=
     // all types of Type System 1
     T
     // A new record type with a fully defined structure.
-    // The set of fields may be empty.
-    | '{' field ':' T2 ',' ...',' field ':' T2 '}'
-    // A new record type with a partially defined structure
-    // (the type variable should be a 'row').
-    // The set of fields may be empty.
-    | '{' field ':' T2 ',' ...',' field ':' T2 ',' typeVar '}'
-    // A variant that contains several options.
-    | variantOption '|' ... '|' variantOption
-    // A variant of undefined structure (the type variable should be a 'row')
+    // The set of fields may be empty. If typeVar is present,
+    // the record type is parameterized (typeVar must be of the 'row' kind).
+    | '{' field ':' T12 ',' ...',' field ':' T12 [',' typeVar] '}'
+    // A variant that contains several options,
+    // optionally parameterized (typeVar must be of the 'row' kind).
+    | variantOption '|' ... '|' variantOption '|' [typeVar]
+    // A purely parameterized variant (typeVar must be of the 'row' kind).
     | 'Variant' '(' typeVar ')'
-    // An empty variant
-    | 'Variant' '(' ')'
 
 variantOption ::=
-    // A variant option with a fully defined structure.
-    | { tag: stringLiteral, field: T2, ..., field: T2 }
-    // a variant option with a partially defined structure
-    //   (a variant option over a row).
-    | { tag: stringLiteral, field: T2, ..., field: T2, typeVar }
+    // A variant option with a fully defined structure,
+    // tagged with a name that is defined with 'identifier'
+    identifier '(' T12 ')'
 
 // Special syntax for the rows, which is internal to the type checker.
 row ::=
-    // A row with a fully defined structure.
-    | '(|' field ':' T2 '|' ...'|' field ':' T2 '|)'
-    // A row with a partially defined structure (ending with a row).
-    | '(|' field ':' T2 '|' ...'|' field ':' T2 '|' typeVar '|)'
+    // A row with a fully defined structure
+    //   (having at least one field).
+    | '(|' field ':' T12 '|' ...'|' field ':' T12 '|)'
+    // A row with a partially defined structure
+    //   (having at least one field and ending with a variable of the 'row' kind).
+    | '(|' field ':' T12 '|' ...'|' field ':' T12 '|' typeVar '|)'
 ```
 
 **Examples.**
@@ -181,25 +183,18 @@ row ::=
 * `r2` is a record that has the fields `a` of type `Int` and `b` of type `Str`
   and other fields, whose precise structure is captured with a type variable
   `c`. The type of `r2` is `{ a: Int, b: Str, c }`.  More precisely, the
-  variable `c` should be a row. For instance, `c` can be equal to the row `(|
+  variable `c` must be a row. For instance, `c` can be equal to the row `(|
   f: Bool | g: Set(Int) |)`; in this case, `r2` would be a record of type `{ a:
   Int, b: Str, f: Bool, g: Set(Int) }`.
 
 * `v1` is a variant that has one of the two possible shapes:
- 
-   - It has the fields `tag` of type `Str` and `a` of type `Int` (if the field
-     `tag` is equal to `"A"`).
+  - Either it carries the tag `A` and an associated value of type `Int`, or
+  - It carries the tag `B` and an associated value of type `Bool`.
+  - The type of `v1` is `A(Int) | B(Bool)`.
 
-   - It has the fields `tag` of type `Str` and `b` of type `Bool` (if the field
-     `tag` is equal to `"B"`).
-
-* `v2` is an empty variant, which admits no options. It has the type
-  `Variant()`.
-
-* `v3` is a variant whose structure is defined by the type variable `b`.
-   The type of `v3` is `Variant(b)`. Note that `b` type variable should be
-   a row. For instance, it can be equal to the type `(| A: { tag: Str, f: Int }
-   | B: { tag: Str, g: Str } |)`.
+* `v2` is a variant whose structure is entirely defined by the type variable
+  `b`. The type of `v2` is `Variant(b)`. Note that `b` must be a
+   row. For instance, it could be equal to `(| A: Int | B: Str |)`.
 
 Note that this syntax encapsulates rows in records and variants. We introduce
 the syntax for row types for completeness. Most likely, the users will never
@@ -235,7 +230,7 @@ captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
 cannot assign a reasonable type to `{1, TRUE}`.
 
-**Sets of records in Type System 1.**
+**Sets of tagged records in Type System 1.**
 We can assign a reasonable type to `{[type |-> "1a", bal |-> 1], [type
 |-> "2a", bal |-> 2, val |-> 3]}`, a pattern that often occurs in practice,
 e.g., see
@@ -245,28 +240,53 @@ probably not what you expected, but it is the best type we can actually compute
 without having algebraic datatypes in TLA+. It also reminds the user that one
 better tests the field `type` carefully.
 
-**Sets of records in Type System 1.2.** Consider the following set:
+In retrospect, we have found that almost every user of Apalache made typos in
+their record types (including the Apalache developers!). Hence, we are
+migrating to Type System 1.2.
+
+**Sets of tagged records (variants) in Type System 1.2.** Apalache provides the
+user with the module [Variants.tla][] that implements operators over [variant
+types][].
+
+Using variants, we can write the above set of messages as follows:
 
 ```tla
-{[tag |-> "1a", bal |-> 1],
- [tag |-> "2a", bal |-> 2, val |-> 3]}
+{
+  Variant("M1a", [bal |-> 1]),
+  Variant("M2a", [bal |-> 2, val |-> 3])
+}
 ```
 
-In Type System 1.2 ([Section 1.3](#ts-1.2)), this set has the type of a set over a variant
+In Type System 1.2 ([Section 1.3](#ts12)), this set has the type of a set over a variant
 type:
 
 ```tla
-Set({ tag: "1a", bal: Int } | { tag: "2a", bal: Int, val: Int })
+  Set(
+      M1a({ bal: Int })
+    | M2a({ bal: Int, val: Int })
+    | a
+  )
 ```
 
-The value of the field `tag` serves as a type tag. However, we have to fix a
-set of patterns that turn a variant type into a precise record type. In untyped
-TLA+, such pattern is a set comprehension, e.g., `{ r \in S: r.tag = "1a" }`.
-In the typed version, we define a minimal set of operators over variants in the
-module
-[Variants.tla](https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla).
-For instance, instead of writing the set comprehension, we have to use a filter
-over a set of variants: `FilterByTag(S, "1a")`.
+Note that the variant type is open-ended (parameterized with `a`) in the above
+example, as we have not restricted its type. If we want to restrict the type to
+exactly two options, we have to do that explicitly:
+
+```tla
+  \* @typeAlias: MESSAGE = M1a({ bal: Int }) | M2a({ bal: Int, val: Int });
+  LET \* @type: Int => MESSAGE;
+    M1a(bal) == Variant("M1a", [bal |-> bal])
+  IN
+  LET \* @type: (Int, Int) => MESSAGE;
+    M2a(bal, val) == Variant("M2a", [bal |-> bal, val |-> val])
+  IN
+  { M1a(1), M2a(2, 3) }
+```
+
+Many programming languages would automatically declare constructors such as
+`M2a` and `M1a` from the type declaration. Since we are extending TLA+ with
+types, we have to introduce some idiomatic boilerplate code. This could be
+handled better in a surface syntax that is designed with types in mind.
 
 **Other type systems.**
 Type System 1 is also very much in line with the [type system by Stephan Merz and Hernan Vanzetto](https://dblp.org/search?q=Automatic+Verification+of+%7BTLA%7D+%2B+Proof+Obligations+with+%7BSMT%7D+Solvers),
@@ -275,7 +295,7 @@ which is used internally by
 types for user-defined operators, on top of their types for TLA+ expressions that do not contain user-defined operators.
 
 We expect that this type system will evolve in the future. That is why we call
-it __Type System 1__. [Section 1.3](#ts-1.2) presents its extension to __Type System
+it __Type System 1__. [Section 1.3](#ts12) presents its extension to __Type System
 1.2__. Feel free to suggest __Type System 2.0__ :-)
 
 ## 2. How to write type annotations (as a user)
@@ -404,12 +424,14 @@ The type checker uses the type annotation to refine the type of an empty set
 <a id="useTypeAlias"></a>
 ### 2.4. Introducing and using type aliases
 
-A type alias is introduced with the annotation `@typeAlias: <ALIAS> = <Type>;` 
-on a dummy operator called `<PREFIX>TypeAliases`. For example:
+A type alias is introduced with the annotation `@typeAlias: <ALIAS> = <Type>;`.
+Since it is convenient to group type aliases of a module `MyModule`
+in one place, we usually use the following idiom:
 
 ```tla
-\* @typeAlias: ENTRY = [a: Int, b: Bool];
-EXTypeAliases = TRUE
+\* @typeAlias: ID = Int;
+\* @typeAlias: ENTRY = { a: ID, b: Bool };
+MyModule_typedefs == TRUE
 
 VARIABLE
     \* @type: Set(ENTRY);
@@ -422,8 +444,8 @@ Foo(ms, m) ==
 
 The use of the dummy operator is a convention followed to simplify reasoning
 about where type aliases belong, and to ensure all aliases are located in one
-place. The `<PREFIX>` convention protects against name clashes when the  module
-is extended or instantiated.
+place. The prefix such as the module name protects against name clashes when
+the module is extended or instantiated.
 
 The actual rules around the placement of the `@typeAlias` annotation allows more
 flexibility:
@@ -433,7 +455,7 @@ flexibility:
 1. The names of type aliases must be unique in a module.
 
 1. There is no scoping for aliases within a module. Even if an alias is defined
-   deep in a tree of LET-IN definitions, it can be references at any level in
+   deep in a tree of LET-IN definitions, it can be referenced at any level in
    the module.
 
 ## 3. Example
@@ -469,7 +491,7 @@ CONSTANT
   Offers
 
 VARIABLE
-  \* @type: INGREDIENT -> [smoking: Bool];
+  \* @type: INGREDIENT -> { smoking: Bool };
   smokers,
   \* @type: Set(INGREDIENT);
   dealer
@@ -529,3 +551,6 @@ AtMostOne ==
 [Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
 [ADR014]: https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
+[Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism
+[Variants.tla]: https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla
+[variant types]: https://en.wikipedia.org/wiki/Tagged_union
