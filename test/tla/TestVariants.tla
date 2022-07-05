@@ -46,21 +46,11 @@ TestVariantGetOrElse ==
     \* When the tag name is different from the actual one, return the default value.
     VariantGetOrElse("A", VarB, 12) = 12
 
-TestVariantMatch ==
-    VariantMatch(
-        "A",
-        VarA,
-        LAMBDA i: i > 0,
-        LAMBDA v: FALSE
-    )
-
 AllTests ==
     /\ TestVariant
     /\ TestVariantFilter
     /\ TestVariantUnwrap
     /\ TestVariantGetUnsafe
     /\ TestVariantGetOrElse
-    \* Disabled as unsupported by the model checker yet
-    \*/\ TestVariantMatch
 
 ===============================================================================
