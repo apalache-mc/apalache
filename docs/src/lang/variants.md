@@ -1,0 +1,325 @@
+# Variants
+
+**Warning:** This feature is currently under testing. To enable variants
+support in Apalache, pass the option `--features=rows`.
+
+[[Back to all operators]](./apalache-extensions.md)
+
+[Variants][] (also called *tagged unions*) are useful, when you want to combine
+values of different shapes in a single set or a sequence.
+
+**Idiomatic tagged unions in untyped TLA+.** In untyped TLA+, one can simply
+pack a value into a record and add an additional tag field. For instance, we
+could create a set that contains two records of different shapes:
+
+```tla
+ApplesAndOranges == {
+    [ tag |-> "Apple", color |-> "red" ],
+    [ tag |-> "Orange", seedless |-> TRUE ]
+  }
+```
+
+Now we can unpack the elements of `ApplesAndOranges` based on their tag:
+
+```tla
+  \E e \in ApplesAndOranges:
+    /\ e.tag = "Apple"
+    /\ e.color /= "green"
+```
+
+This idiom is quite common in untyped TLA+. [Tagged unions in Paxos][] is
+probably the most illuminating example of this idiom. Unfortunately, it is way
+too easy to make a typo in the tag name, since it is a string, or simply access
+a wrong record without checking its tag.
+
+**Variants module.** Apalache formalizes the above idiom in the module
+[Variants.tla][]. Due to the type checker, the users get a type error, when
+they access a wrong value. Additionally, the default implementation raises an
+error in TLC, when a variant is used incorrectly.
+
+**Immutability**. As variants are immutable.
+
+**Construction.** An instance of a variant can be constructed via the operator
+`Variant`:
+
+```tla
+Variant("Apple", "red")
+```
+
+If we just construct a variant like in the example above, it will be assigned
+a parametric variant type:
+
+```
+Apple(Str) | a
+```
+
+In this type, we know that whenever a value is tagged with "Apple" it should be
+of the string type. However, we know nothing about other options. Most of the
+time, we want to define variants that are sealed, that is, we know all
+available options. In the Apalache terms, it means that our type would look
+like follows:
+
+```
+Apple(Str) | Orange(Bool)
+```
+
+To do this, we can introduce variants together with user-defined
+constructors for each option right away:
+
+```tla
+\* @typeAlias: FRUIT = Apple(Str) | Orange(Bool);
+\*
+\* @type: Str => FRUIT;
+Apple(color) == Variant("Apple", color)
+
+\* @type: Bool => FRUIT;
+Orange(seedless) == Variant("Orange", seedless)
+```
+
+Now we can naturally construct apples and orange as follows:
+
+```tla
+Apple("red")
+Orange(TRUE)
+```
+
+Note that we have lost the field names in the process. If we want to keep
+the names, we should use records instead of basic values:
+
+```tla
+\* @typeAlias: DRINK =
+\*     Water({ sparkling: Bool })
+\*   | Beer({ malt: Str, strength: Int });
+\*
+\* @type: Bool => DRINK;
+Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
+
+\* @type: (Str, Int) => DRINK;
+Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
+```
+
+Once a variant is constructed, it becomes opaque for the type checker, that is,
+the type checker only knows that `Water(TRUE)` and `Beer("Dark", 5)` are both
+of type `DRINK`. This is exactly what we want, in order to combine these values
+in a single set. However, we have lost the ability to access the fields of
+these values. To deconstruct values of a variant type, we have to use other
+operators, presented below.
+
+**Filtering by tag name.** Following the idiomatic use of tagged unions in
+untyped TLA+, we can filter a set of variants:
+
+```tla
+LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
+\E d \in VariantFilter("Beer", Drink):
+    d.strength < 3
+```
+
+We believe that `VariantFilter` is the most commonly used way to deconstruct a
+set of variants. Note that `VariantFilter` transforms a set of variants into a
+set of values (that correspond to the associated tag name).
+
+**Type-safe get.** Sometimes, we do have just a value that does not belong to a
+set, so we cannot use `VariantFilter` directly. In this case, we can use
+`VariantGetOrElse`:
+
+```tla
+LET water == Water(TRUE) IN
+VariantGetOrElse("Beer", water,
+                 [ malt |-> "Non-alcoholic", strength |-> 0])).strength
+```
+
+In the above example, we unpack `water` by using the tag name `"Beer"`.  Since
+`water` is actually tagged with `"Water"`, the operator falls back to the
+default case and returns the record `[ malt |-> "Non-alcoholic", strength |->
+0]`.
+
+**Type-unsafe get.** Sometimes, using `VariantFilter` and `VariantGetOrElse`
+is a nuisance, when we know exactly the value type. In this case, we can bypass
+the type checker and get the value notwithstanding the tag:
+
+```tla
+LET drink == ... IN
+LET nonFree ==
+    IF VariantTag(drink) = "Water"
+    THEN VariantGetUnsafe("Water", drink).sparkling
+    ELSE VariantGetUnsafe("Beer", drink).strength > 0
+IN
+...
+```
+
+In general, you should avoid using `VariantGetUnsafe`, as it is type unsafe :-)
+
+----------------------------------------------------------------------------
+
+## Operators
+
+----------------------------------------------------------------------------
+
+<a name="variantCtor"></a>
+### Variant constructor
+
+**Notation:** `Variant(tagName, associatedValue)`
+
+**LaTeX notation:** same
+
+**Arguments:** Two arguments: the tag name (a string literal) and a value
+(a TLA+ expression).
+
+**Apalache type:** `(Str, a) => tagName(a) | b `, for some types `a` and `b`.
+Note that `tagName` is an identifier in this notation.
+
+**Effect:** The variant constructor returns a new value that keeps the
+pair `(tagName, associatedValue)`.
+
+**Determinism:** Deterministic.
+
+**Errors:** No errors.
+
+**Example in TLA+:**
+
+```tla
+\* @typeAlias: DRINK =
+\*     Water({ sparkling: Bool })
+\*   | Beer({ malt: Str, strength: Int });
+\*
+\* @type: Bool => DRINK;
+Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
+
+\* @type: (Str, Int) => DRINK;
+Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
+```
+
+----------------------------------------------------------------------------
+
+<a name="variantFilter"></a>
+### Variant filter
+
+**Notation:** `VariantFilter(tagName, set)`
+
+**LaTeX notation:** same
+
+**Arguments:** Two arguments: the tag name (a string literal) and a set of
+variants (a TLA+ expression).
+
+**Apalache type:** `(Str, Set(tagName(a) | b)) => Set(a)`, for some types `a`
+and `b`. Note that `tagName` is an identifier in this notation.
+
+**Effect:** The variant filter keeps the set elements that are tagged with
+`tagName`. It removes the tags from these elements and produces the set of
+values that were packed with `Variant`.
+
+**Determinism:** Deterministic.
+
+**Errors:** No errors.
+
+**Example in TLA+:**
+
+```tla
+\* @typeAlias: DRINK =
+\*     Water({ sparkling: Bool })
+\*   | Beer({ malt: Str, strength: Int });
+\*
+\* @type: Bool => DRINK;
+Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
+
+\* @type: (Str, Int) => DRINK;
+Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
+
+LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
+\E d \in VariantFilter("Beer", Drink):
+    d.strength < 3
+```
+
+----------------------------------------------------------------------------
+
+<a name="variantGetOrElse"></a>
+### Unpacking a variant safely
+
+**Notation:** `VariantGetOrElse(tagName, variant, defaultValue)`
+
+**LaTeX notation:** same
+
+**Arguments:** Three arguments: the tag name (a string literal), a variant
+constructed via `Variant`, a default value compatible with the value carried by
+the variant.
+
+**Apalache type:** `(Str, tagName(a) | b, a) => a`, for some types `a` and
+`b`. Note that `tagName` is an identifier in this notation.
+
+**Effect:** The operator `VariantGetOrElse` returns the value that was wrapped
+via the `Variant` constructor, if the variant is tagged with `tagName`.
+Otherwise, the operator returns `defaultValue`.
+
+**Determinism:** Deterministic.
+
+**Errors:** No errors.
+
+**Example in TLA+:**
+
+```tla
+\* @typeAlias: DRINK =
+\*     Water({ sparkling: Bool })
+\*   | Beer({ malt: Str, strength: Int });
+\*
+\* @type: Bool => DRINK;
+Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
+
+\* @type: (Str, Int) => DRINK;
+Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
+
+LET water == Water(TRUE) IN
+VariantGetOrElse("Beer", water,
+                 [ malt |-> "Non-alcoholic", strength |-> 0])).strength
+```
+
+----------------------------------------------------------------------------
+
+<a name="variantGetUnsafe"></a>
+### Unpacking a variant unsafely
+
+**Notation:** `VariantGetUnsafe(tagName, variant)`
+
+**LaTeX notation:** same
+
+**Arguments:** Two arguments: the tag name (a string literal) and a variant
+constructed via `Variant`.
+
+**Apalache type:** `(Str, tagName(a) | b) => a`, for some types `a` and
+`b`. Note that `tagName` is an identifier in this notation.
+
+**Effect:** The operator `VariantGetUnsafe` unconditionally returns some value
+that is compatible with the type of values tagged with `tagName`. If `variant`
+is tagged with `tagName`, the returned value is the value that was wrapped via
+the `Variant` constructor. Otherwise, it is some value of proper type. As such,
+this operator does not guarantee that the retrieved value is always constructed
+via `Variant`, unless the operator is used with the right tag.
+
+**Determinism:** Deterministic.
+
+**Errors:** No errors.
+
+**Example in TLA+:**
+
+```tla
+\* @typeAlias: DRINK =
+\*     Water({ sparkling: Bool })
+\*   | Beer({ malt: Str, strength: Int });
+\*
+\* @type: Bool => DRINK;
+Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
+
+\* @type: (Str, Int) => DRINK;
+Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
+
+LET drink == Beer("Dunkles", 4) IN
+LET nonFree ==
+    IF VariantTag(drink) = "Water"
+    THEN VariantGetUnsafe("Water", drink).sparkling
+    ELSE VariantGetUnsafe("Beer", drink).strength > 0
+IN
+...
+```
+
+[Variants]: https://en.wikipedia.org/wiki/Tagged_union
+[Tagged unions in Paxos]: https://github.com/tlaplus/Examples/blob/779852ba9951621f062fc4074b8e81fd12db21dc/specifications/Paxos/Paxos.tla#L85-L106
+[Variants.tla]: https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla
