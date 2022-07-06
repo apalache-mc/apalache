@@ -191,6 +191,32 @@ Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ]
 
 ----------------------------------------------------------------------------
 
+<a name="variantTag"></a>
+### Variant tag
+
+**Notation:** `VariantTag(variant)`
+
+**LaTeX notation:** same
+
+**Arguments:** One argument: a variant constructed via `Variant`.
+
+**Apalache type:** `(tagName(a) | b => Str)`, for some types `a`
+and `b`. Note that `tagName` is an identifier in this notation.
+
+**Effect:** This operator simply returns the tag attached to the variant.
+
+**Determinism:** Deterministic.
+
+**Errors:** No errors.
+
+**Example in TLA+:**
+
+```tla
+VariantTag(Variant("Water", [ sparkling |-> sparkling ])) = "Water"
+```
+
+----------------------------------------------------------------------------
+
 <a name="variantFilter"></a>
 ### Variant filter
 
