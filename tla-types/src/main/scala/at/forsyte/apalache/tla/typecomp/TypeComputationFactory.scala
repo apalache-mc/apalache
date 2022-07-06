@@ -23,10 +23,12 @@ class TypeComputationFactory {
   private val controlOperMap: SignatureMap = ControlOperSignatures.getMap
   private val funOperMap: SignatureMap = FunOperSignatures.getMap
   private val tempOperMap: SignatureMap = TemporalOperSignatures.getMap
+  private val apaInternalOperMap: SignatureMap = ApalacheInternalOperSignatures.getMap
 
   private val knownSignatures: SignatureMap =
     baseOperMap ++ arithOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++
-      actionOperMap ++ controlOperMap ++ funOperMap ++ finSetOperMap ++ tempOperMap
+      actionOperMap ++ controlOperMap ++ funOperMap ++ finSetOperMap ++ tempOperMap ++
+      apaInternalOperMap
 
   /** Given an operator with a known signature, constructs a pure type computation for its return type */
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
