@@ -14,7 +14,7 @@ package shai;
 service TransExplorer {
   rpc OpenConnection (ConnectRequest) returns (Connection);
   // TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
-  rpc LoadModel(LoadModelRequest) returns (UninitializedModel);
+  rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
 }
 
 message ConnectRequest {
@@ -30,6 +30,9 @@ message LoadModelRequest {
   repeated string aux = 3;
 }
 
-message UninitializedModel {
-  google.protobuf.Struct spec = 1;
+message LoadModelResponse {
+  oneof result {
+    google.protobuf.Struct spec = 1;
+    string err = 2;
+  }
 }

@@ -13,7 +13,7 @@ package at.forsyte.apalache.shai.v1
  */
 
 import at.forsyte.apalache.shai.v1.transExplorer.{
-  ConnectRequest, Connection, LoadModelRequest, UninitializedModel, ZioTransExplorer,
+  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, ZioTransExplorer,
 }
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.passes.SourceOption
@@ -23,8 +23,10 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
+import scala.util.control.Exception
 import zio.{Ref, ZEnv, ZIO}
 import com.google.protobuf.struct.Struct
+import at.forsyte.apalache.infra.ExitCodes
 
 // TODO The connnection type will become enriched with more structure
 // as we build out the server
@@ -37,6 +39,8 @@ private case class Conn(
     this.copy(model = Some(model))
   }
 }
+
+private case class ParsingFailed(code: ExitCodes.TExitCode) extends Exception(s"Parsing failed with error code ${code}")
 
 /**
  * The service enabling interaction with the symbolic model checker, via the
@@ -63,21 +67,41 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     _ <- addConnection(Conn(id))
   } yield Connection(id.toString())
 
-  // TODO replace return with either
-  def loadModel(req: LoadModelRequest): Result[UninitializedModel] = for {
-    // TODO
-    parser <- ZIO.effectTotal(Executor(new ParserModule))
-    _ <- ZIO.effectTotal(parser.passOptions.set("parser.source", SourceOption.StringSource(req.spec)))
-    module <- ZIO
-      .effectTotal(parser.run() match {
-        case Right(module) => module
-        // TODO Handle any possible thrown error to convert into left
-        case Left(_) => throw new Exception("TODO")
-      })
-    _ <- updateConnection(req.conn)(_.setModel(module))
-    json <- ZIO.effectTotal(new TlaToUJson(None).makeRoot(Seq(module)).toString)
-    struct <- ZIO.effectTotal(Struct.parseFrom(json.getBytes()))
-  } yield UninitializedModel(spec = Some(struct)) // TODO: obtain google.protobuf.Struct
+  /**
+   * Parses a spec into a model
+   *
+   * This method handles the [LoadModelRequest] RPC defined by `transExplorer.proto`
+   *
+   * @param req
+   *   the request to load a model, including the root module spec and any auxiliar modules
+   */
+  def loadModel(req: LoadModelRequest): Result[LoadModelResponse] = for {
+    parseResult <- parseSpec(req.spec)
+    result <- parseResult match {
+      case Right(module) =>
+        for {
+          _ <- updateConnection(req.conn)(_.setModel(module))
+        } yield LoadModelResponse.Result.Spec(structOfModule(module))
+      case Left(err) =>
+        ZIO.succeed(LoadModelResponse.Result.Err(err.getMessage()))
+    }
+  } yield LoadModelResponse(result)
+
+  private def parseSpec(spec: String): Result[Either[Throwable, TlaModule]] = {
+    ZIO.effectTotal(for {
+      parser <- Exception.allCatch.either {
+        val parser = Executor(new ParserModule)
+        parser.passOptions.set("parser.source", SourceOption.StringSource(spec))
+        parser
+      }
+      result <- parser.run().left.map(ParsingFailed)
+    } yield result)
+  }
+
+  private def structOfModule(module: TlaModule): Struct = {
+    val json = new TlaToUJson(None).makeRoot(Seq(module)).toString
+    Struct.parseFrom(json.getBytes())
+  }
 
   private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
 
@@ -105,4 +129,5 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     updatedConn = f(conn)
     _ <- addConnection(updatedConn)
   } yield updatedConn
+
 }
