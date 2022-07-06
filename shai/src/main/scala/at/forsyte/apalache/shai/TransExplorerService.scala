@@ -15,10 +15,16 @@ package at.forsyte.apalache.shai.v1
 import at.forsyte.apalache.shai.v1.transExplorer.{
   ConnectRequest, Connection, LoadModelRequest, UninitializedModel, ZioTransExplorer,
 }
+import at.forsyte.apalache.infra.Executor
+import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.io.json.impl.TlaToUJson
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
+import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
 import zio.{Ref, ZEnv, ZIO}
+import com.google.protobuf.struct.Struct
 
 // TODO The connnection type will become enriched with more structure
 // as we build out the server
@@ -60,10 +66,18 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
   // TODO replace return with either
   def loadModel(req: LoadModelRequest): Result[UninitializedModel] = for {
     // TODO
-    _ <- getConnection(req.conn)
-    module = TlaModule("TODO", Seq())
+    parser <- ZIO.effectTotal(Executor(new ParserModule))
+    _ <- ZIO.effectTotal(parser.passOptions.set("parser.source", SourceOption.StringSource(req.spec)))
+    module <- ZIO
+      .effectTotal(parser.run() match {
+        case Right(module) => module
+        // TODO Handle any possible thrown error to convert into left
+        case Left(_) => throw new Exception("TODO")
+      })
     _ <- updateConnection(req.conn)(_.setModel(module))
-  } yield UninitializedModel(spec = None) // TODO: obtain google.protobuf.Struct
+    json <- ZIO.effectTotal(new TlaToUJson(None).makeRoot(Seq(module)).toString)
+    struct <- ZIO.effectTotal(Struct.parseFrom(json.getBytes()))
+  } yield UninitializedModel(spec = Some(struct)) // TODO: obtain google.protobuf.Struct
 
   private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
 
