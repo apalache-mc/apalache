@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaBoolOper, TlaOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.TlaStr
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
 import org.scalatestplus.junit.JUnitRunner
@@ -18,7 +17,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
       notSuppEx.eqTyped(
           OperEx(
               ApalacheInternalOper.notSupportedByModelChecker,
-              ValEx(TlaStr("msg"))(Typed(StrT1)),
+              builder.str("msg"),
           )(Typed(tt))
       )
     }

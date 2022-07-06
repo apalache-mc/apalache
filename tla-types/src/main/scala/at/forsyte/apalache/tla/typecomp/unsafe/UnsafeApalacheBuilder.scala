@@ -24,12 +24,17 @@ trait UnsafeApalacheBuilder extends ProtoBuilder {
   /**
    * {{{Gen(n): t}}}
    *
+   * `n` must be > 0
+   *
    * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
    * argument.
    */
-  protected def _gen(n: Int, t: TlaType1): TlaEx = OperEx(ApalacheOper.gen, ValEx(TlaInt(n))(Typed(IntT1)))(Typed(t))
+  protected def _gen(n: Int, t: TlaType1): TlaEx = {
+    require(n > 0)
+    OperEx(ApalacheOper.gen, ValEx(TlaInt(n))(Typed(IntT1)))(Typed(t))
+  }
 
-  /** {{{Skolem(ex)}}} `ex` must be an existential quantification */
+  /** {{{Skolem(ex)}}} `ex` must be an expression of the shape {{{\E x \in S: P}}} */
   protected def _skolem(ex: TlaEx): TlaEx = {
     require(ex match {
       case OperEx(TlaBoolOper.exists, _, _, _) => true

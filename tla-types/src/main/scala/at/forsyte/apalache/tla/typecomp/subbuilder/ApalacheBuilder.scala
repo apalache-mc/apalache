@@ -22,12 +22,14 @@ trait ApalacheBuilder extends UnsafeApalacheBuilder {
   /**
    * {{{Gen(n): t}}}
    *
+   * `n` must be > 0
+   *
    * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
    * argument.
    */
   def gen(n: Int, t: TlaType1): TBuilderInstruction = _gen(n, t).point[TBuilderInternalState]
 
-  /** {{{Skolem(ex)}}} `ex` must be an existential quantification */
+  /** {{{Skolem(ex)}}} `ex` must be an expression of the shape {{{\E x \in S: P}}} */
   def skolem(ex: TBuilderInstruction): TBuilderInstruction = ex.map(_skolem)
 
   /** {{{Guess(S)}}} */
