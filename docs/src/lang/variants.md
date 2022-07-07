@@ -8,9 +8,8 @@ support in Apalache, pass the option `--features=rows`.
 [Variants][] (also called *tagged unions* or *sum types*) are useful, when you want to combine
 values of different shapes in a single set or a sequence.
 
-**Idiomatic tagged unions in untyped TLA+.** In untyped TLA+, one can simply
-pack a value into a record and add an additional tag field. For instance, we
-could create a set that contains two records of different shapes:
+**Idiomatic tagged unions in untyped TLA+.** In untyped TLA+, one can construct sets, which contain records with different fields, where one filed is typically used as a disambiguation tag. 
+For instance, we could create a set that contains two records of different shapes:
 
 ```tla
 ApplesAndOranges == {
@@ -19,7 +18,7 @@ ApplesAndOranges == {
   }
 ```
 
-Now we can unpack the elements of `ApplesAndOranges` based on their tag:
+We can dynamically reason about the elements of `ApplesAndOranges` based on their tag:
 
 ```tla
   \E e \in ApplesAndOranges:
@@ -28,9 +27,13 @@ Now we can unpack the elements of `ApplesAndOranges` based on their tag:
 ```
 
 This idiom is quite common in untyped TLA+. [Tagged unions in Paxos][] is
-probably the most illuminating example of this idiom. Unfortunately, it is way
-too easy to make a typo in the tag name, since it is a string, or simply access
-a wrong record without checking its tag.
+probably the most illuminating example of this idiom. 
+Unfortunately, it is way too easy to make a typo in the tag name, since it is a string, or simply access a field, which records marked with the given tag do not have. For example,
+\`\`\`tla
+  \E e \in ApplesAndOranges:
+    /\ e.tag = "Apple"
+    /\ e.seedless
+\`\`\`
 
 **Variants module.** Apalache formalizes the above idiom in the module
 [Variants.tla][]. Apalache's type checker alerts users with a type error when
@@ -134,7 +137,7 @@ default case and returns the record `[ malt |-> "Non-alcoholic", strength |->
 0]`.
 
 **Type-unsafe get.** Sometimes, using `VariantFilter` and `VariantGetOrElse`
-is a nuisance, when we know exactly the value type. In this case, we can bypass
+is a nuisance, when we know the exact value type. In this case, we can bypass
 the type checker and get the value notwithstanding the tag:
 
 ```tla
@@ -316,7 +319,7 @@ constructed via `Variant`.
 **Effect:** The operator `VariantGetUnsafe` unconditionally returns some value
 that is compatible with the type of values tagged with `tagName`. If `variant`
 is tagged with `tagName`, the returned value is the value that was wrapped via
-the `Variant` constructor. Otherwise, it is some value of proper type. As such,
+the `Variant` constructor. Otherwise, it is some arbitrary value of proper type. As such,
 this operator does not guarantee that the retrieved value is always constructed
 via `Variant`, unless the operator is used with the right tag.
 
