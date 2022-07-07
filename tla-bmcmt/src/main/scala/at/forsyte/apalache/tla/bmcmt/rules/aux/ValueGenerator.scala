@@ -104,7 +104,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
   private def genVariant(state: SymbState, options: SortedMap[String, TlaType1]): SymbState = {
     // generate the tag name
-    var nextState = genBasic(state, ConstT1(RecordAndVariantOps.tagSort))
+    var nextState = genBasic(state, StrT1)
     val tagCell = nextState.asCell
     // assert that one of the options is selected
     val tags = options.keys.map { name =>
