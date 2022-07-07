@@ -697,19 +697,15 @@ class Builder {
   }
 
   /**
-   * Match a variant that admits only one option (one tag)
+   * Get the tag name associated with a variant.
    *
-   * @param tagName
-   *   a tag value (string)
    * @param variantEx
    *   a variant expression
    * @return
-   *   the value extracted from the variant
+   *   the tag name associated with the variant
    */
-  def variantUnwrap(
-      tagName: String,
-      variantEx: BuilderEx): BuilderEx = {
-    BuilderOper(VariantOper.variantUnwrap, str(tagName), variantEx)
+  def variantTag(variantEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantTag, variantEx)
   }
 
   /**
@@ -843,7 +839,7 @@ class Builder {
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
         VariantOper.variant.name -> VariantOper.variant,
-        VariantOper.variantUnwrap.name -> VariantOper.variantUnwrap,
+        VariantOper.variantTag.name -> VariantOper.variantTag,
         VariantOper.variantGetUnsafe.name -> VariantOper.variantGetUnsafe,
         VariantOper.variantGetOrElse.name -> VariantOper.variantGetOrElse,
         VariantOper.variantFilter.name -> VariantOper.variantFilter,

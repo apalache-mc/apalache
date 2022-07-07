@@ -121,6 +121,7 @@ object KeraLanguagePred {
         TlaSeqOper.head,
         TlaSeqOper.tail,
         TlaSeqOper.len,
+        VariantOper.variantTag,
         ApalacheOper.skolem,
         ApalacheOper.gen,
         ApalacheOper.expand,
@@ -158,7 +159,6 @@ object KeraLanguagePred {
         ApalacheOper.assign,
         VariantOper.variant,
         VariantOper.variantGetUnsafe,
-        VariantOper.variantUnwrap,
         VariantOper.variantFilter,
         // for the future
         //      TlaActionOper.composition,

@@ -391,10 +391,10 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     }
   }
 
-  test("""VariantUnwrap("T1a", v)""") {
-    val operType = parser(s"""(Str, T1a(a)) => a""")
-    val expected = mkUniqApp(Seq(operType), mkUniqConst(StrT1), mkUniqName("v"))
-    val matchEx = tla.variantUnwrap("T1a", tla.name("v"))
+  test("""VariantTag("T1a", v)""") {
+    val operType = parser(s"""Variant(a) => Str""")
+    val expected = mkUniqApp(Seq(operType), mkUniqName("v"))
+    val matchEx = tla.variantTag(tla.name("v"))
     val produced = gen(matchEx)
     produced should equal(expected)
   }

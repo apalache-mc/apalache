@@ -571,9 +571,9 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |\* @type: Set(T1a({ val: Int, found: Bool) | T2a({ bal: Int })) => Set({ val: Int, found: Bool });
         |TestVariantFilter == VariantFilter("T1a", { TestVariant })
         |
-        |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
-        |TestVariantUnwrap(var) ==
-        |  VariantUnwrap("T1a", var)
+        |\* @type: T1a({ val: Int, found: Bool }) => Str;
+        |TestVariantTag(var) ==
+        |  VariantTag(var)
         |
         |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
         |TestVariantGetUnsafe(var) ==
@@ -619,17 +619,16 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         ),
     )
 
-    // TestVariantUnwrap(var) ==
-    //   VariantUnwrap("T1a", var)
+    // TestVariantTag(var) ==
+    //   VariantTag("T1a", var)
     val applyMatchOnly =
       OperEx(
-          VariantOper.variantUnwrap,
-          str("T1a"),
+          VariantOper.variantTag,
           name("var"),
       )
 
     expectDecl(
-        "TestVariantUnwrap",
+        "TestVariantTag",
         applyMatchOnly,
         OperParam("var"),
     )

@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps.tagSort
 import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
 
@@ -92,7 +91,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
       case variantT @ VariantT1(RowT1(options, None)) if options.nonEmpty =>
         // it would be better to call RecordAndVariantOps.makeVariant, but that would produce a circular dependency
         val tagName = options.head._1
-        val (arena2, tagAsCell) = rewriter.modelValueCache.getOrCreate(arena, (tagSort, tagName))
+        val (arena2, tagAsCell) = rewriter.modelValueCache.getOrCreate(arena, (StrT1.toString, tagName))
         var nextArena = arena2
         // introduce default values for all variant options
         val variantValues = options.map { case (t, tp) =>

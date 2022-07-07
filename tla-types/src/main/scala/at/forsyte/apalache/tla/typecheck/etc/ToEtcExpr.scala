@@ -785,20 +785,13 @@ class ToEtcExpr(
       case ex @ OperEx(VariantOper.variantFilter, tag @ _, _) =>
         throw new TypingInputException(s"The first argument of VariantFilter must be a string, found: $tag", ex.ID)
 
-      case OperEx(VariantOper.variantUnwrap, v @ ValEx(TlaStr(tagName)), variantEx) =>
+      case OperEx(VariantOper.variantTag, variantEx) =>
         val a = varPool.fresh
-        // (Str, T1a(a)) => a
-        val operArgs =
-          Seq(
-              StrT1,
-              VariantT1(RowT1(tagName -> a)),
-          )
+        // Variant(a) => Str
+        val operArgs = Seq(VariantT1(RowT1(a)))
 
-        val opsig = OperT1(operArgs, a)
-        mkExRefApp(opsig, Seq(v, variantEx))
-
-      case OperEx(VariantOper.variantUnwrap, tag @ _, _) =>
-        throw new TypingInputException(s"The first argument of VariantGetOnly must be a string, found: $tag", ex.ID)
+        val opsig = OperT1(operArgs, StrT1)
+        mkExRefApp(opsig, Seq(variantEx))
 
       case OperEx(VariantOper.variantGetUnsafe, v @ ValEx(TlaStr(tagName)), variantEx) =>
         val a = varPool.fresh
