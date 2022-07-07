@@ -100,48 +100,64 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
    */
   def loadFromSource(source: Source, aux: Seq[Source] = Seq()): (String, Map[String, TlaModule]) = {
     val tempDir = Files.createTempDirectory("sanyimp").toFile
-    try {
-      val rootModule = saveTlaFile(tempDir, source)
-      aux.foreach(saveTlaFile(tempDir, _))
-      loadFromFile(rootModule)
-    } finally {
-      tempDir.delete()
+
+    val nameAndModule = for {
+      (rootName, rootFile) <- saveTlaFile(tempDir, source)
+      // Save the aux modules to files, and get just the module names, if errors are hit, the first one will turn into a `Try`
+      savedModuleNames <- Try(aux.map(saveTlaFile(tempDir, _).map(_._1).get))
+      _ <- ensureModuleNamesAreUnique(rootName +: savedModuleNames)
+      result <- Try(loadFromFile(rootFile))
+    } yield result
+    tempDir.delete()
+    // Raise any errors previously captures in the `Try`
+    nameAndModule.get
+  }
+
+  private def ensureModuleNamesAreUnique(moduleNames: Seq[String]): Try[Unit] = {
+    val duplicateNames = moduleNames.groupBy(identity).filter(_._2.size > 1)
+    if (duplicateNames.isEmpty) {
+      Success(())
+    } else {
+      Failure(new SanyImporterException(
+              s"Modules with duplicate names were supplied when loading from sources: ${duplicateNames.keySet}"))
     }
   }
 
   // Regex to match the module line and capture the module name
   private val MODULE_LINE_RE = """-+ +MODULE +(\w*) -+""".r
 
-  // Extract the name of a module from the source specifying it
+  // Try to extract the name of a module from the source specifying the module.
+  //
   // This function copies the Source [s] and doesn't consume it.
-  private def moduleNameOfSource(s: Source): Option[String] = {
+  private def moduleNameOfSource(s: Source): Try[String] = {
     // Copy the source so we don't consume iterator
     val copy = s.reset()
-    copy.getLines().find(MODULE_LINE_RE.matches(_)).flatMap {
-      case MODULE_LINE_RE(name) => Some(name)
-      case _                    => None
-    }
-  }
-
-  private def saveTlaFile(dir: File, source: Source): File = {
-    val moduleName = moduleNameOfSource(source) match {
-      case Some(n) => n
-      case None    => throw new SanyImporterException(s"No module name found in source for module")
-    }
-
-    val temp = new File(dir, moduleName + ".tla")
-    // write the contents to a temporary file
-    val pw = new PrintWriter(temp)
-    try {
-      Try(source.getLines()) match {
-        case Success(lines) => lines.foreach(line => pw.println(line))
-        case Failure(e)     => throw new FileNotFoundException("Source not found: " + e.getMessage)
+    for {
+      lines <- Try(copy.getLines()).recoverWith(e =>
+        Failure(new FileNotFoundException("Source not found: " + e.getMessage)))
+      firstLine = lines.nextOption().getOrElse("")
+      moduleName <- (Iterator(firstLine) ++ lines).find(MODULE_LINE_RE.matches(_)) match {
+        case Some(MODULE_LINE_RE(name)) => Success(name)
+        case _ =>
+          Failure(
+              new SanyImporterException(s"No module name found in source for module beginning with line ${firstLine}"))
       }
-    } finally {
-      pw.close()
-    }
-    temp
+    } yield moduleName
   }
+
+  private def saveTlaFile(dir: File, source: Source): Try[(String, File)] =
+    for {
+      moduleName <- moduleNameOfSource(source)
+      tempFile = new File(dir, moduleName + ".tla")
+      // write the contents to a tempFileorary file
+      pw = new PrintWriter(tempFile)
+      _ <- {
+        // Stash the try result so we can close the pw before bailing if anything goes wrong
+        val result = Try(source.getLines().foreach(pw.println(_)))
+        pw.close()
+        result
+      }
+    } yield (moduleName, tempFile)
 
   private def throwOnError(specObj: SpecObj): Unit = {
     val initErrors = specObj.getInitErrors
