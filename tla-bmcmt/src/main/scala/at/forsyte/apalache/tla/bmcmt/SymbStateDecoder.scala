@@ -180,8 +180,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
   private def decodeVariantToTlaEx(arena: Arena, cell: ArenaCell, options: SortedMap[String, TlaType1]): TlaEx = {
     val tagName = decodeCellToTlaEx(arena, recordOps.getVariantTag(arena, cell)) match {
-      case ValEx(TlaStr(name)) if ModelValueHandler.isModelValue(name) =>
-        ModelValueHandler.typeAndIndex(name).get._2
+      case ValEx(TlaStr(name)) => name
 
       case e => throw new RewriterException(s"Expected a tag name in a variant $cell, found: $e", NullEx)
     }

@@ -35,12 +35,12 @@ object VariantOper {
   }
 
   /**
-   * Match a single variant.
+   * Get the tag name of a variant.
    */
-  object variantUnwrap extends VariantOper {
-    override def name: String = "Variants!VariantUnwrap"
+  object variantTag extends VariantOper {
+    override def name: String = "Variants!VariantTag"
 
-    override def arity: OperArity = FixedArity(2)
+    override def arity: OperArity = FixedArity(1)
 
     override val precedence: (Int, Int) = (100, 100)
   }

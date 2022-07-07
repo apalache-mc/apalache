@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.VariantOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
@@ -20,7 +19,7 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     symbState.ex match {
       case OperEx(VariantOper.variant, _, _)             => true
       case OperEx(VariantOper.variantGetUnsafe, _, _)    => true
-      case OperEx(VariantOper.variantUnwrap, _, _)       => true
+      case OperEx(VariantOper.variantTag, _)             => true
       case OperEx(VariantOper.variantGetOrElse, _, _, _) => true
       case OperEx(VariantOper.variantFilter, _, _)       => true
       case _                                             => false
@@ -37,11 +36,8 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // This should work independently of the tag associated with the variant.
         translateVariantGetUnsafe(state, tagName, variantEx)
 
-      case OperEx(VariantOper.variantUnwrap, ValEx(TlaStr(tagName)), variantEx) =>
-        // At this point, there is no difference between VariantGetUnsafe and VariantUnwrap.
-        // The type checker has to make sure that the variant has only one option.
-        assertSingletonVariant(variantEx)
-        translateVariantGetUnsafe(state, tagName, variantEx)
+      case OperEx(VariantOper.variantTag, variantEx) =>
+        translateVariantTag(state, variantEx)
 
       case OperEx(VariantOper.variantGetOrElse, ValEx(TlaStr(tagName)), variantEx, defaultEx) =>
         translateVariantGetOrElse(state, tagName, variantEx, defaultEx)
@@ -107,18 +103,19 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     variantOps.variantFilter(nextState, setCell, tagName)
   }
 
-  // make sure that the expression is a variant that has only one option
-  private def assertSingletonVariant(variantEx: TlaEx) = {
-    def errorMsg(vt: TlaType1) = new TypingException(s"Expected a singleton variant, found: $vt", variantEx.ID)
-
-    variantEx.typeTag.asTlaType1() match {
-      case vt @ VariantT1(RowT1(fieldTypes, None)) =>
-        if (fieldTypes.size == 1) {
-          errorMsg(vt)
-        }
-
-      case vt =>
-        errorMsg(vt)
-    }
+  /**
+   * Translate VariantTag(variant).
+   *
+   * @param state
+   *   a symbolic state
+   * @param variantEx
+   *   a variant to get the tag of
+   * @return
+   *   the associated tag as a string expression
+   */
+  private def translateVariantTag(state: SymbState, variantEx: TlaEx): SymbState = {
+    val nextState = rewriter.rewriteUntilDone(state.setRex(variantEx))
+    val tag = variantOps.getVariantTag(nextState.arena, nextState.asCell)
+    nextState.setRex(tag.toBuilder)
   }
 }
