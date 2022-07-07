@@ -44,15 +44,13 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
   implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
-  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = for {
-    t1 <- singleTypeGen
-    t2 <- singleTypeGen
-  } yield (t1, t2)
+  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(singleTypeGen, singleTypeGen)
 
   // Useful methods for defining mkIllTypedArgs
   object InvalidTypeMethods {
     def notSet: TlaType1 = IntT1
     def notSeq: TlaType1 = IntT1
+    def notTup: TlaType1 = IntT1
     def notBool: TlaType1 = differentFrom(BoolT1)
     def notInt: TlaType1 = differentFrom(IntT1)
     def notApplicative: TlaType1 = IntT1

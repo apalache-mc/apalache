@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeSeqBuilder
 
 /**
- * Type-safe builder for TlaSeqOper expressions.
+ * Scope-safe builder for TlaSeqOper expressions.
  *
  * @author
  *   Jure Kukovec
