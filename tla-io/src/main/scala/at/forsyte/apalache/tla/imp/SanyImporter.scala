@@ -17,7 +17,7 @@ import scala.util.{Failure, Success, Try}
  * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
  *
  * @author
- *   Igor Konnov, Thomas Pani
+ *   Igor Konnov, Thomas Pani, Shon Feder
  */
 class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) extends LazyLogging {
 
