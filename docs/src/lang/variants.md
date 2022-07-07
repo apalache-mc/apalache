@@ -3,7 +3,7 @@
 **Warning:** This feature is currently under testing. To enable variants
 support in Apalache, pass the option `--features=rows`.
 
-[[Back to all operators]](./apalache-extensions.md)
+[[Back to Apalache extensions]](./apalache-extensions.md)
 
 [Variants][] (also called *tagged unions* or *sum types*) are useful, when you want to combine
 values of different shapes in a single set or a sequence.
@@ -27,13 +27,15 @@ We can dynamically reason about the elements of `ApplesAndOranges` based on thei
 ```
 
 This idiom is quite common in untyped TLA+. [Tagged unions in Paxos][] is
-probably the most illuminating example of this idiom. 
-Unfortunately, it is way too easy to make a typo in the tag name, since it is a string, or simply access a field, which records marked with the given tag do not have. For example,
-\`\`\`tla
+probably the most illuminating example of this idiom. Unfortunately, it is way
+too easy to make a typo in the tag name, since it is a string, or simply access
+a field, which records marked with the given tag do not have. For example:
+
+```tla
   \E e \in ApplesAndOranges:
     /\ e.tag = "Apple"
     /\ e.seedless
-\`\`\`
+```
 
 **Variants module.** Apalache formalizes the above idiom in the module
 [Variants.tla][]. Apalache's type checker alerts users with a type error when
@@ -150,7 +152,19 @@ IN
 ...
 ```
 
-In general, you should avoid using `VariantGetUnsafe`, as it is type unsafe :-)
+In general, you should avoid using `VariantGetUnsafe`, as it is type unsafe.
+Consider the following example:
+
+```tla
+  VariantGetUnsafe("Beer", Water(TRUE)).strength
+```
+
+In the above example, we treat water as beer. If you try this example with TLC,
+it would complain about the missing field `strength`, as it computes some form
+of types dynamically. If you try this example with Apalache, it would compute
+types statically and in the case of `VariantGetUnsafe` it would simply produce
+an arbitrary integer. Most likely, this arbitrary integer would propagate into
+an invariant violation and will lead to a spurious counterexample.
 
 ----------------------------------------------------------------------------
 
@@ -169,7 +183,8 @@ In general, you should avoid using `VariantGetUnsafe`, as it is type unsafe :-)
 (a TLA+ expression).
 
 **Apalache type:** `(Str, a) => tagName(a) | b `, for some types `a` and `b`.
-Note that `tagName` is an identifier in this notation.
+Note that `tagName` is an identifier in this notation. In this type, `b` is a
+type variable that captures other options in the variant type.
 
 **Effect:** The variant constructor returns a new value that keeps the
 pair `(tagName, associatedValue)`.
@@ -203,8 +218,9 @@ Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ]
 
 **Arguments:** One argument: a variant constructed via `Variant`.
 
-**Apalache type:** `(tagName(a) | b) => Str`, for some types `a`
-and `b`. Note that `tagName` is an identifier in this notation.
+**Apalache type:** `(tagName(a) | b) => Str`, for some types `a` and `b`. Note
+that `tagName` is an identifier in this notation. In this type, `b` is a type
+variable that captures other options in the variant type.
 
 **Effect:** This operator simply returns the tag attached to the variant.
 
@@ -231,7 +247,8 @@ VariantTag(Variant("Water", [ sparkling |-> sparkling ])) = "Water"
 variants (a TLA+ expression).
 
 **Apalache type:** `(Str, Set(tagName(a) | b)) => Set(a)`, for some types `a`
-and `b`. Note that `tagName` is an identifier in this notation.
+and `b`. Note that `tagName` is an identifier in this notation. In this type,
+`b` is a type variable that captures other options in the variant type.
 
 **Effect:** The variant filter keeps the set elements that are tagged with
 `tagName`. It removes the tags from these elements and produces the set of
@@ -272,8 +289,9 @@ LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
 constructed via `Variant`, a default value compatible with the value carried by
 the variant.
 
-**Apalache type:** `(Str, tagName(a) | b, a) => a`, for some types `a` and
-`b`. Note that `tagName` is an identifier in this notation.
+**Apalache type:** `(Str, tagName(a) | b, a) => a`, for some types `a` and `b`.
+Note that `tagName` is an identifier in this notation. In this type, `b` is a
+type variable that captures other options in the variant type.
 
 **Effect:** The operator `VariantGetOrElse` returns the value that was wrapped
 via the `Variant` constructor, if the variant is tagged with `tagName`.
@@ -313,8 +331,9 @@ VariantGetOrElse("Beer", water,
 **Arguments:** Two arguments: the tag name (a string literal) and a variant
 constructed via `Variant`.
 
-**Apalache type:** `(Str, tagName(a) | b) => a`, for some types `a` and
-`b`. Note that `tagName` is an identifier in this notation.
+**Apalache type:** `(Str, tagName(a) | b) => a`, for some types `a` and `b`.
+Note that `tagName` is an identifier in this notation. In this type, `b` is a
+type variable that captures other options in the variant type.
 
 **Effect:** The operator `VariantGetUnsafe` unconditionally returns some value
 that is compatible with the type of values tagged with `tagName`. If `variant`
