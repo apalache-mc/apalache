@@ -5,7 +5,7 @@ support in Apalache, pass the option `--features=rows`.
 
 [[Back to all operators]](./apalache-extensions.md)
 
-[Variants][] (also called *tagged unions*) are useful, when you want to combine
+[Variants][] (also called *tagged unions* or *sum types*) are useful, when you want to combine
 values of different shapes in a single set or a sequence.
 
 **Idiomatic tagged unions in untyped TLA+.** In untyped TLA+, one can simply
@@ -33,11 +33,11 @@ too easy to make a typo in the tag name, since it is a string, or simply access
 a wrong record without checking its tag.
 
 **Variants module.** Apalache formalizes the above idiom in the module
-[Variants.tla][]. Due to the type checker, the users get a type error, when
+[Variants.tla][]. Apalache's type checker alerts users with a type error when
 they access a wrong value. Additionally, the default implementation raises an
-error in TLC, when a variant is used incorrectly.
+error in TLC when a variant is used incorrectly.
 
-**Immutability**. As variants are immutable.
+**Immutability**. All variants are immutable.
 
 **Construction.** An instance of a variant can be constructed via the operator
 `Variant`:
@@ -56,19 +56,21 @@ Apple(Str) | a
 In this type, we know that whenever a value is tagged with "Apple" it should be
 of the string type. However, we know nothing about other options. Most of the
 time, we want to define variants that are sealed, that is, we know all
-available options. In the Apalache terms, it means that our type would look
-like follows:
+available options. Suppose we wanted to reason about different kinds of fruit, 
+but wanted to limit our model to only comparing apples and oranges.
+In Apalache, the type for a value that could be either an apple or an orange, but nothing else, 
+would be as follows:
 
 ```
 Apple(Str) | Orange(Bool)
 ```
 
-To do this, we can introduce variants together with user-defined
-constructors for each option right away:
+To make it easier to represent the fruits, we can introduce variants together with 
+user-defined constructors for each option::
 
 ```tla
 \* @typeAlias: FRUIT = Apple(Str) | Orange(Bool);
-\*
+
 \* @type: Str => FRUIT;
 Apple(color) == Variant("Apple", color)
 
@@ -83,8 +85,7 @@ Apple("red")
 Orange(TRUE)
 ```
 
-Note that we have lost the field names in the process. If we want to keep
-the names, we should use records instead of basic values:
+Variants can wrap records, for when we want to represent compound data with named fields:
 
 ```tla
 \* @typeAlias: DRINK =
@@ -96,9 +97,8 @@ Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
 \* @type: (Str, Int) => DRINK;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
-```
 
-Once a variant is constructed, it becomes opaque for the type checker, that is,
+Once a variant is constructed, it becomes opaque to the type checker, that is,
 the type checker only knows that `Water(TRUE)` and `Beer("Dark", 5)` are both
 of type `DRINK`. This is exactly what we want, in order to combine these values
 in a single set. However, we have lost the ability to access the fields of
@@ -114,7 +114,7 @@ LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
     d.strength < 3
 ```
 
-We believe that `VariantFilter` is the most commonly used way to deconstruct a
+We believe that `VariantFilter` is the most commonly used way to partition a
 set of variants. Note that `VariantFilter` transforms a set of variants into a
 set of values (that correspond to the associated tag name).
 
@@ -200,7 +200,7 @@ Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ]
 
 **Arguments:** One argument: a variant constructed via `Variant`.
 
-**Apalache type:** `(tagName(a) | b => Str)`, for some types `a`
+**Apalache type:** `(tagName(a) | b) => Str`, for some types `a`
 and `b`. Note that `tagName` is an identifier in this notation.
 
 **Effect:** This operator simply returns the tag attached to the variant.
@@ -252,7 +252,7 @@ Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
 
 LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
-\E d \in VariantFilter("Beer", Drink):
+\E d \in VariantFilter("Beer", Drinks):
     d.strength < 3
 ```
 
