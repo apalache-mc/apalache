@@ -106,34 +106,41 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
    * into it, in order to call SANY.
    *
    * @param source
-   *   the text source
+   *   the text source for the root module
+   * @param aux
+   *   the text sources for any auxiliary modules
    * @return
    *   the pair (the root module name, a map of modules)
    */
-  def loadFromSource(source: Source): (String, Map[String, TlaModule]) = {
-    val moduleName = moduleNameOfSource(source) match {
-      case Some(n) => n
-      case None    => throw new SanyImporterException(s"No module name found in given source")
-    }
-
+  def loadFromSource(source: Source, aux: Seq[Source] = Seq()): (String, Map[String, TlaModule]) = {
     val tempDir = Files.createTempDirectory("sanyimp").toFile
-    val temp = new File(tempDir, moduleName + ".tla")
     try {
-      // write the contents to a temporary file
-      val pw = new PrintWriter(temp)
-      try {
-        Try(source.getLines()) match {
-          case Success(lines) => lines.foreach(line => pw.println(line))
-          case Failure(e)     => throw new FileNotFoundException("Source not found: " + e.getMessage)
-        }
-      } finally {
-        pw.close()
-      }
-      loadFromFile(temp)
+      val rootModule = saveTlaFile(tempDir, source)
+      aux.foreach(saveTlaFile(tempDir, _))
+      loadFromFile(rootModule)
     } finally {
-      temp.delete()
       tempDir.delete()
     }
+  }
+
+  private def saveTlaFile(dir: File, source: Source): File = {
+    val moduleName = moduleNameOfSource(source) match {
+      case Some(n) => n
+      case None    => throw new SanyImporterException(s"No module name found in source for module")
+    }
+
+    val temp = new File(dir, moduleName + ".tla")
+    // write the contents to a temporary file
+    val pw = new PrintWriter(temp)
+    try {
+      Try(source.getLines()) match {
+        case Success(lines) => lines.foreach(line => pw.println(line))
+        case Failure(e)     => throw new FileNotFoundException("Source not found: " + e.getMessage)
+      }
+    } finally {
+      pw.close()
+    }
+    temp
   }
 
   private def throwOnError(specObj: SpecObj): Unit = {

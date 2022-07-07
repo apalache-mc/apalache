@@ -1870,6 +1870,36 @@ class TestSanyImporter extends SanyImporterTestBase {
     expectSourceInfoInDefs(root)
   }
 
+  test("can load multiple modules from source") {
+    val auxText =
+      """|---- MODULE B ----
+         |BOp == TRUE
+         |==================
+         |""".stripMargin
+
+    val rootText =
+      """|---- MODULE A ----
+         |EXTENDS B
+         |Foo == BOp
+         |==================
+         |""".stripMargin
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource(Source.fromString(rootText), List(Source.fromString(auxText)))
+    // We've loaded two modules
+    assert(2 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we end up with declarations from both modules
+    assert(2 == root.declarations.size)
+    // the first declaration in the root is from the extended module B
+    root.declarations(0) match {
+      case TlaOperDecl("BOp", _, body) =>
+        assert(ValEx(TlaBool(true)) == body)
+      case d => fail("unexpected declaration: " + d)
+    }
+  }
+
   ////////////////////////////////////////////////////////////////////
   private def expectSingleModule(
       expectedRootName: String,
