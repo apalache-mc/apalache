@@ -66,13 +66,15 @@
     - [Tuples](./lang/tuples.md)
     - [Sequences](./lang/sequences.md)
     - [Bags]()
+- [Apalache extensions](./lang/apalache-extensions.md)
+  - [Apalache module](./lang/apalache-operators.md)
+  - [Variants](./lang/variants.md)
 - [User-defined operators](./lang/user-operators.md)
     - [Top-level operator definitions](./lang/user/top-level-operators.md)
     - [LET-IN definitions](./lang/user/let-in.md)
     - [Higher-order operators definitions](./lang/user/higher-order-operators.md)
     - [Anonymous operator definitions](./lang/user/lambdas.md)
     - [Local operator definitions](./lang/user/local-operators.md)
-- [Apalache operators](./lang/apalache-operators.md)
 - [Modules, Extends, and Instances]()
 
 # Idiomatic TLA+
