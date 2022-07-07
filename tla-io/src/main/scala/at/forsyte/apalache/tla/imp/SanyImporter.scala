@@ -102,8 +102,8 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
   }
 
   /**
-   * Load a TLA+ specification from a text source. This method creates a temporary file and saves the source's contents
-   * into it, in order to call SANY.
+   * Load a TLA+ specification from a text source, possibly including auxiliary modules needed for imports. This method
+   * creates temporary files and saves the sources contents into it, in order to call SANY.
    *
    * @param source
    *   the text source for the root module
