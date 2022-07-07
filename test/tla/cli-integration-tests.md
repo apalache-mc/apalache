@@ -2692,7 +2692,7 @@ EXITCODE: ERROR (255)
 ### typecheck ChannelTyped.tla
 
 ```sh
-$ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck --features=rows ChannelTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.

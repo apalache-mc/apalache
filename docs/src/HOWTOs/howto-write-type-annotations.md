@@ -1,8 +1,19 @@
 # How to write type annotations
 
-**Warning:** *This HOWTO discusses how to write type annotations for the new
-type checker [Snowcat][], which is used in Apalache since version 0.15.0.
-Note that the example specification uses recursive operators, which were removed in version 0.23.1.*
+**Revision:** July 7, 2022
+
+**Important updates:**
+
+ - Version 0.25.9: This HOWTO introduces new syntax for record types and
+   variants, which is currently under testing. This syntax is activated via the
+   option `--features=rows`. See [Type System 1.2](../adr/002adr-types.md#ts12).
+
+ - Version 0.23.1: The example specification uses recursive operators, which
+   were removed in version 0.23.1.
+
+ - Version 0.15.0: This HOWTO discusses how to write type annotations for the type checker
+   [Snowcat][], which is used in Apalache since version 0.15.0 (introduced in
+   2021).
 
 This HOWTO gives you concrete steps to extend TLA+ specifications with type
 annotations. You can find the detailed syntax of type annotations in
@@ -17,7 +28,7 @@ of declarations in isolation instead of analyzing the whole specification.
 The good news is that the type checker finds the types of many operators
 automatically. 
 
-## Recipe 1: Recipe variables
+## Recipe 1: Annotating variables
 
 Consider the example [HourClock.tla][] from [Specifying Systems][]:
 
@@ -92,12 +103,7 @@ we can define `Data` to have the type `Set(DATUM)`. Uninterpreted types are
 always written in CAPITALS. Now we can annotate `Data` and `chan` as follows:
 
 ```tla
-CONSTANT
-    \* @type: Set(DATUM);
-    Data
-VARIABLE
-    \* @type: [val: DATUM, rdy: Int, ack: Int];
-    chan 
+{{#include ../../../test/tla/ChannelTyped.tla:declarations}}
 ```
 
 Note carefully that the type annotation should be *between* the keyword
@@ -105,13 +111,31 @@ Note carefully that the type annotation should be *between* the keyword
 declare several constants at once. In this case, you have to write one type
 annotation per name.
 
+Have a look at the type of `chan`:
+
+```
+\* @type: { val: DATUM, rdy: Int, ack: Int };
+```
+
+The type of `chan` is a record that has three fields: field `val` of type
+`DATUM`, field `rdy` of type `Int`, field `ack` of type `Int`. The syntax of
+record types is similar to that of programming languages. We made it different
+from the TLA+'s syntax for records `[ val |-> v, rdy |-> r, ack |-> a ]`
+and record sets `[ val: V, rdy: R, ack: A ]`, to avoid confusion between
+types and values.
+
 Run the type checker again. You should see the following message:
 
 ```
+$ apalache-mc typecheck --features=rows ChannelTyped.tla
+...
 > Running Snowcat .::.
 > Your types are purrfect!
 > All expressions are typed 
 ```
+
+Note that we had to pass the option `--features=rows`, as we are using the
+experimental syntax for records.
 
 ## Recipe 3: Annotating operators
 
@@ -178,38 +202,30 @@ This time the type checker can find the types of all expressions:
 ...
 ```
 
+## Recipe 4: Using variants in heterogenous sets
 
-## Recipe 4: Annotating records
-
-Check the example [TwoPhase.tla][] from the repository of TLA+ examples (you will also need [TCommit.tla][], which
-is imported by TwoPhase.tla).
-This example has 176 lines of code, so we do not inline it here.
+Check the example [TwoPhase.tla][] from the repository of TLA+ examples (you
+will also need [TCommit.tla][], which is imported by TwoPhase.tla). This
+example has 176 lines of code, so we do not inline it here.
 
 As you probably expected, the type checker complains about not knowing
 the types of constants and variables. As for constant `RM`, we opt for using
 an uninterpreted type that we call `RM`. That is:
 
 ```tla
-CONSTANT
-        \* @type: Set(RM);
-        RM
+{{#include ../../../test/tla/TwoPhaseTyped.tla:constants}}
 ```
 
 By looking at the spec, it is easy to guess the types of the variables
 `rmState`, `tmState`, and `tmPrepared`:
 
 ```tla
-VARIABLES
-  \* @type: RM -> Str;
-  rmState,
-  \* @type: Str;
-  tmState,
-  \* @type: Set(RM);
-  tmPrepared,
+{{#include ../../../test/tla/TwoPhaseTyped.tla:vars1}}
 ```
 
-The type of the variable `msgs` is less obvious. We can check the definitions
-of `TPTypeOK` and `Message` to get the idea about the type of `msgs`:
+The type of the variable `msgs` is less obvious. We can check the original
+(untyped) definitions of `TPTypeOK` and `Message` to get the idea about the
+type of `msgs`:
 
 ```tla
 Message ==
@@ -222,20 +238,72 @@ TPTypeOK ==
   /\ msgs \in SUBSET Message
 ```
 
-From these definitions, you can see that `msgs` is a set that contains records
-of two types: `[type: Str]` and `[type: Str, rm: RM]`. When you have a set of
-heterogeneous records, you have to choose the type of a super-record that
-contains the fields of all records that could be put in the set. That is:
+From these (untyped) definitions, you can see that `msgs` is a set that
+contains records of two types: `{ type: Str }` and `{ type: Str, rm: RM }`.
+This seems to be problematic, as we have to mix in two records types in a
+single set, which requires us to specify its only type.
+
+To this end, we have to use the [Variants module][], which is distributed with
+Apalache. For reference, check the [Chapter on variants][]. First, we declare a
+type alias for the type of messages in a separate file called
+`TwoPhaseTyped_typedefs.tla`:
 
 ```tla
-  \* @type: Set([type: Str, rm: RM]);
-  msgs           
+{{#include ../../../test/tla/TwoPhaseTyped_typedefs.tla}}
 ```
 
-A downside of this approach is that [Snowcat][] will not help you in finding
-an incorrect field access. We probably will introduce more precise types for
-records later. See [Issue 401][].
+Usually, we extract type aliases in a separate file for the case, when we have
+to use the same type alias in different specifications, e.g., the specification
+and its instance for model checking.
 
+With the type alias `MESSAGE`, we specify that a message is a variant type,
+that is, it can represent three kinds of different values:
+
+ - A value tagged with `Commit`. Since we do not require the variant to carry
+   any value here, we simply declare that the value has the uninterpreted type
+   `NIL`. This is simply a convention, we could use any type in this case.
+
+ - A value tagged with `Abort`. Similar to `Commit`, we are using the `NIL`
+   type.
+
+ - A value tagged with `Prepared`. In this case, the value is of importance.
+   We are using the value `RM`, that is, the (uninterpreted) type of a resource
+   manager.
+
+Once we have specified the variant type, we introduce three constructors,
+one per variant option:
+
+```tla
+{{#include ../../../test/tla/TwoPhaseTyped.tla:constructors}}
+```
+
+Since the values carried by the `Commit` and `Abort` messages are not
+important, we use the uninterpeted value `"0_OF_NIL"`. Again, this is a
+convention. We could use any value of type `NIL`. Importantly, the operators
+`MkAbort`, `MkCommit`, and `MkPrepared` all produce values of type `MESSAGE`,
+which makes it possible to add them to a single set of messages.
+
+Now it should be clear how to specify the type of the variable `msgs`:
+
+```tla
+{{#include ../../../test/tla/TwoPhaseTyped.tla:vars2}}
+```
+
+Now we run the type checker once again (pay attention to the option
+`--features=rows`, required for variants):
+
+```sh
+$ apalache-mc typecheck --features=rows TwoPhaseTyped.tla
+...
+ > All expressions are typed
+Type checker [OK]
+```
+
+As you can see, variants require quite a bit of boilerplate. If you can simply
+introduce a set of records of the same type, this is usually a simpler
+solution. For instance, we could partition `msgs` into three subsets: the
+subset of `Commit` messages, the subset of `Abort` messages, and the subset of
+`Prepared` messages. See the discussion in [Idiom 3][].
 
 <a id="funAsSeq"></a>
 ## Recipe 5: functions as sequences
@@ -245,29 +313,22 @@ Check the example [Queens.tla][] from the repository of TLA+ examples.  It has
 sections, we annotate constants and variables:
 
 ```tla
-CONSTANT 
-         \* @type: Int;
-         N
-...         
-VARIABLES
-    \* @type: Set(Seq(Int));
-    todo,
-    \* @type: Set(Seq(Int));
-    sols
+{{#include ../../../test/tla/QueensTyped.tla:constants}}
+...
+{{#include ../../../test/tla/QueensTyped.tla:variables}}
 ```
 
 After having inspected the type errors reported by Snowcat, we annotate the
 operators `Attacks`, `IsSolution`, and `vars` as follows:
 
 ```tla
-\* @type: (Seq(Int), Int, Int) => Bool;
-Attacks(queens,i,j) == ...
+{{#include ../../../test/tla/QueensTyped.tla:Attacks}}
+  ...
 
-\* @type: Seq(Int) => Bool;
-IsSolution(queens) == ...
+{{#include ../../../test/tla/QueensTyped.tla:IsSolution}}
+  ...
 
-\* @type: <<Set(Seq(Int)), Set(Seq(Int))>>;
-vars == <<todo,sols>>
+{{#include ../../../test/tla/QueensTyped.tla:vars}}
 ```
 
 Now we run the type checker and receive the following type error:
@@ -285,13 +346,13 @@ Solutions ==
     { queens \in [1..N -> 1..N]: IsSolution(queens) }
 ```
 
-This looks funny: `IsSolution` is expecting a sequence, whereas `Solutions` is
-clearly producing a set of functions. Of course, it is not a problem in the
-untyped TLA+. In fact, it is a well-known idiom: Construct a function by using
-function operators and then apply sequence operators to it. In Apalache we have
-to explicitly write that a function should be reinterpreted as a sequence.  To
-this end, we have to use the operator `FunAsSeq` from the module
-[Apalache.tla][]. Hence, we add `Apalache` to the `EXTENDS` clause and
+This looks interesting: `IsSolution` is expecting a sequence, whereas
+`Solutions` is clearly producing a set of functions. Of course, it is not a
+problem in the untyped TLA+. In fact, it is a well-known idiom: Construct a
+function by using function operators and then apply sequence operators to it.
+In Apalache we have to explicitly write that a function should be reinterpreted
+as a sequence.  To this end, we have to use the operator `FunAsSeq` from the
+module [Apalache.tla][]. Hence, we add `Apalache` to the `EXTENDS` clause and
 apply the operator `FunAsSeq` as follows:
 
 ```tla
@@ -397,7 +458,7 @@ VARIABLES
 Note that the parser removes the leading strings `"    \*"` from the annotations,
 similar to how multi-line strings are treated in modern programming languages.
 
-## Recipe 8: Comments in annotations
+## Recipe 9: Comments in annotations
 
 Sometimes, it helps to document the meaning of type components. Consider the following
 example from [Recipe 5](#funAsSeq):
@@ -458,3 +519,7 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Issue 578]: https://github.com/tlaplus/tlaplus/issues/578
 [Issue 718]: https://github.com/informalsystems/apalache/issues/718
 [MissionariesAndCannibals.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla
+[Variants module]: https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla
+[Chapter on variants]: ../lang/variants.md
+[Idiom 3]: ../idiomatic/003record-sets.md
+[LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla
