@@ -458,7 +458,7 @@ VARIABLES
 Note that the parser removes the leading strings `"    \*"` from the annotations,
 similar to how multi-line strings are treated in modern programming languages.
 
-## Recipe 9: Comments in annotations
+## Recipe 8: Comments in annotations
 
 Sometimes, it helps to document the meaning of type components. Consider the following
 example from [Recipe 5](#funAsSeq):
