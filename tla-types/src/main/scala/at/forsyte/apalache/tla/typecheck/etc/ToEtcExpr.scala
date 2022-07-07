@@ -790,7 +790,7 @@ class ToEtcExpr(
         // Variant(a) => Str
         val operArgs = Seq(VariantT1(RowT1(a)))
 
-        val opsig = OperT1(operArgs, a)
+        val opsig = OperT1(operArgs, StrT1)
         mkExRefApp(opsig, Seq(variantEx))
 
       case OperEx(VariantOper.variantGetUnsafe, v @ ValEx(TlaStr(tagName)), variantEx) =>
