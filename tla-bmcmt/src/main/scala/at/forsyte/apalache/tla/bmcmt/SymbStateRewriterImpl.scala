@@ -287,7 +287,7 @@ class SymbStateRewriterImpl(
           -> List(new VariantOpsRule(this)),
         key(tla.variantGetOrElse("Tag", tla.name("V"), tla.name("def")))
           -> List(new VariantOpsRule(this)),
-        key(tla.variantUnwrap("Tag", tla.name("V")))
+        key(tla.variantTag(tla.name("V")))
           -> List(new VariantOpsRule(this)),
         key(tla.variantFilter("Tag", tla.name("S")))
           -> List(new VariantOpsRule(this)),

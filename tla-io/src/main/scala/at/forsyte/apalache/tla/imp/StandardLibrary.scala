@@ -70,7 +70,7 @@ object StandardLibrary {
         // Variants
         ("Variants", "Variant") -> VariantOper.variant,
         ("Variants", "VariantFilter") -> VariantOper.variantFilter,
-        ("Variants", "VariantUnwrap") -> VariantOper.variantUnwrap,
+        ("Variants", "VariantTag") -> VariantOper.variantTag,
         ("Variants", "VariantGetUnsafe") -> VariantOper.variantGetUnsafe,
         ("Variants", "VariantGetOrElse") -> VariantOper.variantGetOrElse,
         // internal modules

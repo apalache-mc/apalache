@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps.tagSort
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 
 import scala.collection.immutable.SortedMap
 
@@ -68,7 +66,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
    *   a new symbolic state that contains the constructed tag cell as an expression
    */
   def getOrCreateVariantTag(state: SymbState, tagName: String): SymbState = {
-    val (newArena, tagAsCell) = rewriter.modelValueCache.getOrCreate(state.arena, (tagSort, tagName))
+    val (newArena, tagAsCell) = rewriter.modelValueCache.getOrCreate(state.arena, (StrT1.toString, tagName))
     state.setArena(newArena).setRex(tagAsCell.toNameEx)
   }
 
@@ -201,7 +199,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val tagCell = getVariantTag(state.arena, variantCell)
     val unsafeValueCell = getUnsafeVariantValue(state.arena, variantCell, tagName)
     // IF variant.__tag = tagName THEN variant.__value ELSE defaultValue
-    val tagNameOfSort = tla.str(ModelValueHandler.construct((tagSort, tagName))).as(ConstT1(tagSort))
+    val tagNameOfSort = tla.str(tagName).as(StrT1)
     val ite =
       tla
         .ite(tla.eql(tagCell.toNameEx, tagNameOfSort).as(BoolT1), unsafeValueCell.toNameEx, defaultValue.toNameEx)
@@ -356,9 +354,4 @@ object RecordAndVariantOps {
    * The name of the hidden tag field that is attached to every variant.
    */
   val variantTagField = "__tag"
-
-  /**
-   * The uninterpreted sort to use for storing the tag values.
-   */
-  val tagSort = "__TAG"
 }

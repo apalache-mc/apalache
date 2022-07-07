@@ -158,7 +158,7 @@ object KeraLanguagePred {
         ApalacheOper.assign,
         VariantOper.variant,
         VariantOper.variantGetUnsafe,
-        VariantOper.variantUnwrap,
+        VariantOper.variantTag,
         VariantOper.variantFilter,
         // for the future
         //      TlaActionOper.composition,
