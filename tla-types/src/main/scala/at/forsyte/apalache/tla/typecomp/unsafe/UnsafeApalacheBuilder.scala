@@ -22,9 +22,7 @@ trait UnsafeApalacheBuilder extends ProtoBuilder {
   }
 
   /**
-   * {{{Gen(n): t}}}
-   *
-   * `n` must be > 0
+   * {{{Gen(n): t}}} `n` must be > 0
    *
    * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
    * argument.

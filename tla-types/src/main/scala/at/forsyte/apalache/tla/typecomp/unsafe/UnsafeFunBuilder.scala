@@ -19,10 +19,11 @@ import scala.collection.immutable.SortedMap
 trait UnsafeFunBuilder extends ProtoBuilder {
 
   /**
-   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
+   * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}} `args` must be nonempty, and all keys must be
+   * unique strings
    */
   protected def _rec(args: (String, TlaEx)*): TlaEx = {
-    // the other _recSet does all the require checks
+    // _recMixed does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
       Seq(ValEx(TlaStr(k))(Typed(StrT1)), v)
     }
@@ -30,17 +31,18 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   }
 
   /**
-   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
+   * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}} `args` must have even, positive arity, and all keys must
+   * be unique strings
    */
   protected def _recMixed(args: TlaEx*): TlaEx = {
+    require(TlaFunOper.rec.arity.cond(args.size))
     // All keys must be ValEx(TlaStr(_))
-    require(args.nonEmpty)
-    require(args.size % 2 == 0)
     val (keys, vals) = TlaOper.deinterleave(args)
     require(keys.forall {
       case ValEx(_: TlaStr) => true
       case _                => false
     })
+    // Keys must be unique
     val duplicates = keys.filter(k => keys.count(_ == k) > 1)
     if (duplicates.nonEmpty)
       throw new IllegalArgumentException(s"Found repeated keys in record constructor: ${duplicates.mkString(", ")}")
@@ -60,7 +62,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
   }
 
-  /** {{{<<t1, ..., tn>>}}} with a tuple-type */
+  /** {{{<<args[0], ..., args[n]>> : <<t1, ..., tn>>}}} */
   protected def _tuple(args: TlaEx*): TlaEx = {
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
     // just define the tuple-variant signature
@@ -69,10 +71,10 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
   }
 
-  /** {{{<<>>}}} with a sequence type */
-  protected def _emptySeq(elemType: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(elemType)))
+  /** {{{<<>> : Seq(t)}}} */
+  protected def _emptySeq(t: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(t)))
 
-  /** {{{<<t1, ..., tn>>}}} with a sequence-type. Must be nonempty. */
+  /** {{{<<args[0], ..., args[0]>> : Seq(t)}}} `args` must be nonempty. */
   protected def _seq(args: TlaEx*): TlaEx = {
     require(args.nonEmpty)
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
@@ -82,22 +84,33 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
   }
 
-  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
-  protected def _funDef(e: TlaEx, varSetPairs: (TlaEx, TlaEx)*): TlaEx = {
-    // the other _funDef does all the require checks
-    val args = varSetPairs.flatMap { case (k, v) =>
+  /**
+   * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}} `pairs` must be nonempty, and all vars
+   * must be unique variable names
+   */
+  protected def _funDef(e: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
+    // _funDefMixed does all the require checks
+    val args = pairs.flatMap { case (k, v) =>
       Seq(k, v)
     }
     _funDefMixed(e, args: _*)
   }
 
-  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
-  protected def _funDefMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
-    // Even, non-zero number of args and every other argument is NameEx
-    require(varSetPairs.nonEmpty)
-    require(varSetPairs.size % 2 == 0)
-    require(TlaOper.deinterleave(varSetPairs)._1.forall { _.isInstanceOf[NameEx] })
-    buildBySignatureLookup(TlaFunOper.funDef, e +: varSetPairs: _*)
+  /**
+   * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}} `pairs` must have even, positive arity, and all
+   * vars must be unique variable names
+   */
+  protected def _funDefMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
+    // Even, non-zero number of args in `pairs` and every other argument is NameEx
+    require(TlaFunOper.funDef.arity.cond(1 + pairs.size))
+    val (vars, _) = TlaOper.deinterleave(pairs)
+    require(vars.forall { _.isInstanceOf[NameEx] })
+    // Vars must be unique
+    val duplicates = vars.filter(k => vars.count(_ == k) > 1)
+    if (duplicates.nonEmpty) {
+      throw new IllegalArgumentException(s"Found repeated keys in record constructor: ${duplicates.mkString(", ")}")
+    }
+    buildBySignatureLookup(TlaFunOper.funDef, e +: pairs: _*)
   }
 
   // The rest of the operators are overloaded, so buildBySignatureLookup doesn't work
@@ -114,7 +127,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   // APP overload //
   //////////////////
 
-  /** f[x] for any Applicative f */
+  /** {{{f[x]}}} for any Applicative `f` */
   protected def _app(f: TlaEx, x: TlaEx): TlaEx = {
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value
@@ -128,6 +141,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   // DOMAIN overload //
   /////////////////////
 
+  /** {{{DOMAIN f}}} for any Applicative `f` */
   protected def _dom(f: TlaEx): TlaEx =
     buildFromPartialSignature(
         { case Seq(tt) if Applicative.domainElemType(tt).nonEmpty => SetT1(Applicative.domainElemType(tt).get) }
@@ -137,7 +151,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   // EXCEPT overload //
   /////////////////////
 
-  /** [f EXCEPT !.x = e] for any Applicative f */
+  /** {{{[f EXCEPT ![x] = e]}}} for any Applicative `f` */
   protected def _except(f: TlaEx, x: TlaEx, e: TlaEx): TlaEx = {
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value

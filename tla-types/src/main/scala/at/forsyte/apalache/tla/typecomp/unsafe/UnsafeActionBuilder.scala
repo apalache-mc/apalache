@@ -11,23 +11,23 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
  */
 trait UnsafeActionBuilder extends ProtoBuilder {
 
-  /** e' */
+  /** {{{e'}}} */
   protected def _prime(e: TlaEx): TlaEx = buildBySignatureLookup(TlaActionOper.prime, e)
 
-  /** [A]_e */
+  /** {{{[A]_e}}} */
   protected def _stutt(A: TlaEx, e: TlaEx): TlaEx =
     buildBySignatureLookup(TlaActionOper.stutter, A, e)
 
-  /** <A>_e */
+  /** {{{<A>_e}}} */
   protected def _nostutt(A: TlaEx, e: TlaEx): TlaEx =
     buildBySignatureLookup(TlaActionOper.nostutter, A, e)
 
-  /** ENABLED A */
+  /** {{{ENABLED A}}} */
   protected def _enabled(A: TlaEx): TlaEx = buildBySignatureLookup(TlaActionOper.enabled, A)
 
-  /** UNCHANGED e */
+  /** {{{UNCHANGED e}}} */
   protected def _unchanged(e: TlaEx): TlaEx = buildBySignatureLookup(TlaActionOper.unchanged, e)
 
-  /** A \cdot B */
+  /** {{{A \cdot B}}} */
   protected def _comp(A: TlaEx, B: TlaEx): TlaEx = buildBySignatureLookup(TlaActionOper.composition, A, B)
 }

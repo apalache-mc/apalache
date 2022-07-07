@@ -29,13 +29,13 @@ trait UnsafeTemporalBuilder extends ProtoBuilder {
   /** {{{SF_x(A)}}} */
   protected def _SF(x: TlaEx, A: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.strongFairness, x, A)
 
-  /** {{{\EE x: P}}} */
+  /** {{{\EE x: P}}} `x` must be a variable name */
   protected def _EE(x: TlaEx, P: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaTempOper.EE, x, P)
   }
 
-  /** {{{\AA x: P}}} */
+  /** {{{\AA x: P}}} `x` must be a variable name */
   protected def _AA(x: TlaEx, P: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaTempOper.AA, x, P)

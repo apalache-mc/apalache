@@ -318,6 +318,19 @@ class TestSetBuilder extends BuilderTest {
       build(builder.mapMixed(builder.name("x", IntT1), builder.name("x", IntT1)))
     }
 
+    // throws on duplicate vars
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mapMixed(
+              builder.name("e", IntT1),
+              builder.name(s"x1", IntT1),
+              builder.name(s"S1", SetT1(IntT1)),
+              builder.name(s"x1", IntT1),
+              builder.name(s"S2", SetT1(IntT1)),
+          )
+      )
+    }
+
     assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) =>
       builder.mapMixed(expr, variable, set)
     }
@@ -339,6 +352,26 @@ class TestSetBuilder extends BuilderTest {
           )
       )
     }
+
+    // does not throw on non-shadowing: multi-arity
+    // { e: x \in S, y \in {z \in T: \E x \in S: TRUE} }
+    build(
+        builder.mapMixed(
+            builder.name("e", StrT1),
+            builder.name("x", StrT1),
+            builder.name("S", SetT1(StrT1)),
+            builder.name("y", IntT1),
+            builder.filter(
+                builder.name("z", IntT1),
+                builder.name("T", SetT1(IntT1)),
+                builder.exists(
+                    builder.name("x", StrT1),
+                    builder.name("S", SetT1(StrT1)),
+                    builder.bool(true),
+                ),
+            ),
+        )
+    )
 
     // now for builder.map (not mapMixed)
 
@@ -400,6 +433,23 @@ class TestSetBuilder extends BuilderTest {
       builder.map(expr, (variable, set))
     }
 
+    // throws on duplicate vars
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.map(
+              builder.name("e", IntT1),
+              (
+                  builder.name(s"x1", IntT1),
+                  builder.name(s"S1", SetT1(IntT1)),
+              ),
+              (
+                  builder.name(s"x1", IntT1),
+                  builder.name(s"S2", SetT1(IntT1)),
+              ),
+          )
+      )
+    }
+
     // throws on shadowing: multi-arity
     assertThrows[TBuilderScopeException] {
       build(
@@ -415,6 +465,30 @@ class TestSetBuilder extends BuilderTest {
           )
       )
     }
+
+    // does not throw on non-shadowing: multi-arity
+    // { e : x \in S, y \in {z \in T: \E x \in S: TRUE} }
+    build(
+        builder.map(
+            builder.name("e", StrT1),
+            (
+                builder.name("x", StrT1),
+                builder.name("S", SetT1(StrT1)),
+            ),
+            (
+                builder.name("y", IntT1),
+                builder.filter(
+                    builder.name("z", IntT1),
+                    builder.name("T", SetT1(IntT1)),
+                    builder.exists(
+                        builder.name("x", StrT1),
+                        builder.name("S", SetT1(StrT1)),
+                        builder.bool(true),
+                    ),
+                ),
+            ),
+        )
+    )
 
   }
 

@@ -13,10 +13,10 @@ import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
  */
 trait UnsafeLiteralAndNameBuilder {
 
-  /** i : Int */
+  /** {{{i : Int}}} */
   protected def _int(i: BigInt): TlaEx = ValEx(TlaInt(i))(Typed(IntT1))
 
-  /** s : Str */
+  /** {{{s : Str}}} `s` must be a string literal, not a literal of an uninterpreted sort. */
   protected def _str(s: String): TlaEx = {
     if (ModelValueHandler.isModelValue(s))
       throw new TBuilderTypeException(
@@ -25,10 +25,10 @@ trait UnsafeLiteralAndNameBuilder {
     ValEx(TlaStr(s))(Typed(StrT1))
   }
 
-  /** b : Bool */
+  /** {{{b : Bool}}} */
   protected def _bool(b: Boolean): TlaEx = ValEx(TlaBool(b))(Typed(BoolT1))
 
-  /** root_OF_A : A */
+  /** {{{root_OF_A : A}}} `root` must be a string identifier and may not contain the `_OF_` suffix. */
   protected def _const(root: String, A: ConstT1): TlaEx = {
     if (ModelValueHandler.isModelValue(root))
       throw new TBuilderTypeException(
@@ -37,7 +37,7 @@ trait UnsafeLiteralAndNameBuilder {
     ValEx(TlaStr(fullStr))(Typed(A))
   }
 
-  /** v : A */
+  /** {{{v : A}}} `v` must be a literal of an uninterpreted sort, not a string literal. */
   protected def _constParsed(v: String): TlaEx = {
     if (!ModelValueHandler.isModelValue(v))
       throw new TBuilderTypeException(
@@ -47,18 +47,18 @@ trait UnsafeLiteralAndNameBuilder {
     ValEx(TlaStr(v))(Typed(tt))
   }
 
-  /** BOOLEAN */
+  /** {{{BOOLEAN}}} */
   protected def _booleanSet(): TlaEx = ValEx(TlaBoolSet)(Typed(SetT1(BoolT1)))
 
-  /** STRING */
+  /** {{{STRING}}} */
   protected def _stringSet(): TlaEx = ValEx(TlaStrSet)(Typed(SetT1(StrT1)))
 
-  /** Int */
+  /** {{{Int}}} */
   protected def _intSet(): TlaEx = ValEx(TlaIntSet)(Typed(SetT1(IntT1)))
 
-  /** Nat */
+  /** {{{Nat}}} */
   protected def _natSet(): TlaEx = ValEx(TlaNatSet)(Typed(SetT1(IntT1)))
 
-  /** exprName: exType */
-  protected def _name(exprName: String, exprType: TlaType1): TlaEx = NameEx(exprName)(Typed(exprType))
+  /** {{{exprName: t}}} */
+  protected def _name(exprName: String, t: TlaType1): TlaEx = NameEx(exprName)(Typed(t))
 }

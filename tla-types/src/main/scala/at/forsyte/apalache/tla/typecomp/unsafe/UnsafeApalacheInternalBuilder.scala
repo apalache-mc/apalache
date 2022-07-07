@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 trait UnsafeApalacheInternalBuilder extends ProtoBuilder {
 
   /**
-   * notSupportedByModelChecker
+   * {{{__NotSupportedByModelChecker(msg): t}}}
    *
    * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
    * argument.
@@ -27,7 +27,7 @@ trait UnsafeApalacheInternalBuilder extends ProtoBuilder {
     buildBySignatureLookup(ApalacheInternalOper.distinct, args: _*)
   }
 
-  /** apalacheSeqCapacity */
+  /** {{{__ApalacheSeqCapacity(seq)}}} */
   protected def _apalacheSeqCapacity(seq: TlaEx): TlaEx =
     buildBySignatureLookup(ApalacheInternalOper.apalacheSeqCapacity, seq)
 

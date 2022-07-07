@@ -11,9 +11,9 @@ import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
  */
 trait UnsafeFiniteSetBuilder extends ProtoBuilder {
 
-  /** IsFiniteSet(set) */
+  /** {{{IsFiniteSet(set)}}} */
   protected def _isFiniteSet(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.isFiniteSet, set)
 
-  /** Cardinality(set) */
+  /** {{{Cardinality(set)}}} */
   protected def _cardinality(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.cardinality, set)
 }

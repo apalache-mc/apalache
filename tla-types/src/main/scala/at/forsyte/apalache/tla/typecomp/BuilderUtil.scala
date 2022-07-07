@@ -38,8 +38,10 @@ object BuilderUtil {
     )(variable: TBuilderInstruction,
       set: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
+    usedBefore <- allUsed
     setEx <- set
-    usedInSet <- allUsed // variable may not appear as bound or free in set
+    usedInSetOrBefore <- allUsed // variable may not appear as bound or free in set
+    usedInSet = usedInSetOrBefore -- usedBefore
     exprEx <- expr
     boundAfterExpr <- allBound // variable may not appear as bound in expr
     varEx <- variable
@@ -91,18 +93,23 @@ object BuilderUtil {
       case (cmp, (variable, set)) =>
         for {
           seq <- cmp
+          usedBefore <- allUsed
           setEx <- set
-          usedInSet <- allUsed // variable_i may not appear as bound or free in set_i
+          usedInSetOrBefore <- allUsed // variable_i may not appear as bound or free in set_i
+          usedInSet = usedInSetOrBefore -- usedBefore
           varEx <- variable
-          _ = require(varEx.isInstanceOf[NameEx])
-          _ <- markAsBound(varEx)
-          // variable_i is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfterBodyEx
-          boundAfterVar <- allBound
-        } yield
-          if (boundAfterVar.subsetOf(usedInSet.union(boundAfterBodyEx))) {
+          // we delay marking as bound, to not interfere with other variable-set pairs
+        } yield {
+          require(varEx.isInstanceOf[NameEx])
+          // variable_i is shadowed iff boundVar \in usedInSet \union boundAfterBodyEx
+          val boundVar = varEx.asInstanceOf[NameEx].name
+          if (usedInSet.union(boundAfterBodyEx).contains(boundVar))
             throw new TBuilderScopeException(s"Variable $varEx is shadowed in $bodyEx or $setEx.")
-          } else seq :+ (varEx, setEx)
+          else seq :+ (varEx, setEx)
+        }
     }
+    // Mark as bound later
+    _ <- buildSeq(pairs.map(pa => markAsBound(pa._1)))
   } yield unsafeMethod(bodyEx, pairs)
 
   /** Convenience shorthand to access the set of used names. */
