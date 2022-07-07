@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
 
 /**
- * Type-unsafe builder for names and literals (IR tree leaves)
+ * Scope-unsafe builder for names and literals (IR tree leaves)
  *
  * @author
  *   Jure Kukovec

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeControlBuilder
 import scalaz._
 
 /**
- * Type-safe builder for TlaSetOper expressions.
+ * Scope-safe builder for TlaSetOper expressions.
  *
  * @author
  *   Jure Kukovec

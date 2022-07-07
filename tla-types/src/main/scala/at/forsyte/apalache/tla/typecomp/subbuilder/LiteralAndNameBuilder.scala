@@ -7,7 +7,7 @@ import scalaz.Scalaz._
 import scalaz._
 
 /**
- * Type-safe builder for names and literals (IR tree leaves)
+ * Scope-safe builder for names and literals (IR tree leaves)
  *
  * @author
  *   Jure Kukovec

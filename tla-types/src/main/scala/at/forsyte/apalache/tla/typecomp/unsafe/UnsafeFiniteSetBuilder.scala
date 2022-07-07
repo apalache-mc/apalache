@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
 
 /**
- * Type-unsafe builder for TlaFiniteSetOper expressions.
+ * Scope-unsafe builder for TlaFiniteSetOper expressions.
  *
  * @author
  *   Jure Kukovec
