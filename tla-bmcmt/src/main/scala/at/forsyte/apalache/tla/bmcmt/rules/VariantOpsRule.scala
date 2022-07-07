@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.VariantOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
@@ -118,20 +117,5 @@ class VariantOpsRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val nextState = rewriter.rewriteUntilDone(state.setRex(variantEx))
     val tag = variantOps.getVariantTag(nextState.arena, nextState.asCell)
     nextState.setRex(tag.toBuilder)
-  }
-
-  // make sure that the expression is a variant that has only one option
-  private def assertSingletonVariant(variantEx: TlaEx) = {
-    def errorMsg(vt: TlaType1) = new TypingException(s"Expected a singleton variant, found: $vt", variantEx.ID)
-
-    variantEx.typeTag.asTlaType1() match {
-      case vt @ VariantT1(RowT1(fieldTypes, None)) =>
-        if (fieldTypes.size == 1) {
-          errorMsg(vt)
-        }
-
-      case vt =>
-        errorMsg(vt)
-    }
   }
 }
