@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFiniteSetBuilder
 
 /**
- * Type-safe builder for TlaFiniteSetOper expressions.
+ * Scope-safe builder for TlaFiniteSetOper expressions.
  *
  * @author
  *   Jure Kukovec
