@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 
 /**
- * Type-safe builder for TlaBoolOper expressions.
+ * Scope-safe builder for TlaBoolOper expressions.
  *
  * @author
  *   Jure Kukovec

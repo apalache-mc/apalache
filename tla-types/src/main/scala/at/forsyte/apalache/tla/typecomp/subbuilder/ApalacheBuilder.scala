@@ -8,7 +8,7 @@ import scalaz.Scalaz._
 import scalaz._
 
 /**
- * Type-safe builder for ApalacheOper expressions.
+ * Scope-safe builder for ApalacheOper expressions.
  *
  * @author
  *   Jure Kukovec

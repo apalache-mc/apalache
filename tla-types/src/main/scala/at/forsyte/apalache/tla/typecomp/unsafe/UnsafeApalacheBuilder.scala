@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
 /**
- * Type-unsafe builder for ApalacheOper expressions.
+ * Scope-unsafe builder for ApalacheOper expressions.
  *
  * @author
  *   Jure Kukovec

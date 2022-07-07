@@ -45,16 +45,16 @@ object ApalacheOperSignatures {
     // (Int, Int => t) => Seq(t)
     val mkSeqSig = signatureMapEntry(mkSeq, { case Seq(IntT1, OperT1(Seq(t), IntT1)) => SeqT1(t) })
 
-    // ((t1,t2) => t1, t1, Set(t2)) => t1
+    // ((a,b) => a, a, Set(b)) => a
     val foldSetSig = signatureMapEntry(foldSet,
         {
-          case Seq(OperT1(Seq(t1, t2), t11), t12, SetT1(t22)) if t1 == t11 && t11 == t12 && t2 == t22 => t1
+          case Seq(OperT1(Seq(a, b), a1), a2, SetT1(b1)) if a == a1 && a1 == a2 && b == b1 => a
         })
 
-    // ((t1,t2) => t1, t1, Seq(t2)) => t1
+    // ((a,b) => a, a, Seq(b)) => a
     val foldSeqSig = signatureMapEntry(foldSeq,
         {
-          case Seq(OperT1(Seq(t1, t2), t11), t12, SeqT1(t22)) if t1 == t11 && t11 == t12 && t2 == t22 => t1
+          case Seq(OperT1(Seq(a, b), a1), a2, SeqT1(b1)) if a == a1 && a1 == a2 && b == b1 => a
         })
 
     // (Set(<<a,b>>)) => a -> b
