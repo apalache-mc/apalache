@@ -186,8 +186,7 @@ an invariant violation and will lead to a spurious counterexample.
 Note that `tagName` is an identifier in this notation. In this type, `b` is a
 type variable that captures other options in the variant type.
 
-**Effect:** The variant constructor returns a new value that keeps the
-pair `(tagName, associatedValue)`.
+**Effect:** The variant constructor returns a new value of the variant type.
 
 **Determinism:** Deterministic.
 
