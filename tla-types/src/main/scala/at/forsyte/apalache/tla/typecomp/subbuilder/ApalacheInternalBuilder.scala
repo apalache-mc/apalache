@@ -16,7 +16,12 @@ import scalaz.Scalaz._
  */
 trait ApalacheInternalBuilder extends UnsafeApalacheInternalBuilder {
 
-  /** notSupportedByModelChecker */
+  /**
+   * {{{__NotSupportedByModelChecker(msg): t}}}
+   *
+   * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
+   * argument.
+   */
   def notSupportedByModelChecker(msg: String, tt: TlaType1): TBuilderInstruction =
     _notSupportedByModelChecker(msg, tt).point[TBuilderInternalState]
 
@@ -24,7 +29,7 @@ trait ApalacheInternalBuilder extends UnsafeApalacheInternalBuilder {
   def distinct(args: TBuilderInstruction*): TBuilderInstruction =
     buildSeq(args).map(_distinct(_: _*))
 
-  /** apalacheSeqCapacity */
+  /** {{{__ApalacheSeqCapacity(seq)}}} */
   def apalacheSeqCapacity(seq: TBuilderInstruction): TBuilderInstruction = seq.map(_apalacheSeqCapacity)
 
   /** selectInSet */

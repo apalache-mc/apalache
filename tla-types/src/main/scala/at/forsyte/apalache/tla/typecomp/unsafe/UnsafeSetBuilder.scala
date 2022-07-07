@@ -163,6 +163,6 @@ trait UnsafeSetBuilder extends ProtoBuilder {
     buildBySignatureLookup(TlaSetOper.times, sets: _*)
   }
 
-  /** SUBSET set */
+  /** {{{SUBSET set}}} */
   protected def _powSet(set: TlaEx): TlaEx = buildBySignatureLookup(TlaSetOper.powerset, set)
 }

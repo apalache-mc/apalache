@@ -34,11 +34,11 @@ trait TemporalBuilder extends UnsafeTemporalBuilder {
   def SF(x: TBuilderInstruction, A: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(x, A)(_SF)
 
-  /** {{{\EE x: P}}} */
+  /** {{{\EE x: P}}} `x` must be a variable name */
   def EE(x: TBuilderInstruction, P: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionBinary(_EE)(x, P)
 
-  /** {{{\AA x: P}}} */
+  /** {{{\AA x: P}}} `x` must be a variable name */
   def AA(x: TBuilderInstruction, P: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionBinary(_AA)(x, P)
 }

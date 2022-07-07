@@ -74,7 +74,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   /** {{{<<>> : Seq(t)}}} */
   protected def _emptySeq(t: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(t)))
 
-  /** {{{<<args[0], ..., args[0]>> : Seq(t)}}} `args` must be nonempty. */
+  /** {{{<<args[0], ..., args[n]>> : Seq(t)}}} `args` must be nonempty. */
   protected def _seq(args: TlaEx*): TlaEx = {
     require(args.nonEmpty)
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we

@@ -13,23 +13,29 @@ import scalaz._
  */
 trait ControlBuilder extends UnsafeControlBuilder {
 
-  /** IF p THEN A ELSE B */
+  /** {{{IF p THEN A ELSE B}}} */
   def ite(p: TBuilderInstruction, A: TBuilderInstruction, B: TBuilderInstruction): TBuilderInstruction =
     ternaryFromUnsafe(p, A, B)(_ite)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
+  /** {{{CASE pairs[0]._1 -> pairs[0]._2 [] ... [] pairs[n]._1 -> pairs[n]._2}}} `pairs` must be nonempty */
   def caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseSplitMixed(pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
+  /** {{{CASE pairs[0] -> pairs[1] [] ... [] pairs[n-1] -> pairs[n]}}} `pairs` must have even, positive arity */
   def caseSplitMixed(pairs: TBuilderInstruction*): TBuilderInstruction =
     buildSeq(pairs).map(_caseSplitMixed(_: _*))
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
+  /**
+   * {{{CASE pairs[0]._1 -> pairs[0]._2 [] ... [] pairs[n]._1 -> pairs[n]._2 [] OTHER -> other}}} `pairs` must be
+   * nonempty
+   */
   def caseOther(other: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseOtherMixed(other, pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
+  /**
+   * {{{CASE pairs[0] -> pairs[1] [] ... [] pairs[n-1] -> pairs[n] [] OTHER -> other}}} `pairs` must have even, positive
+   * arity
+   */
   def caseOtherMixed(other: TBuilderInstruction, pairs: TBuilderInstruction*): TBuilderInstruction = for {
     otherEx <- other
     pairsExs <- buildSeq(pairs)

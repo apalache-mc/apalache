@@ -12,39 +12,39 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
  */
 trait ArithmeticBuilder extends UnsafeArithmeticBuilder {
 
-  /** x + y */
+  /** {{{x + y}}} */
   def plus(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_plus)
 
-  /** x - y */
+  /** {{{x - y}}} */
   def minus(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_minus)
 
-  /** -x */
+  /** {{{-x}}} */
   def uminus(x: TBuilderInstruction): TBuilderInstruction = x.map(_uminus)
 
-  /** x * y */
+  /** {{{x * y}}} */
   def mult(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_mult)
 
-  /** x \div y */
+  /** {{{x \div y}}} */
   def div(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_div)
 
-  /** x % y */
+  /** {{{x % y}}} */
   def mod(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_mod)
 
   /** {{{x^y}}} */
   def exp(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_exp)
 
-  /** x .. y */
+  /** {{{x .. y}}} */
   def dotdot(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_dotdot)
 
-  /** x < y */
+  /** {{{x < y}}} */
   def lt(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_lt)
 
-  /** x > y */
+  /** {{{x > y}}} */
   def gt(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_gt)
 
-  /** x <= y */
+  /** {{{x <= y}}} */
   def le(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_le)
 
-  /** x >= y */
+  /** {{{x >= y}}} */
   def ge(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(x, y)(_ge)
 }

@@ -11,9 +11,9 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFiniteSetBuilder
  */
 trait FiniteSetBuilder extends UnsafeFiniteSetBuilder {
 
-  /** IsFiniteSet(set) */
+  /** {{{IsFiniteSet(set)}}} */
   def isFiniteSet(set: TBuilderInstruction): TBuilderInstruction = set.map(_isFiniteSet)
 
-  /** Cardinality(set) */
+  /** {{{Cardinality(set)}}} */
   def cardinality(set: TBuilderInstruction): TBuilderInstruction = set.map(_cardinality)
 }

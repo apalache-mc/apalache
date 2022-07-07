@@ -12,24 +12,24 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeSeqBuilder
  */
 trait SeqBuilder extends UnsafeSeqBuilder {
 
-  /** Append(seq,elem) */
+  /** {{{Append(seq,elem)}}} */
   def append(seq: TBuilderInstruction, elem: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(seq, elem)(_append)
 
-  /** leftSeq \o rightSeq */
+  /** {{{leftSeq \o rightSeq}}} */
   def concat(leftSeq: TBuilderInstruction, rightSeq: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(leftSeq, rightSeq)(_concat)
 
-  /** Head(seq) */
+  /** {{{Head(seq)}}} */
   def head(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _head }
 
-  /** Tail(seq) */
+  /** {{{Tail(seq)}}} */
   def tail(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _tail }
 
-  /** Len(seq) */
+  /** {{{Len(seq)}}} */
   def len(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _len }
 
-  /** SubSeq(seq, fromIndex, toIndex) */
+  /** {{{SubSeq(seq, fromIndex, toIndex)}}} */
   def subseq(
       seq: TBuilderInstruction,
       fromIndex: TBuilderInstruction,
