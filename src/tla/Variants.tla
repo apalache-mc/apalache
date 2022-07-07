@@ -41,24 +41,18 @@ VariantFilter(__tagName, __S) ==
     { __d \in { __e \in __S: __e.tag = __tagName }: __d.value }
 
 (**
- * In cases where `variant` allows for one value,
- * extract the associated value and return it.
- * The type checker must enforce that `variant` allows for one option.
+ * Get the tag name that is associated with a variant.
  *
- * @param `tagValue` the tag attached to the variant
  * @param `variant` a variant that is constructed with `Variant(...)`
- * @return the value extracted from the variant
+ * @return the tag name associated with a variant
  *
- * Its type could look like follows:
+ * Its type is as follows:
  *
- *   (Str, Tag(a)) => a
+ *   Variant(a) => Str
  *)
-VariantUnwrap(__tagName, __variant) ==
+VariantTag(__variant) ==
     \* default untyped implementation
-    IF __variant.tag = __tagName
-    THEN __variant.value
-    ELSE \* trigger an error in TLC by choosing a non-existent element
-         CHOOSE x \in { __variant }: x.tag = __tagName
+    __variant.tag
 
 (**
  * Return the value associated with the tag, when the tag equals to __tagName.

@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
 
 trait TestSymbStateRewriterVariant extends RewriterBase {
-  private val tagSort = "__TAG"
   private val parser = DefaultType1Parser
   private val fieldA = int(33).typed()
 
@@ -24,7 +23,7 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
     assert(variantT == cell.cellType.toTlaType1)
 
     expectTaggedValue(rewriter, nextState, cell, "Foo", fieldA)
-    expectTaggedValue(rewriter, nextState, cell, "__tag", tla.str(s"Foo_OF_${tagSort}").as(ConstT1(tagSort)))
+    expectTaggedValue(rewriter, nextState, cell, "__tag", tla.str(s"Foo").as(StrT1))
   }
 
   test("""Variant equality""") { rewriterType: SMTEncoding =>
@@ -103,11 +102,11 @@ trait TestSymbStateRewriterVariant extends RewriterBase {
     assertTlaExAndRestore(rewriter, state)
   }
 
-  test("""VariantUnwrap""") { rewriterType: SMTEncoding =>
+  test("""VariantTag""") { rewriterType: SMTEncoding =>
     val variantT = parser("Foo(Int)")
     val vrt1 = variant("Foo", int(33)).as(variantT)
-    val only = variantUnwrap("Foo", vrt1).as(IntT1)
-    val eq = eql(only, int(33)).as(BoolT1)
+    val tag = variantTag(vrt1).as(StrT1)
+    val eq = eql(tag, str("Foo")).as(BoolT1)
 
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create(rewriterType)
