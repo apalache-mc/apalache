@@ -12,34 +12,35 @@ import scalaz._
  * @author
  *   Jure Kukovec
  */
-trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
+trait LiteralAndNameBuilder {
+  private val unsafeBuilder = new UnsafeLiteralAndNameBuilder
 
   /** {{{i : Int}}} */
-  def int(i: BigInt): TBuilderInstruction = _int(i).point[TBuilderInternalState]
+  def int(i: BigInt): TBuilderInstruction = unsafeBuilder.int(i).point[TBuilderInternalState]
 
   /** {{{s : Str}}} `s` must be a string literal, not a literal of an uninterpreted sort. */
-  def str(s: String): TBuilderInstruction = _str(s).point[TBuilderInternalState]
+  def str(s: String): TBuilderInstruction = unsafeBuilder.str(s).point[TBuilderInternalState]
 
   /** {{{b : Bool}}} */
-  def bool(b: Boolean): TBuilderInstruction = _bool(b).point[TBuilderInternalState]
+  def bool(b: Boolean): TBuilderInstruction = unsafeBuilder.bool(b).point[TBuilderInternalState]
 
   /** {{{root_OF_A : A}}} `root` must be a string identifier and may not contain the `_OF_` suffix. */
-  def const(root: String, A: ConstT1): TBuilderInstruction = _const(root, A).point[TBuilderInternalState]
+  def const(root: String, A: ConstT1): TBuilderInstruction = unsafeBuilder.const(root, A).point[TBuilderInternalState]
 
   /** {{{v : A}}} `v` must be a literal of an uninterpreted sort, not a string literal. */
-  def constParsed(v: String): TBuilderInstruction = _constParsed(v).point[TBuilderInternalState]
+  def constParsed(v: String): TBuilderInstruction = unsafeBuilder.constParsed(v).point[TBuilderInternalState]
 
   /** {{{BOOLEAN}}} */
-  def booleanSet(): TBuilderInstruction = _booleanSet().point[TBuilderInternalState]
+  def booleanSet(): TBuilderInstruction = unsafeBuilder.booleanSet().point[TBuilderInternalState]
 
   /** {{{STRING}}} */
-  def stringSet(): TBuilderInstruction = _stringSet().point[TBuilderInternalState]
+  def stringSet(): TBuilderInstruction = unsafeBuilder.stringSet().point[TBuilderInternalState]
 
   /** {{{Int}}} */
-  def intSet(): TBuilderInstruction = _intSet().point[TBuilderInternalState]
+  def intSet(): TBuilderInstruction = unsafeBuilder.intSet().point[TBuilderInternalState]
 
   /** {{{Nat}}} */
-  def natSet(): TBuilderInstruction = _natSet().point[TBuilderInternalState]
+  def natSet(): TBuilderInstruction = unsafeBuilder.natSet().point[TBuilderInternalState]
 
   /** {{{exprName: t}}} */
   def name(exprName: String, t: TlaType1): TBuilderInstruction = State[TBuilderContext, TlaEx] { mi =>
@@ -53,7 +54,7 @@ trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
         )
     }
 
-    val ret = _name(exprName, t)
+    val ret = unsafeBuilder.name(exprName, t)
     (mi.copy(freeNameScope = scope + (exprName -> t), usedNames = mi.usedNames + exprName), ret)
   }
 
@@ -65,7 +66,7 @@ trait LiteralAndNameBuilder extends UnsafeLiteralAndNameBuilder {
         throw new TBuilderScopeException(
             s"Cannot build $exprName: the type of $exprName is not in scope. Use name(exprName, exType) instead."
         ))
-    _name(exprName, tt)
+    unsafeBuilder.name(exprName, tt)
   }
 
 }

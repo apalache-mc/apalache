@@ -9,41 +9,41 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
  * @author
  *   Jure Kukovec
  */
-trait UnsafeArithmeticBuilder extends ProtoBuilder {
+class UnsafeArithmeticBuilder extends ProtoBuilder {
 
   /** {{{x + y}}} */
-  protected def _plus(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.plus, x, y)
+  def plus(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.plus, x, y)
 
   /** {{{x - y}}} */
-  protected def _minus(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.minus, x, y)
+  def minus(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.minus, x, y)
 
   /** {{{-x}}} */
-  protected def _uminus(x: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.uminus, x)
+  def uminus(x: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.uminus, x)
 
   /** {{{x * y}}} */
-  protected def _mult(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.mult, x, y)
+  def mult(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.mult, x, y)
 
   /** {{{x \div y}}} */
-  protected def _div(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.div, x, y)
+  def div(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.div, x, y)
 
   /** {{{x % y}}} */
-  protected def _mod(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.mod, x, y)
+  def mod(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.mod, x, y)
 
   /** {{{x^y}}} */
-  protected def _exp(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.exp, x, y)
+  def exp(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.exp, x, y)
 
   /** {{{x .. y}}} */
-  protected def _dotdot(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.dotdot, x, y)
+  def dotdot(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.dotdot, x, y)
 
   /** {{{x < y}}} */
-  protected def _lt(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.lt, x, y)
+  def lt(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.lt, x, y)
 
   /** {{{x > y}}} */
-  protected def _gt(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.gt, x, y)
+  def gt(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.gt, x, y)
 
   /** {{{x <= y}}} */
-  protected def _le(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.le, x, y)
+  def le(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.le, x, y)
 
   /** {{{x >= y}}} */
-  protected def _ge(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.ge, x, y)
+  def ge(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.ge, x, y)
 }

@@ -16,25 +16,25 @@ import scala.collection.immutable.SortedMap
  * @author
  *   Jure Kukovec
  */
-trait UnsafeFunBuilder extends ProtoBuilder {
+class UnsafeFunBuilder extends ProtoBuilder {
 
   /**
    * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}} `args` must be nonempty, and all keys must be
    * unique strings
    */
-  protected def _rec(args: (String, TlaEx)*): TlaEx = {
+  def rec(args: (String, TlaEx)*): TlaEx = {
     // _recMixed does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
       Seq(ValEx(TlaStr(k))(Typed(StrT1)), v)
     }
-    _recMixed(flatArgs: _*)
+    recMixed(flatArgs: _*)
   }
 
   /**
    * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}} `args` must have even, positive arity, and all keys must
    * be unique strings
    */
-  protected def _recMixed(args: TlaEx*): TlaEx = {
+  def recMixed(args: TlaEx*): TlaEx = {
     require(TlaFunOper.rec.arity.cond(args.size))
     // All keys must be ValEx(TlaStr(_))
     val (keys, vals) = TlaOper.deinterleave(args)
@@ -63,7 +63,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   }
 
   /** {{{<<args[0], ..., args[n]>> : <<t1, ..., tn>>}}} */
-  protected def _tuple(args: TlaEx*): TlaEx = {
+  def tuple(args: TlaEx*): TlaEx = {
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
     // just define the tuple-variant signature
     val partialSig: PartialSignature = { seq => TupT1(seq: _*) }
@@ -72,10 +72,10 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   }
 
   /** {{{<<>> : Seq(t)}}} */
-  protected def _emptySeq(t: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(t)))
+  def emptySeq(t: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(t)))
 
   /** {{{<<args[0], ..., args[n]>> : Seq(t)}}} `args` must be nonempty. */
-  protected def _seq(args: TlaEx*): TlaEx = {
+  def seq(args: TlaEx*): TlaEx = {
     require(args.nonEmpty)
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
     // just define the seq-variant signature
@@ -88,19 +88,19 @@ trait UnsafeFunBuilder extends ProtoBuilder {
    * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}} `pairs` must be nonempty, and all vars
    * must be unique variable names
    */
-  protected def _funDef(e: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
+  def funDef(e: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
     // _funDefMixed does all the require checks
     val args = pairs.flatMap { case (k, v) =>
       Seq(k, v)
     }
-    _funDefMixed(e, args: _*)
+    funDefMixed(e, args: _*)
   }
 
   /**
    * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}} `pairs` must have even, positive arity, and all
    * vars must be unique variable names
    */
-  protected def _funDefMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
+  def funDefMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
     // Even, non-zero number of args in `pairs` and every other argument is NameEx
     require(TlaFunOper.funDef.arity.cond(1 + pairs.size))
     val (vars, _) = TlaOper.deinterleave(pairs)
@@ -128,7 +128,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   //////////////////
 
   /** {{{f[x]}}} for any Applicative `f` */
-  protected def _app(f: TlaEx, x: TlaEx): TlaEx = {
+  def app(f: TlaEx, x: TlaEx): TlaEx = {
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value
       case Seq(appT, domT) if asInstanceOfApplicative(appT, x).exists(_.fromT == domT) =>
@@ -142,7 +142,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   /////////////////////
 
   /** {{{DOMAIN f}}} for any Applicative `f` */
-  protected def _dom(f: TlaEx): TlaEx =
+  def dom(f: TlaEx): TlaEx =
     buildFromPartialSignature(
         { case Seq(tt) if Applicative.domainElemType(tt).nonEmpty => SetT1(Applicative.domainElemType(tt).get) }
     )(TlaFunOper.domain, f)
@@ -152,7 +152,7 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   /////////////////////
 
   /** {{{[f EXCEPT ![x] = e]}}} for any Applicative `f` */
-  protected def _except(f: TlaEx, x: TlaEx, e: TlaEx): TlaEx = {
+  def except(f: TlaEx, x: TlaEx, e: TlaEx): TlaEx = {
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value
       case Seq(appT, domT, cdmT) if asInstanceOfApplicative(appT, x).contains(Applicative(domT, cdmT)) => appT

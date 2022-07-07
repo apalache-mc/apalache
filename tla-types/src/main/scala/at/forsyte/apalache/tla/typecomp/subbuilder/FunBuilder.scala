@@ -13,7 +13,8 @@ import scalaz.Scalaz._
  * @author
  *   Jure Kukovec
  */
-trait FunBuilder extends UnsafeFunBuilder {
+trait FunBuilder {
+  private val unsafeBuilder = new UnsafeFunBuilder
 
   /**
    * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}} `args` must be nonempty, and all keys must be
@@ -22,30 +23,30 @@ trait FunBuilder extends UnsafeFunBuilder {
   def rec(args: (String, TBuilderInstruction)*): TBuilderInstruction = for {
     vs <- buildSeq(args.map(_._2))
     ks = args.map(_._1)
-  } yield _rec(ks.zip(vs): _*)
+  } yield unsafeBuilder.rec(ks.zip(vs): _*)
 
   /**
    * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}} `args` must have even, positive arity, and all keys must
    * be unique strings
    */
   def recMixed(args: TBuilderInstruction*): TBuilderInstruction =
-    buildSeq(args).map { _recMixed(_: _*) }
+    buildSeq(args).map { unsafeBuilder.recMixed(_: _*) }
 
   /** {{{<<args[0], ..., args[n]>> : <<t1, ..., tn>>}}} */
-  def tuple(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(_tuple(_: _*))
+  def tuple(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(unsafeBuilder.tuple(_: _*))
 
   /** {{{<<>> : Seq(t)}}} */
-  def emptySeq(t: TlaType1): TBuilderInstruction = _emptySeq(t).point[TBuilderInternalState]
+  def emptySeq(t: TlaType1): TBuilderInstruction = unsafeBuilder.emptySeq(t).point[TBuilderInternalState]
 
   /** {{{<<args[0], ..., args[n]>> : Seq(t)}}} `args` must be nonempty. */
-  def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { _seq }
+  def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { unsafeBuilder.seq }
 
   /**
    * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}} `pairs` must be nonempty, and all vars
    * must be unique variable names
    */
   def funDef(e: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
-    boundVarIntroductionVariadic(_funDef)(e, pairs: _*)
+    boundVarIntroductionVariadic(unsafeBuilder.funDef)(e, pairs: _*)
 
   /**
    * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}} `pairs` must have even, positive arity, and all
@@ -65,14 +66,14 @@ trait FunBuilder extends UnsafeFunBuilder {
 
   /** {{{f[x]}}} for any Applicative `f` */
   def app(f: TBuilderInstruction, x: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(f, x)(_app)
+    binaryFromUnsafe(f, x)(unsafeBuilder.app)
 
   /////////////////////
   // DOMAIN overload //
   /////////////////////
 
   /** {{{DOMAIN f}}} for any Applicative `f` */
-  def dom(f: TBuilderInstruction): TBuilderInstruction = f.map { _dom }
+  def dom(f: TBuilderInstruction): TBuilderInstruction = f.map { unsafeBuilder.dom }
 
   /////////////////////
   // EXCEPT overload //
@@ -80,6 +81,6 @@ trait FunBuilder extends UnsafeFunBuilder {
 
   /** {{{[f EXCEPT ![x] = e]}}} for any Applicative `f` */
   def except(f: TBuilderInstruction, x: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(f, x, e)(_except)
+    ternaryFromUnsafe(f, x, e)(unsafeBuilder.except)
 
 }

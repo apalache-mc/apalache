@@ -9,11 +9,11 @@ import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
  * @author
  *   Jure Kukovec
  */
-trait UnsafeFiniteSetBuilder extends ProtoBuilder {
+class UnsafeFiniteSetBuilder extends ProtoBuilder {
 
   /** {{{IsFiniteSet(set)}}} */
-  protected def _isFiniteSet(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.isFiniteSet, set)
+  def isFiniteSet(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.isFiniteSet, set)
 
   /** {{{Cardinality(set)}}} */
-  protected def _cardinality(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.cardinality, set)
+  def cardinality(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.cardinality, set)
 }

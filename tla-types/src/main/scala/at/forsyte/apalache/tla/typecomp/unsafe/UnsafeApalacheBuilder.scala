@@ -10,10 +10,10 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * @author
  *   Jure Kukovec
  */
-trait UnsafeApalacheBuilder extends ProtoBuilder {
+class UnsafeApalacheBuilder extends ProtoBuilder {
 
   /** {{{lhs := rhs}}} `lhs` must be a primed variable name. */
-  protected def _assign(lhs: TlaEx, rhs: TlaEx): TlaEx = {
+  def assign(lhs: TlaEx, rhs: TlaEx): TlaEx = {
     require(lhs match {
       case OperEx(TlaActionOper.prime, _: NameEx) => true
       case _                                      => false
@@ -27,13 +27,13 @@ trait UnsafeApalacheBuilder extends ProtoBuilder {
    * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
    * argument.
    */
-  protected def _gen(n: Int, t: TlaType1): TlaEx = {
+  def gen(n: Int, t: TlaType1): TlaEx = {
     require(n > 0)
     OperEx(ApalacheOper.gen, ValEx(TlaInt(n))(Typed(IntT1)))(Typed(t))
   }
 
   /** {{{Skolem(ex)}}} `ex` must be an expression of the shape {{{\E x \in S: P}}} */
-  protected def _skolem(ex: TlaEx): TlaEx = {
+  def skolem(ex: TlaEx): TlaEx = {
     require(ex match {
       case OperEx(TlaBoolOper.exists, _, _, _) => true
       case _                                   => false
@@ -42,10 +42,10 @@ trait UnsafeApalacheBuilder extends ProtoBuilder {
   }
 
   /** {{{Guess(S)}}} */
-  protected def _guess(S: TlaEx): TlaEx = buildBySignatureLookup(ApalacheOper.guess, S)
+  def guess(S: TlaEx): TlaEx = buildBySignatureLookup(ApalacheOper.guess, S)
 
   /** {{{Expand(ex)}}} `ex` must be either `SUBSET S` or `[A -> B]` */
-  protected def _expand(ex: TlaEx): TlaEx = {
+  def expand(ex: TlaEx): TlaEx = {
     require(ex match {
       case OperEx(TlaSetOper.powerset, _)  => true
       case OperEx(TlaSetOper.funSet, _, _) => true
@@ -55,7 +55,7 @@ trait UnsafeApalacheBuilder extends ProtoBuilder {
   }
 
   /** {{{ConstCard(ex)}}} `ex` must be an expression of the shape {{{Cardinality(S) >= N}}} */
-  protected def _constCard(ex: TlaEx): TlaEx = {
+  def constCard(ex: TlaEx): TlaEx = {
     require(ex match {
       case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(_: TlaInt)) => true
       case _                                                                                  => false
@@ -69,23 +69,23 @@ trait UnsafeApalacheBuilder extends ProtoBuilder {
   }
 
   /** {{{MkSeq(n, F)}}} `F` must be an expression of the shape {{{LET Op(i) == ... IN Op}}} */
-  protected def _mkSeq(len: Int, F: TlaEx): TlaEx = {
+  def mkSeq(len: Int, F: TlaEx): TlaEx = {
     require(isNaryLambda(n = 1)(F))
     buildBySignatureLookup(ApalacheOper.mkSeq, ValEx(TlaInt(len))(Typed(IntT1)), F)
   }
 
   /** {{{FoldSet(F, v, S)}}} `F` must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}} */
-  protected def _foldSet(F: TlaEx, v: TlaEx, S: TlaEx): TlaEx = {
+  def foldSet(F: TlaEx, v: TlaEx, S: TlaEx): TlaEx = {
     require(isNaryLambda(n = 2)(F))
     buildBySignatureLookup(ApalacheOper.foldSet, F, v, S)
   }
 
   /** {{{FoldSeq(F, v, seq)}}} `F` must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}} */
-  protected def _foldSeq(F: TlaEx, v: TlaEx, seq: TlaEx): TlaEx = {
+  def foldSeq(F: TlaEx, v: TlaEx, seq: TlaEx): TlaEx = {
     require(isNaryLambda(n = 2)(F))
     buildBySignatureLookup(ApalacheOper.foldSeq, F, v, seq)
   }
 
   /** {{{SetAsFun(S)}}} */
-  protected def _setAsFun(S: TlaEx): TlaEx = buildBySignatureLookup(ApalacheOper.setAsFun, S)
+  def setAsFun(S: TlaEx): TlaEx = buildBySignatureLookup(ApalacheOper.setAsFun, S)
 }

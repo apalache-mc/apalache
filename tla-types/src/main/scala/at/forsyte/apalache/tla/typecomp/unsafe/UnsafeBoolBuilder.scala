@@ -9,43 +9,43 @@ import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
  * @author
  *   Jure Kukovec
  */
-trait UnsafeBoolBuilder extends ProtoBuilder {
+class UnsafeBoolBuilder extends ProtoBuilder {
 
   /** {{{args[0] /\ ... /\ args[n]}}} */
-  protected def _and(args: TlaEx*): TlaEx = buildBySignatureLookup(TlaBoolOper.and, args: _*)
+  def and(args: TlaEx*): TlaEx = buildBySignatureLookup(TlaBoolOper.and, args: _*)
 
   /** {{{args[0] \/ ... \/ args[n]}}} */
-  protected def _or(args: TlaEx*): TlaEx = buildBySignatureLookup(TlaBoolOper.or, args: _*)
+  def or(args: TlaEx*): TlaEx = buildBySignatureLookup(TlaBoolOper.or, args: _*)
 
   /** {{{~p}}} */
-  protected def _not(p: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.not, p)
+  def not(p: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.not, p)
 
   /** {{{p => q}}} */
-  protected def _impl(p: TlaEx, q: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.implies, p, q)
+  def impl(p: TlaEx, q: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.implies, p, q)
 
   /** {{{p <=> q}}} */
-  protected def _equiv(p: TlaEx, q: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.equiv, p, q)
+  def equiv(p: TlaEx, q: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.equiv, p, q)
 
   /** {{{\A x \in set: p}}} `x` must be a variable name */
-  protected def _forall(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
+  def forall(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaBoolOper.forall, x, set, p)
   }
 
   /** {{{\A x: p}}} `x` must be a variable name */
-  protected def _forall(x: TlaEx, p: TlaEx): TlaEx = {
+  def forall(x: TlaEx, p: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaBoolOper.forallUnbounded, x, p)
   }
 
   /** {{{\E x \in set: p}}} `x` must be a variable name */
-  protected def _exists(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
+  def exists(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaBoolOper.exists, x, set, p)
   }
 
   /** {{{\E x: p}}} `x` must be a variable name */
-  protected def _exists(x: TlaEx, p: TlaEx): TlaEx = {
+  def exists(x: TlaEx, p: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaBoolOper.existsUnbounded, x, p)
   }

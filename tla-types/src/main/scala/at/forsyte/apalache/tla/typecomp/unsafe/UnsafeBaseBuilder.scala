@@ -10,31 +10,31 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
  * @author
  *   Jure Kukovec
  */
-trait UnsafeBaseBuilder extends ProtoBuilder {
+class UnsafeBaseBuilder extends ProtoBuilder {
 
   /** {{{lhs = rhs}}} */
-  protected def _eql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.eq, lhs, rhs)
+  def eql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.eq, lhs, rhs)
 
   /** {{{lhs /= rhs}}} */
-  protected def _neql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.ne, lhs, rhs)
+  def neql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.ne, lhs, rhs)
 
   /** {{{Op(args[1],...,args[n])}}} */
-  protected def _appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
+  def appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
 
   /** {{{CHOOSE x: p}}} `x` must be a variable name */
-  protected def _choose(x: TlaEx, p: TlaEx): TlaEx = {
+  def choose(x: TlaEx, p: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaOper.chooseUnbounded, x, p)
   }
 
   /** {{{CHOOSE x \in set: p}}}, `x` must be a variable name */
-  protected def _choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
+  def choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
     require(x.isInstanceOf[NameEx])
     buildBySignatureLookup(TlaOper.chooseBounded, x, set, p)
   }
 
   /** {{{args[0](args[1], ..., args[n]) :: ex}}} `args` must be nonempty */
-  protected def _label(ex: TlaEx, args: String*): TlaEx = {
+  def label(ex: TlaEx, args: String*): TlaEx = {
     require(args.nonEmpty)
     val argsAsStringExs = args.map { s => ValEx(TlaStr(s))(Typed(StrT1)) }
     buildBySignatureLookup(TlaOper.label, ex +: argsAsStringExs: _*)
