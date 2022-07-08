@@ -1638,6 +1638,16 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check for Bug1946: unexpected equality test when comparing function sets
+
+See https://github.com/informalsystems/apalache/issues/1946
+
+```sh
+$ apalache-mc check --length=5 Bug1946.tla
+...
+EXITCODE: OK
+```
+
 ## configure the check command
 
 Testing various flags that are set via command-line options and the TLC configuration file. The CLI has priority over
