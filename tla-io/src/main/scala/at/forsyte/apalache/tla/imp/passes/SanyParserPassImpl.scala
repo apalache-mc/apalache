@@ -58,10 +58,10 @@ class SanyParserPassImpl @Inject() (
     Right(modules.get(rootName).get)
   }
 
-  private def loadFromTlaString(content: String): PassResult = {
+  private def loadFromTlaString(content: String, aux: Seq[String]): PassResult = {
     val (rootName, modules) =
       new SanyImporter(sourceStore, annotationStore)
-        .loadFromSource(Source.fromString(content))
+        .loadFromSource(Source.fromString(content), aux.map(Source.fromString(_)))
     Right(modules.get(rootName).get)
   }
 
@@ -88,8 +88,8 @@ class SanyParserPassImpl @Inject() (
     for {
       rootModule <-
         source match {
-          case SourceOption.StringSource(content) =>
-            loadFromTlaString(content)
+          case SourceOption.StringSource(content, aux) =>
+            loadFromTlaString(content, aux)
           case SourceOption.FileSource(file) =>
             if (file.getName().endsWith(".json")) {
               loadFromJsonFile(file)

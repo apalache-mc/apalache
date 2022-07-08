@@ -148,7 +148,7 @@ class ConfigurationPassImpl @Inject() (
     // read a TLC config if it was passed by the user
     val configFilename = options.getOrElse[String]("checker", "config", "")
     options.getOrError[SourceOption]("parser", "source") match {
-      case SourceOption.StringSource(_) =>
+      case SourceOption.StringSource(_, _) =>
         // NOTE: Implicit loading of .cfg files not supported when loading from a string
         ()
       case SourceOption.FileSource(f) =>
