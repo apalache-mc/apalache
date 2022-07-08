@@ -180,20 +180,6 @@ in the following way:
 {{#include ../../../test/tla/LamportMutexTyped.tla:vars2}}
 ```
 
-Now we should run the type checker again:
-
-```sh
-$ apalache-mc typecheck --features=rows LamportMutexTyped.tla
-...
-Typing input error: Expected a type annotation for CONSTANT maxClock
-```
-
-The type checker is still not happy: We have not annotated `CONSTANTS`.
-
-Note that we had to pass the option `--features=rows`, as we are using the new
-syntax for record types `{ ... }`, which needs to be activated. This feature
-will become the default in September of 2022.
-
 **Note:** We are lucky that `ReqMessage`, `AckMessage`, and `RelMessage` are
 producing records of the same shape. In some specifications, the shapes of
 records differ, while these records should be added to the same set. This is a
@@ -206,6 +192,21 @@ same type. In this case, we have three options:
 
  - Use variants. This is a more advanced topic, see the
    [HOWTO on writing type annotations][].
+
+Now we should run the type checker again:
+
+```sh
+$ apalache-mc typecheck --features=rows LamportMutexTyped.tla
+...
+Typing input error: Expected a type annotation for CONSTANT maxClock
+```
+
+Note that we pass the option `--features=rows`, as we are using the new syntax
+for record types `{ ... }`, which needs to be activated. This feature will
+become the default in the future.
+<!-- TODO(#1943): Remove --features=rows when it becomes default. -->
+
+The type checker is still not happy: We have not annotated `CONSTANTS`.
 
 ## Step 4: Annotating constants
 
