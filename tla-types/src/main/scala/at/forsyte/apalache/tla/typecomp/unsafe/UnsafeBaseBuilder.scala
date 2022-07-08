@@ -21,21 +21,33 @@ class UnsafeBaseBuilder extends ProtoBuilder {
   /** {{{Op(args[1],...,args[n])}}} */
   def appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
 
-  /** {{{CHOOSE x: p}}} `x` must be a variable name */
+  /**
+   * {{{CHOOSE x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def choose(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaOper.chooseUnbounded, x, p)
   }
 
-  /** {{{CHOOSE x \in set: p}}}, `x` must be a variable name */
+  /**
+   * {{{CHOOSE x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaOper.chooseBounded, x, set, p)
   }
 
-  /** {{{args[0](args[1], ..., args[n]) :: ex}}} `args` must be nonempty */
+  /**
+   * {{{args[0](args[1], ..., args[n]) :: ex}}}
+   * @param args
+   *   must be nonempty
+   */
   def label(ex: TlaEx, args: String*): TlaEx = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty.")
     val argsAsStringExs = args.map { s => ValEx(TlaStr(s))(Typed(StrT1)) }
     buildBySignatureLookup(TlaOper.label, ex +: argsAsStringExs: _*)
   }

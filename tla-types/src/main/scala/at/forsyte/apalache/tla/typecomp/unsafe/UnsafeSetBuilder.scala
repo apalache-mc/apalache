@@ -16,9 +16,14 @@ import scala.collection.immutable.SortedMap
  */
 class UnsafeSetBuilder extends ProtoBuilder {
 
-  /** {{{{args[0], ..., args[n]} }}} `args` must be nonempty. */
+  /**
+   * {{{
+   * {args[0], ..., args[n]} }}} To construct empty sets, use [[emptySet]] instead.
+   * @param args
+   *   must be nonempty.
+   */
   def enumSet(args: TlaEx*): TlaEx = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty.")
     buildBySignatureLookup(TlaSetOper.enumSet, args: _*)
   }
 
@@ -40,16 +45,24 @@ class UnsafeSetBuilder extends ProtoBuilder {
   /** {{{UNION set}}} */
   def union(set: TlaEx): TlaEx = buildBySignatureLookup(TlaSetOper.union, set)
 
-  /** {{{{ x \in set: p } }}} `x` must be a variable name */
+  // Trailing `` in scaladocs prevents auto-format linebreaks
+  /**
+   * {{{
+   * { x \in set: p } }}} ``
+   * @param x
+   *   must be a variable name
+   */
   def filter(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaSetOper.filter, x, set, p)
   }
 
+  // Trailing `` in scaladocs prevents auto-format linebreaks
   /**
    * {{{
-   * { e: pairs[0]._1 \in pairs[0]._2 , ..., pairs[n]._1 \in pairs[n]._2 } }}} `pairs` must be nonempty, and all vars
-   * must be unique variable names
+   * { e: pairs[0]._1 \in pairs[0]._2 , ..., pairs[n]._1 \in pairs[n]._2 } }}} ``
+   * @param pairs
+   *   must be nonempty, and all vars must be unique variable names
    */
   def map(e: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
     // _mapMixed does all the require checks
@@ -59,21 +72,21 @@ class UnsafeSetBuilder extends ProtoBuilder {
     mapMixed(e, args: _*)
   }
 
+  // Trailing `` in scaladocs prevents auto-format linebreaks
   /**
    * {{{
-   * { e: pairs[0] \in pairs[1] , ..., pairs[n-1] \in pairs[n] } }}} `pairs` must have even, positive arity, and all vars
-   * must be unique variable names
+   * { e: pairs[0] \in pairs[1] , ..., pairs[n-1] \in pairs[n] } }}} ``
+   * @param pairs
+   *   must have even, positive arity, and all vars must be unique variable names
    */
   def mapMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
     // Even, non-zero number of args and every other argument is NameEx
-    require(TlaSetOper.map.arity.cond(1 + pairs.size))
+    require(TlaSetOper.map.arity.cond(1 + pairs.size), s"pairs = $pairs must have even, positive arity.")
     val (vars, _) = TlaOper.deinterleave(pairs)
-    require(vars.forall { _.isInstanceOf[NameEx] })
+    require(vars.forall { _.isInstanceOf[NameEx] }, s"vars = $vars must be variable names.")
     // Vars must be unique
     val duplicates = vars.filter(k => vars.count(_ == k) > 1)
-    if (duplicates.nonEmpty) {
-      throw new IllegalArgumentException(s"Found repeated keys in map: ${duplicates.mkString(", ")}")
-    }
+    require(duplicates.isEmpty, s"vars = $vars must be unique. Duplicates: ${duplicates.mkString(", ")}.")
     buildBySignatureLookup(TlaSetOper.map, e +: pairs: _*)
   }
 
@@ -81,8 +94,9 @@ class UnsafeSetBuilder extends ProtoBuilder {
   def funSet(fromSet: TlaEx, toSet: TlaEx): TlaEx = buildBySignatureLookup(TlaSetOper.funSet, fromSet, toSet)
 
   /**
-   * {{{[ kvs[0]._1: kvs[0]._2, ... , kvs[n]._1: kvs[n]._2 ]}}} `kvs` must be nonempty, and all keys must be unique
-   * strings
+   * {{{[ kvs[0]._1: kvs[0]._2, ... , kvs[n]._1: kvs[n]._2 ]}}}
+   * @param kvs
+   *   must be nonempty, and all keys must be unique strings
    */
   def recSet(kvs: (String, TlaEx)*): TlaEx = {
     // _recSetMixed does all the require checks
@@ -93,20 +107,20 @@ class UnsafeSetBuilder extends ProtoBuilder {
   }
 
   /**
-   * {{{[ kvs[0]: kvs[1], ... , kvs[n-1]: kvs[n] ]}}} `kvs` must have even, positive arity, and all keys must be unique
-   * strings
+   * {{{[ kvs[0]: kvs[1], ... , kvs[n-1]: kvs[n] ]}}}
+   * @param kvs
+   *   must have even, positive arity, and all keys must be unique strings
    */
   def recSetMixed(kvs: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
-    require(TlaSetOper.recSet.arity.cond(kvs.size))
-    val (recKeys, _) = TlaOper.deinterleave(kvs)
-    require(recKeys.forall {
-      case ValEx(_: TlaStr) => true
-      case _                => false
-    })
-    val duplicates = recKeys.filter(k => recKeys.count(_ == k) > 1)
-    if (duplicates.nonEmpty)
-      throw new IllegalArgumentException(s"Found repeated keys in record set constructor: ${duplicates.mkString(", ")}")
+    require(TlaSetOper.recSet.arity.cond(kvs.size), s"kvs = $kvs must have even, positive arity.")
+    val (keys, _) = TlaOper.deinterleave(kvs)
+    require(keys.forall {
+          case ValEx(_: TlaStr) => true
+          case _                => false
+        }, s"keys = $keys must be TLA strings.")
+    val duplicates = keys.filter(k => keys.count(_ == k) > 1)
+    require(duplicates.isEmpty, s"keys = $keys must be unique. Duplicates: ${duplicates.mkString(", ")}.")
 
     // Record constructors don't have a signature, so we must construct a type-computation manually
     // This type computation cannot be pure, as it must read the string values of the record field names
@@ -157,9 +171,13 @@ class UnsafeSetBuilder extends ProtoBuilder {
   def setminus(left: TlaEx, right: TlaEx): TlaEx =
     buildBySignatureLookup(TlaSetOper.setminus, left, right)
 
-  /** {{{sets[0] \X sets[1] \X ... \X sets[n]}}} `sets` must have at least 2 elements */
+  /**
+   * {{{sets[0] \X sets[1] \X ... \X sets[n]}}}
+   * @param sets
+   *   must have at least 2 elements
+   */
   def times(sets: TlaEx*): TlaEx = {
-    require(TlaSetOper.times.arity.cond(sets.size))
+    require(TlaSetOper.times.arity.cond(sets.size), s"sets = $sets must have at least 2 elements.")
     buildBySignatureLookup(TlaSetOper.times, sets: _*)
   }
 

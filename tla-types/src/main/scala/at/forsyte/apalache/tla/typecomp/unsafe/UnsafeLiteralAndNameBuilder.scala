@@ -16,7 +16,11 @@ class UnsafeLiteralAndNameBuilder {
   /** {{{i : Int}}} */
   def int(i: BigInt): TlaEx = ValEx(TlaInt(i))(Typed(IntT1))
 
-  /** {{{s : Str}}} `s` must be a string literal, not a literal of an uninterpreted sort. */
+  /**
+   * {{{s : Str}}}
+   * @param s
+   *   must be a string literal, not a literal of an uninterpreted sort.
+   */
   def str(s: String): TlaEx = {
     if (ModelValueHandler.isModelValue(s))
       throw new TBuilderTypeException(
@@ -28,7 +32,11 @@ class UnsafeLiteralAndNameBuilder {
   /** {{{b : Bool}}} */
   def bool(b: Boolean): TlaEx = ValEx(TlaBool(b))(Typed(BoolT1))
 
-  /** {{{root_OF_A : A}}} `root` must be a string identifier and may not contain the `_OF_` suffix. */
+  /**
+   * {{{root_OF_A : A}}}
+   * @param root
+   *   must be a string identifier and may not contain the `_OF_` suffix.
+   */
   def const(root: String, A: ConstT1): TlaEx = {
     if (ModelValueHandler.isModelValue(root))
       throw new TBuilderTypeException(
@@ -37,7 +45,11 @@ class UnsafeLiteralAndNameBuilder {
     ValEx(TlaStr(fullStr))(Typed(A))
   }
 
-  /** {{{v : A}}} `v` must be a literal of an uninterpreted sort, not a string literal. */
+  /**
+   * {{{v : A}}}
+   * @param v
+   *   must be a literal of an uninterpreted sort, not a string literal.
+   */
   def constParsed(v: String): TlaEx = {
     if (!ModelValueHandler.isModelValue(v))
       throw new TBuilderTypeException(

@@ -26,27 +26,43 @@ class UnsafeBoolBuilder extends ProtoBuilder {
   /** {{{p <=> q}}} */
   def equiv(p: TlaEx, q: TlaEx): TlaEx = buildBySignatureLookup(TlaBoolOper.equiv, p, q)
 
-  /** {{{\A x \in set: p}}} `x` must be a variable name */
+  /**
+   * {{{\A x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def forall(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaBoolOper.forall, x, set, p)
   }
 
-  /** {{{\A x: p}}} `x` must be a variable name */
+  /**
+   * {{{\A x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def forall(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaBoolOper.forallUnbounded, x, p)
   }
 
-  /** {{{\E x \in set: p}}} `x` must be a variable name */
+  /**
+   * {{{\E x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def exists(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaBoolOper.exists, x, set, p)
   }
 
-  /** {{{\E x: p}}} `x` must be a variable name */
+  /**
+   * {{{\E x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def exists(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaBoolOper.existsUnbounded, x, p)
   }
 }

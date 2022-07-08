@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecomp.subbuilder
 
 import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
-import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.typecomp.{Applicative, TBuilderInstruction, TBuilderInternalState}
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFunBuilder
 import scalaz._
 import scalaz.Scalaz._
@@ -17,8 +17,9 @@ trait FunBuilder {
   private val unsafeBuilder = new UnsafeFunBuilder
 
   /**
-   * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}} `args` must be nonempty, and all keys must be
-   * unique strings
+   * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}}
+   * @param args
+   *   must be nonempty, and all keys must be unique strings
    */
   def rec(args: (String, TBuilderInstruction)*): TBuilderInstruction = for {
     vs <- buildSeq(args.map(_._2))
@@ -26,8 +27,9 @@ trait FunBuilder {
   } yield unsafeBuilder.rec(ks.zip(vs): _*)
 
   /**
-   * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}} `args` must have even, positive arity, and all keys must
-   * be unique strings
+   * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}}
+   * @param args
+   *   must have even, positive arity, and all keys must be unique strings
    */
   def recMixed(args: TBuilderInstruction*): TBuilderInstruction =
     buildSeq(args).map { unsafeBuilder.recMixed(_: _*) }
@@ -38,19 +40,25 @@ trait FunBuilder {
   /** {{{<<>> : Seq(t)}}} */
   def emptySeq(t: TlaType1): TBuilderInstruction = unsafeBuilder.emptySeq(t).point[TBuilderInternalState]
 
-  /** {{{<<args[0], ..., args[n]>> : Seq(t)}}} `args` must be nonempty. */
+  /**
+   * {{{<<args[0], ..., args[n]>> : Seq(t)}}}
+   * @param args
+   *   must be nonempty.
+   */
   def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { unsafeBuilder.seq }
 
   /**
-   * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}} `pairs` must be nonempty, and all vars
-   * must be unique variable names
+   * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}}
+   * @param pairs
+   *   must be nonempty, and all vars must be unique variable names
    */
   def funDef(e: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     boundVarIntroductionVariadic(unsafeBuilder.funDef)(e, pairs: _*)
 
   /**
-   * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}} `pairs` must have even, positive arity, and all
-   * vars must be unique variable names
+   * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}}
+   * @param pairs
+   *   must have even, positive arity, and all vars must be unique variable names
    */
   def funDefMixed(e: TBuilderInstruction, pairs: TBuilderInstruction*): TBuilderInstruction = {
     require(pairs.size % 2 == 0)
@@ -64,7 +72,11 @@ trait FunBuilder {
   // APP overload //
   //////////////////
 
-  /** {{{f[x]}}} for any Applicative `f` */
+  /**
+   * {{{f[x]}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
   def app(f: TBuilderInstruction, x: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(f, x)(unsafeBuilder.app)
 
@@ -72,14 +84,22 @@ trait FunBuilder {
   // DOMAIN overload //
   /////////////////////
 
-  /** {{{DOMAIN f}}} for any Applicative `f` */
+  /**
+   * {{{DOMAIN f}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
   def dom(f: TBuilderInstruction): TBuilderInstruction = f.map { unsafeBuilder.dom }
 
   /////////////////////
   // EXCEPT overload //
   /////////////////////
 
-  /** {{{[f EXCEPT ![x] = e]}}} for any Applicative `f` */
+  /**
+   * {{{[f EXCEPT ![x] = e]}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
   def except(f: TBuilderInstruction, x: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction =
     ternaryFromUnsafe(f, x, e)(unsafeBuilder.except)
 

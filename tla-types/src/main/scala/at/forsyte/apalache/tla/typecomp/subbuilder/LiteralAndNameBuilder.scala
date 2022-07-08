@@ -18,16 +18,28 @@ trait LiteralAndNameBuilder {
   /** {{{i : Int}}} */
   def int(i: BigInt): TBuilderInstruction = unsafeBuilder.int(i).point[TBuilderInternalState]
 
-  /** {{{s : Str}}} `s` must be a string literal, not a literal of an uninterpreted sort. */
+  /**
+   * {{{s : Str}}}
+   * @param s
+   *   must be a string literal, not a literal of an uninterpreted sort.
+   */
   def str(s: String): TBuilderInstruction = unsafeBuilder.str(s).point[TBuilderInternalState]
 
   /** {{{b : Bool}}} */
   def bool(b: Boolean): TBuilderInstruction = unsafeBuilder.bool(b).point[TBuilderInternalState]
 
-  /** {{{root_OF_A : A}}} `root` must be a string identifier and may not contain the `_OF_` suffix. */
+  /**
+   * {{{root_OF_A : A}}}
+   * @param root
+   *   must be a string identifier and may not contain the `_OF_` suffix.
+   */
   def const(root: String, A: ConstT1): TBuilderInstruction = unsafeBuilder.const(root, A).point[TBuilderInternalState]
 
-  /** {{{v : A}}} `v` must be a literal of an uninterpreted sort, not a string literal. */
+  /**
+   * {{{v : A}}}
+   * @param v
+   *   must be a literal of an uninterpreted sort, not a string literal.
+   */
   def constParsed(v: String): TBuilderInstruction = unsafeBuilder.constParsed(v).point[TBuilderInternalState]
 
   /** {{{BOOLEAN}}} */

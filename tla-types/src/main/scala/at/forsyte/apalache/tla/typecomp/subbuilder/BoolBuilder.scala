@@ -30,19 +30,35 @@ trait BoolBuilder {
   def equiv(p: TBuilderInstruction, q: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(p, q)(unsafeBuilder.equiv)
 
-  /** {{{\A x \in set: p}}} `x` must be a variable name */
+  /**
+   * {{{\A x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def forall(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionTernary(unsafeBuilder.forall)(x, set, p)
 
-  /** {{{\A x: p}}} `x` must be a variable name */
+  /**
+   * {{{\A x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def forall(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionBinary(unsafeBuilder.forall)(x, p)
 
-  /** {{{\E x \in set: p}}} `x` must be a variable name */
+  /**
+   * {{{\E x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def exists(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionTernary(unsafeBuilder.exists)(x, set, p)
 
-  /** {{{\E x: p}}} `x` must be a variable name */
+  /**
+   * {{{\E x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def exists(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionBinary(unsafeBuilder.exists)(x, p)
 

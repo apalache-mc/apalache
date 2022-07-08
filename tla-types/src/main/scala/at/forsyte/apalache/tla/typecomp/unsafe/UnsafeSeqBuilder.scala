@@ -15,8 +15,7 @@ class UnsafeSeqBuilder extends ProtoBuilder {
   def append(seq: TlaEx, elem: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.append, seq, elem)
 
   /** {{{leftSeq \o rightSeq}}} */
-  def concat(leftSeq: TlaEx, rightSeq: TlaEx): TlaEx =
-    buildBySignatureLookup(TlaSeqOper.concat, leftSeq, rightSeq)
+  def concat(leftSeq: TlaEx, rightSeq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.concat, leftSeq, rightSeq)
 
   /** {{{Head(seq)}}} */
   def head(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.head, seq)

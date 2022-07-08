@@ -659,30 +659,4 @@ class TestFunBuilder extends BuilderTest {
 
   }
 
-  test("debug") {
-    // does not throw on non-shadowing: multi-arity
-    // [ x \in S, y \in {z \in T: \E x \in S: TRUE} |->e ]
-    build(
-        builder.funDef(
-            builder.name("e", StrT1),
-            (
-                builder.name("x", StrT1),
-                builder.name("S", SetT1(StrT1)),
-            ),
-            (
-                builder.name("y", IntT1),
-                builder.filter(
-                    builder.name("z", IntT1),
-                    builder.name("T", SetT1(IntT1)),
-                    builder.exists(
-                        builder.name("x", StrT1),
-                        builder.name("S", SetT1(StrT1)),
-                        builder.bool(true),
-                    ),
-                ),
-            ),
-        )
-    )
-  }
-
 }

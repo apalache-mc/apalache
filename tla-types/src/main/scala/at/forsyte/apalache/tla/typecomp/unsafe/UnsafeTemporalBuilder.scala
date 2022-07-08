@@ -29,15 +29,23 @@ class UnsafeTemporalBuilder extends ProtoBuilder {
   /** {{{SF_x(A)}}} */
   def SF(x: TlaEx, A: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.strongFairness, x, A)
 
-  /** {{{\EE x: P}}} `x` must be a variable name */
+  /**
+   * {{{\EE x: P}}}
+   * @param x
+   *   must be a variable name
+   */
   def EE(x: TlaEx, P: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaTempOper.EE, x, P)
   }
 
-  /** {{{\AA x: P}}} `x` must be a variable name */
+  /**
+   * {{{\AA x: P}}}
+   * @param x
+   *   must be a variable name
+   */
   def AA(x: TlaEx, P: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
     buildBySignatureLookup(TlaTempOper.AA, x, P)
   }
 }

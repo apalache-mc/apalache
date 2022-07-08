@@ -26,7 +26,11 @@ trait ApalacheInternalBuilder {
   def notSupportedByModelChecker(msg: String, tt: TlaType1): TBuilderInstruction =
     unsafeBuilder.notSupportedByModelChecker(msg, tt).point[TBuilderInternalState]
 
-  /** distinct */
+  /**
+   * distinct
+   * @param args
+   *   must be nonempty
+   */
   def distinct(args: TBuilderInstruction*): TBuilderInstruction =
     buildSeq(args).map(unsafeBuilder.distinct(_: _*))
 

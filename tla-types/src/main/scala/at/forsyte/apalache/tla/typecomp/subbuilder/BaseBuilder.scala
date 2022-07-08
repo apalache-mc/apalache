@@ -27,15 +27,27 @@ trait BaseBuilder {
     argsExs <- buildSeq(args)
   } yield unsafeBuilder.appOp(opEx, argsExs: _*)
 
-  /** {{{CHOOSE x: p}}} `x` must be a variable name */
+  /**
+   * {{{CHOOSE x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def choose(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionBinary(unsafeBuilder.choose)(x, p)
 
-  /** {{{CHOOSE x \in set: p}}}, `x` must be a variable name */
+  /**
+   * {{{CHOOSE x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def choose(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
     boundVarIntroductionTernary(unsafeBuilder.choose)(x, set, p)
 
-  /** {{{args[0](args[1], ..., args[n]) :: ex}}} `args` must be nonempty */
+  /**
+   * {{{args[0](args[1], ..., args[n]) :: ex}}}
+   * @param args
+   *   must be nonempty
+   */
   def label(ex: TBuilderInstruction, args: String*): TBuilderInstruction =
     ex.map { e => unsafeBuilder.label(e, args: _*) }
 }

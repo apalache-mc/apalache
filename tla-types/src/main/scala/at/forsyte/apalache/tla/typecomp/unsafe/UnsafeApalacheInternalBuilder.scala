@@ -21,9 +21,13 @@ class UnsafeApalacheInternalBuilder extends ProtoBuilder {
   def notSupportedByModelChecker(msg: String, tt: TlaType1): TlaEx =
     OperEx(ApalacheInternalOper.notSupportedByModelChecker, ValEx(TlaStr(msg))(Typed(StrT1)))(Typed(tt))
 
-  /** distinct */
+  /**
+   * distinct
+   * @param args
+   *   must be nonempty
+   */
   def distinct(args: TlaEx*): TlaEx = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty.")
     buildBySignatureLookup(ApalacheInternalOper.distinct, args: _*)
   }
 
