@@ -33,10 +33,8 @@ TestVariantFilter ==
     \E v \in VariantFilter("B", { VarA, VarB }):
         v.value = "hello"
 
-TestVariantUnwrap ==
-    \* We could just pass "world", without wrapping it in a record.
-    \* But we want to see how it works with records too.
-    VariantUnwrap("C", VarC) = [ value |-> "world" ]
+TestVariantTag ==
+    VariantTag(VarC) = "C"
 
 TestVariantGetUnsafe ==
     \* The unsafe version gives us only a type guarantee.
@@ -49,7 +47,7 @@ TestVariantGetOrElse ==
 AllTests ==
     /\ TestVariant
     /\ TestVariantFilter
-    /\ TestVariantUnwrap
+    /\ TestVariantTag
     /\ TestVariantGetUnsafe
     /\ TestVariantGetOrElse
 

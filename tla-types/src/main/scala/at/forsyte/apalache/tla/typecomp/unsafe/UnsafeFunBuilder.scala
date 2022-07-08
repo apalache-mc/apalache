@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil.{completePartial, composeAnd
 import scala.collection.immutable.SortedMap
 
 /**
- * Type-unsafe builder for TlaFunOper expressions.
+ * Scope-unsafe builder for TlaFunOper expressions.
  *
  * @author
  *   Jure Kukovec

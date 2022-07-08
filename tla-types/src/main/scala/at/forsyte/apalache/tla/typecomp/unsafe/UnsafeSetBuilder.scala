@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, TBuilderTypeException, Typ
 import scala.collection.immutable.SortedMap
 
 /**
- * Type-unsafe builder for TlaSetOper expressions.
+ * Scope-unsafe builder for TlaSetOper expressions.
  *
  * @author
  *   Jure Kukovec

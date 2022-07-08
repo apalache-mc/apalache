@@ -8,7 +8,7 @@ import scalaz._
 import scalaz.Scalaz._
 
 /**
- * Type-safe builder for TlaFunOper expressions.
+ * Scope-safe builder for TlaFunOper expressions.
  *
  * @author
  *   Jure Kukovec

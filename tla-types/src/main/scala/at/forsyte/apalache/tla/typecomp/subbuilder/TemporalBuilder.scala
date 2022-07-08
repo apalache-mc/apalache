@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeTemporalBuilder
 
 /**
- * Type-safe builder for [[at.forsyte.apalache.tla.lir.oper.TlaTempOper]] expressions.
+ * Scope-safe builder for [[at.forsyte.apalache.tla.lir.oper.TlaTempOper]] expressions.
  *
  * @author
  *   Jure Kukovec

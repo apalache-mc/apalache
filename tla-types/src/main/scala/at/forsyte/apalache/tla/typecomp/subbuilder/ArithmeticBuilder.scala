@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeArithmeticBuilder
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
 
 /**
- * Type-safe builder for TlaArithOper expressions.
+ * Scope-safe builder for TlaArithOper expressions.
  *
  * @author
  *   Jure Kukovec
