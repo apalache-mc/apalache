@@ -9,6 +9,7 @@
  *)
 EXTENDS Integers, FiniteSets, Variants, TwoPhaseTyped_typedefs
 
+\* ANCHOR: constructors
 \* @type: MESSAGE;
 MkCommit == Variant("Commit", "0_OF_NIL")
 
@@ -17,11 +18,15 @@ MkAbort == Variant("Abort", "0_OF_NIL")
 
 \* @type: RM => MESSAGE;
 MkPrepared(rm) == Variant("Prepared", rm)
+\* ANCHOR_END: constructors
 
+\* ANCHOR: constants
 CONSTANT
     \* @type: Set(RM);
     RM \* The set of resource managers
+\* ANCHOR_END: constants
 
+\* ANCHOR: vars1
 VARIABLES
   \* @type: RM -> Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
@@ -30,8 +35,11 @@ VARIABLES
   \* @type: Set(RM);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
                  \* messages.
+\* ANCHOR_END: vars1
+\* ANCHOR: vars2
   \* @type: Set(MESSAGE);
   msgs
+\* ANCHOR_END: vars2
 
 \* @type: Set(MESSAGE);
 Message ==

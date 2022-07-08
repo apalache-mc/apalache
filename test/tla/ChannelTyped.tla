@@ -2,12 +2,14 @@
 \* This is a typed version of the example from Specifying Systems:
 \* https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla
 EXTENDS Naturals
+\* ANCHOR: declarations
 CONSTANT
     \* @type: Set(DATUM);
     Data
 VARIABLE
-    \* @type: [val: DATUM, rdy: Int, ack: Int];
+    \* @type: { val: DATUM, rdy: Int, ack: Int };
     chan 
+\* ANCHOR_END: declarations
 
 TypeInvariant  ==  chan \in [val : Data,  rdy : {0, 1},  ack : {0, 1}]
 -----------------------------------------------------------------------
