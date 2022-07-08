@@ -118,9 +118,8 @@ Have a look at the type of `chan`:
 ```
 
 The type of `chan` is a record that has three fields: field `val` of type
-`DATUM`, field `rdy` of type `Int`, field `ack` of type `Int`. The syntax of
-record types is similar to that of programming languages. We made it different
-from the TLA+'s syntax for records `[ val |-> v, rdy |-> r, ack |-> a ]`
+`DATUM`, field `rdy` of type `Int`, field `ack` of type `Int`. The record type syntax is similar to dictionary syntax from programming languages (e.g. Python). We made it different
+from TLA+'s syntax for records `[ val |-> v, rdy |-> r, ack |-> a ]`
 and record sets `[ val: V, rdy: R, ack: A ]`, to avoid confusion between
 types and values.
 
@@ -224,7 +223,7 @@ By looking at the spec, it is easy to guess the types of the variables
 ```
 
 The type of the variable `msgs` is less obvious. We can check the original
-(untyped) definitions of `TPTypeOK` and `Message` to get the idea about the
+(untyped) definitions of `TPTypeOK` and `Message` to get an idea about the
 type of `msgs`:
 
 ```tla
@@ -252,7 +251,7 @@ type alias for the type of messages in a separate file called
 {{#include ../../../test/tla/TwoPhaseTyped_typedefs.tla}}
 ```
 
-Usually, we extract type aliases in a separate file for the case, when we have
+Usually, we place type aliases in a separate file for when we have
 to use the same type alias in different specifications, e.g., the specification
 and its instance for model checking.
 
@@ -278,7 +277,7 @@ one per variant option:
 ```
 
 Since the values carried by the `Commit` and `Abort` messages are not
-important, we use the uninterpeted value `"0_OF_NIL"`. Again, this is a
+important, we use the uninterpeted value `"0_OF_NIL"`. This is merely a
 convention. We could use any value of type `NIL`. Importantly, the operators
 `MkAbort`, `MkCommit`, and `MkPrepared` all produce values of type `MESSAGE`,
 which makes it possible to add them to a single set of messages.
@@ -289,7 +288,7 @@ Now it should be clear how to specify the type of the variable `msgs`:
 {{#include ../../../test/tla/TwoPhaseTyped.tla:vars2}}
 ```
 
-Now we run the type checker once again (pay attention to the option
+We run the type checker once again (pay attention to the option
 `--features=rows`, required for variants):
 
 ```sh
@@ -346,10 +345,10 @@ Solutions ==
     { queens \in [1..N -> 1..N]: IsSolution(queens) }
 ```
 
-This looks interesting: `IsSolution` is expecting a sequence, whereas
-`Solutions` is clearly producing a set of functions. Of course, it is not a
-problem in the untyped TLA+. In fact, it is a well-known idiom: Construct a
-function by using function operators and then apply sequence operators to it.
+This looks interesting: `IsSolution` expects a sequence, whereas
+`Solutions` produces a set of functions. This is obviously not a
+problem in untyped TLA+. In fact, it is a well-known idiom: Construct a
+function by using the function set operator, and then apply sequence operators to it.
 In Apalache we have to explicitly write that a function should be reinterpreted
 as a sequence.  To this end, we have to use the operator `FunAsSeq` from the
 module [Apalache.tla][]. Hence, we add `Apalache` to the `EXTENDS` clause and
