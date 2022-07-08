@@ -17,9 +17,12 @@ annotating a specification with types.
 ## Setup
 
 We assume that you have Apalache installed. If not, check the manual page on
-[Apalache installation][]. The minimal required version is 0.25.9. We are
-using the new feature that makes type checking of records precise. This
-feature is activated with the option `--features=rows`.
+[Apalache installation][]. The minimal required version is 0.25.9.
+
+**Note**: This tutorial uses a new feature in Apalache that makes type checking of
+records more precise. Currently, this experimental feature is activated with the
+option `--features=rows`.
+<!-- TODO(#1943): Remove --features=rows when it becomes default. -->
 
 ## Running example: Lamport's mutex
 
@@ -103,9 +106,9 @@ In our type annotations:
  - `crit` is a subset of `Proc`, so it is a set of integers, that is,
    `Set(Int)`.
 
-Note that we had to add the annotation for `clock` between the keyword
-`VARIABLES` and `clock`, not before the keyword `VARIABLES`. Similar to that,
-we had to add a type annotation in front of every variable name.
+**Note**: We place the annotation for `clock` between the keyword `VARIABLES`
+and `clock`, not before the keyword `VARIABLES`. Similarly, we added a type
+annotation immediately above every other variable name.
 
 We used the one-line TLA+ comment for `clock`:
 
@@ -123,7 +126,7 @@ Alternatively, we could use the multi-line comment:
  *)
 ```
 
-Importantly, the type annotation should end with a semi-colon: `;`.
+**Note**: Importantly, every type annotation must end with a semi-colon `;`.
 
 Let's run the type checker again:
 
@@ -133,7 +136,8 @@ $ apalache-mc typecheck LamportMutexTyped.tla
 Typing input error: Expected a type annotation for VARIABLE network
 ```
 
-No magic happened. We have to annotate the variable `network`.
+Not surprisingly, the type checker tells us that we still have to annotate the
+variable `network`.
 
 ## Step 3: Annotating the variable network
 
