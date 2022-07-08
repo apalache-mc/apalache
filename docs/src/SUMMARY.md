@@ -12,6 +12,12 @@
 - [Symbolic Model Checking](./tutorials/symbmc.md)
 - [Specifying temporal properties and understanding counterexamples](./tutorials/temporal-properties.md)
 
+# HOWTOs
+
+- [Overview](HOWTOs/index.md)
+- [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
+- [How to use uninterpreted types](./HOWTOs/uninterpretedTypes.md)
+
 # Apalache User Manual
 
 - [Getting Started](./apalache/index.md)
@@ -44,12 +50,6 @@
 - [Assignments and Symbolic Transitions in Depth](./apalache/assignments-in-depth.md)
 - [KerA: kernel logic of actions](./apalache/kera.md)
 
-
-# HOWTOs
-
-- [Overview](HOWTOs/index.md)
-- [How to write type annotations](./HOWTOs/howto-write-type-annotations.md)
-- [How to use uninterpreted types](./HOWTOs/uninterpretedTypes.md)
 
 # TLA+ Language Manual for Engineers
 
