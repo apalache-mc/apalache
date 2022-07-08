@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecomp.subbuilder
 
 import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
-import at.forsyte.apalache.tla.typecomp.{Applicative, TBuilderInstruction, TBuilderInternalState}
+import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, TBuilderInternalState}
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFunBuilder
 import scalaz._
 import scalaz.Scalaz._
