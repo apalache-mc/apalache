@@ -6,9 +6,11 @@ labels: bug
 assignees: ''
 
 ---
-
 <!-- Thank you for filing a report! Please ensure you have filled out all -->
 <!-- sections, as it help us to address the problem effectively. -->
+
+<!-- NOTE: Please try to ensure the bug can be produced on the latest release of -->
+<!-- Apalache. See https://github.com/informalsystems/apalache/releases -->
 
 ## Description
 
@@ -50,3 +52,11 @@ assignees: ''
 ## Additional context
 
 <!-- Add any other context about the problem here. -->
+
+## Triage checklist (for maintainers)
+
+<!-- This section is for maintainers -->
+
+- [ ] Reproduce the bug on the main development branch.
+- [ ] Add the issue to the apalache GitHub project.
+- [ ] If the bug is high impact, ensure someone available is assigned to fix it.
