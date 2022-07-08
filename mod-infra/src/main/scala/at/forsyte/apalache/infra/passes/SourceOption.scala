@@ -8,6 +8,13 @@ object SourceOption {
   /** Data to be loaded from a file */
   final case class FileSource(file: java.io.File) extends SourceOption
 
-  /** Data supplied as a string */
-  final case class StringSource(content: String) extends SourceOption
+  /**
+   * Data supplied as a string
+   *
+   * @param content
+   *   the principle data source
+   * @param aux
+   *   auxiliary data sources
+   */
+  final case class StringSource(content: String, aux: Seq[String] = Seq()) extends SourceOption
 }
