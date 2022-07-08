@@ -23,11 +23,11 @@ feature is activated with the option `--features=rows`.
 
 ## Running example: Lamport's mutex
 
-As a running example, we are using the specification of [Lamport'S Mutex][]
+As a running example, we are using the specification of [Lamport's Mutex][]
 (written by [Stephan Merz][]). We recommend to reproduce the steps in this
 tutorial. So, go ahead and download the specification file
 [LamportMutex.tla][]. We will add type annotations to this file. Let's rename
-`LamportMutex.tla` to `LamportMutexTyped.tla`
+`LamportMutex.tla` to `LamportMutexTyped.tla`.
 
 ## Step 1: Running Snowcat
 
@@ -45,7 +45,7 @@ output:
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.                                           
-Typing input error: Expected a type annotation for VARIABLE clock 
+Typing input error: Expected a type annotation for VARIABLE clock
 ... 
 ```
 
@@ -246,7 +246,7 @@ our example, though it required some exploration of the specification.
 
 Hence, we did not have to run the type checker seven times to see the error
 messages.  The type annotations are useful on its own, since we do not have to
-traverse the spec, to figure out the types of constants and states. Our more
+traverse the spec to figure out the types of constants and states. Our more
 engineering-oriented peers find these annotations to be quite important.
 
 Sometimes, the type checker cannot find a unique type of an expression. This
