@@ -37,7 +37,7 @@ object Dependencies {
     val z3 = "tools.aqua" % "z3-turnkey" % "4.8.17"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
-    val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.5.1" % "provided"
+    val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
     val grpcNetty = "io.grpc" % "grpc-netty" % "1.47.0"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
