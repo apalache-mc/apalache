@@ -23,9 +23,9 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
-import zio.{Ref, ZEnv, ZIO}
+import zio.{Ref, Semaphore, ZEnv, ZIO}
 
-// TODO The connnection type will become enriched with more structure
+// TODO The connection type will become enriched with more structure
 // as we build out the server
 private case class Conn(
     id: UUID,
@@ -45,10 +45,16 @@ private case class ParsingFailed(msg: String) extends Exception(msg)
  *
  * @param connections
  *   A thread-safe, mutable reference holding a map registering connections by their unique ID
+ *
+ * @param parserSemaphore
+ *   A semaphore used to ensure atomic access to the SANY parser. This is necessitated by the statefull design of the
+ *   SANY parser, which makes it impossible to run two instance of the parser concurrently in the same runtime. See
+ *   https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894 for details.
  */
-class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
+class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore)
+    extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
-  /** Concurrent tasks from the service that produce values of type [[T]] */
+  /** Concurrent tasks performed by the service that produce values of type [[T]] */
   type Result[T] = ZIO[ZEnv, Status, T]
 
   /**
@@ -70,7 +76,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
    * This method handles the [LoadModelRequest] RPC defined by `transExplorer.proto`
    *
    * @param req
-   *   the request to load a model, including the root module spec and any auxiliar modules
+   *   the request to load a model, including the root module spec and any auxiliary modules
    */
   def loadModel(req: LoadModelRequest): Result[LoadModelResponse] = for {
     parseResult <- parseSpec(req.spec, req.aux)
@@ -85,15 +91,16 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     }
   } yield LoadModelResponse(result)
 
-  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[Throwable, TlaModule]] = {
-    ZIO.effectTotal(try {
+  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[Throwable, TlaModule]] =
+    // Obtain permit on the semaphore protecting access to the parser, ensuring the parser is not
+    // run by more than one thread at a time.
+    parserSemaphore.withPermit(ZIO.effectTotal(try {
       val parser = Executor(new ParserModule)
       parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
-      parser.run().left.map(code => ParsingFailed(s"Parsing failed with error code ${code}"))
+      parser.run().left.map(code => ParsingFailed(s"Parsing failed with error code: ${code}"))
     } catch {
-      case e: Throwable => Left(ParsingFailed(s"Parsing failed: ${e.getMessage()}"))
-    })
-  }
+      case e: Throwable => Left(ParsingFailed(s"Parsing failed with exception: ${e.getMessage()}"))
+    }))
 
   private def jsonOfModule(module: TlaModule): String = {
     new TlaToUJson(None).makeRoot(Seq(module)).toString
@@ -108,7 +115,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
           ZIO.succeed(UUID.fromString(id))
         } catch {
           case _: IllegalArgumentException =>
-            // TODO log for invalid conn ID
+            // TODO log for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
             ZIO.fail(Status.INVALID_ARGUMENT)
         }
       connMap <- connections.get
