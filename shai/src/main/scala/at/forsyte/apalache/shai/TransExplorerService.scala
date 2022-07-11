@@ -23,10 +23,7 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
-import scala.util.control.Exception
 import zio.{Ref, ZEnv, ZIO}
-import com.google.protobuf.struct.Struct
-import at.forsyte.apalache.infra.ExitCodes
 
 // TODO The connnection type will become enriched with more structure
 // as we build out the server
@@ -40,7 +37,7 @@ private case class Conn(
   }
 }
 
-private case class ParsingFailed(code: ExitCodes.TExitCode) extends Exception(s"Parsing failed with error code ${code}")
+private case class ParsingFailed(msg: String) extends Exception(msg)
 
 /**
  * The service enabling interaction with the symbolic model checker, via the
@@ -81,26 +78,25 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
       case Right(module) =>
         for {
           _ <- updateConnection(req.conn)(_.setModel(module))
-        } yield LoadModelResponse.Result.Spec(structOfModule(module))
+          json = jsonOfModule(module)
+        } yield LoadModelResponse.Result.Spec(json)
       case Left(err) =>
         ZIO.succeed(LoadModelResponse.Result.Err(err.getMessage()))
     }
   } yield LoadModelResponse(result)
 
   private def parseSpec(spec: String, aux: Seq[String]): Result[Either[Throwable, TlaModule]] = {
-    ZIO.effectTotal(for {
-      parser <- Exception.allCatch.either {
-        val parser = Executor(new ParserModule)
-        parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
-        parser
-      }
-      result <- parser.run().left.map(ParsingFailed)
-    } yield result)
+    ZIO.effectTotal(try {
+      val parser = Executor(new ParserModule)
+      parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
+      parser.run().left.map(code => ParsingFailed(s"Parsing failed with error code ${code}"))
+    } catch {
+      case e: Throwable => Left(ParsingFailed(s"Parsing failed: ${e.getMessage()}"))
+    })
   }
 
-  private def structOfModule(module: TlaModule): Struct = {
-    val json = new TlaToUJson(None).makeRoot(Seq(module)).toString
-    Struct.parseFrom(json.getBytes())
+  private def jsonOfModule(module: TlaModule): String = {
+    new TlaToUJson(None).makeRoot(Seq(module)).toString
   }
 
   private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))

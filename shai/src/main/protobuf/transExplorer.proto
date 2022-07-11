@@ -2,8 +2,6 @@
 
 syntax = "proto3";
 
-import "google/protobuf/struct.proto";
-
 option java_multiple_files = true;
 option java_package = "at.forsyte.apalache.shai.v1";
 option java_outer_classname = "TransExplorerProto";
@@ -32,7 +30,7 @@ message LoadModelRequest {
 
 message LoadModelResponse {
   oneof result {
-    google.protobuf.Struct spec = 1;
+    string spec = 1;
     string err = 2;
   }
 }
