@@ -57,6 +57,9 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   /** Concurrent tasks performed by the service that produce values of type [[T]] */
   type Result[T] = ZIO[ZEnv, Status, T]
 
+  // The type of the conn field carried by all requests
+  private type RequestConn = Option[Connection]
+
   /**
    * Creates and registers a new connection
    *
@@ -108,11 +111,14 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
 
   private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
 
-  private def getConnection(id: String): Result[Conn] = {
+  private def getConnection(reqConn: RequestConn): Result[Conn] = {
     for {
       uuid <-
         try {
-          ZIO.succeed(UUID.fromString(id))
+          reqConn match {
+            case Some(conn) => ZIO.succeed(UUID.fromString(conn.id))
+            case None       => throw new IllegalArgumentException()
+          }
         } catch {
           case _: IllegalArgumentException =>
             // TODO log for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
@@ -127,8 +133,8 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
     } yield conn
   }
 
-  private def updateConnection(id: String)(f: Conn => Conn): Result[Conn] = for {
-    conn <- getConnection(id)
+  private def updateConnection(reqConn: RequestConn)(f: Conn => Conn): Result[Conn] = for {
+    conn <- getConnection(reqConn)
     updatedConn = f(conn)
     _ <- addConnection(updatedConn)
   } yield updatedConn

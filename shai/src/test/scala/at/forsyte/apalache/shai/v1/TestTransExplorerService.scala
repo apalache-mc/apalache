@@ -24,7 +24,7 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
         for {
           s <- ZIO.service[TransExplorerService]
           conn <- s.openConnection(ConnectRequest())
-          resp <- s.loadModel(LoadModelRequest(conn.id, spec))
+          resp <- s.loadModel(LoadModelRequest(Some(conn), spec))
           msg = resp.result.err.get
         } yield assert(msg)(containsString("Parsing failed with exception: Error by TLA+ parser"))
       },
@@ -38,7 +38,7 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
         for {
           s <- ZIO.service[TransExplorerService]
           conn <- s.openConnection(ConnectRequest())
-          resp <- s.loadModel(LoadModelRequest(conn.id, spec))
+          resp <- s.loadModel(LoadModelRequest(Some(conn), spec))
         } yield assert(resp.result.isSpec)(isTrue)
       },
       testM("valid multi-module spec loads into a parsed model") {
@@ -57,7 +57,7 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
         for {
           s <- ZIO.service[TransExplorerService]
           conn <- s.openConnection(ConnectRequest())
-          resp <- s.loadModel(LoadModelRequest(conn.id, spec, Seq(auxSpec)))
+          resp <- s.loadModel(LoadModelRequest(Some(conn), spec, Seq(auxSpec)))
         } yield assert(resp.result.isSpec)(isTrue)
       },
       testM("can load two valid specs in sequence") {
@@ -76,8 +76,8 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
         for {
           s <- ZIO.service[TransExplorerService]
           conn <- s.openConnection(ConnectRequest())
-          respA <- s.loadModel(LoadModelRequest(conn.id, specA))
-          respB <- s.loadModel(LoadModelRequest(conn.id, specB))
+          respA <- s.loadModel(LoadModelRequest(Some(conn), specA))
+          respB <- s.loadModel(LoadModelRequest(Some(conn), specB))
         } yield assert(respA.result.isSpec && respB.result.isSpec)(isTrue)
       },
       testM("can load two valid specs in parallel") {
@@ -99,8 +99,8 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
           // parallel on the same connection isn't a feasible use case
           connA <- s.openConnection(ConnectRequest())
           connB <- s.openConnection(ConnectRequest())
-          reqA = LoadModelRequest(connA.id, specA)
-          reqB = LoadModelRequest(connB.id, specB)
+          reqA = LoadModelRequest(Some(connA), specA)
+          reqB = LoadModelRequest(Some(connB), specB)
           responses <- s.loadModel(reqA).zipPar(s.loadModel(reqB))
           (respA, respB) = responses
         } yield assert(respA.result.isSpec && respB.result.isSpec)(isTrue)
