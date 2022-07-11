@@ -76,7 +76,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
    *   the request to load a model, including the root module spec and any auxiliar modules
    */
   def loadModel(req: LoadModelRequest): Result[LoadModelResponse] = for {
-    parseResult <- parseSpec(req.spec)
+    parseResult <- parseSpec(req.spec, req.aux)
     result <- parseResult match {
       case Right(module) =>
         for {
@@ -87,11 +87,11 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]]) extends ZioTransEx
     }
   } yield LoadModelResponse(result)
 
-  private def parseSpec(spec: String): Result[Either[Throwable, TlaModule]] = {
+  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[Throwable, TlaModule]] = {
     ZIO.effectTotal(for {
       parser <- Exception.allCatch.either {
         val parser = Executor(new ParserModule)
-        parser.passOptions.set("parser.source", SourceOption.StringSource(spec))
+        parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
         parser
       }
       result <- parser.run().left.map(ParsingFailed)
