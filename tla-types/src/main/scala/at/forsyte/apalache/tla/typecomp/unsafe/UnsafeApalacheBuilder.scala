@@ -21,7 +21,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
     require(lhs match {
           case OperEx(TlaActionOper.prime, _: NameEx) => true
           case _                                      => false
-        }, s"lhs = $lhs must be a primed variable name.")
+        }, s"Expected lhs to be a primed variable name, found $lhs.")
     buildBySignatureLookup(ApalacheOper.assign, lhs, rhs)
   }
 
@@ -35,7 +35,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be > 0
    */
   def gen(n: Int, t: TlaType1): TlaEx = {
-    require(n > 0, s"n = $n must be positive.")
+    require(n > 0, s"Expected n to be positive, found $n.")
     OperEx(ApalacheOper.gen, ValEx(TlaInt(n))(Typed(IntT1)))(Typed(t))
   }
 
@@ -48,7 +48,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
     require(ex match {
           case OperEx(TlaBoolOper.exists, _, _, _) => true
           case _                                   => false
-        }, s"ex = $ex must be an existential.")
+        }, s"Expected ex to be an existential quantification, found $ex.")
     buildBySignatureLookup(ApalacheOper.skolem, ex)
   }
 
@@ -65,7 +65,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
           case OperEx(TlaSetOper.powerset, _)  => true
           case OperEx(TlaSetOper.funSet, _, _) => true
           case _                               => false
-        }, s"ex = $ex must be a powerset or a function set.")
+        }, s"Expected ex to be a powerset or function set, found $ex.")
     buildBySignatureLookup(ApalacheOper.expand, ex)
   }
 
@@ -78,7 +78,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
     require(ex match {
           case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(_: TlaInt)) => true
           case _                                                                                  => false
-        }, s"ex = $ex must be a cardinality comparison.")
+        }, s"Expected ex to be a cardinality comparison, found $ex.")
     buildBySignatureLookup(ApalacheOper.constCard, ex)
   }
 
@@ -95,8 +95,8 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
   def mkSeq(n: Int, F: TlaEx): TlaEx = {
-    require(n > 0, s"n = $n must be positive.")
-    require(isNaryPassByName(n = 1)(F), s"F = $F must a unary operator passed by name.")
+    require(n > 0, s"Expected n to be positive, found $n.")
+    require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
     buildBySignatureLookup(ApalacheOper.mkSeq, ValEx(TlaInt(n))(Typed(IntT1)), F)
   }
 
@@ -106,7 +106,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}}
    */
   def foldSet(F: TlaEx, v: TlaEx, S: TlaEx): TlaEx = {
-    require(isNaryPassByName(n = 2)(F), s"F = $F must a binary operator passed by name.")
+    require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
     buildBySignatureLookup(ApalacheOper.foldSet, F, v, S)
   }
 
@@ -116,7 +116,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}}
    */
   def foldSeq(F: TlaEx, v: TlaEx, seq: TlaEx): TlaEx = {
-    require(isNaryPassByName(n = 2)(F), s"F = $F must a binary operator passed by name.")
+    require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
     buildBySignatureLookup(ApalacheOper.foldSeq, F, v, seq)
   }
 

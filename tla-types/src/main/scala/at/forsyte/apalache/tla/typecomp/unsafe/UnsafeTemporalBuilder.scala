@@ -35,7 +35,7 @@ class UnsafeTemporalBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def EE(x: TlaEx, P: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaTempOper.EE, x, P)
   }
 
@@ -45,7 +45,7 @@ class UnsafeTemporalBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def AA(x: TlaEx, P: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaTempOper.AA, x, P)
   }
 }

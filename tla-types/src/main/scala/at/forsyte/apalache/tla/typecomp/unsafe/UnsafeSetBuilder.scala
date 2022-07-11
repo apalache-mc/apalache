@@ -53,7 +53,7 @@ class UnsafeSetBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def filter(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaSetOper.filter, x, set, p)
   }
 
@@ -81,12 +81,12 @@ class UnsafeSetBuilder extends ProtoBuilder {
    */
   def mapMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
     // Even, non-zero number of args and every other argument is NameEx
-    require(TlaSetOper.map.arity.cond(1 + pairs.size), s"pairs = $pairs must have even, positive arity.")
+    require(TlaSetOper.map.arity.cond(1 + pairs.size), s"Expected pairs to have even, positive arity, found $pairs.")
     val (vars, _) = TlaOper.deinterleave(pairs)
-    require(vars.forall { _.isInstanceOf[NameEx] }, s"vars = $vars must be variable names.")
+    require(vars.forall { _.isInstanceOf[NameEx] }, s"Expected vars to be variable names, found $vars.")
     // Vars must be unique
     val duplicates = vars.filter(k => vars.count(_ == k) > 1)
-    require(duplicates.isEmpty, s"vars = $vars must be unique. Duplicates: ${duplicates.mkString(", ")}.")
+    require(duplicates.isEmpty, s"Expected vars to be unique, found duplicates: ${duplicates.mkString(", ")}.")
     buildBySignatureLookup(TlaSetOper.map, e +: pairs: _*)
   }
 
@@ -113,14 +113,14 @@ class UnsafeSetBuilder extends ProtoBuilder {
    */
   def recSetMixed(kvs: TlaEx*): TlaEx = {
     // All keys must be ValEx(TlaStr(_))
-    require(TlaSetOper.recSet.arity.cond(kvs.size), s"kvs = $kvs must have even, positive arity.")
+    require(TlaSetOper.recSet.arity.cond(kvs.size), s"Expected kvs to have even, positive arity, found $kvs.")
     val (keys, _) = TlaOper.deinterleave(kvs)
     require(keys.forall {
           case ValEx(_: TlaStr) => true
           case _                => false
-        }, s"keys = $keys must be TLA strings.")
+        }, s"Expected keys to be TLA+ strings, found $keys.")
     val duplicates = keys.filter(k => keys.count(_ == k) > 1)
-    require(duplicates.isEmpty, s"keys = $keys must be unique. Duplicates: ${duplicates.mkString(", ")}.")
+    require(duplicates.isEmpty, s"Expected keys to be unique, found duplicates: ${duplicates.mkString(", ")}.")
 
     // Record constructors don't have a signature, so we must construct a type-computation manually
     // This type computation cannot be pure, as it must read the string values of the record field names
@@ -177,7 +177,7 @@ class UnsafeSetBuilder extends ProtoBuilder {
    *   must have at least 2 elements
    */
   def times(sets: TlaEx*): TlaEx = {
-    require(TlaSetOper.times.arity.cond(sets.size), s"sets = $sets must have at least 2 elements.")
+    require(TlaSetOper.times.arity.cond(sets.size), s"Expected sets to have at least 2 elements, found $sets.")
     buildBySignatureLookup(TlaSetOper.times, sets: _*)
   }
 

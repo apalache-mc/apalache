@@ -32,7 +32,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def forall(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaBoolOper.forall, x, set, p)
   }
 
@@ -42,7 +42,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def forall(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaBoolOper.forallUnbounded, x, p)
   }
 
@@ -52,7 +52,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def exists(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaBoolOper.exists, x, set, p)
   }
 
@@ -62,7 +62,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def exists(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaBoolOper.existsUnbounded, x, p)
   }
 }

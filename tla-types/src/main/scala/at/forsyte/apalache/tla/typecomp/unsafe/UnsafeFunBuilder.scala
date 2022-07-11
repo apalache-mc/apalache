@@ -37,16 +37,16 @@ class UnsafeFunBuilder extends ProtoBuilder {
    *   must have even, positive arity, and all keys must be unique strings
    */
   def recMixed(args: TlaEx*): TlaEx = {
-    require(TlaFunOper.rec.arity.cond(args.size), s"args = $args must have even, positive arity.")
+    require(TlaFunOper.rec.arity.cond(args.size), s"Expected args to have even, positive arity, found $args.")
     // All keys must be ValEx(TlaStr(_))
     val (keys, vals) = TlaOper.deinterleave(args)
     require(keys.forall {
           case ValEx(_: TlaStr) => true
           case _                => false
-        }, s"keys = $keys must be TLA strings.")
+        }, s"Expected keys to be TLA+ strings, found $keys.")
     // Keys must be unique
     val duplicates = keys.filter(k => keys.count(_ == k) > 1)
-    require(duplicates.isEmpty, s"keys = $keys must be unique. Duplicates: ${duplicates.mkString(", ")}.")
+    require(duplicates.isEmpty, s"Expected keys to be unique, found duplicates: ${duplicates.mkString(", ")}.")
 
     // We don't need a dynamic TypeComputation, because a record constructor admits all types (we've already validated
     // all keys as strings with `require`)
@@ -109,12 +109,12 @@ class UnsafeFunBuilder extends ProtoBuilder {
    */
   def funDefMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
     // Even, non-zero number of args in `pairs` and every other argument is NameEx
-    require(TlaFunOper.funDef.arity.cond(1 + pairs.size), s"pairs = $pairs must have even, positive arity.")
+    require(TlaFunOper.funDef.arity.cond(1 + pairs.size), s"Expected pairs to have even, positive arity, found $pairs.")
     val (vars, _) = TlaOper.deinterleave(pairs)
-    require(vars.forall { _.isInstanceOf[NameEx] }, s"vars = $vars must be variable names.")
+    require(vars.forall { _.isInstanceOf[NameEx] }, s"Expected vars to be variable names, found $vars.")
     // Vars must be unique
     val duplicates = vars.filter(k => vars.count(_ == k) > 1)
-    require(duplicates.isEmpty, s"vars = $vars must be unique. Duplicates: ${duplicates.mkString(", ")}.")
+    require(duplicates.isEmpty, s"Expected vars to be unique, found duplicates: ${duplicates.mkString(", ")}.")
     buildBySignatureLookup(TlaFunOper.funDef, e +: pairs: _*)
   }
 

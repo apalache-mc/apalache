@@ -30,7 +30,8 @@ class UnsafeControlBuilder extends ProtoBuilder {
    *   must have even, positive arity
    */
   def caseSplitMixed(pairs: TlaEx*): TlaEx = {
-    require(TlaControlOper.caseNoOther.arity.cond(pairs.size), s"pairs = $pairs must have even, positive arity.")
+    require(TlaControlOper.caseNoOther.arity.cond(pairs.size),
+        s"Expected pairs to have even, positive arity, found $pairs.")
     buildBySignatureLookup(TlaControlOper.caseNoOther, pairs: _*)
   }
 
@@ -50,7 +51,8 @@ class UnsafeControlBuilder extends ProtoBuilder {
    *   must have even, positive arity
    */
   def caseOtherMixed(other: TlaEx, pairs: TlaEx*): TlaEx = {
-    require(TlaControlOper.caseWithOther.arity.cond(1 + pairs.size), s"pairs = $pairs must have even, positive arity.")
+    require(TlaControlOper.caseWithOther.arity.cond(1 + pairs.size),
+        s"Expected pairs to have even, positive arity, found $pairs.")
     buildBySignatureLookup(TlaControlOper.caseWithOther, other +: pairs: _*)
   }
 

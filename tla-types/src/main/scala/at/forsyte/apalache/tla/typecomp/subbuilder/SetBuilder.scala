@@ -75,7 +75,7 @@ trait SetBuilder {
    *   must have even, positive arity, and all vars must be unique variable names
    */
   def mapMixed(e: TBuilderInstruction, pairs: TBuilderInstruction*): TBuilderInstruction = {
-    require(pairs.size % 2 == 0, s"pairs = $pairs must have even arirty.")
+    require(pairs.size % 2 == 0, s"Expected pairs to have even arity, found $pairs.")
     val asPairs = pairs.grouped(2).toSeq.map { case Seq(a, b) =>
       (a, b)
     }

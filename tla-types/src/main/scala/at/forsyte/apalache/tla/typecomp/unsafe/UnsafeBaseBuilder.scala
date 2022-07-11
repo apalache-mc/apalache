@@ -27,7 +27,7 @@ class UnsafeBaseBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def choose(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaOper.chooseUnbounded, x, p)
   }
 
@@ -37,7 +37,7 @@ class UnsafeBaseBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"x = $x must be a variable name.")
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaOper.chooseBounded, x, set, p)
   }
 

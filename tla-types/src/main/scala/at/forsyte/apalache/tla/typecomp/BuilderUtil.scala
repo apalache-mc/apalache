@@ -25,7 +25,7 @@ object BuilderUtil {
 
   /** Removes elem from the scope, as the scope only contains types of free variables */
   def markAsBound(elem: TlaEx): TBuilderInternalState[Unit] = State[TBuilderContext, Unit] { mi: TBuilderContext =>
-    require(elem.isInstanceOf[NameEx], s"elem = $elem must be a variable name.")
+    require(elem.isInstanceOf[NameEx], s"Expected elem to be a variable name, found $elem.")
     (mi.copy(freeNameScope = mi.freeNameScope - elem.asInstanceOf[NameEx].name), ())
   }
 
@@ -100,7 +100,7 @@ object BuilderUtil {
           varEx <- variable
           // we delay marking as bound, to not interfere with other variable-set pairs
         } yield {
-          require(varEx.isInstanceOf[NameEx], s"varEx = $varEx must be a variable name.")
+          require(varEx.isInstanceOf[NameEx], s"Expected varEx to be a variable name, found $varEx.")
           // variable_i is shadowed iff boundVar \in usedInSet \union boundAfterBodyEx
           val boundVar = varEx.asInstanceOf[NameEx].name
           if (usedInSet.union(boundAfterBodyEx).contains(boundVar))
