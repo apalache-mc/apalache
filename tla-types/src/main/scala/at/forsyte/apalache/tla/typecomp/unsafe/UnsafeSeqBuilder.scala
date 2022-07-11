@@ -9,26 +9,25 @@ import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
  * @author
  *   Jure Kukovec
  */
-trait UnsafeSeqBuilder extends ProtoBuilder {
+class UnsafeSeqBuilder extends ProtoBuilder {
 
-  /** Append(seq,elem) */
-  protected def _append(seq: TlaEx, elem: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.append, seq, elem)
+  /** {{{Append(seq,elem)}}} */
+  def append(seq: TlaEx, elem: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.append, seq, elem)
 
-  /** leftSeq \o rightSeq */
-  protected def _concat(leftSeq: TlaEx, rightSeq: TlaEx): TlaEx =
-    buildBySignatureLookup(TlaSeqOper.concat, leftSeq, rightSeq)
+  /** {{{leftSeq \o rightSeq}}} */
+  def concat(leftSeq: TlaEx, rightSeq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.concat, leftSeq, rightSeq)
 
-  /** Head(seq) */
-  protected def _head(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.head, seq)
+  /** {{{Head(seq)}}} */
+  def head(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.head, seq)
 
-  /** Tail(seq) */
-  protected def _tail(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.tail, seq)
+  /** {{{Tail(seq)}}} */
+  def tail(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.tail, seq)
 
-  /** Len(seq) */
-  protected def _len(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.len, seq)
+  /** {{{Len(seq)}}} */
+  def len(seq: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.len, seq)
 
-  /** SubSeq(seq, fromIndex, toIndex) */
-  protected def _subseq(seq: TlaEx, fromIndex: TlaEx, toIndex: TlaEx): TlaEx =
+  /** {{{SubSeq(seq, fromIndex, toIndex)}}} */
+  def subseq(seq: TlaEx, fromIndex: TlaEx, toIndex: TlaEx): TlaEx =
     buildBySignatureLookup(TlaSeqOper.subseq, seq, fromIndex, toIndex)
 
 }

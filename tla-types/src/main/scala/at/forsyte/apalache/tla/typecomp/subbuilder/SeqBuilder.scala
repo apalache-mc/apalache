@@ -10,30 +10,31 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeSeqBuilder
  * @author
  *   Jure Kukovec
  */
-trait SeqBuilder extends UnsafeSeqBuilder {
+trait SeqBuilder {
+  private val unsafeBuilder = new UnsafeSeqBuilder
 
-  /** Append(seq,elem) */
+  /** {{{Append(seq,elem)}}} */
   def append(seq: TBuilderInstruction, elem: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(seq, elem)(_append)
+    binaryFromUnsafe(seq, elem)(unsafeBuilder.append)
 
-  /** leftSeq \o rightSeq */
+  /** {{{leftSeq \o rightSeq}}} */
   def concat(leftSeq: TBuilderInstruction, rightSeq: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(leftSeq, rightSeq)(_concat)
+    binaryFromUnsafe(leftSeq, rightSeq)(unsafeBuilder.concat)
 
-  /** Head(seq) */
-  def head(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _head }
+  /** {{{Head(seq)}}} */
+  def head(seq: TBuilderInstruction): TBuilderInstruction = seq.map { unsafeBuilder.head }
 
-  /** Tail(seq) */
-  def tail(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _tail }
+  /** {{{Tail(seq)}}} */
+  def tail(seq: TBuilderInstruction): TBuilderInstruction = seq.map { unsafeBuilder.tail }
 
-  /** Len(seq) */
-  def len(seq: TBuilderInstruction): TBuilderInstruction = seq.map { _len }
+  /** {{{Len(seq)}}} */
+  def len(seq: TBuilderInstruction): TBuilderInstruction = seq.map { unsafeBuilder.len }
 
-  /** SubSeq(seq, fromIndex, toIndex) */
+  /** {{{SubSeq(seq, fromIndex, toIndex)}}} */
   def subseq(
       seq: TBuilderInstruction,
       fromIndex: TBuilderInstruction,
       toIndex: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(seq, fromIndex, toIndex)(_subseq)
+    ternaryFromUnsafe(seq, fromIndex, toIndex)(unsafeBuilder.subseq)
 
 }

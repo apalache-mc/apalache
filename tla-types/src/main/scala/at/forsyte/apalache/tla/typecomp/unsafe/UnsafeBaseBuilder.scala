@@ -10,32 +10,44 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
  * @author
  *   Jure Kukovec
  */
-trait UnsafeBaseBuilder extends ProtoBuilder {
+class UnsafeBaseBuilder extends ProtoBuilder {
 
-  /** lhs = rhs */
-  protected def _eql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.eq, lhs, rhs)
+  /** {{{lhs = rhs}}} */
+  def eql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.eq, lhs, rhs)
 
-  /** lhs /= rhs */
-  protected def _neql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.ne, lhs, rhs)
+  /** {{{lhs /= rhs}}} */
+  def neql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.ne, lhs, rhs)
 
-  /** Op(args[1],...,args[n]) */
-  protected def _appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
+  /** {{{Op(args[1],...,args[n])}}} */
+  def appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
 
-  /** CHOOSE x: p */
-  protected def _choose(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+  /**
+   * {{{CHOOSE x: p}}}
+   * @param x
+   *   must be a variable name
+   */
+  def choose(x: TlaEx, p: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaOper.chooseUnbounded, x, p)
   }
 
-  /** CHOOSE x \in set: p */
-  protected def _choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+  /**
+   * {{{CHOOSE x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
+  def choose(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaOper.chooseBounded, x, set, p)
   }
 
-  /** args[0](args[1], ..., args[n]) :: ex */
-  protected def _label(ex: TlaEx, args: String*): TlaEx = {
-    require(args.nonEmpty)
+  /**
+   * {{{args[0](args[1], ..., args[n]) :: ex}}}
+   * @param args
+   *   must be nonempty
+   */
+  def label(ex: TlaEx, args: String*): TlaEx = {
+    require(args.nonEmpty, s"args must be nonempty.")
     val argsAsStringExs = args.map { s => ValEx(TlaStr(s))(Typed(StrT1)) }
     buildBySignatureLookup(TlaOper.label, ex +: argsAsStringExs: _*)
   }

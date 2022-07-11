@@ -296,12 +296,29 @@ class TestFunBuilder extends BuilderTest {
       )
     }
 
+    // throws on duplicate vars
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.funDef(
+              builder.name("e", IntT1),
+              (
+                  builder.name(s"x1", IntT1),
+                  builder.name(s"S1", SetT1(IntT1)),
+              ),
+              (
+                  builder.name(s"x1", IntT1),
+                  builder.name(s"S2", SetT1(IntT1)),
+              ),
+          )
+      )
+    }
+
     assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) => builder.funDef(expr, (variable, set)) }
 
     // throws on shadowing: multi-arity
     assertThrows[TBuilderScopeException] {
       build(
-          // { \E y \in T: TRUE : x \in S, y \in T }
+          // [ x \in S, y \in T |-> \E y \in T: TRUE ]
           builder.funDef(
               builder.exists(
                   builder.name("y", IntT1),
@@ -319,6 +336,30 @@ class TestFunBuilder extends BuilderTest {
           )
       )
     }
+
+    // does not throw on non-shadowing: multi-arity
+    // [ x \in S, y \in {z \in T: \E x \in S: TRUE} |->e ]
+    build(
+        builder.funDef(
+            builder.name("e", StrT1),
+            (
+                builder.name("x", StrT1),
+                builder.name("S", SetT1(StrT1)),
+            ),
+            (
+                builder.name("y", IntT1),
+                builder.filter(
+                    builder.name("z", IntT1),
+                    builder.name("T", SetT1(IntT1)),
+                    builder.exists(
+                        builder.name("x", StrT1),
+                        builder.name("S", SetT1(StrT1)),
+                        builder.bool(true),
+                    ),
+                ),
+            ),
+        )
+    )
 
     // funDefMixed
     type T2 = (TBuilderInstruction, Seq[TBuilderInstruction])
@@ -385,6 +426,19 @@ class TestFunBuilder extends BuilderTest {
       )
     }
 
+    // throws on duplicate vars
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.funDefMixed(
+              builder.name("e", IntT1),
+              builder.name(s"x1", IntT1),
+              builder.name(s"S1", SetT1(IntT1)),
+              builder.name(s"x1", IntT1),
+              builder.name(s"S2", SetT1(IntT1)),
+          )
+      )
+    }
+
     assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) => builder.funDefMixed(expr, variable, set) }
 
     // throws on shadowing: multi-arity
@@ -404,6 +458,26 @@ class TestFunBuilder extends BuilderTest {
           )
       )
     }
+
+    // does not throw on non-shadowing: multi-arity
+    // [ x \in S, y \in {z \in T: \E x \in S: TRUE} |->e ]
+    build(
+        builder.funDefMixed(
+            builder.name("e", StrT1),
+            builder.name("x", StrT1),
+            builder.name("S", SetT1(StrT1)),
+            builder.name("y", IntT1),
+            builder.filter(
+                builder.name("z", IntT1),
+                builder.name("T", SetT1(IntT1)),
+                builder.exists(
+                    builder.name("x", StrT1),
+                    builder.name("S", SetT1(StrT1)),
+                    builder.bool(true),
+                ),
+            ),
+        )
+    )
 
   }
 

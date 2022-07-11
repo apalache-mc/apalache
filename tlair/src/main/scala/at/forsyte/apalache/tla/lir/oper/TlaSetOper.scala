@@ -34,7 +34,7 @@ object TlaSetOper {
    * not `NameEx("...")`.
    */
   object recSet extends TlaSetOper {
-    override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
+    override def arity: OperArity = MinimalArity(2) && AnyEvenArity()
 
     override val name: String = "RECORD_SET"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -117,7 +117,7 @@ object TlaSetOper {
    * A set mapping: `{ e: x_1 \in S_1, ..., x_k \in S_k }`. The argument order is: `(e, x_1, S_1, ..., x_k, S_k)`.
    */
   object map extends TlaSetOper {
-    override val arity = new OperArity(k => k >= 3 && k % 2 == 1)
+    override val arity = MinimalArity(3) && AnyOddArity()
     override val name = "SET_MAP"
     override val precedence: (Int, Int) = (16, 16)
   }

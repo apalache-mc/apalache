@@ -10,23 +10,27 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
  * @author
  *   Jure Kukovec
  */
-trait ActionBuilder extends UnsafeActionBuilder {
+trait ActionBuilder {
+  private val unsafeBuilder = new UnsafeActionBuilder
 
-  /** e' */
-  def prime(e: TBuilderInstruction): TBuilderInstruction = e.map(_prime)
+  /** {{{e'}}} */
+  def prime(e: TBuilderInstruction): TBuilderInstruction = e.map(unsafeBuilder.prime)
 
-  /** [A]_e */
-  def stutt(A: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(A, e)(_stutt)
+  /** {{{[A]_e}}} */
+  def stutt(A: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(A, e)(unsafeBuilder.stutt)
 
   /** {{{<A>_e}}} */
-  def nostutt(A: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(A, e)(_nostutt)
+  def nostutt(A: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(A, e)(unsafeBuilder.nostutt)
 
-  /** ENABLED A */
-  def enabled(A: TBuilderInstruction): TBuilderInstruction = A.map(_enabled)
+  /** {{{ENABLED A}}} */
+  def enabled(A: TBuilderInstruction): TBuilderInstruction = A.map(unsafeBuilder.enabled)
 
-  /** UNCHANGED e */
-  def unchanged(e: TBuilderInstruction): TBuilderInstruction = e.map(_unchanged)
+  /** {{{UNCHANGED e}}} */
+  def unchanged(e: TBuilderInstruction): TBuilderInstruction = e.map(unsafeBuilder.unchanged)
 
-  /** A \cdot B */
-  def comp(A: TBuilderInstruction, B: TBuilderInstruction): TBuilderInstruction = binaryFromUnsafe(A, B)(_comp)
+  /** {{{A \cdot B}}} */
+  def comp(A: TBuilderInstruction, B: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(A, B)(unsafeBuilder.comp)
 }

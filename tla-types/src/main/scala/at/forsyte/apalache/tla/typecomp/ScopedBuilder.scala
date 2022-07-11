@@ -179,7 +179,7 @@ class ScopedBuilder
   def exceptMany(
       f: TBuilderInstruction,
       args: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty.")
     args.foldLeft(f) { case (fn, (ai, ei)) =>
       except(fn, ai, ei)
     }
@@ -198,7 +198,7 @@ class ScopedBuilder
       f: TBuilderInstruction,
       e: TBuilderInstruction,
       args: TBuilderInstruction*): TBuilderInstruction = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty")
 
     args match {
       case Seq(head) => except(f, head, e)
@@ -225,7 +225,7 @@ class ScopedBuilder
       f: TBuilderInstruction,
       args: (TBuilderInstruction, Seq[TBuilderInstruction])*): TBuilderInstruction = {
     // require all depths are the same? Also ensures args.nonEmpty
-    require(args.map(_._2.size).toSet.size == 1)
+    require(args.map(_._2.size).toSet.size == 1, s"Expected args to be nonempty and uniformly sized, found $args.")
     args.foldLeft(f) { case (fn, (e, as)) =>
       exceptDeep(fn, e, as: _*)
     }

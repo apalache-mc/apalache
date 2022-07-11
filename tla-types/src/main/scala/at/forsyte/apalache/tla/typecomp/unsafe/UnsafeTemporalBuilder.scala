@@ -9,35 +9,43 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
  * @author
  *   Jure Kukovec
  */
-trait UnsafeTemporalBuilder extends ProtoBuilder {
+class UnsafeTemporalBuilder extends ProtoBuilder {
 
   /** {{{[]P}}} */
-  protected def _box(P: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.box, P)
+  def box(P: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.box, P)
 
   /** {{{<>P}}} */
-  protected def _diamond(P: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.diamond, P)
+  def diamond(P: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.diamond, P)
 
   /** {{{P ~> Q}}} */
-  protected def _leadsTo(P: TlaEx, Q: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.leadsTo, P, Q)
+  def leadsTo(P: TlaEx, Q: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.leadsTo, P, Q)
 
   /** {{{P -+-> Q}}} */
-  protected def _guarantees(P: TlaEx, Q: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.guarantees, P, Q)
+  def guarantees(P: TlaEx, Q: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.guarantees, P, Q)
 
   /** {{{WF_x(A)}}} */
-  protected def _WF(x: TlaEx, A: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.weakFairness, x, A)
+  def WF(x: TlaEx, A: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.weakFairness, x, A)
 
   /** {{{SF_x(A)}}} */
-  protected def _SF(x: TlaEx, A: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.strongFairness, x, A)
+  def SF(x: TlaEx, A: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.strongFairness, x, A)
 
-  /** {{{\EE x: P}}} */
-  protected def _EE(x: TlaEx, P: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+  /**
+   * {{{\EE x: P}}}
+   * @param x
+   *   must be a variable name
+   */
+  def EE(x: TlaEx, P: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaTempOper.EE, x, P)
   }
 
-  /** {{{\AA x: P}}} */
-  protected def _AA(x: TlaEx, P: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx])
+  /**
+   * {{{\AA x: P}}}
+   * @param x
+   *   must be a variable name
+   */
+  def AA(x: TlaEx, P: TlaEx): TlaEx = {
+    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
     buildBySignatureLookup(TlaTempOper.AA, x, P)
   }
 }

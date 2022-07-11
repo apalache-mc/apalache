@@ -10,31 +10,44 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeBaseBuilder
  * @author
  *   Jure Kukovec
  */
-trait BaseBuilder extends UnsafeBaseBuilder {
+trait BaseBuilder {
+  private val unsafeBuilder = new UnsafeBaseBuilder
 
-  /** lhs = rhs */
+  /** {{{lhs = rhs}}} */
   def eql(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(lhs, rhs)(_eql)
+    binaryFromUnsafe(lhs, rhs)(unsafeBuilder.eql)
 
-  /** lhs /= rhs */
+  /** {{{lhs /= rhs}}} */
   def neql(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(lhs, rhs)(_neql)
+    binaryFromUnsafe(lhs, rhs)(unsafeBuilder.neql)
 
-  /** Op(args[1],...,args[n]) */
+  /** {{{Op(args[1],...,args[n])}}} */
   def appOp(Op: TBuilderInstruction, args: TBuilderInstruction*): TBuilderInstruction = for {
     opEx <- Op
     argsExs <- buildSeq(args)
-  } yield _appOp(opEx, argsExs: _*)
+  } yield unsafeBuilder.appOp(opEx, argsExs: _*)
 
-  /** CHOOSE x: p */
+  /**
+   * {{{CHOOSE x: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def choose(x: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    boundVarIntroductionBinary(_choose)(x, p)
+    boundVarIntroductionBinary(unsafeBuilder.choose)(x, p)
 
-  /** CHOOSE x \in set: p */
+  /**
+   * {{{CHOOSE x \in set: p}}}
+   * @param x
+   *   must be a variable name
+   */
   def choose(x: TBuilderInstruction, set: TBuilderInstruction, p: TBuilderInstruction): TBuilderInstruction =
-    boundVarIntroductionTernary(_choose)(x, set, p)
+    boundVarIntroductionTernary(unsafeBuilder.choose)(x, set, p)
 
-  /** args[0](args[1], ..., args[n]) :: ex */
+  /**
+   * {{{args[0](args[1], ..., args[n]) :: ex}}}
+   * @param args
+   *   must be nonempty
+   */
   def label(ex: TBuilderInstruction, args: String*): TBuilderInstruction =
-    ex.map { e => _label(e, args: _*) }
+    ex.map { e => unsafeBuilder.label(e, args: _*) }
 }
