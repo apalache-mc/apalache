@@ -219,6 +219,221 @@ class TestHybrid extends BuilderTest {
 
   }
 
+  test("letIn") {
+    type T = TBuilderInstruction
+    type DeclParamT = (TlaType1, Seq[TlaType1])
+    type TParam1 = (TlaType1, DeclParamT)
+    type TParamN = (TlaType1, Seq[DeclParamT])
+
+    val parameterTypeGen: Gen[TlaType1] = for {
+      n <- Gen.choose(1, 5)
+      ts <- Gen.listOfN(n, tt1gen.genPrimitive)
+    } yield ts match {
+      case head :: Nil  => head
+      case head :: tail => OperT1(tail, head)
+      case Nil          => IntT1 // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+    }
+
+    val declParamGen: Gen[DeclParamT] = for {
+      t <- singleTypeGen
+      n <- Gen.choose(0, 5)
+      seq <- Gen.listOfN(n, parameterTypeGen)
+    } yield (t, seq)
+
+    implicit val gen1: Gen[TParam1] = Gen.zip(singleTypeGen, declParamGen)
+    implicit val genN: Gen[TParamN] =
+      Gen.zip(
+          singleTypeGen,
+          Gen.choose(1, 5).flatMap { Gen.listOfN(_, declParamGen) },
+      )
+
+    def mkWellTyped1(tparam: TParam1): T = {
+      val (_, (bodyT, paramTs)) = tparam
+      builder.letIn(
+          builder.name("F", OperT1(paramTs, bodyT)),
+          builder.decl(
+              "F",
+              builder.name("X", bodyT),
+              paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+          ),
+      )
+    }
+
+    def mkWellTypedN(tparam: TParamN): T = {
+      val (letT, declTs) = tparam
+      val decls = declTs.zipWithIndex.map { case ((t, ts), j) =>
+        val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p${i}_$j", tt) }
+        builder.decl(s"F$j", builder.name(s"X$j", t), tParams: _*)
+      }
+      builder.letIn(builder.name("e", letT), decls: _*)
+    }
+
+    // LET-IN cannot be type-incorrect if decl is not, that's tested elsewhere
+    // It can, however, shadow operator declarations.
+    def forceScopeException1(tparam: TParam1): Seq[T] = {
+      val (letT, (bodyT, paramTs)) = tparam
+      Seq(
+          // LET F(...) == X IN \E F: TRUE, F has a non-operator type
+          builder.letIn(
+              builder.exists(
+                  builder.name("F", InvalidTypeMethods.notOper),
+                  builder.bool(true),
+              ),
+              builder.decl(
+                  "F",
+                  builder.name("X", bodyT),
+                  paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+              ),
+          ),
+          // LET F(...) == X IN \E F: TRUE, F has the right type
+          builder.letIn(
+              builder.exists(
+                  builder.name("F", OperT1(paramTs, bodyT)),
+                  builder.bool(true),
+              ),
+              builder.decl(
+                  "F",
+                  builder.name("X", bodyT),
+                  paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+              ),
+          ),
+          // LET F(...) == \E F: TRUE IN e, bound F has a non-operator type
+          builder.letIn(
+              builder.name("e", letT),
+              builder.decl(
+                  "F",
+                  builder.exists(
+                      builder.name("F", InvalidTypeMethods.notOper),
+                      builder.bool(true),
+                  ),
+                  paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+              ),
+          ),
+          // LET F(...) == \E F: TRUE IN e, bound F has the correct type
+          builder.letIn(
+              builder.name("e", letT),
+              builder.decl(
+                  "F",
+                  builder.exists(
+                      builder.name("F", OperT1(paramTs, bodyT)),
+                      builder.bool(true),
+                  ),
+                  paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+              ),
+          ),
+          // LET F ==
+          //   LET F == X
+          //   IN F
+          // IN F
+          builder.letIn(
+              builder.letIn(
+                  builder.name("F", OperT1(paramTs, bodyT)),
+                  builder.decl(
+                      "F",
+                      builder.name("X", bodyT),
+                      paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+                  ),
+              ),
+              builder.decl(
+                  "F",
+                  builder.name("X", bodyT),
+                  paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }: _*
+              ),
+          ),
+      )
+    }
+
+    def forceScopeExceptionN(tparam: TParamN): Seq[T] = {
+      val (letT, declParams) = tparam
+      declParams.zipWithIndex.flatMap { case ((bodyT_j, paramTs_j), j) =>
+        Seq(
+            // LET F1 == X1, ..., FN = XN IN \E Fj: TRUE, Fj has the right type
+            builder.letIn(
+                builder.exists(
+                    builder.name(s"F$j", OperT1(paramTs_j, bodyT_j)),
+                    builder.bool(true),
+                ),
+                declParams.zipWithIndex.map { case ((bodyT, paramTs), k) =>
+                  builder.decl(
+                      s"F$k",
+                      builder.name(s"X$k", bodyT),
+                      paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p${i}_$k", tt) }: _*
+                  )
+                }: _*
+            ),
+            // LET  F1 == X1, ...,  Fj == \E Fj: TRUE, ..., FN = XN IN e, bound Fj has the right type
+            builder.letIn(
+                builder.name("e", letT),
+                declParams.zipWithIndex.map { case ((bodyT, paramTs), k) =>
+                  builder.decl(
+                      s"F$k",
+                      if (k == j) builder.exists(builder.name(s"F$j", OperT1(paramTs, bodyT)), builder.bool(true))
+                      else builder.name(s"X$k", bodyT),
+                      paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p${i}_$k", tt) }: _*
+                  )
+                }: _*
+            ),
+        )
+      }
+    }
+
+    def isExpected1(tparam: TParam1): TlaEx => Boolean = {
+      val (_, (bodyT, paramTs)) = tparam
+      val params = paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
+      val letT = OperT1(paramTs, bodyT)
+      val expectedBody =
+        LetInEx(
+            builder.name("F", letT),
+            builder.decl("F", builder.name("X", bodyT), params: _*),
+        )(Typed(letT))
+
+      expectedBody.eqTyped
+    }
+
+    def isExpectedN(tparam: TParamN): TlaEx => Boolean = {
+      val (letT, declParams) = tparam
+      val decls = declParams.zipWithIndex.map { case ((bodyT, paramTs), j) =>
+        val params = paramTs.zipWithIndex.map { case (tt, i) => builder.param(s"p${i}_$j", tt) }
+        builder.decl(s"F$j", builder.name(s"X$j", bodyT), params: _*)
+      }
+      val expectedBody =
+        decls.foldRight[TlaEx](builder.name("e", letT)) { case (decl, partial) =>
+          LetInEx(partial, decl)(Typed(letT))
+        }
+
+      expectedBody.eqTyped
+    }
+
+    def run[TParam](
+        mkWellTyped: TParam => T,
+        forceScopeException: TParam => Seq[T],
+        isExpected: TParam => TlaEx => Boolean,
+      )(tparam: TParam): Boolean = {
+
+      val goodDecl = mkWellTyped(tparam)
+
+      isExpected(tparam)(goodDecl) shouldBe true
+
+      val badDecls = forceScopeException(tparam)
+
+      badDecls.foreach { instruction =>
+        assertThrows[TBuilderScopeException] {
+          build(instruction)
+        }
+      }
+      true
+    }
+
+    checkRun[TParam1](run(mkWellTyped1, forceScopeException1, isExpected1))
+    checkRun[TParamN](run(mkWellTypedN, forceScopeExceptionN, isExpectedN))
+
+    // throws on n = 0
+    assertThrows[IllegalArgumentException] {
+      builder.letIn(builder.int(0))
+    }
+
+  }
+
   test("except") {
     type T = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
     type TParam = (TlaType1, Seq[(TBuilderInstruction, TlaType1)])
