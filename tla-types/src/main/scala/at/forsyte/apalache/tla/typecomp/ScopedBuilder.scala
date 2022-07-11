@@ -179,7 +179,7 @@ class ScopedBuilder
     usedInDecl = usedAfterDecl -- usedBeforeDecl
     bodyEx <- body
     boundAfterBody <- getAllBound // decl may not appear as bound in body
-    boundInBody = boundAfterBody -- usedInDecl
+    boundInBody = boundAfterBody -- usedAfterDecl
     declName <- name(declEx.name, declEx.typeTag.asTlaType1()) // puts name in scope w/ type
     _ <- markAsBound(declName)
   } yield {
