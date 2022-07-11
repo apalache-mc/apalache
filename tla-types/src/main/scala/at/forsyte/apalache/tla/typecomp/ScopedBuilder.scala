@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.{allBound, allUsed, markAsBound}
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.{getAllBound, getAllUsed, markAsBound}
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
 
@@ -173,12 +173,12 @@ class ScopedBuilder
 
   /** {{{LET decl(...) = ... IN body}}} */
   def letIn(body: TBuilderInstruction, decl: TBuilderOperDeclInstruction): TBuilderInstruction = for {
-    usedBeforeDecl <- allUsed // decl name may not appear in decl body
+    usedBeforeDecl <- getAllUsed // decl name may not appear in decl body
     declEx <- decl
-    usedAfterDecl <- allUsed
+    usedAfterDecl <- getAllUsed
     usedInDecl = usedAfterDecl -- usedBeforeDecl
     bodyEx <- body
-    boundAfterBody <- allBound // decl may not appear as bound in body
+    boundAfterBody <- getAllBound // decl may not appear as bound in body
     boundInBody = boundAfterBody -- usedInDecl
     declName <- name(declEx.name, declEx.typeTag.asTlaType1()) // puts name in scope w/ type
     _ <- markAsBound(declName)
