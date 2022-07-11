@@ -7,9 +7,6 @@ import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, LoadModelReque
 
 object TransExplorerServiceSpec extends DefaultRunnableSpec {
 
-  // Basic service for use in tests
-  // val service: UIO[TransExplorerService] = RpcServer.createService
-
   def spec = suite("TransExplorerServiceSpec")(
       testM("can obtain two different connections to server") {
         for {
@@ -19,20 +16,21 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
         } yield assert(c1.id)(not(equalTo(c2.id)))
       },
       testM("invalid spec returns error") {
-        val spec = """|---- missing module declaration ----
-                      |Foo == TRUE
-                      |====
-                      |""".stripMargin
+        val spec =
+          """|---- missing module declaration ----
+             |Foo == TRUE
+             |====
+             |""".stripMargin
         for {
           s <- ZIO.service[TransExplorerService]
           conn <- s.openConnection(ConnectRequest())
           resp <- s.loadModel(LoadModelRequest(conn.id, spec))
           msg = resp.result.err.get
-        } yield assert(msg)(containsString("Parsing failed: Error by TLA+ parser"))
+        } yield assert(msg)(containsString("Parsing failed with exception: Error by TLA+ parser"))
       },
-      testM("valid spec returns parsed model") {
+      testM("loading a valid spec returns parsed model") {
         val spec =
-          """|---- MODULE A ----
+          """|---- MODULE D ----
              |Foo == TRUE
              |====
              |""".stripMargin
@@ -43,7 +41,7 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
           resp <- s.loadModel(LoadModelRequest(conn.id, spec))
         } yield assert(resp.result.isSpec)(isTrue)
       },
-      testM("valid multi-module spec loads parsed model") {
+      testM("valid multi-module spec loads into a parsed model") {
         val auxSpec =
           """|---- MODULE B ----
              |BOp == TRUE
@@ -61,6 +59,51 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
           conn <- s.openConnection(ConnectRequest())
           resp <- s.loadModel(LoadModelRequest(conn.id, spec, Seq(auxSpec)))
         } yield assert(resp.result.isSpec)(isTrue)
+      },
+      testM("can load two valid specs in sequence") {
+        val specA =
+          """|---- MODULE A ----
+             |Foo == TRUE
+             |====
+             |""".stripMargin
+
+        val specB =
+          """|---- MODULE B ----
+             |Foo == TRUE
+             |====
+             |""".stripMargin
+
+        for {
+          s <- ZIO.service[TransExplorerService]
+          conn <- s.openConnection(ConnectRequest())
+          respA <- s.loadModel(LoadModelRequest(conn.id, specA))
+          respB <- s.loadModel(LoadModelRequest(conn.id, specB))
+        } yield assert(respA.result.isSpec && respB.result.isSpec)(isTrue)
+      },
+      testM("can load two valid specs in parallel") {
+        val specA =
+          """|---- MODULE A ----
+             |Foo == TRUE
+             |====
+             |""".stripMargin
+
+        val specB =
+          """|---- MODULE B ----
+             |Foo == TRUE
+             |====
+             |""".stripMargin
+
+        for {
+          s <- ZIO.service[TransExplorerService]
+          // Run with two separate connections, because loading two specs in
+          // parallel on the same connection isn't a feasible use case
+          connA <- s.openConnection(ConnectRequest())
+          connB <- s.openConnection(ConnectRequest())
+          reqA = LoadModelRequest(connA.id, specA)
+          reqB = LoadModelRequest(connB.id, specB)
+          responses <- s.loadModel(reqA).zipPar(s.loadModel(reqB))
+          (respA, respB) = responses
+        } yield assert(respA.result.isSpec && respB.result.isSpec)(isTrue)
       },
   )
     // Create the single shared service for use in our tests, allowing us to run
