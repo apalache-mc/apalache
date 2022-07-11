@@ -20,7 +20,7 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.7"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.8.0"
     val commonsIo = "commons-io" % "commons-io" % "2.11.0"
     val guice = "com.google.inject" % "guice" % "5.1.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0"
@@ -37,7 +37,7 @@ object Dependencies {
     val z3 = "tools.aqua" % "z3-turnkey" % "4.8.17"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
-    val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.5.1" % "provided"
+    val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
     val grpcNetty = "io.grpc" % "grpc-netty" % "1.47.0"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
