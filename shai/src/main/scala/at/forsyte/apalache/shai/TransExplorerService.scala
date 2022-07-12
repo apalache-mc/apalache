@@ -69,7 +69,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
    */
   def openConnection(req: ConnectRequest): Result[Connection] = for {
     id <- ZIO.effectTotal(UUID.randomUUID())
-    _ <- addConnection(Conn(id))
+    _ <- setConnection(Conn(id))
   } yield Connection(id.toString())
 
   /**
@@ -114,7 +114,10 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
     new TlaToUJson(None).makeRoot(Seq(module)).toString
   }
 
-  private def addConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
+  // Sets the connection [[c]] in the map of [[connections]] by assigning [[c.id -> c]]
+  // If [[c]] does not already exist in [[connections]] it will be added, or if a previous
+  // version of a connection with the same id is present, the value will be overwritten.
+  private def setConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
 
   private def getConnection(reqConn: RequestConn): Result[Conn] = {
     for {
@@ -140,10 +143,15 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
     } yield conn
   }
 
+  // Updates the content of the connection indicated by the id in the [[reqConn]] by using the update function [[f]]
+  // It is a contract violation if [[f]] changes the id of the underlying connection.
   private def updateConnection(reqConn: RequestConn)(f: Conn => Conn): Result[Conn] = for {
     conn <- getConnection(reqConn)
     updatedConn = f(conn)
-    _ <- addConnection(updatedConn)
+    _ <-
+      // Bail if the contract is violated
+      ZIO.succeed(require(conn.id == updatedConn.id, "invalid updateConnction: connectin ID has been changed"))
+    _ <- setConnection(updatedConn)
   } yield updatedConn
 
 }
