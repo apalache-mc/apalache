@@ -23,9 +23,9 @@ import scala.util.parsing.input.NoPosition
 object DefaultType1Parser extends Parsers with Type1Parser {
   override type Elem = Type1Token
 
-  // This pattern recognizes camelCase:
+  // This pattern recognizes camelCase and lowercase:
   // https://stackoverflow.com/questions/23936280/matching-camelcase-to-a-regular-expression-in-java
-  private val camelCasePattern = "^[a-z]+(?:[A-Z][a-z]*)+$".r
+  private val camelCasePattern = "^[a-z]+(?:[A-Z][a-z]*)*$".r
 
   /**
    * Parse a type from a string, possibly substituting aliases with types.

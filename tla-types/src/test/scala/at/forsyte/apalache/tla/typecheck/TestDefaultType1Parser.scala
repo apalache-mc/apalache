@@ -176,6 +176,12 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert(SetT1(ConstT1("$refToAnotherAlias")) == tt)
   }
 
+  test("lowercase = Set(Int)") {
+    // just lower case should also work
+    val (name, _) = DefaultType1Parser.parseAlias("lowercase = Set(Int)")
+    assert("$lowercase" == name)
+  }
+
   test("Set(ENTRY)") {
     val result = DefaultType1Parser.parseType("Set(ENTRY)")
     assert(SetT1(ConstT1("ENTRY")) == result)
