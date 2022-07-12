@@ -25,17 +25,18 @@ class TypeComputationFactory {
   private val tempOperMap: SignatureMap = TemporalOperSignatures.getMap
   private val apaInternalOperMap: SignatureMap = ApalacheInternalOperSignatures.getMap
   private val apaOperMap: SignatureMap = ApalacheOperSignatures.getMap
+  private val varOperMap: SignatureMap = VariantOperSignatures.getMap
 
   private val knownSignatures: SignatureMap =
     baseOperMap ++ arithOperMap ++ boolOperMap ++ setOperMap ++ seqOperMap ++
       actionOperMap ++ controlOperMap ++ funOperMap ++ finSetOperMap ++ tempOperMap ++
-      apaInternalOperMap ++ apaOperMap
+      apaInternalOperMap ++ apaOperMap ++ varOperMap
 
   /** Given an operator with a known signature, constructs a pure type computation for its return type */
   def computationFromSignature(oper: TlaOper): PureTypeComputation = { args =>
     knownSignatures.get(oper) match {
       // Failure: bad identifier
-      case None      => leftTypeException(s"Unknown signature for operator ${oper.name}")
+      case None      => leftTypeException(s"Unknown signature for operator ${oper.name}.")
       case Some(sig) => sig(args)
     }
   }
