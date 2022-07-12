@@ -42,6 +42,38 @@ private case class Conn(
  * The service enabling interaction with the symbolic model checker, via the
  * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]]
  *
+ * ==Overview==
+ * The public methods of this class are handlers for the protobuf messages defined in `transExplorer.proto`. These
+ * handlers implement RPC calls enabling interaction with the Apalache model checker.
+ *
+ * On a successful remote procedure call, a handler returns a value of type [[Result[T]]], were [[T]] is the type of the
+ * protobuf message specified as the response for the given RPC.
+ *
+ * The type [[Result[T]]] is an alias for [[ZIO[ZEnv, Status, T]]], which is fallible promise to return a value of type
+ * [[T]] computed in the environment [[ZEnv]].
+ *
+ * ==Error handling==
+ *
+ * There are two kinds of errors that may be signled by the PRC handlers:
+ *
+ *   - '''Protocol-level errors''', which indicate a failure to communicate successfully with the RPC system. These are
+ *     indicated by [[Status]] error codes.
+ *   - '''Application-level errors''', which indicate some erroneous outcome in the execution of an RPC that was
+ *     successfully communicated and executed. These are indicated by `err` results in the protobuf message sent back in
+ *     response.
+ *
+ * Examples of '''protocol-level errors''':
+ *
+ *   - a protobuf message is malformed
+ *   - an uncaught exception crashes the server
+ *   - a request doesn't contain a connection
+ *
+ * Examples of '''application-level errors''':
+ *
+ *   - a syntax error is found when trying to parse a spec
+ *   - a type error is found when typechecking a spec
+ *   - a counterexample to a specified property is found while model checking
+ *
  * @param connections
  *   A thread-safe, mutable reference holding a map registering connections by their unique ID
  *
@@ -56,13 +88,20 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   /** Concurrent tasks performed by the service that produce values of type [[T]] */
   type Result[T] = ZIO[ZEnv, Status, T]
 
-  // The type of the conn field carried by all requests
+  // The type of the `conn` field carried by all requests (exception for the `ConnectRequest`)
+  //
+  // It should always be `Some(Connection)`, but gRPC does not support required
+  // fields, so instead we have to validate that the connection is supplied for
+  // any incoming requests.
   private type RequestConn = Option[Connection]
 
   /**
    * Creates and registers a new connection
    *
-   * This method handles the OpenConnection RPC defined by `transExplorer.proto`
+   * This method handles the [[OpenConnection]] RPC defined by `transExplorer.proto`
+   *
+   * Every session that interacts with the server must begin by obtaining a [[Connection]], and every subsequent request
+   * must include a `conn` field holding the [[Connection]].
    *
    * @param req
    *   the request (isomorphic to the Unit)
@@ -75,7 +114,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   /**
    * Parses a spec into a model
    *
-   * This method handles the [LoadModelRequest] RPC defined by `transExplorer.proto`
+   * This method handles the [[LoadModelRequest]] RPC defined by `transExplorer.proto`
    *
    * @param req
    *   the request to load a model, including the root module spec and any auxiliary modules
@@ -119,32 +158,41 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   // version of a connection with the same id is present, the value will be overwritten.
   private def setConnection(c: Conn): Result[Unit] = connections.update(_ + (c.id -> c))
 
+  // Takes a [[RequestConn]] that should always hold a [[Connection]] with a valid UUID
+  // and returns the internal [[Conn]] instance storing session data corresponding to the connection.
+  //
+  // It provides error checking ont the required presence of a valid Connection
+  // ID, as desribed in the documentation of the [[TransExplorerService]]
+  // service.
+  //
+  // TODO Add logging for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
+  // TODO Add loggin for unregistered conn ID: https://github.com/informalsystems/apalache/issues/1849
   private def getConnection(reqConn: RequestConn): Result[Conn] = {
     for {
       uuid <-
-        try {
-          reqConn match {
-            case Some(conn) => ZIO.succeed(UUID.fromString(conn.id))
-            case None       =>
-              // TODO log for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
-              ZIO.fail(Status.INVALID_ARGUMENT)
-          }
-        } catch {
-          case _: IllegalArgumentException =>
-            // TODO log for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
-            ZIO.fail(Status.INVALID_ARGUMENT)
+        reqConn match {
+          case Some(conn) =>
+            try { ZIO.succeed(UUID.fromString(conn.id)) }
+            catch {
+              case _: IllegalArgumentException =>
+                ZIO.fail(
+                    Status.INVALID_ARGUMENT.withDescription("Invalid RPC request: Connection id is not a valid UUID"))
+            }
+          case None => ZIO.fail(Status.INVALID_ARGUMENT.withDescription("Invalid RPC request: no Connection provided"))
         }
       connMap <- connections.get
       conn <- connMap.get(uuid) match {
-        // TODO log for unregistered uuid
-        case None    => ZIO.fail(Status.FAILED_PRECONDITION)
+        case None =>
+          ZIO.fail(Status.FAILED_PRECONDITION.withDescription(
+                  "Invalid Connection: no Connextion is registered for given ID"))
         case Some(c) => ZIO.succeed(c)
       }
     } yield conn
   }
 
-  // Updates the content of the connection indicated by the id in the [[reqConn]] by using the update function [[f]]
-  // It is a contract violation if [[f]] changes the id of the underlying connection.
+  // Updates the [[Conn]] corresponding by the id in the [[reqConn]], using the update function [[f]]
+  //
+  // [[f]] must not change the id of the underlying connection.
   private def updateConnection(reqConn: RequestConn)(f: Conn => Conn): Result[Conn] = for {
     conn <- getConnection(reqConn)
     updatedConn = f(conn)
@@ -153,5 +201,4 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
       ZIO.succeed(require(conn.id == updatedConn.id, "invalid updateConnction: connectin ID has been changed"))
     _ <- setConnection(updatedConn)
   } yield updatedConn
-
 }
