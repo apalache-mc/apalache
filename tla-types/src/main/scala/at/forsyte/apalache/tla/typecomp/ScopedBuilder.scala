@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.markAsBound
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.{getAllBound, getAllUsed, markAsBound}
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
 
@@ -169,6 +169,43 @@ class ScopedBuilder
             OperT1(paramTs, bodyEx.typeTag.asTlaType1())
         )
     )
+  }
+
+  /** {{{LET decl(...) = ... IN body}}} */
+  def letIn(body: TBuilderInstruction, decl: TBuilderOperDeclInstruction): TBuilderInstruction = for {
+    usedBeforeDecl <- getAllUsed // decl name may not appear in decl body
+    declEx <- decl
+    usedAfterDecl <- getAllUsed
+    usedInDecl = usedAfterDecl -- usedBeforeDecl
+    bodyEx <- body
+    boundAfterBody <- getAllBound // decl may not appear as bound in body
+    boundInBody = boundAfterBody -- usedAfterDecl
+    declName <- name(declEx.name, declEx.typeTag.asTlaType1()) // puts name in scope w/ type
+    _ <- markAsBound(declName)
+  } yield {
+    if (usedInDecl.union(boundInBody).contains(declEx.name)) {
+      val source = if (usedInDecl.contains(declEx.name)) declEx.body else bodyEx
+      throw new TBuilderScopeException(s"Declaration name ${declEx.name} is shadowed in $source.")
+    } else
+      LetInEx(bodyEx, declEx)(bodyEx.typeTag)
+  }
+
+  /**
+   * {{{LET F_1(a_1^1,...,a_{n_1}^1) == X_1 F_2(a_1^2,...,b_{n_2}^2) == X_2 ... F_N(a_1^N,...,z_{n_N}^N) == X_N IN e}}}
+   * is equivalently translated to
+   * {{{
+   *   LET F_1(a_1^1,...,a_{n_1}^1) == X_1 IN
+   *   LET F_2(a_1^2,...,b_{n_2}^2) == X_2 IN
+   *   ...
+   *   LET F_N(a_1^N,...,z_{n_N}^N) == X_N IN
+   *   e
+   * }}}
+   */
+  def letIn(body: TBuilderInstruction, decls: TBuilderOperDeclInstruction*): TBuilderInstruction = {
+    require(decls.nonEmpty, "decls must be nonempty.")
+    decls.foldRight(body) { case (decl, partial) =>
+      letIn(partial, decl)
+    }
   }
 
   /**

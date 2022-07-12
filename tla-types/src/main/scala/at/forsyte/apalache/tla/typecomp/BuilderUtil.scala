@@ -38,16 +38,16 @@ object BuilderUtil {
     )(variable: TBuilderInstruction,
       set: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
-    usedBefore <- allUsed
+    usedBefore <- getAllUsed
     setEx <- set
-    usedInSetOrBefore <- allUsed // variable may not appear as bound or free in set
+    usedInSetOrBefore <- getAllUsed // variable may not appear as bound or free in set
     usedInSet = usedInSetOrBefore -- usedBefore
     exprEx <- expr
-    boundAfterExpr <- allBound // variable may not appear as bound in expr
+    boundAfterExpr <- getAllBound // variable may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
     // variable is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfrerExpr
-    boundAfterVar <- allBound
+    boundAfterVar <- getAllBound
   } yield {
     val ret = unsafeMethod(varEx, setEx, exprEx)
     if (boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
@@ -66,11 +66,11 @@ object BuilderUtil {
     )(variable: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
     exprEx <- expr
-    boundAfterExpr <- allBound // variable may not appear as bound in expr
+    boundAfterExpr <- getAllBound // variable may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
     // variable is shadowed iff boundAfterVar \subseteq boundAfterExpr
-    boundAfterVar <- allBound
+    boundAfterVar <- getAllBound
   } yield {
     val ret = unsafeMethod(varEx, exprEx)
     if (boundAfterVar.subsetOf(boundAfterExpr)) {
@@ -88,14 +88,14 @@ object BuilderUtil {
     )(ex: TBuilderInstruction,
       varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = for {
     bodyEx <- ex
-    boundAfterBodyEx <- allBound // variables may not appear as bound in bodyEx
+    boundAfterBodyEx <- getAllBound // variables may not appear as bound in bodyEx
     pairs <- varSetPairs.foldLeft(Seq.empty[(TlaEx, TlaEx)].point[TBuilderInternalState]) {
       case (cmp, (variable, set)) =>
         for {
           seq <- cmp
-          usedBefore <- allUsed
+          usedBefore <- getAllUsed
           setEx <- set
-          usedInSetOrBefore <- allUsed // variable_i may not appear as bound or free in set_i
+          usedInSetOrBefore <- getAllUsed // variable_i may not appear as bound or free in set_i
           usedInSet = usedInSetOrBefore -- usedBefore
           varEx <- variable
           // we delay marking as bound, to not interfere with other variable-set pairs
@@ -103,21 +103,28 @@ object BuilderUtil {
           require(varEx.isInstanceOf[NameEx], s"Expected varEx to be a variable name, found $varEx.")
           // variable_i is shadowed iff boundVar \in usedInSet \union boundAfterBodyEx
           val boundVar = varEx.asInstanceOf[NameEx].name
-          if (usedInSet.union(boundAfterBodyEx).contains(boundVar))
-            throw new TBuilderScopeException(s"Variable $varEx is shadowed in $bodyEx or $setEx.")
-          else seq :+ (varEx, setEx)
+          if (usedInSet.union(boundAfterBodyEx).contains(boundVar)) {
+            val source = if (boundAfterBodyEx.contains(boundVar)) bodyEx else setEx
+            throw new TBuilderScopeException(s"Variable $varEx is shadowed in $source.")
+          } else seq :+ (varEx, setEx)
         }
     }
     // Mark as bound later
     _ <- buildSeq(pairs.map(pa => markAsBound(pa._1)))
   } yield unsafeMethod(bodyEx, pairs)
 
-  /** Convenience shorthand to access the set of used names. */
-  def allUsed: TBuilderInternalState[Set[String]] =
+  /**
+   * Convenience shorthand to access the set of used names. May return different values at different places, depending
+   * on the internal state.
+   */
+  def getAllUsed: TBuilderInternalState[Set[String]] =
     gets[TBuilderContext, Set[String]] { _.usedNames }
 
-  /** Convenience shorthand to access the set of bound names. */
-  def allBound: TBuilderInternalState[Set[String]] =
+  /**
+   * Convenience shorthand to access the set of bound names. May return different values at different places, depending
+   * on the internal state.
+   */
+  def getAllBound: TBuilderInternalState[Set[String]] =
     gets[TBuilderContext, Set[String]] { ctx => ctx.usedNames -- ctx.freeNameScope.keySet }
 
   /**
