@@ -68,8 +68,13 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     // Resolver for filenames, patched for wired modules.
     val filenameResolver = SanyNameToStream(libraryPaths)
 
+    // Set a unique tmpdir to avoid race-condition in SANY
+    // TODO: RM once https://github.com/tlaplus/tlaplus/issues/688 is fixed
+    System.setProperty("java.io.tmpdir", sanyTempDir().toString())
+
     // call SANY
     val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
+
     SANY.frontEndMain(
         specObj,
         file.getAbsolutePath,
@@ -99,8 +104,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
    *   the pair (the root module name, a map of modules)
    */
   def loadFromSource(source: Source, aux: Seq[Source] = Seq()): (String, Map[String, TlaModule]) = {
-    val tempDir = Files.createTempDirectory("sanyimp").toFile
-
+    val tempDir = sanyTempDir()
     val nameAndModule = for {
       (rootName, rootFile) <- saveTlaFile(tempDir, source)
       // Save the aux modules to files, and get just the module names, if errors are hit, the first one will turn into a `Try`
@@ -112,6 +116,9 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     // Raise any errors previously captures in the `Try`
     nameAndModule.get
   }
+
+  // Create a unique temp directory for use by the SANY importer
+  private def sanyTempDir() = Files.createTempDirectory("sanyimp").toFile
 
   private def ensureModuleNamesAreUnique(moduleNames: Seq[String]): Try[Unit] = {
     val duplicateNames = moduleNames.groupBy(identity).filter(_._2.size > 1)
