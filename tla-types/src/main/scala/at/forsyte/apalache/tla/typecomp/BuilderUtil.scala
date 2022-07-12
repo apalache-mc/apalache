@@ -103,9 +103,10 @@ object BuilderUtil {
           require(varEx.isInstanceOf[NameEx], s"Expected varEx to be a variable name, found $varEx.")
           // variable_i is shadowed iff boundVar \in usedInSet \union boundAfterBodyEx
           val boundVar = varEx.asInstanceOf[NameEx].name
-          if (usedInSet.union(boundAfterBodyEx).contains(boundVar))
-            throw new TBuilderScopeException(s"Variable $varEx is shadowed in $bodyEx or $setEx.")
-          else seq :+ (varEx, setEx)
+          if (usedInSet.union(boundAfterBodyEx).contains(boundVar)) {
+            val source = if (boundAfterBodyEx.contains(boundVar)) bodyEx else setEx
+            throw new TBuilderScopeException(s"Variable $varEx is shadowed in $source.")
+          } else seq :+ (varEx, setEx)
         }
     }
     // Mark as bound later

@@ -183,9 +183,11 @@ class ScopedBuilder
     declName <- name(declEx.name, declEx.typeTag.asTlaType1()) // puts name in scope w/ type
     _ <- markAsBound(declName)
   } yield {
-    if ((usedInDecl ++ boundInBody).contains(declEx.name))
-      throw new TBuilderScopeException(s"Declaration name ${declEx.name} is shadowed in ${declEx.body} or $bodyEx.")
-    LetInEx(bodyEx, declEx)(bodyEx.typeTag)
+    if (usedInDecl.union(boundInBody).contains(declEx.name)) {
+      val source = if (usedInDecl.contains(declEx.name)) declEx.body else bodyEx
+      throw new TBuilderScopeException(s"Declaration name ${declEx.name} is shadowed in $source.")
+    } else
+      LetInEx(bodyEx, declEx)(bodyEx.typeTag)
   }
 
   /**
