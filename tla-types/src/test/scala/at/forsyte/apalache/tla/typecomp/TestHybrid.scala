@@ -66,7 +66,9 @@ class TestHybrid extends BuilderTest {
         ts match {
           case head :: Nil  => head
           case head :: tail => OperT1(tail, head)
-          case Nil          => IntT1 // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+          case Nil          =>
+            // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+            throw new IllegalStateException("Expected list of generated parameters to be nonempty.")
         },
         n - 1,
     )
@@ -231,7 +233,9 @@ class TestHybrid extends BuilderTest {
     } yield ts match {
       case head :: Nil  => head
       case head :: tail => OperT1(tail, head)
-      case Nil          => IntT1 // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+      case Nil          =>
+        // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
+        throw new IllegalStateException("Expected list of generated parameters to be nonempty.")
     }
 
     val declParamGen: Gen[DeclParamT] = for {
