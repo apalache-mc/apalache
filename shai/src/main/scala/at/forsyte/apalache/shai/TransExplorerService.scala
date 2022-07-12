@@ -37,8 +37,6 @@ private case class Conn(
   }
 }
 
-private case class ParsingFailed(msg: String) extends Exception(msg)
-
 /**
  * The service enabling interaction with the symbolic model checker, via the
  * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]]
@@ -90,19 +88,19 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
           json = jsonOfModule(module)
         } yield LoadModelResponse.Result.Spec(json)
       case Left(err) =>
-        ZIO.succeed(LoadModelResponse.Result.Err(err.getMessage()))
+        ZIO.succeed(LoadModelResponse.Result.Err(err))
     }
   } yield LoadModelResponse(result)
 
-  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[Throwable, TlaModule]] =
+  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[String, TlaModule]] =
     // Obtain permit on the semaphore protecting access to the parser, ensuring the parser is not
     // run by more than one thread at a time.
     parserSemaphore.withPermit(ZIO.effectTotal(try {
       val parser = Executor(new ParserModule)
       parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
-      parser.run().left.map(code => ParsingFailed(s"Parsing failed with error code: ${code}"))
+      parser.run().left.map(code => s"Parsing failed with error code: ${code}")
     } catch {
-      case e: Throwable => Left(ParsingFailed(s"Parsing failed with exception: ${e.getMessage()}"))
+      case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
     }))
 
   private def jsonOfModule(module: TlaModule): String = {
