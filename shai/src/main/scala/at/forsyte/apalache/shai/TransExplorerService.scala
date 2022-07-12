@@ -24,6 +24,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
 import zio.{Ref, Semaphore, ZEnv, ZIO}
+import zio.duration._
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -92,16 +93,22 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
     }
   } yield LoadModelResponse(result)
 
-  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[String, TlaModule]] =
+  private val parserTimeoutDuration: Duration = 2.minute
+
+  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[String, TlaModule]] = for {
     // Obtain permit on the semaphore protecting access to the parser, ensuring the parser is not
     // run by more than one thread at a time.
-    parserSemaphore.withPermit(ZIO.effectTotal(try {
-      val parser = Executor(new ParserModule)
-      parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
-      parser.run().left.map(code => s"Parsing failed with error code: ${code}")
-    } catch {
-      case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
-    }))
+    result <- parserSemaphore
+      .withPermit(ZIO.effectTotal(try {
+        val parser = Executor(new ParserModule)
+        parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
+        parser.run().left.map(code => s"Parsing failed with error code: ${code}")
+      } catch {
+        case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
+      }))
+      .disconnect
+      .timeout(parserTimeoutDuration)
+  } yield result.getOrElse(Left(s"Parsing failed with timeout: exceeded ${parserTimeoutDuration}"))
 
   private def jsonOfModule(module: TlaModule): String = {
     new TlaToUJson(None).makeRoot(Seq(module)).toString
