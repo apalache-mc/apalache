@@ -90,14 +90,17 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
   /**
    * {{{MkSeq(n, F)}}}
    * @param n
-   *   must be > 0
+   *   must be a nonnegative TLA+ integer
    * @param F
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
-  def mkSeq(n: Int, F: TlaEx): TlaEx = {
-    require(n > 0, s"Expected n to be positive, found $n.")
+  def mkSeq(n: TlaEx, F: TlaEx): TlaEx = {
+    require(n match {
+          case ValEx(TlaInt(m)) if m >= 0 => true
+          case _                          => false
+        }, s"Expected n to be a nonnegative TLA+ integer, found $n.")
     require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
-    buildBySignatureLookup(ApalacheOper.mkSeq, ValEx(TlaInt(n))(Typed(IntT1)), F)
+    buildBySignatureLookup(ApalacheOper.mkSeq, n, F)
   }
 
   /**

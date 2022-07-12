@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.types.tla.TypedParam
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
@@ -250,10 +251,286 @@ class TestApalacheBuilder extends BuilderTest {
     }
   }
 
-  // TODO: Implement builder.letInEx, so we can construct lambdas for the following tests
-  test("mkSeq") {}
-  test("foldSet") {}
-  test("foldSeq") {}
+  object LambdaFactory {
+    // we pass body and bodyT separately, so we can avoid building `body` to get its type.
+    // when using Gen[TParam] we get the body type explicitly anyway.
+    // Assumption: build(body).typeTag.asTlaType1() == bodyT
+    /**
+     * Creates a lambda expression of the form
+     * {{{
+     * LET opName(p1,...,pn) == body IN opName }}} ``
+     */
+    def mkLambda(
+        opName: String,
+        tparams: Seq[TypedParam],
+        body: TBuilderInstruction,
+        bodyT: TlaType1): TBuilderInstruction = {
+      val paramTs = tparams.map { _._2 }
+      val operT = OperT1(paramTs, bodyT)
+      builder.letIn(
+          builder.name(opName, operT),
+          builder.decl(opName, body, tparams: _*),
+      )
+    }
+  }
+
+  test("mkSeq") {
+    import LambdaFactory.mkLambda
+    type T = (TBuilderInstruction, TBuilderInstruction)
+    type TParam = (Int, TlaType1)
+
+    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(0, 10), singleTypeGen)
+
+    // MkSeq(n, LET F(i) == e IN F)
+    def mkWellTyped(tparam: TParam): T = {
+      val (n, t) = tparam
+      val param = builder.param("i", IntT1)
+      (
+          builder.int(n),
+          mkLambda(
+              "F",
+              Seq(param),
+              builder.name("e", t),
+              t,
+          ),
+      )
+    }
+
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (n, t) = tparam
+      Seq(
+          // F is a unary lambda, but the arg-type is not Int
+          (
+              builder.int(n),
+              mkLambda(
+                  "F",
+                  Seq(builder.param("i", InvalidTypeMethods.notInt)),
+                  builder.name("e", t),
+                  t,
+              ),
+          )
+      )
+    }
+
+    def resultIsExpected = expectEqTyped[TParam, T](
+        ApalacheOper.mkSeq,
+        mkWellTyped,
+        { case (a, b) => Seq(a, b) },
+        { case (_, t) => SeqT1(t) },
+    )
+
+    checkRun(
+        runBinary(
+            builder.mkSeq,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // throws on non-integer literal
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mkSeq(
+              builder.name("NonLit", IntT1),
+              mkLambda(
+                  "F",
+                  Seq(builder.param("i", IntT1)),
+                  builder.name("e", IntT1),
+                  IntT1,
+              ),
+          )
+      )
+    }
+
+    // throws on negative integer literal
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mkSeq(
+              builder.int(-1),
+              mkLambda(
+                  "F",
+                  Seq(builder.param("i", IntT1)),
+                  builder.name("e", IntT1),
+                  IntT1,
+              ),
+          )
+      )
+    }
+
+    // throws on non-lambda
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mkSeq(
+              builder.int(2),
+              builder.name("NonLambda", OperT1(Seq(IntT1), IntT1)),
+          )
+      )
+    }
+
+    // throws on non-unary lambda
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mkSeq(
+              builder.int(2),
+              mkLambda(
+                  "F",
+                  Seq(
+                      builder.param("i", IntT1),
+                      builder.param("j", IntT1),
+                  ),
+                  builder.name("e", IntT1),
+                  IntT1,
+              ),
+          )
+      )
+    }
+  }
+
+  test("foldSet/foldSeq") {
+    import LambdaFactory.mkLambda
+    type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
+    type TParam = (TlaType1, TlaType1)
+
+    // Fold tests need to generate legal operator parameter types.
+    val gen2Param: Gen[TParam] = Gen.zip(parameterTypeGen, parameterTypeGen)
+
+    // Assume SeqOrSetT1 = SeqT1(_) or SetT1(_) below. The tests are otherwise the same
+
+    // ((a,b) => a, a, SeqOrSet(b)) => a
+    // FoldSeqOrSet( LET F(x,y) == e IN F, v, S )
+    def mkWellTyped(SeqOrSetT1: TlaType1 => TlaType1)(tparam: TParam): T = {
+      val (a, b) = tparam
+      val params = Seq(
+          builder.param("x", a),
+          builder.param("y", b),
+      )
+      (
+          mkLambda(
+              "F",
+              params,
+              builder.name("e", a),
+              a,
+          ),
+          builder.name("v", a),
+          builder.name("S", SeqOrSetT1(b)),
+      )
+    }
+
+    def mkIllTyped(SeqOrSetT1: TlaType1 => TlaType1)(tparam: TParam): Seq[T] = {
+      val (a, b) = tparam
+      // We manipulate each of the types to break correctness, but the names can stay the same
+      def mkCustomLambda(xT: TlaType1, yT: TlaType1): TBuilderInstruction =
+        mkLambda(
+            "F",
+            Seq(
+                builder.param("x", xT),
+                builder.param("y", yT),
+            ),
+            builder.name("e", xT),
+            xT,
+        )
+      Seq(
+          (
+              mkCustomLambda(InvalidTypeMethods.differentFrom(a), b),
+              builder.name("v", a),
+              builder.name("S", SeqOrSetT1(b)),
+          ),
+          (
+              mkCustomLambda(a, InvalidTypeMethods.differentFrom(b)),
+              builder.name("v", a),
+              builder.name("S", SeqOrSetT1(b)),
+          ),
+          (
+              mkCustomLambda(a, b),
+              builder.name("v", InvalidTypeMethods.differentFrom(a)),
+              builder.name("S", SeqOrSetT1(b)),
+          ),
+          (
+              mkCustomLambda(a, b),
+              builder.name("v", a),
+              builder.name("S", SeqOrSetT1(InvalidTypeMethods.differentFrom(b))),
+          ),
+          (
+              mkCustomLambda(a, b),
+              builder.name("v", a),
+              builder.name("S", IntT1), // both not a set and not a seq
+          ),
+      )
+    }
+
+    def resultIsExpected(seqOrSetT: TlaType1 => TlaType1) = expectEqTyped[TParam, T](
+        if (seqOrSetT == SetT1) ApalacheOper.foldSet else ApalacheOper.foldSeq,
+        mkWellTyped(seqOrSetT),
+        { case (a, b, c) => Seq(a, b, c) },
+        { case (a, _) => a },
+    )
+
+    def run(seqOrSetT: TlaType1 => TlaType1) =
+      runTernary(
+          if (seqOrSetT == SetT1) builder.foldSet else builder.foldSeq,
+          mkWellTyped(seqOrSetT),
+          mkIllTyped(seqOrSetT),
+          resultIsExpected(seqOrSetT),
+      ) _
+
+    // we pass gen explicitly, since there exists a standard generator for (TT1, TT1). See #1966
+    checkRun(run(SetT1))(gen2Param) // FoldSet tests
+    checkRun(run(SeqT1))(gen2Param) // FoldSeq tests
+
+    // throws on non-lambda
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.foldSet(
+              builder.name("NonLambda", OperT1(Seq(IntT1, IntT1), IntT1)),
+              builder.name("v", IntT1),
+              builder.name("S", SetT1(IntT1)),
+          )
+      )
+    }
+
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.foldSeq(
+              builder.name("NonLambda", OperT1(Seq(IntT1, IntT1), IntT1)),
+              builder.name("v", IntT1),
+              builder.name("seq", SeqT1(IntT1)),
+          )
+      )
+    }
+
+    // throws on non-binary lambda
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.foldSet(
+              mkLambda(
+                  "F",
+                  Seq(builder.param("x", IntT1)),
+                  builder.name("e", IntT1),
+                  IntT1,
+              ),
+              builder.name("v", IntT1),
+              builder.name("S", SetT1(IntT1)),
+          )
+      )
+    }
+
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.foldSet(
+              mkLambda(
+                  "F",
+                  Seq(builder.param("x", IntT1)),
+                  builder.name("e", IntT1),
+                  IntT1,
+              ),
+              builder.name("v", IntT1),
+              builder.name("seq", SeqT1(IntT1)),
+          )
+      )
+    }
+
+  }
 
   test("setAsFun") {
     type T = TBuilderInstruction
