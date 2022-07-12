@@ -70,7 +70,6 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
 
     // Set a unique tmpdir to avoid race-condition in SANY
     // TODO: RM once https://github.com/tlaplus/tlaplus/issues/688 is fixed
-    //       see
     System.setProperty("java.io.tmpdir", sanyTempDir().toString())
 
     // call SANY
