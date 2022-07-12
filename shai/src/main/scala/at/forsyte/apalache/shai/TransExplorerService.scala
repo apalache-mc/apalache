@@ -122,7 +122,9 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
         try {
           reqConn match {
             case Some(conn) => ZIO.succeed(UUID.fromString(conn.id))
-            case None       => throw new IllegalArgumentException()
+            case None       =>
+              // TODO log for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
+              ZIO.fail(Status.INVALID_ARGUMENT)
           }
         } catch {
           case _: IllegalArgumentException =>
