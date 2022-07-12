@@ -23,6 +23,10 @@ import scala.util.parsing.input.NoPosition
 object DefaultType1Parser extends Parsers with Type1Parser {
   override type Elem = Type1Token
 
+  // This pattern recognizes camelCase:
+  // https://stackoverflow.com/questions/23936280/matching-camelcase-to-a-regular-expression-in-java
+  private val camelCasePattern = "^[a-z]+(?:[A-Z][a-z]*)+$".r
+
   /**
    * Parse a type from a string, possibly substituting aliases with types.
    *
@@ -64,7 +68,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
   private def closedTypeExpr: Parser[TlaType1] = phrase(typeExpr) ^^ (e => e)
 
   private def aliasExpr: Parser[(String, TlaType1)] = {
-    (typeConst ~ EQ() ~ typeExpr) ^^ { case ConstT1(name) ~ _ ~ tt =>
+    (oldOrNewAlias ~ EQ() ~ typeExpr) ^^ { case ConstT1(name) ~ _ ~ tt =>
       (name, tt)
     }
   }
@@ -80,6 +84,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
       | record | recordFromRow
       | variant | variantVar
       | typeVar | typeConst
+      | aliasReference
       | parenExpr) ^^ {
       case INT()        => IntT1
       case REAL()       => RealT1
@@ -259,6 +264,11 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
+  // a reference to an alias
+  private def aliasReference: Parser[TlaType1] = {
+    DOLLAR() ~> newAlias ^^ { n => n }
+  }
+
   // A record field name, like foo_BAR2.
   // As field name are colliding with CAPS_IDENT and TYPE_VAR, we expect all of them.
   private def fieldName: Parser[IDENT] = {
@@ -285,6 +295,22 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // a type constant or an alias name, e.g., BAZ
   private def typeConst: Parser[ConstT1] = {
-    acceptMatch("type constant", { case IDENT(name) if (name.toUpperCase() == name) => ConstT1(name) })
+    acceptMatch("type constant", { case IDENT(name) if name.toUpperCase() == name => ConstT1(name) })
+  }
+
+  // old ALIAS_SYNTAX, or newSyntaxInCamelCase
+  private def oldOrNewAlias: Parser[ConstT1] = {
+    acceptMatch("alias name",
+        {
+          case IDENT(name) if name.toUpperCase() == name =>
+            ConstT1(name)
+
+          case IDENT(name) if camelCasePattern.matches(name) =>
+            ConstT1("$" + name)
+        })
+  }
+
+  private def newAlias: Parser[ConstT1] = {
+    acceptMatch("type constant", { case IDENT(name) if camelCasePattern.matches(name) => ConstT1("$" + name) })
   }
 }

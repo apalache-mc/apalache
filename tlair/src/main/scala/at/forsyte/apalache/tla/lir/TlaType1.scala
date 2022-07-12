@@ -104,8 +104,8 @@ case object StrT1 extends TlaType1 {
  *   unique name of the constant type
  */
 case class ConstT1(name: String) extends TlaType1 {
-  require(name.forall(c => c.isUpper || c.isDigit || c == '_'),
-      "ConstT1 accepts identifiers in upper case, found: " + name)
+  require(name.forall(c => c.isUpper || c.isDigit || c == '_') || name.startsWith("$"),
+      "ConstT1 accepts identifiers in upper case or $aliasReference, found: " + name)
 
   override def toString: String = name
 
