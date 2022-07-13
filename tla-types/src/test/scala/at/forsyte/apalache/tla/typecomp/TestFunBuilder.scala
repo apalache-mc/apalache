@@ -408,7 +408,7 @@ class TestFunBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaFunOper.funDef,
         mkWellTyped2,
-        { case (a, seq) => liftBuildToSeq(a +: seq) },
+        ToSeq.variadicWithDistinguishedFirst,
         { case (t, ts) => funT(t, ts) },
     )
 
@@ -548,7 +548,7 @@ class TestFunBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.app,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         { case (appT, arg) => Applicative.asInstanceOfApplicative(appT, arg).get.toT },
     )
 
@@ -578,7 +578,7 @@ class TestFunBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.domain,
         mkWellTyped,
-        { a => Seq(a) },
+        ToSeq.unary,
         { case (appT, _) => SetT1(Applicative.domainElemType(appT).get) },
     )
 
@@ -646,7 +646,7 @@ class TestFunBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.except,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         { case (appT, _) => appT },
     )
 
