@@ -5,7 +5,6 @@ import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.types.tla.TypedParam
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
-import org.scalacheck.Prop.forAll
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
@@ -58,19 +57,37 @@ class TestApalacheBuilder extends BuilderTest {
   }
 
   test("gen") {
+    type T = (Int, TlaType1)
+    type TParam = (Int, TlaType1)
 
-    val gen = Gen.zip(Gen.choose(1, 10), singleTypeGen)
+    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(1, 10), singleTypeGen)
 
-    val prop = forAll(gen) { case (n, tt) =>
-      val genEx: TlaEx = builder.gen(n, tt)
-      genEx.eqTyped(
-          OperEx(
-              ApalacheOper.gen,
-              builder.int(n),
-          )(Typed(tt))
+    def mkWellTyped(tparam: TParam): T = tparam
+
+    def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
+
+    def resultIsExpected = expectEqTyped[TParam, T](
+        ApalacheOper.gen,
+        mkWellTyped,
+        { case (a, _) => Seq(builder.int(a)) },
+        { case (_, t) => t },
+    )
+
+    checkRun(
+        runBinary(
+            builder.gen,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // throws on n <= 0
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.gen(0, IntT1)
       )
     }
-    check(prop, minSuccessful(1000), sizeRange(8))
 
     assertThrows[IllegalArgumentException] {
       build(
@@ -276,7 +293,7 @@ class TestApalacheBuilder extends BuilderTest {
 
   test("mkSeq") {
     import LambdaFactory.mkLambda
-    type T = (TBuilderInstruction, TBuilderInstruction)
+    type T = (Int, TBuilderInstruction)
     type TParam = (Int, TlaType1)
 
     implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(0, 10), singleTypeGen)
@@ -286,7 +303,7 @@ class TestApalacheBuilder extends BuilderTest {
       val (n, t) = tparam
       val param = builder.param("i", IntT1)
       (
-          builder.int(n),
+          n,
           mkLambda(
               "F",
               Seq(param),
@@ -301,7 +318,7 @@ class TestApalacheBuilder extends BuilderTest {
       Seq(
           // F is a unary lambda, but the arg-type is not Int
           (
-              builder.int(n),
+              n,
               mkLambda(
                   "F",
                   Seq(builder.param("i", InvalidTypeMethods.notInt)),
@@ -315,7 +332,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.mkSeq,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        { case (a, b) => Seq(builder.int(a), b) },
         { case (_, t) => SeqT1(t) },
     )
 
@@ -328,26 +345,11 @@ class TestApalacheBuilder extends BuilderTest {
         )
     )
 
-    // throws on non-integer literal
-    assertThrows[IllegalArgumentException] {
-      build(
-          builder.mkSeq(
-              builder.name("NonLit", IntT1),
-              mkLambda(
-                  "F",
-                  Seq(builder.param("i", IntT1)),
-                  builder.name("e", IntT1),
-                  IntT1,
-              ),
-          )
-      )
-    }
-
     // throws on negative integer literal
     assertThrows[IllegalArgumentException] {
       build(
           builder.mkSeq(
-              builder.int(-1),
+              -1,
               mkLambda(
                   "F",
                   Seq(builder.param("i", IntT1)),
@@ -362,7 +364,7 @@ class TestApalacheBuilder extends BuilderTest {
     assertThrows[IllegalArgumentException] {
       build(
           builder.mkSeq(
-              builder.int(2),
+              2,
               builder.name("NonLambda", OperT1(Seq(IntT1), IntT1)),
           )
       )
@@ -372,7 +374,7 @@ class TestApalacheBuilder extends BuilderTest {
     assertThrows[IllegalArgumentException] {
       build(
           builder.mkSeq(
-              builder.int(2),
+              2,
               mkLambda(
                   "F",
                   Seq(

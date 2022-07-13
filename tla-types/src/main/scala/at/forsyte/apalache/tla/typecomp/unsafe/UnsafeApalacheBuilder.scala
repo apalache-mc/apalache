@@ -12,6 +12,10 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  */
 class UnsafeApalacheBuilder extends ProtoBuilder {
 
+  // We borrow the LiteralBuilder to make TLA integers from Scala ints
+  private val intBuilder = new UnsafeLiteralAndNameBuilder
+  private def mkTlaInt: BigInt => TlaEx = intBuilder.int
+
   /**
    * {{{lhs := rhs}}}
    * @param lhs
@@ -32,11 +36,11 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    * argument.
    *
    * @param n
-   *   must be > 0
+   *   must be positive
    */
   def gen(n: Int, t: TlaType1): TlaEx = {
     require(n > 0, s"Expected n to be positive, found $n.")
-    OperEx(ApalacheOper.gen, ValEx(TlaInt(n))(Typed(IntT1)))(Typed(t))
+    OperEx(ApalacheOper.gen, mkTlaInt(n))(Typed(t))
   }
 
   /**
@@ -90,17 +94,14 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
   /**
    * {{{MkSeq(n, F)}}}
    * @param n
-   *   must be a nonnegative TLA+ integer
+   *   must be nonnegative
    * @param F
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
-  def mkSeq(n: TlaEx, F: TlaEx): TlaEx = {
-    require(n match {
-          case ValEx(TlaInt(m)) if m >= 0 => true
-          case _                          => false
-        }, s"Expected n to be a nonnegative TLA+ integer, found $n.")
+  def mkSeq(n: Int, F: TlaEx): TlaEx = {
+    require(n >= 0, s"Expected n to be nonnegative, found $n.")
     require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
-    buildBySignatureLookup(ApalacheOper.mkSeq, n, F)
+    buildBySignatureLookup(ApalacheOper.mkSeq, mkTlaInt(n), F)
   }
 
   /**
