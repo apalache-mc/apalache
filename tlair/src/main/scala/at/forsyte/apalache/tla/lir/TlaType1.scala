@@ -98,19 +98,69 @@ case object StrT1 extends TlaType1 {
 }
 
 /**
- * An uninterpreted type constant.
+ * <p>An uninterpreted type constant such as PROC_NAME.</p>
+ *
+ * <p>Inside the type checker, this class may also represent references to type aliases. Do not use this feature outside
+ * of the type checker.</p>
  *
  * @param name
  *   unique name of the constant type
  */
 case class ConstT1(name: String) extends TlaType1 {
-  require(name.forall(c => c.isUpper || c.isDigit || c == '_') || name.startsWith("$"),
+  require(ConstT1.isUninterpreted(name) || ConstT1.isAliasReference(name),
       "ConstT1 accepts identifiers in upper case or $aliasReference, found: " + name)
 
   override def toString: String = name
 
   override def usedNames: Set[Int] = Set.empty
+}
 
+/**
+ * A companion object for [[ConstT1]].
+ */
+object ConstT1 {
+
+  /**
+   * Does this type represent an uninterpreted type, e.g., PROCESS. Outside of the type parser and the type checker,
+   * this method should always return true.
+   *
+   * @param name
+   *   type name
+   * @return
+   *   true iff the type name represents an uninterpreted type.
+   */
+  def isUninterpreted(name: String): Boolean = {
+    name.forall(c => c.isUpper || c.isDigit || c == '_')
+  }
+
+  /**
+   * Does this type represent a reference to an alias, e.g., $aliasReference. This case is only of relevance to the type
+   * parser and the type checker.
+   *
+   * @param name
+   *   type name
+   * @return
+   *   true iff the type name represents a reference to an alias.
+   */
+  def isAliasReference(name: String): Boolean = {
+    name.startsWith("$")
+  }
+
+  /**
+   * Extract alias name from the reference syntax.
+   *
+   * @param reference
+   *   a reference such as $aliasRef
+   * @return
+   *   the name without the dollar sign
+   */
+  def aliasNameFromReference(reference: String): String = {
+    if (reference.startsWith("$")) {
+      reference.substring(1)
+    } else {
+      throw new IllegalArgumentException(s"Expected $reference to start with the dollar sign")
+    }
+  }
 }
 
 /**

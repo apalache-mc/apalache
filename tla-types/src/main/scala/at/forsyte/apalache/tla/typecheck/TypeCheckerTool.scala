@@ -2,13 +2,12 @@ package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStr, StandardAnnotations}
-import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -87,7 +86,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     }
   }
 
-  private def loadTypeAliases(declarations: Seq[TlaDecl]): ConstSubstitution = {
+  private def loadTypeAliases(declarations: Seq[TlaDecl]): TypeAliasSubstitution = {
     var aliases = Map[String, lir.TlaType1]()
 
     // extract all aliases from the annotations
@@ -96,7 +95,13 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
         annotations.filter(_.name == StandardAnnotations.TYPE_ALIAS).foreach { annot =>
           annot.args match {
             case Seq(AnnotationStr(text)) =>
-              aliases += parseTypeAlias(decl.name, text)
+              val (alias, assignedType) = parseTypeAlias(decl.name, text)
+              if (!ConstT1.isAliasReference(alias)) {
+                val msg =
+                  s"Operator ${decl.name}: Deprecated syntax in type alias $alias. Use camlCase of Type System 1.2."
+                logger.warn(msg)
+              }
+              aliases += alias -> assignedType
 
             case args =>
               throw new TypingInputException(
@@ -107,7 +112,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     }
 
     // Aliases can refer to one another. Substitute the aliases until we arrive at a fixpoint.
-    ConstSubstitution(aliases).closure()
+    TypeAliasSubstitution(aliases).closure()
   }
 
   // parse type from its text representation

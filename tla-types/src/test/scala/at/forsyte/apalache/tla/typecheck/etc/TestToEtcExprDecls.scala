@@ -2,14 +2,14 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.StandardAnnotations
 import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.convenience.tla
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 /**
  * Unit tests for translating declarations rather than single expressions.
@@ -26,7 +26,7 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
   override protected def beforeEach(): Unit = {
     parser = DefaultType1Parser
     annotationStore = createAnnotationStore()
-    gen = new ToEtcExpr(annotationStore, ConstSubstitution.empty, new TypeVarPool())
+    gen = new ToEtcExpr(annotationStore, TypeAliasSubstitution.empty, new TypeVarPool())
   }
 
   test("An operator declaration with a java-like annotation") {
@@ -85,7 +85,7 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
   }
 
   test("variable declarations with java-like annotations and aliases") {
-    val aliases = ConstSubstitution(Map("ENTRY" -> IntT1))
+    val aliases = TypeAliasSubstitution(Map("ENTRY" -> IntT1))
     // redefine gen to use aliases
     gen = new ToEtcExpr(annotationStore, aliases, new TypeVarPool())
 
