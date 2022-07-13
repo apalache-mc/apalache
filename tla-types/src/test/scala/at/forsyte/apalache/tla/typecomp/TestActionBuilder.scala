@@ -19,7 +19,7 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaActionOper.prime,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         tt => tt,
     )
 
@@ -52,7 +52,7 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected(op: TlaActionOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        ToSeq.binaryToSeq,
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -86,7 +86,7 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[Unit, T](
         TlaActionOper.enabled,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         _ => BoolT1,
     )
 
@@ -109,7 +109,7 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaActionOper.unchanged,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         _ => BoolT1,
     )
 
@@ -149,7 +149,7 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[Unit, T](
         TlaActionOper.composition,
         mkWellTyped,
-        ToSeq.binaryToSeq,
+        ToSeq.binary,
         _ => BoolT1,
     )
 

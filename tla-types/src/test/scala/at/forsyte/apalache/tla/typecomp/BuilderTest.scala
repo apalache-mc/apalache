@@ -73,10 +73,14 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
   /** Defines a collection of standard conversion methods, to be used as `toSeq` in `expectEqTyped` */
   object ToSeq {
-    def unaryToSeq: TBuilderInstruction => Seq[TBuilderResult] = Seq(_)
-    def binaryToSeq: ((TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = { case (a, b) => Seq(a, b) }
-    def ternaryToSeq: ((TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = {
+    def unary: TBuilderInstruction => Seq[TBuilderResult] = Seq(_)
+    def binary: ((TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = { case (a, b) => Seq(a, b) }
+    def ternary: ((TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = {
       case (a, b, c) => Seq(a, b, c)
+    }
+    def variadic: Seq[TBuilderInstruction] => Seq[TBuilderResult] = liftBuildToSeq
+    def variadicWithDistinguishedFirst: ((TBuilderInstruction, Seq[TBuilderInstruction])) => Seq[TBuilderResult] = {
+      case (a, seq) => liftBuildToSeq(a +: seq)
     }
   }
 

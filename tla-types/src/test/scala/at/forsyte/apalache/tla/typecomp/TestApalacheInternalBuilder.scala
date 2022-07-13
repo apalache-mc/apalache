@@ -43,7 +43,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected(n: Int) = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.distinct,
         mkWellTyped(n),
-        liftBuildToSeq,
+        ToSeq.variadic,
         _ => BoolT1,
     )
 
@@ -79,7 +79,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.apalacheSeqCapacity,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         _ => IntT1,
     )
 
@@ -121,7 +121,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected(oper: ApalacheInternalOper) = expectEqTyped[TlaType1, T](
         oper,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -180,7 +180,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheInternalOper.storeInSet,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         _ => BoolT1,
     )
 
@@ -226,7 +226,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected(oper: TlaOper) = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.smtMap(oper),
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SetT1(tt),
     )
 
@@ -266,7 +266,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.unconstrainArray,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         _ => BoolT1,
     )
 

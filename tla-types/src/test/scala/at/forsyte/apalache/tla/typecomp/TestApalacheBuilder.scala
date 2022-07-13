@@ -34,7 +34,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.assign,
         mkWellTyped,
-        ToSeq.binaryToSeq,
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -114,7 +114,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.skolem,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         _ => BoolT1,
     )
 
@@ -148,7 +148,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.guess,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         tt => tt,
     )
 
@@ -176,7 +176,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected1 = expectEqTyped[TlaType1, T](
         ApalacheOper.expand,
         mkWellTyped1,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         tt => SetT1(SetT1(tt)),
     )
 
@@ -211,7 +211,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected2 = expectEqTyped[TParam, T](
         ApalacheOper.expand,
         mkWellTyped2,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         { case (a, b) => SetT1(FunT1(a, b)) },
     )
 
@@ -249,7 +249,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.constCard,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         _ => BoolT1,
     )
 
@@ -336,7 +336,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.mkSeq,
         mkWellTyped,
-        ToSeq.binaryToSeq,
+        ToSeq.binary,
         { case (_, t) => SeqT1(t) },
     )
 
@@ -468,7 +468,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected(seqOrSetT: TlaType1 => TlaType1) = expectEqTyped[TParam, T](
         if (seqOrSetT == SetT1) ApalacheOper.foldSet else ApalacheOper.foldSeq,
         mkWellTyped(seqOrSetT),
-        ToSeq.ternaryToSeq,
+        ToSeq.ternary,
         { case (a, _) => a },
     )
 
@@ -556,7 +556,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.setAsFun,
         mkWellTyped,
-        ToSeq.unaryToSeq,
+        ToSeq.unary,
         { case (a, b) => FunT1(a, b) },
     )
 

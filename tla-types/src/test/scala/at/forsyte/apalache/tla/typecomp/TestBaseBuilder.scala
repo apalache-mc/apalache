@@ -33,7 +33,7 @@ class TestBaseBuilder extends BuilderTest {
     def resultIsExpected(op: TlaOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -99,7 +99,7 @@ class TestBaseBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaOper.apply,
         mkWellTyped,
-        { case (a, seq) => liftBuildToSeq(a +: seq) },
+        ToSeq.variadicWithDistinguishedFirst,
         { case (t, _) => t },
     )
 
@@ -149,7 +149,7 @@ class TestBaseBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaOper.chooseBounded,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => tt,
     )
 
@@ -184,7 +184,7 @@ class TestBaseBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaOper.chooseUnbounded,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => tt,
     )
 
@@ -225,7 +225,7 @@ class TestBaseBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaOper.label,
         mkWellTyped,
-        { case (a, seq) => liftBuildToSeq(a +: seq.map { builder.str }) },
+        { case (a, seq) => ToSeq.variadicWithDistinguishedFirst(a, seq.map { builder.str }) },
         { case (t, _) => t },
     )
 
