@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.typecomp.unsafe
 
-import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
-import at.forsyte.apalache.tla.typecomp.{Applicative, BuilderUtil, PartialSignature}
+import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature}
 
 import scala.collection.immutable.SortedMap
 
@@ -28,16 +27,19 @@ class UnsafeVariantBuilder extends ProtoBuilder {
   }
 
   /**
-   * {{{Variant(tag, value)}}}
+   * {{{Variant(tag, value): variantT}}}
    * @param tag
    *   must be a TLA+ string
+   * @param variantT
+   *   must be a variant type, where `tag` is one of the options
    */
-  def variant(tag: TlaEx, value: TlaEx): TlaEx = {
+  def variant(tag: TlaEx, value: TlaEx, variantT: TlaType1): TlaEx = {
     val tagName = checkTagAndGetName(tag)
-    val rowT = RowT1(tagName -> value.typeTag.asTlaType1())
+    require(variantT match {
+          case VariantT1(RowT1(keys, _)) => keys.contains(tagName)
+        }, s"Expected variantT to be a variant type containing $tagName, found $variantT.")
 
-    // For any a, returns tagName(a), so we don't need type calculus
-    OperEx(VariantOper.variant, tag, value)(Typed(VariantT1(rowT)))
+    OperEx(VariantOper.variant, tag, value)(Typed(variantT))
   }
 
   /**
@@ -50,7 +52,7 @@ class UnsafeVariantBuilder extends ProtoBuilder {
 
     // Knowing the tag name, we can write a custom signature:
     val partialSig: PartialSignature = {
-      case Seq(StrT1, SetT1(VariantT1(row))) if row.fieldTypes.contains(tagName) => SetT1(row.fieldTypes(tagName))
+      case Seq(StrT1, SetT1(VariantT1(RowT1(fields, _)))) if fields.contains(tagName) => SetT1(fields(tagName))
     }
     val sig = completePartial(VariantOper.variantFilter.name, partialSig)
 
@@ -59,4 +61,6 @@ class UnsafeVariantBuilder extends ProtoBuilder {
 
   /** {{{VariantTag(v)}}} */
   def variantTag(v: TlaEx): TlaEx = buildBySignatureLookup(VariantOper.variantTag, v)
+
+  /** {{{VariantTag(v)}}} */
 }
