@@ -73,14 +73,35 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
   /** Defines a collection of standard conversion methods, to be used as `toSeq` in `expectEqTyped` */
   object ToSeq {
-    def unary: TBuilderInstruction => Seq[TBuilderResult] = Seq(_)
-    def binary: ((TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = { case (a, b) => Seq(a, b) }
-    def ternary: ((TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = {
-      case (a, b, c) => Seq(a, b, c)
+    def unary[T](implicit convert: T => TBuilderInstruction): T => Seq[TBuilderResult] = { v => Seq(convert(v)) }
+    def binary[T1, T2](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction): ((T1, T2)) => Seq[TBuilderResult] = { case (a, b) =>
+      Seq(convert1(a), convert2(b))
     }
-    def variadic: Seq[TBuilderInstruction] => Seq[TBuilderResult] = liftBuildToSeq
-    def variadicWithDistinguishedFirst: ((TBuilderInstruction, Seq[TBuilderInstruction])) => Seq[TBuilderResult] = {
-      case (a, seq) => liftBuildToSeq(a +: seq)
+    def ternary[T1, T2, T3](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction,
+        convert3: T3 => TBuilderInstruction): ((T1, T2, T3)) => Seq[TBuilderResult] = { case (a, b, c) =>
+      Seq(convert1(a), convert2(b), convert3(c))
+    }
+    def variadic[T](implicit convert: T => TBuilderInstruction): Seq[T] => Seq[TBuilderResult] = { seq =>
+      liftBuildToSeq(seq.map(convert))
+    }
+    def variadicPairs[T1, T2](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction): Seq[(T1, T2)] => Seq[TBuilderResult] =
+      _.flatMap(binary[T1, T2](convert1, convert2))
+    def variadicWithDistinguishedFirst[T1, T2](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction): ((T1, Seq[T2])) => Seq[TBuilderResult] = { case (a, seq) =>
+      build(convert1(a)) +: variadic[T2](convert2)(seq)
+    }
+    def variadicPairsWithDistinguishedFirst[T1, T2, T3](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction,
+        convert3: T3 => TBuilderInstruction): ((T1, Seq[(T2, T3)])) => Seq[TBuilderResult] = { case (a, seq) =>
+      build(convert1(a)) +: variadicPairs[T2, T3](convert2, convert3)(seq)
     }
   }
 

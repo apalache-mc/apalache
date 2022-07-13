@@ -35,7 +35,7 @@ class TestFunBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.rec,
         mkWellTyped,
-        { seq => seq },
+        ToSeq.variadic,
         { ts =>
           val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
             m + (s"x$i" -> t)
@@ -93,10 +93,12 @@ class TestFunBuilder extends BuilderTest {
 
     def mkIllTyped2(@unused tparam: TParam): Seq[T2] = Seq.empty
 
+    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
+
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaFunOper.rec,
         mkWellTyped2,
-        { seq => seq.flatMap { case (s, x) => Seq(builder.str(s), x) } },
+        ToSeq.variadicPairs,
         { ts =>
           val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
             m + (s"x$i" -> t)
@@ -148,7 +150,7 @@ class TestFunBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.tuple,
         mkWellTyped,
-        liftBuildToSeq,
+        ToSeq.variadic,
         ts => TupT1(ts: _*),
     )
 
@@ -179,7 +181,7 @@ class TestFunBuilder extends BuilderTest {
     def resultIsExpected(n: Int) = expectEqTyped[TlaType1, T](
         TlaFunOper.tuple,
         mkWellTyped(n),
-        liftBuildToSeq,
+        ToSeq.variadic,
         tt => SeqT1(tt),
     )
 
@@ -276,7 +278,7 @@ class TestFunBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.funDef,
         mkWellTyped,
-        { case (a, seq) => liftBuildToSeq(a +: seq.flatMap { case (a, b) => Seq(a, b) }) },
+        ToSeq.variadicPairsWithDistinguishedFirst,
         { case (t, ts) => funT(t, ts) },
     )
 
