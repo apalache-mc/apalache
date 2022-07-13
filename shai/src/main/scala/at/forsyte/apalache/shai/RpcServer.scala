@@ -1,6 +1,6 @@
 package at.forsyte.apalache.shai.v1
 
-import zio.{console, Ref, ZEnv, ZIO}
+import zio.{console, Ref, Semaphore, ZEnv, ZIO}
 import java.util.UUID
 import scalapb.zio_grpc.ServerMain
 import scalapb.zio_grpc.ServiceList
@@ -15,7 +15,10 @@ object RpcServer extends ServerMain {
     // A thread safe mutable reference to the active connections
     // See https://zio.dev/version-1.x/datatypes/concurrency/ref/
     connections <- Ref.make(Map[UUID, Conn]())
-  } yield new TransExplorerService(connections)
+    // Ensure atomic access to the parser
+    // See https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894
+    parserSemaphore <- Semaphore.make(permits = 1)
+  } yield new TransExplorerService(connections, parserSemaphore)
 
   def services: ServiceList[ZEnv] =
     ServiceList.addM(createService)
