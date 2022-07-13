@@ -112,11 +112,11 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
    *   Degree of polymorphism. Unit if testing non-polymorphic methods, TlaType1, if testing a method with one type
    *   parameter, Seq[TlaType1] if testing a method with many type parameters, etc.
    */
-  def runPBT[H <: HList, TypeParameterization](
-      methodH: PartialFunction[H, TBuilderInstruction],
+  def runPBT[H <: HList, TypeParameterization, BuilderResultT](
+      methodH: PartialFunction[H, TBuilderInternalState[BuilderResultT]],
       mkWellTypedArgs: TypeParameterization => H,
       mkIllTypedArgs: TypeParameterization => Seq[H], // some operators cannot be passed an invalid arg
-      resultIsExpected: TypeParameterization => TBuilderResult => Boolean,
+      resultIsExpected: TypeParameterization => BuilderResultT => Boolean,
     )(tparam: TypeParameterization): Boolean = {
     val wellTypedH = mkWellTypedArgs(tparam)
     val illTypedIs = mkIllTypedArgs(tparam).map(methodH)
@@ -144,17 +144,17 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   /** Invokes tests for a unary builder method. Performs lifting to HList logic for the user. */
-  def runUnary[TypeParameterization](
-      method: TBuilderInstruction => TBuilderInstruction,
-      mkWellTypedArg: TypeParameterization => TBuilderInstruction,
-      mkIllTypedArg: TypeParameterization => Seq[TBuilderInstruction],
-      resultIsExpected: TypeParameterization => TBuilderResult => Boolean,
+  def runUnary[TypeParameterization, ArgumentT1, ResultT](
+      method: ArgumentT1 => TBuilderInternalState[ResultT],
+      mkWellTypedArg: TypeParameterization => ArgumentT1,
+      mkIllTypedArg: TypeParameterization => Seq[ArgumentT1],
+      resultIsExpected: TypeParameterization => ResultT => Boolean,
     )(tparam: TypeParameterization): Boolean = {
 
-    type H = TBuilderInstruction :: HNil
+    type H = ArgumentT1 :: HNil
     def mkWellTypedArgH(tparam: TypeParameterization): H = mkWellTypedArg(tparam) :: HNil
     def mkIllTypedArgH(tparam: TypeParameterization): Seq[H] = mkIllTypedArg(tparam).map { _ :: HNil }
-    def methodH: PartialFunction[H, TBuilderInstruction] = { case a :: HNil =>
+    def methodH: PartialFunction[H, TBuilderInternalState[ResultT]] = { case a :: HNil =>
       method(a)
     }
 
@@ -167,14 +167,14 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   /** Invokes tests for a binary builder method. Performs lifting to HList logic for the user. */
-  def runBinary[TypeParameterization](
-      method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction,
-      mkWellTypedArg: TypeParameterization => (TBuilderInstruction, TBuilderInstruction),
-      mkIllTypedArg: TypeParameterization => Seq[(TBuilderInstruction, TBuilderInstruction)],
-      resultIsExpected: TypeParameterization => TBuilderResult => Boolean,
+  def runBinary[TypeParameterization, ArgumentT1, ArgumentT2, ResultT](
+      method: (ArgumentT1, ArgumentT2) => TBuilderInternalState[ResultT],
+      mkWellTypedArg: TypeParameterization => (ArgumentT1, ArgumentT2),
+      mkIllTypedArg: TypeParameterization => Seq[(ArgumentT1, ArgumentT2)],
+      resultIsExpected: TypeParameterization => ResultT => Boolean,
     )(tparam: TypeParameterization): Boolean = {
 
-    type H = TBuilderInstruction :: TBuilderInstruction :: HNil
+    type H = ArgumentT1 :: ArgumentT2 :: HNil
     def mkWellTypedArgH(tparam: TypeParameterization): H = {
       val (a, b) = mkWellTypedArg(tparam)
       a :: b :: HNil
@@ -182,7 +182,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def mkIllTypedArgH(tparam: TypeParameterization): Seq[H] = mkIllTypedArg(tparam).map { case (a, b) =>
       a :: b :: HNil
     }
-    def methodH: PartialFunction[H, TBuilderInstruction] = { case a :: b :: HNil =>
+    def methodH: PartialFunction[H, TBuilderInternalState[ResultT]] = { case a :: b :: HNil =>
       method(a, b)
     }
 
@@ -195,14 +195,14 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   /** Invokes tests for a ternary builder method. Performs lifting to HList logic for the user. */
-  def runTernary[TypeParameterization](
-      method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction,
-      mkWellTypedArg: TypeParameterization => (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction),
-      mkIllTypedArg: TypeParameterization => Seq[(TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)],
-      resultIsExpected: TypeParameterization => TBuilderResult => Boolean,
+  def runTernary[TypeParameterization, ArgumentT1, ArgumentT2, ArgumentT3, ResultT](
+      method: (ArgumentT1, ArgumentT2, ArgumentT3) => TBuilderInternalState[ResultT],
+      mkWellTypedArg: TypeParameterization => (ArgumentT1, ArgumentT2, ArgumentT3),
+      mkIllTypedArg: TypeParameterization => Seq[(ArgumentT1, ArgumentT2, ArgumentT3)],
+      resultIsExpected: TypeParameterization => ResultT => Boolean,
     )(tparam: TypeParameterization): Boolean = {
 
-    type H = TBuilderInstruction :: TBuilderInstruction :: TBuilderInstruction :: HNil
+    type H = ArgumentT1 :: ArgumentT2 :: ArgumentT3 :: HNil
     def mkWellTypedArgH(tparam: TypeParameterization): H = {
       val (a, b, c) = mkWellTypedArg(tparam)
       a :: b :: c :: HNil
@@ -210,7 +210,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def mkIllTypedArgH(tparam: TypeParameterization): Seq[H] = mkIllTypedArg(tparam).map { case (a, b, c) =>
       a :: b :: c :: HNil
     }
-    def methodH: PartialFunction[H, TBuilderInstruction] = { case a :: b :: c :: HNil =>
+    def methodH: PartialFunction[H, TBuilderInternalState[ResultT]] = { case a :: b :: c :: HNil =>
       method(a, b, c)
     }
 
@@ -223,20 +223,20 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   /** Invokes tests for a variadic builder method. Performs lifting to HList logic for the user. */
-  def runVariadic[TypeParameterization, T](
-      method: Seq[T] => TBuilderInstruction,
-      mkWellTypedArg: TypeParameterization => Seq[T],
-      mkIllTypedArg: TypeParameterization => Seq[Seq[T]],
-      resultIsExpected: TypeParameterization => TBuilderResult => Boolean,
+  def runVariadic[TypeParameterization, ArgumentT, ResultT](
+      method: Seq[ArgumentT] => TBuilderInternalState[ResultT],
+      mkWellTypedArg: TypeParameterization => Seq[ArgumentT],
+      mkIllTypedArg: TypeParameterization => Seq[Seq[ArgumentT]],
+      resultIsExpected: TypeParameterization => ResultT => Boolean,
     )(tparam: TypeParameterization): Boolean = {
 
-    type H = Seq[T] :: HNil
+    type H = Seq[ArgumentT] :: HNil
     def mkWellTypedArgH(tparam: TypeParameterization): H =
       mkWellTypedArg(tparam) :: HNil
 
     def mkIllTypedArgH(tparam: TypeParameterization): Seq[H] = mkIllTypedArg(tparam).map { _ :: HNil }
 
-    def methodH: PartialFunction[H, TBuilderInstruction] = { case seq :: HNil =>
+    def methodH: PartialFunction[H, TBuilderInternalState[ResultT]] = { case seq :: HNil =>
       method(seq)
     }
 
@@ -252,14 +252,14 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
    * Invokes tests for a variadic builder method with a distinguished first argument. Performs lifting to HList logic
    * for the user.
    */
-  def runVariadicWithDistinguishedFirst[TypeParameterization, T](
-      method: (TBuilderInstruction, Seq[T]) => TBuilderInstruction,
-      mkWellTypedArg: TypeParameterization => (TBuilderInstruction, Seq[T]),
-      mkIllTypedArg: TypeParameterization => Seq[(TBuilderInstruction, Seq[T])],
-      resultIsExpected: TypeParameterization => TBuilderResult => Boolean,
+  def runVariadicWithDistinguishedFirst[TypeParameterization, ArgumentT1, SeqArgumentsT, ResultT](
+      method: (ArgumentT1, Seq[SeqArgumentsT]) => TBuilderInternalState[ResultT],
+      mkWellTypedArg: TypeParameterization => (ArgumentT1, Seq[SeqArgumentsT]),
+      mkIllTypedArg: TypeParameterization => Seq[(ArgumentT1, Seq[SeqArgumentsT])],
+      resultIsExpected: TypeParameterization => ResultT => Boolean,
     )(tparam: TypeParameterization): Boolean = {
 
-    type H = TBuilderInstruction :: Seq[T] :: HNil
+    type H = ArgumentT1 :: Seq[SeqArgumentsT] :: HNil
     def mkWellTypedArgH(tparam: TypeParameterization): H = {
       val (a, seq) = mkWellTypedArg(tparam)
       a :: seq :: HNil
@@ -268,7 +268,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def mkIllTypedArgH(tparam: TypeParameterization): Seq[H] =
       mkIllTypedArg(tparam).map { case (a, seq) => a :: seq :: HNil }
 
-    def methodH: PartialFunction[H, TBuilderInstruction] = { case a :: seq :: HNil =>
+    def methodH: PartialFunction[H, TBuilderInternalState[ResultT]] = { case a :: seq :: HNil =>
       method(a, seq)
     }
 
