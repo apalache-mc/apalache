@@ -118,6 +118,7 @@ You may find it useful to consult the following documentation:
 - [Overview](https://zio.dev/version-1.x/usecases/usecases_testing/)
 - [Documentation](https://zio.dev/version-1.x/howto/test-effects)
 - [Tutorial](https://scala.monster/zio-test/)
+- [Tutorial on shared dependencies](https://hmemcpy.com/2021/11/working-with-shared-dependencies-in-zio-test/)
 
 ## Resources
 
