@@ -67,6 +67,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def notBool: TlaType1 = differentFrom(BoolT1)
     def notInt: TlaType1 = differentFrom(IntT1)
     def notApplicative: TlaType1 = IntT1
+    def notVariant: TlaType1 = IntT1
     def differentFrom(tt: TlaType1): TlaType1 = if (tt == IntT1) StrT1 else IntT1
   }
 
