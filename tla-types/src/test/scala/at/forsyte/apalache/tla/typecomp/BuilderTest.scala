@@ -71,6 +71,15 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def differentFrom(tt: TlaType1): TlaType1 = if (tt == IntT1) StrT1 else IntT1
   }
 
+  /** Defines a collection of standard conversion methods, to be used as `toSeq` in `expectEqTyped` */
+  object ToSeq {
+    def unaryToSeq: TBuilderInstruction => Seq[TBuilderResult] = Seq(_)
+    def binaryToSeq: ((TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = { case (a, b) => Seq(a, b) }
+    def ternaryToSeq: ((TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)) => Seq[TBuilderResult] = {
+      case (a, b, c) => Seq(a, b, c)
+    }
+  }
+
   /** Convenience method, for constructing resultIsExpected as an test of eqTyped */
   def expectEqTyped[TypeParameterization, T](
       op: TlaOper,

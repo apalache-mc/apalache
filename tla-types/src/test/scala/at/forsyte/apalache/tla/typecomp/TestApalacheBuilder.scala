@@ -34,7 +34,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.assign,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binaryToSeq,
         _ => BoolT1,
     )
 
@@ -66,10 +66,12 @@ class TestApalacheBuilder extends BuilderTest {
 
     def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
 
+    implicit val intToBuilderI: BigInt => TBuilderInstruction = builder.int
+
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.gen,
         mkWellTyped,
-        { case (a, _) => Seq(builder.int(a)) },
+        ToSeq.binary,
         { case (_, t) => t },
     )
 
@@ -112,7 +114,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.skolem,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unaryToSeq,
         _ => BoolT1,
     )
 
@@ -146,7 +148,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.guess,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unaryToSeq,
         tt => tt,
     )
 
@@ -174,7 +176,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected1 = expectEqTyped[TlaType1, T](
         ApalacheOper.expand,
         mkWellTyped1,
-        Seq(_),
+        ToSeq.unaryToSeq,
         tt => SetT1(SetT1(tt)),
     )
 
@@ -209,7 +211,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected2 = expectEqTyped[TParam, T](
         ApalacheOper.expand,
         mkWellTyped2,
-        Seq(_),
+        ToSeq.unaryToSeq,
         { case (a, b) => SetT1(FunT1(a, b)) },
     )
 
@@ -247,7 +249,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.constCard,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unaryToSeq,
         _ => BoolT1,
     )
 
@@ -329,10 +331,12 @@ class TestApalacheBuilder extends BuilderTest {
       )
     }
 
+    implicit val intToBuilderI: BigInt => TBuilderInstruction = builder.int
+
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.mkSeq,
         mkWellTyped,
-        { case (a, b) => Seq(builder.int(a), b) },
+        ToSeq.binaryToSeq,
         { case (_, t) => SeqT1(t) },
     )
 
@@ -464,7 +468,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected(seqOrSetT: TlaType1 => TlaType1) = expectEqTyped[TParam, T](
         if (seqOrSetT == SetT1) ApalacheOper.foldSet else ApalacheOper.foldSeq,
         mkWellTyped(seqOrSetT),
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternaryToSeq,
         { case (a, _) => a },
     )
 
@@ -552,7 +556,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.setAsFun,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unaryToSeq,
         { case (a, b) => FunT1(a, b) },
     )
 
