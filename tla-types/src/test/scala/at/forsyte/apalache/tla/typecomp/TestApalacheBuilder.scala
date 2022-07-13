@@ -70,7 +70,7 @@ class TestApalacheBuilder extends BuilderTest {
         ApalacheOper.gen,
         mkWellTyped,
         { case (a, _) => Seq(builder.int(a)) },
-        _ => BoolT1,
+        { case (_, t) => t },
     )
 
     checkRun(
