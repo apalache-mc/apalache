@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaOper}
-import at.forsyte.apalache.tla.lir.values.TlaStr
 
 /**
  * Scope-unsafe builder for ApalacheInternalOper expressions.

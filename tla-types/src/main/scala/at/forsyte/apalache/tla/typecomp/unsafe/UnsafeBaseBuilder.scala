@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.values.TlaStr
 
 /**
  * Scope-unsafe builder for base TlaOper expressions.
