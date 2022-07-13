@@ -21,7 +21,7 @@ class TestTemporalBuilder extends BuilderTest {
     def resultIsExpected(oper: TlaTempOper) = expectEqTyped[Unit, T](
         oper,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         { _ => BoolT1 },
     )
 
@@ -61,7 +61,7 @@ class TestTemporalBuilder extends BuilderTest {
     def resultIsExpected(oper: TlaTempOper) = expectEqTyped[Unit, T](
         oper,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         { _ => BoolT1 },
     )
 
@@ -97,7 +97,7 @@ class TestTemporalBuilder extends BuilderTest {
     def resultIsExpected(oper: TlaTempOper) = expectEqTyped[TlaType1, T](
         oper,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         { _ => BoolT1 },
     )
 
@@ -132,7 +132,7 @@ class TestTemporalBuilder extends BuilderTest {
     def resultIsExpected(oper: TlaTempOper) = expectEqTyped[TlaType1, T](
         oper,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
