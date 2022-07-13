@@ -16,51 +16,61 @@ import scala.collection.immutable.SortedMap
  */
 class UnsafeVariantBuilder extends ProtoBuilder {
 
-  /** Checks that the tag is a TLA string, and extracts the string value if that is the case. */
-  private def checkTagAndGetName(tag: TlaEx): String = {
-    require(tag match {
-          case ValEx(_: TlaStr) => true
-          case _                => false
-        }, s"Expected tag to be a TLA+ string, found $tag.")
-    val ValEx(TlaStr(tagName)) = tag
-    tagName
-  }
+  // We borrow the LiteralBuilder to make TLA strings from name tags (Scala strings)
+  private val strBuilder = new UnsafeLiteralAndNameBuilder
+  private def mkTlaStr: String => TlaEx = strBuilder.str
 
   /**
-   * {{{Variant(tag, value): variantT}}}
-   * @param tag
-   *   must be a TLA+ string
+   * {{{Variant(tagName, value): variantT}}}
    * @param variantT
-   *   must be a variant type, where `tag` is one of the options
+   *   must be a variant type, where `tagName` is one of the options
    */
-  def variant(tag: TlaEx, value: TlaEx, variantT: TlaType1): TlaEx = {
-    val tagName = checkTagAndGetName(tag)
-    require(variantT match {
-          case VariantT1(RowT1(keys, _)) => keys.contains(tagName)
-        }, s"Expected variantT to be a variant type containing $tagName, found $variantT.")
+  def variant(tagName: String, value: TlaEx, variantT: VariantT1): TlaEx = {
+    require(variantT.row.fieldTypes.contains(tagName),
+        s"Expected variantT to be a variant type containing $tagName, found $variantT.")
 
-    OperEx(VariantOper.variant, tag, value)(Typed(variantT))
+    val argT = variantT.row.fieldTypes(tagName)
+
+    // Knowing the tag name, we can write a custom signature:
+    val partialSig: PartialSignature = { case Seq(StrT1, `argT`) =>
+      variantT
+    }
+    val sig = completePartial(VariantOper.variant.name, partialSig)
+
+    BuilderUtil.composeAndValidateTypes(VariantOper.variant, sig, mkTlaStr(tagName), value)
   }
 
-  /**
-   * {{{VariantFilter(tag, set)}}}
-   * @param tag
-   *   must be a TLA+ string
-   */
-  def variantFilter(tag: TlaEx, set: TlaEx): TlaEx = {
-    val tagName = checkTagAndGetName(tag)
-
+  /** {{{VariantFilter(tagName, set)}}} */
+  def variantFilter(tagName: String, set: TlaEx): TlaEx = {
     // Knowing the tag name, we can write a custom signature:
     val partialSig: PartialSignature = {
       case Seq(StrT1, SetT1(VariantT1(RowT1(fields, _)))) if fields.contains(tagName) => SetT1(fields(tagName))
     }
     val sig = completePartial(VariantOper.variantFilter.name, partialSig)
 
-    BuilderUtil.composeAndValidateTypes(VariantOper.variantFilter, sig, tag, set)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variantFilter, sig, mkTlaStr(tagName), set)
   }
 
   /** {{{VariantTag(v)}}} */
   def variantTag(v: TlaEx): TlaEx = buildBySignatureLookup(VariantOper.variantTag, v)
 
-  /** {{{VariantTag(v)}}} */
+  /** {{{VariantGetOrElse(tagName, v, default)}}} */
+  def variantGetOrElse(tagName: String, v: TlaEx, default: TlaEx): TlaEx = {
+    // Knowing the tag name, we can write a custom signature:
+    val partialSig: PartialSignature = {
+      case Seq(StrT1, VariantT1(RowT1(fields, _)), a) if fields.get(tagName).contains(a) => a
+    }
+    val sig = completePartial(VariantOper.variantGetOrElse.name, partialSig)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variantGetOrElse, sig, mkTlaStr(tagName), v, default)
+  }
+
+  /** {{{VariantGetUnsafe(tagName, v)}}} */
+  def variantGetUnsafe(tagName: String, v: TlaEx): TlaEx = {
+    // Knowing the tag name, we can write a custom signature:
+    val partialSig: PartialSignature = {
+      case Seq(StrT1, VariantT1(RowT1(fields, _))) if fields.contains(tagName) => fields(tagName)
+    }
+    val sig = completePartial(VariantOper.variantGetUnsafe.name, partialSig)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variantGetUnsafe, sig, mkTlaStr(tagName), v)
+  }
 }
