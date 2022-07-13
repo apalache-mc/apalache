@@ -23,7 +23,7 @@ class TestFiniteSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaFiniteSetOper.isFiniteSet,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         { _ => BoolT1 },
     )
 
@@ -51,7 +51,7 @@ class TestFiniteSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaFiniteSetOper.cardinality,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         { _ => IntT1 },
     )
 

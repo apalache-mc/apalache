@@ -40,7 +40,7 @@ class TestControlBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaControlOper.ifThenElse,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => tt,
     )
 
@@ -104,7 +104,7 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaControlOper.caseNoOther,
         mkWellTyped,
-        { seq => liftBuildToSeq(seq.flatMap { case (a, b) => Seq(a, b) }) },
+        _.flatMap(ToSeq.binary),
         { case (t, _) => t },
     )
 
@@ -165,7 +165,7 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaControlOper.caseNoOther,
         mkWellTyped2,
-        liftBuildToSeq,
+        ToSeq.variadic,
         { case (t, _) => t },
     )
 
@@ -255,7 +255,7 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaControlOper.caseWithOther,
         mkWellTyped,
-        { case (other, pairs) => liftBuildToSeq(other +: pairs.flatMap { case (a, b) => Seq(a, b) }) },
+        { case (other, pairs) => ToSeq.unary(other) ++ pairs.flatMap(ToSeq.binary) },
         { case (t, _) => t },
     )
 
@@ -332,7 +332,7 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaControlOper.caseWithOther,
         mkWellTyped2,
-        { case (e, seq) => liftBuildToSeq(e +: seq) },
+        ToSeq.variadicWithDistinguishedFirst,
         { case (t, _) => t },
     )
 
