@@ -12,6 +12,10 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
  */
 class UnsafeBaseBuilder extends ProtoBuilder {
 
+  // We borrow the LiteralBuilder to make TLA strings from Scala strings
+  private val strBuilder = new UnsafeLiteralAndNameBuilder
+  private def mkTlaStr: String => TlaEx = strBuilder.str
+
   /** {{{lhs = rhs}}} */
   def eql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.eq, lhs, rhs)
 
@@ -48,7 +52,7 @@ class UnsafeBaseBuilder extends ProtoBuilder {
    */
   def label(ex: TlaEx, args: String*): TlaEx = {
     require(args.nonEmpty, s"args must be nonempty.")
-    val argsAsStringExs = args.map { s => ValEx(TlaStr(s))(Typed(StrT1)) }
+    val argsAsStringExs = args.map { mkTlaStr }
     buildBySignatureLookup(TlaOper.label, ex +: argsAsStringExs: _*)
   }
 }
