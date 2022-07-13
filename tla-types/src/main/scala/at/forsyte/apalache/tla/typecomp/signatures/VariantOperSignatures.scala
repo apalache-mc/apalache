@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecomp.signatures
 
-import at.forsyte.apalache.tla.lir.{BoolT1, StrT1, VariantT1}
+import at.forsyte.apalache.tla.lir.{StrT1, VariantT1}
 import at.forsyte.apalache.tla.lir.oper.VariantOper
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
 

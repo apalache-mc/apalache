@@ -2,11 +2,8 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature}
-
-import scala.collection.immutable.SortedMap
 
 /**
  * Scope-unsafe builder for VariantOper expressions.
