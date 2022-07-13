@@ -39,7 +39,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected(n: Int) = expectEqTyped[TlaType1, T](
         TlaSetOper.enumSet,
         mkWellTyped(n),
-        liftBuildToSeq,
+        ToSeq.variadic,
         tt => SetT1(tt),
     )
 
@@ -102,7 +102,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected(op: TlaSetOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -145,7 +145,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected(op: TlaSetOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SetT1(tt),
     )
 
@@ -180,7 +180,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.union,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(tt),
     )
 
@@ -228,7 +228,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.filter,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => SetT1(tt),
     )
 
@@ -295,7 +295,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.map,
         mkWellTyped,
-        { case (a, seq) => liftBuildToSeq(a +: seq) },
+        ToSeq.variadicWithDistinguishedFirst,
         { case (t, _) => SetT1(t) },
     )
 
@@ -411,7 +411,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaSetOper.map,
         mkWellTyped2,
-        { case (a, seq) => liftBuildToSeq(a +: seq.flatMap { case (b, c) => Seq(b, c) }) },
+        ToSeq.variadicPairsWithDistinguishedFirst,
         { case (t, _) => SetT1(t) },
     )
 
@@ -518,7 +518,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.funSet,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         { case (t1, t2) => SetT1(FunT1(t1, t2)) },
     )
 
@@ -564,7 +564,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.recSet,
         mkWellTyped,
-        { seq => seq },
+        ToSeq.variadic,
         { ts =>
           val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
             m + (s"x$i" -> t)
@@ -629,10 +629,12 @@ class TestSetBuilder extends BuilderTest {
       )
     }
 
+    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
+
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaSetOper.recSet,
         mkWellTyped2,
-        { seq => seq.flatMap { case (s, x) => Seq(builder.str(s), x) } },
+        ToSeq.variadicPairs,
         { ts =>
           val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
             m + (s"x$i" -> t)
@@ -677,7 +679,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.seqSet,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(SeqT1(tt)),
     )
 
@@ -715,7 +717,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.subseteq,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -755,7 +757,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.times,
         mkWellTyped,
-        liftBuildToSeq,
+        ToSeq.variadic,
         tts => SetT1(TupT1(tts: _*)),
     )
 
@@ -793,7 +795,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.powerset,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(SetT1(tt)),
     )
 

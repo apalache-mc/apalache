@@ -31,7 +31,7 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSeqOper.append,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SeqT1(tt),
     )
 
@@ -68,7 +68,7 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSeqOper.concat,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SeqT1(tt),
     )
 
@@ -96,7 +96,7 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected(op: TlaSeqOper, corrType: TlaType1 => TlaType1) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { Seq(_) },
+        ToSeq.unary,
         corrType,
     )
 
@@ -150,7 +150,7 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSeqOper.subseq,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => SeqT1(tt),
     )
 
