@@ -225,16 +225,6 @@ class TestHybrid extends BuilderTest {
   object SharedLetTestCode {
     type T = TBuilderInstruction
     type DeclParamT = (TlaType1, Seq[TlaType1])
-    val parameterTypeGen: Gen[TlaType1] = for {
-      n <- Gen.choose(1, 5)
-      ts <- Gen.listOfN(n, tt1gen.genPrimitive)
-    } yield ts match {
-      case head :: Nil  => head
-      case head :: tail => OperT1(tail, head)
-      case Nil          =>
-        // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
-        throw new IllegalStateException("Expected list of generated parameters to be nonempty.")
-    }
 
     val declParamGen: Gen[DeclParamT] = for {
       t <- singleTypeGen

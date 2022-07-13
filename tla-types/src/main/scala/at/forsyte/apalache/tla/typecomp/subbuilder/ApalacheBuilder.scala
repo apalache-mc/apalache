@@ -62,11 +62,12 @@ trait ApalacheBuilder {
   /**
    * {{{MkSeq(n, F)}}}
    * @param n
-   *   must be > 0
+   *   must be a nonnegative TLA+ integer
    * @param F
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
-  def mkSeq(n: Int, F: TBuilderInstruction): TBuilderInstruction = F.map(unsafeBuilder.mkSeq(n, _))
+  def mkSeq(n: TBuilderInstruction, F: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(n, F)(unsafeBuilder.mkSeq)
 
   /**
    * {{{FoldSet(F, v, S)}}}

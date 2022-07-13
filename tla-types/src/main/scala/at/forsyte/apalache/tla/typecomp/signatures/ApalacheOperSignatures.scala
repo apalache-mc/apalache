@@ -43,7 +43,7 @@ object ApalacheOperSignatures {
     // funAsSeq should not be constructed
 
     // (Int, Int => t) => Seq(t)
-    val mkSeqSig = signatureMapEntry(mkSeq, { case Seq(IntT1, OperT1(Seq(t), IntT1)) => SeqT1(t) })
+    val mkSeqSig = signatureMapEntry(mkSeq, { case Seq(IntT1, OperT1(Seq(IntT1), t)) => SeqT1(t) })
 
     // ((a,b) => a, a, Set(b)) => a
     val foldSetSig = signatureMapEntry(foldSet,
