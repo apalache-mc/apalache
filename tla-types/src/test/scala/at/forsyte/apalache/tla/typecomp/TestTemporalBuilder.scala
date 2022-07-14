@@ -109,8 +109,8 @@ class TestTemporalBuilder extends BuilderTest {
           resultIsExpected(oper),
       )(_)
 
-    checkRun(run(TlaTempOper.strongFairness, builder.SF))
-    checkRun(run(TlaTempOper.weakFairness, builder.WF))
+    checkRun(run(TlaTempOper.strongFairness, builder.SF))(Generators.singleTypeGen)
+    checkRun(run(TlaTempOper.weakFairness, builder.WF))(Generators.singleTypeGen)
   }
 
   test("AA/EE") {
@@ -144,8 +144,8 @@ class TestTemporalBuilder extends BuilderTest {
           resultIsExpected(oper),
       )(_)
 
-    checkRun(run(TlaTempOper.AA, builder.AA))
-    checkRun(run(TlaTempOper.EE, builder.EE))
+    checkRun(run(TlaTempOper.AA, builder.AA))(Generators.singleTypeGen)
+    checkRun(run(TlaTempOper.EE, builder.EE))(Generators.singleTypeGen)
 
     assertThrowsBoundVarIntroductionBinary(builder.AA)
     assertThrowsBoundVarIntroductionBinary(builder.EE)

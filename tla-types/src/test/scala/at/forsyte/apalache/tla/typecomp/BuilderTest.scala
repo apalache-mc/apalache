@@ -10,8 +10,9 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
-
 import shapeless._
+
+import scala.collection.immutable.SortedMap
 
 /**
  * BuilderTest implements a framework for PB testing various Builder methods.
@@ -134,6 +135,31 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(strGen, singleTypeGen)
 
+    val variantGen: Gen[VariantT1] = for {
+      n <- Gen.choose(1, 5)
+      flds <- Gen.listOfN(n, Gen.zip(strGen, singleTypeGen))
+    } yield VariantT1(RowT1(SortedMap(flds: _*), None))
+
+    def variantGenWithMandatoryEntry(mandatoryEntry: (String, TlaType1)): Gen[VariantT1] = variantGen.map { variantT =>
+      VariantT1(RowT1(variantT.row.fieldTypes + mandatoryEntry, None))
+    }
+
+    def variantGenWithMandatoryField(mandatoryField: String): Gen[VariantT1] =
+      singleTypeGen.flatMap { fldT =>
+        variantGenWithMandatoryEntry(mandatoryField -> fldT)
+      }
+
+    val tagAndVariantGen: Gen[(String, VariantT1)] = for {
+      tagName <- strGen
+      variantT <- variantGenWithMandatoryField(tagName)
+    } yield (tagName, variantT)
+
+    val tagValVariantGen: Gen[(String, TlaType1, VariantT1)] = for {
+      tagName <- strGen
+      valT <- singleTypeGen
+      variantT <- variantGenWithMandatoryEntry(tagName -> valT)
+    } yield (tagName, valT, variantT)
+
   }
 
   // Useful methods for defining mkIllTypedArgs
@@ -151,6 +177,9 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
   /** Defines a collection of standard conversion methods, to be used as `toSeq` in `expectEqTyped` */
   object ToSeq {
+    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
+    implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
+
     def unary[T](implicit convert: T => TBuilderInstruction): T => Seq[TBuilderResult] = { v => Seq(convert(v)) }
     def binary[T1, T2](
         implicit convert1: T1 => TBuilderInstruction,
