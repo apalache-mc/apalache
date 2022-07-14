@@ -197,13 +197,13 @@ class TestBaseBuilder extends BuilderTest {
   test("label") {
     type T = (TBuilderInstruction, Seq[String])
 
-    type TParam = (BigInt, TlaType1)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
       val (n, t) = tparam
       (
           builder.name("ex", t),
-          (0 until n.toInt).map { i =>
+          (0 until n).map { i =>
             s"x$i"
           },
       )

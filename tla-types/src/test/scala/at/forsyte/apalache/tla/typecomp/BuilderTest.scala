@@ -41,7 +41,13 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     cmpFactory = new TypeComputationFactory
   }
 
+  type DeclParamT = (TlaType1, Seq[TlaType1])
   object Generators {
+
+    val unitGen: Gen[Unit] = Gen.const(())
+
+    val positiveIntGen: Gen[Int] = Gen.choose(1, 10)
+    val nonnegativeIntGen: Gen[Int] = Gen.choose(0, 10)
 
     protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
@@ -50,7 +56,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val parameterTypeGen: Gen[TlaType1] = for {
       t <- tt1gen.genPrimitive
-      n <- Gen.choose(0, 5)
+      n <- nonnegativeIntGen
       ts <- Gen.listOfN(n, tt1gen.genPrimitive)
     } yield n match {
       case 0          => t
@@ -62,19 +68,63 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val doubleParameterTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(parameterTypeGen, parameterTypeGen)
 
-    val typeSeqGen: Gen[Seq[TlaType1]] = Gen.choose(0, 5).flatMap(Gen.listOfN(_, singleTypeGen))
-    val nonemptyTypeSeqGen: Gen[Seq[TlaType1]] = Gen.choose(1, 5).flatMap(Gen.listOfN(_, singleTypeGen))
+    val declTypesGen: Gen[DeclParamT] = for {
+      t <- singleTypeGen
+      n <- nonnegativeIntGen
+      ts <- Gen.listOfN(n, parameterTypeGen)
+    } yield (t, ts)
 
-    val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, typeSeqGen)
-    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptyTypeSeqGen)
+    val typeAndDeclGen: Gen[(TlaType1, DeclParamT)] = Gen.zip(singleTypeGen, declTypesGen)
+    val typeAndListOfDeclsGen: Gen[(TlaType1, Seq[DeclParamT])] = Gen.zip(
+        singleTypeGen,
+        positiveIntGen.flatMap(Gen.listOfN(_, declTypesGen)),
+    )
 
-    val unitGen: Gen[Unit] = Gen.const(())
+    val seqOfTypesGen: Gen[Seq[TlaType1]] = nonnegativeIntGen.flatMap(Gen.listOfN(_, singleTypeGen))
+    val nonemptySeqOfTypesGen: Gen[Seq[TlaType1]] = positiveIntGen.flatMap(Gen.listOfN(_, singleTypeGen))
 
-    val positiveIntGen: Gen[BigInt] = Gen.choose(1, 10)
-    val nonnegativeIntGen: Gen[BigInt] = Gen.choose(0, 10)
+    val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
+    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptySeqOfTypesGen)
 
-    val positiveIntAndTypeGen: Gen[(BigInt, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
-    val nonnegativeIntAndTypeGen: Gen[(BigInt, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
+    // unsafe for non-applicative
+    private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
+      case FunT1(a, _) => Gen.const(builder.name("x", a))
+      case TupT1(args @ _*) => // assume nonempty
+        Gen.choose[Int](1, args.size).map(builder.int)
+      case RecT1(flds) => // assume nonempty
+        Gen.oneOf(flds.keys).map(builder.str)
+      case _: SeqT1 => Gen.const(builder.name("x", IntT1))
+    }
+
+    val applicativeGen: Gen[TlaType1] = Gen.oneOf(tt1gen.genFun, tt1gen.genRec, tt1gen.genSeq, tt1gen.genTup)
+
+    val applicativeAndArgGen: Gen[(TlaType1, TBuilderInstruction)] = for {
+      appT <- applicativeGen
+      arg <- argGen(appT)
+    } yield (appT, arg)
+
+    private var ctr: Int = 0
+    // unsafe for non-applicative
+    def argAndCdmTypeGen(appT: TlaType1): Gen[(TBuilderInstruction, TlaType1)] = {
+      ctr += 1
+      (appT: @unchecked) match {
+        case FunT1(a, b) => Gen.const((builder.name(s"x$ctr", a), b))
+        case TupT1(args @ _*) => // assume nonempty
+          Gen.choose[Int](1, args.size).map(i => (builder.int(i), args(i - 1)))
+        case RecT1(flds) => // assume nonempty
+          Gen.oneOf(flds.keys).map(k => (builder.str(k), flds(k)))
+        case SeqT1(t) => Gen.const((builder.name(s"x$ctr", IntT1), t))
+      }
+    }
+
+    implicit val applicativeAndSeqArgCdmGen: Gen[(TlaType1, Seq[(TBuilderInstruction, TlaType1)])] = for {
+      t <- applicativeGen
+      n <- positiveIntGen
+      seq <- Gen.listOfN(n, argAndCdmTypeGen(t))
+    } yield (t, seq)
+
+    val positiveIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
+    val nonnegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
 
     val strGen: Gen[String] = Gen.alphaStr
 

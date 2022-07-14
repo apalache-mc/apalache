@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
 class UnsafeLiteralAndNameBuilder {
 
   /** {{{i : Int}}} */
-  def int(i: BigInt): TlaEx = ValEx(TlaInt(i))(Typed(IntT1))
+  def int(i: Int): TlaEx = ValEx(TlaInt(i))(Typed(IntT1))
 
   /**
    * {{{s : Str}}}

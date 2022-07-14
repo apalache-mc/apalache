@@ -57,11 +57,11 @@ class TestControlBuilder extends BuilderTest {
   test("caseNoOther") {
     type T = Seq[(TBuilderInstruction, TBuilderInstruction)]
 
-    type TParam = (BigInt, TlaType1)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
       val (n, t) = tparam
-      (1 to n.toInt).map { i =>
+      (1 to n).map { i =>
         (
             builder.name(s"p$i", BoolT1),
             builder.name(s"e$i", t),
@@ -71,7 +71,7 @@ class TestControlBuilder extends BuilderTest {
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
       val (bigN, t) = tparam
-      val n = bigN.toInt
+      val n = bigN
       (1 to n).flatMap { j =>
         val bodyFuzzOpt =
           if (n > 1) // If there's only 1 case branch, the body can't be ill-typed
@@ -123,7 +123,7 @@ class TestControlBuilder extends BuilderTest {
 
     def mkWellTyped2(tparam: TParam): T2 = {
       val (n, t) = tparam
-      (1 to n.toInt).flatMap { i =>
+      (1 to n).flatMap { i =>
         Seq(
             builder.name(s"p$i", BoolT1),
             builder.name(s"e$i", t),
@@ -132,8 +132,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped2(tparam: TParam): Seq[T2] = {
-      val (bigN, t) = tparam
-      val n = bigN.toInt
+      val (n, t) = tparam
       (1 to n).flatMap { j =>
         val bodyFuzzOpt =
           if (n > 1)
@@ -188,11 +187,11 @@ class TestControlBuilder extends BuilderTest {
   test("caseWithOther") {
     type T = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
 
-    type TParam = (BigInt, TlaType1)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
       val (n, t) = tparam
-      val pairs = (1 to n.toInt).map { i =>
+      val pairs = (1 to n).map { i =>
         (
             builder.name(s"p$i", BoolT1),
             builder.name(s"e$i", t),
@@ -203,8 +202,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
-      val (bigN, t) = tparam
-      val n = bigN.toInt
+      val (n, t) = tparam
       (
           builder.name("e", InvalidTypeMethods.differentFrom(t)),
           (1 to n).map { i =>
@@ -272,7 +270,7 @@ class TestControlBuilder extends BuilderTest {
     def mkWellTyped2(tparam: TParam): T2 = {
       val (n, t) = tparam
       (builder.name("e", t),
-          (1 to n.toInt).flatMap { i =>
+          (1 to n).flatMap { i =>
             Seq(
                 builder.name(s"p$i", BoolT1),
                 builder.name(s"e$i", t),
@@ -281,8 +279,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped2(tparam: TParam): Seq[T2] = {
-      val (bigN, t) = tparam
-      val n = bigN.toInt
+      val (n, t) = tparam
       (
           builder.name("e", InvalidTypeMethods.differentFrom(t)),
           (1 to n).flatMap { i =>

@@ -57,14 +57,14 @@ class TestApalacheBuilder extends BuilderTest {
   }
 
   test("gen") {
-    type T = (BigInt, TlaType1)
-    type TParam = (BigInt, TlaType1)
+    type T = (Int, TlaType1)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = tparam
 
     def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
 
-    implicit val intToBuilderI: BigInt => TBuilderInstruction = builder.int
+    implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
 
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.gen,
@@ -232,7 +232,7 @@ class TestApalacheBuilder extends BuilderTest {
 
   test("constCard") {
     type T = TBuilderInstruction
-    type TParam = (BigInt, TlaType1)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
       val (n, tt) = tparam
@@ -291,8 +291,8 @@ class TestApalacheBuilder extends BuilderTest {
 
   test("mkSeq") {
     import LambdaFactory.mkLambda
-    type T = (BigInt, TBuilderInstruction)
-    type TParam = (BigInt, TlaType1)
+    type T = (Int, TBuilderInstruction)
+    type TParam = (Int, TlaType1)
 
     // MkSeq(n, LET F(i) == e IN F)
     def mkWellTyped(tparam: TParam): T = {
@@ -325,7 +325,7 @@ class TestApalacheBuilder extends BuilderTest {
       )
     }
 
-    implicit val intToBuilderI: BigInt => TBuilderInstruction = builder.int
+    implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
 
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.mkSeq,
