@@ -46,8 +46,10 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val unitGen: Gen[Unit] = Gen.const(())
 
-    val positiveIntGen: Gen[Int] = Gen.choose(1, 10)
-    val nonnegativeIntGen: Gen[Int] = Gen.choose(0, 10)
+    def minIntGen(min: Int) = Gen.choose(min, min + 10)
+
+    val positiveIntGen: Gen[Int] = minIntGen(1)
+    val nonnegativeIntGen: Gen[Int] = minIntGen(0)
 
     protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
@@ -80,8 +82,10 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
         positiveIntGen.flatMap(Gen.listOfN(_, declTypesGen)),
     )
 
-    val seqOfTypesGen: Gen[Seq[TlaType1]] = nonnegativeIntGen.flatMap(Gen.listOfN(_, singleTypeGen))
-    val nonemptySeqOfTypesGen: Gen[Seq[TlaType1]] = positiveIntGen.flatMap(Gen.listOfN(_, singleTypeGen))
+    def seqOfTypesGenMinLenGen(min: Int) = minIntGen(min).flatMap(Gen.listOfN(_, singleTypeGen))
+
+    val seqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(0)
+    val nonemptySeqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(1)
 
     val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
     val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptySeqOfTypesGen)

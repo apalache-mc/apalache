@@ -54,7 +54,7 @@ class TestSetBuilder extends BuilderTest {
       }
     }
 
-    checkRun(run)
+    checkRun(run)(Generators.singleTypeGen)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -75,7 +75,7 @@ class TestSetBuilder extends BuilderTest {
       true
     }
 
-    checkRun(run)
+    checkRun(run)(Generators.singleTypeGen)
   }
 
   test("(not)in") {
@@ -117,8 +117,8 @@ class TestSetBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaSetOper.in, builder.in))
-    checkRun(run(TlaSetOper.notin, builder.notin))
+    checkRun(run(TlaSetOper.in, builder.in))(Generators.singleTypeGen)
+    checkRun(run(TlaSetOper.notin, builder.notin))(Generators.singleTypeGen)
   }
 
   test("cap/cup/setminus") {
@@ -160,9 +160,9 @@ class TestSetBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaSetOper.cap, builder.cap))
-    checkRun(run(TlaSetOper.cup, builder.cup))
-    checkRun(run(TlaSetOper.setminus, builder.setminus))
+    checkRun(run(TlaSetOper.cap, builder.cap))(Generators.singleTypeGen)
+    checkRun(run(TlaSetOper.cup, builder.cup))(Generators.singleTypeGen)
+    checkRun(run(TlaSetOper.setminus, builder.setminus))(Generators.singleTypeGen)
   }
 
   test("union") {
@@ -191,7 +191,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
   }
 
@@ -239,21 +239,14 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
     assertThrowsBoundVarIntroductionTernary(builder.filter)
   }
 
   test("map") {
     type T = (TBuilderInstruction, Seq[TBuilderInstruction])
-
     type TParam = (TlaType1, Seq[TlaType1])
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(1, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield (t, seq)
 
     def mkWellTyped(tparam: TParam): T = {
       val (t, ts) = tparam
@@ -306,7 +299,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.typeAndNonemptySeqGen)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -422,7 +415,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped2,
             resultIsExpected2,
         )
-    )
+    )(Generators.typeAndNonemptySeqGen)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -529,18 +522,13 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.doubleTypeGen)
   }
 
   test("recSet") {
     type T = Seq[TBuilderInstruction]
 
     type TParam = Seq[TlaType1]
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      n <- Gen.choose(1, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield seq
 
     def mkWellTyped(tparam: TParam): T =
       tparam.zipWithIndex.flatMap { case (tt, i) =>
@@ -580,7 +568,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.nonemptySeqOfTypesGen)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -650,7 +638,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped2,
             resultIsExpected2,
         )
-    )
+    )(Generators.nonemptySeqOfTypesGen)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -690,7 +678,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
   test("subseteq") {
@@ -728,7 +716,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
   }
 
@@ -736,11 +724,6 @@ class TestSetBuilder extends BuilderTest {
     type T = Seq[TBuilderInstruction]
 
     type TParam = Seq[TlaType1]
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      n <- Gen.choose(2, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield seq
 
     def mkWellTyped(tparam: TParam): T =
       tparam.zipWithIndex.map { case (t, i) => builder.name(s"S$i", SetT1(t)) }
@@ -768,7 +751,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.seqOfTypesGenMinLenGen(2))
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -806,7 +789,7 @@ class TestSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
 }

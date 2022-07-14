@@ -42,7 +42,7 @@ class TestSeqBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
   }
 
@@ -79,7 +79,7 @@ class TestSeqBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
   }
 
@@ -112,11 +112,11 @@ class TestSeqBuilder extends BuilderTest {
           resultIsExpected(op, corrType),
       )(tt)
 
-    checkRun(run(TlaSeqOper.head, tt => tt, builder.head))
+    checkRun(run(TlaSeqOper.head, tt => tt, builder.head))(Generators.singleTypeGen)
 
-    checkRun(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))
+    checkRun(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))(Generators.singleTypeGen)
 
-    checkRun(run(TlaSeqOper.len, _ => IntT1, builder.len))
+    checkRun(run(TlaSeqOper.len, _ => IntT1, builder.len))(Generators.singleTypeGen)
   }
 
   test("subseq") {
@@ -161,7 +161,7 @@ class TestSeqBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
 }
