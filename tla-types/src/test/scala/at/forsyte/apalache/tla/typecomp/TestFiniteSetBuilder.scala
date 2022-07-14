@@ -34,7 +34,7 @@ class TestFiniteSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
   test("cardinality") {
@@ -62,7 +62,7 @@ class TestFiniteSetBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
 }
