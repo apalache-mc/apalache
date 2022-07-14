@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaBoolOper, TlaOper, TlaSetOper}
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.forAll
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
