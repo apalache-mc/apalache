@@ -44,14 +44,12 @@ class TestHybrid extends BuilderTest {
         }
     }
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.singleTypeGen)(runBinary(
             builder.primeEq,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
   test("decl") {
@@ -180,7 +178,7 @@ class TestHybrid extends BuilderTest {
       true
     }
 
-    checkRun(run)(Generators.declTypesGen)
+    checkRun(Generators.declTypesGen)(run)
 
     // throws on illegal parameter type
 
@@ -348,7 +346,7 @@ class TestHybrid extends BuilderTest {
       expectedBody.eqTyped
     }
 
-    checkRun[TParam1](runLetTests(mkWellTyped1, forceScopeException1, isExpected1))(Generators.typeAndDeclGen)
+    checkRun(Generators.typeAndDeclGen)(runLetTests(mkWellTyped1, forceScopeException1, isExpected1))
   }
 
   test("letIn (N decls)") {
@@ -420,7 +418,7 @@ class TestHybrid extends BuilderTest {
       expectedBody.eqTyped
     }
 
-    checkRun[TParamN](runLetTests(mkWellTypedN, forceScopeExceptionN, isExpectedN))(Generators.typeAndListOfDeclsGen)
+    checkRun(Generators.typeAndListOfDeclsGen)(runLetTests(mkWellTypedN, forceScopeExceptionN, isExpectedN))
 
     // throws on n = 0
     assertThrows[IllegalArgumentException] {
@@ -499,14 +497,12 @@ class TestHybrid extends BuilderTest {
       res.eqTyped(expected)
     }
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.applicativeAndSeqArgCdmGen)(runVariadicWithDistinguishedFirst(
             builder.exceptMany,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.applicativeAndSeqArgCdmGen)
+        ))
 
     // throws on n = 0
     assertThrows[IllegalArgumentException] {

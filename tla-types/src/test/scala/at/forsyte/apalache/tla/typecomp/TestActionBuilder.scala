@@ -23,14 +23,12 @@ class TestActionBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.singleTypeGen)(runUnary(
             builder.prime,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
   test("stutt/nostutt") {
@@ -67,8 +65,8 @@ class TestActionBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaActionOper.stutter, builder.stutt))(Generators.singleTypeGen)
-    checkRun(run(TlaActionOper.nostutter, builder.nostutt))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(TlaActionOper.stutter, builder.stutt))
+    checkRun(Generators.singleTypeGen)(run(TlaActionOper.nostutter, builder.nostutt))
   }
 
   test("enabled") {
@@ -88,14 +86,12 @@ class TestActionBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.unitGen)(runUnary(
             builder.enabled,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.unitGen)
+        ))
   }
 
   test("unchanged") {
@@ -111,14 +107,12 @@ class TestActionBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.singleTypeGen)(runUnary(
             builder.unchanged,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
   test("cmp") {
@@ -148,14 +142,12 @@ class TestActionBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.unitGen)(runBinary(
             builder.comp,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.unitGen)
+        ))
   }
 
 }

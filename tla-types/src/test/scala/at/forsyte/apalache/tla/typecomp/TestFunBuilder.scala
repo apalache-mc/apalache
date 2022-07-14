@@ -39,14 +39,12 @@ class TestFunBuilder extends BuilderTest {
         },
     )
 
-    checkRun(
-        runVariadic(
+    checkRun(Generators.nonemptySeqOfTypesGen)(runVariadic(
             builder.recMixed,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.nonemptySeqOfTypesGen)
+        ))
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -100,14 +98,12 @@ class TestFunBuilder extends BuilderTest {
         },
     )
 
-    checkRun(
-        runVariadic(
+    checkRun(Generators.nonemptySeqOfTypesGen)(runVariadic(
             builder.rec,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        )
-    )(Generators.nonemptySeqOfTypesGen)
+        ))
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -142,14 +138,12 @@ class TestFunBuilder extends BuilderTest {
         ts => TupT1(ts: _*),
     )
 
-    checkRun(
-        runVariadic(
+    checkRun(Generators.seqOfTypesGen)(runVariadic(
             builder.tuple,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.seqOfTypesGen)
+        ))
 
   }
 
@@ -184,7 +178,7 @@ class TestFunBuilder extends BuilderTest {
       }
     }
 
-    checkRun(run)(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -205,7 +199,7 @@ class TestFunBuilder extends BuilderTest {
       true
     }
 
-    checkRun(run)(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run)
   }
 
   test("funDef") {
@@ -264,14 +258,12 @@ class TestFunBuilder extends BuilderTest {
         { case (t, ts) => funT(t, ts) },
     )
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.typeAndNonemptySeqGen)(runVariadicWithDistinguishedFirst(
             builder.funDef,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.typeAndNonemptySeqGen)
+        ))
 
     // throws on n = 0
     assertThrows[IllegalArgumentException] {
@@ -394,14 +386,12 @@ class TestFunBuilder extends BuilderTest {
         { case (t, ts) => funT(t, ts) },
     )
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.typeAndNonemptySeqGen)(runVariadicWithDistinguishedFirst(
             builder.funDefMixed,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        )
-    )(Generators.typeAndNonemptySeqGen)
+        ))
 
     // throws on n = 0
     assertThrows[IllegalArgumentException] {
@@ -519,14 +509,12 @@ class TestFunBuilder extends BuilderTest {
         { case (appT, arg) => Applicative.asInstanceOfApplicative(appT, arg).get.toT },
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.applicativeAndArgGen)(runBinary(
             builder.app,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.applicativeAndArgGen)
+        ))
 
   }
 
@@ -549,14 +537,12 @@ class TestFunBuilder extends BuilderTest {
         { case (appT, _) => SetT1(Applicative.domainElemType(appT).get) },
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.applicativeAndArgGen)(runUnary(
             builder.dom,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.applicativeAndArgGen)
+        ))
 
   }
 
@@ -617,14 +603,12 @@ class TestFunBuilder extends BuilderTest {
         { case (appT, _) => appT },
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.applicativeAndArgGen)(runTernary(
             builder.except,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.applicativeAndArgGen)
+        ))
 
   }
 

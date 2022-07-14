@@ -25,14 +25,12 @@ class TestApalacheInternalBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.strAndTypeGen)(runBinary(
             builder.notSupportedByModelChecker,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.strAndTypeGen)
+        ))
 
   }
 
@@ -70,7 +68,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
       }
     }
 
-    checkRun(run)(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -95,14 +93,12 @@ class TestApalacheInternalBuilder extends BuilderTest {
         _ => IntT1,
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.singleTypeGen)(runUnary(
             builder.apalacheSeqCapacity,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
   test("selectInSet/storeInSet2/storeNotInSet") {
@@ -145,9 +141,9 @@ class TestApalacheInternalBuilder extends BuilderTest {
           resultIsExpected(oper),
       )(_)
 
-    checkRun(run(ApalacheInternalOper.selectInSet, builder.selectInSet))(Generators.singleTypeGen)
-    checkRun(run(ApalacheInternalOper.storeInSet, builder.storeInSet))(Generators.singleTypeGen)
-    checkRun(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.selectInSet, builder.selectInSet))
+    checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeInSet, builder.storeInSet))
+    checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))
   }
 
   test("storeInSet3") {
@@ -196,14 +192,12 @@ class TestApalacheInternalBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.doubleTypeGen)(runTernary(
             builder.storeInSet,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.doubleTypeGen)
+        ))
   }
 
   test("smtMap") {
@@ -250,8 +244,8 @@ class TestApalacheInternalBuilder extends BuilderTest {
           resultIsExpected(oper),
       )(_)
 
-    checkRun(run(TlaBoolOper.and))(Generators.singleTypeGen)
-    checkRun(run(TlaBoolOper.or))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.and))
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.or))
 
     // Throws on TlaOper not supported by smtMap
     assertThrows[TBuilderTypeException] {
@@ -282,14 +276,12 @@ class TestApalacheInternalBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.singleTypeGen)(runUnary(
             builder.unconstrainArray,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
 }

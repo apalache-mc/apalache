@@ -35,14 +35,12 @@ class TestSeqBuilder extends BuilderTest {
         tt => SeqT1(tt),
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.singleTypeGen)(runBinary(
             builder.append,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
 
   }
 
@@ -72,14 +70,12 @@ class TestSeqBuilder extends BuilderTest {
         tt => SeqT1(tt),
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.singleTypeGen)(runBinary(
             builder.concat,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
 
   }
 
@@ -112,11 +108,11 @@ class TestSeqBuilder extends BuilderTest {
           resultIsExpected(op, corrType),
       )(tt)
 
-    checkRun(run(TlaSeqOper.head, tt => tt, builder.head))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(TlaSeqOper.head, tt => tt, builder.head))
 
-    checkRun(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))
 
-    checkRun(run(TlaSeqOper.len, _ => IntT1, builder.len))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(TlaSeqOper.len, _ => IntT1, builder.len))
   }
 
   test("subseq") {
@@ -154,14 +150,12 @@ class TestSeqBuilder extends BuilderTest {
         tt => SeqT1(tt),
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.singleTypeGen)(runTernary(
             builder.subseq,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
 }

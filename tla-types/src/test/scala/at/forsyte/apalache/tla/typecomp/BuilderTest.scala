@@ -43,6 +43,8 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   type DeclParamT = (TlaType1, Seq[TlaType1])
+
+  /** Contains definitions of parameterization generators */
   object Generators {
 
     val unitGen: Gen[Unit] = Gen.const(())
@@ -277,9 +279,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   /** test `run` against a generator of TypeParameterization values */
-  def checkRun[TypeParameterization](
-      run: TypeParameterization => Boolean
-    )(implicit typegen: Gen[TypeParameterization]): Unit = {
+  def checkRun[TypeParameterization](typegen: Gen[TypeParameterization])(run: TypeParameterization => Boolean): Unit = {
     val prop = forAll(typegen) { run }
     check(prop, minSuccessful(1000), sizeRange(8))
   }

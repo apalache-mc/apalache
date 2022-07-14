@@ -27,14 +27,12 @@ class TestFiniteSetBuilder extends BuilderTest {
         { _ => BoolT1 },
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.singleTypeGen)(runUnary(
             builder.isFiniteSet,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
   test("cardinality") {
@@ -55,14 +53,12 @@ class TestFiniteSetBuilder extends BuilderTest {
         { _ => IntT1 },
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.singleTypeGen)(runUnary(
             builder.cardinality,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
 }

@@ -48,8 +48,8 @@ class TestBaseBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaOper.eq, builder.eql))(Generators.singleTypeGen)
-    checkRun(run(TlaOper.ne, builder.neql))(Generators.singleTypeGen)
+    checkRun(Generators.singleTypeGen)(run(TlaOper.eq, builder.eql))
+    checkRun(Generators.singleTypeGen)(run(TlaOper.ne, builder.neql))
   }
 
   test("appOp") {
@@ -97,14 +97,12 @@ class TestBaseBuilder extends BuilderTest {
         { case (t, _) => t },
     )
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.typeAndSeqGen)(runVariadicWithDistinguishedFirst(
             builder.appOp,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.typeAndSeqGen)
+        ))
   }
 
   test("choose3") {
@@ -147,14 +145,12 @@ class TestBaseBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.singleTypeGen)(runTernary(
             builder.choose,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
 
     assertThrowsBoundVarIntroductionTernary(builder.choose)
   }
@@ -182,14 +178,12 @@ class TestBaseBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.singleTypeGen)(runBinary(
             builder.choose,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
 
     assertThrowsBoundVarIntroductionBinary(builder.choose)
   }
@@ -218,14 +212,12 @@ class TestBaseBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.positiveIntAndTypeGen)(runVariadicWithDistinguishedFirst(
             builder.label,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.positiveIntAndTypeGen)
+        ))
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {

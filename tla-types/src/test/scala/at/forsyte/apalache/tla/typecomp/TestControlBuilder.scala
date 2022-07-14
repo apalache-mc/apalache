@@ -44,14 +44,12 @@ class TestControlBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.singleTypeGen)(runTernary(
             builder.ite,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.singleTypeGen)
+        ))
   }
 
   test("caseNoOther") {
@@ -104,14 +102,12 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(
-        runVariadic(
+    checkRun(Generators.positiveIntAndTypeGen)(runVariadic(
             builder.caseSplit,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.positiveIntAndTypeGen)
+        ))
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -165,14 +161,12 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(
-        runVariadic(
+    checkRun(Generators.positiveIntAndTypeGen)(runVariadic(
             builder.caseSplitMixed,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        )
-    )(Generators.positiveIntAndTypeGen)
+        ))
 
     // test fail on n = 0 or odd nArgs
     assertThrows[IllegalArgumentException] {
@@ -250,14 +244,12 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.positiveIntAndTypeGen)(runVariadicWithDistinguishedFirst(
             builder.caseOther,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.positiveIntAndTypeGen)
+        ))
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -327,14 +319,12 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(
-        runVariadicWithDistinguishedFirst(
+    checkRun(Generators.positiveIntAndTypeGen)(runVariadicWithDistinguishedFirst(
             builder.caseOtherMixed,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        )
-    )(Generators.positiveIntAndTypeGen)
+        ))
 
     // test fail on n = 0 or even nArgs
     assertThrows[IllegalArgumentException] {

@@ -43,14 +43,12 @@ class TestVariantBuilder extends BuilderTest {
         { case (_, _, t) => t },
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.tagValVariantGen)(runTernary(
             builder.variant,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.tagValVariantGen)
+        ))
 
     // throws on malformed variant type
     assertThrows[IllegalArgumentException] {
@@ -103,14 +101,12 @@ class TestVariantBuilder extends BuilderTest {
         { case (tagName, t) => SetT1(t.row.fieldTypes(tagName)) },
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.tagAndVariantGen)(runBinary(
             builder.variantFilter,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.tagAndVariantGen)
+        ))
 
   }
 
@@ -133,14 +129,12 @@ class TestVariantBuilder extends BuilderTest {
         { _ => StrT1 },
     )
 
-    checkRun(
-        runUnary(
+    checkRun(Generators.variantGen)(runUnary(
             builder.variantTag,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.variantGen)
+        ))
   }
 
   test("variantGetOrElse") {
@@ -185,14 +179,12 @@ class TestVariantBuilder extends BuilderTest {
         { case (_, t, _) => t },
     )
 
-    checkRun(
-        runTernary(
+    checkRun(Generators.tagValVariantGen)(runTernary(
             builder.variantGetOrElse,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.tagValVariantGen)
+        ))
 
   }
 
@@ -230,14 +222,12 @@ class TestVariantBuilder extends BuilderTest {
         { case (tagName, varT) => varT.row.fieldTypes(tagName) },
     )
 
-    checkRun(
-        runBinary(
+    checkRun(Generators.tagAndVariantGen)(runBinary(
             builder.variantGetUnsafe,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        )
-    )(Generators.tagAndVariantGen)
+        ))
 
   }
 
