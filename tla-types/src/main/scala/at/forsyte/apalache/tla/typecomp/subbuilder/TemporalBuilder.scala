@@ -10,35 +10,44 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeTemporalBuilder
  * @author
  *   Jure Kukovec
  */
-trait TemporalBuilder extends UnsafeTemporalBuilder {
+trait TemporalBuilder {
+  private val unsafeBuilder = new UnsafeTemporalBuilder
 
   /** {{{[]P}}} */
-  def box(P: TBuilderInstruction): TBuilderInstruction = P.map(_box)
+  def box(P: TBuilderInstruction): TBuilderInstruction = P.map(unsafeBuilder.box)
 
   /** {{{<>P}}} */
-  def diamond(P: TBuilderInstruction): TBuilderInstruction = P.map(_diamond)
+  def diamond(P: TBuilderInstruction): TBuilderInstruction = P.map(unsafeBuilder.diamond)
 
   /** {{{P ~> Q}}} */
   def leadsTo(P: TBuilderInstruction, Q: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(P, Q)(_leadsTo)
+    binaryFromUnsafe(P, Q)(unsafeBuilder.leadsTo)
 
   /** {{{P -+-> Q}}} */
   def guarantees(P: TBuilderInstruction, Q: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(P, Q)(_guarantees)
+    binaryFromUnsafe(P, Q)(unsafeBuilder.guarantees)
 
   /** {{{WF_x(A)}}} */
   def WF(x: TBuilderInstruction, A: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(x, A)(_WF)
+    binaryFromUnsafe(x, A)(unsafeBuilder.WF)
 
   /** {{{SF_x(A)}}} */
   def SF(x: TBuilderInstruction, A: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(x, A)(_SF)
+    binaryFromUnsafe(x, A)(unsafeBuilder.SF)
 
-  /** {{{\EE x: P}}} */
+  /**
+   * {{{\EE x: P}}}
+   * @param x
+   *   must be a variable name
+   */
   def EE(x: TBuilderInstruction, P: TBuilderInstruction): TBuilderInstruction =
-    boundVarIntroductionBinary(_EE)(x, P)
+    boundVarIntroductionBinary(unsafeBuilder.EE)(x, P)
 
-  /** {{{\AA x: P}}} */
+  /**
+   * {{{\AA x: P}}}
+   * @param x
+   *   must be a variable name
+   */
   def AA(x: TBuilderInstruction, P: TBuilderInstruction): TBuilderInstruction =
-    boundVarIntroductionBinary(_AA)(x, P)
+    boundVarIntroductionBinary(unsafeBuilder.AA)(x, P)
 }

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecomp.subbuilder
 
 import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
-import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, TBuilderInternalState}
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFunBuilder
 import scalaz._
 import scalaz.Scalaz._
@@ -13,39 +13,56 @@ import scalaz.Scalaz._
  * @author
  *   Jure Kukovec
  */
-trait FunBuilder extends UnsafeFunBuilder {
+trait FunBuilder {
+  private val unsafeBuilder = new UnsafeFunBuilder
 
   /**
-   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
+   * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}}
+   * @param args
+   *   must be nonempty, and all keys must be unique strings
    */
   def rec(args: (String, TBuilderInstruction)*): TBuilderInstruction = for {
     vs <- buildSeq(args.map(_._2))
     ks = args.map(_._1)
-  } yield _rec(ks.zip(vs): _*)
+  } yield unsafeBuilder.rec(ks.zip(vs): _*)
 
   /**
-   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
+   * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}}
+   * @param args
+   *   must have even, positive arity, and all keys must be unique strings
    */
   def recMixed(args: TBuilderInstruction*): TBuilderInstruction =
-    buildSeq(args).map { _recMixed(_: _*) }
+    buildSeq(args).map { unsafeBuilder.recMixed(_: _*) }
 
-  /** {{{<<t1, ..., tn>>}}} with a tuple-type */
-  def tuple(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(_tuple(_: _*))
+  /** {{{<<args[0], ..., args[n]>> : <<t1, ..., tn>>}}} */
+  def tuple(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(unsafeBuilder.tuple(_: _*))
 
-  /** {{{<<>>}}} with a sequence type */
-  def emptySeq(t: TlaType1): TBuilderInstruction = _emptySeq(t).point[TBuilderInternalState]
+  /** {{{<<>> : Seq(t)}}} */
+  def emptySeq(t: TlaType1): TBuilderInstruction = unsafeBuilder.emptySeq(t).point[TBuilderInternalState]
 
-  /** {{{<<t1, ..., tn>>}}} with a sequence-type. Must be nonempty. */
-  def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { _seq }
+  /**
+   * {{{<<args[0], ..., args[n]>> : Seq(t)}}}
+   * @param args
+   *   must be nonempty.
+   */
+  def seq(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map { unsafeBuilder.seq }
 
-  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
-  def funDef(e: TBuilderInstruction, varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
-    boundVarIntroductionVariadic(_funDef)(e, varSetPairs: _*)
+  /**
+   * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}}
+   * @param pairs
+   *   must be nonempty, and all vars must be unique variable names
+   */
+  def funDef(e: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
+    boundVarIntroductionVariadic(unsafeBuilder.funDef)(e, pairs: _*)
 
-  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
-  def funDefMixed(e: TBuilderInstruction, varSetPairs: TBuilderInstruction*): TBuilderInstruction = {
-    require(varSetPairs.size % 2 == 0)
-    val asPairs = varSetPairs.grouped(2).toSeq.map { case Seq(a, b) =>
+  /**
+   * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}}
+   * @param pairs
+   *   must have even, positive arity, and all vars must be unique variable names
+   */
+  def funDefMixed(e: TBuilderInstruction, pairs: TBuilderInstruction*): TBuilderInstruction = {
+    require(pairs.size % 2 == 0, s"Expected pairs to have even arity, found $pairs.")
+    val asPairs = pairs.grouped(2).toSeq.map { case Seq(a, b) =>
       (a, b)
     }
     funDef(e, asPairs: _*)
@@ -55,22 +72,35 @@ trait FunBuilder extends UnsafeFunBuilder {
   // APP overload //
   //////////////////
 
-  /** f[x] for any Applicative f */
+  /**
+   * {{{f[x]}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
   def app(f: TBuilderInstruction, x: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(f, x)(_app)
+    binaryFromUnsafe(f, x)(unsafeBuilder.app)
 
   /////////////////////
   // DOMAIN overload //
   /////////////////////
 
-  def dom(f: TBuilderInstruction): TBuilderInstruction = f.map { _dom }
+  /**
+   * {{{DOMAIN f}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
+  def dom(f: TBuilderInstruction): TBuilderInstruction = f.map { unsafeBuilder.dom }
 
   /////////////////////
   // EXCEPT overload //
   /////////////////////
 
-  /** [f EXCEPT !.x = e] for any Applicative f */
+  /**
+   * {{{[f EXCEPT ![x] = e]}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
   def except(f: TBuilderInstruction, x: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(f, x, e)(_except)
+    ternaryFromUnsafe(f, x, e)(unsafeBuilder.except)
 
 }

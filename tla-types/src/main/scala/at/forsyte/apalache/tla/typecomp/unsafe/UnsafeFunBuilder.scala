@@ -16,34 +16,41 @@ import scala.collection.immutable.SortedMap
  * @author
  *   Jure Kukovec
  */
-trait UnsafeFunBuilder extends ProtoBuilder {
+class UnsafeFunBuilder extends ProtoBuilder {
+
+  // We borrow the LiteralBuilder to make TLA strings from Scala strings
+  private val strBuilder = new UnsafeLiteralAndNameBuilder
+  private def mkTlaStr: String => TlaEx = strBuilder.str
 
   /**
-   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
+   * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}}
+   * @param args
+   *   must be nonempty, and all keys must be unique strings
    */
-  protected def _rec(args: (String, TlaEx)*): TlaEx = {
-    // the other _recSet does all the require checks
+  def rec(args: (String, TlaEx)*): TlaEx = {
+    // _recMixed does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
-      Seq(ValEx(TlaStr(k))(Typed(StrT1)), v)
+      Seq(mkTlaStr(k), v)
     }
-    _recMixed(flatArgs: _*)
+    recMixed(flatArgs: _*)
   }
 
   /**
-   * Record constructor [ k1 |-> v1, ... , kN |-> vN ]; must have at least 1 key-value pair and all keys must be unique
+   * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}}
+   * @param args
+   *   must have even, positive arity, and all keys must be unique strings
    */
-  protected def _recMixed(args: TlaEx*): TlaEx = {
+  def recMixed(args: TlaEx*): TlaEx = {
+    require(TlaFunOper.rec.arity.cond(args.size), s"Expected args to have even, positive arity, found $args.")
     // All keys must be ValEx(TlaStr(_))
-    require(args.nonEmpty)
-    require(args.size % 2 == 0)
     val (keys, vals) = TlaOper.deinterleave(args)
     require(keys.forall {
-      case ValEx(_: TlaStr) => true
-      case _                => false
-    })
+          case ValEx(_: TlaStr) => true
+          case _                => false
+        }, s"Expected keys to be TLA+ strings, found $keys.")
+    // Keys must be unique
     val duplicates = keys.filter(k => keys.count(_ == k) > 1)
-    if (duplicates.nonEmpty)
-      throw new IllegalArgumentException(s"Found repeated keys in record constructor: ${duplicates.mkString(", ")}")
+    require(duplicates.isEmpty, s"Expected keys to be unique, found duplicates: ${duplicates.mkString(", ")}.")
 
     // We don't need a dynamic TypeComputation, because a record constructor admits all types (we've already validated
     // all keys as strings with `require`)
@@ -60,8 +67,8 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
   }
 
-  /** {{{<<t1, ..., tn>>}}} with a tuple-type */
-  protected def _tuple(args: TlaEx*): TlaEx = {
+  /** {{{<<args[0], ..., args[n]>> : <<t1, ..., tn>>}}} */
+  def tuple(args: TlaEx*): TlaEx = {
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
     // just define the tuple-variant signature
     val partialSig: PartialSignature = { seq => TupT1(seq: _*) }
@@ -69,12 +76,16 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
   }
 
-  /** {{{<<>>}}} with a sequence type */
-  protected def _emptySeq(elemType: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(elemType)))
+  /** {{{<<>> : Seq(t)}}} */
+  def emptySeq(t: TlaType1): TlaEx = OperEx(TlaFunOper.tuple)(Typed(SeqT1(t)))
 
-  /** {{{<<t1, ..., tn>>}}} with a sequence-type. Must be nonempty. */
-  protected def _seq(args: TlaEx*): TlaEx = {
-    require(args.nonEmpty)
+  /**
+   * {{{<<args[0], ..., args[n]>> : Seq(t)}}}
+   * @param args
+   *   must be nonempty.
+   */
+  def seq(args: TlaEx*): TlaEx = {
+    require(args.nonEmpty, s"args must be nonempty.")
     // TlaFunOper.tuple can produce both tuples and sequences, so instead of going through cmpFactory, we
     // just define the seq-variant signature
     val partialSig: PartialSignature = { case h +: tail if tail.forall(_ == h) => SeqT1(h) }
@@ -82,22 +93,33 @@ trait UnsafeFunBuilder extends ProtoBuilder {
     BuilderUtil.composeAndValidateTypes(TlaFunOper.tuple, sig, args: _*)
   }
 
-  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
-  protected def _funDef(e: TlaEx, varSetPairs: (TlaEx, TlaEx)*): TlaEx = {
-    // the other _funDef does all the require checks
-    val args = varSetPairs.flatMap { case (k, v) =>
+  /**
+   * {{{[pairs[0]._1 \in pairs[0]._2, ..., pairs[n]._1 \in pairs[n]._2 |-> e]}}}
+   * @param pairs
+   *   must be nonempty, and all vars must be unique variable names
+   */
+  def funDef(e: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
+    // _funDefMixed does all the require checks
+    val args = pairs.flatMap { case (k, v) =>
       Seq(k, v)
     }
-    _funDefMixed(e, args: _*)
+    funDefMixed(e, args: _*)
   }
 
-  /** [x1 \in S1, ..., xn \in Sn |-> e], must have at least 1 var-set pair */
-  protected def _funDefMixed(e: TlaEx, varSetPairs: TlaEx*): TlaEx = {
-    // Even, non-zero number of args and every other argument is NameEx
-    require(varSetPairs.nonEmpty)
-    require(varSetPairs.size % 2 == 0)
-    require(TlaOper.deinterleave(varSetPairs)._1.forall { _.isInstanceOf[NameEx] })
-    buildBySignatureLookup(TlaFunOper.funDef, e +: varSetPairs: _*)
+  /**
+   * {{{[pairs[0] \in pairs[1], ..., pairs[n-1] \in pairs[n] |-> e]}}}
+   * @param pairs
+   *   must have even, positive arity, and all vars must be unique variable names
+   */
+  def funDefMixed(e: TlaEx, pairs: TlaEx*): TlaEx = {
+    // Even, non-zero number of args in `pairs` and every other argument is NameEx
+    require(TlaFunOper.funDef.arity.cond(1 + pairs.size), s"Expected pairs to have even, positive arity, found $pairs.")
+    val (vars, _) = TlaOper.deinterleave(pairs)
+    require(vars.forall { _.isInstanceOf[NameEx] }, s"Expected vars to be variable names, found $vars.")
+    // Vars must be unique
+    val duplicates = vars.filter(k => vars.count(_ == k) > 1)
+    require(duplicates.isEmpty, s"Expected vars to be unique, found duplicates: ${duplicates.mkString(", ")}.")
+    buildBySignatureLookup(TlaFunOper.funDef, e +: pairs: _*)
   }
 
   // The rest of the operators are overloaded, so buildBySignatureLookup doesn't work
@@ -114,8 +136,12 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   // APP overload //
   //////////////////
 
-  /** f[x] for any Applicative f */
-  protected def _app(f: TlaEx, x: TlaEx): TlaEx = {
+  /**
+   * {{{f[x]}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
+  def app(f: TlaEx, x: TlaEx): TlaEx = {
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value
       case Seq(appT, domT) if asInstanceOfApplicative(appT, x).exists(_.fromT == domT) =>
@@ -128,7 +154,12 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   // DOMAIN overload //
   /////////////////////
 
-  protected def _dom(f: TlaEx): TlaEx =
+  /**
+   * {{{DOMAIN f}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
+  def dom(f: TlaEx): TlaEx =
     buildFromPartialSignature(
         { case Seq(tt) if Applicative.domainElemType(tt).nonEmpty => SetT1(Applicative.domainElemType(tt).get) }
     )(TlaFunOper.domain, f)
@@ -137,8 +168,12 @@ trait UnsafeFunBuilder extends ProtoBuilder {
   // EXCEPT overload //
   /////////////////////
 
-  /** [f EXCEPT !.x = e] for any Applicative f */
-  protected def _except(f: TlaEx, x: TlaEx, e: TlaEx): TlaEx = {
+  /**
+   * {{{[f EXCEPT ![x] = e]}}}
+   * @param f
+   *   must be [[Applicative]]
+   */
+  def except(f: TlaEx, x: TlaEx, e: TlaEx): TlaEx = {
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value
       case Seq(appT, domT, cdmT) if asInstanceOfApplicative(appT, x).contains(Applicative(domT, cdmT)) => appT

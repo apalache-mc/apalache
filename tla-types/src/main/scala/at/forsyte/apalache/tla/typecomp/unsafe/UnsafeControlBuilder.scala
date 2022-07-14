@@ -9,32 +9,50 @@ import at.forsyte.apalache.tla.lir.oper.TlaControlOper
  * @author
  *   Jure Kukovec
  */
-trait UnsafeControlBuilder extends ProtoBuilder {
+class UnsafeControlBuilder extends ProtoBuilder {
 
-  /** IF p THEN A ELSE B */
-  protected def _ite(p: TlaEx, A: TlaEx, B: TlaEx): TlaEx = buildBySignatureLookup(TlaControlOper.ifThenElse, p, A, B)
+  /** {{{IF p THEN A ELSE B}}} */
+  def ite(p: TlaEx, A: TlaEx, B: TlaEx): TlaEx = buildBySignatureLookup(TlaControlOper.ifThenElse, p, A, B)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
-  protected def _caseSplit(pairs: (TlaEx, TlaEx)*): TlaEx = {
-    require(pairs.nonEmpty)
+  /**
+   * {{{CASE pairs[0]._1 -> pairs[0]._2 [] ... [] pairs[n]._1 -> pairs[n]._2}}}
+   * @param pairs
+   *   must be nonempty
+   */
+  def caseSplit(pairs: (TlaEx, TlaEx)*): TlaEx = {
+    require(pairs.nonEmpty, s"pairs must be nonempty.")
     buildBySignatureLookup(TlaControlOper.caseNoOther, pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
   }
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
-  protected def _caseSplitMixed(pairs: TlaEx*): TlaEx = {
-    require(TlaControlOper.caseNoOther.arity.cond(pairs.size))
+  /**
+   * {{{CASE pairs[0] -> pairs[1] [] ... [] pairs[n-1] -> pairs[n]}}}
+   * @param pairs
+   *   must have even, positive arity
+   */
+  def caseSplitMixed(pairs: TlaEx*): TlaEx = {
+    require(TlaControlOper.caseNoOther.arity.cond(pairs.size),
+        s"Expected pairs to have even, positive arity, found $pairs.")
     buildBySignatureLookup(TlaControlOper.caseNoOther, pairs: _*)
   }
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
-  protected def _caseOther(other: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
-    require(pairs.nonEmpty)
+  /**
+   * {{{CASE pairs[0]._1 -> pairs[0]._2 [] ... [] pairs[n]._1 -> pairs[n]._2 [] OTHER -> other}}}
+   * @param pairs
+   *   must be nonempty
+   */
+  def caseOther(other: TlaEx, pairs: (TlaEx, TlaEx)*): TlaEx = {
+    require(pairs.nonEmpty, s"pairs must be nonempty.")
     buildBySignatureLookup(TlaControlOper.caseWithOther, other +: pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
   }
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
-  protected def _caseOtherMixed(other: TlaEx, pairs: TlaEx*): TlaEx = {
-    require(TlaControlOper.caseWithOther.arity.cond(1 + pairs.size))
+  /**
+   * {{{CASE pairs[0] -> pairs[1] [] ... [] pairs[n-1] -> pairs[n] [] OTHER -> other}}}
+   * @param pairs
+   *   must have even, positive arity
+   */
+  def caseOtherMixed(other: TlaEx, pairs: TlaEx*): TlaEx = {
+    require(TlaControlOper.caseWithOther.arity.cond(1 + pairs.size),
+        s"Expected pairs to have even, positive arity, found $pairs.")
     buildBySignatureLookup(TlaControlOper.caseWithOther, other +: pairs: _*)
   }
 

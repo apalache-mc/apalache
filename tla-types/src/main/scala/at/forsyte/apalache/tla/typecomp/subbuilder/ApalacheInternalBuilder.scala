@@ -14,40 +14,50 @@ import scalaz.Scalaz._
  * @author
  *   Jure Kukovec
  */
-trait ApalacheInternalBuilder extends UnsafeApalacheInternalBuilder {
+trait ApalacheInternalBuilder {
+  private val unsafeBuilder = new UnsafeApalacheInternalBuilder
 
-  /** notSupportedByModelChecker */
+  /**
+   * {{{__NotSupportedByModelChecker(msg): t}}}
+   *
+   * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
+   * argument.
+   */
   def notSupportedByModelChecker(msg: String, tt: TlaType1): TBuilderInstruction =
-    _notSupportedByModelChecker(msg, tt).point[TBuilderInternalState]
+    unsafeBuilder.notSupportedByModelChecker(msg, tt).point[TBuilderInternalState]
 
-  /** distinct */
+  /**
+   * distinct
+   * @param args
+   *   must be nonempty
+   */
   def distinct(args: TBuilderInstruction*): TBuilderInstruction =
-    buildSeq(args).map(_distinct(_: _*))
+    buildSeq(args).map(unsafeBuilder.distinct(_: _*))
 
-  /** apalacheSeqCapacity */
-  def apalacheSeqCapacity(seq: TBuilderInstruction): TBuilderInstruction = seq.map(_apalacheSeqCapacity)
+  /** {{{__ApalacheSeqCapacity(seq)}}} */
+  def apalacheSeqCapacity(seq: TBuilderInstruction): TBuilderInstruction = seq.map(unsafeBuilder.apalacheSeqCapacity)
 
   /** selectInSet */
   def selectInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(elem, set)(_selectInSet)
+    binaryFromUnsafe(elem, set)(unsafeBuilder.selectInSet)
 
   /** storeNotInSet */
   def storeNotInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(elem, set)(_storeNotInSet)
+    binaryFromUnsafe(elem, set)(unsafeBuilder.storeNotInSet)
 
   /** storeInSet binary (sets) */
   def storeInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(elem, set)(_storeInSet)
+    binaryFromUnsafe(elem, set)(unsafeBuilder.storeInSet)
 
   /** storeInSet ternary (functions) */
   def storeInSet(elem: TBuilderInstruction, fun: TBuilderInstruction, arg: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(elem, fun, arg)(_storeInSet)
+    ternaryFromUnsafe(elem, fun, arg)(unsafeBuilder.storeInSet)
 
   /** smtMap */
   def smtMap(oper: TlaOper, set1: TBuilderInstruction, set2: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(set1, set2)(_smtMap(oper, _, _))
+    binaryFromUnsafe(set1, set2)(unsafeBuilder.smtMap(oper, _, _))
 
   /** unconstrainArray */
   def unconstrainArray(set: TBuilderInstruction): TBuilderInstruction =
-    set.map(_unconstrainArray)
+    set.map(unsafeBuilder.unconstrainArray)
 }

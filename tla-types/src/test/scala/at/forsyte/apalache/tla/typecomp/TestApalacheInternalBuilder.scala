@@ -49,7 +49,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
 
     def run(tparam: TlaType1) = {
       (1 to 5).forall { n =>
-        runVariadic[TlaType1, TBuilderInstruction](
+        runVariadic[TlaType1, TBuilderInstruction, TBuilderResult](
             builder.distinct(_: _*),
             mkWellTyped(n),
             mkIllTyped(n),

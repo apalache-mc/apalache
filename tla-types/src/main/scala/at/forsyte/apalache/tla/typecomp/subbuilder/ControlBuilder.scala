@@ -11,28 +11,45 @@ import scalaz._
  * @author
  *   Jure Kukovec
  */
-trait ControlBuilder extends UnsafeControlBuilder {
+trait ControlBuilder {
+  private val unsafeBuilder = new UnsafeControlBuilder
 
-  /** IF p THEN A ELSE B */
+  /** {{{IF p THEN A ELSE B}}} */
   def ite(p: TBuilderInstruction, A: TBuilderInstruction, B: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(p, A, B)(_ite)
+    ternaryFromUnsafe(p, A, B)(unsafeBuilder.ite)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
+  /**
+   * {{{CASE pairs[0]._1 -> pairs[0]._2 [] ... [] pairs[n]._1 -> pairs[n]._2}}}
+   * @param pairs
+   *   must be nonempty
+   */
   def caseSplit(pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseSplitMixed(pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en */
+  /**
+   * {{{CASE pairs[0] -> pairs[1] [] ... [] pairs[n-1] -> pairs[n]}}}
+   * @param pairs
+   *   must have even, positive arity
+   */
   def caseSplitMixed(pairs: TBuilderInstruction*): TBuilderInstruction =
-    buildSeq(pairs).map(_caseSplitMixed(_: _*))
+    buildSeq(pairs).map(unsafeBuilder.caseSplitMixed(_: _*))
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
+  /**
+   * {{{CASE pairs[0]._1 -> pairs[0]._2 [] ... [] pairs[n]._1 -> pairs[n]._2 [] OTHER -> other}}}
+   * @param pairs
+   *   must be nonempty
+   */
   def caseOther(other: TBuilderInstruction, pairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction =
     caseOtherMixed(other, pairs.flatMap { case (a, b) => Seq(a, b) }: _*)
 
-  /** CASE p1 -> e1 [] p2 -> e2 [] ... [] pn -> en [] OTHER -> e */
+  /**
+   * {{{CASE pairs[0] -> pairs[1] [] ... [] pairs[n-1] -> pairs[n] [] OTHER -> other}}}
+   * @param pairs
+   *   must have even, positive arity
+   */
   def caseOtherMixed(other: TBuilderInstruction, pairs: TBuilderInstruction*): TBuilderInstruction = for {
     otherEx <- other
     pairsExs <- buildSeq(pairs)
-  } yield _caseOtherMixed(otherEx, pairsExs: _*)
+  } yield unsafeBuilder.caseOtherMixed(otherEx, pairsExs: _*)
 
 }

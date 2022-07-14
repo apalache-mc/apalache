@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.markAsBound
+import at.forsyte.apalache.tla.typecomp.BuilderUtil.{getAllBound, getAllUsed, markAsBound}
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
 
@@ -36,7 +36,7 @@ import scalaz.Scalaz._
 class ScopedBuilder
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with FiniteSetBuilder with SeqBuilder
     with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with ApalacheInternalBuilder
-    with ApalacheBuilder with LiteralAndNameBuilder {
+    with ApalacheBuilder with VariantBuilder with LiteralAndNameBuilder {
 
   private def parser = DefaultType1Parser
 
@@ -171,6 +171,43 @@ class ScopedBuilder
     )
   }
 
+  /** {{{LET decl(...) = ... IN body}}} */
+  def letIn(body: TBuilderInstruction, decl: TBuilderOperDeclInstruction): TBuilderInstruction = for {
+    usedBeforeDecl <- getAllUsed // decl name may not appear in decl body
+    declEx <- decl
+    usedAfterDecl <- getAllUsed
+    usedInDecl = usedAfterDecl -- usedBeforeDecl
+    bodyEx <- body
+    boundAfterBody <- getAllBound // decl may not appear as bound in body
+    boundInBody = boundAfterBody -- usedAfterDecl
+    declName <- name(declEx.name, declEx.typeTag.asTlaType1()) // puts name in scope w/ type
+    _ <- markAsBound(declName)
+  } yield {
+    if (usedInDecl.union(boundInBody).contains(declEx.name)) {
+      val source = if (usedInDecl.contains(declEx.name)) declEx.body else bodyEx
+      throw new TBuilderScopeException(s"Declaration name ${declEx.name} is shadowed in $source.")
+    } else
+      LetInEx(bodyEx, declEx)(bodyEx.typeTag)
+  }
+
+  /**
+   * {{{LET F_1(a_1^1,...,a_{n_1}^1) == X_1 F_2(a_1^2,...,b_{n_2}^2) == X_2 ... F_N(a_1^N,...,z_{n_N}^N) == X_N IN e}}}
+   * is equivalently translated to
+   * {{{
+   *   LET F_1(a_1^1,...,a_{n_1}^1) == X_1 IN
+   *   LET F_2(a_1^2,...,b_{n_2}^2) == X_2 IN
+   *   ...
+   *   LET F_N(a_1^N,...,z_{n_N}^N) == X_N IN
+   *   e
+   * }}}
+   */
+  def letIn(body: TBuilderInstruction, decls: TBuilderOperDeclInstruction*): TBuilderInstruction = {
+    require(decls.nonEmpty, "decls must be nonempty.")
+    decls.foldRight(body) { case (decl, partial) =>
+      letIn(partial, decl)
+    }
+  }
+
   /**
    * [f EXCEPT ![a1] = e1, ![a2] = e2 ... ![an] = en]
    *
@@ -179,7 +216,7 @@ class ScopedBuilder
   def exceptMany(
       f: TBuilderInstruction,
       args: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty.")
     args.foldLeft(f) { case (fn, (ai, ei)) =>
       except(fn, ai, ei)
     }
@@ -198,7 +235,7 @@ class ScopedBuilder
       f: TBuilderInstruction,
       e: TBuilderInstruction,
       args: TBuilderInstruction*): TBuilderInstruction = {
-    require(args.nonEmpty)
+    require(args.nonEmpty, s"args must be nonempty")
 
     args match {
       case Seq(head) => except(f, head, e)
@@ -225,7 +262,7 @@ class ScopedBuilder
       f: TBuilderInstruction,
       args: (TBuilderInstruction, Seq[TBuilderInstruction])*): TBuilderInstruction = {
     // require all depths are the same? Also ensures args.nonEmpty
-    require(args.map(_._2.size).toSet.size == 1)
+    require(args.map(_._2.size).toSet.size == 1, s"Expected args to be nonempty and uniformly sized, found $args.")
     args.foldLeft(f) { case (fn, (e, as)) =>
       exceptDeep(fn, e, as: _*)
     }
