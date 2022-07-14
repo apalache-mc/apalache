@@ -30,7 +30,7 @@ class TestActionBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
   test("stutt/nostutt") {
@@ -67,13 +67,11 @@ class TestActionBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaActionOper.stutter, builder.stutt))
-    checkRun(run(TlaActionOper.nostutter, builder.nostutt))
+    checkRun(run(TlaActionOper.stutter, builder.stutt))(Generators.singleTypeGen)
+    checkRun(run(TlaActionOper.nostutter, builder.nostutt))(Generators.singleTypeGen)
   }
 
   test("enabled") {
-
-    implicit val unitGen: Gen[Unit] = Gen.oneOf(Seq(()))
 
     type T = TBuilderInstruction
     def mkWellTyped(@unused tt: Unit): T = builder.name("A", BoolT1)
@@ -97,7 +95,7 @@ class TestActionBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.unitGen)
   }
 
   test("unchanged") {
@@ -120,13 +118,10 @@ class TestActionBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
   test("cmp") {
-
-    implicit val unitGen: Gen[Unit] = Gen.oneOf(Seq(()))
-
     type T = (TBuilderInstruction, TBuilderInstruction)
     def mkWellTyped(@unused tt: Unit): T =
       (
@@ -160,7 +155,7 @@ class TestActionBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.unitGen)
   }
 
 }

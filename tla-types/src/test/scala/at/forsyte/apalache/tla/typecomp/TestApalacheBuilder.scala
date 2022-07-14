@@ -45,7 +45,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
     // Assert throws on non-prime
     assertThrows[IllegalArgumentException] {
@@ -57,10 +57,8 @@ class TestApalacheBuilder extends BuilderTest {
   }
 
   test("gen") {
-    type T = (Int, TlaType1)
-    type TParam = (Int, TlaType1)
-
-    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(1, 10), singleTypeGen)
+    type T = (BigInt, TlaType1)
+    type TParam = (BigInt, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = tparam
 
@@ -82,7 +80,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.positiveIntAndTypeGen)
 
     // throws on n <= 0
     assertThrows[IllegalArgumentException] {
@@ -125,7 +123,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
     // throws on non-existential
     assertThrows[IllegalArgumentException] {
@@ -159,7 +157,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
   }
 
   test("expand") {
@@ -187,7 +185,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped1,
             resultIsExpected1,
         )
-    )
+    )(Generators.singleTypeGen)
 
     // throws on non-SUBSET
     assertThrows[IllegalArgumentException] {
@@ -222,7 +220,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped2,
             resultIsExpected2,
         )
-    )
+    )(Generators.doubleTypeGen)
 
     // throws on non-functionset
     assertThrows[IllegalArgumentException] {
@@ -234,9 +232,7 @@ class TestApalacheBuilder extends BuilderTest {
 
   test("constCard") {
     type T = TBuilderInstruction
-    type TParam = (Int, TlaType1)
-
-    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(0, 10), singleTypeGen)
+    type TParam = (BigInt, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
       val (n, tt) = tparam
@@ -260,7 +256,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.nonnegativeIntAndTypeGen)
 
     // throws on non-Cardinality
     assertThrows[IllegalArgumentException] {
@@ -295,10 +291,8 @@ class TestApalacheBuilder extends BuilderTest {
 
   test("mkSeq") {
     import LambdaFactory.mkLambda
-    type T = (Int, TBuilderInstruction)
-    type TParam = (Int, TlaType1)
-
-    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(0, 10), singleTypeGen)
+    type T = (BigInt, TBuilderInstruction)
+    type TParam = (BigInt, TlaType1)
 
     // MkSeq(n, LET F(i) == e IN F)
     def mkWellTyped(tparam: TParam): T = {
@@ -347,7 +341,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.nonnegativeIntAndTypeGen)
 
     // throws on negative integer literal
     assertThrows[IllegalArgumentException] {
@@ -397,9 +391,6 @@ class TestApalacheBuilder extends BuilderTest {
     import LambdaFactory.mkLambda
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
     type TParam = (TlaType1, TlaType1)
-
-    // Fold tests need to generate legal operator parameter types.
-    val gen2Param: Gen[TParam] = Gen.zip(parameterTypeGen, parameterTypeGen)
 
     // Assume SeqOrSetT1 = SeqT1(_) or SetT1(_) below. The tests are otherwise the same
 
@@ -480,9 +471,9 @@ class TestApalacheBuilder extends BuilderTest {
           resultIsExpected(seqOrSetT),
       ) _
 
-    // we pass gen explicitly, since there exists a standard generator for (TT1, TT1). See #1966
-    checkRun(run(SetT1))(gen2Param) // FoldSet tests
-    checkRun(run(SeqT1))(gen2Param) // FoldSeq tests
+    // Fold tests need to generate legal operator parameter types.
+    checkRun(run(SetT1))(Generators.doubleParameterTypeGen) // FoldSet tests
+    checkRun(run(SeqT1))(Generators.doubleParameterTypeGen) // FoldSeq tests
 
     // throws on non-lambda
     assertThrows[IllegalArgumentException] {
@@ -567,7 +558,7 @@ class TestApalacheBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.doubleTypeGen)
   }
 
 }

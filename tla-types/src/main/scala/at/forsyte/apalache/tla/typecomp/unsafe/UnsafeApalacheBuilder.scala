@@ -38,7 +38,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    * @param n
    *   must be positive
    */
-  def gen(n: Int, t: TlaType1): TlaEx = {
+  def gen(n: BigInt, t: TlaType1): TlaEx = {
     require(n > 0, s"Expected n to be positive, found $n.")
     OperEx(ApalacheOper.gen, mkTlaInt(n))(Typed(t))
   }
@@ -98,7 +98,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    * @param F
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
-  def mkSeq(n: Int, F: TlaEx): TlaEx = {
+  def mkSeq(n: BigInt, F: TlaEx): TlaEx = {
     require(n >= 0, s"Expected n to be nonnegative, found $n.")
     require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
     buildBySignatureLookup(ApalacheOper.mkSeq, mkTlaInt(n), F)

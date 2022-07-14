@@ -41,21 +41,35 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     cmpFactory = new TypeComputationFactory
   }
 
-  protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
+  object Generators {
 
-  implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
-  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(singleTypeGen, singleTypeGen)
+    protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
-  val parameterTypeGen: Gen[TlaType1] = for {
-    t <- tt1gen.genPrimitive
-    n <- Gen.choose(0, 5)
-    ts <- Gen.listOfN(n, tt1gen.genPrimitive)
-  } yield n match {
-    case 0          => t
-    case m if m > 0 => OperT1(ts, t)
-    case _          =>
-      // impossible, since 0 <= n <= 5, but the compiler doesn't know and complains
-      throw new IllegalStateException("Expected n to be nonnegative.")
+    val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
+    val doubleTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(singleTypeGen, singleTypeGen)
+
+    val parameterTypeGen: Gen[TlaType1] = for {
+      t <- tt1gen.genPrimitive
+      n <- Gen.choose(0, 5)
+      ts <- Gen.listOfN(n, tt1gen.genPrimitive)
+    } yield n match {
+      case 0          => t
+      case m if m > 0 => OperT1(ts, t)
+      case _          =>
+        // impossible, since 0 <= n <= 5, but the compiler doesn't know and complains
+        throw new IllegalStateException("Expected n to be nonnegative.")
+    }
+
+    val doubleParameterTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(parameterTypeGen, parameterTypeGen)
+
+    val unitGen: Gen[Unit] = Gen.const(())
+
+    val positiveIntGen: Gen[BigInt] = Gen.choose(1, 10)
+    val nonnegativeIntGen: Gen[BigInt] = Gen.choose(0, 10)
+
+    val positiveIntAndTypeGen: Gen[(BigInt, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
+    val nonnegativeIntAndTypeGen: Gen[(BigInt, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
+
   }
 
   // Useful methods for defining mkIllTypedArgs
