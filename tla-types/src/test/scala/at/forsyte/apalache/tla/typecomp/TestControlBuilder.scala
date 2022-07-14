@@ -104,7 +104,7 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaControlOper.caseNoOther,
         mkWellTyped,
-        _.flatMap(ToSeq.binary),
+        ToSeq.variadicPairs,
         { case (t, _) => t },
     )
 
