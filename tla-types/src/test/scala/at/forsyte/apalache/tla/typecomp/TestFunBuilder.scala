@@ -88,8 +88,6 @@ class TestFunBuilder extends BuilderTest {
 
     def mkIllTyped2(@unused tparam: TParam): Seq[T2] = Seq.empty
 
-    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
-
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaFunOper.rec,
         mkWellTyped2,

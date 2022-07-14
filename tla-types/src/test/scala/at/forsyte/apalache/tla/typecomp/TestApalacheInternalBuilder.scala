@@ -22,7 +22,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
         ApalacheInternalOper.notSupportedByModelChecker,
         mkWellTyped,
         { case (a, _) => ToSeq.unary(builder.str)(a) },
-        _ => IntT1,
+        { case (_, t) => t },
     )
 
     checkRun(

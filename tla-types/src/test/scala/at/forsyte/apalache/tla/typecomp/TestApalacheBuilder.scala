@@ -64,12 +64,10 @@ class TestApalacheBuilder extends BuilderTest {
 
     def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
 
-    implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
-
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.gen,
         mkWellTyped,
-        ToSeq.binary,
+        { case (a, _) => ToSeq.unary(intToBuilderI)(a) },
         { case (_, t) => t },
     )
 
@@ -324,8 +322,6 @@ class TestApalacheBuilder extends BuilderTest {
           )
       )
     }
-
-    implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
 
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.mkSeq,

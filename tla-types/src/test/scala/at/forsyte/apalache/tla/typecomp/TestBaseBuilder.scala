@@ -211,8 +211,6 @@ class TestBaseBuilder extends BuilderTest {
 
     def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
 
-    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
-
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaOper.label,
         mkWellTyped,

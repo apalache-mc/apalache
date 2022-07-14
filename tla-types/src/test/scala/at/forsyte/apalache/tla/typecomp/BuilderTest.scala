@@ -122,7 +122,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       }
     }
 
-    implicit val applicativeAndSeqArgCdmGen: Gen[(TlaType1, Seq[(TBuilderInstruction, TlaType1)])] = for {
+    val applicativeAndSeqArgCdmGen: Gen[(TlaType1, Seq[(TBuilderInstruction, TlaType1)])] = for {
       t <- applicativeGen
       n <- positiveIntGen
       seq <- Gen.listOfN(n, argAndCdmTypeGen(t))
@@ -177,9 +177,6 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
   /** Defines a collection of standard conversion methods, to be used as `toSeq` in `expectEqTyped` */
   object ToSeq {
-    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
-    implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
-
     def unary[T](implicit convert: T => TBuilderInstruction): T => Seq[TBuilderResult] = { v => Seq(convert(v)) }
     def binary[T1, T2](
         implicit convert1: T1 => TBuilderInstruction,
@@ -211,6 +208,8 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       build(convert1(a)) +: variadicPairs[T2, T3](convert2, convert3)(seq)
     }
   }
+  implicit val strToBuilderI: String => TBuilderInstruction = builder.str
+  implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
 
   /** Convenience method, for constructing resultIsExpected as an test of eqTyped */
   def expectEqTyped[TypeParameterization, T](

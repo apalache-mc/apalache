@@ -617,8 +617,6 @@ class TestSetBuilder extends BuilderTest {
       )
     }
 
-    implicit val strToBuilderI: String => TBuilderInstruction = builder.str
-
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaSetOper.recSet,
         mkWellTyped2,
