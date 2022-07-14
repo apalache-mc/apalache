@@ -62,6 +62,12 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val doubleParameterTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(parameterTypeGen, parameterTypeGen)
 
+    val typeSeqGen: Gen[Seq[TlaType1]] = Gen.choose(0, 5).flatMap(Gen.listOfN(_, singleTypeGen))
+    val nonemptyTypeSeqGen: Gen[Seq[TlaType1]] = Gen.choose(1, 5).flatMap(Gen.listOfN(_, singleTypeGen))
+
+    val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, typeSeqGen)
+    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptyTypeSeqGen)
+
     val unitGen: Gen[Unit] = Gen.const(())
 
     val positiveIntGen: Gen[BigInt] = Gen.choose(1, 10)
@@ -69,6 +75,10 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val positiveIntAndTypeGen: Gen[(BigInt, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
     val nonnegativeIntAndTypeGen: Gen[(BigInt, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
+
+    val strGen: Gen[String] = Gen.alphaStr
+
+    val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(strGen, singleTypeGen)
 
   }
 

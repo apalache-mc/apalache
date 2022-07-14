@@ -48,20 +48,14 @@ class TestBaseBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaOper.eq, builder.eql))
-    checkRun(run(TlaOper.ne, builder.neql))
+    checkRun(run(TlaOper.eq, builder.eql))(Generators.singleTypeGen)
+    checkRun(run(TlaOper.ne, builder.neql))(Generators.singleTypeGen)
   }
 
   test("appOp") {
     type T = (TBuilderInstruction, Seq[TBuilderInstruction])
 
     type TParam = (TlaType1, Seq[TlaType1])
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(0, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield (t, seq)
 
     def mkWellTyped(tparam: TParam): T = {
       val (t, ts) = tparam
@@ -110,7 +104,7 @@ class TestBaseBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.typeAndSeqGen)
   }
 
   test("choose3") {
@@ -160,7 +154,7 @@ class TestBaseBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
     assertThrowsBoundVarIntroductionTernary(builder.choose)
   }
@@ -195,7 +189,7 @@ class TestBaseBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.singleTypeGen)
 
     assertThrowsBoundVarIntroductionBinary(builder.choose)
   }
@@ -203,18 +197,13 @@ class TestBaseBuilder extends BuilderTest {
   test("label") {
     type T = (TBuilderInstruction, Seq[String])
 
-    type TParam = (TlaType1, Int)
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(1, 5)
-    } yield (t, n)
+    type TParam = (BigInt, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (
           builder.name("ex", t),
-          (0 until n).map { i =>
+          (0 until n.toInt).map { i =>
             s"x$i"
           },
       )
@@ -228,7 +217,7 @@ class TestBaseBuilder extends BuilderTest {
         TlaOper.label,
         mkWellTyped,
         ToSeq.variadicWithDistinguishedFirst,
-        { case (t, _) => t },
+        { case (_, t) => t },
     )
 
     checkRun(
@@ -238,7 +227,7 @@ class TestBaseBuilder extends BuilderTest {
             mkIllTyped,
             resultIsExpected,
         )
-    )
+    )(Generators.positiveIntAndTypeGen)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
