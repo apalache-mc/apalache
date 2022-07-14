@@ -37,12 +37,14 @@ class TestApalacheBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.singleTypeGen)(runBinary(
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
             builder.assign,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // Assert throws on non-prime
     assertThrows[IllegalArgumentException] {
@@ -68,12 +70,14 @@ class TestApalacheBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.positiveIntAndTypeGen)(runBinary(
+    checkRun(Generators.positiveIntAndTypeGen)(
+        runBinary(
             builder.gen,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // throws on n <= 0
     assertThrows[IllegalArgumentException] {
@@ -109,12 +113,14 @@ class TestApalacheBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.skolem,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // throws on non-existential
     assertThrows[IllegalArgumentException] {
@@ -141,12 +147,14 @@ class TestApalacheBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.guess,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("expand") {
@@ -167,12 +175,14 @@ class TestApalacheBuilder extends BuilderTest {
         tt => SetT1(SetT1(tt)),
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.expand,
             mkWellTyped1,
             mkIllTyped1,
             resultIsExpected1,
-        ))
+        )
+    )
 
     // throws on non-SUBSET
     assertThrows[IllegalArgumentException] {
@@ -200,12 +210,14 @@ class TestApalacheBuilder extends BuilderTest {
         { case (a, b) => SetT1(FunT1(a, b)) },
     )
 
-    checkRun(Generators.doubleTypeGen)(runUnary(
+    checkRun(Generators.doubleTypeGen)(
+        runUnary(
             builder.expand,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        ))
+        )
+    )
 
     // throws on non-functionset
     assertThrows[IllegalArgumentException] {
@@ -234,12 +246,14 @@ class TestApalacheBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.nonnegativeIntAndTypeGen)(runUnary(
+    checkRun(Generators.nonnegativeIntAndTypeGen)(
+        runUnary(
             builder.constCard,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // throws on non-Cardinality
     assertThrows[IllegalArgumentException] {
@@ -315,12 +329,14 @@ class TestApalacheBuilder extends BuilderTest {
         { case (_, t) => SeqT1(t) },
     )
 
-    checkRun(Generators.nonnegativeIntAndTypeGen)(runBinary(
+    checkRun(Generators.nonnegativeIntAndTypeGen)(
+        runBinary(
             builder.mkSeq,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // throws on negative integer literal
     assertThrows[IllegalArgumentException] {
@@ -530,12 +546,14 @@ class TestApalacheBuilder extends BuilderTest {
         { case (a, b) => FunT1(a, b) },
     )
 
-    checkRun(Generators.doubleTypeGen)(runUnary(
+    checkRun(Generators.doubleTypeGen)(
+        runUnary(
             builder.setAsFun,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
 }

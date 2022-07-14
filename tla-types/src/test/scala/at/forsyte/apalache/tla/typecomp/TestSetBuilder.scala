@@ -44,8 +44,8 @@ class TestSetBuilder extends BuilderTest {
 
     def run(tparam: TlaType1) = {
       (1 to 5).forall { n =>
-        runVariadic[TlaType1, TBuilderInstruction, TBuilderResult](
-            builder.enumSet(_: _*),
+        runVariadic(
+            builder.enumSet,
             mkWellTyped(n),
             mkIllTyped(n),
             resultIsExpected(n),
@@ -183,12 +183,14 @@ class TestSetBuilder extends BuilderTest {
         tt => SetT1(tt),
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.union,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
   }
 
@@ -229,12 +231,14 @@ class TestSetBuilder extends BuilderTest {
         tt => SetT1(tt),
     )
 
-    checkRun(Generators.singleTypeGen)(runTernary(
+    checkRun(Generators.singleTypeGen)(
+        runTernary(
             builder.filter,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     assertThrowsBoundVarIntroductionTernary(builder.filter)
   }
@@ -287,12 +291,14 @@ class TestSetBuilder extends BuilderTest {
         { case (t, _) => SetT1(t) },
     )
 
-    checkRun(Generators.typeAndNonemptySeqGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.typeAndNonemptySeqGen)(
+        runVariadicWithDistinguishedFirst(
             builder.mapMixed,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -401,12 +407,14 @@ class TestSetBuilder extends BuilderTest {
         { case (t, _) => SetT1(t) },
     )
 
-    checkRun(Generators.typeAndNonemptySeqGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.typeAndNonemptySeqGen)(
+        runVariadicWithDistinguishedFirst(
             builder.map,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -506,12 +514,14 @@ class TestSetBuilder extends BuilderTest {
         { case (t1, t2) => SetT1(FunT1(t1, t2)) },
     )
 
-    checkRun(Generators.doubleTypeGen)(runBinary(
+    checkRun(Generators.doubleTypeGen)(
+        runBinary(
             builder.funSet,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("recSet") {
@@ -550,12 +560,14 @@ class TestSetBuilder extends BuilderTest {
         },
     )
 
-    checkRun(Generators.nonemptySeqOfTypesGen)(runVariadic(
+    checkRun(Generators.nonemptySeqOfTypesGen)(
+        runVariadic(
             builder.recSetMixed,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -616,12 +628,14 @@ class TestSetBuilder extends BuilderTest {
         },
     )
 
-    checkRun(Generators.nonemptySeqOfTypesGen)(runVariadic(
+    checkRun(Generators.nonemptySeqOfTypesGen)(
+        runVariadic(
             builder.recSet,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -654,12 +668,14 @@ class TestSetBuilder extends BuilderTest {
         tt => SetT1(SeqT1(tt)),
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.seqSet,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("subseteq") {
@@ -690,12 +706,14 @@ class TestSetBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.singleTypeGen)(runBinary(
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
             builder.subseteq,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
   }
 
@@ -723,12 +741,14 @@ class TestSetBuilder extends BuilderTest {
         tts => SetT1(TupT1(tts: _*)),
     )
 
-    checkRun(Generators.seqOfTypesGenMinLenGen(2))(runVariadic[TParam, TBuilderInstruction, TBuilderResult](
-            builder.times(_: _*),
+    checkRun(Generators.seqOfTypesGenMinLenGen(2))(
+        runVariadic(
+            builder.times,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -759,12 +779,14 @@ class TestSetBuilder extends BuilderTest {
         tt => SetT1(SetT1(tt)),
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.powSet,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
 }

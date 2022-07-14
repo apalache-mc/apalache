@@ -43,12 +43,14 @@ class TestHybrid extends BuilderTest {
         }
     }
 
-    checkRun(Generators.singleTypeGen)(runBinary(
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
             builder.primeEq,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("decl") {
@@ -496,12 +498,14 @@ class TestHybrid extends BuilderTest {
       res.eqTyped(expected)
     }
 
-    checkRun(Generators.applicativeAndSeqArgCdmGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.applicativeAndSeqArgCdmGen)(
+        runVariadicWithDistinguishedFirst(
             builder.exceptMany,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // throws on n = 0
     assertThrows[IllegalArgumentException] {

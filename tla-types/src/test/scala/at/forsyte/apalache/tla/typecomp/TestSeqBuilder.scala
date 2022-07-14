@@ -35,12 +35,14 @@ class TestSeqBuilder extends BuilderTest {
         tt => SeqT1(tt),
     )
 
-    checkRun(Generators.singleTypeGen)(runBinary(
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
             builder.append,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
   }
 
@@ -70,12 +72,14 @@ class TestSeqBuilder extends BuilderTest {
         tt => SeqT1(tt),
     )
 
-    checkRun(Generators.singleTypeGen)(runBinary(
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
             builder.concat,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
   }
 
@@ -150,12 +154,14 @@ class TestSeqBuilder extends BuilderTest {
         tt => SeqT1(tt),
     )
 
-    checkRun(Generators.singleTypeGen)(runTernary(
+    checkRun(Generators.singleTypeGen)(
+        runTernary(
             builder.subseq,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
 }

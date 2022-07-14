@@ -96,12 +96,14 @@ class TestBaseBuilder extends BuilderTest {
         { case (t, _) => t },
     )
 
-    checkRun(Generators.typeAndSeqGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.typeAndSeqGen)(
+        runVariadicWithDistinguishedFirst(
             builder.appOp,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("choose3") {
@@ -144,12 +146,14 @@ class TestBaseBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(Generators.singleTypeGen)(runTernary(
+    checkRun(Generators.singleTypeGen)(
+        runTernary(
             builder.choose,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     assertThrowsBoundVarIntroductionTernary(builder.choose)
   }
@@ -177,12 +181,14 @@ class TestBaseBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(Generators.singleTypeGen)(runBinary(
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
             builder.choose,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     assertThrowsBoundVarIntroductionBinary(builder.choose)
   }
@@ -211,12 +217,14 @@ class TestBaseBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.positiveIntAndTypeGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.positiveIntAndTypeGen)(
+        runVariadicWithDistinguishedFirst(
             builder.label,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {

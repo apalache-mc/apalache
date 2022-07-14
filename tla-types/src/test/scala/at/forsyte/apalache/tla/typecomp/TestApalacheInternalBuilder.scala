@@ -24,12 +24,14 @@ class TestApalacheInternalBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.strAndTypeGen)(runBinary(
+    checkRun(Generators.strAndTypeGen)(
+        runBinary(
             builder.notSupportedByModelChecker,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
   }
 
@@ -58,8 +60,8 @@ class TestApalacheInternalBuilder extends BuilderTest {
 
     def run(tparam: TlaType1) = {
       (1 to 5).forall { n =>
-        runVariadic[TlaType1, TBuilderInstruction, TBuilderResult](
-            builder.distinct(_: _*),
+        runVariadic(
+            builder.distinct,
             mkWellTyped(n),
             mkIllTyped(n),
             resultIsExpected(n),
@@ -92,12 +94,14 @@ class TestApalacheInternalBuilder extends BuilderTest {
         _ => IntT1,
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.apalacheSeqCapacity,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("selectInSet/storeInSet2/storeNotInSet") {
@@ -191,12 +195,14 @@ class TestApalacheInternalBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.doubleTypeGen)(runTernary(
+    checkRun(Generators.doubleTypeGen)(
+        runTernary(
             builder.storeInSet,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("smtMap") {
@@ -275,12 +281,14 @@ class TestApalacheInternalBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.singleTypeGen)(runUnary(
+    checkRun(Generators.singleTypeGen)(
+        runUnary(
             builder.unconstrainArray,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
 }

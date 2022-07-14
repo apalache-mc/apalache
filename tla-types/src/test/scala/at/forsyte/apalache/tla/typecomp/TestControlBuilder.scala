@@ -43,12 +43,14 @@ class TestControlBuilder extends BuilderTest {
         tt => tt,
     )
 
-    checkRun(Generators.singleTypeGen)(runTernary(
+    checkRun(Generators.singleTypeGen)(
+        runTernary(
             builder.ite,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
   }
 
   test("caseNoOther") {
@@ -67,8 +69,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
-      val (bigN, t) = tparam
-      val n = bigN
+      val (n, t) = tparam
       (1 to n).flatMap { j =>
         val bodyFuzzOpt =
           if (n > 1) // If there's only 1 case branch, the body can't be ill-typed
@@ -101,12 +102,14 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.positiveIntAndTypeGen)(runVariadic(
+    checkRun(Generators.positiveIntAndTypeGen)(
+        runVariadic(
             builder.caseSplit,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -160,12 +163,14 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.positiveIntAndTypeGen)(runVariadic(
+    checkRun(Generators.positiveIntAndTypeGen)(
+        runVariadic(
             builder.caseSplitMixed,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        ))
+        )
+    )
 
     // test fail on n = 0 or odd nArgs
     assertThrows[IllegalArgumentException] {
@@ -243,12 +248,14 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.positiveIntAndTypeGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.positiveIntAndTypeGen)(
+        runVariadicWithDistinguishedFirst(
             builder.caseOther,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
-        ))
+        )
+    )
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -318,12 +325,14 @@ class TestControlBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
-    checkRun(Generators.positiveIntAndTypeGen)(runVariadicWithDistinguishedFirst(
+    checkRun(Generators.positiveIntAndTypeGen)(
+        runVariadicWithDistinguishedFirst(
             builder.caseOtherMixed,
             mkWellTyped2,
             mkIllTyped2,
             resultIsExpected2,
-        ))
+        )
+    )
 
     // test fail on n = 0 or even nArgs
     assertThrows[IllegalArgumentException] {
