@@ -130,6 +130,19 @@ import scala.collection.immutable.SortedMap
 // Lastly, we need to define a generator for TParam. In most cases, you can use one of the generators defined in
 // Generators. In our case Generators.doubleTypeGen for (TlaType1, TlaType1).
 //
+// Our test then looks as follows:
+// checkRun(Generators.doubleTypeGen)(
+//   runBinary(
+//     builderDotFoo,
+//     mkWellTyped,
+//     mkIllTyped,
+//     resultIsExpected,
+//   )
+// )
+//
+// Depending on the operator, we may need to additionally test shadowing-prevention (see tests for \E) or
+// requirement satisfaction (see tests for Gen).
+//
 // The Foo example is implemented in HOWTOTestFooBuilder
 
 /**
