@@ -32,7 +32,7 @@ object ApalacheInternalOperSignatures {
       signatureMapEntry(
           selectInSet,
           {
-            case Seq(t, SetT1(tt)) if t == tt    => BoolT1
+            case Seq(tt, SetT1(a)) if t == tt    => BoolT1
             case Seq(aa, FunT1(a, b)) if a == aa => b
           },
       )
