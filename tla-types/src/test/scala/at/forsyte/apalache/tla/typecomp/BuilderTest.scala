@@ -61,7 +61,7 @@ import scala.collection.immutable.SortedMap
 //       builder.name("y", FunT1(a, b))
 //      )
 //    }
-//    since the 1st argument must have a a type, and the 2nd a a -> b type.
+//    since the 1st argument must have the type a, and the 2nd the type a -> b.
 // c) A constructor of ill-typed arguments `mkIllTyped`. It should have the type TParam => Seq[T], i.e., given
 //    type parameters, it should construct a sequence of pairs of arguments (x,y), such that
 //    `build(builder.foo(x,y)` produces a TBuilderTypeException for each pair.
