@@ -7,6 +7,7 @@ language = "en"
 [output.html]
 mathjax-support = true
 git-repository-url = "https://github.com/informalsystems/apalache"
+additional-js = ["./highlightjs-tlaplus/dist/tlaplus.min.js", "./theme/highlightTla.js"]
 
 [build]
 build-dir = "../target/docs"
