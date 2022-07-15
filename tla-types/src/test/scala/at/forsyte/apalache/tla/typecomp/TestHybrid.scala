@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaArithOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
@@ -44,7 +43,7 @@ class TestHybrid extends BuilderTest {
         }
     }
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runBinary(
             builder.primeEq,
             mkWellTyped,
@@ -57,32 +56,12 @@ class TestHybrid extends BuilderTest {
   test("decl") {
 
     type T = TBuilderOperDeclInstruction
-    type TParam = (TlaType1, Seq[(TlaType1, Int)])
-
-    val parameterTypeGen: Gen[(TlaType1, Int)] = for {
-      n <- Gen.choose(1, 5)
-      ts <- Gen.listOfN(n, tt1gen.genPrimitive)
-    } yield (
-        ts match {
-          case head :: Nil  => head
-          case head :: tail => OperT1(tail, head)
-          case Nil          =>
-            // impossible, since 1 <= n <= 5, but the compiler doesn't know and complains
-            throw new IllegalStateException("Expected list of generated parameters to be nonempty.")
-        },
-        n - 1,
-    )
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(0, 5)
-      seq <- Gen.listOfN(n, parameterTypeGen)
-    } yield (t, seq)
+    type TParam = (TlaType1, Seq[TlaType1])
 
     // A(p1,...,pn) == CHOOSE x: p1 /\  p2 >= 0 /\ ... /\ pn = pn
     def mkWellTyped(tparam: TParam): (T, T) = {
       val (t, ts) = tparam
-      val tParams = ts.zipWithIndex.map { case ((tt, _), i) => builder.param(s"p$i", tt) }
+      val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
       val paramConds = tParams.map { case (OperParam(pName, _), tt) =>
         def n: TBuilderInstruction = builder.name(pName, tt)
         // We can try different expressions for different parameter types, as long as each name is used at least once
@@ -116,7 +95,7 @@ class TestHybrid extends BuilderTest {
     def forceScopeException(tparam: TParam): Seq[T] = {
       val (t, ts) = tparam
       ts.indices.map { j =>
-        val tParams = ts.zipWithIndex.map { case ((tt, _), i) => builder.param(s"p$i", tt) }
+        val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
         val eqls = tParams.zipWithIndex.map { case ((OperParam(pName, _), tt), i) =>
           // We use the j-th parameter inconsistently w.r.t. types
           val n = builder.name(pName, if (i != j) tt else InvalidTypeMethods.differentFrom(tt))
@@ -130,11 +109,16 @@ class TestHybrid extends BuilderTest {
       }
     }
 
+    def paramArity(tt: TlaType1): Int = tt match {
+      case OperT1(args, _) => args.size
+      case _               => 0
+    }
+
     def isExpected(tparam: TParam): TlaOperDecl => Boolean = {
       val (t, ts) = tparam
-      val params = ts.zipWithIndex.map { case ((_, arity), i) => OperParam(s"p$i", arity) }
+      val params = ts.zipWithIndex.map { case (tt, i) => OperParam(s"p$i", paramArity(tt)) }
       val bTag = Typed(BoolT1)
-      val conds = params.zip(ts).map { case (p, (tt, _)) =>
+      val conds = params.zip(ts).map { case (p, tt) =>
         def n: NameEx = NameEx(p.name)(Typed(tt))
         tt match {
           case BoolT1 => n
@@ -167,7 +151,7 @@ class TestHybrid extends BuilderTest {
 
       def ret(decl: TlaOperDecl): Boolean =
         decl.eqTyped(
-            TlaOperDecl("A", params.toList, expectedBody)(Typed(OperT1(ts.map(_._1), t)))
+            TlaOperDecl("A", params.toList, expectedBody)(Typed(OperT1(ts, t)))
         )
 
       ret
@@ -195,7 +179,7 @@ class TestHybrid extends BuilderTest {
       true
     }
 
-    checkRun(run)
+    checkRun(Generators.declTypesGen)(run)
 
     // throws on illegal parameter type
 
@@ -224,13 +208,6 @@ class TestHybrid extends BuilderTest {
   // Shared code for tests "letIn1" and "letInN"
   object SharedLetTestCode {
     type T = TBuilderInstruction
-    type DeclParamT = (TlaType1, Seq[TlaType1])
-
-    val declParamGen: Gen[DeclParamT] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(0, 5)
-      seq <- Gen.listOfN(n, parameterTypeGen)
-    } yield (t, seq)
 
     /**
      * Tests the following properties (parameterized by TParam):
@@ -263,8 +240,6 @@ class TestHybrid extends BuilderTest {
   test("letIn (1 decl)") {
     import SharedLetTestCode._
     type TParam1 = (TlaType1, DeclParamT)
-
-    implicit val gen1: Gen[TParam1] = Gen.zip(singleTypeGen, declParamGen)
 
     def mkWellTyped1(tparam: TParam1): T = {
       val (_, (bodyT, paramTs)) = tparam
@@ -372,18 +347,12 @@ class TestHybrid extends BuilderTest {
       expectedBody.eqTyped
     }
 
-    checkRun[TParam1](runLetTests(mkWellTyped1, forceScopeException1, isExpected1))
+    checkRun(Generators.typeAndDeclGen)(runLetTests(mkWellTyped1, forceScopeException1, isExpected1))
   }
 
   test("letIn (N decls)") {
     import SharedLetTestCode._
     type TParamN = (TlaType1, Seq[DeclParamT])
-
-    implicit val genN: Gen[TParamN] =
-      Gen.zip(
-          singleTypeGen,
-          Gen.choose(1, 5).flatMap { Gen.listOfN(_, declParamGen) },
-      )
 
     def mkWellTypedN(tparam: TParamN): T = {
       val (letT, declTs) = tparam
@@ -450,7 +419,7 @@ class TestHybrid extends BuilderTest {
       expectedBody.eqTyped
     }
 
-    checkRun[TParamN](runLetTests(mkWellTypedN, forceScopeExceptionN, isExpectedN))
+    checkRun(Generators.typeAndListOfDeclsGen)(runLetTests(mkWellTypedN, forceScopeExceptionN, isExpectedN))
 
     // throws on n = 0
     assertThrows[IllegalArgumentException] {
@@ -462,26 +431,6 @@ class TestHybrid extends BuilderTest {
   test("except") {
     type T = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
     type TParam = (TlaType1, Seq[(TBuilderInstruction, TlaType1)])
-
-    var ctr: Int = 0
-    // unsafe for non-applicative
-    def argAndCdmTypeGen(appT: TlaType1): Gen[(TBuilderInstruction, TlaType1)] = {
-      ctr += 1
-      (appT: @unchecked) match {
-        case FunT1(a, b) => Gen.const((builder.name(s"x$ctr", a), b))
-        case TupT1(args @ _*) => // assume nonempty
-          Gen.choose[BigInt](1, args.size).map(i => (builder.int(i), args((i - 1).toInt)))
-        case RecT1(flds) => // assume nonempty
-          Gen.oneOf(flds.keys).map(k => (builder.str(k), flds(k)))
-        case SeqT1(t) => Gen.const((builder.name(s"x$ctr", IntT1), t))
-      }
-    }
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- Gen.oneOf(tt1gen.genFun, tt1gen.genRec, tt1gen.genSeq, tt1gen.genTup)
-      n <- Gen.choose(1, 5)
-      seq <- Gen.listOfN(n, argAndCdmTypeGen(t))
-    } yield (t, seq)
 
     def mkWellTyped(tparam: TParam): T = {
       val (t, ts) = tparam
@@ -549,7 +498,7 @@ class TestHybrid extends BuilderTest {
       res.eqTyped(expected)
     }
 
-    checkRun(
+    checkRun(Generators.applicativeAndSeqArgCdmGen)(
         runVariadicWithDistinguishedFirst(
             builder.exceptMany,
             mkWellTyped,

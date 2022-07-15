@@ -31,11 +31,11 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSeqOper.append,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SeqT1(tt),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runBinary(
             builder.append,
             mkWellTyped,
@@ -68,11 +68,11 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSeqOper.concat,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SeqT1(tt),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runBinary(
             builder.concat,
             mkWellTyped,
@@ -96,7 +96,7 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected(op: TlaSeqOper, corrType: TlaType1 => TlaType1) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { Seq(_) },
+        ToSeq.unary,
         corrType,
     )
 
@@ -112,11 +112,11 @@ class TestSeqBuilder extends BuilderTest {
           resultIsExpected(op, corrType),
       )(tt)
 
-    checkRun(run(TlaSeqOper.head, tt => tt, builder.head))
+    checkRun(Generators.singleTypeGen)(run(TlaSeqOper.head, tt => tt, builder.head))
 
-    checkRun(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))
+    checkRun(Generators.singleTypeGen)(run(TlaSeqOper.tail, tt => SeqT1(tt), builder.tail))
 
-    checkRun(run(TlaSeqOper.len, _ => IntT1, builder.len))
+    checkRun(Generators.singleTypeGen)(run(TlaSeqOper.len, _ => IntT1, builder.len))
   }
 
   test("subseq") {
@@ -150,11 +150,11 @@ class TestSeqBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSeqOper.subseq,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => SeqT1(tt),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runTernary(
             builder.subseq,
             mkWellTyped,

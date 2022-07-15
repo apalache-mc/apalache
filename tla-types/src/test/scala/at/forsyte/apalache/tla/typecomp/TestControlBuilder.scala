@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
@@ -40,11 +39,11 @@ class TestControlBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaControlOper.ifThenElse,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => tt,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runTernary(
             builder.ite,
             mkWellTyped,
@@ -57,15 +56,10 @@ class TestControlBuilder extends BuilderTest {
   test("caseNoOther") {
     type T = Seq[(TBuilderInstruction, TBuilderInstruction)]
 
-    type TParam = (TlaType1, Int)
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(1, 5)
-    } yield (t, n)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (1 to n).map { i =>
         (
             builder.name(s"p$i", BoolT1),
@@ -75,7 +69,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (1 to n).flatMap { j =>
         val bodyFuzzOpt =
           if (n > 1) // If there's only 1 case branch, the body can't be ill-typed
@@ -104,11 +98,11 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaControlOper.caseNoOther,
         mkWellTyped,
-        { seq => liftBuildToSeq(seq.flatMap { case (a, b) => Seq(a, b) }) },
-        { case (t, _) => t },
+        ToSeq.variadicPairs,
+        { case (_, t) => t },
     )
 
-    checkRun(
+    checkRun(Generators.positiveIntAndTypeGen)(
         runVariadic(
             builder.caseSplit,
             mkWellTyped,
@@ -126,7 +120,7 @@ class TestControlBuilder extends BuilderTest {
     type T2 = Seq[TBuilderInstruction]
 
     def mkWellTyped2(tparam: TParam): T2 = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (1 to n).flatMap { i =>
         Seq(
             builder.name(s"p$i", BoolT1),
@@ -136,7 +130,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped2(tparam: TParam): Seq[T2] = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (1 to n).flatMap { j =>
         val bodyFuzzOpt =
           if (n > 1)
@@ -165,11 +159,11 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaControlOper.caseNoOther,
         mkWellTyped2,
-        liftBuildToSeq,
-        { case (t, _) => t },
+        ToSeq.variadic,
+        { case (_, t) => t },
     )
 
-    checkRun(
+    checkRun(Generators.positiveIntAndTypeGen)(
         runVariadic(
             builder.caseSplitMixed,
             mkWellTyped2,
@@ -191,15 +185,10 @@ class TestControlBuilder extends BuilderTest {
   test("caseWithOther") {
     type T = (TBuilderInstruction, Seq[(TBuilderInstruction, TBuilderInstruction)])
 
-    type TParam = (TlaType1, Int)
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(1, 5)
-    } yield (t, n)
+    type TParam = (Int, TlaType1)
 
     def mkWellTyped(tparam: TParam): T = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       val pairs = (1 to n).map { i =>
         (
             builder.name(s"p$i", BoolT1),
@@ -211,7 +200,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (
           builder.name("e", InvalidTypeMethods.differentFrom(t)),
           (1 to n).map { i =>
@@ -255,11 +244,11 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaControlOper.caseWithOther,
         mkWellTyped,
-        { case (other, pairs) => liftBuildToSeq(other +: pairs.flatMap { case (a, b) => Seq(a, b) }) },
-        { case (t, _) => t },
+        ToSeq.variadicPairsWithDistinguishedFirst,
+        { case (_, t) => t },
     )
 
-    checkRun(
+    checkRun(Generators.positiveIntAndTypeGen)(
         runVariadicWithDistinguishedFirst(
             builder.caseOther,
             mkWellTyped,
@@ -277,7 +266,7 @@ class TestControlBuilder extends BuilderTest {
     type T2 = (TBuilderInstruction, Seq[TBuilderInstruction])
 
     def mkWellTyped2(tparam: TParam): T2 = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (builder.name("e", t),
           (1 to n).flatMap { i =>
             Seq(
@@ -288,7 +277,7 @@ class TestControlBuilder extends BuilderTest {
     }
 
     def mkIllTyped2(tparam: TParam): Seq[T2] = {
-      val (t, n) = tparam
+      val (n, t) = tparam
       (
           builder.name("e", InvalidTypeMethods.differentFrom(t)),
           (1 to n).flatMap { i =>
@@ -332,11 +321,11 @@ class TestControlBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaControlOper.caseWithOther,
         mkWellTyped2,
-        { case (e, seq) => liftBuildToSeq(e +: seq) },
-        { case (t, _) => t },
+        ToSeq.variadicWithDistinguishedFirst,
+        { case (_, t) => t },
     )
 
-    checkRun(
+    checkRun(Generators.positiveIntAndTypeGen)(
         runVariadicWithDistinguishedFirst(
             builder.caseOtherMixed,
             mkWellTyped2,
