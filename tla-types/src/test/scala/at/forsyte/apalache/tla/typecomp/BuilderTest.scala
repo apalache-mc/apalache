@@ -14,137 +14,6 @@ import shapeless._
 
 import scala.collection.immutable.SortedMap
 
-// /////////////////////////////
-// // HOW TO WRITE A NEW TEST //
-// /////////////////////////////
-//
-// Suppose we want to add a test for TLA+ operator (binary, in this example), `Foo(x,y) == ...`
-// which has an internal representation of `foo` and is built by the `builder.foo` method.
-// Assume, for the purposes of this example, that Foo takes two arguments - x: a and y: a -> b -
-// and returns a value of type b, for any pair of types a and b.
-//
-// We add a test("foo") to TestOperCategoryBuilder, where OperCategory is the class of operators foo belongs to
-// (TlaSetOper, ApalacheOper, etc.).
-// Our goal is to use `BuilderTest.checkRun` to test `builder.foo` on inputs of varying types. To do this, we
-// need to determine the following:
-//
-// 1) The number of arguments to `builder.foo` and their types.
-//    In our example, `builder.foo` takes two TBuilderInstruction arguments.
-//    Typically, we introduce a type alias, so in our case
-//    type T = (TBuilderInstruction, TBuilderInstruction)
-//
-// 2) The number and types of the automatically generated parameters
-//    In our example, `Foo` has a polymorphic signature, that takes two type parameters (a, b).
-//    Typically, we introduce a type alias, so in our case
-//    type TParam = (TlaType1, TlaType1)
-//
-// 3) A description of a test run, for a fixed instance of parameters
-//    checkRun accepts two arguments: a generator (discussed later) and a `run`, which is a
-//    function from TParam to Bool. A `run` should test the builder method (e.g. `builder.foo`) for
-//    parameterized correctness (tested against all parameters produced by the generator),
-//    and should return true every time if the method is correctly implemented.
-//    You _can_ write a custom run, but the recommended way is to use one of the pre-written templates, i.e.
-//    runUnary, runBinary, runTernary, runVariadic, or runVariadicWithDistinguishedFirst (depending on the arity of
-//    the builder method).
-//
-// Assume we want to use the `runBinary` template to test our `builder.foo`. Regardless of arity, each template
-// takes four arguments:
-// a) The method. In our case `builder.foo`. runBinary requires a binary method, other templates require methods
-//    of their corresponding arities.
-// b) A well-typed argument constructor `mkWellTyped`. It should have the type TParam => T, i.e., given
-//    type parameters, it should construct a pair of arguments (x,y), such that `build(builder.foo(x,y)` succeeds.
-//    In our case:
-//    def mkWellTyped(tparam: TParam): T = {
-//      val (a, b) = tparam
-//      (
-//       builder.name("x", a),
-//       builder.name("y", FunT1(a, b))
-//      )
-//    }
-//    since the 1st argument must have the type a, and the 2nd the type a -> b.
-// c) A constructor of ill-typed arguments `mkIllTyped`. It should have the type TParam => Seq[T], i.e., given
-//    type parameters, it should construct a sequence of pairs of arguments (x,y), such that
-//    `build(builder.foo(x,y)` produces a TBuilderTypeException for each pair.
-//    In our case:
-//    def mkIllTyped(tparam: TParam): Seq[T] = {
-//      val (a, b) = tparam
-//      Seq(
-//          (
-//              builder.name("x", InvalidTypeMethods.differentFrom(a)),
-//              builder.name("y", FunT1(a, b)),
-//          ),
-//          (
-//              builder.name("x", a),
-//              builder.name("y", InvalidTypeMethods.notApplicative),
-//          ),
-//          (
-//              builder.name("x", a),
-//              builder.name("y", FunT1(InvalidTypeMethods.differentFrom(a), b)),
-//          ),
-//      )
-//    }
-//    Since there are three ways of violating the type constraints:
-//      - If x has the type c and y has the type a -> b, where c /= a
-//      - If y doesn't have a function type at all
-//      - If x has the type a and y has the type c -> b, where c /= a
-//
-//    Note that the following is _not_ ill-typed:
-//    (
-//        builder.name("x", a),
-//        builder.name("y", FunT1(a, InvalidTypeMethods.differentFrom(b))),
-//    ),
-//    Since b isn't checked against any other argument, unlike a, if we swap b with some c
-//    we get arguments with types a and a -> c, which is still valid w.r.t. the signature of foo, and would
-//    return some value of type c.
-//
-//    Note that some operators, for example those that take one argument of any type, have no ill-typed
-//    inputs. In those cases,
-//    def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
-//
-// d) A validator test `resultIsExpected`. It should have the type TParam => ResultT => Boolean, i.e.,
-//    if `method` produces a value of type TBuilderInternalState[ResultT] (recall, TBuilderInstruction is an alias
-//    for TBuilderInternalState[TlaEx]), then resultIsExpected is a predicate over values of type ResultT (parameterized
-//    by TParam) that should return true iff the value produced by `method` meets expectations.
-//    In the vast majority of cases (excluding e.g. declaration constructors), ResultT == TlaEx.
-//    You can write your own, but the standard way is to use `expectEqTyped`, which tests whether the builder
-//    constructs an OperEx expression, with the correct operator, arguments, and type tag.
-//
-// To use `expectEqTyped`, four things are needed:
-// i) The expected operator `op`. In our case, `foo`.
-// ii) A parametric constructor for the expected arguments. You should always use `mkWellTyped`.
-// iii) A transformer to turn a tuple of arguments into a sequence of arguments `toSeq`. This is required, due to the
-//      underlying shapeless framework, which allows us to generalize tests over all method arities.
-//      In the vast majority of cases, you can use the method in ToSeq, corresponding to the method arity.
-//      In our case, `ToSeq.binary`.
-// iv) A predictor of the type of the return value `resType`, parameterized by the type parameters.
-//     In our case { case (_, b) => b }
-//
-// In summary, the test for builder.foo is:
-// def resultIsExpected = expectEqTyped[TParam, T](
-//   foo,
-//   mkWellTyped,
-//   ToSeq.binary,
-//   { case (_, b) => b },
-// )
-//
-// Lastly, we need to define a generator for TParam. In most cases, you can use one of the generators defined in
-// Generators. In our case Generators.doubleTypeGen for (TlaType1, TlaType1).
-//
-// Our test then looks as follows:
-// checkRun(Generators.doubleTypeGen)(
-//   runBinary(
-//     builder.foo,
-//     mkWellTyped,
-//     mkIllTyped,
-//     resultIsExpected,
-//   )
-// )
-//
-// Depending on the operator, we may need to additionally test shadowing-prevention (see tests for \E) or
-// requirement satisfaction (see tests for Gen).
-//
-// The Foo example is implemented in HOWTOTestFooBuilder
-
 /**
  * BuilderTest implements a framework for PB testing various Builder methods.
  *
@@ -162,6 +31,157 @@ import scala.collection.immutable.SortedMap
  *   - Tests whether a TBuilderInstruction, which is supposed to construct a well-typed operator expression actually
  *     does
  *   - Tests whether all of the inputs which would have produced an ill-typed expression actually cause `build` to fail
+ *
+ * <h1>HOW TO WRITE A NEW TEST</h1>
+ *
+ * Suppose we want to add a test for TLA+ operator (binary, in this example), `Foo(x,y) == ...` which has an internal
+ * representation of `foo` and is built by the `builder.foo` method. Assume, for the purposes of this example, that Foo
+ * takes two arguments - `x: a` and `y: a -> b` - and returns a value of type `b`, for any pair of types `a` and `b`.
+ *
+ * We add a test("foo") to TestOperCategoryBuilder, where OperCategory is the class of operators foo belongs to
+ * (TlaSetOper, ApalacheOper, etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying types.
+ * To do this, we need to determine the following:
+ *
+ * <ol>
+ *
+ * <li> The number of arguments to `builder.foo` and their types. In our example, `builder.foo` takes two
+ * [[TBuilderInstruction]] arguments. Typically, we introduce a type alias, so in our case
+ * {{{type T = (TBuilderInstruction, TBuilderInstruction)}}} </li>
+ *
+ * <li> The number and types of the automatically generated parameters. In our example, `Foo` has a polymorphic
+ * signature, that takes two type parameters `(a, b)`. Typically, we introduce a type alias, so in our case
+ * {{{type TParam = (TlaType1, TlaType1)}}} </li>
+ *
+ * <li> A description of a test run, for a fixed instance of parameters. [[checkRun]] accepts two arguments: a generator
+ * (discussed later) and a `run`, which is a predicate over `TParam`. A `run` should test the builder method (e.g.
+ * `builder.foo`) for parameterized correctness (tested against all parameters produced by the generator), and should
+ * return true every time if the method is correctly implemented. You _can_ write a custom run, but the recommended way
+ * is to use one of the pre-written templates, i.e. [[runUnary]], [[runBinary]], [[runTernary]], [[runVariadic]], or
+ * [[runVariadicWithDistinguishedFirst]] (depending on the arity of the builder method). </li>
+ *
+ * </ol>
+ *
+ * Assume we want to use the [[runBinary]] template to test our `builder.foo`. Regardless of arity, each template takes
+ * four arguments:
+ *
+ * <ol>
+ *
+ * <li> The `method`. In our case `builder.foo`. [[runBinary]] requires a binary method, other templates require methods
+ * of their corresponding arities. </li>
+ *
+ * <li> A well-typed argument constructor `mkWellTyped`. It should have the type `TParam => T`, i.e., given type
+ * parameters, it should construct a pair of arguments `(x,y)`, such that `build(builder.foo(x,y)` succeeds. In our
+ * case:
+ * {{{
+ *    def mkWellTyped(tparam: TParam): T = {
+ *      val (a, b) = tparam
+ *      (
+ *       builder.name("x", a),
+ *       builder.name("y", FunT1(a, b))
+ *      )
+ *    }
+ * }}}
+ * since the 1st argument must have the type `a`, and the 2nd the type `a -> b`. </li>
+ *
+ * <li> A constructor of ill-typed arguments `mkIllTyped`. It should have the type `TParam => Seq[T]`, i.e., given type
+ * parameters, it should construct a sequence of pairs of arguments `(x,y)`, such that `build(builder.foo(x,y)` produces
+ * a [[TBuilderTypeException]] for each pair. In our case:
+ * {{{
+ *    def mkIllTyped(tparam: TParam): Seq[T] = {
+ *      val (a, b) = tparam
+ *      Seq(
+ *          (
+ *              builder.name("x", InvalidTypeMethods.differentFrom(a)),
+ *              builder.name("y", FunT1(a, b)),
+ *          ),
+ *          (
+ *              builder.name("x", a),
+ *              builder.name("y", InvalidTypeMethods.notApplicative),
+ *          ),
+ *          (
+ *              builder.name("x", a),
+ *              builder.name("y", FunT1(InvalidTypeMethods.differentFrom(a), b)),
+ *          ),
+ *      )
+ *    }
+ * }}}
+ * since there are three ways of violating the type constraints. If `x` has the type `c` and `y` has the type `a -> b`,
+ * where `c /= a`, if `y` doesn't have a function type at all, or if `x` has the type `a` and `y` has the type `c -> b`,
+ * where `c /= a`. Note that the following is _not_ ill-typed:
+ * {{{
+ *    (
+ *        builder.name("x", a),
+ *        builder.name("y", FunT1(a, InvalidTypeMethods.differentFrom(b))),
+ *    )
+ * }}}
+ * since `b` isn't checked against any other argument, unlike `a`, if we swap `b` with some `c` we get arguments with
+ * types `a` and `a -> c`, which is still valid w.r.t. the signature of `foo`, and would return some value of type `c`.
+ * Some operators, for example those that take one argument of any type, have no ill-typed inputs. In those cases,
+ * {{{
+ *    def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
+ * }}}
+ * </li>
+ *
+ * <li> A validator test `resultIsExpected`. It should have the type `TParam => ResultT => Boolean`, i.e., if `method`
+ * produces a value of type [[TBuilderInternalState]][ResultT] (recall, [[TBuilderInstruction]] is an alias for
+ * [[TBuilderInternalState]][TlaEx]), then `resultIsExpected` is a predicate over values of type `ResultT`
+ * (parameterized by `TParam`), that should return true iff the value produced by `method` meets expectations. In the
+ * vast majority of cases (excluding e.g. declaration constructors), `ResultT == TlaEx`. You can write your own, but the
+ * standard way is to use [[expectEqTyped]], which tests whether the builder constructs an [[OperEx]] expression, with
+ * the correct operator, arguments, and type tag. </li>
+ *
+ * </ol>
+ *
+ * To use [[expectEqTyped]], four things are needed:
+ *
+ * <ol>
+ *
+ * <li> The expected operator `op`. In our case, `foo`. </li>
+ *
+ * <li> A parametric constructor for the expected arguments. You should always use `mkWellTyped`. </li>
+ *
+ * <li> A transformer to turn a tuple of arguments into a sequence of arguments `toSeq`. This is required, due to the
+ * underlying shapeless framework, which allows us to generalize tests over all method arities. In the vast majority of
+ * cases, you can use the method in [[BuilderTest.ToSeq]], corresponding to the method arity. In our case,
+ * [[BuilderTest.ToSeq.binary]]. </li>
+ *
+ * <li> A predictor of the type of the return value `resType`, parameterized by the type parameters. In our case {
+ * {{{
+ * case (_, b) => b}
+ * }}}
+ * </li>
+ *
+ * </ol>
+ *
+ * In summary, the test for `builder.foo` is:
+ * {{{
+ * def resultIsExpected = expectEqTyped[TParam, T](
+ *   foo,
+ *   mkWellTyped,
+ *   ToSeq.binary,
+ *   { case (_, b) => b },
+ * )
+ * }}}
+ *
+ * Lastly, we need to define a generator for `TParam`. In most cases, you can use one of the generators defined in
+ * [[BuilderTest.Generators]]. In our case [[BuilderTest.Generators.doubleTypeGen]] for `(TlaType1, TlaType1)`.
+ *
+ * Our test then looks as follows:
+ * {{{
+ * checkRun(Generators.doubleTypeGen)(
+ *   runBinary(
+ *     builder.foo,
+ *     mkWellTyped,
+ *     mkIllTyped,
+ *     resultIsExpected,
+ *   )
+ * )
+ * }}}
+ *
+ * Depending on the operator, we may need to additionally test shadowing-prevention (see tests for \E) or requirement
+ * satisfaction (see tests for Gen).
+ *
+ * The Foo example is implemented in [[HOWTOTestFooBuilder]]
  */
 @RunWith(classOf[JUnitRunner])
 trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with AppendedClues with Matchers {
