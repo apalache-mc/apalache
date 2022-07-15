@@ -26,12 +26,15 @@ object ApalacheInternalOperSignatures {
     val apalacheSeqCapacitySig = signatureMapEntry(apalacheSeqCapacity, { case Seq(_: SeqT1) => IntT1 })
 
     // (t, Set(t)) => Bool
-    val membershipSigs = Seq(
-        selectInSet,
-        storeNotInSet,
-    ).map {
-      signatureMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 })
-    }.toMap
+    // (a, a -> b) => b
+    val selectInSetSig =
+      signatureMapEntry(
+          selectInSet,
+          {
+            case Seq(t, SetT1(tt)) if t == tt    => BoolT1
+            case Seq(aa, FunT1(a, b)) if a == aa => b
+          },
+      )
 
     // storeInSet is separate, because it has variable arity.
     // (t, SetT1(t)) => Bool
@@ -46,6 +49,9 @@ object ApalacheInternalOperSignatures {
           },
       )
 
+    // (t, Set(t)) => Bool
+    val storeNotInSetSig = signatureMapEntry(storeNotInSet, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 })
+
     // (Set(t), Set(t)) => Set(t)
     val smtMapSig = Seq(
         TlaBoolOper.and,
@@ -55,6 +61,6 @@ object ApalacheInternalOperSignatures {
     // (Set(t)) => Bool
     val unconstrainArraySig = signatureMapEntry(unconstrainArray, { case Seq(_: SetT1) => BoolT1 })
 
-    (membershipSigs ++ smtMapSig) + distinctSig + apalacheSeqCapacitySig + storeInSetSig + unconstrainArraySig
+    smtMapSig + distinctSig + apalacheSeqCapacitySig + selectInSetSig + storeInSetSig + storeNotInSetSig + unconstrainArraySig
   }
 }
