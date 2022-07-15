@@ -97,7 +97,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
       case FunT1(a, _) => Gen.const(builder.name("x", a))
       case TupT1(args @ _*) => // assume nonempty
-        Gen.choose[Int](1, args.size).map(builder.int)
+        Gen.choose[BigInt](1, args.size).map(builder.int)
       case RecT1(flds) => // assume nonempty
         Gen.oneOf(flds.keys).map(builder.str)
       case _: SeqT1 => Gen.const(builder.name("x", IntT1))
@@ -211,7 +211,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     }
   }
   implicit val strToBuilderI: String => TBuilderInstruction = builder.str
-  implicit val intToBuilderI: Int => TBuilderInstruction = builder.int
+  implicit val intToBuilderI: Int => TBuilderInstruction = { i => builder.int(i) } // coerces implcit cast Int -> BigInt
 
   /** Convenience method, for constructing resultIsExpected as an test of eqTyped */
   def expectEqTyped[TypeParameterization, T](

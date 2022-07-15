@@ -70,9 +70,12 @@ class TestApalacheBuilder extends BuilderTest {
         { case (_, t) => t },
     )
 
+    // We don't want generators producing BigInt, so we have to manually cast the parameter argument
+    def genFromInt(i: Int, t: TlaType1): TBuilderInstruction = builder.gen(BigInt.int2bigInt(i), t)
+
     checkRun(Generators.positiveIntAndTypeGen)(
         runBinary(
-            builder.gen,
+            genFromInt,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
@@ -329,9 +332,12 @@ class TestApalacheBuilder extends BuilderTest {
         { case (_, t) => SeqT1(t) },
     )
 
+    // We don't want generators producing BigInt, so we have to manually cast the parameter argument
+    def mkSeqFromInt(i: Int, x: TBuilderInstruction): TBuilderInstruction = builder.mkSeq(BigInt.int2bigInt(i), x)
+
     checkRun(Generators.nonnegativeIntAndTypeGen)(
         runBinary(
-            builder.mkSeq,
+            mkSeqFromInt,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
