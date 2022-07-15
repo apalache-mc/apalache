@@ -31,7 +31,7 @@ trait ApalacheBuilder {
    * argument.
    *
    * @param n
-   *   must be > 0
+   *   must be positive
    */
   def gen(n: Int, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
 
@@ -62,7 +62,7 @@ trait ApalacheBuilder {
   /**
    * {{{MkSeq(n, F)}}}
    * @param n
-   *   must be > 0
+   *   must be nonnegative
    * @param F
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */

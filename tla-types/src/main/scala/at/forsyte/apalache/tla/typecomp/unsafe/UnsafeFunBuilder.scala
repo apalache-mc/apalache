@@ -18,6 +18,10 @@ import scala.collection.immutable.SortedMap
  */
 class UnsafeFunBuilder extends ProtoBuilder {
 
+  // We borrow the LiteralBuilder to make TLA strings from Scala strings
+  private val strBuilder = new UnsafeLiteralAndNameBuilder
+  private def mkTlaStr: String => TlaEx = strBuilder.str
+
   /**
    * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}}
    * @param args
@@ -26,7 +30,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
   def rec(args: (String, TlaEx)*): TlaEx = {
     // _recMixed does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
-      Seq(ValEx(TlaStr(k))(Typed(StrT1)), v)
+      Seq(mkTlaStr(k), v)
     }
     recMixed(flatArgs: _*)
   }

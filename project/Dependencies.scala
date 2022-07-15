@@ -41,6 +41,10 @@ object Dependencies {
     val grpcNetty = "io.grpc" % "grpc-netty" % "1.47.0"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
+    // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)
+    // see https://scalapb.github.io/docs/faq/#i-am-getting-import-was-not-found-or-had-errors
+    val scalapbRuntime =
+      "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
   }
 
   // Test only depenendencies
