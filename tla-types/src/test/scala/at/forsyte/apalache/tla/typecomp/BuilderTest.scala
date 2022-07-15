@@ -23,7 +23,8 @@ import scala.collection.immutable.SortedMap
 // Assume, for the purposes of this example, that Foo takes two arguments - x: a and y: a -> b -
 // and returns a value of type b, for any pair of types a and b.
 //
-// We add a test("foo") to TestOperCategoryBuilder.
+// We add a test("foo") to TestOperCategoryBuilder, where OperCategory is the class of operators foo belongs to
+// (TlaSetOper, ApalacheOper, etc.).
 // Our goal is to use `BuilderTest.checkRun` to test `builder.foo` on inputs of varying types. To do this, we
 // need to determine the following:
 //
