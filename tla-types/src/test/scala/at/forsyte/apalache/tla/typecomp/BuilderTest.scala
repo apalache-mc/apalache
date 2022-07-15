@@ -10,8 +10,9 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
-
 import shapeless._
+
+import scala.collection.immutable.SortedMap
 
 /**
  * BuilderTest implements a framework for PB testing various Builder methods.
@@ -41,21 +42,126 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     cmpFactory = new TypeComputationFactory
   }
 
-  protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
+  type DeclParamT = (TlaType1, Seq[TlaType1])
 
-  implicit val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
-  implicit val doubleTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(singleTypeGen, singleTypeGen)
+  /** Contains definitions of parameterization generators */
+  object Generators {
 
-  val parameterTypeGen: Gen[TlaType1] = for {
-    t <- tt1gen.genPrimitive
-    n <- Gen.choose(0, 5)
-    ts <- Gen.listOfN(n, tt1gen.genPrimitive)
-  } yield n match {
-    case 0          => t
-    case m if m > 0 => OperT1(ts, t)
-    case _          =>
-      // impossible, since 0 <= n <= 5, but the compiler doesn't know and complains
-      throw new IllegalStateException("Expected n to be nonnegative.")
+    val unitGen: Gen[Unit] = Gen.const(())
+
+    def minIntGen(min: Int) = Gen.choose(min, min + 10)
+
+    val positiveIntGen: Gen[Int] = minIntGen(1)
+    val nonnegativeIntGen: Gen[Int] = minIntGen(0)
+
+    protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
+
+    val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
+    val doubleTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(singleTypeGen, singleTypeGen)
+
+    val parameterTypeGen: Gen[TlaType1] = for {
+      t <- tt1gen.genPrimitive
+      n <- nonnegativeIntGen
+      ts <- Gen.listOfN(n, tt1gen.genPrimitive)
+    } yield n match {
+      case 0          => t
+      case m if m > 0 => OperT1(ts, t)
+      case _          =>
+        // impossible, since 0 <= n <= 5, but the compiler doesn't know and complains
+        throw new IllegalStateException("Expected n to be nonnegative.")
+    }
+
+    val doubleParameterTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(parameterTypeGen, parameterTypeGen)
+
+    val declTypesGen: Gen[DeclParamT] = for {
+      t <- singleTypeGen
+      n <- nonnegativeIntGen
+      ts <- Gen.listOfN(n, parameterTypeGen)
+    } yield (t, ts)
+
+    val typeAndDeclGen: Gen[(TlaType1, DeclParamT)] = Gen.zip(singleTypeGen, declTypesGen)
+    val typeAndListOfDeclsGen: Gen[(TlaType1, Seq[DeclParamT])] = Gen.zip(
+        singleTypeGen,
+        positiveIntGen.flatMap(Gen.listOfN(_, declTypesGen)),
+    )
+
+    def seqOfTypesGenMinLenGen(min: Int) = minIntGen(min).flatMap(Gen.listOfN(_, singleTypeGen))
+
+    val seqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(0)
+    val nonemptySeqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(1)
+
+    val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
+    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptySeqOfTypesGen)
+
+    // unsafe for non-applicative
+    private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
+      case FunT1(a, _) => Gen.const(builder.name("x", a))
+      case TupT1(args @ _*) => // assume nonempty
+        Gen.choose[BigInt](1, args.size).map(builder.int)
+      case RecT1(flds) => // assume nonempty
+        Gen.oneOf(flds.keys).map(builder.str)
+      case _: SeqT1 => Gen.const(builder.name("x", IntT1))
+    }
+
+    val applicativeGen: Gen[TlaType1] = Gen.oneOf(tt1gen.genFun, tt1gen.genRec, tt1gen.genSeq, tt1gen.genTup)
+
+    val applicativeAndArgGen: Gen[(TlaType1, TBuilderInstruction)] = for {
+      appT <- applicativeGen
+      arg <- argGen(appT)
+    } yield (appT, arg)
+
+    private var ctr: Int = 0
+    // unsafe for non-applicative
+    def argAndCdmTypeGen(appT: TlaType1): Gen[(TBuilderInstruction, TlaType1)] = {
+      ctr += 1
+      (appT: @unchecked) match {
+        case FunT1(a, b) => Gen.const((builder.name(s"x$ctr", a), b))
+        case TupT1(args @ _*) => // assume nonempty
+          Gen.choose[Int](1, args.size).map(i => (builder.int(i), args(i - 1)))
+        case RecT1(flds) => // assume nonempty
+          Gen.oneOf(flds.keys).map(k => (builder.str(k), flds(k)))
+        case SeqT1(t) => Gen.const((builder.name(s"x$ctr", IntT1), t))
+      }
+    }
+
+    val applicativeAndSeqArgCdmGen: Gen[(TlaType1, Seq[(TBuilderInstruction, TlaType1)])] = for {
+      t <- applicativeGen
+      n <- positiveIntGen
+      seq <- Gen.listOfN(n, argAndCdmTypeGen(t))
+    } yield (t, seq)
+
+    val positiveIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
+    val nonnegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
+
+    val strGen: Gen[String] = Gen.alphaStr
+
+    val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(strGen, singleTypeGen)
+
+    val variantGen: Gen[VariantT1] = for {
+      n <- Gen.choose(1, 5)
+      flds <- Gen.listOfN(n, Gen.zip(strGen, singleTypeGen))
+    } yield VariantT1(RowT1(SortedMap(flds: _*), None))
+
+    def variantGenWithMandatoryEntry(mandatoryEntry: (String, TlaType1)): Gen[VariantT1] = variantGen.map { variantT =>
+      VariantT1(RowT1(variantT.row.fieldTypes + mandatoryEntry, None))
+    }
+
+    def variantGenWithMandatoryField(mandatoryField: String): Gen[VariantT1] =
+      singleTypeGen.flatMap { fldT =>
+        variantGenWithMandatoryEntry(mandatoryField -> fldT)
+      }
+
+    val tagAndVariantGen: Gen[(String, VariantT1)] = for {
+      tagName <- strGen
+      variantT <- variantGenWithMandatoryField(tagName)
+    } yield (tagName, variantT)
+
+    val tagValVariantGen: Gen[(String, TlaType1, VariantT1)] = for {
+      tagName <- strGen
+      valT <- singleTypeGen
+      variantT <- variantGenWithMandatoryEntry(tagName -> valT)
+    } yield (tagName, valT, variantT)
+
   }
 
   // Useful methods for defining mkIllTypedArgs
@@ -70,6 +176,42 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def notVariant: TlaType1 = IntT1
     def differentFrom(tt: TlaType1): TlaType1 = if (tt == IntT1) StrT1 else IntT1
   }
+
+  /** Defines a collection of standard conversion methods, to be used as `toSeq` in `expectEqTyped` */
+  object ToSeq {
+    def unary[T](implicit convert: T => TBuilderInstruction): T => Seq[TBuilderResult] = { v => Seq(convert(v)) }
+    def binary[T1, T2](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction): ((T1, T2)) => Seq[TBuilderResult] = { case (a, b) =>
+      Seq(convert1(a), convert2(b))
+    }
+    def ternary[T1, T2, T3](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction,
+        convert3: T3 => TBuilderInstruction): ((T1, T2, T3)) => Seq[TBuilderResult] = { case (a, b, c) =>
+      Seq(convert1(a), convert2(b), convert3(c))
+    }
+    def variadic[T](implicit convert: T => TBuilderInstruction): Seq[T] => Seq[TBuilderResult] = { seq =>
+      liftBuildToSeq(seq.map(convert))
+    }
+    def variadicPairs[T1, T2](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction): Seq[(T1, T2)] => Seq[TBuilderResult] =
+      _.flatMap(binary[T1, T2](convert1, convert2))
+    def variadicWithDistinguishedFirst[T1, T2](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction): ((T1, Seq[T2])) => Seq[TBuilderResult] = { case (a, seq) =>
+      build(convert1(a)) +: variadic[T2](convert2)(seq)
+    }
+    def variadicPairsWithDistinguishedFirst[T1, T2, T3](
+        implicit convert1: T1 => TBuilderInstruction,
+        convert2: T2 => TBuilderInstruction,
+        convert3: T3 => TBuilderInstruction): ((T1, Seq[(T2, T3)])) => Seq[TBuilderResult] = { case (a, seq) =>
+      build(convert1(a)) +: variadicPairs[T2, T3](convert2, convert3)(seq)
+    }
+  }
+  implicit val strToBuilderI: String => TBuilderInstruction = builder.str
+  implicit val intToBuilderI: Int => TBuilderInstruction = { i => builder.int(i) } // coerces implcit cast Int -> BigInt
 
   /** Convenience method, for constructing resultIsExpected as an test of eqTyped */
   def expectEqTyped[TypeParameterization, T](
@@ -137,9 +279,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
   }
 
   /** test `run` against a generator of TypeParameterization values */
-  def checkRun[TypeParameterization](
-      run: TypeParameterization => Boolean
-    )(implicit typegen: Gen[TypeParameterization]): Unit = {
+  def checkRun[TypeParameterization](typegen: Gen[TypeParameterization])(run: TypeParameterization => Boolean): Unit = {
     val prop = forAll(typegen) { run }
     check(prop, minSuccessful(1000), sizeRange(8))
   }

@@ -3,40 +3,15 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.VariantOper
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
-
-import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
 class TestVariantBuilder extends BuilderTest {
 
-  implicit val tagGen: Gen[String] = Gen.alphaStr
-
-  implicit val variantGen: Gen[VariantT1] = for {
-    n <- Gen.choose(1, 5)
-    flds <- Gen.listOfN(n, Gen.zip(tagGen, singleTypeGen))
-  } yield VariantT1(RowT1(SortedMap(flds: _*), None))
-
-  def variantGenWithMandatoryEntry(mandatoryEntry: (String, TlaType1)): Gen[VariantT1] = variantGen.map { variantT =>
-    VariantT1(RowT1(variantT.row.fieldTypes + mandatoryEntry, None))
-  }
-
-  def variantGenWithMandatoryField(mandatoryField: String): Gen[VariantT1] =
-    singleTypeGen.flatMap { fldT =>
-      variantGenWithMandatoryEntry(mandatoryField -> fldT)
-    }
-
   test("variant") {
     type T = (String, TBuilderInstruction, VariantT1)
     type TParam = (String, TlaType1, VariantT1)
-
-    implicit val gen: Gen[TParam] = for {
-      tagName <- tagGen
-      valT <- singleTypeGen
-      variantT <- variantGenWithMandatoryEntry(tagName -> valT)
-    } yield (tagName, valT, variantT)
 
     // Variant(tagName, val) : varT
     def mkWellTyped(tparam: TParam): T = {
@@ -67,7 +42,7 @@ class TestVariantBuilder extends BuilderTest {
         { case (_, _, t) => t },
     )
 
-    checkRun(
+    checkRun(Generators.tagValVariantGen)(
         runTernary(
             builder.variant,
             mkWellTyped,
@@ -92,11 +67,6 @@ class TestVariantBuilder extends BuilderTest {
   test("variantFilter") {
     type T = (String, TBuilderInstruction)
     type TParam = (String, VariantT1)
-
-    implicit val gen: Gen[TParam] = for {
-      tagName <- tagGen
-      variantT <- variantGenWithMandatoryField(tagName)
-    } yield (tagName, variantT)
 
     // VariantFilter(tagName, set)
     def mkWellTyped(tparam: TParam): T = {
@@ -128,11 +98,11 @@ class TestVariantBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         VariantOper.variantFilter,
         mkWellTyped,
-        { case (a, b) => Seq(builder.str(a), b) },
+        ToSeq.binary,
         { case (tagName, t) => SetT1(t.row.fieldTypes(tagName)) },
     )
 
-    checkRun(
+    checkRun(Generators.tagAndVariantGen)(
         runBinary(
             builder.variantFilter,
             mkWellTyped,
@@ -158,11 +128,11 @@ class TestVariantBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         VariantOper.variantTag,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         { _ => StrT1 },
     )
 
-    checkRun(
+    checkRun(Generators.variantGen)(
         runUnary(
             builder.variantTag,
             mkWellTyped,
@@ -175,12 +145,6 @@ class TestVariantBuilder extends BuilderTest {
   test("variantGetOrElse") {
     type T = (String, TBuilderInstruction, TBuilderInstruction)
     type TParam = (String, TlaType1, VariantT1)
-
-    implicit val gen: Gen[TParam] = for {
-      tagName <- tagGen
-      valT <- singleTypeGen
-      variantT <- variantGenWithMandatoryEntry(tagName -> valT)
-    } yield (tagName, valT, variantT)
 
     // VariantGetOrElse(tagName, v, default)
     def mkWellTyped(tparam: TParam): T = {
@@ -216,11 +180,11 @@ class TestVariantBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         VariantOper.variantGetOrElse,
         mkWellTyped,
-        { case (a, b, c) => Seq(builder.str(a), b, c) },
+        ToSeq.ternary,
         { case (_, t, _) => t },
     )
 
-    checkRun(
+    checkRun(Generators.tagValVariantGen)(
         runTernary(
             builder.variantGetOrElse,
             mkWellTyped,
@@ -234,11 +198,6 @@ class TestVariantBuilder extends BuilderTest {
   test("variantGetUnsafe") {
     type T = (String, TBuilderInstruction)
     type TParam = (String, VariantT1)
-
-    implicit val gen: Gen[TParam] = for {
-      tagName <- tagGen
-      variantT <- variantGenWithMandatoryField(tagName)
-    } yield (tagName, variantT)
 
     // VariantGetUnsafe(tagName, v)
     def mkWellTyped(tparam: TParam): T = {
@@ -270,7 +229,7 @@ class TestVariantBuilder extends BuilderTest {
         { case (tagName, varT) => varT.row.fieldTypes(tagName) },
     )
 
-    checkRun(
+    checkRun(Generators.tagAndVariantGen)(
         runBinary(
             builder.variantGetUnsafe,
             mkWellTyped,
