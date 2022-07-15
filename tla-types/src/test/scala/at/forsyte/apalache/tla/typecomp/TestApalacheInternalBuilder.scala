@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaBoolOper, TlaOper, TlaSetOper}
 import org.junit.runner.RunWith
-import org.scalacheck.Prop.forAll
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
@@ -11,17 +10,29 @@ import scalaz.unused
 class TestApalacheInternalBuilder extends BuilderTest {
 
   test("notSupportedByModelChecker") {
+    type T = (String, TlaType1)
+    type TParam = (String, TlaType1)
 
-    val prop = forAll(singleTypeGen) { tt =>
-      val notSuppEx: TlaEx = builder.notSupportedByModelChecker("msg", tt)
-      notSuppEx.eqTyped(
-          OperEx(
-              ApalacheInternalOper.notSupportedByModelChecker,
-              builder.str("msg"),
-          )(Typed(tt))
-      )
-    }
-    check(prop, minSuccessful(1000), sizeRange(8))
+    def mkWellTyped(tparam: TParam): T = tparam
+
+    def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
+
+    def resultIsExpected = expectEqTyped[TParam, T](
+        ApalacheInternalOper.notSupportedByModelChecker,
+        mkWellTyped,
+        { case (a, _) => ToSeq.unary(builder.str)(a) },
+        { case (_, t) => t },
+    )
+
+    checkRun(Generators.strAndTypeGen)(
+        runBinary(
+            builder.notSupportedByModelChecker,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
   }
 
   test("distinct") {
@@ -43,14 +54,14 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected(n: Int) = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.distinct,
         mkWellTyped(n),
-        liftBuildToSeq,
+        ToSeq.variadic,
         _ => BoolT1,
     )
 
     def run(tparam: TlaType1) = {
       (1 to 5).forall { n =>
-        runVariadic[TlaType1, TBuilderInstruction, TBuilderResult](
-            builder.distinct(_: _*),
+        runVariadic(
+            builder.distinct,
             mkWellTyped(n),
             mkIllTyped(n),
             resultIsExpected(n),
@@ -58,7 +69,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
       }
     }
 
-    checkRun(run)
+    checkRun(Generators.singleTypeGen)(run)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -79,11 +90,11 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.apalacheSeqCapacity,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         _ => IntT1,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.apalacheSeqCapacity,
             mkWellTyped,
@@ -121,7 +132,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected(oper: ApalacheInternalOper) = expectEqTyped[TlaType1, T](
         oper,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -133,9 +144,9 @@ class TestApalacheInternalBuilder extends BuilderTest {
           resultIsExpected(oper),
       )(_)
 
-    checkRun(run(ApalacheInternalOper.selectInSet, builder.selectInSet))
-    checkRun(run(ApalacheInternalOper.storeInSet, builder.storeInSet))
-    checkRun(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))
+    checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.selectInSet, builder.selectInSet))
+    checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeInSet, builder.storeInSet))
+    checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))
   }
 
   test("storeInSet3") {
@@ -180,11 +191,11 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheInternalOper.storeInSet,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.doubleTypeGen)(
         runTernary(
             builder.storeInSet,
             mkWellTyped,
@@ -226,7 +237,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected(oper: TlaOper) = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.smtMap(oper),
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SetT1(tt),
     )
 
@@ -238,8 +249,8 @@ class TestApalacheInternalBuilder extends BuilderTest {
           resultIsExpected(oper),
       )(_)
 
-    checkRun(run(TlaBoolOper.and))
-    checkRun(run(TlaBoolOper.or))
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.and))
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.or))
 
     // Throws on TlaOper not supported by smtMap
     assertThrows[TBuilderTypeException] {
@@ -266,11 +277,11 @@ class TestApalacheInternalBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheInternalOper.unconstrainArray,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.unconstrainArray,
             mkWellTyped,

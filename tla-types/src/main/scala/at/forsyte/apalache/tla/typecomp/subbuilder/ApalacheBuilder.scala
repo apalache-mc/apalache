@@ -33,7 +33,7 @@ trait ApalacheBuilder {
    * @param n
    *   must be positive
    */
-  def gen(n: Int, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
+  def gen(n: BigInt, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
 
   /**
    * {{{Skolem(ex)}}}
@@ -66,7 +66,7 @@ trait ApalacheBuilder {
    * @param F
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
-  def mkSeq(n: Int, F: TBuilderInstruction): TBuilderInstruction = F.map(unsafeBuilder.mkSeq(n, _))
+  def mkSeq(n: BigInt, F: TBuilderInstruction): TBuilderInstruction = F.map(unsafeBuilder.mkSeq(n, _))
 
   /**
    * {{{FoldSet(F, v, S)}}}

@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.types.tla.TypedParam
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
@@ -34,11 +33,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.assign,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runBinary(
             builder.assign,
             mkWellTyped,
@@ -60,8 +59,6 @@ class TestApalacheBuilder extends BuilderTest {
     type T = (Int, TlaType1)
     type TParam = (Int, TlaType1)
 
-    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(1, 10), singleTypeGen)
-
     def mkWellTyped(tparam: TParam): T = tparam
 
     def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
@@ -69,13 +66,16 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.gen,
         mkWellTyped,
-        { case (a, _) => Seq(builder.int(a)) },
+        { case (a, _) => ToSeq.unary(intToBuilderI)(a) },
         { case (_, t) => t },
     )
 
-    checkRun(
+    // We don't want generators producing BigInt, so we have to manually cast the parameter argument
+    def genFromInt(i: Int, t: TlaType1): TBuilderInstruction = builder.gen(BigInt.int2bigInt(i), t)
+
+    checkRun(Generators.positiveIntAndTypeGen)(
         runBinary(
-            builder.gen,
+            genFromInt,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
@@ -112,11 +112,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.skolem,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.skolem,
             mkWellTyped,
@@ -146,11 +146,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         ApalacheOper.guess,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => tt,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.guess,
             mkWellTyped,
@@ -174,11 +174,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected1 = expectEqTyped[TlaType1, T](
         ApalacheOper.expand,
         mkWellTyped1,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(SetT1(tt)),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.expand,
             mkWellTyped1,
@@ -209,11 +209,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected2 = expectEqTyped[TParam, T](
         ApalacheOper.expand,
         mkWellTyped2,
-        Seq(_),
+        ToSeq.unary,
         { case (a, b) => SetT1(FunT1(a, b)) },
     )
 
-    checkRun(
+    checkRun(Generators.doubleTypeGen)(
         runUnary(
             builder.expand,
             mkWellTyped2,
@@ -234,8 +234,6 @@ class TestApalacheBuilder extends BuilderTest {
     type T = TBuilderInstruction
     type TParam = (Int, TlaType1)
 
-    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(0, 10), singleTypeGen)
-
     def mkWellTyped(tparam: TParam): T = {
       val (n, tt) = tparam
       builder.ge(builder.cardinality(builder.name("S", SetT1(tt))), builder.int(n))
@@ -247,11 +245,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.constCard,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.nonnegativeIntAndTypeGen)(
         runUnary(
             builder.constCard,
             mkWellTyped,
@@ -296,8 +294,6 @@ class TestApalacheBuilder extends BuilderTest {
     type T = (Int, TBuilderInstruction)
     type TParam = (Int, TlaType1)
 
-    implicit val gen: Gen[TParam] = Gen.zip(Gen.choose(0, 10), singleTypeGen)
-
     // MkSeq(n, LET F(i) == e IN F)
     def mkWellTyped(tparam: TParam): T = {
       val (n, t) = tparam
@@ -332,13 +328,16 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.mkSeq,
         mkWellTyped,
-        { case (a, b) => Seq(builder.int(a), b) },
+        ToSeq.binary,
         { case (_, t) => SeqT1(t) },
     )
 
-    checkRun(
+    // We don't want generators producing BigInt, so we have to manually cast the parameter argument
+    def mkSeqFromInt(i: Int, x: TBuilderInstruction): TBuilderInstruction = builder.mkSeq(BigInt.int2bigInt(i), x)
+
+    checkRun(Generators.nonnegativeIntAndTypeGen)(
         runBinary(
-            builder.mkSeq,
+            mkSeqFromInt,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
@@ -393,9 +392,6 @@ class TestApalacheBuilder extends BuilderTest {
     import LambdaFactory.mkLambda
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
     type TParam = (TlaType1, TlaType1)
-
-    // Fold tests need to generate legal operator parameter types.
-    val gen2Param: Gen[TParam] = Gen.zip(parameterTypeGen, parameterTypeGen)
 
     // Assume SeqOrSetT1 = SeqT1(_) or SetT1(_) below. The tests are otherwise the same
 
@@ -464,7 +460,7 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected(seqOrSetT: TlaType1 => TlaType1) = expectEqTyped[TParam, T](
         if (seqOrSetT == SetT1) ApalacheOper.foldSet else ApalacheOper.foldSeq,
         mkWellTyped(seqOrSetT),
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         { case (a, _) => a },
     )
 
@@ -476,9 +472,9 @@ class TestApalacheBuilder extends BuilderTest {
           resultIsExpected(seqOrSetT),
       ) _
 
-    // we pass gen explicitly, since there exists a standard generator for (TT1, TT1). See #1966
-    checkRun(run(SetT1))(gen2Param) // FoldSet tests
-    checkRun(run(SeqT1))(gen2Param) // FoldSeq tests
+    // Fold tests need to generate legal operator parameter types.
+    checkRun(Generators.doubleParameterTypeGen)(run(SetT1)) // FoldSet tests
+    checkRun(Generators.doubleParameterTypeGen)(run(SeqT1)) // FoldSeq tests
 
     // throws on non-lambda
     assertThrows[IllegalArgumentException] {
@@ -552,11 +548,11 @@ class TestApalacheBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         ApalacheOper.setAsFun,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         { case (a, b) => FunT1(a, b) },
     )
 
-    checkRun(
+    checkRun(Generators.doubleTypeGen)(
         runUnary(
             builder.setAsFun,
             mkWellTyped,

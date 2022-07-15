@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
@@ -39,14 +38,14 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected(n: Int) = expectEqTyped[TlaType1, T](
         TlaSetOper.enumSet,
         mkWellTyped(n),
-        liftBuildToSeq,
+        ToSeq.variadic,
         tt => SetT1(tt),
     )
 
     def run(tparam: TlaType1) = {
       (1 to 5).forall { n =>
-        runVariadic[TlaType1, TBuilderInstruction, TBuilderResult](
-            builder.enumSet(_: _*),
+        runVariadic(
+            builder.enumSet,
             mkWellTyped(n),
             mkIllTyped(n),
             resultIsExpected(n),
@@ -54,7 +53,7 @@ class TestSetBuilder extends BuilderTest {
       }
     }
 
-    checkRun(run)
+    checkRun(Generators.singleTypeGen)(run)
 
     // test fail on n = 0
     assertThrows[IllegalArgumentException] {
@@ -75,7 +74,7 @@ class TestSetBuilder extends BuilderTest {
       true
     }
 
-    checkRun(run)
+    checkRun(Generators.singleTypeGen)(run)
   }
 
   test("(not)in") {
@@ -102,7 +101,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected(op: TlaSetOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -117,8 +116,8 @@ class TestSetBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaSetOper.in, builder.in))
-    checkRun(run(TlaSetOper.notin, builder.notin))
+    checkRun(Generators.singleTypeGen)(run(TlaSetOper.in, builder.in))
+    checkRun(Generators.singleTypeGen)(run(TlaSetOper.notin, builder.notin))
   }
 
   test("cap/cup/setminus") {
@@ -145,7 +144,7 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected(op: TlaSetOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         tt => SetT1(tt),
     )
 
@@ -160,9 +159,9 @@ class TestSetBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaSetOper.cap, builder.cap))
-    checkRun(run(TlaSetOper.cup, builder.cup))
-    checkRun(run(TlaSetOper.setminus, builder.setminus))
+    checkRun(Generators.singleTypeGen)(run(TlaSetOper.cap, builder.cap))
+    checkRun(Generators.singleTypeGen)(run(TlaSetOper.cup, builder.cup))
+    checkRun(Generators.singleTypeGen)(run(TlaSetOper.setminus, builder.setminus))
   }
 
   test("union") {
@@ -180,11 +179,11 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.union,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(tt),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.union,
             mkWellTyped,
@@ -228,11 +227,11 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.filter,
         mkWellTyped,
-        { case (a, b, c) => Seq(a, b, c) },
+        ToSeq.ternary,
         tt => SetT1(tt),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runTernary(
             builder.filter,
             mkWellTyped,
@@ -246,14 +245,7 @@ class TestSetBuilder extends BuilderTest {
 
   test("map") {
     type T = (TBuilderInstruction, Seq[TBuilderInstruction])
-
     type TParam = (TlaType1, Seq[TlaType1])
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      t <- singleTypeGen
-      n <- Gen.choose(1, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield (t, seq)
 
     def mkWellTyped(tparam: TParam): T = {
       val (t, ts) = tparam
@@ -295,11 +287,11 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.map,
         mkWellTyped,
-        { case (a, seq) => liftBuildToSeq(a +: seq) },
+        ToSeq.variadicWithDistinguishedFirst,
         { case (t, _) => SetT1(t) },
     )
 
-    checkRun(
+    checkRun(Generators.typeAndNonemptySeqGen)(
         runVariadicWithDistinguishedFirst(
             builder.mapMixed,
             mkWellTyped,
@@ -411,11 +403,11 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaSetOper.map,
         mkWellTyped2,
-        { case (a, seq) => liftBuildToSeq(a +: seq.flatMap { case (b, c) => Seq(b, c) }) },
+        ToSeq.variadicPairsWithDistinguishedFirst,
         { case (t, _) => SetT1(t) },
     )
 
-    checkRun(
+    checkRun(Generators.typeAndNonemptySeqGen)(
         runVariadicWithDistinguishedFirst(
             builder.map,
             mkWellTyped2,
@@ -518,11 +510,11 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.funSet,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         { case (t1, t2) => SetT1(FunT1(t1, t2)) },
     )
 
-    checkRun(
+    checkRun(Generators.doubleTypeGen)(
         runBinary(
             builder.funSet,
             mkWellTyped,
@@ -536,11 +528,6 @@ class TestSetBuilder extends BuilderTest {
     type T = Seq[TBuilderInstruction]
 
     type TParam = Seq[TlaType1]
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      n <- Gen.choose(1, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield seq
 
     def mkWellTyped(tparam: TParam): T =
       tparam.zipWithIndex.flatMap { case (tt, i) =>
@@ -564,7 +551,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.recSet,
         mkWellTyped,
-        { seq => seq },
+        ToSeq.variadic,
         { ts =>
           val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
             m + (s"x$i" -> t)
@@ -573,7 +560,7 @@ class TestSetBuilder extends BuilderTest {
         },
     )
 
-    checkRun(
+    checkRun(Generators.nonemptySeqOfTypesGen)(
         runVariadic(
             builder.recSetMixed,
             mkWellTyped,
@@ -632,7 +619,7 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected2 = expectEqTyped[TParam, T2](
         TlaSetOper.recSet,
         mkWellTyped2,
-        { seq => seq.flatMap { case (s, x) => Seq(builder.str(s), x) } },
+        ToSeq.variadicPairs,
         { ts =>
           val map = ts.zipWithIndex.foldLeft(SortedMap.empty[String, TlaType1]) { case (m, (t, i)) =>
             m + (s"x$i" -> t)
@@ -641,7 +628,7 @@ class TestSetBuilder extends BuilderTest {
         },
     )
 
-    checkRun(
+    checkRun(Generators.nonemptySeqOfTypesGen)(
         runVariadic(
             builder.recSet,
             mkWellTyped2,
@@ -677,11 +664,11 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.seqSet,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(SeqT1(tt)),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.seqSet,
             mkWellTyped,
@@ -715,11 +702,11 @@ class TestSetBuilder extends BuilderTest {
     val resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.subseteq,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runBinary(
             builder.subseteq,
             mkWellTyped,
@@ -734,11 +721,6 @@ class TestSetBuilder extends BuilderTest {
     type T = Seq[TBuilderInstruction]
 
     type TParam = Seq[TlaType1]
-
-    implicit val typeSeqGen: Gen[TParam] = for {
-      n <- Gen.choose(2, 5)
-      seq <- Gen.listOfN(n, singleTypeGen)
-    } yield seq
 
     def mkWellTyped(tparam: TParam): T =
       tparam.zipWithIndex.map { case (t, i) => builder.name(s"S$i", SetT1(t)) }
@@ -755,13 +737,13 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.times,
         mkWellTyped,
-        liftBuildToSeq,
+        ToSeq.variadic,
         tts => SetT1(TupT1(tts: _*)),
     )
 
-    checkRun(
-        runVariadic[TParam, TBuilderInstruction, TBuilderResult](
-            builder.times(_: _*),
+    checkRun(Generators.seqOfTypesGenMinLenGen(2))(
+        runVariadic(
+            builder.times,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,
@@ -793,11 +775,11 @@ class TestSetBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaSetOper.powerset,
         mkWellTyped,
-        Seq(_),
+        ToSeq.unary,
         tt => SetT1(SetT1(tt)),
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.powSet,
             mkWellTyped,

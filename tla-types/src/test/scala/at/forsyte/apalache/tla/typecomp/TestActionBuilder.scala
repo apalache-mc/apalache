@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
 
@@ -19,11 +18,11 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaActionOper.prime,
         mkWellTyped,
-        { Seq(_) },
+        ToSeq.unary,
         tt => tt,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.prime,
             mkWellTyped,
@@ -52,7 +51,7 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected(op: TlaActionOper) = expectEqTyped[TlaType1, T](
         op,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
@@ -67,13 +66,11 @@ class TestActionBuilder extends BuilderTest {
           resultIsExpected(op),
       )(tt)
 
-    checkRun(run(TlaActionOper.stutter, builder.stutt))
-    checkRun(run(TlaActionOper.nostutter, builder.nostutt))
+    checkRun(Generators.singleTypeGen)(run(TlaActionOper.stutter, builder.stutt))
+    checkRun(Generators.singleTypeGen)(run(TlaActionOper.nostutter, builder.nostutt))
   }
 
   test("enabled") {
-
-    implicit val unitGen: Gen[Unit] = Gen.oneOf(Seq(()))
 
     type T = TBuilderInstruction
     def mkWellTyped(@unused tt: Unit): T = builder.name("A", BoolT1)
@@ -86,11 +83,11 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[Unit, T](
         TlaActionOper.enabled,
         mkWellTyped,
-        { Seq(_) },
+        ToSeq.unary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.unitGen)(
         runUnary(
             builder.enabled,
             mkWellTyped,
@@ -109,11 +106,11 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[TlaType1, T](
         TlaActionOper.unchanged,
         mkWellTyped,
-        { Seq(_) },
+        ToSeq.unary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.singleTypeGen)(
         runUnary(
             builder.unchanged,
             mkWellTyped,
@@ -124,9 +121,6 @@ class TestActionBuilder extends BuilderTest {
   }
 
   test("cmp") {
-
-    implicit val unitGen: Gen[Unit] = Gen.oneOf(Seq(()))
-
     type T = (TBuilderInstruction, TBuilderInstruction)
     def mkWellTyped(@unused tt: Unit): T =
       (
@@ -149,11 +143,11 @@ class TestActionBuilder extends BuilderTest {
     def resultIsExpected = expectEqTyped[Unit, T](
         TlaActionOper.composition,
         mkWellTyped,
-        { case (a, b) => Seq(a, b) },
+        ToSeq.binary,
         _ => BoolT1,
     )
 
-    checkRun(
+    checkRun(Generators.unitGen)(
         runBinary(
             builder.comp,
             mkWellTyped,
