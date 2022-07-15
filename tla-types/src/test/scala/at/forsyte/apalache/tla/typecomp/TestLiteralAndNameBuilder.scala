@@ -15,7 +15,6 @@ class TestLiteralAndNameBuilder extends BuilderTest {
 
   test("int") {
     type T = BigInt
-    type TParam = Int
 
     def mkWellTyped(i: Int): T = i // implicit cast Int -> BigInt
 
@@ -33,7 +32,6 @@ class TestLiteralAndNameBuilder extends BuilderTest {
 
   test("str") {
     type T = String
-    type TParam = String
 
     def mkWellTyped(s: String): T = s
 
@@ -57,7 +55,6 @@ class TestLiteralAndNameBuilder extends BuilderTest {
 
   test("bool") {
     type T = Boolean
-    type TParam = Boolean
 
     def mkWellTyped(b: Boolean): T = b
 
@@ -75,11 +72,11 @@ class TestLiteralAndNameBuilder extends BuilderTest {
 
   test("const") {
     type T1 = (String, ConstT1)
-    type TParam1 = (String, ConstT1)
+    type TParam = (String, ConstT1)
 
-    def mkWellTyped1(tparam: TParam1): T1 = tparam
+    def mkWellTyped1(tparam: TParam): T1 = tparam
 
-    def resultIsExpected1(tparam: TParam1)(resEx: TBuilderResult): Boolean = {
+    def resultIsExpected1(tparam: TParam)(resEx: TBuilderResult): Boolean = {
       val (index, constT) = tparam
       val fullName = ModelValueHandler.construct(constT.name, index)
       resEx.eqTyped(ValEx(TlaStr(fullName))(Typed(constT)))
@@ -103,7 +100,6 @@ class TestLiteralAndNameBuilder extends BuilderTest {
     }
 
     type T2 = String
-    type TParam2 = String
 
     def mkWellTyped2(s: String): T2 = s
 
