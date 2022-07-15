@@ -7,6 +7,7 @@
 module.exports = function (hljs)
 {
   return {
+    aliases: ['tla'],
     // Auto-detection is hard: https://github.com/highlightjs/highlight.js/issues/1213
     disableAutodetect: true,
     case_insensitive: false,
