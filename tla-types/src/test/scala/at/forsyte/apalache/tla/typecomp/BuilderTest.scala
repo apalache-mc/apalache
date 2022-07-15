@@ -133,7 +133,7 @@ import scala.collection.immutable.SortedMap
 // Our test then looks as follows:
 // checkRun(Generators.doubleTypeGen)(
 //   runBinary(
-//     builderDotFoo,
+//     builder.foo,
 //     mkWellTyped,
 //     mkIllTyped,
 //     resultIsExpected,
