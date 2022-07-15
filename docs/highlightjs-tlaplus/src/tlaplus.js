@@ -12,14 +12,38 @@ module.exports = function (hljs)
     case_insensitive: false,
     keywords:
       {
-        keyword: 'ACTION ASSUME ASSUMPTION AXIOM BOOLEAN BY CASE CHOOSE CONSTANT CONSTANTS COROLLARY DEF DEFINE DEFS DOMAIN ELSE ENABLED EXCEPT EXTENDS FALSE HAVE HIDE IF IN INSTANCE LAMBDA LEMMA LET LOCAL MODULE NEW OBVIOUS OMITTED OTHER PICK PROOF PROPOSITION PROVE QED RECURSIVE STATE SUBSET SUFFICES TAKE TEMPORAL THEN THEOREM TRUE UNCHANGED UNION USE VARIABLE VARIABLES WITH WITNESS'
+        // Specifying Systems p277, and
+        // TLA+ Version 2: https://lamport.azurewebsites.net/tla/tla2-guide.pdf
+        keyword: 'ACTION ASSUME ASSUMPTION AXIOM BY CASE CHOOSE CONSTANT CONSTANTS COROLLARY DEF DEFINE DEFS ELSE EXCEPT EXTENDS HAVE HIDE IF IN INSTANCE LAMBDA LEMMA LET LOCAL MODULE NEW OBVIOUS OMITTED ONLY OTHER PICK PROOF PROPOSITION PROVE QED RECURSIVE STATE SUFFICES TAKE TEMPORAL THEN THEOREM USE VARIABLE VARIABLES WITH WITNESS'
       },
     contains:
       [
         hljs.QUOTE_STRING_MODE,
         hljs.C_NUMBER_MODE,
         hljs.COMMENT(/\(\*/, /\*\)/),
-        hljs.COMMENT(/\\\*/, /$/)
+        hljs.COMMENT(/\\\*/, /$/),
+        // TLA+ specific modes, see Specifying Systems p277, and
+        // TLA+ Version 2: https://lamport.azurewebsites.net/tla/tla2-guide.pdf
+        {
+          // TLA+ predefined identifiers
+          className: 'literal',
+          begin: /TRUE|FALSE|BOOLEAN|STRING/
+        },
+        {
+          // TLA+ built-in operators like `\in`
+          className: 'built_in',
+          begin: /\\\w+/
+        },
+        {
+          // TLA+ built-in operators like `DOMAIN`
+          className: 'built_in',
+          begin: /DOMAIN|ENABLED|SUBSET|UNCHANGED|UNION/
+        },
+        {
+          // TLA+ built-in operators /\ and \/
+          className: 'built_in',
+          begin: /\\\/|\/\\/
+        }
       ]
   }
 }
