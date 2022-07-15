@@ -26,6 +26,7 @@ object ApalacheInternalOperSignatures {
     val apalacheSeqCapacitySig = signatureMapEntry(apalacheSeqCapacity, { case Seq(_: SeqT1) => IntT1 })
 
     // (t, Set(t)) => Bool
+    // or
     // (a, a -> b) => b
     val selectInSetSig =
       signatureMapEntry(
