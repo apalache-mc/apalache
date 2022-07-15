@@ -6,10 +6,6 @@
  * off the initial highlighting as soon as it is loaded.
  */
 (function highlightTla() {
-  // We locally tag TLA+ snippets as `tla`, but highlightjs-tlaplus defines it
-  // as `tlaplus`; register an alias.
-  hljs.registerAliases('tla', { languageName: 'tlaplus' });
-
   // Get all `code.language-tla` blocks and highlight them.
   // Adapted from mdbook: https://github.com/rust-lang/mdBook/blob/6688bd8d7b7cd8da0f5c5f697e9e730880413828/src/theme/book.js#L157-L174
   let code_nodes = Array
