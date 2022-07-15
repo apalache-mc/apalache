@@ -4,158 +4,212 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
+import scalaz.unused
 
 @RunWith(classOf[JUnitRunner])
 class TestBoolBuilder extends BuilderTest {
 
-  // TODO: Update with BuilderTest framework.
+  test("and/or") {
+    type T = Seq[TBuilderInstruction]
+    type TParam = Int
 
-  def argGen(n: Int): Seq[TBuilderInstruction] = Seq.fill(n)(builder.bool(true))
+    def mkWellTyped(tparam: TParam): T =
+      (0 until tparam).map { i =>
+        builder.name(s"x$i", BoolT1)
+      }
 
-  def testCmpOKAndMistyped[T](
-      args: Seq[TBuilderInstruction],
-      oper: TlaBoolOper,
-      cmp: PureTypeComputation,
-      eval: Seq[TBuilderInstruction] => TBuilderInstruction): Unit = {
+    def mkIllTyped(tparam: TParam): Seq[T] =
+      (0 until tparam).map { j =>
+        (0 until tparam).map { i =>
+          builder.name(s"x$i", if (i == j) InvalidTypeMethods.notBool else BoolT1)
+        }
+      }
 
-    val builtArgs = args.map(build)
-    val res = cmp(builtArgs)
+    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TParam, T](
+        oper,
+        mkWellTyped,
+        ToSeq.variadic,
+        _ => BoolT1,
+    )
 
-    assert(res.contains(BoolT1))
+    def run(oper: TlaBoolOper, method: T => TBuilderInstruction) =
+      runVariadic(
+          method,
+          mkWellTyped,
+          mkIllTyped,
+          resultIsExpected(oper),
+      ) _
 
-    val resEx = eval(args)
+    checkRun(Generators.nonnegativeIntGen)(run(TlaBoolOper.and, builder.and))
+    checkRun(Generators.nonnegativeIntGen)(run(TlaBoolOper.or, builder.or))
 
-    assert(resEx.eqTyped(OperEx(oper, builtArgs: _*)(Typed(BoolT1))))
-
-    val badY: TBuilderInstruction = builder.str("a")
-    val badArgs = badY +: args.tail
-
-    assertThrows[TBuilderTypeException] {
-      build(eval(badArgs))
-    }
-  }
-
-  test("and") {
-    val oper = TlaBoolOper.and
-    (1 to 5).foreach { i =>
-      testCmpOKAndMistyped(
-          argGen(i),
-          oper,
-          cmpFactory.computationFromSignature(oper),
-          builder.and(_: _*),
-      )
-    }
-  }
-
-  test("or") {
-    val oper = TlaBoolOper.or
-    (1 to 5).foreach { i =>
-      testCmpOKAndMistyped(
-          argGen(i),
-          oper,
-          cmpFactory.computationFromSignature(oper),
-          builder.or(_: _*),
-      )
-    }
   }
 
   test("not") {
-    val oper = TlaBoolOper.not
-    testCmpOKAndMistyped(
-        argGen(1),
-        oper,
-        cmpFactory.computationFromSignature(oper),
-        { case Seq(e) => builder.not(e) },
+    type T = TBuilderInstruction
+    type TParam = Unit
+
+    def mkWellTyped(@unused tparam: TParam): T = builder.name("x", BoolT1)
+
+    def mkIllTyped(@unused tparam: TParam): Seq[T] =
+      Seq(
+          builder.name("x", InvalidTypeMethods.notBool)
+      )
+
+    def resultIsExpected = expectEqTyped[TParam, T](
+        TlaBoolOper.not,
+        mkWellTyped,
+        ToSeq.unary,
+        _ => BoolT1,
     )
-  }
 
-  test("impl") {
-    val oper = TlaBoolOper.implies
-    testCmpOKAndMistyped(
-        argGen(2),
-        oper,
-        cmpFactory.computationFromSignature(oper),
-        { case Seq(a, b) => builder.impl(a, b) },
+    checkRun(Generators.unitGen)(
+        runUnary(
+            builder.not,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
     )
+
   }
 
-  test("equiv") {
-    val oper = TlaBoolOper.equiv
-    testCmpOKAndMistyped(
-        argGen(2),
+  test("impl/equiv") {
+    type T = (TBuilderInstruction, TBuilderInstruction)
+    type TParam = Unit
+
+    def mkWellTyped(@unused tparam: TParam): T =
+      (
+          builder.name("x", BoolT1),
+          builder.name("y", BoolT1),
+      )
+
+    def mkIllTyped(@unused tparam: TParam): Seq[T] =
+      Seq(
+          (
+              builder.name("x", BoolT1),
+              builder.name("y", InvalidTypeMethods.notBool),
+          ),
+          (
+              builder.name("x", InvalidTypeMethods.notBool),
+              builder.name("y", BoolT1),
+          ),
+      )
+
+    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TParam, T](
         oper,
-        cmpFactory.computationFromSignature(oper),
-        { case Seq(a, b) => builder.equiv(a, b) },
+        mkWellTyped,
+        ToSeq.binary,
+        _ => BoolT1,
     )
+
+    def run(oper: TlaBoolOper, method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction) =
+      runBinary(
+          method,
+          mkWellTyped,
+          mkIllTyped,
+          resultIsExpected(oper),
+      ) _
+
+    checkRun(Generators.unitGen)(run(TlaBoolOper.implies, builder.impl))
+    checkRun(Generators.unitGen)(run(TlaBoolOper.equiv, builder.equiv))
   }
 
-  def testQuant(
-      oper: TlaBoolOper,
-      methodE: Either[(TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction, (
-              TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction]): Unit = {
-    val xBool = builder.name("x", BoolT1)
-    val xInt = builder.name("x", IntT1)
+  test("forall3/exists3") {
+    type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
+    def mkWellTyped(tt: TlaType1): T =
+      (
+          builder.name("x", tt),
+          builder.name("set", SetT1(tt)),
+          builder.name("p", BoolT1),
+      )
 
-    val sBool = builder.name("S", SetT1(BoolT1))
-    val sInt = builder.name("S", SetT1(IntT1))
+    def mkIllTyped(tt: TlaType1): Seq[T] =
+      Seq(
+          (
+              builder.name("x", InvalidTypeMethods.differentFrom(tt)),
+              builder.name("set", SetT1(tt)),
+              builder.name("p", BoolT1),
+          ),
+          (
+              builder.name("x", tt),
+              builder.name("set", SetT1(InvalidTypeMethods.differentFrom(tt))),
+              builder.name("p", BoolT1),
+          ),
+          (
+              builder.name("x", tt),
+              builder.name("set", InvalidTypeMethods.notSet),
+              builder.name("p", BoolT1),
+          ),
+          (
+              builder.name("x", tt),
+              builder.name("set", SetT1(tt)),
+              builder.name("p", InvalidTypeMethods.notBool),
+          ),
+      )
 
-    val (okW, typeErrorW, scopeErrorW, expected) = methodE match {
-      case Left(boundQuant) =>
-        val okW = boundQuant(xBool, sBool, xBool)
+    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TlaType1, T](
+        oper,
+        mkWellTyped,
+        ToSeq.ternary,
+        _ => BoolT1,
+    )
 
-        val typeErrorW = boundQuant(xBool, sInt, xBool)
+    def run(
+        oper: TlaBoolOper,
+        method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction) =
+      runTernary(
+          method,
+          mkWellTyped,
+          mkIllTyped,
+          resultIsExpected(oper),
+      ) _
 
-        val scopeErrorW = boundQuant(xInt, sInt, xBool)
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.forall, builder.forall))
+    assertThrowsBoundVarIntroductionTernary(builder.forall)
 
-        val expected = OperEx(
-            oper,
-            NameEx("x")(Typed(BoolT1)),
-            NameEx("S")(Typed(SetT1(BoolT1))),
-            NameEx("x")(Typed(BoolT1)),
-        )(Typed(BoolT1))
-
-        (okW, typeErrorW, scopeErrorW, expected)
-      case Right(unboundQuant) =>
-        val okW = unboundQuant(xBool, xBool)
-
-        val typeErrorW = unboundQuant(xInt, xInt)
-
-        val scopeErrorW = unboundQuant(xInt, xBool)
-
-        val expected = OperEx(
-            oper,
-            NameEx("x")(Typed(BoolT1)),
-            NameEx("x")(Typed(BoolT1)),
-        )(Typed(BoolT1))
-
-        (okW, typeErrorW, scopeErrorW, expected)
-    }
-
-    assert(okW.eqTyped(expected))
-
-    assertThrows[TBuilderTypeException] {
-      build(typeErrorW)
-    }
-
-    assertThrows[TBuilderScopeException] {
-      build(scopeErrorW)
-    }
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.exists, builder.exists))
+    assertThrowsBoundVarIntroductionTernary(builder.exists)
   }
 
-  test("forall3") {
-    testQuant(TlaBoolOper.forall, Left(builder.forall))
-  }
+  test("forall2/exists2") {
+    type T = (TBuilderInstruction, TBuilderInstruction)
 
-  test("forall2") {
-    testQuant(TlaBoolOper.forallUnbounded, Right(builder.forall))
-  }
+    def mkWellTyped(tt: TlaType1): T =
+      (
+          builder.name("x", tt),
+          builder.name("p", BoolT1),
+      )
 
-  test("exists3") {
-    testQuant(TlaBoolOper.exists, Left(builder.exists))
-  }
+    def mkIllTyped(tt: TlaType1): Seq[T] =
+      Seq(
+          (
+              builder.name("x", tt),
+              builder.name("p", InvalidTypeMethods.notBool),
+          )
+      )
 
-  test("exists2") {
-    testQuant(TlaBoolOper.existsUnbounded, Right(builder.exists))
-  }
+    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TlaType1, T](
+        oper,
+        mkWellTyped,
+        ToSeq.binary,
+        _ => BoolT1,
+    )
 
+    def run(
+        oper: TlaBoolOper,
+        method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction) =
+      runBinary(
+          method,
+          mkWellTyped,
+          mkIllTyped,
+          resultIsExpected(oper),
+      ) _
+
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.forallUnbounded, builder.forall))
+    assertThrowsBoundVarIntroductionBinary(builder.forall)
+
+    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.existsUnbounded, builder.exists))
+    assertThrowsBoundVarIntroductionBinary(builder.exists)
+  }
 }
