@@ -2,38 +2,99 @@ package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
+import scalaz.unused
 
 @RunWith(classOf[JUnitRunner])
 class TestLiteralAndNameBuilder extends BuilderTest {
 
-  test("literals") {
+  // Literal builders have no ill-typed arguments, only malformed ones
+  def mkIllTyped[A, B](@unused tparam: A): Seq[B] = Seq.empty
 
-    val oneEx: TlaEx = builder.int(1)
+  test("int") {
+    type T = BigInt
+    type TParam = Int
 
-    assert(oneEx.eqTyped(ValEx(TlaInt(1))(Typed(IntT1))))
+    def mkWellTyped(i: Int): T = i // implicit cast Int -> BigInt
 
-    val xEx: TlaEx = builder.str("x")
+    def resultIsExpected(i: Int)(resEx: TBuilderResult): Boolean = resEx.eqTyped(ValEx(TlaInt(i))(Typed(IntT1)))
 
-    assert(xEx.eqTyped(ValEx(TlaStr("x"))(Typed(StrT1))))
+    checkRun(Generators.intGen)(
+        runUnary(
+            builder.int,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+  }
+
+  test("str") {
+    type T = String
+    type TParam = String
+
+    def mkWellTyped(s: String): T = s
+
+    def resultIsExpected(s: String)(resEx: TBuilderResult): Boolean = resEx.eqTyped(ValEx(TlaStr(s))(Typed(StrT1)))
+
+    checkRun(Generators.strGen)(
+        runUnary(
+            builder.str,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // throws on uninterpreted sorts
     assertThrows[TBuilderTypeException] {
       build(builder.str("1_OF_X"))
     }
 
-    val trueEx: TlaEx = builder.bool(true)
+  }
 
-    assert(trueEx.eqTyped(ValEx(TlaBool(true))(Typed(BoolT1))))
+  test("bool") {
+    type T = Boolean
+    type TParam = Boolean
 
-    val v1: TlaEx = builder.constParsed("v_OF_A")
-    val v2: TlaEx = builder.const("v", ConstT1("A"))
+    def mkWellTyped(b: Boolean): T = b
 
-    assert(v1.eqTyped(v2))
-    assert(v2.eqTyped(ValEx(TlaStr("v_OF_A"))(Typed(ConstT1("A")))))
+    def resultIsExpected(b: Boolean)(resEx: TBuilderResult): Boolean = resEx.eqTyped(ValEx(TlaBool(b))(Typed(BoolT1)))
 
-    assertThrows[TBuilderTypeException] {
-      build(builder.constParsed("x"))
+    checkRun(Generators.boolGen)(
+        runUnary(
+            builder.bool,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+  }
+
+  test("const") {
+    type T1 = (String, ConstT1)
+    type TParam1 = (String, ConstT1)
+
+    def mkWellTyped1(tparam: TParam1): T1 = tparam
+
+    def resultIsExpected1(tparam: TParam1)(resEx: TBuilderResult): Boolean = {
+      val (index, constT) = tparam
+      val fullName = ModelValueHandler.construct(constT.name, index)
+      resEx.eqTyped(ValEx(TlaStr(fullName))(Typed(constT)))
     }
+
+    checkRun(Generators.uninterpretedIndexAndTypeGen)(
+        runBinary(
+            builder.const,
+            mkWellTyped1,
+            mkIllTyped,
+            resultIsExpected1,
+        )
+    )
+
+    // Throws on ambiguous index
     assertThrows[TBuilderTypeException] {
       build(builder.const("1_OF_A", ConstT1("A")))
     }
@@ -41,31 +102,59 @@ class TestLiteralAndNameBuilder extends BuilderTest {
       build(builder.const("1_OF_A", ConstT1("B")))
     }
 
+    type T2 = String
+    type TParam2 = String
+
+    def mkWellTyped2(s: String): T2 = s
+
+    def resultIsExpected2(s: String)(resEx: TBuilderResult): Boolean =
+      ModelValueHandler.typeAndIndex(s).exists { case (constT, _) =>
+        resEx.eqTyped(ValEx(TlaStr(s))(Typed(constT)))
+      }
+
+    checkRun(Generators.uninterpretedLiteralGen)(
+        runUnary(
+            builder.constParsed,
+            mkWellTyped2,
+            mkIllTyped,
+            resultIsExpected2,
+        )
+    )
+
+    // throws on non-uninterpreted-literal
+    assertThrows[TBuilderTypeException] {
+      build(builder.constParsed("x"))
+    }
   }
 
   test("names and scope") {
+    type T = (String, TlaType1)
+    type TParam = (String, TlaType1)
 
-    val xInt = builder.name("x", IntT1)
+    def mkWellTyped(tparam: TParam): T = tparam
 
-    val xBool = builder.name("x", BoolT1)
-
-    // ok separately
-    val xIntEx = build(xInt)
-
-    assert(xIntEx.eqTyped(NameEx("x")(Typed(IntT1))))
-
-    val xBoolEx = build(xBool)
-
-    assert(xBoolEx.eqTyped(NameEx("x")(Typed(BoolT1))))
-
-    // Throw if in same scope
-    assertThrows[TBuilderScopeException] {
-      val both = for {
-        _ <- xInt
-        _ <- xBool
-      } yield ()
-      both.run(TBuilderContext.empty)
+    def resultIsExpected(tparam: TParam)(resEx: TBuilderResult): Boolean = {
+      val (name, tt) = tparam
+      resEx.eqTyped(NameEx(name)(Typed(tt)))
     }
 
+    checkRun(Generators.strAndTypeGen)(
+        runBinary(
+            builder.name,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // Throw on scope violations
+    assertThrows[TBuilderScopeException] {
+      build(
+          for {
+            _ <- builder.name("x", IntT1)
+            _ <- builder.name("x", BoolT1)
+          } yield ()
+      )
+    }
   }
 }

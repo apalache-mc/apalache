@@ -51,8 +51,23 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     def minIntGen(min: Int) = Gen.choose(min, min + 10)
 
+    val intGen: Gen[Int] = minIntGen(-5)
     val positiveIntGen: Gen[Int] = minIntGen(1)
     val nonnegativeIntGen: Gen[Int] = minIntGen(0)
+
+    val boolGen: Gen[Boolean] = Gen.oneOf(true, false)
+
+    // empty strings mess up regex matching for uninterpreted literals
+    val strGen: Gen[String] = Gen.alphaStr.suchThat(_.nonEmpty)
+    val uninterpretedTypeNameGen: Gen[String] = Gen.alphaUpperStr.suchThat(_.nonEmpty)
+    val uninterpretedLiteralGen: Gen[String] = for {
+      name <- strGen
+      uiType <- uninterpretedTypeNameGen
+    } yield s"${name}_OF_$uiType"
+
+    val uninterpretedTypeGen: Gen[ConstT1] = uninterpretedTypeNameGen.map { ConstT1 }
+
+    val uninterpretedIndexAndTypeGen: Gen[(String, ConstT1)] = Gen.zip(strGen, uninterpretedTypeGen)
 
     protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
@@ -132,8 +147,6 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val positiveIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
     val nonnegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
-
-    val strGen: Gen[String] = Gen.alphaStr
 
     val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(strGen, singleTypeGen)
 
