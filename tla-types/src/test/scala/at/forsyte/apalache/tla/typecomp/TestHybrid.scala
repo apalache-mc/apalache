@@ -3,8 +3,11 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaArithOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.types.tla.TypedParam
 import org.junit.runner.RunWith
+import org.scalacheck.Prop.forAll
 import org.scalatestplus.junit.JUnitRunner
+import scalaz.unused
 
 @RunWith(classOf[JUnitRunner])
 class TestHybrid extends BuilderTest {
@@ -55,58 +58,69 @@ class TestHybrid extends BuilderTest {
 
   test("decl") {
 
-    type T = TBuilderOperDeclInstruction
+    type ExplicitT = (String, TBuilderInstruction, Seq[TypedParam])
     type TParam = (TlaType1, Seq[TlaType1])
 
-    // A(p1,...,pn) == CHOOSE x: p1 /\  p2 >= 0 /\ ... /\ pn = pn
-    def mkWellTyped(tparam: TParam): (T, T) = {
-      val (t, ts) = tparam
-      val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
-      val paramConds = tParams.map { case (OperParam(pName, _), tt) =>
-        def n: TBuilderInstruction = builder.name(pName, tt)
-        // We can try different expressions for different parameter types, as long as each name is used at least once
-        tt match {
-          case BoolT1 => n
-          case IntT1  => builder.ge(n, builder.int(0))
-          case OperT1(from, to) =>
-            builder.eql(
-                builder.appOp(
-                    n,
-                    from.zipWithIndex.map { case (fromT, i) => builder.name(s"v${i}_$pName", fromT) }: _*
-                ),
-                builder.name(s"e_$pName", to),
-            )
-          case _ => builder.eql(n, n)
-        }
-
+    // We create a different term for operator vs simple parameters
+    def paramCond(param: TypedParam): TBuilderInstruction = {
+      val (OperParam(pName, _), tt) = param
+      def mkNameTT(s: String) = builder.name(s, tt)
+      tt match {
+        // an operator parameter p(_,...,_) gets the term p(v1_p, ...., vn_p) = e_p
+        case OperT1(from, to) =>
+          builder.eql(
+              builder.appOp(
+                  mkNameTT(pName),
+                  from.zipWithIndex.map { case (fromT, i) => builder.name(s"v${i}_$pName", fromT) }: _*
+              ),
+              builder.name(s"e_$pName", to),
+          )
+        // an simple parameter p gets the term \E q: q = p
+        case _ =>
+          val qName = s"q_$pName"
+          builder.exists(
+              mkNameTT(qName),
+              builder.eql(
+                  mkNameTT(qName),
+                  mkNameTT(pName),
+              ),
+          )
       }
-      val body = builder.choose(
-          builder.name("x", t),
-          builder.and(paramConds: _*),
-      )
-
-      val explicit = builder.decl("A", body, tParams: _*)
-      val withParamTypesFromScope =
-        builder.declWithInferredParameterTypes("A", body, tParams.map(_._1): _*)
-
-      (explicit, withParamTypesFromScope)
     }
 
-    def forceScopeException(tparam: TParam): Seq[T] = {
+    // CHOOSE can make the body type w/e we need it to be
+    // A(p1(_,...,_),p2,...,pn) == CHOOSE x: p1(v1_p1,...,vk_p1) = e_p1 /\  \E q2: q2 = p2 /\ ...
+    def mkWellTypedExplicit(tparam: TParam): ExplicitT = {
       val (t, ts) = tparam
-      ts.indices.map { j =>
-        val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
-        val eqls = tParams.zipWithIndex.map { case ((OperParam(pName, _), tt), i) =>
-          // We use the j-th parameter inconsistently w.r.t. types
-          val n = builder.name(pName, if (i != j) tt else InvalidTypeMethods.differentFrom(tt))
-          builder.eql(n, n)
+      val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
+      (
+          "A",
+          builder.choose(
+              builder.name("x", t),
+              builder.and(tParams.map { paramCond }: _*),
+          ),
+          tParams,
+      )
+    }
+
+    // No type exception, only scope exceptions
+    def mkIllTypedExplicit(@unused tparam: TParam): Seq[ExplicitT] = Seq.empty
+
+    def expectEqTypedDecl[T](
+        mkWellTyped: TParam => (String, TBuilderInstruction, T),
+        exParams: TParam => List[OperParam],
+        exType: TParam => TlaType1): TParam => TlaOperDecl => Boolean = {
+      tparam =>
+        { resDecl =>
+          val (name, body, _) = mkWellTyped(tparam)
+          resDecl.eqTyped(
+              TlaOperDecl(
+                  name,
+                  exParams(tparam),
+                  body,
+              )(Typed(exType(tparam)))
+          )
         }
-        val body = builder.choose(
-            builder.name("x", t),
-            builder.and(eqls: _*),
-        )
-        builder.decl("A", body, tParams: _*)
-      }
     }
 
     def paramArity(tt: TlaType1): Int = tt match {
@@ -114,72 +128,94 @@ class TestHybrid extends BuilderTest {
       case _               => 0
     }
 
-    def isExpected(tparam: TParam): TlaOperDecl => Boolean = {
-      val (t, ts) = tparam
-      val params = ts.zipWithIndex.map { case (tt, i) => OperParam(s"p$i", paramArity(tt)) }
-      val bTag = Typed(BoolT1)
-      val conds = params.zip(ts).map { case (p, tt) =>
-        def n: NameEx = NameEx(p.name)(Typed(tt))
-        tt match {
-          case BoolT1 => n
-          case IntT1  => OperEx(TlaArithOper.ge, n, ValEx(TlaInt(0))(Typed(IntT1)))(bTag)
-          case OperT1(from, to) =>
-            OperEx(
-                TlaOper.eq,
-                OperEx(
-                    TlaOper.apply,
-                    n +:
-                      from.zipWithIndex.map { case (fromT, i) =>
-                        NameEx(s"v${i}_${p.name}")(Typed(fromT))
-                      }: _*
-                )(Typed(to)),
-                NameEx(s"e_${p.name}")(Typed(to)),
-            )(bTag)
-          case _ => OperEx(TlaOper.eq, n, n)(bTag)
-        }
-      }
-      val tTag = Typed(t)
-      val expectedBody =
-        OperEx(
-            TlaOper.chooseUnbounded,
-            NameEx("x")(tTag),
-            OperEx(
-                TlaBoolOper.and,
-                conds: _*
-            )(bTag),
-        )(tTag)
+    val resultIsExpectedExplicit = expectEqTypedDecl(
+        mkWellTypedExplicit,
+        { case (_, ts) => ts.toList.zipWithIndex.map { case (tt, i) => OperParam(s"p$i", paramArity(tt)) } },
+        { case (t, ts) => OperT1(ts, t) },
+    )
 
-      def ret(decl: TlaOperDecl): Boolean =
-        decl.eqTyped(
-            TlaOperDecl("A", params.toList, expectedBody)(Typed(OperT1(ts, t)))
+    checkRun(Generators.declTypesGen)(
+        runTernary(
+            builder.decl,
+            mkWellTypedExplicit,
+            mkIllTypedExplicit,
+            resultIsExpectedExplicit,
         )
+    )
 
-      ret
+    def mkIllScopedExplicit(tparam: TParam): Seq[ExplicitT] = {
+      val (t, ts) = tparam
+      val tParams = ts.zipWithIndex.map { case (tt, i) => builder.param(s"p$i", tt) }
+      val body = builder.choose(
+          builder.name("x", t),
+          builder.and(tParams.map { paramCond }: _*),
+      )
+      ts.indices.map { j =>
+        (
+            "A",
+            body,
+            ts.zipWithIndex.map { case (tt, i) =>
+              // j-th param is used with type tt and declared with something else
+              builder.param(s"p$i",
+                  if (i == j) InvalidTypeMethods.differentFrom(tt)
+                  else tt)
+            },
+        )
+      }
     }
 
-    def run(tparam: TParam): Boolean = {
-
-      val (goodDeclExplicitI, goodDeclImplicitI) = mkWellTyped(tparam)
-
-      val goodDeclExplicit = build(goodDeclExplicitI)
-      val goodDeclImplicit = build(goodDeclImplicitI)
-
-      goodDeclExplicit shouldEqual goodDeclImplicit
-
-      isExpected(tparam)(goodDeclExplicit) shouldBe true
-
-      val badDeclIs = forceScopeException(tparam)
-
-      badDeclIs.foreach { instruction =>
+    // TODO: refactor after #1965
+    val scopeExcProp = forAll(Generators.declTypesGen) { tparam =>
+      mkIllScopedExplicit(tparam).foreach { case (name, body, params) =>
         assertThrows[TBuilderScopeException] {
-          build(instruction)
+          build(
+              builder.decl(name, body, params: _*)
+          )
         }
       }
-
       true
     }
+    check(scopeExcProp, minSuccessful(1000), sizeRange(8))
 
-    checkRun(Generators.declTypesGen)(run)
+    // Now check the implicit variant
+
+    type ImplicitT = (String, TBuilderInstruction, Seq[OperParam])
+    def mkWellTypedImplicit(tparam: TParam): ImplicitT = {
+      val (name, body, tParams) = mkWellTypedExplicit(tparam)
+      (
+          name,
+          body,
+          tParams.map(_._1),
+      )
+    }
+
+    def mkIllTypedImplicit(@unused tparam: TParam): Seq[ImplicitT] = Seq.empty
+
+    val resultIsExpectedImplicit = expectEqTypedDecl(
+        mkWellTypedImplicit,
+        { case (_, ts) => ts.toList.zipWithIndex.map { case (tt, i) => OperParam(s"p$i", paramArity(tt)) } },
+        { case (t, ts) => OperT1(ts, t) },
+    )
+
+    checkRun(Generators.declTypesGen)(
+        runTernary(
+            builder.declWithInferredParameterTypes,
+            mkWellTypedImplicit,
+            mkIllTypedImplicit,
+            resultIsExpectedImplicit,
+        )
+    )
+
+    // TODO: refactor after #1965
+    // explicit == implicit
+    val explicitImplicitProp = forAll(Generators.declTypesGen) { tparam =>
+      val (nameE, bodyE, paramsE) = mkWellTypedExplicit(tparam)
+      val (nameI, bodyI, paramsI) = mkWellTypedImplicit(tparam)
+      build(builder.decl(nameE, bodyE, paramsE: _*)) shouldEqual
+        build(builder.declWithInferredParameterTypes(nameI, bodyI, paramsI: _*))
+      true
+    }
+    check(explicitImplicitProp, minSuccessful(1000), sizeRange(8))
 
     // throws on illegal parameter type
 
