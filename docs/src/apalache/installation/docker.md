@@ -74,18 +74,16 @@ $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystem
 $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 ```
 
-## Using the main version of Apalache
+## Using the development branch of Apalache
 
-The development of Apalache proceeds at a high pace, and we introduce a
-substantial number of improvements in the main branch before the next stable
-release. Please refer to the [change
-log](https://github.com/informalsystems/apalache/blob/main/CHANGES.md) and
-[manual](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md)
-on the main branch for the description of the newest features. **We
-recommend using the main version if you want to try all the exciting new
-features of Apalache. But be warned: It is called "main" for a reason**. To
-use `main`, just type `ghcr.io/informalsystems/apalache:main` instead of `ghcr.io/informalsystems/apalache`
-everywhere.
+The development of Apalache proceeds at a quick pace and we cut releases weekly.
+Please refer to the [changelog][] and the [manual][] on the `main` development
+branch for a report of the newest features. Since we cut releases weekly, you
+should have access to all the latest features in the last week by using the
+`latest` tag. However, if you wish to use the very latest developments as they
+are added throughout the week, you can run the image with the `main` tag: just
+type `ghcr.io/informalsystems/apalache:main` instead of
+`ghcr.io/informalsystems/apalache` everywhere.
 
 Do not forget to pull the docker image from time to time:
 
@@ -104,6 +102,10 @@ To create an alias pointing to the `main` version:
 ```bash
 $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 ```
+
+[changelog]: https://github.com/informalsystems/apalache/blob/main/CHANGES.md
+[manual]: https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md
+
 
 ## Building an image
 
