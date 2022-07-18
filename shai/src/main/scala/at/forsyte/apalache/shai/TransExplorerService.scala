@@ -124,8 +124,11 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
    */
   def openConnection(req: ConnectRequest): Result[Connection] = for {
     id <- ZIO.effectTotal(UUID.randomUUID())
+    conn = Conn(id)
     _ <- setConnection(Conn(id))
-  } yield Connection(id.toString())
+    connection = Connection(id.toString())
+    _ <- Log.info(Some(connection), "New connection created")
+  } yield connection
 
   /**
    * Parses a spec into a model
@@ -136,15 +139,20 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
    *   the request to load a model, including the root module spec and any auxiliary modules
    */
   def loadModel(req: LoadModelRequest): Result[LoadModelResponse] = for {
+    // Ensure we can get a connection for the request
+    _ <- getConnection(req.conn)
     parseResult <- parseSpec(req.spec, req.aux)
     result <- parseResult match {
       case Right(module) =>
         for {
           _ <- updateConnection(req.conn)(_.setModel(module))
           json = jsonOfModule(module)
+          _ <- Log.info(req.conn, "Specification parsed successfully")
         } yield LoadModelResponse.Result.Spec(json)
       case Left(err) =>
-        ZIO.succeed(LoadModelResponse.Result.Err(err))
+        for {
+          _ <- Log.warn(req.conn, s"Specification parsing failed: ${err}")
+        } yield LoadModelResponse.Result.Err(err)
     }
   } yield LoadModelResponse(result)
 
@@ -177,12 +185,9 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   // Takes a [[RequestConn]] that should always hold a [[Connection]] with a valid UUID
   // and returns the internal [[Conn]] instance storing session data corresponding to the connection.
   //
-  // It provides error checking ont the required presence of a valid Connection
-  // ID, as desribed in the documentation of the [[TransExplorerService]]
-  // service.
-  //
-  // TODO Add logging for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
-  // TODO Add loggin for unregistered conn ID: https://github.com/informalsystems/apalache/issues/1849
+  // It checks for the required presence of a valid Connection ID, as desribed
+  // in the documentation of the [[TransExplorerService]] service, and returns a
+  // protol-level error via the [[zio.Status]] if no valid connection is given.
   private def getConnection(reqConn: RequestConn): Result[Conn] = {
     for {
       uuid <-
@@ -191,16 +196,16 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
             try { ZIO.succeed(UUID.fromString(conn.id)) }
             catch {
               case _: IllegalArgumentException =>
-                ZIO.fail(
-                    Status.INVALID_ARGUMENT.withDescription("Invalid RPC request: Connection id is not a valid UUID"))
+                val msg = s"Invalid RPC request: Connection id ${conn.id} is not a valid UUID"
+                Log.error(None, msg).andThen(ZIO.fail(Status.INVALID_ARGUMENT.withDescription(msg)))
             }
           case None => ZIO.fail(Status.INVALID_ARGUMENT.withDescription("Invalid RPC request: no Connection provided"))
         }
       connMap <- connections.get
       conn <- connMap.get(uuid) match {
         case None =>
-          ZIO.fail(Status.FAILED_PRECONDITION.withDescription(
-                  "Invalid Connection: no Connextion is registered for given ID"))
+          val msg = "Invalid Connection: no connection is registered for id ${uuid}"
+          Log.error(None, msg).andThen(ZIO.fail(Status.FAILED_PRECONDITION.withDescription(msg)))
         case Some(c) => ZIO.succeed(c)
       }
     } yield conn
