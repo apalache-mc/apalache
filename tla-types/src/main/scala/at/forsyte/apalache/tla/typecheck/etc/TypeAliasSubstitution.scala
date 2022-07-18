@@ -4,9 +4,9 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.TypingInputException
 
 /**
- * A substitution from constant names to types. It is very similar to Substitution. However, `ConstSubstitution` is
- * meant to replace constant types, e.g., ENTRY or $entryInCamlCase, with a concrete type, whereas `Substitution`
- * replaces variables. We use `ConstSubstitution` to rewrite type aliases.
+ * A substitution from constant names to types. It is very similar to Substitution. However, [[TypeAliasSubstitution]]
+ * is meant to replace constant types, e.g., ENTRY or $entryInCamlCase, with a concrete type, whereas [[Substitution]]
+ * replaces variables. We use [[TypeAliasSubstitution]] to rewrite type aliases.
  *
  * @param context
  *   a mapping from constant names to types.

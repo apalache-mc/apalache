@@ -98,10 +98,10 @@ case object StrT1 extends TlaType1 {
 }
 
 /**
- * <p>An uninterpreted type constant such as PROC_NAME.</p>
+ * An uninterpreted type constant such as `PROC_NAME`.
  *
- * <p>Inside the type checker, this class may also represent references to type aliases. Do not use this feature outside
- * of the type checker.</p>
+ * Inside the type checker, this class may also represent references to type aliases. Do not use this feature outside of
+ * the type checker.
  *
  * @param name
  *   unique name of the constant type
@@ -136,8 +136,8 @@ object ConstT1 {
   }
 
   /**
-   * Does this type represent a reference to an alias, e.g., $aliasReference. This case is only of relevance to the type
-   * parser and the type checker.
+   * Does this type represent a reference to an alias, e.g., `$aliasReference`. This case is only of relevance to the
+   * type parser and the type checker.
    *
    * @param name
    *   type name
@@ -167,7 +167,8 @@ object ConstT1 {
 
 /**
  * A type variable. Instead of using strings for names, we are just using integers, which makes it easier to process
- * them. To make vars user-friendly, we assign the names a..z to the numbers 0..25. The rest are called a27, a28, etc.
+ * them. To make vars user-friendly, we assign the names a..z to the numbers `0..25`. The rest are called `a27`, `a28`,
+ * etc.
  *
  * @param no
  *   the variable number
@@ -193,7 +194,7 @@ object VarT1 {
       "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
 
   /**
-   * Construct a variable from the human-readable form like 'b' or 'a100'. We use this method to write human-readable
+   * Construct a variable from the human-readable form like `b` or `a100`. We use this method to write human-readable
    * variable names in tests.
    *
    * @param name
@@ -227,7 +228,7 @@ object VarT1 {
   }
 
   /**
-   * Call parse(text).
+   * Call [[parse]] on `text`.
    *
    * @param text
    *   a string representation of a variable
