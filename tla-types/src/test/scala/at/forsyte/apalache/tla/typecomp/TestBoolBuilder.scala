@@ -40,8 +40,8 @@ class TestBoolBuilder extends BuilderTest {
           resultIsExpected(oper),
       ) _
 
-    checkRun(Generators.nonnegativeIntGen)(run(TlaBoolOper.and, builder.and))
-    checkRun(Generators.nonnegativeIntGen)(run(TlaBoolOper.or, builder.or))
+    checkRun(Generators.nonNegativeIntGen)(run(TlaBoolOper.and, builder.and))
+    checkRun(Generators.nonNegativeIntGen)(run(TlaBoolOper.or, builder.or))
 
   }
 

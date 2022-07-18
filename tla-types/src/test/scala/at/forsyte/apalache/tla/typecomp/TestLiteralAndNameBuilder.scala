@@ -37,7 +37,7 @@ class TestLiteralAndNameBuilder extends BuilderTest {
 
     def resultIsExpected(s: String)(resEx: TBuilderResult): Boolean = resEx.eqTyped(ValEx(TlaStr(s))(Typed(StrT1)))
 
-    checkRun(Generators.strGen)(
+    checkRun(Generators.nonEmptyStrGen)(
         runUnary(
             builder.str,
             mkWellTyped,
