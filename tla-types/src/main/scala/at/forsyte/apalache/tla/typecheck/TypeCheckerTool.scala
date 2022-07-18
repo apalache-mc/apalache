@@ -98,7 +98,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
               val (alias, assignedType) = parseTypeAlias(decl.name, text)
               if (!ConstT1.isAliasReference(alias)) {
                 val msg =
-                  s"Operator ${decl.name}: Deprecated syntax in type alias $alias. Use camlCase of Type System 1.2."
+                  s"Operator ${decl.name}: Deprecated syntax in type alias $alias. Use camelCase of Type System 1.2."
                 logger.warn(msg)
               }
               aliases += alias -> assignedType

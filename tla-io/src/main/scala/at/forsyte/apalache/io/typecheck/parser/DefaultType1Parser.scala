@@ -266,7 +266,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
 
   // a reference to an alias
   private def aliasReference: Parser[TlaType1] = {
-    DOLLAR() ~> newAlias ^^ { n => n }
+    DOLLAR() ~> newAlias
   }
 
   // A record field name, like foo_BAR2.

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.typecheck.TypingInputException
 /**
  * A substitution from constant names to types. It is very similar to Substitution. However, `ConstSubstitution` is
  * meant to replace constant types, e.g., ENTRY or $entryInCamlCase, with a concrete type, whereas `Substitution`
- * replaces variables. We use `ConstSubstitution` to implement rewrite type aliases.
+ * replaces variables. We use `ConstSubstitution` to rewrite type aliases.
  *
  * @param context
  *   a mapping from constant names to types.
@@ -23,7 +23,7 @@ class TypeAliasSubstitution(val context: Map[String, TlaType1]) {
    * Recursively apply type aliases to all other type aliases in [[context]].
    *
    * @throws TypingInputException
-   *   if found undefined type aliases.
+   *   if undefined type aliases are found.
    * @return
    *   a new substitution that has all aliases substituted.
    */
