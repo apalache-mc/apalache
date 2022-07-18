@@ -3114,7 +3114,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck TestAliasOld.tla | sed 's/[IEW]@.*//'
 ...
-Operator TestAlias_aliases: Deprecated syntax in type alias OLD_ALIAS. Use camlCase of Type System 1.2.
+Operator TestAlias_aliases: Deprecated syntax in type alias OLD_ALIAS. Use camelCase of Type System 1.2.
 ...
 EXITCODE: OK
 ```
