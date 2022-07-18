@@ -155,20 +155,31 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
   }
 
   test("ALIAS1 = Int") {
+    // old syntax that we are going to remove
     val (name, tt) = DefaultType1Parser.parseAlias("ALIAS1 = [a: Int, b: Bool]")
     assert("ALIAS1" == name)
     assert(RecT1("a" -> IntT1, "b" -> BoolT1) == tt)
   }
 
   test("ALIAS2 = Set(ALIAS1)") {
+    // old syntax that we are going to remove
     val (name, tt) = DefaultType1Parser.parseAlias("ALIAS2 = Set(ALIAS1)")
     assert("ALIAS2" == name)
     // ALIAS1 is not replaced immediately, it has to be substituted when we have the map of all aliases
     assert(SetT1(ConstT1("ALIAS1")) == tt)
   }
 
-  test("incorrect name: alias1 = Set(ALIAS3)") {
-    assertThrows[Type1ParseError](DefaultType1Parser.parseAlias("alias1 = Set(ALIAS3)"))
+  test("newSyntaxInCamelCase = Set($refToAnotherAlias)") {
+    val (name, tt) = DefaultType1Parser.parseAlias("newSyntaxInCamelCase = Set($refToAnotherAlias)")
+    assert("$newSyntaxInCamelCase" == name)
+    // before $refToAnotherAlias is substituted with the type assigned to refToAnotherAlias
+    assert(SetT1(ConstT1("$refToAnotherAlias")) == tt)
+  }
+
+  test("lowercase = Set(Int)") {
+    // just lower case should also work
+    val (name, _) = DefaultType1Parser.parseAlias("lowercase = Set(Int)")
+    assert("$lowercase" == name)
   }
 
   test("Set(ENTRY)") {

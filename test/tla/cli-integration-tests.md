@@ -3109,9 +3109,38 @@ $ apalache-mc typecheck --features=rows TestReqAckVariants.tla | sed 's/[IEW]@.*
 EXITCODE: OK
 ```
 
+### typecheck TestAliasOld.tla
+
+```sh
+$ apalache-mc typecheck TestAliasOld.tla | sed 's/[IEW]@.*//'
+...
+Operator TestAlias_aliases: Deprecated syntax in type alias OLD_ALIAS. Use camelCase of Type System 1.2.
+...
+EXITCODE: OK
+```
+
+### typecheck TestAliasNew.tla
+
+```sh
+$ apalache-mc typecheck TestAliasNew.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck TestAliasNewMissing.tla
+
+```sh
+$ apalache-mc typecheck TestAliasNewMissing.tla | sed 's/[IEW]@.*//'
+...
+Typing input error: Missing @typeAlias: newAlias = <type>;
+...
+EXITCODE: ERROR (255)
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag
+
 If we run with the `--out-dir` flag
 
 ```sh
