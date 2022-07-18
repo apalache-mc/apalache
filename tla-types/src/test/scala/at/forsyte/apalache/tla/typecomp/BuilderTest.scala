@@ -51,8 +51,23 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     def minIntGen(min: Int) = Gen.choose(min, min + 10)
 
+    val intGen: Gen[Int] = minIntGen(-5)
     val positiveIntGen: Gen[Int] = minIntGen(1)
-    val nonnegativeIntGen: Gen[Int] = minIntGen(0)
+    val nonNegativeIntGen: Gen[Int] = minIntGen(0)
+
+    val boolGen: Gen[Boolean] = Gen.oneOf(true, false)
+
+    // empty strings mess up regex matching for uninterpreted literals. See ModelValueHandler.matchRegex.
+    val nonEmptyStrGen: Gen[String] = Gen.alphaStr.suchThat(_.nonEmpty)
+    val uninterpretedTypeNameGen: Gen[String] = Gen.alphaUpperStr.suchThat(_.nonEmpty)
+    val uninterpretedLiteralGen: Gen[String] = for {
+      name <- nonEmptyStrGen
+      uiType <- uninterpretedTypeNameGen
+    } yield s"${name}_OF_$uiType"
+
+    val uninterpretedTypeGen: Gen[ConstT1] = uninterpretedTypeNameGen.map { ConstT1 }
+
+    val uninterpretedIndexAndTypeGen: Gen[(String, ConstT1)] = Gen.zip(nonEmptyStrGen, uninterpretedTypeGen)
 
     protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
@@ -61,7 +76,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val parameterTypeGen: Gen[TlaType1] = for {
       t <- tt1gen.genPrimitive
-      n <- nonnegativeIntGen
+      n <- nonNegativeIntGen
       ts <- Gen.listOfN(n, tt1gen.genPrimitive)
     } yield n match {
       case 0          => t
@@ -75,7 +90,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val declTypesGen: Gen[DeclParamT] = for {
       t <- singleTypeGen
-      n <- nonnegativeIntGen
+      n <- nonNegativeIntGen
       ts <- Gen.listOfN(n, parameterTypeGen)
     } yield (t, ts)
 
@@ -88,10 +103,10 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def seqOfTypesGenMinLenGen(min: Int) = minIntGen(min).flatMap(Gen.listOfN(_, singleTypeGen))
 
     val seqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(0)
-    val nonemptySeqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(1)
+    val nonEmptySeqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(1)
 
     val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
-    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptySeqOfTypesGen)
+    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonEmptySeqOfTypesGen)
 
     // unsafe for non-applicative
     private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
@@ -131,15 +146,13 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     } yield (t, seq)
 
     val positiveIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
-    val nonnegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
+    val nonNegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonNegativeIntGen, singleTypeGen)
 
-    val strGen: Gen[String] = Gen.alphaStr
-
-    val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(strGen, singleTypeGen)
+    val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(nonEmptyStrGen, singleTypeGen)
 
     val variantGen: Gen[VariantT1] = for {
       n <- Gen.choose(1, 5)
-      flds <- Gen.listOfN(n, Gen.zip(strGen, singleTypeGen))
+      flds <- Gen.listOfN(n, Gen.zip(nonEmptyStrGen, singleTypeGen))
     } yield VariantT1(RowT1(SortedMap(flds: _*), None))
 
     def variantGenWithMandatoryEntry(mandatoryEntry: (String, TlaType1)): Gen[VariantT1] = variantGen.map { variantT =>
@@ -152,12 +165,12 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       }
 
     val tagAndVariantGen: Gen[(String, VariantT1)] = for {
-      tagName <- strGen
+      tagName <- nonEmptyStrGen
       variantT <- variantGenWithMandatoryField(tagName)
     } yield (tagName, variantT)
 
     val tagValVariantGen: Gen[(String, TlaType1, VariantT1)] = for {
-      tagName <- strGen
+      tagName <- nonEmptyStrGen
       valT <- singleTypeGen
       variantT <- variantGenWithMandatoryEntry(tagName -> valT)
     } yield (tagName, valT, variantT)

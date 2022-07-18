@@ -249,7 +249,7 @@ class TestApalacheBuilder extends BuilderTest {
         _ => BoolT1,
     )
 
-    checkRun(Generators.nonnegativeIntAndTypeGen)(
+    checkRun(Generators.nonNegativeIntAndTypeGen)(
         runUnary(
             builder.constCard,
             mkWellTyped,
@@ -335,7 +335,7 @@ class TestApalacheBuilder extends BuilderTest {
     // We don't want generators producing BigInt, so we have to manually cast the parameter argument
     def mkSeqFromInt(i: Int, x: TBuilderInstruction): TBuilderInstruction = builder.mkSeq(BigInt.int2bigInt(i), x)
 
-    checkRun(Generators.nonnegativeIntAndTypeGen)(
+    checkRun(Generators.nonNegativeIntAndTypeGen)(
         runBinary(
             mkSeqFromInt,
             mkWellTyped,
