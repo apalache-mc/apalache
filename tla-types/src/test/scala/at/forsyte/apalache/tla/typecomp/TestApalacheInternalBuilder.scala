@@ -104,7 +104,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     )
   }
 
-  test("selectInSet/storeInSet2/storeNotInSet") {
+  test("selectInSet(Set)/storeInSet2/storeNotInSet") {
     type T = (TBuilderInstruction, TBuilderInstruction)
 
     def mkWellTyped(tt: TlaType1): T =
@@ -147,6 +147,51 @@ class TestApalacheInternalBuilder extends BuilderTest {
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.selectInSet, builder.selectInSet))
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeInSet, builder.storeInSet))
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))
+  }
+
+  test("selectInSet(Fun)") {
+    type T = (TBuilderInstruction, TBuilderInstruction)
+    type TParam = (TlaType1, TlaType1)
+
+    def mkWellTyped(tparam: TParam): T = {
+      val (a, b) = tparam
+      (
+          builder.name("x", a),
+          builder.name("f", FunT1(a, b)),
+      )
+    }
+
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (a, b) = tparam
+      Seq(
+          (
+              builder.name("x", InvalidTypeMethods.differentFrom(a)),
+              builder.name("f", FunT1(a, b)),
+          ),
+          (
+              builder.name("x", a),
+              builder.name("f", FunT1(InvalidTypeMethods.differentFrom(a), b)),
+          ),
+      )
+    }
+
+    def resultIsExpected = {
+      expectEqTyped[TParam, T](
+          ApalacheInternalOper.selectInSet,
+          mkWellTyped,
+          ToSeq.binary,
+          { case (_, t) => t },
+      )
+    }
+
+    checkRun(Generators.doubleTypeGen)(
+        runBinary(
+            builder.selectInSet,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
   }
 
   test("storeInSet3") {
