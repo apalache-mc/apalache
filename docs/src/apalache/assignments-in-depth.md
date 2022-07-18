@@ -75,7 +75,7 @@ that has one of the following forms:
 - `x' = e`,
 - `x' \in S`,
 - `UNCHANGED x`, or
-- `x' := e` (note that `:=` is the operator defined in [Apalache.tla](https://github.com/informalsystems/apalache/blob/unstable/src/tla/Apalache.tla))
+- `x' := e` (note that `:=` is the operator defined in [Apalache.tla](https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla))
 
 So to reformulate the second requirement: the transition operator must contain
 at least one assignment candidate for each variable declared in the

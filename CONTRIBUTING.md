@@ -91,7 +91,7 @@ to [.github/CODEOWNERS](.github/CODEOWNERS).
 
 Sometimes a contributor wants to ensure that they have a chance to review a
 [pull request](#making-a-pull-request) before the changes are landed in
-`unstable`. Contributors can lock the PR to prevent it from being merged before
+`main`. Contributors can lock the PR to prevent it from being merged before
 they can complete a review by leaving an empty review on the PR, requesting
 changes, along with a note like:
 
@@ -125,11 +125,11 @@ of landing changes:
 
 ## Making a pull request
 
-We develop on the `unstable` branch and practice [trunk-based
+We develop on the `main` branch and practice [trunk-based
 development](https://trunkbaseddevelopment.com/).
 
 Nontrivial changes should start with a [draft pull request][] against
-`unstable`. The draft signals that work is underway. When the work is ready for
+`main`. The draft signals that work is underway. When the work is ready for
 feedback, hitting "Ready for Review" will signal to the maintainers that you are
 ready for them to take a look.
 
@@ -142,7 +142,7 @@ Each stage of the process is aimed at creating feedback cycles which align
 contributors and maintainers to make sure:
 
 - Contributors don’t waste their time implementing/proposing features which
-  won’t land in `unstable`.
+  won’t land in `main`.
 - Maintainers have the necessary context in order to support and review
   contributions.
 
@@ -471,14 +471,14 @@ The process proceeds in two steps:
 Assuming the current version recorded in the project's `VERSION` file is
 `l.m.n-SNAPSHOT`, the manual release process is as follows:
 
-- [ ] `git checkout unstable && git pull`
+- [ ] `git checkout main && git pull`
 - [ ] Run `./script/release-prepare.sh` to
   - create and checkout a branch `release/l.m.n`.
   - prepare and add a release commit `[release] l.m.n`
   - update the changelog
   - bump the version number
   - commit the changes
-  - opens a pr into `unstable` with the title `[release] l.m.n`.
+  - opens a pr into `main` with the title `[release] l.m.n`.
 - [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
 
 If you need to set a specific version (e.g., to increment to a major version),
@@ -490,9 +490,9 @@ RELEASE_VERSION=l.m.n ./script/release-prepare.sh
 
 #### Cut the release
 
-When the PR is merged into `unstable`:
+When the PR is merged into `main`:
 
-- [ ] Checkout the `[release] l.m.n` commit from the latest `unstable`
+- [ ] Checkout the `[release] l.m.n` commit from the latest `main`
 - [ ] Run `./script/release-publish.sh` to
   - tag the release commit
   - package the

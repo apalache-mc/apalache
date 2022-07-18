@@ -2,7 +2,7 @@ name: release
 
 on:
   pull_request:
-    branches: [unstable]
+    branches: [main]
     types: [closed]
 
 jobs:
