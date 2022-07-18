@@ -1,6 +1,20 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.25.10 - 2022-07-18
+
+### Features
+
+- Add RPC to load spec to the experimental Shai server (see #1114)
+
+### Bug fixes
+
+- Add workaround for Sany parsing failures when running parallel instances of Apalache (see #1959)
+
+### Documentation
+
+- Added TLA+ syntax highlighting to the manual, see #1972
+
 ## 0.25.9 - 2022-07-11
 
 ### Features
