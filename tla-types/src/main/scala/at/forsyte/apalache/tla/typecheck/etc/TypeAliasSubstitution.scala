@@ -142,12 +142,14 @@ object TypeAliasSubstitution {
           if (fun.isDefinedAt(name)) {
             (fun(name), true)
           } else {
-            // The behavior for an OLD_TYPE_ALIAS is to understand it as an uninterpreted type.
-            // Since in the old syntax, we cannot distinguish between uninterpreted types and type aliases,
-            // we cannot do much here.
             if (!ConstT1.isAliasReference(name)) {
+              // The behavior for an OLD_TYPE_ALIAS is to interpret it as an uninterpreted type,
+              // when the user has not written @typeAlias: OLD_TYPE_ALIAS = ...;
+              // Hence, in this case we simply do not do any substitution.
+              // When we switch to the new aliases completely, this behavior will be forbidden.
               (tp, false)
             } else {
+              // with the new alias syntax, we can issue an error
               val originalName = ConstT1.aliasNameFromReference(name)
               val msg = s"Missing @typeAlias: $originalName = <type>;"
               throw new TypingInputException(msg, UID.nullId)
