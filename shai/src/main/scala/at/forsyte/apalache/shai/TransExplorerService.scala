@@ -99,7 +99,11 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   // any incoming requests.
   private type RequestConn = Option[Connection]
 
-  // A private object to give us ZIO managed access to an external logger
+  // A private object to give us ZIO managed access to an external logger.
+  //
+  // We need to lift the calls to the logger into ZIO effects so they can be
+  // managed by the ZIO schedular for concurrent execution. See the project documentation
+  // in shai/README.md for tips and references on understanding effects in ZIO.
   private object Log {
     private def shaiMsg(conn: RequestConn, msg: String): String = {
       val connId = conn.map(_.id).getOrElse("NO_CONNECTION")
