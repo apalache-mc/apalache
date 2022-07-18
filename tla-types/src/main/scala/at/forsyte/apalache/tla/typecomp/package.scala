@@ -2,21 +2,65 @@ package at.forsyte.apalache.tla
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.typecomp.SignatureMap
 import scalaz._
 
 import scala.language.implicitConversions
 
 /**
- * The key definitions related to the typed builder. The most important ones for the users of this API are the methods:
+ * This package defines key types and conversions related to [[ScopedBuilder]].
  *
- *   - an implicit conversion [[typecomp#build]] that converts a builder state to its final form, e.g., to `TlaEx`.
- *   - an implicit conversion [[typecomp#liftBuildToSeq]] that applies `build` to a sequence.
+ * <h1> A brief introduction to [[ScopedBuilder]] <h1>
  *
- * To use the above methods in your code, import the implicit conversions as follows:
+ * [[ScopedBuilder]] is a utility class for generating TLA+ IR expressions. It can be conceptually separated into three
+ * distinct layers:
+ *   1. The signature layer
+ *   1. The type-safe, scope-unsafe layer
+ *   1. The type-safe, scope-safe layer
  *
+ * <h2> The signature layer <h2>
+ *
+ * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. The majority (but not all) of the operators have
+ * type signatures, that is, they restrict the types of the arguments, that may be used to construct valid [[OperEx]]
+ * expressions. For instance, [[at.forsyte.apalache.tla.lir.oper.TlaArithOper.plus]] represents the arithmetic operator
+ * `+` and has the signature `(Int, Int) => Int` in the type system, meaning that `e@OperEx(TlaArithOper.plus, x, y)` is
+ * considered valid iff both `x`, `y`, and `e` are all tagged with `Typed(IntT1)`. Similarly,
+ * [[at.forsyte.apalache.tla.lir.oper.TlaOper.chooseBounded]] has the signature `(t, Set(t), Bool) => t`, meaning that
+ * `e@OperEx(TlaOper.chooseBounded, x, S, p)` is considered valid if `x` and `e` are tagged with `Typed(t: TlaType1)`,
+ * for some `t`, `S` is tagged with `Typed(SetT1(t))` (for the same `t`), and `p` is tagged with `Typed(BoolT1)`.
+ *
+ * You can think of a signature `(a1,...,an) => b` as a partial function; given a sequence of argument types `v1, ...
+ * vn`, it returns some type `c` (derived from `b`), if the types `v1, ..., vn` match the pattern `a1, ..., an`. More
+ * precisely, the return value is `s(b)`, if there exists some type substitution `s`, such that `s(ai) = vi` for all i.
+ *
+ * To reason about signatures, we define two types, [[PartialSignature]] and [[Signature]]. They serve the same purpose,
+ * but differ in the way they behave on mis-matches. [[PartialSignature]]s are bare-bones descriptions of the
+ * happy-case; given an input pattern `a1,...,an`, they describe the output `b`. For example, `plus` has the
+ * [[PartialSignature]]
  * {{{
- *  import at.forsyte.apalache.tla.typecomp._
+ *   { case Seq(IntT1, IntT1) => IntT1 }
  * }}}
+ * that is, given an input sequence of exactly two arguments, both of which are `IntT1`, it deduces the result type to
+ * be `IntT1`. Similarly, `chooseBounded` has the signature
+ * {{{
+ *   { case Seq(t, SetT1(tt), BoolT1) if t == tt => t }
+ * }}}
+ * that is, given an input sequence of exactly three arguments, the first two of which are `t` and `Set(t)`, for some
+ * `t`, and the last of which is `BoolT1, , it deduces the result type to be `t`. This means that applying this partial
+ * signature to `Seq(IntT1, SetT1(IntT1), BoolT1)`, would return `IntT1` while applying it to `Seq(StrT1, SetT1(StrT1),
+ * BoolT1)` would return `StrT1`. It is not applicable to `Seq(IntT1, SetT1(StrT1), BoolT1)`.
+ *
+ * [[Signature]]s complete [[PartialSignature]]s, by equipping them with an exception message, should the input sequence
+ * not match the pattern defined by the [[PartialSignature]]. This lifting is done by [[BuilderUtil.completePartial]],
+ * which can be further refined by [[BuilderUtil.checkForArityException]], to output a more precise error message,
+ * outlining whether [[PartialSignature]] application failed because of the non-existence of a type substitution, or
+ * simply because of an invalid arity.
+ *
+ * [[SignatureMap]] represents a map from [[at.forsyte.apalache.tla.lir.oper.ApalacheOper]]s to their signatures (for
+ * those that have one). The module [[signatures]] defines maps for various subtypes of
+ * [[at.forsyte.apalache.tla.lir.oper.ApalacheOper]], grouped by their category. A convenience method
+ * [[BuilderUtil.signatureMapEntry]] is provided, which creates a [[SignatureMap]] entry from a partial signature and
+ * operator. Internally, it invokes [[BuilderUtil.checkForArityException]], by reading the operator's name and arity.
  */
 package object typecomp {
 
