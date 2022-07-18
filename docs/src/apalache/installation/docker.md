@@ -39,7 +39,7 @@ The following docker parameters are used:
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
 - `informalsystems/apalache` is the APALACHE docker image name. By default, the `latest` stable
-  version is used; you can also refer to a specific tool version, e.g., `informalsystems/apalache:0.6.0` or `informalsystems/apalache:unstable`
+  version is used; you can also refer to a specific tool version, e.g., `informalsystems/apalache:0.6.0` or `informalsystems/apalache:main`
 - `<args>` are the tool arguments as described in [Running the Tool](../running.md).
 
 We provide a convenience wrapper for this docker command in
@@ -69,40 +69,40 @@ Apalache in docker while sharing the working directory:
 
 $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache'
 
-###### using the latest unstable
+###### using the latest main
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 ```
 
-## Using the unstable version of Apalache
+## Using the main version of Apalache
 
 The development of Apalache proceeds at a high pace, and we introduce a
-substantial number of improvements in the unstable branch before the next stable
+substantial number of improvements in the main branch before the next stable
 release. Please refer to the [change
-log](https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md) and
-[manual](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/index.md)
-on the unstable branch for the description of the newest features. **We
-recommend using the unstable version if you want to try all the exciting new
-features of Apalache. But be warned: It is called "unstable" for a reason**. To
-use `unstable`, just type `ghcr.io/informalsystems/apalache:unstable` instead of `ghcr.io/informalsystems/apalache`
+log](https://github.com/informalsystems/apalache/blob/main/CHANGES.md) and
+[manual](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md)
+on the main branch for the description of the newest features. **We
+recommend using the main version if you want to try all the exciting new
+features of Apalache. But be warned: It is called "main" for a reason**. To
+use `main`, just type `ghcr.io/informalsystems/apalache:main` instead of `ghcr.io/informalsystems/apalache`
 everywhere.
 
 Do not forget to pull the docker image from time to time:
 
 ```bash
-docker pull ghcr.io/informalsystems/apalache:unstable
+docker pull ghcr.io/informalsystems/apalache:main
 ```
 
 Run it with the following command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache:unstable <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache:main <args>
 ```
 
-To create an alias pointing to the `unstable` version:
+To create an alias pointing to the `main` version:
 
 ```bash
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 ```
 
 ## Building an image

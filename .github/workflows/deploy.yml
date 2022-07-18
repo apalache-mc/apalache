@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - master
-      # TODO Remove once deploying unstable versions separately
-      - unstable
+      # TODO Remove once deploying main versions separately
+      - main
 
 jobs:
   deploy:

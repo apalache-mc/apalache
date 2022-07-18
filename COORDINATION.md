@@ -37,7 +37,7 @@ shared understanding of how to use and interpret the main features:
 (For more on projects vs. milestones, see
 https://stackoverflow.com/a/47542346/1187277)
 
-[adr and rfc]: https://github.com/informalsystems/apalache/tree/unstable/docs/src/adr
+[adr and rfc]: https://github.com/informalsystems/apalache/tree/main/docs/src/adr
 [discussion]: https://github.com/informalsystems/apalache/discussions
 [issues]: https://github.com/informalsystems/apalache/issues
 [labels]: https://github.com/informalsystems/apalache/issues/labels
@@ -109,7 +109,7 @@ nothing is a priority".
 
 We use a modified action-priority matrix. Our prioritization process is
 recorded in
-[RFC-21](https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/021rfc-prioritization.md)
+[RFC-21](https://github.com/informalsystems/apalache/blob/main/docs/src/adr/021rfc-prioritization.md)
 
 ### Milestones
 

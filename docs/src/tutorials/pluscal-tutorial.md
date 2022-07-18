@@ -239,9 +239,9 @@ IsPositive(x) == x > 0
 ## Conclusion
 
 The final specifications can be found in
-[BakeryTyped.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryTyped.tla)
+[BakeryTyped.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla)
 and
-[BakeryWoTlaps.tla](https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryWoTlaps.tla).
+[BakeryWoTlaps.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla).
 
 In this tutorial we have shown how to:
 
@@ -264,7 +264,7 @@ or drop us a message on [Zulip chat].
 
 [PlusCal specification]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
 [Bakery.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
-[BakeryWoTlaps.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryWoTlaps.tla
+[BakeryWoTlaps.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla
 [Entry-level Tutorial on the Model Checker]: ./entry-tutorial.md
 [HOWTO on writing type annotations]: ../HOWTOs/howto-write-type-annotations.md
 [Apalache installation]: ../apalache/installation/index.md
