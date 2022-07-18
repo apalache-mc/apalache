@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaArithOper, TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper}
 import at.forsyte.apalache.tla.types.tla.TypedParam
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
