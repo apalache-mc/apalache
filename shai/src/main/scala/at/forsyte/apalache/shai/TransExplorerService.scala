@@ -25,6 +25,7 @@ import io.grpc.Status
 import java.util.UUID
 import zio.{Ref, Semaphore, ZEnv, ZIO}
 import zio.duration._
+import com.typesafe.scalalogging.Logger
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -81,8 +82,11 @@ private case class Conn(
  *   A semaphore used to ensure atomic access to the SANY parser. This is necessitated by the statefull design of the
  *   SANY parser, which makes it impossible to run two instance of the parser concurrently in the same runtime. See
  *   https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894 for details.
+ *
+ * @param logger
+ *   The logger used by the service
  */
-class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore)
+class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore, logger: Logger)
     extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
   /** Concurrent tasks performed by the service that produce values of type [[T]] */
@@ -94,6 +98,18 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   // fields, so instead we have to validate that the connection is supplied for
   // any incoming requests.
   private type RequestConn = Option[Connection]
+
+  // A private object to give us ZIO managed access to an external logger
+  private object Log {
+    private def shaiMsg(conn: RequestConn, msg: String): String = {
+      val connId = conn.map(_.id).getOrElse("NO_CONNECTION")
+      s"[Shai:${connId}]: ${msg}"
+    }
+    def debug(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.debug(shaiMsg(conn, msg)))
+    def info(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.info(shaiMsg(conn, msg)))
+    def warn(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.warn(shaiMsg(conn, msg)))
+    def error(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.error(shaiMsg(conn, msg)))
+  }
 
   /**
    * Creates and registers a new connection
