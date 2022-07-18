@@ -119,6 +119,8 @@ case class ConstT1(name: String) extends TlaType1 {
  * A companion object for [[ConstT1]].
  */
 object ConstT1 {
+  // the regular expression that recognizes uninterpreted types
+  private val uninterpretedRegex = "[A-Z_][A-Z0-9_]*".r
 
   /**
    * Does this type represent an uninterpreted type, e.g., PROCESS. Outside of the type parser and the type checker,
@@ -130,7 +132,7 @@ object ConstT1 {
    *   true iff the type name represents an uninterpreted type.
    */
   def isUninterpreted(name: String): Boolean = {
-    name.forall(c => c.isUpper || c.isDigit || c == '_')
+    uninterpretedRegex.matches(name)
   }
 
   /**
