@@ -560,7 +560,7 @@ class TestSetBuilder extends BuilderTest {
         },
     )
 
-    checkRun(Generators.nonemptySeqOfTypesGen)(
+    checkRun(Generators.nonEmptySeqOfTypesGen)(
         runVariadic(
             builder.recSetMixed,
             mkWellTyped,
@@ -628,7 +628,7 @@ class TestSetBuilder extends BuilderTest {
         },
     )
 
-    checkRun(Generators.nonemptySeqOfTypesGen)(
+    checkRun(Generators.nonEmptySeqOfTypesGen)(
         runVariadic(
             builder.recSet,
             mkWellTyped2,
