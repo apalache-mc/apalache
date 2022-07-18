@@ -284,10 +284,10 @@ Type System 1.2, pass <code>--features=rows</code> to <code>typecheck</code> or 
 e.g., <code>check</code>:</p>
 <pre><code class="language-sh">$ apalache-mc typecheck --features=rows MySpec.tla
 </code></pre>
-<p>As discussed in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
+<p>As discussed in <a href="https://github.com/informalsystems/apalache/blob/trunk/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
-given in <a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR014</a>, we discuss the extension of the type grammar in this
+given in <a href="https://github.com/informalsystems/apalache/blob/trunk/docs/src/adr/014adr-precise-records.md">ADR014</a>, we discuss the extension of the type grammar in this
 ADR-002. If you do not know about row typing, it may be useful to check the
 Wikipedia page on  <a href="https://en.wikipedia.org/wiki/Row_polymorphism">Row polymorphism</a>. We extend the grammar with new
 records, variants, and rows as follows:</p>
@@ -383,7 +383,7 @@ better tests the field <code>type</code> carefully.</p>
 their record types (including the Apalache developers!). Hence, we are
 migrating to Type System 1.2.</p>
 <p><strong>Sets of tagged records (variants) in Type System 1.2.</strong> Apalache provides the
-user with the module <a href="https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla">Variants.tla</a> that implements operators over <a href="https://en.wikipedia.org/wiki/Tagged_union">variant
+user with the module <a href="https://github.com/informalsystems/apalache/blob/trunk/src/tla/Variants.tla">Variants.tla</a> that implements operators over <a href="https://en.wikipedia.org/wiki/Tagged_union">variant
 types</a>.</p>
 <p>Using variants, we can write the above set of messages as follows:</p>
 <pre><code class="language-tla">{
