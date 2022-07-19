@@ -17,30 +17,37 @@ import scala.collection.immutable.SortedMap
 /**
  * BuilderTest implements a framework for PB testing various Builder methods.
  *
- * Since builder methods have many different arities no useful Scala-native supertype to represent the type of a builder
- * method in full generality. To this end, we use shapeless' HList (H for heterogeneous) as a representation of any
- * builder method's argument types. For example:
- *   - plus has the signature (TBuilderInstruction,TBuilderInstruction) => TBuilderInstruction, represented by
- *     TBuilderInstruction :: TBuilderInstruction :: HNil <: HList
- *   - union has the signature (TBuilderInstruction) => TBuilderInstruction, and is represented by the type
- *     TBuilderInstruction :: HNil <: HList
- *   - map has the signature (TBuilderInstruction, TBuilderInstruction*) => TBuilderInstruction, represented by
- *     TBuilderInstruction :: Seq[TBuilderInstruction] :: HNil <: HList
+ * Since builder methods have many different arities, there is no useful Scala-native supertype to represent the type of
+ * a builder method in full generality. To this end, we use shapeless' [[HList]] (H for heterogeneous) as a
+ * representation of any builder method's argument types. For example:
+ *   - plus has the signature `(TBuilderInstruction,TBuilderInstruction) => TBuilderInstruction`, represented by
+ *     `TBuilderInstruction :: TBuilderInstruction :: HNil <: HList`
+ *   - union has the signature `(TBuilderInstruction) => TBuilderInstruction`, and is represented by the type
+ *     `TBuilderInstruction :: HNil <: HList`
+ *   - map has the signature `(TBuilderInstruction, TBuilderInstruction*) => TBuilderInstruction`, represented by
+ *     `TBuilderInstruction :: Seq[TBuilderInstruction] :: HNil <: HList`
  *
- * The central method, with various convenience extensions, is runPBT, which performs the following testing tasks:
- *   - Tests whether a TBuilderInstruction, which is supposed to construct a well-typed operator expression actually
+ * The central method, with various convenience extensions, is [[runPBT]], which performs the following testing tasks:
+ *   - Tests whether a [[TBuilderInstruction]], which is supposed to construct a well-typed operator expression actually
  *     does
- *   - Tests whether all of the inputs which would have produced an ill-typed expression actually cause `build` to fail
+ *   - Tests whether all of the inputs which would have produced an ill-typed expression actually cause [[build]] to
+ *     fail
  *
- * = HOW TO WRITE A NEW TEST =
+ * =HOW TO WRITE A NEW TEST=
  *
- * Suppose we want to add a test for a binary TLA+ operator `Foo(x,y) == ...` which has an internal
- * representation of `foo` and is built by the `builder.foo` method. Assume, for the purposes of this example, that Foo
- * takes two arguments, `x: a` and `y: a -> b`, and returns a value of type `b`, for any pair of types `a` and `b`.
+ * It is assumed that you are familiar with the package [[typecomp]] and the basics of [[ScopedBuilder]]. If not, read
+ * the [[typecomp]] documentation first.
+ *
+ * Suppose we want to add a test for a binary TLA+ operator `Foo(x,y) == ...` which has an internal representation of
+ * `foo` (a subclass of [[TlaOper]]) and is built by the `builder.foo` method. Assume, for the purposes of this example,
+ * that Foo takes two arguments, `x: a` and `y: a -> b`, and returns a value of type `b`, for any pair of types `a` and
+ * `b`.
+ *
+ * The Foo example is implemented in [[HOWTOTestFooBuilder]].
  *
  * We add a `test("foo")` to `TestOperCategoryBuilder`, where `OperCategory` is the class of operators foo belongs to
- * ([[TlaSetOper]], [[ApalacheOper]], etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying types.
- * To do this, we need to determine the following:
+ * ([[TlaSetOper]], [[ApalacheOper]], etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying
+ * types. To do this, we need to determine the following:
  *
  * <ol>
  *
@@ -55,22 +62,25 @@ import scala.collection.immutable.SortedMap
  * <li> A description of a test run, for a fixed instance of parameters. [[checkRun]] accepts two arguments: a generator
  * (discussed later) and a `run`, which is a predicate over `TParam`. A `run` should test the builder method (e.g.
  * `builder.foo`) for parameterized correctness (tested against all parameters produced by the generator), and should
- * return true every time if the method is correctly implemented. You _can_ write a custom run, but the recommended way
- * is to use one of the pre-written templates, i.e. [[runUnary]], [[runBinary]], [[runTernary]], [[runVariadic]], or
+ * return true every time if the method is correctly implemented. You ''can'' write a custom run, but the recommended
+ * way is to use one of the pre-written templates, i.e. [[runUnary]], [[runBinary]], [[runTernary]], [[runVariadic]], or
  * [[runVariadicWithDistinguishedFirst]] (depending on the arity of the builder method). </li>
  *
  * </ol>
+ *
+ * ==Using `run-` templates==
  *
  * Assume we want to use the [[runBinary]] template to test our `builder.foo`. Regardless of arity, each template takes
  * four arguments:
  *
  * <ol>
  *
- * <li> The `method`. [[runBinary]] requires a binary method, other templates require methods of their corresponding arities. In our case, we pass `builder.foo`. </li>
+ * <li> The `method`. [[runBinary]] requires a binary method, other templates require methods of their corresponding
+ * arities. In our case, we pass `builder.foo`. </li>
  *
  * <li> A well-typed argument constructor `mkWellTyped`. It should have the type `TParam => T`, i.e., given type
- * parameters, it should construct a pair of arguments `(x,y)`, such that `build(builder.foo(x,y)` succeeds. In our
- * case:
+ * parameters, it should construct a number of arguments `(x1, ..., xn)`, such that `build(method(x1,...,xn))` succeeds.
+ * In our case:
  * {{{
  *    def mkWellTyped(tparam: TParam): T = {
  *      val (a, b) = tparam
@@ -83,8 +93,8 @@ import scala.collection.immutable.SortedMap
  * since the 1st argument must have the type `a`, and the 2nd the type `a -> b`. </li>
  *
  * <li> A constructor of ill-typed arguments `mkIllTyped`. It should have the type `TParam => Seq[T]`, i.e., given type
- * parameters, it should construct a sequence of pairs of arguments `(x,y)`, such that `build(builder.foo(x,y)` produces
- * a [[TBuilderTypeException]] for each pair. In our case:
+ * parameters, it should construct a sequence of tuples of arguments `(x1, ..., xn)`, such that
+ * `build(method(x1,...,xn))` produces a [[TBuilderTypeException]] for each tuple of arguments. In our case:
  * {{{
  *    def mkIllTyped(tparam: TParam): Seq[T] = {
  *      val (a, b) = tparam
@@ -104,9 +114,10 @@ import scala.collection.immutable.SortedMap
  *      )
  *    }
  * }}}
- * since there are three ways of violating the type constraints. If `x` has the type `c` and `y` has the type `a -> b`,
- * where `c /= a`, if `y` doesn't have a function type at all, or if `x` has the type `a` and `y` has the type `c -> b`,
- * where `c /= a`. Note that the following is ''not'' ill-typed:
+ * since there are three ways of violating the type constraints (i.e. the required relation between the types of `x` and
+ * `y` imposed by the signature of `Foo`). If `x` has the type `c` and `y` has the type `a -> b`, where `c /= a`, if `y`
+ * doesn't have a function type at all, or if `x` has the type `a` and `y` has the type `c -> b`, where `c /= a`. Note
+ * that the following is ''not'' ill-typed:
  * {{{
  *    (
  *        builder.name("x", a),
@@ -121,16 +132,17 @@ import scala.collection.immutable.SortedMap
  * }}}
  * </li>
  *
- * <li> A judgement method `resultIsExpected`, that returns true iff the value produced by `method` meets expectations. You can write your own, but the
- * standard way is to use [[expectEqTyped]], which tests whether the builder constructs an [[OperEx]] expression with
- * the correct operator, arguments, and type tag.
- * `resultIsExpected` has the type `TParam => ResultT => Boolean`, i.e., if `method`
- * produces a value of type [[TBuilderInternalState]][ResultT] (recall, [[TBuilderInstruction]] is an alias for
- * [[TBuilderInternalState]][TlaEx]), then `resultIsExpected` is a predicate over values of type `ResultT`
- * (parameterized by `TParam`). In the
- * vast majority of cases (excluding e.g. declaration constructors), `ResultT == TlaEx`. </li>
+ * <li> A judgement method `resultIsExpected`, that returns true iff the value produced by `method` meets expectations.
+ * You can write your own, but the standard way is to use [[expectEqTyped]], which tests whether the builder constructs
+ * an [[OperEx]] expression with the correct operator, arguments, and type tag. `resultIsExpected` has the type `TParam
+ * \=> ResultT => Boolean`, i.e., if `method` produces a value of type [[TBuilderInternalState]][ResultT] (recall,
+ * [[TBuilderInstruction]] is an alias for [[TBuilderInternalState]][TlaEx]), then `resultIsExpected` is a predicate
+ * over values of type `ResultT` (parameterized by `TParam`). In the vast majority of cases (excluding e.g. declaration
+ * constructors), `ResultT == TlaEx`. </li>
  *
  * </ol>
+ *
+ * ==Using [[expectEqTyped]] to define judgements==
  *
  * To use [[expectEqTyped]], four things are needed:
  *
@@ -163,6 +175,8 @@ import scala.collection.immutable.SortedMap
  * )
  * }}}
  *
+ * ==Assembling the pieces and using generators==
+ *
  * Lastly, we need to define a generator for `TParam`. In most cases, you can use one of the generators defined in
  * [[BuilderTest.Generators]]. In our case [[BuilderTest.Generators.doubleTypeGen]] for `(TlaType1, TlaType1)`.
  *
@@ -180,8 +194,6 @@ import scala.collection.immutable.SortedMap
  *
  * Depending on the operator, we may need to additionally test shadowing-prevention (see tests for \E) or requirement
  * satisfaction (see tests for Gen).
- *
- * The Foo example is implemented in [[HOWTOTestFooBuilder]]
  */
 @RunWith(classOf[JUnitRunner])
 trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with AppendedClues with Matchers {
