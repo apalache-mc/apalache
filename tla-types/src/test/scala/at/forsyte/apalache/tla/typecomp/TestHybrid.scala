@@ -60,7 +60,15 @@ class TestHybrid extends BuilderTest {
     type ExplicitT = (String, TBuilderInstruction, Seq[TypedParam])
     type TParam = (TlaType1, Seq[TlaType1])
 
-    // We create a different term for operator vs simple parameters
+    // To test the declaration constructor, we need to test the relation between declared parameters, and the
+    // way the parameters ar actually used in the declaration body. Concretely, we need to create a declaration body,
+    // in which every parameter p, with expected type T appears in an expression that only permits values of type T.
+    // This way, we can test whether the builder correctly detects a discrepancy between p declared with type T
+    // and p used with type TT (s.t. TT /= T).
+    //
+    // We could always just do \E (q: declaredTypeOf(p)): q = p, but in real specs, operator types can't appear like that
+    // To test operator parameters with types (a1,...,an) => b, we construct values (q1: a1, ..., qn: an) and (e: b),
+    // then test application. For non-operator parameters, we just test \E (q: typeOf(p)): q = p
     def paramCond(param: TypedParam): TBuilderInstruction = {
       val (OperParam(pName, _), tt) = param
       def mkNameTT(s: String) = builder.name(s, tt)
