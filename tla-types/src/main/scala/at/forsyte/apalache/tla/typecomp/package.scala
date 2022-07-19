@@ -9,7 +9,7 @@ import scala.language.implicitConversions
 /**
  * This package defines key types and conversions related to [[ScopedBuilder]].
  *
- * <h2> A brief introduction to [[ScopedBuilder]] </h2>
+ * =A brief introduction to [[ScopedBuilder]]=
  *
  * [[ScopedBuilder]] is a utility class for generating TLA+ IR expressions. It can be conceptually separated into three
  * distinct layers:
@@ -17,7 +17,7 @@ import scala.language.implicitConversions
  *   1. The type-safe, scope-unsafe layer
  *   1. The type-safe, scope-safe layer
  *
- * <h1> The signature layer </h1>
+ * ==The signature layer==
  *
  * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. The majority (but not all) of operators have
  * type signatures, that is, they restrict the types of the arguments, that may be used to construct valid [[OperEx]]
@@ -70,7 +70,7 @@ import scala.language.implicitConversions
  * [[TypeComputationFactory.knownSignatures knownSignatures]] stores all operator signatures that are considered known
  * to [[ScopedBuilder]].
  *
- * <h1> The type-safe, scope-unsafe layer </h1>
+ * ==The type-safe, scope-unsafe layer==
  *
  * In this layer, we define builder methods, which generate type-safe (though potentially scope-unsafe) [[TlaEx]]
  * values. For the most part, we focus on [[OperEx]] values, as literals can be trivially constructed as type-safe.
@@ -122,7 +122,7 @@ import scala.language.implicitConversions
  * [[unsafe]] contains collections of builder methods, categorized by the type of IR operator they build
  * ([[TlaBoolOper]], [[TlaArithOper]], [[ApalacheOper]], etc.)
  *
- * <h1> The type-safe, scope-safe layer </h1>
+ * ==The type-safe, scope-safe layer==
  *
  * In practice, it is not enough to construct type-safe expressions (w.r.t. signatures). Consider the following example:
  * `CHOOSE (x: Int) \in (S: Set(Int)): (x: Bool)`. We know `CHOOSE` has the signature `(t, Set(t), Bool) => t`, so from
