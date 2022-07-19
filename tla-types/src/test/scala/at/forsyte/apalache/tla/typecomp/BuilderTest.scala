@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
-import org.scalatest.{AppendedClues, BeforeAndAfter}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.{AppendedClues, BeforeAndAfter}
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 import shapeless._
@@ -228,7 +228,9 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       uiType <- uninterpretedTypeNameGen
     } yield s"${name}_OF_$uiType"
 
-    val uninterpretedTypeGen: Gen[ConstT1] = uninterpretedTypeNameGen.map { ConstT1 }
+    val uninterpretedTypeGen: Gen[ConstT1] = uninterpretedTypeNameGen.map {
+      ConstT1(_)
+    }
 
     val uninterpretedIndexAndTypeGen: Gen[(String, ConstT1)] = Gen.zip(nonEmptyStrGen, uninterpretedTypeGen)
 

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.io.typecheck.parser
 
 import java.io.Reader
-
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
@@ -38,7 +37,7 @@ private[parser] object Type1Lexer extends RegexParsers {
         int | real | bool | str | set | seq | rec | variant | identifier | fieldNumber | stringLiteral |
           rightArrow | doubleRightArrow | eq | leftRow | rightRow | leftTupleRow | rightTupleRow |
           leftParen | rightParen | pipe | leftBracket | rightBracket |
-          leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon
+          leftCurly | rightCurly | doubleLeftAngle | doubleRightAngle | comma | colon | dollar
     ) ///
 
   // it is important that linefeed is not in whiteSpace, as otherwise singleComment consumes the whole input!
@@ -162,5 +161,9 @@ private[parser] object Type1Lexer extends RegexParsers {
 
   private def colon: Parser[COLON] = {
     ":".r ^^ { _ => COLON() }
+  }
+
+  private def dollar: Parser[DOLLAR] = {
+    "\\$".r ^^ { _ => DOLLAR() }
   }
 }
