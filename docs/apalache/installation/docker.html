@@ -204,7 +204,7 @@ In particular the tool logs are written in that directory.</p>
 </li>
 <li>
 <p><code>informalsystems/apalache</code> is the APALACHE docker image name. By default, the <code>latest</code> stable
-version is used; you can also refer to a specific tool version, e.g., <code>informalsystems/apalache:0.6.0</code> or <code>informalsystems/apalache:unstable</code></p>
+version is used; you can also refer to a specific tool version, e.g., <code>informalsystems/apalache:0.6.0</code> or <code>informalsystems/apalache:main</code></p>
 </li>
 <li>
 <p><code>&lt;args&gt;</code> are the tool arguments as described in <a href="../running.html">Running the Tool</a>.</p>
@@ -228,29 +228,27 @@ Apalache in docker while sharing the working directory:</p>
 
 $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache'
 
-###### using the latest unstable
+###### using the latest main
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 </code></pre>
-<h2><a class="header" href="#using-the-unstable-version-of-apalache" id="using-the-unstable-version-of-apalache">Using the unstable version of Apalache</a></h2>
-<p>The development of Apalache proceeds at a high pace, and we introduce a
-substantial number of improvements in the unstable branch before the next stable
-release. Please refer to the <a href="https://github.com/informalsystems/apalache/blob/unstable/CHANGES.md">change
-log</a> and
-<a href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/index.md">manual</a>
-on the unstable branch for the description of the newest features. <strong>We
-recommend using the unstable version if you want to try all the exciting new
-features of Apalache. But be warned: It is called &quot;unstable&quot; for a reason</strong>. To
-use <code>unstable</code>, just type <code>ghcr.io/informalsystems/apalache:unstable</code> instead of <code>ghcr.io/informalsystems/apalache</code>
-everywhere.</p>
+<h2><a class="header" href="#using-the-development-branch-of-apalache" id="using-the-development-branch-of-apalache">Using the development branch of Apalache</a></h2>
+<p>The development of Apalache proceeds at a quick pace and we cut releases weekly.
+Please refer to the <a href="https://github.com/informalsystems/apalache/blob/main/CHANGES.md">changelog</a> and the <a href="https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md">manual</a> on the <code>main</code> development
+branch for a report of the newest features. Since we cut releases weekly, you
+should have access to all the latest features in the last week by using the
+<code>latest</code> tag. However, if you wish to use the very latest developments as they
+are added throughout the week, you can run the image with the <code>main</code> tag: just
+type <code>ghcr.io/informalsystems/apalache:main</code> instead of
+<code>ghcr.io/informalsystems/apalache</code> everywhere.</p>
 <p>Do not forget to pull the docker image from time to time:</p>
-<pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache:unstable
+<pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache:main
 </code></pre>
 <p>Run it with the following command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/informalsystems/apalache:unstable &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/informalsystems/apalache:main &lt;args&gt;
 </code></pre>
-<p>To create an alias pointing to the <code>unstable</code> version:</p>
-<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:unstable'
+<p>To create an alias pointing to the <code>main</code> version:</p>
+<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 </code></pre>
 <h2><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h2>
 <p>For an end user there is no need to build an Apalache image. If you like to

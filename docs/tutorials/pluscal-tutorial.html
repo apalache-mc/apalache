@@ -189,7 +189,7 @@ specification has been checked with the model checker <a href="https://github.co
 <a href="https://lamport.azurewebsites.net/">Leslie Lamport</a> has proved safety of this algorithm with the <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
 <h2><a class="header" href="#step-0-remove-the-tlaps-proof" id="step-0-remove-the-tlaps-proof">Step 0: Remove the TLAPS proof</a></h2>
 <p>Since we are not interested in the TLAPS proof, we copy <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla">Bakery.tla</a> to
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> and modify it as follows:</p>
+<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> and modify it as follows:</p>
 <ul>
 <li>
 <p>Remove <code>TLAPS</code> from the list of extended modules</p>
@@ -204,7 +204,7 @@ specification has been checked with the model checker <a href="https://github.co
 </li>
 </ul>
 <h2><a class="header" href="#step-1-add-a-module-with-type-annotations" id="step-1-add-a-module-with-type-annotations">Step 1: Add a module with type annotations</a></h2>
-<p>Let us check the types of <a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> with Apalache:</p>
+<p>Let us check the types of <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> with Apalache:</p>
 <pre><code class="language-sh">$ apalache-mc typecheck BakeryWoTlaps.tla
 ...
 Typing input error: Expected a type annotation for VARIABLE max
@@ -395,9 +395,9 @@ IsPositive(x) == x &gt; 0
 </code></pre>
 <h2><a class="header" href="#conclusion" id="conclusion">Conclusion</a></h2>
 <p>The final specifications can be found in
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryTyped.tla">BakeryTyped.tla</a>
+<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla">BakeryTyped.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/unstable/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a>.</p>
+<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a>.</p>
 <p>In this tutorial we have shown how to:</p>
 <ul>
 <li>Annotate a PlusCal spec with types by introducing an additional TLA+ module.</li>
