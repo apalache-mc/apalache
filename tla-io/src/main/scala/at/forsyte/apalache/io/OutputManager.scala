@@ -68,7 +68,7 @@ object OutputManager extends LazyLogging {
   /**
    * Accessor for the configured output directory.
    *
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   if called before OutputManager is configured: this is considered an implementator error
    */
   def outDir: Path = {
@@ -78,7 +78,7 @@ object OutputManager extends LazyLogging {
   /**
    * Accessor for the configured run directory.
    *
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   if called before OutputManager is configured: this is considered an implementator error
    */
   def runDir: Path = {

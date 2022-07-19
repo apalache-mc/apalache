@@ -613,7 +613,7 @@ class Builder {
   }
 
   /**
-   * Apply the operator [[ApalacheOper.mkSeq]].
+   * Apply the operator [[oper.ApalacheOper.mkSeq]].
    *
    * @param lenEx
    *   non-negative length of the sequence
