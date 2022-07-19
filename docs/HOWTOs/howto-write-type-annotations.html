@@ -401,7 +401,7 @@ type alias for the type of messages in a separate file called
 <code>TwoPhaseTyped_typedefs.tla</code>:</p>
 <pre><code class="language-tla">----------------------- MODULE TwoPhaseTyped_typedefs ----------------
 (*
- @typeAlias: MESSAGE = Commit(NIL) | Abort(NIL) | Prepared(RM);
+ @typeAlias: message = Commit(NIL) | Abort(NIL) | Prepared(RM);
  *)
 TwoPhaseTyped_aliases == TRUE
 
@@ -430,13 +430,13 @@ manager.</p>
 </ul>
 <p>Once we have specified the variant type, we introduce three constructors,
 one per variant option:</p>
-<pre><code class="language-tla">\* @type: MESSAGE;
+<pre><code class="language-tla">\* @type: $message;
 MkCommit == Variant(&quot;Commit&quot;, &quot;0_OF_NIL&quot;)
 
-\* @type: MESSAGE;
+\* @type: $message;
 MkAbort == Variant(&quot;Abort&quot;, &quot;0_OF_NIL&quot;)
 
-\* @type: RM =&gt; MESSAGE;
+\* @type: RM =&gt; $message;
 MkPrepared(rm) == Variant(&quot;Prepared&quot;, rm)
 </code></pre>
 <p>Since the values carried by the <code>Commit</code> and <code>Abort</code> messages are not
@@ -445,7 +445,7 @@ convention. We could use any value of type <code>NIL</code>. Importantly, the op
 <code>MkAbort</code>, <code>MkCommit</code>, and <code>MkPrepared</code> all produce values of type <code>MESSAGE</code>,
 which makes it possible to add them to a single set of messages.</p>
 <p>Now it should be clear how to specify the type of the variable <code>msgs</code>:</p>
-<pre><code class="language-tla">  \* @type: Set(MESSAGE);
+<pre><code class="language-tla">  \* @type: Set($message);
   msgs
 </code></pre>
 <p>We run the type checker once again (pay attention to the option
