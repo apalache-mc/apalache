@@ -109,10 +109,10 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
       val connId = conn.map(_.id).getOrElse("NO_CONNECTION")
       s"[Shai:${connId}]: ${msg}"
     }
-    def debug(conn: RequestConn, msg: String): Result[Unit] = ZIO.effect(logger.debug(shaiMsg(conn, msg)))
-    def info(conn: RequestConn, msg: String): Result[Unit] = ZIO.effect(logger.info(shaiMsg(conn, msg)))
-    def warn(conn: RequestConn, msg: String): Result[Unit] = ZIO.effect(logger.warn(shaiMsg(conn, msg)))
-    def error(conn: RequestConn, msg: String): Result[Unit] = ZIO.effect(logger.error(shaiMsg(conn, msg)))
+    def debug(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.debug(shaiMsg(conn, msg)))
+    def info(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.info(shaiMsg(conn, msg)))
+    def warn(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.warn(shaiMsg(conn, msg)))
+    def error(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.error(shaiMsg(conn, msg)))
   }
 
   /**
