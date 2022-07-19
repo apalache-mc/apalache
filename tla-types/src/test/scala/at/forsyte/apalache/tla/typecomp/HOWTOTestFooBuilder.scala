@@ -30,7 +30,7 @@ class HOWTOTestFooBuilder extends BuilderTest {
     binaryFromUnsafe(x, y)(composeAndValidateTypes(foo, fooSig, _, _))
 
   test("foo") {
-    // builder.foo takes 2 arguments, each one is TBuilderInstruction
+    // builder.foo takes 2 arguments, each one is a TBuilderInstruction
     type T = (TBuilderInstruction, TBuilderInstruction)
     // Foo has the signature (a, a -> b) => b, which is parameterized by 2 TlaType1 values (a, b)
     // We want to test arguments to builder.foo, for all kinds of a, b

@@ -32,14 +32,14 @@ import scala.collection.immutable.SortedMap
  *     does
  *   - Tests whether all of the inputs which would have produced an ill-typed expression actually cause `build` to fail
  *
- * <h1>HOW TO WRITE A NEW TEST</h1>
+ * = HOW TO WRITE A NEW TEST =
  *
- * Suppose we want to add a test for TLA+ operator (binary, in this example), `Foo(x,y) == ...` which has an internal
+ * Suppose we want to add a test for a binary TLA+ operator `Foo(x,y) == ...` which has an internal
  * representation of `foo` and is built by the `builder.foo` method. Assume, for the purposes of this example, that Foo
- * takes two arguments - `x: a` and `y: a -> b` - and returns a value of type `b`, for any pair of types `a` and `b`.
+ * takes two arguments, `x: a` and `y: a -> b`, and returns a value of type `b`, for any pair of types `a` and `b`.
  *
- * We add a test("foo") to TestOperCategoryBuilder, where OperCategory is the class of operators foo belongs to
- * (TlaSetOper, ApalacheOper, etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying types.
+ * We add a `test("foo")` to `TestOperCategoryBuilder`, where `OperCategory` is the class of operators foo belongs to
+ * ([[TlaSetOper]], [[ApalacheOper]], etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying types.
  * To do this, we need to determine the following:
  *
  * <ol>
@@ -66,8 +66,7 @@ import scala.collection.immutable.SortedMap
  *
  * <ol>
  *
- * <li> The `method`. In our case `builder.foo`. [[runBinary]] requires a binary method, other templates require methods
- * of their corresponding arities. </li>
+ * <li> The `method`. [[runBinary]] requires a binary method, other templates require methods of their corresponding arities. In our case, we pass `builder.foo`. </li>
  *
  * <li> A well-typed argument constructor `mkWellTyped`. It should have the type `TParam => T`, i.e., given type
  * parameters, it should construct a pair of arguments `(x,y)`, such that `build(builder.foo(x,y)` succeeds. In our
@@ -107,7 +106,7 @@ import scala.collection.immutable.SortedMap
  * }}}
  * since there are three ways of violating the type constraints. If `x` has the type `c` and `y` has the type `a -> b`,
  * where `c /= a`, if `y` doesn't have a function type at all, or if `x` has the type `a` and `y` has the type `c -> b`,
- * where `c /= a`. Note that the following is _not_ ill-typed:
+ * where `c /= a`. Note that the following is ''not'' ill-typed:
  * {{{
  *    (
  *        builder.name("x", a),
@@ -122,13 +121,14 @@ import scala.collection.immutable.SortedMap
  * }}}
  * </li>
  *
- * <li> A validator test `resultIsExpected`. It should have the type `TParam => ResultT => Boolean`, i.e., if `method`
+ * <li> A judgement method `resultIsExpected`, that returns true iff the value produced by `method` meets expectations. You can write your own, but the
+ * standard way is to use [[expectEqTyped]], which tests whether the builder constructs an [[OperEx]] expression with
+ * the correct operator, arguments, and type tag.
+ * `resultIsExpected` has the type `TParam => ResultT => Boolean`, i.e., if `method`
  * produces a value of type [[TBuilderInternalState]][ResultT] (recall, [[TBuilderInstruction]] is an alias for
  * [[TBuilderInternalState]][TlaEx]), then `resultIsExpected` is a predicate over values of type `ResultT`
- * (parameterized by `TParam`), that should return true iff the value produced by `method` meets expectations. In the
- * vast majority of cases (excluding e.g. declaration constructors), `ResultT == TlaEx`. You can write your own, but the
- * standard way is to use [[expectEqTyped]], which tests whether the builder constructs an [[OperEx]] expression, with
- * the correct operator, arguments, and type tag. </li>
+ * (parameterized by `TParam`). In the
+ * vast majority of cases (excluding e.g. declaration constructors), `ResultT == TlaEx`. </li>
  *
  * </ol>
  *
@@ -145,15 +145,15 @@ import scala.collection.immutable.SortedMap
  * cases, you can use the method in [[BuilderTest.ToSeq]], corresponding to the method arity. In our case,
  * [[BuilderTest.ToSeq.binary]]. </li>
  *
- * <li> A predictor of the type of the return value `resType`, parameterized by the type parameters. In our case {
+ * <li> A predictor of the type of the return value `resType`, parameterized by the type parameters. In our case
  * {{{
- * case (_, b) => b}
+ * case (_, b) => b
  * }}}
  * </li>
  *
  * </ol>
  *
- * In summary, the test for `builder.foo` is:
+ * In summary, the judgement method `resultIsExpected` for `builder.foo` is:
  * {{{
  * def resultIsExpected = expectEqTyped[TParam, T](
  *   foo,
@@ -166,7 +166,7 @@ import scala.collection.immutable.SortedMap
  * Lastly, we need to define a generator for `TParam`. In most cases, you can use one of the generators defined in
  * [[BuilderTest.Generators]]. In our case [[BuilderTest.Generators.doubleTypeGen]] for `(TlaType1, TlaType1)`.
  *
- * Our test then looks as follows:
+ * The entire test then looks as follows:
  * {{{
  * checkRun(Generators.doubleTypeGen)(
  *   runBinary(
