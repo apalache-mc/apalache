@@ -16,7 +16,7 @@ class PassExecException(message: String) extends Exception(message)
 class PassOptionException(message: String) extends Exception(message)
 
 /**
- * An error that has been adapted by a [[ExceptionAdapter]]
+ * An error that has been adapted by an [[ExceptionAdapter]]
  * @param err
  *   the [[ErrorMessage]] into which the originating error was adapted
  */
