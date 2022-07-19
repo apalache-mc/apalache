@@ -7,12 +7,12 @@ import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultFail, 
 import scala.collection.immutable.HashSet
 
 /**
- * Test whether expressions fit into the input fragment of [[Keramelizer]], i.e., whether an expression
+ * Test whether expressions fit into the input fragment of `Keramelizer`, i.e., whether an expression
  *   - is flattened (see [[FlatLanguagePred]]),
  *   - operators `exists`, `forall`, `chooseBounded`, `filter`, `apply` take a [[NameEx]] as first argument, and
  *   - `Seq(_)` is prohibited.
  *
- * To get a better idea of the accepted fragment, check [[TestKeramelizerInputLanguagePred]].
+ * To get a better idea of the accepted fragment, check `TestKeramelizerInputLanguagePred`.
  */
 class KeramelizerInputLanguagePred extends ContextualLanguagePred {
   override def isExprOk(expr: TlaEx): PredResult = {

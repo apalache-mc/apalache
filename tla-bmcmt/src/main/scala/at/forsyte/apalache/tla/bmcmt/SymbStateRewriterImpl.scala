@@ -595,7 +595,7 @@ class SymbStateRewriterImpl(
    *   an id of the object, e.g., ArenaCell.id
    * @return
    *   a text message, if exists
-   * @throws NoSuchElementException
+   * @throws java.util.NoSuchElementException
    *   if there is no message associated with the given id
    */
   override def findMessage(id: Int): String = {

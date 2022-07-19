@@ -34,7 +34,7 @@ class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
    *
    * @param snapshot
    *   a snapshot
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   when recovery is impossible
    */
   override def recover(snapshot: IncrementalExecutionContextSnapshot): Unit = {

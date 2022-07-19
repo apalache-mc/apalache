@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.typecheck.TypingInputException
 
 /**
  * A substitution from constant names to types. It is very similar to Substitution. However, [[TypeAliasSubstitution]]
- * is meant to replace constant types, e.g., ENTRY or $entryInCamlCase, with a concrete type, whereas [[Substitution]]
+ * is meant to replace constant types, e.g., ENTRY or \$entryInCamlCase, with a concrete type, whereas [[Substitution]]
  * replaces variables. We use [[TypeAliasSubstitution]] to rewrite type aliases.
  *
  * @param context

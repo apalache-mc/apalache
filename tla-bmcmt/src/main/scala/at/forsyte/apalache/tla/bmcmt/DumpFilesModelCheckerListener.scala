@@ -11,10 +11,10 @@ import com.typesafe.scalalogging.LazyLogging
  * Observer to [[SeqModelChecker]] that dumps example and counterexample traces to files.
  *
  * The traces are written to files
- *   - `${prefix}${index}.{tla,json,.itf.json}` contains the current (counter)example
- *   - `${prefix}.{tla,json,.itf.json}` contains the latest (counter)example
+ *   - `\${prefix}\${index}.{tla,json,.itf.json}` contains the current (counter)example
+ *   - `\${prefix}.{tla,json,.itf.json}` contains the latest (counter)example
  *
- * where $prefix and $index are
+ * where \$prefix and \$index are
  *   - "violation" and `errorIndex` for counterexamples, and
  *   - "example" and `exampleIndex` for examples.
  */

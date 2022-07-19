@@ -25,8 +25,8 @@ object Tool extends LazyLogging {
   lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
 
   /**
-   * Run the tool in the standalone mode with the provided arguments. This method calls [[System.exit]] with the
-   * computed exit code. To call the tool without System.exit, use [[run]].
+   * Run the tool in the standalone mode with the provided arguments. This method calls [[java.lang.System.exit]] with
+   * the computed exit code. To call the tool without System.exit, use [[run]].
    *
    * @param args
    *   the command line arguments
