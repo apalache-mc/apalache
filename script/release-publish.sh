@@ -47,6 +47,12 @@ ZIPF_NO_VER="target/universal/apalache.zip"
 TGZF="target/universal/apalache-${VERSION}.tgz"
 TGZF_NO_VER="target/universal/apalache.tgz"
 
+cd target/universal
+sha256sum apalache.* > sha256sum.txt
+cd -
+
+SHA256F="target/universal/sha256sum.txt"
+
 # We put a `v` in front of our versions for tags
 TAG_NAME="v${VERSION}"
 
@@ -60,4 +66,5 @@ hub release create \
     --attach="$ZIPF" --attach="$ZIPF_NO_VER" \
     --attach="$TGZF" --attach="$TGZF_NO_VER" \
     --message="$TAG_NAME" --message="$body" \
+    --attach="$SHA256F" --message="$(cat \"$SHA256F\")" \
     "$TAG_NAME"
