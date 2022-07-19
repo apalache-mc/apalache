@@ -10,13 +10,13 @@
 EXTENDS Integers, FiniteSets, Variants, TwoPhaseTyped_typedefs
 
 \* ANCHOR: constructors
-\* @type: MESSAGE;
+\* @type: $message;
 MkCommit == Variant("Commit", "0_OF_NIL")
 
-\* @type: MESSAGE;
+\* @type: $message;
 MkAbort == Variant("Abort", "0_OF_NIL")
 
-\* @type: RM => MESSAGE;
+\* @type: RM => $message;
 MkPrepared(rm) == Variant("Prepared", rm)
 \* ANCHOR_END: constructors
 
@@ -37,11 +37,11 @@ VARIABLES
                  \* messages.
 \* ANCHOR_END: vars1
 \* ANCHOR: vars2
-  \* @type: Set(MESSAGE);
+  \* @type: Set($message);
   msgs
 \* ANCHOR_END: vars2
 
-\* @type: Set(MESSAGE);
+\* @type: Set($message);
 Message ==
   { MkPrepared(rm): rm \in RM }
     \union
