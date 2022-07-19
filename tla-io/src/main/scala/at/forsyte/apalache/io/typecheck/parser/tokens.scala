@@ -110,6 +110,13 @@ private[parser] case class COLON() extends Type1Token {
 }
 
 /**
+ * The dollar sign.
+ */
+private[parser] case class DOLLAR() extends Type1Token {
+  override def toString: String = "$"
+}
+
+/**
  * Left parenthesis "(".
  */
 private[parser] case class LPAREN() extends Type1Token {

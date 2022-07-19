@@ -1,32 +1,38 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1,
-  TupT1, TypingException, UID, VarT1, VariantT1,
-}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck.TypingInputException
 
 /**
- * A substitution from constant names to types. It is very similar to Substitution. However, `ConstSubstitution` is
- * meant to replace constant types, e.g., ENTRY, with a concrete type, whereas `Substitution` replaces variables. We use
- * `ConstSubstitution` to implement aliases.
+ * A substitution from constant names to types. It is very similar to Substitution. However, [[TypeAliasSubstitution]]
+ * is meant to replace constant types, e.g., ENTRY or $entryInCamlCase, with a concrete type, whereas [[Substitution]]
+ * replaces variables. We use [[TypeAliasSubstitution]] to rewrite type aliases.
  *
  * @param context
  *   a mapping from constant names to types.
  */
-class ConstSubstitution(val context: Map[String, TlaType1]) {
+class TypeAliasSubstitution(val context: Map[String, TlaType1]) {
   // we put an upper bound on the number of iterations in the closure computation, in case of cyclic dependencies
   private val CLOSURE_LIMIT = 100
 
   def apply(tp: TlaType1): (TlaType1, Boolean) = {
-    ConstSubstitution.mk(context)(tp)
+    TypeAliasSubstitution.mk(context)(tp)
   }
 
-  def closure(): ConstSubstitution = {
+  /**
+   * Recursively apply type aliases to all other type aliases in [[context]].
+   *
+   * @throws TypingInputException
+   *   if undefined type aliases are found.
+   * @return
+   *   a new substitution that has all aliases substituted.
+   */
+  def closure(): TypeAliasSubstitution = {
     var aliases = context
     // compute a fixpoint by replacing references to aliases with their definitions
     var tries = CLOSURE_LIMIT
     while (tries > 0) {
-      val sub = ConstSubstitution(aliases)
+      val sub = TypeAliasSubstitution(aliases)
       val (newPairs, newChanged) =
         aliases.foldLeft((Seq[(String, TlaType1)](), false)) {
           case ((pairs: Seq[(String, TlaType1)], changed), (key, tt)) =>
@@ -42,7 +48,10 @@ class ConstSubstitution(val context: Map[String, TlaType1]) {
       aliases = Map(newPairs: _*)
     }
 
-    // make sure that all aliases have been substituted
+    // Make sure that all aliases have been substituted.
+    // This is basically a postcondition to the above loop to make sure that:
+    //  - We have implemented it correctly, and
+    //  - There are no cyclic dependencies in the aliases.
     for ((caller, tt) <- aliases) {
       def callback(callee: String) = {
         val msg = s"Cannot resolve a reference to type alias $callee in the type alias $caller. A cyclic dependency?"
@@ -52,17 +61,17 @@ class ConstSubstitution(val context: Map[String, TlaType1]) {
       throwOnUndefined(aliases.keySet, callback, tt)
     }
 
-    ConstSubstitution(aliases)
+    TypeAliasSubstitution(aliases)
   }
 
   override def toString: String = {
     "ConstSub{%s}".format(String.join(", ", context.toSeq.map(p => "%s -> %s".format(p._1, p._2)): _*))
   }
 
-  def canEqual(other: Any): Boolean = other.isInstanceOf[ConstSubstitution]
+  def canEqual(other: Any): Boolean = other.isInstanceOf[TypeAliasSubstitution]
 
   override def equals(other: Any): Boolean = other match {
-    case that: ConstSubstitution =>
+    case that: TypeAliasSubstitution =>
       (that.canEqual(this)) &&
       context == that.context
     case _ => false
@@ -112,11 +121,11 @@ class ConstSubstitution(val context: Map[String, TlaType1]) {
   }
 }
 
-object ConstSubstitution {
-  val empty = new ConstSubstitution(Map.empty)
+object TypeAliasSubstitution {
+  val empty = new TypeAliasSubstitution(Map.empty)
 
-  def apply(context: Map[String, TlaType1]): ConstSubstitution = {
-    new ConstSubstitution(context)
+  def apply(context: Map[String, TlaType1]): TypeAliasSubstitution = {
+    new TypeAliasSubstitution(context)
   }
 
   def mk(fun: PartialFunction[String, TlaType1]): TlaType1 => (TlaType1, Boolean) = {
@@ -133,7 +142,18 @@ object ConstSubstitution {
           if (fun.isDefinedAt(name)) {
             (fun(name), true)
           } else {
-            (tp, false)
+            if (!ConstT1.isAliasReference(name)) {
+              // The behavior for an OLD_TYPE_ALIAS is to interpret it as an uninterpreted type,
+              // when the user has not written @typeAlias: OLD_TYPE_ALIAS = ...;
+              // Hence, in this case we simply do not do any substitution.
+              // When we switch to the new aliases completely, this behavior will be forbidden.
+              (tp, false)
+            } else {
+              // with the new alias syntax, we can issue an error
+              val originalName = ConstT1.aliasNameFromReference(name)
+              val msg = s"Missing @typeAlias: $originalName = <type>;"
+              throw new TypingInputException(msg, UID.nullId)
+            }
           }
 
         case VarT1(_) | IntT1 | BoolT1 | RealT1 | StrT1 =>

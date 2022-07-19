@@ -23,7 +23,7 @@ import scala.annotation.nowarn
  */
 class ToEtcExpr(
     annotationStore: AnnotationStore,
-    aliasSubstitution: ConstSubstitution,
+    aliasSubstitution: TypeAliasSubstitution,
     varPool: TypeVarPool,
     val useRows: Boolean = false)
     extends EtcBuilder with LazyLogging {

@@ -10,7 +10,7 @@ VARIABLES
   \* @type: Set(RM);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
                  \* messages.
-  \* @type: Set(MESSAGE);
+  \* @type: Set($message);
   msgs
 
 INSTANCE TwoPhaseTyped

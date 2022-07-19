@@ -98,24 +98,77 @@ case object StrT1 extends TlaType1 {
 }
 
 /**
- * An uninterpreted type constant.
+ * An uninterpreted type constant such as `PROC_NAME`.
+ *
+ * Inside the type checker, this class may also represent references to type aliases. Do not use this feature outside of
+ * the type checker.
  *
  * @param name
  *   unique name of the constant type
  */
 case class ConstT1(name: String) extends TlaType1 {
-  require(name.forall(c => c.isUpper || c.isDigit || c == '_'),
-      "ConstT1 accepts identifiers in upper case, found: " + name)
+  require(ConstT1.isUninterpreted(name) || ConstT1.isAliasReference(name),
+      "ConstT1 accepts identifiers in upper case or $aliasReference, found: " + name)
 
   override def toString: String = name
 
   override def usedNames: Set[Int] = Set.empty
+}
 
+/**
+ * A companion object for [[ConstT1]].
+ */
+object ConstT1 {
+  // the regular expression that recognizes uninterpreted types
+  private val uninterpretedRegex = "[A-Z_][A-Z0-9_]*".r
+
+  /**
+   * Does this type represent an uninterpreted type, e.g., PROCESS. Outside of the type parser and the type checker,
+   * this method should always return true.
+   *
+   * @param name
+   *   type name
+   * @return
+   *   true iff the type name represents an uninterpreted type.
+   */
+  def isUninterpreted(name: String): Boolean = {
+    uninterpretedRegex.matches(name)
+  }
+
+  /**
+   * Does this type represent a reference to an alias, e.g., `$aliasReference`. This case is only of relevance to the
+   * type parser and the type checker.
+   *
+   * @param name
+   *   type name
+   * @return
+   *   true iff the type name represents a reference to an alias.
+   */
+  def isAliasReference(name: String): Boolean = {
+    name.startsWith("$")
+  }
+
+  /**
+   * Extract alias name from the reference syntax.
+   *
+   * @param reference
+   *   a reference such as $aliasRef
+   * @return
+   *   the name without the dollar sign
+   */
+  def aliasNameFromReference(reference: String): String = {
+    if (reference.startsWith("$")) {
+      reference.substring(1)
+    } else {
+      throw new IllegalArgumentException(s"Expected $reference to start with the dollar sign")
+    }
+  }
 }
 
 /**
  * A type variable. Instead of using strings for names, we are just using integers, which makes it easier to process
- * them. To make vars user-friendly, we assign the names a..z to the numbers 0..25. The rest are called a27, a28, etc.
+ * them. To make vars user-friendly, we assign the names a..z to the numbers `0..25`. The rest are called `a27`, `a28`,
+ * etc.
  *
  * @param no
  *   the variable number
@@ -141,7 +194,7 @@ object VarT1 {
       "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
 
   /**
-   * Construct a variable from the human-readable form like 'b' or 'a100'. We use this method to write human-readable
+   * Construct a variable from the human-readable form like `b` or `a100`. We use this method to write human-readable
    * variable names in tests.
    *
    * @param name
@@ -175,7 +228,7 @@ object VarT1 {
   }
 
   /**
-   * Call parse(text).
+   * Call [[parse]] on `text`.
    *
    * @param text
    *   a string representation of a variable

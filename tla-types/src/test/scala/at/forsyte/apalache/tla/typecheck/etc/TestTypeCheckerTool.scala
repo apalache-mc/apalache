@@ -1,20 +1,21 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
-import at.forsyte.apalache.tla.imp.SanyImporter
-import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
+import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
+import com.typesafe.scalalogging.LazyLogging
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
-import org.scalatestplus.easymock.EasyMockSugar
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
 
 import scala.io.Source
 
@@ -25,7 +26,7 @@ import scala.io.Source
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyMockSugar {
+class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyMockSugar with LazyLogging {
   var gen: ToEtcExpr = _
   private var sourceStore: SourceStore = _
   private var annotationStore: AnnotationStore = _
@@ -43,8 +44,18 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   def loadSpecFromResource(name: String): Source = {
     // Previously, we were using fromResource, but it was too unstable across environments
-    // (e.g., it failed in Intellij Idea). Now we are just reading it from the current working directory.
-    Source.fromFile(s"tla-types/src/test/resources/$name.tla")
+    // (e.g., it failed in Intellij Idea). Now we are just reading it from $APALACHE_HOME/tla-types/src/test/resources.
+    // This is consistent with the behavior of SanyImporter when it is run in tests.
+    System.getenv("APALACHE_HOME") match {
+      // Warn if environment variable APALACHE_HOME is not set
+      case null =>
+        logger.error("Not running from fat JAR and APALACHE_HOME is not set.")
+        logger.error("Set APALACHE_HOME to a directory where Apalache has been checked out.")
+        throw new IllegalStateException("Missing APALACHE_HOME to run the tests")
+
+      case apalacheHome: String =>
+        Source.fromFile(s"$apalacheHome/tla-types/src/test/resources/$name.tla")
+    }
   }
 
   test("the tool runs and reports no type errors") {
