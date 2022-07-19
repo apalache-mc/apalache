@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaTempOper
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 
 /**
- * Scope-unsafe builder for [[TlaTempOper]] expressions.
+ * Scope-unsafe builder for `TlaTempOper` expressions.
  *
  * @author
  *   Jure Kukovec

@@ -432,8 +432,6 @@ class TableauEncoder(
 
   /**
    * Encodes each of a sequence of temporal formulas.
-   * @see
-   *   [[encodeFormula]]
    */
   def temporalsToInvariants(modWithPreds: ModWithPreds, formulas: TlaOperDecl*): TlaModule = {
 

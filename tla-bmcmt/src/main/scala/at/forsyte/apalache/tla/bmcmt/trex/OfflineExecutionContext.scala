@@ -38,7 +38,7 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter, renaming: Increme
    *
    * @param snapshot
    *   a snapshot
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   when recovery is impossible
    */
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
