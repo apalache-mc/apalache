@@ -24,7 +24,6 @@ import at.forsyte.apalache.tla.lir.values._
  * @author
  *   Thomas Pani
  */
-// For type-defining sets TDS, see the private method `isTypeDefining`
 class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTransformer(tracker) {
   private val boolTag = Typed(BoolT1)
   private val intTag = Typed(IntT1)
