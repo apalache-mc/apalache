@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
  * Replaces primitive-valued constants initialized in ConstInit with the values they hold.
  *
  * @param tracker
- *   a [[TransformationTracker]]
+ *   a `TransformationTracker`
  * @param constants
  *   the module constant's names
  */
@@ -42,12 +42,12 @@ class TlaConstInliner(tracker: TransformationTracker, constants: Set[String]) {
   }
 
   /**
-   * Returns a [[TlaExTransformation]] that replaces constant references with constant values from `constValMap`.
+   * Returns a `TlaExTransformation` that replaces constant references with constant values from `constValMap`.
    *
    * @param constValMap
-   *   a [[Map]] from constant names to TLA+ values (e.g., constructed by [[buildConstMap]])
+   *   a [[valMap]] from constant names to TLA+ values (e.g., constructed by [[buildConstMap]])
    * @return
-   *   the inlining [[TlaExTransformation]]
+   *   the inlining `TlaExTransformation`
    */
   def replaceConstWithValue(constValMap: valMap): TlaExTransformation = tracker.trackEx {
     case ex @ NameEx(c) if constants.contains(c) =>
@@ -77,7 +77,7 @@ object TlaConstInliner {
    * Replaces primitive-valued constants initialized in ConstInit with the values they hold.
    *
    * @param tracker
-   *   a [[TransformationTracker]]
+   *   a `TlaExTransformation`
    * @param constants
    *   the module constant's names
    */

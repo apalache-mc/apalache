@@ -19,10 +19,11 @@ trait ModelCheckerListener {
    *   The invariant violation to record in the counterexample. Pass
    *   - for invariant violations: the negated invariant,
    *   - for deadlocks: `ValEx(TlaBool(true))`,
-   *   - for trace invariants: the applied, negated trace invariant (see [[SeqModelChecker.applyTraceInv]]).
+   *   - for trace invariants: the applied, negated trace invariant
    * @param errorIndex
    *   Number of found error (likely [[search.SearchState.nFoundErrors]]).
    */
+  // For more on possible trace invariant violations, see the private method `SeqModelChecker.applyTraceInv`
   def onCounterexample(
       rootModule: TlaModule,
       trace: DecodedExecution,

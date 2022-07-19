@@ -7,8 +7,8 @@ import com.google.inject.Guice
  * This Executor abstracts the dependency injection and execution logic required for executing a PassChainExecutor
  *
  * @param toolModule
- *   The [[ToolModule]] that specifies the sequence of passes
- * @throws [[AdaptedException]]
+ *   The [[infra.passes.ToolModule]] that specifies the sequence of passes
+ * @throws AdaptedException
  *   if any exceptions are caught by the configured [[ExceptionAdapter]]
  * @author
  *   Shon Feder
