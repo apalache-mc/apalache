@@ -33,7 +33,7 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     parser = DefaultType1Parser
     annotationStore = createAnnotationStore()
     // a new instance of the translator, as it gives unique names to the variables
-    gen = new ToEtcExpr(annotationStore, ConstSubstitution.empty, new TypeVarPool())
+    gen = new ToEtcExpr(annotationStore, TypeAliasSubstitution.empty, new TypeVarPool())
   }
 
   test("integer arithmetic") {

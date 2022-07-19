@@ -137,7 +137,7 @@ class Arena private (
    *   the name returned by ArenaCell.toString
    * @return
    *   the cell, if it exists
-   * @throws NoSuchElementException
+   * @throws java.util.NoSuchElementException
    *   when no cell is found
    */
   def findCellByName(name: String): ArenaCell = {
@@ -153,7 +153,7 @@ class Arena private (
    *   the found cell
    * @throws InvalidTlaExException
    *   if the name does not follow the convention
-   * @throws NoSuchElementException
+   * @throws java.util.NoSuchElementException
    *   when no cell is found
    */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = {

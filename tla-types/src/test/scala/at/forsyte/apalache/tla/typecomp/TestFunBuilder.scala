@@ -38,7 +38,7 @@ class TestFunBuilder extends BuilderTest {
         },
     )
 
-    checkRun(Generators.nonemptySeqOfTypesGen)(
+    checkRun(Generators.nonEmptySeqOfTypesGen)(
         runVariadic(
             builder.recMixed,
             mkWellTyped,
@@ -99,7 +99,7 @@ class TestFunBuilder extends BuilderTest {
         },
     )
 
-    checkRun(Generators.nonemptySeqOfTypesGen)(
+    checkRun(Generators.nonEmptySeqOfTypesGen)(
         runVariadic(
             builder.rec,
             mkWellTyped2,

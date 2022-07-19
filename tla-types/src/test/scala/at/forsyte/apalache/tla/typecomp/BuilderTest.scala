@@ -5,9 +5,9 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
-import org.scalatest.{AppendedClues, BeforeAndAfter}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.{AppendedClues, BeforeAndAfter}
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 import shapeless._
@@ -17,20 +17,183 @@ import scala.collection.immutable.SortedMap
 /**
  * BuilderTest implements a framework for PB testing various Builder methods.
  *
- * Since builder methods have many different arities no useful Scala-native supertype to represent the type of a builder
- * method in full generality. To this end, we use shapeless' HList (H for heterogeneous) as a representation of any
- * builder method's argument types. For example:
- *   - plus has the signature (TBuilderInstruction,TBuilderInstruction) => TBuilderInstruction, represented by
- *     TBuilderInstruction :: TBuilderInstruction :: HNil <: HList
- *   - union has the signature (TBuilderInstruction) => TBuilderInstruction, and is represented by the type
- *     TBuilderInstruction :: HNil <: HList
- *   - map has the signature (TBuilderInstruction, TBuilderInstruction*) => TBuilderInstruction, represented by
- *     TBuilderInstruction :: Seq[TBuilderInstruction] :: HNil <: HList
+ * Since builder methods have many different arities, there is no useful Scala-native supertype to represent the type of
+ * a builder method in full generality. To this end, we use shapeless' [[HList]] (H for heterogeneous) as a
+ * representation of any builder method's argument types. For example:
+ *   - plus has the signature `(TBuilderInstruction,TBuilderInstruction) => TBuilderInstruction`, represented by
+ *     `TBuilderInstruction :: TBuilderInstruction :: HNil <: HList`
+ *   - union has the signature `(TBuilderInstruction) => TBuilderInstruction`, and is represented by the type
+ *     `TBuilderInstruction :: HNil <: HList`
+ *   - map has the signature `(TBuilderInstruction, TBuilderInstruction*) => TBuilderInstruction`, represented by
+ *     `TBuilderInstruction :: Seq[TBuilderInstruction] :: HNil <: HList`
  *
- * The central method, with various convenience extensions, is runPBT, which performs the following testing tasks:
- *   - Tests whether a TBuilderInstruction, which is supposed to construct a well-typed operator expression actually
+ * The central method, with various convenience extensions, is [[runPBT]], which performs the following testing tasks:
+ *   - Tests whether a [[TBuilderInstruction]], which is supposed to construct a well-typed operator expression actually
  *     does
- *   - Tests whether all of the inputs which would have produced an ill-typed expression actually cause `build` to fail
+ *   - Tests whether all of the inputs which would have produced an ill-typed expression actually cause [[build]] to
+ *     fail
+ *
+ * =HOW TO WRITE A NEW TEST=
+ *
+ * It is assumed that you are familiar with the package [[typecomp]] and the basics of [[ScopedBuilder]]. If not, read
+ * the [[typecomp]] documentation first.
+ *
+ * Suppose we want to add a test for a binary TLA+ operator `Foo(x,y) == ...` which has an internal representation of
+ * `foo` (a subclass of [[TlaOper]]) and is built by the `builder.foo` method. Assume, for the purposes of this example,
+ * that Foo takes two arguments, `x: a` and `y: a -> b`, and returns a value of type `b`, for any pair of types `a` and
+ * `b`.
+ *
+ * The Foo example is implemented in [[HOWTOTestFooBuilder]].
+ *
+ * We add a `test("foo")` to `TestOperCategoryBuilder`, where `OperCategory` is the class of operators foo belongs to
+ * ([[TlaSetOper]], [[ApalacheOper]], etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying
+ * types. To do this, we need to determine the following:
+ *
+ * <ol>
+ *
+ * <li> The number of arguments to `builder.foo` and their types. In our example, `builder.foo` takes two
+ * [[TBuilderInstruction]] arguments. Typically, we introduce a type alias, so in our case
+ * {{{type T = (TBuilderInstruction, TBuilderInstruction)}}} </li>
+ *
+ * <li> The number and types of the automatically generated parameters. In our example, `Foo` has a polymorphic
+ * signature, that takes two type parameters `(a, b)`. Typically, we introduce a type alias, so in our case
+ * {{{type TParam = (TlaType1, TlaType1)}}} </li>
+ *
+ * <li> A description of a test run, for a fixed instance of parameters. [[checkRun]] accepts two arguments: a generator
+ * (discussed later) and a `run`, which is a predicate over `TParam`. A `run` should test the builder method (e.g.
+ * `builder.foo`) for parameterized correctness (tested against all parameters produced by the generator), and should
+ * return true every time if the method is correctly implemented. You ''can'' write a custom run, but the recommended
+ * way is to use one of the pre-written templates, i.e. [[runUnary]], [[runBinary]], [[runTernary]], [[runVariadic]], or
+ * [[runVariadicWithDistinguishedFirst]] (depending on the arity of the builder method). </li>
+ *
+ * </ol>
+ *
+ * ==Using `run-` templates==
+ *
+ * Assume we want to use the [[runBinary]] template to test our `builder.foo`. Regardless of arity, each template takes
+ * four arguments:
+ *
+ * <ol>
+ *
+ * <li> The `method`. [[runBinary]] requires a binary method, other templates require methods of their corresponding
+ * arities. In our case, we pass `builder.foo`. </li>
+ *
+ * <li> A well-typed argument constructor `mkWellTyped`. It should have the type `TParam => T`, i.e., given type
+ * parameters, it should construct a number of arguments `(x1, ..., xn)`, such that `build(method(x1,...,xn))` succeeds.
+ * In our case:
+ * {{{
+ *    def mkWellTyped(tparam: TParam): T = {
+ *      val (a, b) = tparam
+ *      (
+ *       builder.name("x", a),
+ *       builder.name("y", FunT1(a, b))
+ *      )
+ *    }
+ * }}}
+ * since the 1st argument must have the type `a`, and the 2nd the type `a -> b`. </li>
+ *
+ * <li> A constructor of ill-typed arguments `mkIllTyped`. It should have the type `TParam => Seq[T]`, i.e., given type
+ * parameters, it should construct a sequence of tuples of arguments `(x1, ..., xn)`, such that
+ * `build(method(x1,...,xn))` produces a [[TBuilderTypeException]] for each tuple of arguments. In our case:
+ * {{{
+ *    def mkIllTyped(tparam: TParam): Seq[T] = {
+ *      val (a, b) = tparam
+ *      Seq(
+ *          (
+ *              builder.name("x", InvalidTypeMethods.differentFrom(a)),
+ *              builder.name("y", FunT1(a, b)),
+ *          ),
+ *          (
+ *              builder.name("x", a),
+ *              builder.name("y", InvalidTypeMethods.notApplicative),
+ *          ),
+ *          (
+ *              builder.name("x", a),
+ *              builder.name("y", FunT1(InvalidTypeMethods.differentFrom(a), b)),
+ *          ),
+ *      )
+ *    }
+ * }}}
+ * since there are three ways of violating the type constraints (i.e. the required relation between the types of `x` and
+ * `y` imposed by the signature of `Foo`). If `x` has the type `c` and `y` has the type `a -> b`, where `c /= a`, if `y`
+ * doesn't have a function type at all, or if `x` has the type `a` and `y` has the type `c -> b`, where `c /= a`. Note
+ * that the following is ''not'' ill-typed:
+ * {{{
+ *    (
+ *        builder.name("x", a),
+ *        builder.name("y", FunT1(a, InvalidTypeMethods.differentFrom(b))),
+ *    )
+ * }}}
+ * since `b` isn't checked against any other argument, unlike `a`, if we swap `b` with some `c` we get arguments with
+ * types `a` and `a -> c`, which is still valid w.r.t. the signature of `foo`, and would return some value of type `c`.
+ * Some operators, for example those that take one argument of any type, have no ill-typed inputs. In those cases,
+ * {{{
+ *    def mkIllTyped(@unused tparam: TParam): Seq[T] = Seq.empty
+ * }}}
+ * </li>
+ *
+ * <li> A judgement method `resultIsExpected`, that returns true iff the value produced by `method` meets expectations.
+ * You can write your own, but the standard way is to use [[expectEqTyped]], which tests whether the builder constructs
+ * an [[OperEx]] expression with the correct operator, arguments, and type tag. `resultIsExpected` has the type `TParam
+ * \=> ResultT => Boolean`, i.e., if `method` produces a value of type [[TBuilderInternalState]][ResultT] (recall,
+ * [[TBuilderInstruction]] is an alias for [[TBuilderInternalState]][TlaEx]), then `resultIsExpected` is a predicate
+ * over values of type `ResultT` (parameterized by `TParam`). In the vast majority of cases (excluding e.g. declaration
+ * constructors), `ResultT == TlaEx`. </li>
+ *
+ * </ol>
+ *
+ * ==Using [[expectEqTyped]] to define judgements==
+ *
+ * To use [[expectEqTyped]], four things are needed:
+ *
+ * <ol>
+ *
+ * <li> The expected operator `op`. In our case, `foo`. </li>
+ *
+ * <li> A parametric constructor for the expected arguments. You should always use `mkWellTyped`. </li>
+ *
+ * <li> A transformer to turn a tuple of arguments into a sequence of arguments `toSeq`. This is required, due to the
+ * underlying shapeless framework, which allows us to generalize tests over all method arities. In the vast majority of
+ * cases, you can use the method in [[BuilderTest.ToSeq]], corresponding to the method arity. In our case,
+ * [[BuilderTest.ToSeq.binary]]. </li>
+ *
+ * <li> A predictor of the type of the return value `resType`, parameterized by the type parameters. In our case
+ * {{{
+ * case (_, b) => b
+ * }}}
+ * </li>
+ *
+ * </ol>
+ *
+ * In summary, the judgement method `resultIsExpected` for `builder.foo` is:
+ * {{{
+ * def resultIsExpected = expectEqTyped[TParam, T](
+ *   foo,
+ *   mkWellTyped,
+ *   ToSeq.binary,
+ *   { case (_, b) => b },
+ * )
+ * }}}
+ *
+ * ==Assembling the pieces and using generators==
+ *
+ * Lastly, we need to define a generator for `TParam`. In most cases, you can use one of the generators defined in
+ * [[BuilderTest.Generators]]. In our case [[BuilderTest.Generators.doubleTypeGen]] for `(TlaType1, TlaType1)`.
+ *
+ * The entire test then looks as follows:
+ * {{{
+ * checkRun(Generators.doubleTypeGen)(
+ *   runBinary(
+ *     builder.foo,
+ *     mkWellTyped,
+ *     mkIllTyped,
+ *     resultIsExpected,
+ *   )
+ * )
+ * }}}
+ *
+ * Depending on the operator, we may need to additionally test shadowing-prevention (see tests for \E) or requirement
+ * satisfaction (see tests for Gen).
  */
 @RunWith(classOf[JUnitRunner])
 trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with AppendedClues with Matchers {
@@ -51,8 +214,25 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     def minIntGen(min: Int) = Gen.choose(min, min + 10)
 
+    val intGen: Gen[Int] = minIntGen(-5)
     val positiveIntGen: Gen[Int] = minIntGen(1)
-    val nonnegativeIntGen: Gen[Int] = minIntGen(0)
+    val nonNegativeIntGen: Gen[Int] = minIntGen(0)
+
+    val boolGen: Gen[Boolean] = Gen.oneOf(true, false)
+
+    // empty strings mess up regex matching for uninterpreted literals. See ModelValueHandler.matchRegex.
+    val nonEmptyStrGen: Gen[String] = Gen.alphaStr.suchThat(_.nonEmpty)
+    val uninterpretedTypeNameGen: Gen[String] = Gen.alphaUpperStr.suchThat(_.nonEmpty)
+    val uninterpretedLiteralGen: Gen[String] = for {
+      name <- nonEmptyStrGen
+      uiType <- uninterpretedTypeNameGen
+    } yield s"${name}_OF_$uiType"
+
+    val uninterpretedTypeGen: Gen[ConstT1] = uninterpretedTypeNameGen.map {
+      ConstT1(_)
+    }
+
+    val uninterpretedIndexAndTypeGen: Gen[(String, ConstT1)] = Gen.zip(nonEmptyStrGen, uninterpretedTypeGen)
 
     protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
 
@@ -61,7 +241,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val parameterTypeGen: Gen[TlaType1] = for {
       t <- tt1gen.genPrimitive
-      n <- nonnegativeIntGen
+      n <- nonNegativeIntGen
       ts <- Gen.listOfN(n, tt1gen.genPrimitive)
     } yield n match {
       case 0          => t
@@ -75,7 +255,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val declTypesGen: Gen[DeclParamT] = for {
       t <- singleTypeGen
-      n <- nonnegativeIntGen
+      n <- nonNegativeIntGen
       ts <- Gen.listOfN(n, parameterTypeGen)
     } yield (t, ts)
 
@@ -88,10 +268,10 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def seqOfTypesGenMinLenGen(min: Int) = minIntGen(min).flatMap(Gen.listOfN(_, singleTypeGen))
 
     val seqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(0)
-    val nonemptySeqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(1)
+    val nonEmptySeqOfTypesGen: Gen[Seq[TlaType1]] = seqOfTypesGenMinLenGen(1)
 
     val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
-    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonemptySeqOfTypesGen)
+    val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonEmptySeqOfTypesGen)
 
     // unsafe for non-applicative
     private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
@@ -131,15 +311,13 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     } yield (t, seq)
 
     val positiveIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(positiveIntGen, singleTypeGen)
-    val nonnegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonnegativeIntGen, singleTypeGen)
+    val nonNegativeIntAndTypeGen: Gen[(Int, TlaType1)] = Gen.zip(nonNegativeIntGen, singleTypeGen)
 
-    val strGen: Gen[String] = Gen.alphaStr
-
-    val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(strGen, singleTypeGen)
+    val strAndTypeGen: Gen[(String, TlaType1)] = Gen.zip(nonEmptyStrGen, singleTypeGen)
 
     val variantGen: Gen[VariantT1] = for {
       n <- Gen.choose(1, 5)
-      flds <- Gen.listOfN(n, Gen.zip(strGen, singleTypeGen))
+      flds <- Gen.listOfN(n, Gen.zip(nonEmptyStrGen, singleTypeGen))
     } yield VariantT1(RowT1(SortedMap(flds: _*), None))
 
     def variantGenWithMandatoryEntry(mandatoryEntry: (String, TlaType1)): Gen[VariantT1] = variantGen.map { variantT =>
@@ -152,12 +330,12 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       }
 
     val tagAndVariantGen: Gen[(String, VariantT1)] = for {
-      tagName <- strGen
+      tagName <- nonEmptyStrGen
       variantT <- variantGenWithMandatoryField(tagName)
     } yield (tagName, variantT)
 
     val tagValVariantGen: Gen[(String, TlaType1, VariantT1)] = for {
-      tagName <- strGen
+      tagName <- nonEmptyStrGen
       valT <- singleTypeGen
       variantT <- variantGenWithMandatoryEntry(tagName -> valT)
     } yield (tagName, valT, variantT)

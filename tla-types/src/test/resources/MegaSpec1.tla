@@ -8,7 +8,10 @@ EXTENDS Integers, Sequences, FiniteSets, Reals, Apalache
 CONSTANTS
  \* @typeAlias: ELEM = Int;
  \* @type: ELEM;
- N
+ N,
+ \* @typeAlias: newAlias = Bool;
+ \* @type: $newAlias;
+ K
 
 ASSUME(N > 42)
 

@@ -39,26 +39,26 @@ private case class Conn(
   }
 }
 
+// TODO: Link the TransitionExecutor once tla.bmcmt.trex is imported
 /**
- * The service enabling interaction with the symbolic model checker, via the
- * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]]
+ * The service enabling interaction with the symbolic model checker, via the `TransitionExecutor`
  *
  * ==Overview==
  * The public methods of this class are handlers for the protobuf messages defined in `transExplorer.proto`. These
  * handlers implement RPC calls enabling interaction with the Apalache model checker.
  *
- * On a successful remote procedure call, a handler returns a value of type [[Result[T]]], were [[T]] is the type of the
+ * On a successful remote procedure call, a handler returns a value of type `[[Result]][T]`, were `T` is the type of the
  * protobuf message specified as the response for the given RPC.
  *
- * The type [[Result[T]]] is an alias for [[ZIO[ZEnv, Status, T]]], which is fallible promise to return a value of type
- * [[T]] computed in the environment [[ZEnv]].
+ * The type `[[Result]][T]` is an alias for `ZIO[ZEnv, Status, T]`, which is fallible promise to return a value of type
+ * `T` computed in the environment `ZEnv`.
  *
  * ==Error handling==
  *
  * There are two kinds of errors that may be signled by the PRC handlers:
  *
  *   - '''Protocol-level errors''', which indicate a failure to communicate successfully with the RPC system. These are
- *     indicated by [[Status]] error codes.
+ *     indicated by the `Status` error codes.
  *   - '''Application-level errors''', which indicate some erroneous outcome in the execution of an RPC that was
  *     successfully communicated and executed. These are indicated by `err` results in the protobuf message sent back in
  *     response.
@@ -89,7 +89,7 @@ private case class Conn(
 class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore, logger: Logger)
     extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
-  /** Concurrent tasks performed by the service that produce values of type [[T]] */
+  /** Concurrent tasks performed by the service that produce values of type `T` */
   type Result[T] = ZIO[ZEnv, Status, T]
 
   // The type of the `conn` field carried by all requests (exception for the `ConnectRequest`)
@@ -118,10 +118,10 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   /**
    * Creates and registers a new connection
    *
-   * This method handles the [[OpenConnection]] RPC defined by `transExplorer.proto`
+   * This method handles the `openConnection` RPC defined by `transExplorer.proto`
    *
-   * Every session that interacts with the server must begin by obtaining a [[Connection]], and every subsequent request
-   * must include a `conn` field holding the [[Connection]].
+   * Every session that interacts with the server must begin by obtaining a [[transExplorer.Connection]], and every
+   * subsequent request must include a `conn` field holding the [[transExplorer.Connection]].
    *
    * @param req
    *   the request (isomorphic to the Unit)
@@ -137,7 +137,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   /**
    * Parses a spec into a model
    *
-   * This method handles the [[LoadModelRequest]] RPC defined by `transExplorer.proto`
+   * This method handles the [[transExplorer.LoadModelRequest]] RPC defined by `transExplorer.proto`
    *
    * @param req
    *   the request to load a model, including the root module spec and any auxiliary modules
