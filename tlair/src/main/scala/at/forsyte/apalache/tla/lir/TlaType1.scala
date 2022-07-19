@@ -136,7 +136,7 @@ object ConstT1 {
   }
 
   /**
-   * Does this type represent a reference to an alias, e.g., `$aliasReference`. This case is only of relevance to the
+   * Does this type represent a reference to an alias, e.g., `\$aliasReference`. This case is only of relevance to the
    * type parser and the type checker.
    *
    * @param name
@@ -152,7 +152,7 @@ object ConstT1 {
    * Extract alias name from the reference syntax.
    *
    * @param reference
-   *   a reference such as $aliasRef
+   *   a reference such as \$aliasRef
    * @return
    *   the name without the dollar sign
    */
