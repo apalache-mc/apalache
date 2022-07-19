@@ -12,7 +12,8 @@ import at.forsyte.apalache.tla.lir.values._
  * After Apalache's type-checking, we can rewrite some expressions to simpler forms. For example, the (after
  * type-checking) vacuously true `x \in BOOLEAN` is rewritten to `TRUE` (as `x` must be a `BoolT1`).
  *
- * We currently perform the following simplifications (for a definition of type-defining sets (TDS), see the private method `isTypeDefining`):
+ * We currently perform the following simplifications (for a definition of type-defining sets (TDS), see the private
+ * method `isTypeDefining`):
  *   - `n \in Nat` ~> `x >= 0`
  *   - `b \in BOOLEAN`, `i \in Int`, `r \in Real` ~> `TRUE`
  *   - `seq \in Seq(TDS)` ~> `TRUE`
