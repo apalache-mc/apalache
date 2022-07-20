@@ -61,8 +61,8 @@ class TestHybrid extends BuilderTest {
     type TParam = (TlaType1, Seq[TlaType1])
 
     // To test the declaration constructor, we need to test the relation between declared parameters, and the
-    // way the parameters ar actually used in the declaration body. Concretely, we need to create a declaration body,
-    // in which every parameter p, with expected type T appears in an expression that only permits values of type T.
+    // way the parameters are actually used in the declaration body. Concretely, we need to create a declaration body,
+    // in which every parameter p, with expected type T, appears in an expression that only permits values of type T.
     // This way, we can test whether the builder correctly detects a discrepancy between p declared with type T
     // and p used with type TT (s.t. TT /= T).
     //
@@ -78,11 +78,11 @@ class TestHybrid extends BuilderTest {
           builder.eql(
               builder.appOp(
                   mkNameTT(pName),
-                  from.zipWithIndex.map { case (fromT, i) => builder.name(s"v${i}_$pName", fromT) }: _*
+                  from.zipWithIndex.map { case (fromT, i) => builder.name(s"v${i}_${pName}", fromT) }: _*
               ),
               builder.name(s"e_$pName", to),
           )
-        // an simple parameter p gets the term \E q: q = p
+        // a simple parameter p gets the term \E q: q = p
         case _ =>
           val qName = s"q_$pName"
           builder.exists(
