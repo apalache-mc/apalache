@@ -73,7 +73,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+            op == ApalacheInternalOper.storeInSet =>
         // in and not(notin), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(true))
@@ -81,7 +82,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet || op == ApalacheInternalOper.storeNotInFun =>
         // notin and not(in), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(false))
@@ -124,22 +125,24 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+            op == ApalacheInternalOper.storeInSet =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
           case None         => ex
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet || op == ApalacheInternalOper.storeNotInFun =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = true)
           case None         => ex
         }
 
       case OperEx(op, _*)
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet ||
-            op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+            op == ApalacheInternalOper.storeInSet || op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet ||
+            op == ApalacheInternalOper.storeNotInFun =>
         // do not preprocess these expressions, as we have to find sorts from the names
         ex
 

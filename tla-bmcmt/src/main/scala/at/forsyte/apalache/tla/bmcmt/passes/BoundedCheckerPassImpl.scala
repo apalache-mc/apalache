@@ -112,6 +112,8 @@ class BoundedCheckerPassImpl @Inject() (
         new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case `arraysEncoding` =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
+      case `arraysFunEncoding` =>
+        new SymbStateRewriterImplWithArraysFun(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
@@ -147,6 +149,8 @@ class BoundedCheckerPassImpl @Inject() (
       case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
       case `arraysEncoding` =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore)
+      case `arraysFunEncoding` =>
+        new SymbStateRewriterImplWithArraysFun(solverContext, renaming, exprGradeStore)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.config = RewriterConfig(tuning)
@@ -217,6 +221,7 @@ class BoundedCheckerPassImpl @Inject() (
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
       case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
+      case `arraysFunEncoding`   => new SymbStateRewriterImplWithArraysFun(solverContext, typeFinder, exprGradeStore)
       case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.formulaHintsStore = hintsStore

@@ -33,6 +33,7 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
 
     // A constant SMT array constrained to a default value is used to encode the function
     // Constant arrays are used to allow for sound use of SMT equality of functions
+    // TODO: consider making array constraining consistent with CherryPick.pickFunFromFunSet
     nextState = nextState.updateArena(_.appendCell(funT1))
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, domainCell))
@@ -43,7 +44,7 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+      val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
       val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
       val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1)
       // Function updates are guarded by the inDomain predicate

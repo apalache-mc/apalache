@@ -484,7 +484,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               case `arraysEncoding` =>
                 // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-              case `oopsla19Encoding` =>
+              case `oopsla19Encoding` | `arraysFunEncoding` =>
                 tla.bool(true)
               case oddEncodingType =>
                 throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -638,7 +638,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             case `arraysEncoding` =>
               // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-            case `oopsla19Encoding` =>
+            case `oopsla19Encoding` | `arraysFunEncoding` =>
               tla.bool(true)
             case oddEncodingType =>
               throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -805,7 +805,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {
-      case `arraysEncoding` =>
+      case `arraysEncoding` | `arraysFunEncoding` =>
         // We create an unconstrained SMT array that can be equated to the cells of funs for the oracle assertions
         nextState = nextState.updateArena(_.appendCell(funType, isUnconstrained = true))
         val funCell = nextState.arena.topCell
@@ -833,7 +833,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val domFromPickedRelation = nextState.arena.topCell
         val domElemsFromPickedRelation = nextState.arena.getHas(pickedRelation).map(e => nextState.arena.getHas(e).head)
         nextState = nextState.updateArena(_.appendHas(domFromPickedRelation, domElemsFromPickedRelation: _*))
-        rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedDom, domFromPickedRelation)))
+        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedDom, domFromPickedRelation)))
         rewriter.lazyEq.safeEq(pickedDom, domFromPickedRelation)
 
         rewriter.solverContext.log(s"; } CHERRY-PICK $funCell:$funType")
@@ -944,7 +944,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
 
       rewriter.solverContext.config.smtEncoding match {
-        case `arraysEncoding` =>
+        case `arraysEncoding` | `arraysFunEncoding` =>
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
           // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
           val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
@@ -975,7 +975,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
               if (cdm == state.arena.cellNatSet()) rewriter.solverContext.assertGroundExpr(ge) // Add Nat constraint
 
             case _ =>
-              rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInFun(pickedResult.toNameEx, cdm.toNameEx))
+              if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
+                // Since the cmd set is not an SMT array, we have to use lazy equality
+                val cmdElems = nextState.arena.getHas(cdm)
+                nextState = rewriter.lazyEq.cacheEqConstraints(nextState, cmdElems.map((_, pickedResult)))
+
+                def inAndEq(elem: ArenaCell) = {
+                  tla.and(tla.apalacheSelectInSet(elem.toNameEx, cdm.toNameEx),
+                      rewriter.lazyEq.safeEq(elem, pickedResult)) // use lazy equality
+                }
+
+                // We ensure that the pickedResult is in cdm. Correctness of the domain is ensured by the for-loop.
+                val elemsInAndEq = nextState.arena.getHas(cdm).map(inAndEq)
+                rewriter.solverContext.assertGroundExpr(tla.or(elemsInAndEq: _*))
+              } else {
+                rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInSet(pickedResult.toNameEx, cdm.toNameEx))
+              }
           }
 
         case `oopsla19Encoding` =>

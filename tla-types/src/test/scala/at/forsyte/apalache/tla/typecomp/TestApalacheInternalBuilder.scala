@@ -145,8 +145,10 @@ class TestApalacheInternalBuilder extends BuilderTest {
       )(_)
 
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.selectInSet, builder.selectInSet))
+    // checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.selectInFun, builder.selectInFun)) // TODO
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeInSet, builder.storeInSet))
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))
+    // checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeNotInFun, builder.storeNotInFun)) // TODO
   }
 
   test("storeInSet3") {

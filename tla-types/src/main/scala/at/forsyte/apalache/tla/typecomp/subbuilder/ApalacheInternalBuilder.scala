@@ -41,9 +41,17 @@ trait ApalacheInternalBuilder {
   def selectInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(elem, set)(unsafeBuilder.selectInSet)
 
+  /** selectInFun */
+  def selectInFun(elem: TBuilderInstruction, fun: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(elem, fun)(unsafeBuilder.selectInFun)
+
   /** storeNotInSet */
   def storeNotInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =
     binaryFromUnsafe(elem, set)(unsafeBuilder.storeNotInSet)
+
+  /** storeNotInFun */
+  def storeNotInFun(elem: TBuilderInstruction, fun: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(elem, fun)(unsafeBuilder.storeNotInFun)
 
   /** storeInSet binary (sets) */
   def storeInSet(elem: TBuilderInstruction, set: TBuilderInstruction): TBuilderInstruction =

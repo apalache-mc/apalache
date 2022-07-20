@@ -43,8 +43,9 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         // If argCell is comparable at the Scala level, we generate SMT constraints based on it
         val select = tla.apalacheSelectInFun(elemArg.toNameEx, funCell.toNameEx)
         val eql = tla.eql(elemRes.toNameEx, select)
+        val impl = tla.impl(tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx), eql)
         // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
-        rewriter.solverContext.assertGroundExpr(eql)
+        rewriter.solverContext.assertGroundExpr(impl)
         return nextState.setRex(elemRes.toNameEx)
       } else {
         // We use an oracle to pick an arg for which the function is applied
@@ -83,7 +84,12 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         rewriter.solverContext.assertGroundExpr(eql)
 
         // The edges, dom, and cdm are forwarded below
-        nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
+        if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
+          // If sets are not SMT arrays, they inPreds need to be declared
+          nextState = nextState.updateArena(_.appendHas(res, nextState.arena.getHas(pickedRes): _*))
+        } else {
+          nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
+        }
         pickedRes.cellType match {
           case CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))

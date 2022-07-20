@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.tooling.opt
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, oopsla19Encoding, SMTEncoding}
+import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, arraysFunEncoding, oopsla19Encoding, SMTEncoding}
 import java.io.{File, FileNotFoundException}
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
@@ -24,8 +24,9 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =
-    Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays") {
+    Read.reads[SMTEncoding]("a SMT encoding, either oopsla19, arrays, or arraysFun") {
       case "arrays"        => arraysEncoding
+      case "arraysFun"     => arraysFunEncoding
       case "oopsla19"      => oopsla19Encoding
       case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
     }
@@ -36,7 +37,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
   var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = oopsla19Encoding,
       description =
-        s"the SMT encoding: ${oopsla19Encoding}, ${arraysEncoding} (experimental), default: ${oopsla19Encoding} (overrides envvar SMT_ENCODING)")
+        s"the SMT encoding: ${oopsla19Encoding}, ${arraysEncoding} (experimental), ${arraysFunEncoding} (experimental), default: ${oopsla19Encoding} (overrides envvar SMT_ENCODING)")
   var tuningOptionsFile: String =
     opt[String](name = "tuning-options-file", default = "",
         description = "filename of the tuning options, see docs/tuning.md")

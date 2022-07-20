@@ -8,3 +8,7 @@ case object oopsla19Encoding extends SMTEncoding {
 case object arraysEncoding extends SMTEncoding {
   override def toString: String = "arrays"
 }
+
+case object arraysFunEncoding extends SMTEncoding {
+  override def toString: String = "arraysFun"
+}

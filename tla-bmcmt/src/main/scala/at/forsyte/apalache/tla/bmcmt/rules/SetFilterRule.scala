@@ -91,7 +91,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val smtMap = tla.apalacheSmtMap(TlaBoolOper.and, setCell.toNameEx, newSetCell.toNameEx)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
-          case `oopsla19Encoding` =>
+          case `oopsla19Encoding` | `arraysFunEncoding` =>
             for ((cell, pred) <- filteredCellsAndPreds)
               addCellCons(cell, pred)
 
