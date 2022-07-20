@@ -38,7 +38,7 @@ class ScopedBuilder
     with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with ApalacheInternalBuilder
     with ApalacheBuilder with VariantBuilder with LiteralAndNameBuilder {
 
-  private def parser = DefaultType1Parser
+  private val parser = DefaultType1Parser
 
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.
