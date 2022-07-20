@@ -4,8 +4,14 @@ import zio.{console, Ref, Semaphore, ZEnv, ZIO}
 import java.util.UUID
 import scalapb.zio_grpc.ServerMain
 import scalapb.zio_grpc.ServiceList
+import com.typesafe.scalalogging.LazyLogging
 
-object RpcServer extends ServerMain {
+/**
+ * The Shai RPC server handling gRPC requests to interact with the model checker
+ *
+ * We extend LazyLogging to give the server process access to the same logger configured for the rest of Apalache.
+ */
+object RpcServer extends ServerMain with LazyLogging {
   override def port: Int = 8822
 
   override def welcome: ZIO[ZEnv, Throwable, Unit] =
@@ -18,7 +24,7 @@ object RpcServer extends ServerMain {
     // Ensure atomic access to the parser
     // See https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894
     parserSemaphore <- Semaphore.make(permits = 1)
-  } yield new TransExplorerService(connections, parserSemaphore)
+  } yield new TransExplorerService(connections, parserSemaphore, logger)
 
   def services: ServiceList[ZEnv] =
     ServiceList.addM(createService)
