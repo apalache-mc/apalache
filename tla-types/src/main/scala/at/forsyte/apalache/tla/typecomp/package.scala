@@ -9,7 +9,7 @@ import scala.language.implicitConversions
 /**
  * This package defines key types and conversions related to [[ScopedBuilder]].
  *
- * =A brief introduction to [[ScopedBuilder]]=
+ * =A brief introduction to [[ScopedBuilder]] development=
  *
  * [[ScopedBuilder]] is a utility class for generating TLA+ IR expressions. It can be conceptually separated into three
  * distinct layers:
@@ -19,8 +19,8 @@ import scala.language.implicitConversions
  *
  * ==The signature layer==
  *
- * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. The majority (but not all) of operators have
- * type signatures, that is, they restrict the types of the arguments, that may be used to construct valid [[OperEx]]
+ * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. Most operators have
+ * type signatures, that is, they restrict the types of arguments allowed to construct valid [[OperEx]]
  * expressions. For instance, [[TlaArithOper.plus]] represents the arithmetic operator `+` and has the signature `(Int,
  * Int) => Int` in the type system, meaning that `e @ OperEx(TlaArithOper.plus, x, y)` is considered valid iff `x`, `y`,
  * and `e` are all tagged with `Typed(IntT1)`. Similarly, [[TlaOper.chooseBounded]] has the signature `(t, Set(t), Bool)
@@ -50,8 +50,8 @@ import scala.language.implicitConversions
  * signature to `Seq(IntT1, SetT1(IntT1), BoolT1)`, would return `IntT1` while applying it to `Seq(StrT1, SetT1(StrT1),
  * BoolT1)` would return `StrT1`. It is not applicable to `Seq(IntT1, SetT1(StrT1), BoolT1)`.
  *
- * [[Signature]]s complete [[PartialSignature]]s, by equipping them with an exception message, to be thrown should the
- * input sequence not match the pattern defined by the [[PartialSignature]]. This lifting is done by
+ * [[Signature]]s complete [[PartialSignature]]s, by equipping them with an exception, to be thrown should the
+ * input sequence not match the pattern defined by the corresponding [[PartialSignature]]. This lifting is done by
  * [[BuilderUtil.completePartial completePartial]], if all we want is a total function, or
  * [[BuilderUtil.checkForArityException checkForArityException]], to output a more precise error message, outlining
  * whether [[PartialSignature]] application failed because of the non-existence of a type substitution, or simply
@@ -179,7 +179,7 @@ import scala.language.implicitConversions
  * [[subbuilder]], following the same grouping strategy (by [[TlaOper]] sort).
  *
  * For every scope-safe method `method` there is a 2nd-layer method `method(arg1: TlaEx, ..., argN: TlaEx): TlaEx`
- * defined ins some `unsafeBuilder` used as a basis (a few methods take arguments, which are not `TlaEx`, we omit them
+ * defined in some `unsafeBuilder` used as a basis (a few methods take arguments, which are not `TlaEx`, we omit them
  * here). Then, the scope-safe `method` has the signature `method(arg1: TBuilderInstruction, ..., argN:
  * TBuilderInstruction): TBuilderInstruction`. This way, it composes nicely with other scope-safe methods. The general
  * implementation of a scope-safe method from a scope-unsafe method is fairly simple:
