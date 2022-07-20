@@ -19,19 +19,18 @@ import scala.language.implicitConversions
  *
  * ==The signature layer==
  *
- * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. Most operators have
- * type signatures, that is, they restrict the types of arguments allowed to construct valid [[OperEx]]
- * expressions. For instance, [[TlaArithOper.plus]] represents the arithmetic operator `+` and has the signature `(Int,
- * Int) => Int` in the type system, meaning that `e @ OperEx(TlaArithOper.plus, x, y)` is considered valid iff `x`, `y`,
- * and `e` are all tagged with `Typed(IntT1)`. Similarly, [[TlaOper.chooseBounded]] has the signature `(t, Set(t), Bool)
- * \=> t`, meaning that `e @ OperEx(TlaOper.chooseBounded, x, S, p)` is considered valid if `x` and `e` are tagged with
- * `Typed(t)`, for some `t`, `S` is tagged with `Typed(SetT1(t))` (for the same `t`), and `p` is tagged with
- * `Typed(BoolT1)`.
+ * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. Most operators have type signatures, that is,
+ * they restrict the types of arguments allowed to construct valid [[OperEx]] expressions. For instance,
+ * [[TlaArithOper.plus]] represents the arithmetic operator `+` and has the signature `(Int, Int) => Int` in the type
+ * system, meaning that `e @ OperEx(TlaArithOper.plus, x, y)` is considered valid iff `x`, `y`, and `e` are all tagged
+ * with `Typed(IntT1)`. Similarly, [[TlaOper.chooseBounded]] has the signature `(t, Set(t), Bool) => t`, meaning that an
+ * expression`e @ OperEx(TlaOper.chooseBounded, x, S, p)` is considered valid if `x` and `e` are tagged with `Typed(t)`,
+ * for some `t`, `S` is tagged with `Typed(SetT1(t))` (for the same `t`), and `p` is tagged with `Typed(BoolT1)`.
  *
  * You can think of a signature `(a1,...,an) => b` as a partial function; given a sequence of argument types `v1, ...
  * vn`, it returns some type `c` (derived from `b`), if the types `v1, ..., vn` match the pattern `a1, ..., an`. More
- * precisely, the return value is `s(b)`, if there exists some type substitution `s`, such that `s(ai) = vi` for all `i
- * \= 1,...,n`.
+ * precisely, the return value is `s(b)`, if there exists some type substitution `s`, such that `s(ai) = vi` for all
+ * indices `i = 1,...,n`.
  *
  * To reason about signatures, we define two types, [[PartialSignature]] and [[Signature]]. They serve the same purpose,
  * but differ in the way they behave on mis-matches. [[PartialSignature]]s are bare-bones descriptions of the
@@ -50,8 +49,8 @@ import scala.language.implicitConversions
  * signature to `Seq(IntT1, SetT1(IntT1), BoolT1)`, would return `IntT1` while applying it to `Seq(StrT1, SetT1(StrT1),
  * BoolT1)` would return `StrT1`. It is not applicable to `Seq(IntT1, SetT1(StrT1), BoolT1)`.
  *
- * [[Signature]]s complete [[PartialSignature]]s, by equipping them with an exception, to be thrown should the
- * input sequence not match the pattern defined by the corresponding [[PartialSignature]]. This lifting is done by
+ * [[Signature]]s complete [[PartialSignature]]s, by equipping them with an exception, to be thrown should the input
+ * sequence not match the pattern defined by the corresponding [[PartialSignature]]. This lifting is done by
  * [[BuilderUtil.completePartial completePartial]], if all we want is a total function, or
  * [[BuilderUtil.checkForArityException checkForArityException]], to output a more precise error message, outlining
  * whether [[PartialSignature]] application failed because of the non-existence of a type substitution, or simply
