@@ -76,7 +76,7 @@ import scala.language.implicitConversions
  * values. For the most part, we focus on [[OperEx]] values, as literals can be trivially constructed as type-safe.
  *
  * We solve the following problem: Given [[TlaEx]] arguments `x1,...,xn` and a [[TlaOper]] argument `oper`, what type,
- * if any, can be assigned to `e @ OperEx(oper, x1, ..., xn)`, such that `e` is validly typed w.r.t. the type signature
+ * if any, can be assigned to `e @ OperEx(oper, x1, ..., xn)`, such that `e` is soundly typed w.r.t. the type signature
  * of the TLA+ operator represented by `oper` in the type system.
  *
  * [[TypeComputation]] describes a solution to the above problem. It is a function that takes a sequence of [[TlaEx]]
