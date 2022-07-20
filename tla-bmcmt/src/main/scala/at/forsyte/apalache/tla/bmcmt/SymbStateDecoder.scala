@@ -209,7 +209,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           // check if the pair's head is in the domain
           val funArgs = arena.getHas(pair).head
           val argsInDom = inDom(funArgs).typed(BoolT1)
-          solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1)
+          // solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1)
+          true
 
         case `oopsla19Encoding` =>
           val mem =

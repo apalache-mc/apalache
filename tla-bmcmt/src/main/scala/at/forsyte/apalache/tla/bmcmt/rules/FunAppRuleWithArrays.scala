@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, TlaEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -69,7 +69,22 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         for ((elem, no) <- relationElems.zipWithIndex) {
           val elemArg = nextState.arena.getHas(elem).head
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((elemArg, argCell)))
-          val inDom = tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx)
+          // val inDom = tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx)
+          // inDomain with lazy equality
+          val domElems = nextState.arena.getHas(domainCell)
+          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElems.map((_, elemArg)))
+
+          def inAndEq(elem: ArenaCell) = {
+            tla.and(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx),
+                rewriter.lazyEq.safeEq(elem, elemArg)) // use lazy equality
+          }
+
+          nextState = nextState.updateArena(_.appendCell(BoolT1))
+          val inDom = nextState.arena.topCell.toNameEx
+
+          val elemsInAndEq = nextState.arena.getHas(domainCell).map(inAndEq)
+          rewriter.solverContext.assertGroundExpr(tla.eql(inDom, tla.or(elemsInAndEq: _*)))
+
           val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
           val found = tla.not(oracle.whenEqualTo(nextState, nElems))
           // ~inDom \/ neqArg \/ found, or equivalently, (inDom /\ elemArg = argCell) => found

@@ -66,8 +66,23 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     val eql = tla.eql(resultFunCell.toNameEx, funCell.toNameEx)
     rewriter.solverContext.assertGroundExpr(eql)
 
+    // inDomain with lazy equality
+    val domElems = nextState.arena.getHas(domainCell)
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElems.map((_, indexCell)))
+
+    def inAndEq(elem: ArenaCell) = {
+      tla.and(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx),
+          rewriter.lazyEq.safeEq(elem, indexCell)) // use lazy equality
+    }
+
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
+    val inDomain = nextState.arena.topCell.toNameEx
+
+    val elemsInAndEq = nextState.arena.getHas(domainCell).map(inAndEq)
+    rewriter.solverContext.assertGroundExpr(tla.eql(inDomain, tla.or(elemsInAndEq: _*)))
+
     // Add a constraint updating resultFunCell if needed
-    val inDomain = tla.apalacheSelectInFun(indexCell.toNameEx, domainCell.toNameEx)
+    // val inDomain = tla.apalacheSelectInSet(indexCell.toNameEx, domainCell.toNameEx)
     val updateFun = tla.apalacheStoreInFun(valueCell.toNameEx, resultFunCell.toNameEx, indexCell.toNameEx)
     val unchanged = tla.apalacheStoreNotInFun(valueCell.toNameEx, resultFunCell.toNameEx)
     val ite = tla.ite(inDomain, updateFun, unchanged)

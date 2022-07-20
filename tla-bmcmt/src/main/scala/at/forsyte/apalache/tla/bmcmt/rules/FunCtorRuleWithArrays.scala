@@ -44,7 +44,24 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+      // inDomain with lazy equality
+      val domElems = nextState.arena.getHas(domainCell)
+      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElems.map((_, domElem)))
+
+      def inAndEq(elem: ArenaCell) = {
+        tla
+          .and(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx).typed(BoolT1),
+              rewriter.lazyEq.safeEq(elem, domElem))
+          .typed(BoolT1) // use lazy equality
+      }
+
+      nextState = nextState.updateArena(_.appendCell(BoolT1))
+      val inDomain = nextState.arena.topCell.toNameEx.typed(BoolT1)
+
+      val elemsInAndEq = nextState.arena.getHas(domainCell).map(inAndEq)
+      rewriter.solverContext.assertGroundExpr(tla.eql(inDomain, tla.or(elemsInAndEq: _*).typed(BoolT1)).typed(BoolT1))
+
+      // val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
       val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
       val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1)
       // Function updates are guarded by the inDomain predicate

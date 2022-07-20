@@ -70,7 +70,7 @@ class SetInRuleWithArraysFun(rewriter: SymbStateRewriter) extends SetInRule(rewr
           rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
 
           val dom = tla.apalacheSelectInSet(arg.toNameEx, funDom.toNameEx)
-          tla.impl(dom, tla.and(pred))
+          tla.impl(dom, pred)
       }
     }
 
