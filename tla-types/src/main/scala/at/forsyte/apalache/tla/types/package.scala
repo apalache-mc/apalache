@@ -5,6 +5,12 @@ package at.forsyte.apalache.tla
  *
  * =Importing and using [[tla]]=
  *
+ * The [[tla]] object provides a convenient interface for constructing type- and scope-correct TLA+ expressions. It
+ * exposes methods that correspond to TLA+ operators, for example:
+ * {{{
+ *  val ex: TlaEx = tla.plus(tla.int(2), tla.int(3))
+ * }}}
+ *
  * You can access it by importing via
  * {{{
  * import at.forsyte.apalache.tla.types._
@@ -137,7 +143,10 @@ package object types {
    * import at.forsyte.apalache.tla.types.tla._
    * }}}
    *
-   * For the implementation details, see [[ScopedBuilder]].
+   * @see
+   *   [[types]] for usage instrucitons.
+   * @see
+   *   [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]] for implementation details.
    */
   val tla: ScopedBuilder = new ScopedBuilder()
 }
