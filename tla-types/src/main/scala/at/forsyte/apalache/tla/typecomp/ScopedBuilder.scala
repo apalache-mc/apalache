@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.{getAllBound, getAllUsed, markAsBound}
 import at.forsyte.apalache.tla.typecomp.subbuilder._
 import scalaz.Scalaz._
@@ -11,24 +12,117 @@ import scalaz.Scalaz._
  * Builder for TLA+ (TNT) IR expressions.
  *
  * The following guarantees hold for any IR tree successfully generated exclusively via ScopedBuilder methods:
- *   - Typed-ness: All subexpressions will have a Typed(_) tag
+ *   - Typed-ness: All subexpressions will have a `Typed(_)` tag
  *   - Type correctness:
- *     - All literal expressions will have the correct type, as determined by their value ( 1: Int, "a" : Str, etc.)
- *     - For each operator application expression OperEx(oper, args:_*)(Typed(resultType)), the following holds:
- *       - oper(args:_*) corresponds to some TNT operator with a signature (T1,...,Tn) => T
- *       - There exists a substitution s, such that: s(T1) = typeof(args[1]), ..., s(Tn) = typeof(args[n]) and s(T) =
- *         resultType Example: For e@OperEx(TlaSetOper.union, 1..4, {5}) the subexpressions 1..4, {5} and e will all
- *         have types Set(Int), since TlaSetOper.union corresponds to `\`union: (Set(t), Set(t)) => Set(t), and the
- *         substitution required is t -> Int
+ *     - All literal expressions will have the correct type, as determined by their value ( `1: Int, "a" : Str`, etc.)
+ *     - For each operator application expression `OperEx(oper, args:_*)(Typed(resultType))`, the following holds:
+ *       - `oper(args:_*)` corresponds to some TNT operator with a signature `(T1,...,Tn) => T`
+ *       - There exists some substitution `s`, such that: `s(T1) = typeof(args[1]), ..., s(Tn) = typeof(args[n])` and
+ *         `s(T) = resultType`. Example: For `e @ OperEx(TlaSetOper.union, 1..4, {5})` the subexpressions `1..4, {5}`
+ *         and `e` will all have types `Set(Int)`, since [[TlaSetOper.union]] corresponds to `\union`, which has the
+ *         signature `(Set(t), Set(t)) => Set(t)`, and the substitution required is `t -> Int`.
  *   - Scope correctness: For each variable that appears as free in the IR tree, all instances of that variable will
  *     have the same type. For each sub-tree rooted at an operator, which introduces a bound variable, all instances of
- *     the bound variable will have the same type within the sub-tree. Example: Given \A x \in S: x, if the first x and
- *     S hold the types Int and Set(Int) respectively, while the second x is typed as Bool, the type correctness
- *     requirements imposed by the signature of \A : (t, Set(t), Bool) => Bool are satisfied, but the expression would
- *     not be scope-correct, since x would have to be typed as Int within the scope defined by this \A operator. Thus,
- *     such an expression cannot be constructed by the builder.
+ *     the bound variable will have the same type within the sub-tree. Example: Given `\A x \in S: x`, if the first `x`
+ *     and `S` hold the types `Int` and `Set(Int)` respectively, while the second `x` is typed as `Bool`, the type
+ *     correctness requirements imposed by the signature of `\A`, `(t, Set(t), Bool) => Bool`, are satisfied, but the
+ *     expression would not be scope-correct, since `x` would have to be typed as `Int` within the scope defined by this
+ *     `\A` operator. Thus, such an expression cannot be constructed by the builder.
  *
  * These guarantees are void if [[unchecked]] is used.
+ *
+ * =HOW TO WRITE A NEW METHOD=
+ *
+ * It is assumed that you are familiar with the package [[typecomp]]. If not, read the [[typecomp]] documentation first.
+ *
+ * Suppose we want to add a builder method `ScopedBuilder.foo`, for a binary TLA+ operator `Foo(x,y) == ...` which has
+ * an internal representation of `foo` (a subclass of [[TlaOper]]). We need to implement (up to) three leayers, as
+ * outlined by [[typecomp]].
+ *
+ * The Foo example is implemented in [[HOWTOFooBuilder]].
+ *
+ * ==Determining the type and signature of `Foo`==
+ *
+ * The first step starts with determining the type of `Foo`. There are two general categories of operators:
+ *   1. Operators, for which the type of the operator body depends solely on the types of the parameters
+ *   1. Operators, for which the type of the operator body is contextual
+ *
+ * An example of the first category is `\intersect`; the type of an operator intersection equals the types of both of
+ * the sets (which must have the same type). In other words, `\intersect: (Set(t), Set(t)) => Set(t)`. An example of the
+ * second is `NotSupportedByModelChecker`; its type can be anything, and is not dependent on the type of the argument
+ * (the error message).
+ *
+ * If the operator belongs to the first category, we need to implement (or extend) a `FooOperSignatures` object in
+ * [[signatures]]. Assume, for the purposes of this example, that `Foo` takes two arguments, `x: a` and `y: a -> b`, and
+ * returns a value of type `b`, for any pair of types `a` and `b`. This puts `Foo` in the first category.
+ *
+ * `foo` will have the partial signature
+ * {{{
+ *   { case Seq(a, FunT1(aa, b)) if a == aa => b }
+ * }}}
+ * as it requires exactly two arguments, such that the second argument is a function, and the domain-element type of the
+ * second argument is equal to the first argument. The return type is equal to the codomain-element type of the second
+ * argument. `FooOperSignatures` needs to return a [[SignatureMap]] (via `getMap`), containing an entry for `foo`.
+ * [[BuilderUtil.signatureMapEntry signatureMapEntry]] provides a utility method, for constructing such entries from
+ * partial functions (the implementation calls [[BuilderUtil.checkForArityException checkForArityException]] and
+ * [[BuilderUtil.completePartial completePartial]] in the background, to produce sensible error messages, if
+ * `ScopedBuilder.foo` is used with type-incorrect arguments). In our case:
+ * {{{
+ *   val fooSig = signatureMapEntry(foo, { case Seq(a, FunT1(aa, b)) if a == aa => b })
+ * }}}
+ * We then need to make sure that [[TypeComputationFactory]] adds the [[SignatureMap]] from `FooOperSignatures` to its
+ * `knownSignatures`.
+ *
+ * ==Implementing the type-safe builder method==
+ *
+ * The next step is adding (or extending) a builder in [[unsafe]], `UnsafeFooOperBuilder`. This builder should declare a
+ * method `foo(arg1: T1, ..., argN: TN): TlaEx`. The number of arguments depends on the particular operator, and is
+ * usually equal to the TLA+ arity of the operator, though this is not always the case. Typically, the argument types
+ * are `TlaEx` as well. An exception to this are, for example, operators which take type-hints. Take
+ * [[unsafe.UnsafeApalacheInternalBuilder.notSupportedByModelChecker notSupportedByModelChecker]]; it requires a
+ * `String` and a [[TlaType1]] argument, even though the TLA+ operator `NotSupportedByModelChecker` requires exactly one
+ * argument (of type `Str`).
+ *
+ * In our case, `foo` will need to accept 2 generic [[TlaEx]] arguments, so it will look like
+ * {{{
+ *   def foo(x: TlaEx, y: TlaEx): TlaEx = ...
+ * }}}
+ * The implementation depends on whether the operator has an associated signature. If yes, we just need to use
+ * [[unsafe.ProtoBuilder.buildBySignatureLookup buildBySignatureLookup]]; All it needs are the operator (`foo`) and a
+ * number of [[TlaEx]] arguments. In our case:
+ * {{{
+ *   def foo(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(foo, x, y)
+ * }}}
+ * If we did not have an associated signature, we would have to implement a custom [[TypeComputation]]. See
+ * [[unsafe.UnsafeVariantBuilder.variant variant]] or [[unsafe.UnsafeFunBuilder.rec rec]] for examples of this approach.
+ *
+ * ==Implementing the scope-safe builder method==
+ *
+ * Finally, we need to add the type-safe, scope-safe method to `FooOperBuilder` in [[subbuilder]]. This builder should
+ * declare a method `foo(arg1: TT1, ..., argN: TTN): TBuilderInstruction` and a local instance of `UnsafeFooOperBuilder`
+ * (typically named `unsafeBuilder`). The number of arguments should be the same as for the `UnsafeFooOperBuilder.foo`
+ * method (we also typically use the same argument names). Each argument that is typed as [[TlaEx]] in
+ * `UnsafeFooOperBuilder.foo` should be typed as [[TBuilderInstruction]] in `FooOperBuilder.foo` (though e.g. `String`
+ * and [[TlaType1]] arguments should have the same types in both). Typically, the argument types are `TlaEx` as well. In
+ * our case:
+ * {{{
+ *   def foo(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = ...
+ * }}}
+ *
+ * If the `Foo` operator is not associated with scope modification (e.g. it does not introduce bound variables), all we
+ * really need to do is call one of [[BuilderUtil.binaryFromUnsafe binaryFromUnsafe]], or
+ * [[BuilderUtil.ternaryFromUnsafe ternaryFromUnsafe]], or [[BuilderUtil.buildSeq buildSeq]] methods. In our case:
+ * {{{
+ *   def foo(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction =
+ *     binaryFromUnsafe(x, y)(unsafeBuilder.foo)
+ * }}}
+ * For unary methods, you can just map the unsafe method over a [[TBuilderInstruction]] argument. For methods which deal
+ * with bound variables, there are [[BuilderUtil.boundVarIntroductionBinary boundVarIntroductionBinary]],
+ * [[BuilderUtil.boundVarIntroductionTernary boundVarIntroductionTernary]], and
+ * [[BuilderUtil.boundVarIntroductionVariadic]] (see [[subbuilder.BoolBuilder.exists exists]] or
+ * [[subbuilder.SetBuilder.map map]].
+ *
+ * Finally, we just need [[ScopedBuilder]] to extend `FooOperBuilder`, to make the `foo` method available for use.
  *
  * @author
  *   Jure Kukovec
