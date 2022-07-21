@@ -43,8 +43,10 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         // If argCell is comparable at the Scala level, we generate SMT constraints based on it
         val select = tla.apalacheSelectInFun(elemArg.toNameEx, funCell.toNameEx)
         val eql = tla.eql(elemRes.toNameEx, select)
+        val impl = tla.impl(tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx), eql)
         // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
-        rewriter.solverContext.assertGroundExpr(eql)
+        // The constraining only happens if argCell is in the domain
+        rewriter.solverContext.assertGroundExpr(impl)
         return nextState.setRex(elemRes.toNameEx)
       } else {
         // We use an oracle to pick an arg for which the function is applied
