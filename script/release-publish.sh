@@ -60,7 +60,6 @@ git push --tags
 body=$(cat "$RELEASE_NOTES")
 hub release create \
     --attach="$ZIPF" --attach="$ZIPF_NO_VER" \
-    --attach="$TGZF" --attach="$TGZF_NO_VER" \
-    --message="$TAG_NAME" --message="$body" \
-    --attach="$SHA256F" --message="$(cat \"$SHA256F\")" \
+    --attach="$TGZF" --attach="$TGZF_NO_VER" --attach="$SHA256F"\
+    --message="$TAG_NAME" --message="$body" 
     "$TAG_NAME"
