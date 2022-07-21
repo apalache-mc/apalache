@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla
 
 /**
- * Defines a premade instancce of [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]], named [[tla]].
+ * Defines a premade instance of [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]], named [[tla]].
  *
  * =Importing and using [[tla]]=
  *
@@ -13,7 +13,7 @@ package at.forsyte.apalache.tla
  * {{{
  * import at.forsyte.apalache.tla.types.tla
  * }}}
- * due to the reasons outlined below:
+ * to enable the implicit conversions described below:
  *
  * All [[tla]] ([[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]]) methods return
  * [[at.forsyte.apalache.tla.typecomp.TBuilderInstruction TBuilderInstruction]] or
