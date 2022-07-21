@@ -73,7 +73,7 @@ class TestHybrid extends BuilderTest {
       val (OperParam(pName, _), tt) = param
       def mkNameTT(s: String) = builder.name(s, tt)
       tt match {
-        // an operator parameter p(_,...,_) gets the term p(v1_p, ...., vn_p) = e_p
+        // given an operator parameter p(_,...,_), returns the term p(v1_p, ...., vn_p) = e_p
         case OperT1(from, to) =>
           builder.eql(
               builder.appOp(
@@ -82,7 +82,7 @@ class TestHybrid extends BuilderTest {
               ),
               builder.name(s"e_$pName", to),
           )
-        // a simple parameter p gets the term \E q: q = p
+        // given a simple parameter p, returns the term \E q: q = p
         case _ =>
           val qName = s"q_$pName"
           builder.exists(
