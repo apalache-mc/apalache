@@ -833,7 +833,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val domFromPickedRelation = nextState.arena.topCell
         val domElemsFromPickedRelation = nextState.arena.getHas(pickedRelation).map(e => nextState.arena.getHas(e).head)
         nextState = nextState.updateArena(_.appendHas(domFromPickedRelation, domElemsFromPickedRelation: _*))
-        rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedDom, domFromPickedRelation)))
+        nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedDom, domFromPickedRelation)))
         rewriter.lazyEq.safeEq(pickedDom, domFromPickedRelation)
 
         rewriter.solverContext.log(s"; } CHERRY-PICK $funCell:$funType")
