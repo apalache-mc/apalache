@@ -125,7 +125,7 @@ package object types {
   /**
    * A short-hand to the instance of the typed builder, so one can easily construct expressions.
    *
-   * Alternatively, you can import all of its methods via:
+   * You can import all of its methods via:
    *
    * {{{
    * // import implicit conversions
