@@ -117,6 +117,9 @@ package at.forsyte.apalache.tla
  * In this case, `x` appears as both `Int` and `Str` typed within the scope of `ex`, which is disallowed. </li>
  *
  * </ul>
+ *
+ * '''IMPORTANT: EXCEPTIONS WILL ONLY BE THROWN AFTER A `TBuilderInstruction => TlaEx` CONVERSION (IMPLICIT OR
+ * EXPLICIT). INVOKING BUILDER METHODS WITHOUT CONVERTING WILL NOT THROW THE ABOVE EXCEPTIONS.'''
  */
 package object types {
 
