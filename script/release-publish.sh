@@ -48,7 +48,7 @@ TGZF="target/universal/apalache-${VERSION}.tgz"
 TGZF_NO_VER="target/universal/apalache.tgz"
 
 SHA256F="target/universal/sha256sum.txt"
-(cd target/universal && sha256sum {apalache*.tgz,apalache*.zip} > "$SHA256F")
+(cd target/universal && sha256sum {apalache*.tgz,apalache*.zip} > sha256sum.txt)
 # We put a `v` in front of our versions for tags
 TAG_NAME="v${VERSION}"
 
