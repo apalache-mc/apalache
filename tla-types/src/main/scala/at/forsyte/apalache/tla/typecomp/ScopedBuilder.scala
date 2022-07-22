@@ -82,7 +82,7 @@ import scalaz.Scalaz._
  * `String` and a [[TlaType1]] argument, even though the TLA+ operator `NotSupportedByModelChecker` requires exactly one
  * argument (of type `Str`).
  *
- * In our case, `foo` will need to accept 2 generic [[TlaEx]] arguments, so it will look like
+ * In our case, `foo` will need to accept 2 arguments of type [[TlaEx]], so it will look like
  * {{{
  *   def foo(x: TlaEx, y: TlaEx): TlaEx = ...
  * }}}
