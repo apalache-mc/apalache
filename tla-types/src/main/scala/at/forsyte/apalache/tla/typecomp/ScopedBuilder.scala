@@ -13,7 +13,7 @@ import scalaz.Scalaz._
  * The following guarantees hold for any IR tree successfully generated exclusively via ScopedBuilder methods:
  *   - Typed-ness: All subexpressions will have a `Typed(_)` tag
  *   - Type correctness:
- *     - All literal expressions will have the correct type, as determined by their value ( `1: Int, "a" : Str`, etc.)
+ *     - All literal expressions will have the correct type, as determined by their value ( `1: Int`, `"a" : Str`, etc.)
  *     - For each operator application expression `OperEx(oper, args:_*)(Typed(resultType))`, the following holds:
  *       - `oper(args:_*)` corresponds to some TNT operator with a signature `(T1,...,Tn) => T`
  *       - There exists some substitution `s`, such that: `s(T1) = typeof(args[1]), ..., s(Tn) = typeof(args[n])` and
