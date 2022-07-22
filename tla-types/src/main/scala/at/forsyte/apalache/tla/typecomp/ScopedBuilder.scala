@@ -46,10 +46,10 @@ import scalaz.Scalaz._
  *   1. Operators, for which the type of the operator body depends solely on the types of the parameters
  *   1. Operators, for which the type of the operator body is contextual
  *
- * An example of the first category is `\intersect`; the type of an operator intersection equals the types of both of
- * the sets (which must have the same type). In other words, `\intersect: (Set(t), Set(t)) => Set(t)`. An example of the
- * second is `NotSupportedByModelChecker`; its type can be anything, and is not dependent on the type of the argument
- * (the error message).
+ * An example of the first category is `\intersect`; the type of an intersection of two sets equals the types of both of
+ * the intersecting sets (which must have the same type). In other words, `\intersect: (Set(t), Set(t)) => Set(t)`. An
+ * example of the second is `NotSupportedByModelChecker`; its type can be anything, and is not dependent on the type of
+ * the argument (the error message).
  *
  * If the operator belongs to the first category, we need to implement (or extend) a `FooOperSignatures` object in
  * [[signatures]]. Assume, for the purposes of this example, that `Foo` takes two arguments, `x: a` and `y: a -> b`, and
