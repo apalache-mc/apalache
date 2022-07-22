@@ -121,13 +121,4 @@ class ModelCheckerParams(
   val saveRuns: Boolean =
     tuningOptions.getOrElse("search.simulation.saveRuns", "false").toBoolean
 
-  // does the transition number satisfy the given filter at the given step?
-  def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {
-    if (transitionFilter.length <= stepNo) {
-      true // no filter applied
-    } else {
-      transitionNo.toString.matches("^%s$".format(transitionFilter(stepNo)))
-    }
-  }
-
 }
