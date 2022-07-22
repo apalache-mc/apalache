@@ -38,7 +38,7 @@ object Dependencies {
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
-    val grpcNetty = "io.grpc" % "grpc-netty" % "1.47.0"
+    val grpcNetty = "io.grpc" % "grpc-netty" % "1.48.0"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)

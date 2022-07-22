@@ -7,7 +7,7 @@ on:
   #  See https://github.community/t/actions-cache-cache-not-being-hit-despite-of-being-present/17956/3
   push:
     branches:
-      - unstable
+      - main
 
 name: build
 

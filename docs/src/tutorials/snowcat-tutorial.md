@@ -311,8 +311,8 @@ or drop us a message on [Zulip chat][].
 [Lamport's mutex]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex
 [TwoPhase.tla]: https://github.com/tlaplus/Examples/blob/911dac1462344337940779a797a5f329a77be98c/specifications/transaction_commit/TwoPhase.tla
 [LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla
-[LamportMutexTyped.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/LamportMutexTyped.tla
-[TwoPhaseTyped.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/TwoPhaseTyped.tla
+[LamportMutexTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/LamportMutexTyped.tla
+[TwoPhaseTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/TwoPhaseTyped.tla
 [Stephan Merz]: https://members.loria.fr/Stephan.Merz/
 [GameOfLifeTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/GameOfLifeTyped.tla 
 [CigaretteSmokersTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CigaretteSmokersTyped.tla

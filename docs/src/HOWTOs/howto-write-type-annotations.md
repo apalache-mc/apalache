@@ -504,7 +504,7 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 
 
 [old type annotations]: ../apalache/types-and-annotations.md
-[Apalache.tla]: https://github.com/informalsystems/apalache/blob/unstable/src/tla/Apalache.tla
+[Apalache.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla
 [Snowcat]: ../apalache/typechecker-snowcat.md
 [ADR002]: ../adr/002adr-types.md
 [HourClock.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/RealTime/HourClock.tla
@@ -518,7 +518,7 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Issue 578]: https://github.com/tlaplus/tlaplus/issues/578
 [Issue 718]: https://github.com/informalsystems/apalache/issues/718
 [MissionariesAndCannibals.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla
-[Variants module]: https://github.com/informalsystems/apalache/blob/unstable/src/tla/Variants.tla
+[Variants module]: https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla
 [Chapter on variants]: ../lang/variants.md
 [Idiom 3]: ../idiomatic/003record-sets.md
 [LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla

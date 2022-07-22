@@ -634,7 +634,7 @@ Let us know:
 [Property-based testing]: https://en.wikipedia.org/wiki/QuickCheck
 [TLA+ examples]: https://github.com/tlaplus/Examples/
 [LCR]: https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts
-[ChangRobertsTyped_Test.tla]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/ChangRobertsTyped_Test.tla
+[ChangRobertsTyped_Test.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/ChangRobertsTyped_Test.tla
 [Distributed Algorithms]: https://dl.acm.org/doi/book/10.5555/2821576
 [Raft]: https://github.com/tlaplus/Examples/tree/master/specifications/raft
 [Apalache.tla]: https://github.com/informalsystems/apalache/blob/80cf914fe7272b14832a47b21193f5dfe8119348/src/tla/Apalache.tla
