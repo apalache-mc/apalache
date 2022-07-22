@@ -430,7 +430,7 @@ VARIABLES
 
 Surely, we did not gain much by writing `$persons` instead of `Set(PERSON)`.
 But if your specification has complex types (e.g., records), aliases may help
-you in minimizing the burden of specification maintenance. When you add one
+you in minimizing the burden of specification maintenance. If you add one
 more field to the record type, it suffices to change the definition of the type
 alias, instead of changing the record type everywhere.
 
