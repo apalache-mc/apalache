@@ -1,6 +1,20 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.25.10 - 2022-07-18
+
+### Features
+
+- Add RPC to load spec to the experimental Shai server (see #1114)
+
+### Bug fixes
+
+- Add workaround for Sany parsing failures when running parallel instances of Apalache (see #1959)
+
+### Documentation
+
+- Added TLA+ syntax highlighting to the manual, see #1972
+
 ## 0.25.9 - 2022-07-11
 
 ### Features
@@ -918,13 +932,13 @@
 
  * speed up by using constants instead of uninterpreted functions
 
- * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/tuning.md)
+ * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/tuning.md)
 
  * bugfix in logback configuration
 
 ## 0.4.0-pre1
 
- * type annotations and very simple type inference, see the [notes](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/types-and-annotations.md)
+ * type annotations and very simple type inference, see the [notes](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/types-and-annotations.md)
 
  * a dramatic speed up of many operators by using a `QF_NIA` theory and cherry pick
 

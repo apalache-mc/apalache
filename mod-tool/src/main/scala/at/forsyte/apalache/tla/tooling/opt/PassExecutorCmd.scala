@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.infra.Executor
 
 /**
- * Interface for the subcommands that run an [[Executor]]
+ * Interface for the subcommands that run an `Executor`
  *
  * @author
  *   Shon Feder
@@ -15,14 +15,14 @@ abstract class PassExecutorCmd(name: String, description: String)
   /**
    * The executor used to sequence a chain of passes
    *
-   * Executors are created using [[at.forsyte.apalache.infra.passes.ToolModule]]. E.g.,
+   * Executors are created using `at.forsyte.apalache.infra.passes.ToolModule`. E.g.,
    *
    * {{{
    * val executor = Executor(new TypeCheckerModule)
    * }}}
    *
    * The [[run]] methods of a subcommand implementing this trait will generally end with an invication of
-   * [[executor.run]], such as
+   * `executor.run`, such as
    *
    * {{{
    * executor.run() match {

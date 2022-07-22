@@ -14,7 +14,7 @@
   "bugs": {
     "url": "https://github.com/informalsystems/apalache/issues"
   },
-  "homepage": "https://github.com/informalsystems/apalache/tree/unstable/docs/highlightjs-tlaplus",
+  "homepage": "https://github.com/informalsystems/apalache/tree/main/docs/highlightjs-tlaplus",
   "devDependencies": {
     "highlight.js": "^11.5.1"
   }

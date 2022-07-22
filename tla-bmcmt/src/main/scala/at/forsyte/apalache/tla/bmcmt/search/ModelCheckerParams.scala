@@ -18,7 +18,7 @@ object ModelCheckerParams {
  * A collection of model checker parameters that come from the user configuration.
  *
  * @param stepsBound
- *   Step bound for bounded model-checking, excluding the initial transition introduced by [[PrimingPass]]. E.g.,
+ *   Step bound for bounded model-checking, excluding the initial transition introduced by `PrimingPass`. E.g.,
  *   `stepsBound=1` includes one actual application of the transition operator (e.g., `Next`)
  *
  * @author

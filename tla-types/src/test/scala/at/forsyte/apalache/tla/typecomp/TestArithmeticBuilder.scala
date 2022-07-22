@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
+import scalaz.unused
 
 @RunWith(classOf[JUnitRunner])
 class TestArithmeticBuilder extends BuilderTest {
@@ -11,24 +12,43 @@ class TestArithmeticBuilder extends BuilderTest {
       oper: TlaArithOper,
       method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction,
       retT: TlaType1): Unit = {
-    val cmp = cmpFactory.computationFromSignature(oper)
 
-    val args = Seq.fill(2)(builder.int(1))
+    type T = (TBuilderInstruction, TBuilderInstruction)
+    type TParam = Unit
 
-    val res = cmp(args.map(build))
+    def mkWellTyped(@unused tparam: TParam): T =
+      (
+          builder.name("x", IntT1),
+          builder.name("y", IntT1),
+      )
 
-    assert(res.contains(retT))
+    def mkIllTyped(@unused tparam: TParam): Seq[T] =
+      Seq(
+          (
+              builder.name("x", IntT1),
+              builder.name("y", InvalidTypeMethods.notInt),
+          ),
+          (
+              builder.name("x", InvalidTypeMethods.notInt),
+              builder.name("y", IntT1),
+          ),
+      )
 
-    val Seq(x, y) = args
-    val resEx = method(x, y)
+    def resultIsExpected = expectEqTyped[TParam, T](
+        oper,
+        mkWellTyped,
+        ToSeq.binary,
+        _ => retT,
+    )
 
-    assert(resEx.eqTyped(OperEx(oper, x, y)(Typed(retT))))
-
-    val badY = builder.str("a")
-
-    assertThrows[TBuilderTypeException] {
-      build(method(x, badY))
-    }
+    checkRun(Generators.unitGen)(
+        runBinary(
+            method,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
   }
 
   test("plus") {
@@ -40,23 +60,31 @@ class TestArithmeticBuilder extends BuilderTest {
   }
 
   test("uminus") {
-    val cmp = cmpFactory.computationFromSignature(TlaArithOper.uminus)
+    type T = TBuilderInstruction
+    type TParam = Unit
 
-    val x = builder.int(1)
+    def mkWellTyped(@unused tparam: TParam): T = builder.name("x", IntT1)
 
-    val res = cmp(Seq(build(x)))
+    def mkIllTyped(@unused tparam: TParam): Seq[T] =
+      Seq(
+          builder.name("x", InvalidTypeMethods.notInt)
+      )
 
-    assert(res.contains(IntT1))
+    def resultIsExpected = expectEqTyped[TParam, T](
+        TlaArithOper.uminus,
+        mkWellTyped,
+        ToSeq.unary,
+        _ => IntT1,
+    )
 
-    val resEx = builder.uminus(x)
-
-    assert(resEx.eqTyped(OperEx(TlaArithOper.uminus, x)(Typed(IntT1))))
-
-    val badX = builder.str("a")
-
-    assertThrows[TBuilderTypeException] {
-      build(builder.uminus(badX))
-    }
+    checkRun(Generators.unitGen)(
+        runUnary(
+            builder.uminus,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
   }
 
   test("mult") {

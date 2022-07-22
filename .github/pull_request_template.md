@@ -5,4 +5,4 @@
 - [ ] Documentation added for any new functionality
 - [ ] Entries added to [./unreleased/][unreleased] for any new functionality
 
-[unreleased]: https://github.com/informalsystems/apalache/tree/unstable/.unreleased
+[unreleased]: https://github.com/informalsystems/apalache/tree/main/.unreleased

@@ -7,7 +7,7 @@ on:
   #  See https://github.community/t/actions-cache-cache-not-being-hit-despite-of-being-present/17956/3
   push:
     branches:
-      - unstable
+      - main
 
 name: build
 
@@ -37,6 +37,17 @@ jobs:
           java-version: 17
       - name: Check formatting
         run: make fmt-check
+
+  scaladoc-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+      - name: Check scaladoc
+        run: sbt unidoc
 
   compiler-warnings:
     env:

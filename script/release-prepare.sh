@@ -72,7 +72,7 @@ instructions="
 # Reviewer instructions
 
 - Check the changelog to ensure the version increment is consistent with https://semver.org/.
-  - If a different version should be released, follow [the instructions](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#via-github).
+  - If a different version should be released, follow [the instructions](https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#via-github).
 - Review the changeset as a sanity check.
 - Approve the PR, if it pases muster.
 - **Merge** this branch (do not squash or rebase), but **DO NOT DELETE THE BRANCH**.
@@ -91,4 +91,4 @@ hub pull-request \
     --message="$commit_msg" \
     --message="$instructions" \
     --message="$body" \
-    --base="unstable"
+    --base="main"

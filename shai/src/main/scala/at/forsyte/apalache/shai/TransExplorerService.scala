@@ -25,6 +25,7 @@ import io.grpc.Status
 import java.util.UUID
 import zio.{Ref, Semaphore, ZEnv, ZIO}
 import zio.duration._
+import com.typesafe.scalalogging.Logger
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -38,26 +39,26 @@ private case class Conn(
   }
 }
 
+// TODO: Link the TransitionExecutor once tla.bmcmt.trex is imported
 /**
- * The service enabling interaction with the symbolic model checker, via the
- * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]]
+ * The service enabling interaction with the symbolic model checker, via the `TransitionExecutor`
  *
  * ==Overview==
  * The public methods of this class are handlers for the protobuf messages defined in `transExplorer.proto`. These
  * handlers implement RPC calls enabling interaction with the Apalache model checker.
  *
- * On a successful remote procedure call, a handler returns a value of type [[Result[T]]], were [[T]] is the type of the
+ * On a successful remote procedure call, a handler returns a value of type `[[Result]][T]`, were `T` is the type of the
  * protobuf message specified as the response for the given RPC.
  *
- * The type [[Result[T]]] is an alias for [[ZIO[ZEnv, Status, T]]], which is fallible promise to return a value of type
- * [[T]] computed in the environment [[ZEnv]].
+ * The type `[[Result]][T]` is an alias for `ZIO[ZEnv, Status, T]`, which is fallible promise to return a value of type
+ * `T` computed in the environment `ZEnv`.
  *
  * ==Error handling==
  *
  * There are two kinds of errors that may be signled by the PRC handlers:
  *
  *   - '''Protocol-level errors''', which indicate a failure to communicate successfully with the RPC system. These are
- *     indicated by [[Status]] error codes.
+ *     indicated by the `Status` error codes.
  *   - '''Application-level errors''', which indicate some erroneous outcome in the execution of an RPC that was
  *     successfully communicated and executed. These are indicated by `err` results in the protobuf message sent back in
  *     response.
@@ -81,11 +82,14 @@ private case class Conn(
  *   A semaphore used to ensure atomic access to the SANY parser. This is necessitated by the statefull design of the
  *   SANY parser, which makes it impossible to run two instance of the parser concurrently in the same runtime. See
  *   https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894 for details.
+ *
+ * @param logger
+ *   The logger used by the service
  */
-class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore)
+class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore, logger: Logger)
     extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
-  /** Concurrent tasks performed by the service that produce values of type [[T]] */
+  /** Concurrent tasks performed by the service that produce values of type `T` */
   type Result[T] = ZIO[ZEnv, Status, T]
 
   // The type of the `conn` field carried by all requests (exception for the `ConnectRequest`)
@@ -95,40 +99,64 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   // any incoming requests.
   private type RequestConn = Option[Connection]
 
+  // A private object to give us ZIO managed access to an external logger.
+  //
+  // We need to lift the calls to the logger into ZIO effects so they can be
+  // managed by the ZIO schedular for concurrent execution. See the project documentation
+  // in shai/README.md for tips and references on understanding effects in ZIO.
+  private object Log {
+    private def shaiMsg(conn: RequestConn, msg: String): String = {
+      val connId = conn.map(_.id).getOrElse("NO_CONNECTION")
+      s"[Shai:${connId}]: ${msg}"
+    }
+    def debug(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.debug(shaiMsg(conn, msg)))
+    def info(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.info(shaiMsg(conn, msg)))
+    def warn(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.warn(shaiMsg(conn, msg)))
+    def error(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.error(shaiMsg(conn, msg)))
+  }
+
   /**
    * Creates and registers a new connection
    *
-   * This method handles the [[OpenConnection]] RPC defined by `transExplorer.proto`
+   * This method handles the `openConnection` RPC defined by `transExplorer.proto`
    *
-   * Every session that interacts with the server must begin by obtaining a [[Connection]], and every subsequent request
-   * must include a `conn` field holding the [[Connection]].
+   * Every session that interacts with the server must begin by obtaining a [[transExplorer.Connection]], and every
+   * subsequent request must include a `conn` field holding the [[transExplorer.Connection]].
    *
    * @param req
    *   the request (isomorphic to the Unit)
    */
   def openConnection(req: ConnectRequest): Result[Connection] = for {
     id <- ZIO.effectTotal(UUID.randomUUID())
+    conn = Conn(id)
     _ <- setConnection(Conn(id))
-  } yield Connection(id.toString())
+    connection = Connection(id.toString())
+    _ <- Log.info(Some(connection), "New connection created")
+  } yield connection
 
   /**
    * Parses a spec into a model
    *
-   * This method handles the [[LoadModelRequest]] RPC defined by `transExplorer.proto`
+   * This method handles the [[transExplorer.LoadModelRequest]] RPC defined by `transExplorer.proto`
    *
    * @param req
    *   the request to load a model, including the root module spec and any auxiliary modules
    */
   def loadModel(req: LoadModelRequest): Result[LoadModelResponse] = for {
+    // Ensure we can get a connection for the request
+    _ <- getConnection(req.conn)
     parseResult <- parseSpec(req.spec, req.aux)
     result <- parseResult match {
       case Right(module) =>
         for {
           _ <- updateConnection(req.conn)(_.setModel(module))
           json = jsonOfModule(module)
+          _ <- Log.info(req.conn, "Specification parsed successfully")
         } yield LoadModelResponse.Result.Spec(json)
       case Left(err) =>
-        ZIO.succeed(LoadModelResponse.Result.Err(err))
+        for {
+          _ <- Log.warn(req.conn, s"Specification parsing failed: ${err}")
+        } yield LoadModelResponse.Result.Err(err)
     }
   } yield LoadModelResponse(result)
 
@@ -161,12 +189,9 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
   // Takes a [[RequestConn]] that should always hold a [[Connection]] with a valid UUID
   // and returns the internal [[Conn]] instance storing session data corresponding to the connection.
   //
-  // It provides error checking ont the required presence of a valid Connection
-  // ID, as desribed in the documentation of the [[TransExplorerService]]
-  // service.
-  //
-  // TODO Add logging for invalid conn ID: https://github.com/informalsystems/apalache/issues/1849
-  // TODO Add loggin for unregistered conn ID: https://github.com/informalsystems/apalache/issues/1849
+  // It checks for the required presence of a valid Connection ID, as desribed
+  // in the documentation of the [[TransExplorerService]] service, and returns a
+  // protol-level error via the [[zio.Status]] if no valid connection is given.
   private def getConnection(reqConn: RequestConn): Result[Conn] = {
     for {
       uuid <-
@@ -175,16 +200,16 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
             try { ZIO.succeed(UUID.fromString(conn.id)) }
             catch {
               case _: IllegalArgumentException =>
-                ZIO.fail(
-                    Status.INVALID_ARGUMENT.withDescription("Invalid RPC request: Connection id is not a valid UUID"))
+                val msg = s"Invalid RPC request: Connection id ${conn.id} is not a valid UUID"
+                Log.error(None, msg).andThen(ZIO.fail(Status.INVALID_ARGUMENT.withDescription(msg)))
             }
           case None => ZIO.fail(Status.INVALID_ARGUMENT.withDescription("Invalid RPC request: no Connection provided"))
         }
       connMap <- connections.get
       conn <- connMap.get(uuid) match {
         case None =>
-          ZIO.fail(Status.FAILED_PRECONDITION.withDescription(
-                  "Invalid Connection: no Connextion is registered for given ID"))
+          val msg = "Invalid Connection: no connection is registered for id ${uuid}"
+          Log.error(None, msg).andThen(ZIO.fail(Status.FAILED_PRECONDITION.withDescription(msg)))
         case Some(c) => ZIO.succeed(c)
       }
     } yield conn

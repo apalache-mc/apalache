@@ -27,7 +27,7 @@ private object Converters {
 /**
  * The configuration values that can be overriden based on CLI arguments
  *
- * For documentation on the use and meaning of these fields, see [[at.forsyte.apalache.tla.tooling.opt.General]].
+ * For documentation on the use and meaning of these fields, see `at.forsyte.apalache.tla.tooling.opt.General`.
  */
 trait CliConfig {
 

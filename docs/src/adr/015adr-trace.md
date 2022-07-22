@@ -446,6 +446,6 @@ Reserved for the future.
 
 
 [ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
-[MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/MissionariesAndCannibalsTyped.tla
+[MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [RFC7159]: https://datatracker.ietf.org/doc/html/rfc7159.html

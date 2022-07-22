@@ -76,7 +76,7 @@ ThisBuild / scalacOptions ++= {
 // scalafmt
 // TODO: Remove if we decide we are happy with allways reformatting all
 // Only check/fix against (tracked) files that have changed relative to the trunk
-// ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
+// ThisBuild / scalafmtFilter := "diff-ref=origin/main"
 ThisBuild / scalafmtPrintDiff := true
 
 // scalafix
@@ -244,7 +244,7 @@ lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apal
 
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
-  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin)
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin, ScalaUnidocPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects
@@ -261,6 +261,9 @@ lazy val root = (project in file("."))
   )
   .settings(
       testSettings,
+      // TODO: uncomment to enable building unidoc for for all test and src code
+      // Generate scaladoc for both test and src code
+      // ScalaUnidoc / unidoc / unidocConfigurationFilter := inConfigurations(Compile, Test),
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
