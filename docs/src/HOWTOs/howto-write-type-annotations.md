@@ -1,12 +1,16 @@
 # How to write type annotations
 
-**Revision:** July 7, 2022
+**Revision:** July 22, 2022
 
 **Important updates:**
 
+ - Version 0.25.10: This HOWTO introduces new syntax for type aliases. See
+   [Type Aliases][] in ADR-002.
+
  - Version 0.25.9: This HOWTO introduces new syntax for record types and
    variants, which is currently under testing. This syntax is activated via the
-   option `--features=rows`. See [Type System 1.2](../adr/002adr-types.md#ts12).
+   option `--features=rows`. See [Type System 1.2](../adr/002adr-types.md#ts12)
+   in ADR-002.
 
  - Version 0.23.1: The example specification uses recursive operators, which
    were removed in version 0.23.1.
@@ -380,7 +384,7 @@ clarify the intended meaning of a simple types in the given context.
 Type aliases are declared with the `@typeAlias` annotation, as follows:
 
 ```tla
-\* @typeAlias: ALIAS = <type>;
+\* @typeAlias: aliasNameInCamelCase = <type>;
 ```
 
 For example, suppose we have annotated some constants as follows:
@@ -398,12 +402,13 @@ that the type `Set(PERSON)` is used frequently. Type aliases let us provide a
 shortcut.
 
 By convention, we introduce all type aliases by annotating an operator called
-`<PREFIX>TypeAliases`, where the `<PREFIX>` is replaced with a unique prefix to 
-prevent name clashes. In the [MissionariesAndCannibals.tla][] example, we have
+`<PREFIX>_typedefs`, where the `<PREFIX>` is replaced with a unique prefix to
+prevent name clashes across different modules. Typically `<PREFIX>` is just the
+module name. For the [MissionariesAndCannibalsTyped.tla][] example, we have:
 
 ```tla
-\* @typeAlias: PERSONS = Set(PERSON);
-MCTypeAliases = TRUE
+\* @typeAlias: persons = Set(PERSON);
+MissionariesAndCannibals_typedefs = TRUE
 ```
 
 Having defined the type alias, we can use it in other definitions anywhere else 
@@ -411,25 +416,25 @@ in the file:
 
 ```tla
 CONSTANTS
-    \* @type: PERSONS;
+    \* @type: $persons;
     Missionaries,
-    \* @type: PERSONS;
+    \* @type: $persons;
     Cannibals 
 
 VARIABLES
     \* @type: Str;
     bank_of_boat,
-    \* @type: Str -> PERSONS;
+    \* @type: Str -> $persons;
     who_is_on_bank 
 ```
 
-Surely, we did not gain much by writing `PERSONS` instead of `Set(PERSON)`.  But
-if your specification has complex types (e.g., records), aliases may help you in
-minimizing the burden of specification maintenance. When you add one more field
-to the record type, it suffices to change the definition of the type alias,
-instead of changing the record type everywhere.
+Surely, we did not gain much by writing `$persons` instead of `Set(PERSON)`.
+But if your specification has complex types (e.g., records), aliases may help
+you in minimizing the burden of specification maintenance. When you add one
+more field to the record type, it suffices to change the definition of the type
+alias, instead of changing the record type everywhere.
 
-For more details on the design and usage, see [ADR002][].
+For more details on the design and usage, see [Type Aliases][] in ADR-002.
 
 ## Recipe 7: Multi-line annotations
 
@@ -522,3 +527,5 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Chapter on variants]: ../lang/variants.md
 [Idiom 3]: ../idiomatic/003record-sets.md
 [LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla
+[Type Aliases]: ../adr/002adr-types.md#defTypeAlias
+[MissionariesAndCannibalsTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla

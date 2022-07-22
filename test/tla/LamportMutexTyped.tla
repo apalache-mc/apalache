@@ -50,11 +50,11 @@ VARIABLES
   crit,     \* set of processes in critical section
 \* ANCHOR_END: vars1
 \* ANCHOR: vars2
-  \* @typeAlias: MESSAGE = {
+  \* @typeAlias: message = {
   \*     type: Str,
   \*     clock: Int
   \* };
-  \* @type: Int -> (Int -> Seq(MESSAGE));
+  \* @type: Int -> (Int -> Seq($message));
   network   \* messages sent but not yet received
 \* ANCHOR_END: vars2
 
