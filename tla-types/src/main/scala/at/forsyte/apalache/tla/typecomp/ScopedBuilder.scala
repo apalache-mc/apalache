@@ -65,7 +65,7 @@ import scalaz.Scalaz._
  * [[BuilderUtil.signatureMapEntry signatureMapEntry]] provides a utility method, for constructing such entries from
  * partial functions (the implementation calls [[BuilderUtil.checkForArityException checkForArityException]] and
  * [[BuilderUtil.completePartial completePartial]] in the background, to produce sensible error messages, if
- * `ScopedBuilder.foo` is used with type-incorrect arguments). In our case:
+ * `ScopedBuilder.foo` is used with type-incorrect arguments). In our case, using the `signatureMapEntry` helper would look like this:
  * {{{
  *   val fooSig = signatureMapEntry(foo, { case Seq(a, FunT1(aa, b)) if a == aa => b })
  * }}}
