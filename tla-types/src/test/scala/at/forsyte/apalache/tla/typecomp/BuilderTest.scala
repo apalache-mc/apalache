@@ -39,11 +39,11 @@ import scala.collection.immutable.SortedMap
  * the [[typecomp]] documentation first.
  *
  * Suppose we want to add a test for a binary TLA+ operator `Foo(x,y) == ...` which has an internal representation of
- * `foo` (a subclass of [[TlaOper]]) and is built by the `builder.foo` method. Assume, for the purposes of this example,
- * that Foo takes two arguments, `x: a` and `y: a -> b`, and returns a value of type `b`, for any pair of types `a` and
- * `b`.
+ * `foo` (a subclass of [[TlaOper]]) and is built by the `builder.foo` method. For instructions on how to implement
+ * `builder.foo`, see [[ScopedBuilder]]. Assume, for the purposes of this example, that Foo takes two arguments, `x: a`
+ * and `y: a -> b`, and returns a value of type `b`, for any pair of types `a` and `b`.
  *
- * The Foo example is implemented in [[HOWTOTestFooBuilder]].
+ * The Foo example is implemented in [[HOWTOFooBuilder]].
  *
  * We add a `test("foo")` to `TestOperCategoryBuilder`, where `OperCategory` is the class of operators foo belongs to
  * ([[TlaSetOper]], [[ApalacheOper]], etc.). Our goal is to use [[checkRun]] to test `builder.foo` on inputs of varying
