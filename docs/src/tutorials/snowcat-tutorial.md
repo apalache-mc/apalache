@@ -2,7 +2,7 @@
 
 **Difficulty: Blue trail – Easy**
 
-**Revision:** July 8, 2022
+**Revision:** July 22, 2022
 
 In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.
 We give concrete steps on running the type checker and
@@ -151,11 +151,11 @@ From this we can see that `network` is a function of integers to a function of
 integers to a sequence of messages. So its type should look like:
 
 ```tla
-Int -> (Int -> Seq(MESSAGE))
+Int -> (Int -> Seq(/* message type */))
 ```
 
-But what is a message? To find out, we have to continue our archaeology trip
-and check the definition of `Message` and related operators:
+But what is the message type? To find out, we have to continue our archaeology
+trip and check the definition of `Message` and related operators:
 
 ```tla
 {{#include ../../../test/tla/LamportMutexTyped.tla:Message}}
@@ -176,9 +176,9 @@ Int -> (Int -> Seq({ type: Str, clock: Int }))
 ```
 
 We could write it as above, but that type is a bit hard to read. Hence, we
-split it into two parts: the type alias `MESSAGE` that defines the type of
-messages, and the type of `network` that refers to `MESSAGE`. This can be done
-in the following way:
+split it into two parts: the type alias `message` that defines the type of
+messages, and the type of `network` that refers to the type alias `message`.
+This can be done in the following way:
 
 ```tla
 {{#include ../../../test/tla/LamportMutexTyped.tla:vars2}}

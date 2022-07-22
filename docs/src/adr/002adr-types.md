@@ -2,7 +2,7 @@
 
 | authors                                | revision | revision date  |
 | -------------------------------------- | --------:| --------------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        7 | July 05, 2022 |
+| Shon Feder, Igor Konnov, Jure Kukovec  |        8 | July 22, 2022 |
 
 *This is an architectural decision record. For user documentation, check the
 [Snowcat tutorial][] and [Snowcat HOWTO][].*
@@ -115,15 +115,55 @@ type aliases: tools should always exchange data with types in the alias-free for
 <a id="defTypeAlias"></a>
 ### 1.2. Type aliases
 
-The grammar of `T` includes one more rule for defining a type alias:
+#### New syntax for type aliases
+
+We introduce a special syntax for introducing type alises, which is
+defined by the following single-rule grammar:
 
 ```
-A ::= typeConst "=" T
+A ::= aliasName "=" T
+// an identifer in camel case, starting with a lower-case letter
+aliasName ::= [a-z]+(?:[A-Z][a-z]*)*
 ```
 
-This rule binds a type (produced by `T`) to a name (produced by `typeConst`). As you can see from the definition
-of `typeConst`, the name should be an identifier in the upper case. The type checker should use the bound type instead
-of the constant type. For examples, see [Section 2.4](#useTypeAlias).
+Typically, a type alias is defined via an annotation such as:
+
+```tla
+\* @typeAlias: setOfIntegers = Set(Int);
+module_typedefs == TRUE
+```
+
+To refer to a type alias, we extend the grammar `T` with one more option:
+
+```
+T ::= // all rules as above
+     | '$' aliasName
+```
+
+Whenever the type checker meets a reference like `$aliasName`, it tries to
+substitute `$aliasName` with the type that was earlier defined with the type
+alias. If no such alias is found, the type checker emits a type error.
+
+#### Old syntax for type aliases
+
+*This is the old syntax. We will drop its support in September, 2022.*
+
+Similar to the old syntax, type aliases are defined via a one-grammar rule:
+
+```
+A_old ::= typeConst "=" T
+```
+
+In contrast to the new syntax, the rule `A_old` uses the same syntax for
+aliases as for type constants.  This rule binds a type (produced by `T`) to a
+name (produced by `typeConst`). As you can see from the definition of
+`typeConst`, the name should be an identifier in the upper case. The type
+checker should use the bound type instead of the constant type.
+
+In retrospect, this syntax confused the users and introduced usability issues.
+For instance, when the users forgot to include a type alias, the type alias was
+interpreted as a type constant, and the type checker showed incomprehensible
+error messages.
 
 <a id="rows"></a>
 <a id="ts12"></a>
@@ -211,12 +251,12 @@ text presents a type definition that contains comments:
 
 ```
 // packets are stored in a set
-Set([
+Set({
   // unique sequence number
   seqno: Int,
   // payload hash
   payloadHash: Str
-])
+})
 ```
 
 The parser only supports one-line comments that starts with `//`. Since type
@@ -429,15 +469,15 @@ Since it is convenient to group type aliases of a module `MyModule`
 in one place, we usually use the following idiom:
 
 ```tla
-\* @typeAlias: ID = Int;
-\* @typeAlias: ENTRY = { a: ID, b: Bool };
+\* @typeAlias: id = Int;
+\* @typeAlias: entry = { a: $id, b: Bool };
 MyModule_typedefs == TRUE
 
 VARIABLE
-    \* @type: Set(ENTRY);
+    \* @type: Set($entry);
     msgs
 
-\* @type: (Set(ENTRY), ENTRY) => ENTRY;
+\* @type: (Set($entry), $entry) => $entry;
 Foo(ms, m) ==
     msgs' = ms \union {m}
 ```
