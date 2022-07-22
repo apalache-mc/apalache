@@ -65,7 +65,8 @@ import scalaz.Scalaz._
  * [[BuilderUtil.signatureMapEntry signatureMapEntry]] provides a utility method, for constructing such entries from
  * partial functions (the implementation calls [[BuilderUtil.checkForArityException checkForArityException]] and
  * [[BuilderUtil.completePartial completePartial]] in the background, to produce sensible error messages, if
- * `ScopedBuilder.foo` is used with type-incorrect arguments). In our case, using the `signatureMapEntry` helper would look like this:
+ * `ScopedBuilder.foo` is used with type-incorrect arguments). In our case, using the `signatureMapEntry` helper would
+ * look like this:
  * {{{
  *   val fooSig = signatureMapEntry(foo, { case Seq(a, FunT1(aa, b)) if a == aa => b })
  * }}}
@@ -101,9 +102,9 @@ import scalaz.Scalaz._
  * declare a method `foo(arg1: TT1, ..., argN: TTN): TBuilderInstruction` and a local instance of `UnsafeFooOperBuilder`
  * (typically named `unsafeBuilder`). The number of arguments should be the same as for the `UnsafeFooOperBuilder.foo`
  * method (we also typically use the same argument names). Each argument that is typed as [[TlaEx]] in
- * `UnsafeFooOperBuilder.foo` should be typed as [[TBuilderInstruction]] in `FooOperBuilder.foo` (though e.g. `String`
- * and [[TlaType1]] arguments should have the same types in both). Typically, the argument types are `TlaEx` as well. In
- * our case:
+ * `UnsafeFooOperBuilder.foo` should be typed as [[TBuilderInstruction]] in `FooOperBuilder.foo` (though if an argument
+ * in the scope-unsafe method has, for example, a `String` or [[TlaType1]] type, it would have that same type in the
+ * scope-safe method; strings and [[TlaType1]] expressions cannot introduce scope violations). In our case:
  * {{{
  *   def foo(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = ...
  * }}}
