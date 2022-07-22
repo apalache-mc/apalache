@@ -171,13 +171,18 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#how-to-write-type-annotations" id="how-to-write-type-annotations">How to write type annotations</a></h1>
-<p><strong>Revision:</strong> July 7, 2022</p>
+<p><strong>Revision:</strong> July 22, 2022</p>
 <p><strong>Important updates:</strong></p>
 <ul>
 <li>
+<p>Version 0.25.10: This HOWTO introduces new syntax for type aliases. See
+<a href="../adr/002adr-types.html#defTypeAlias">Type Aliases</a> in ADR-002.</p>
+</li>
+<li>
 <p>Version 0.25.9: This HOWTO introduces new syntax for record types and
 variants, which is currently under testing. This syntax is activated via the
-option <code>--features=rows</code>. See <a href="../adr/002adr-types.html#ts12">Type System 1.2</a>.</p>
+option <code>--features=rows</code>. See <a href="../adr/002adr-types.html#ts12">Type System 1.2</a>
+in ADR-002.</p>
 </li>
 <li>
 <p>Version 0.23.1: The example specification uses recursive operators, which
@@ -521,7 +526,7 @@ Solutions ==
 <p>Type aliases can be used to provide a concise label for complex types, or to
 clarify the intended meaning of a simple types in the given context. </p>
 <p>Type aliases are declared with the <code>@typeAlias</code> annotation, as follows:</p>
-<pre><code class="language-tla">\* @typeAlias: ALIAS = &lt;type&gt;;
+<pre><code class="language-tla">\* @typeAlias: aliasNameInCamelCase = &lt;type&gt;;
 </code></pre>
 <p>For example, suppose we have annotated some constants as follows:</p>
 <pre><code class="language-tla">CONSTANTS
@@ -534,31 +539,32 @@ clarify the intended meaning of a simple types in the given context. </p>
 that the type <code>Set(PERSON)</code> is used frequently. Type aliases let us provide a 
 shortcut.</p>
 <p>By convention, we introduce all type aliases by annotating an operator called
-<code>&lt;PREFIX&gt;TypeAliases</code>, where the <code>&lt;PREFIX&gt;</code> is replaced with a unique prefix to 
-prevent name clashes. In the <a href="https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla">MissionariesAndCannibals.tla</a> example, we have</p>
-<pre><code class="language-tla">\* @typeAlias: PERSONS = Set(PERSON);
-MCTypeAliases = TRUE
+<code>&lt;PREFIX&gt;_typedefs</code>, where the <code>&lt;PREFIX&gt;</code> is replaced with a unique prefix to
+prevent name clashes across different modules. Typically <code>&lt;PREFIX&gt;</code> is just the
+module name. For the <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped.tla</a> example, we have:</p>
+<pre><code class="language-tla">\* @typeAlias: persons = Set(PERSON);
+MissionariesAndCannibals_typedefs = TRUE
 </code></pre>
 <p>Having defined the type alias, we can use it in other definitions anywhere else 
 in the file:</p>
 <pre><code class="language-tla">CONSTANTS
-    \* @type: PERSONS;
+    \* @type: $persons;
     Missionaries,
-    \* @type: PERSONS;
+    \* @type: $persons;
     Cannibals 
 
 VARIABLES
     \* @type: Str;
     bank_of_boat,
-    \* @type: Str -&gt; PERSONS;
+    \* @type: Str -&gt; $persons;
     who_is_on_bank 
 </code></pre>
-<p>Surely, we did not gain much by writing <code>PERSONS</code> instead of <code>Set(PERSON)</code>.  But
-if your specification has complex types (e.g., records), aliases may help you in
-minimizing the burden of specification maintenance. When you add one more field
-to the record type, it suffices to change the definition of the type alias,
-instead of changing the record type everywhere.</p>
-<p>For more details on the design and usage, see <a href="../adr/002adr-types.html">ADR002</a>.</p>
+<p>Surely, we did not gain much by writing <code>$persons</code> instead of <code>Set(PERSON)</code>.
+But if your specification has complex types (e.g., records), aliases may help
+you in minimizing the burden of specification maintenance. If you add one
+more field to the record type, it suffices to change the definition of the type
+alias, instead of changing the record type everywhere.</p>
+<p>For more details on the design and usage, see <a href="../adr/002adr-types.html#defTypeAlias">Type Aliases</a> in ADR-002.</p>
 <h2><a class="header" href="#recipe-7-multi-line-annotations" id="recipe-7-multi-line-annotations">Recipe 7: Multi-line annotations</a></h2>
 <p>A type annotation may span over multiple lines. You may use both the <code>(* ... *)</code> syntax as well as the single-line syntax <code>\* ...</code>. All three examples below
 are accepted by the parser:</p>

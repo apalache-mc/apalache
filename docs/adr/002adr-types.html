@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-002-types-and-type-annotations" id="adr-002-types-and-type-annotations">ADR-002: types and type annotations</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th><th align="right">revision date</th></tr></thead><tbody>
-<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">7</td><td align="right">July 05, 2022</td></tr>
+<tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">8</td><td align="right">July 22, 2022</td></tr>
 </tbody></table>
 <p><em>This is an architectural decision record. For user documentation, check the
 <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">Snowcat tutorial</a> and <a href="https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html">Snowcat HOWTO</a>.</em></p>
@@ -270,12 +270,38 @@ Their type is <code>Set(PID)</code>.</li>
 </ul>
 <p><a id="defTypeAlias"></a></p>
 <h3><a class="header" href="#12-type-aliases" id="12-type-aliases">1.2. Type aliases</a></h3>
-<p>The grammar of <code>T</code> includes one more rule for defining a type alias:</p>
-<pre><code>A ::= typeConst &quot;=&quot; T
+<h4><a class="header" href="#new-syntax-for-type-aliases" id="new-syntax-for-type-aliases">New syntax for type aliases</a></h4>
+<p>We introduce a special syntax for introducing type alises, which is
+defined by the following single-rule grammar:</p>
+<pre><code>A ::= aliasName &quot;=&quot; T
+// an identifer in camel case, starting with a lower-case letter
+aliasName ::= [a-z]+(?:[A-Z][a-z]*)*
 </code></pre>
-<p>This rule binds a type (produced by <code>T</code>) to a name (produced by <code>typeConst</code>). As you can see from the definition
-of <code>typeConst</code>, the name should be an identifier in the upper case. The type checker should use the bound type instead
-of the constant type. For examples, see <a href="#useTypeAlias">Section 2.4</a>.</p>
+<p>Typically, a type alias is defined via an annotation such as:</p>
+<pre><code class="language-tla">\* @typeAlias: setOfIntegers = Set(Int);
+module_typedefs == TRUE
+</code></pre>
+<p>To refer to a type alias, we extend the grammar <code>T</code> with one more option:</p>
+<pre><code>T ::= // all rules as above
+     | '$' aliasName
+</code></pre>
+<p>Whenever the type checker meets a reference like <code>$aliasName</code>, it tries to
+substitute <code>$aliasName</code> with the type that was earlier defined with the type
+alias. If no such alias is found, the type checker emits a type error.</p>
+<h4><a class="header" href="#old-syntax-for-type-aliases" id="old-syntax-for-type-aliases">Old syntax for type aliases</a></h4>
+<p><em>This is the old syntax. We will drop its support in September, 2022.</em></p>
+<p>Similar to the old syntax, type aliases are defined via a one-grammar rule:</p>
+<pre><code>A_old ::= typeConst &quot;=&quot; T
+</code></pre>
+<p>In contrast to the new syntax, the rule <code>A_old</code> uses the same syntax for
+aliases as for type constants.  This rule binds a type (produced by <code>T</code>) to a
+name (produced by <code>typeConst</code>). As you can see from the definition of
+<code>typeConst</code>, the name should be an identifier in the upper case. The type
+checker should use the bound type instead of the constant type.</p>
+<p>In retrospect, this syntax confused the users and introduced usability issues.
+For instance, when the users forgot to include a type alias, the type alias was
+interpreted as a type constant, and the type checker showed incomprehensible
+error messages.</p>
 <p><a id="rows"></a>
 <a id="ts12"></a></p>
 <h3><a class="header" href="#13-type-system-12-including-precise-records-variants-and-rows" id="13-type-system-12-including-precise-records-variants-and-rows">1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
@@ -356,12 +382,12 @@ those fields right in the type annotations. For that reason, the type lexer
 supports one-line comments right in the type definitions. The following
 text presents a type definition that contains comments:</p>
 <pre><code>// packets are stored in a set
-Set([
+Set({
   // unique sequence number
   seqno: Int,
   // payload hash
   payloadHash: Str
-])
+})
 </code></pre>
 <p>The parser only supports one-line comments that starts with <code>//</code>. Since type
 annotations are currently written inside TLA+ comments, we feel that more
@@ -520,15 +546,15 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 <p>A type alias is introduced with the annotation <code>@typeAlias: &lt;ALIAS&gt; = &lt;Type&gt;;</code>.
 Since it is convenient to group type aliases of a module <code>MyModule</code>
 in one place, we usually use the following idiom:</p>
-<pre><code class="language-tla">\* @typeAlias: ID = Int;
-\* @typeAlias: ENTRY = { a: ID, b: Bool };
+<pre><code class="language-tla">\* @typeAlias: id = Int;
+\* @typeAlias: entry = { a: $id, b: Bool };
 MyModule_typedefs == TRUE
 
 VARIABLE
-    \* @type: Set(ENTRY);
+    \* @type: Set($entry);
     msgs
 
-\* @type: (Set(ENTRY), ENTRY) =&gt; ENTRY;
+\* @type: (Set($entry), $entry) =&gt; $entry;
 Foo(ms, m) ==
     msgs' = ms \union {m}
 </code></pre>

@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#tutorial-on-the-snowcat-type-checker" id="tutorial-on-the-snowcat-type-checker">Tutorial on the Snowcat❄🐱 Type Checker</a></h1>
 <p><strong>Difficulty: Blue trail – Easy</strong></p>
-<p><strong>Revision:</strong> July 8, 2022</p>
+<p><strong>Revision:</strong> July 22, 2022</p>
 <p>In this tutorial, we introduce the Snowcat ❄ 🐱 type checker.
 We give concrete steps on running the type checker and
 annotating a specification with types.</p>
@@ -307,10 +307,10 @@ variable <code>network</code>.</p>
 </code></pre>
 <p>From this we can see that <code>network</code> is a function of integers to a function of
 integers to a sequence of messages. So its type should look like:</p>
-<pre><code class="language-tla">Int -&gt; (Int -&gt; Seq(MESSAGE))
+<pre><code class="language-tla">Int -&gt; (Int -&gt; Seq(/* message type */))
 </code></pre>
-<p>But what is a message? To find out, we have to continue our archaeology trip
-and check the definition of <code>Message</code> and related operators:</p>
+<p>But what is the message type? To find out, we have to continue our archaeology
+trip and check the definition of <code>Message</code> and related operators:</p>
 <pre><code class="language-tla">ReqMessage(c) == [type |-&gt; &quot;req&quot;, clock |-&gt; c]
 AckMessage == [type |-&gt; &quot;ack&quot;, clock |-&gt; 0]
 RelMessage == [type |-&gt; &quot;rel&quot;, clock |-&gt; 0]
@@ -326,14 +326,14 @@ that have two fields: the field <code>type</code> that should be a string, and t
 <pre><code class="language-tla">Int -&gt; (Int -&gt; Seq({ type: Str, clock: Int }))
 </code></pre>
 <p>We could write it as above, but that type is a bit hard to read. Hence, we
-split it into two parts: the type alias <code>MESSAGE</code> that defines the type of
-messages, and the type of <code>network</code> that refers to <code>MESSAGE</code>. This can be done
-in the following way:</p>
-<pre><code class="language-tla">  \* @typeAlias: MESSAGE = {
+split it into two parts: the type alias <code>message</code> that defines the type of
+messages, and the type of <code>network</code> that refers to the type alias <code>message</code>.
+This can be done in the following way:</p>
+<pre><code class="language-tla">  \* @typeAlias: message = {
   \*     type: Str,
   \*     clock: Int
   \* };
-  \* @type: Int -&gt; (Int -&gt; Seq(MESSAGE));
+  \* @type: Int -&gt; (Int -&gt; Seq($message));
   network   \* messages sent but not yet received
 </code></pre>
 <p><strong>Note:</strong> We are lucky that <code>ReqMessage</code>, <code>AckMessage</code>, and <code>RelMessage</code> are
