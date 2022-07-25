@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
@@ -110,6 +111,10 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
           case CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
             nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(pickedRes)))
+            // For the decoder to work, the relation's arguments may need to be constrained
+            val resDomain = nextState.arena.getDom(res)
+            val resRelation = nextState.arena.getCdm(res)
+            nextState = constrainRelationArgs(nextState, rewriter, resDomain, resRelation)
 
           case CellTFrom(RecT1(_)) =>
             // Records do not contain cdm metadata

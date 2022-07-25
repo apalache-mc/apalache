@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.UntypedPredefs.{untyped, BuilderExAsUntyped}
+import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla.{fromTlaEx, str}
-import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import com.typesafe.scalalogging.LazyLogging
@@ -189,70 +189,59 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   }
 
   private def decodeFunToTlaEx(arena: Arena, cell: ArenaCell, funT1: FunT1): TlaEx = {
-    // A function is represented with the relation {(x, f[x]) : x \in S}
+    // a function is represented with the relation {(x, f[x]) : x \in S}
+    val relation = arena.getCdm(cell)
     val FunT1(argT, resT) = funT1
-    val pairT = TupT1(argT, resT)
 
-    solverContext.config.smtEncoding match {
-      case `arraysEncoding` | `arraysFunEncoding` =>
-        // If functions are encoded as SMT arrays, the set of pairs is created by querying the SMT array with the
-        // elements of domain, since there is no explicit set of pairs.
-        val domain = arena.getDom(cell)
+    def isInRelation(pair: ArenaCell): Boolean = {
+      solverContext.config.smtEncoding match {
+        case `arraysEncoding` | `arraysFunEncoding` =>
+          // in the arrays encoding the relation is only represented in the arena
+          // given this, we query the solver about the function's domain instead
+          val domain = arena.getDom(cell)
 
-        def isInDomain(domElem: ArenaCell): Boolean = {
-          val mem = tla.apalacheSelectInSet(domElem.toNameEx.as(argT), domain.toNameEx.as(SetT1(argT))).as(BoolT1)
-          solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1)
-        }
-
-        def mkPair(seen: Map[TlaEx, TlaEx], domElem: ArenaCell): Map[TlaEx, TlaEx] = {
-          val domEx = decodeCellToTlaEx(arena, domElem)
-          assert(!seen.contains(domEx))
-          val funApp = OperEx(ApalacheInternalOper.selectInFun, domElem.toNameEx, cell.toNameEx)
-          val valueEx = solverContext.evalGroundExpr(funApp)
-          seen + (domEx -> valueEx)
-        }
-
-        val pairs = arena
-          .getHas(domain)
-          .filter(isInDomain)
-          .foldLeft(Map[TlaEx, TlaEx]())(mkPair)
-          .map { case (k, v) => tla.tuple(k, v).as(pairT) }
-          .toSeq
-
-        tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
-
-      case `oopsla19Encoding` =>
-        // If functions are encoded as uninterpreted constants, we use the explicit set of pairs created.
-        val relation = arena.getCdm(cell)
-
-        def isInRelation(pair: ArenaCell): Boolean = {
-          val mem = tla.apalacheSelectInSet(pair.toNameEx.as(argT), relation.toNameEx.as(TupT1(argT, resT))).as(BoolT1)
-          solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1)
-        }
-
-        def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
-          val keyCell :: valueCell :: _ = arena.getHas(pair)
-          val keyEx = decodeCellToTlaEx(arena, keyCell)
-          if (seen.contains(keyEx)) {
-            seen
-          } else {
-            val valueEx = decodeCellToTlaEx(arena, valueCell)
-            seen + (keyEx -> valueEx)
+          def inDom(elem: ArenaCell): TlaEx = {
+            val elemEx = fromTlaEx(elem.toNameEx).typed(argT)
+            val domEx = fromTlaEx(domain.toNameEx).typed(SetT1(argT))
+            tla.apalacheSelectInSet(elemEx, domEx).typed(BoolT1)
           }
-        }
 
-        val pairs = arena
-          .getHas(relation)
-          .filter(isInRelation)
-          .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
-          .map { case (k, v) => tla.tuple(k, v).as(pairT) }
-          .toSeq
+          // check if the pair's head is in the domain
+          val funArg = arena.getHas(pair).head
+          val argsInDom = inDom(funArg).typed(BoolT1)
+          solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1)
 
-        tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
+        case `oopsla19Encoding` =>
+          val mem =
+            tla
+              .apalacheSelectInSet(pair.toNameEx.as(argT), relation.toNameEx.as(TupT1(argT, resT)))
+              .as(BoolT1)
+          solverContext.evalGroundExpr(mem) == tla.bool(true).typed(BoolT1)
 
-      case oddEncodingType =>
-        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        case oddEncodingType =>
+          throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+      }
     }
+
+    def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
+      val keyCell :: valueCell :: _ = arena.getHas(pair)
+      val keyEx = decodeCellToTlaEx(arena, keyCell)
+      if (seen.contains(keyEx)) {
+        seen
+      } else {
+        val valueEx = decodeCellToTlaEx(arena, valueCell)
+        seen + (keyEx -> valueEx)
+      }
+    }
+
+    val pairT = TupT1(argT, resT)
+    val pairs = arena
+      .getHas(relation)
+      .filter(isInRelation)
+      .foldLeft(Map[TlaEx, TlaEx]())(decodePair)
+      .map { case (k, v) => tla.tuple(k, v).as(pairT) }
+      .toSeq
+    tla.apalacheSetAsFun(tla.enumSet(pairs: _*).as(SetT1(pairT))).as(funT1)
   }
 
   private def decodeSet(arena: Arena, set: ArenaCell): Seq[TlaEx] = {

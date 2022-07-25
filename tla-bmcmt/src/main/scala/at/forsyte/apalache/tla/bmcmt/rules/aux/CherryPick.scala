@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -825,6 +826,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert, noSmt = true)
         val pickedRelation = nextState.asCell
         nextState = nextState.updateArena(_.setCdm(funCell, pickedRelation))
+        // For the decoder to work, the relations' arguments may need to be constrained
+        nextState = constrainRelationArgs(nextState, rewriter, pickedDom, pickedRelation)
 
         // The function's relation is used by the decoder to produce counter-examples. The first elements of its tuples
         // have to be equated to the function's domain, otherwise some tuples might be erroneously filtered out by the
@@ -931,6 +934,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT.arg, funT.res))))
     val relationCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, dom).setCdm(funCell, relationCell))
+    // For the decoder to work, the relations' arguments may need to be constrained
+    nextState = constrainRelationArgs(nextState, rewriter, dom, relationCell)
 
     // For every domain cell, pick a result from the co-domain.
     // The beauty of CherryPick: when the co-domain is not expanded, CherryPick will pick one value out of the co-domain,

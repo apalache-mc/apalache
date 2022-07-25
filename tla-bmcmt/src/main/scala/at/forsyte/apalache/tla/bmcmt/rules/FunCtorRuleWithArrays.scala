@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps._
 
 /**
  * Encodes the construction of a function f = [x \in S |-> e]. We carry the domain set in a separate set cell. The
@@ -42,6 +43,8 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     val relation = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(relation, relationCells: _*))
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
+    // For the decoder to work, the pairs' arguments may need to be constrained
+    nextState = constrainRelationArgs(nextState, rewriter, domainCell, relation)
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
       // inDomain with lazy equality
