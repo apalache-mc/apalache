@@ -7,10 +7,11 @@ import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 
 /**
- * This is an example test, for an operator Foo described in the "HOW TO WRITE A NEW TEST" guide in [[BuilderTest]]
+ * This is an example test, for an operator `Foo` described in the "HOW TO WRITE A NEW METHOD" guide in
+ * [[ScopedBuilder]] and the "HOW TO WRITE A NEW TEST" guide in [[BuilderTest]].
  */
 @RunWith(classOf[JUnitRunner])
-class HOWTOTestFooBuilder extends BuilderTest {
+class HOWTOFooBuilder extends BuilderTest {
 
   // Our mock operator
   object foo extends ApalacheOper {
@@ -21,13 +22,25 @@ class HOWTOTestFooBuilder extends BuilderTest {
     override val precedence: (Int, Int) = (100, 100)
   }
 
+  // We know the signature to be
   // (a, a -> b) => b
-  val partialFooSig: PartialSignature = { case Seq(a, FunT1(aa, b)) if a == aa => b }
-  val fooSig: Signature = completePartial(foo.name, partialFooSig)
+  val fooSig: (TlaOper, Signature) = signatureMapEntry(foo, { case Seq(a, FunT1(aa, b)) if a == aa => b })
+  // We're not adding to TypeComputationFactory, but this is how we _would have_ extended it
+  val mockSignatureMap: SignatureMap = Map(fooSig)
 
-  // assume this is how builder.foo is implemented
+  /**
+   * The type-safe, scope-unsafe builder.foo is implemented via
+   * [[BuilderUtil.composeAndValidateTypes composeAndValidateTypes]].
+   *
+   * This is how [[unsafe.ProtoBuilder.buildBySignatureLookup buildBySignatureLookup]] is implemented (we can't use that
+   * method without adding foo to [[TypeComputationFactory]])
+   */
+  def unsafeBuilderDotFoo(x: TlaEx, y: TlaEx): TlaEx =
+    composeAndValidateTypes(foo, mockSignatureMap(foo), x, y)
+
+  /** The type-safe, scope-unsafe builder.foo is implemented via [[BuilderUtil.binaryFromUnsafe binaryFromUnsafe]] */
   def builderDotFoo(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction =
-    binaryFromUnsafe(x, y)(composeAndValidateTypes(foo, fooSig, _, _))
+    binaryFromUnsafe(x, y)(unsafeBuilderDotFoo)
 
   test("foo") {
     // builder.foo takes 2 arguments, each one is a TBuilderInstruction

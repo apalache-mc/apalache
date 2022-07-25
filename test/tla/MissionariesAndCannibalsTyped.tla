@@ -28,14 +28,15 @@
 EXTENDS Integers, FiniteSets
 
 (***************************************************************************)
-(* The MCTypeAliases operator lets us group all type aliases together.     *)
-(* This makes it easy to rever to the defined aliases and the unique MC    *)
+(* With operator MissionariesAndCannibalsTyped_typedefs, we group all type *)
+(* in one place.                                                           *)
+(* This makes it easy to refer to the defined aliases and the unique       *)
 (* prefix protects against name clashes if this module is extended or      *)
 (* instantiated.                                                           *)
 (***************************************************************************)
 
 \* @typeAlias: persons = Set(PERSON);
-MCTypeAliases == TRUE
+MissionariesAndCannibalsTyped_typedefs == TRUE
 
 (***************************************************************************)
 (* Next comes the declaration of the sets of missionaries and cannibals.   *)
