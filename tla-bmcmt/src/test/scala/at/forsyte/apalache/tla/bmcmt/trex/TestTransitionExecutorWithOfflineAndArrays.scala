@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, SymbStateRewriterImpl}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -14,7 +15,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestTransitionExecutorWithOfflineAndArrays extends TestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = arraysEncoding))
+      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.Arrays))
     new UniqueNameGenerator
     val renaming = new IncrementalRenaming(new IdleTracker)
     val rewriter = new SymbStateRewriterImpl(solver, renaming, new ExprGradeStoreImpl())

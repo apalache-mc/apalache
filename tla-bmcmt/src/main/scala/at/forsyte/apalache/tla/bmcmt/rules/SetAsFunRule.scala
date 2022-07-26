@@ -72,7 +72,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 }
 
                 // Here we iterate over the reverse order of the list to have, in case duplicate keys, the first entry
-                // in the list be the value encoded in the function. This is the semantics of oopsla19Encoding.
+                // in the list be the value encoded in the function. This is the semantics of SMTEncoding.Oopsla19.
                 for ((domElem, rangeElem) <- domainCells.zip(rangeCells).reverse)
                   addCellCons(domElem, rangeElem)
 

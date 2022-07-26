@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}

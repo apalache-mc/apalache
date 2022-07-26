@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rules.aux._
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
@@ -20,9 +21,9 @@ class TestRewriterWithOOPSLA19
     with TestDefaultValueFactory {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = oopsla19Encoding)))
+                smtEncoding = SMTEncoding.Oopsla19)))
     arena = Arena.create(solverContext)
-    val result = test(oopsla19Encoding)
+    val result = test(SMTEncoding.Oopsla19)
     solverContext.dispose()
     result
   }

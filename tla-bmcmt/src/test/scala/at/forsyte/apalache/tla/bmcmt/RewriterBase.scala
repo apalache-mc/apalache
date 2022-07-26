@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -21,7 +22,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
     rewriterType match {
       case SMTEncoding.Oopsla19 => new SymbStateRewriterAuto(solverContext, renaming)
       case SMTEncoding.Arrays   => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
-      case oddRewriterType    => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
+      case oddRewriterType      => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
 
