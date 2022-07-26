@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
-import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.CheckerInput
 
 object ModelCheckerParams {
 
@@ -101,7 +102,7 @@ class ModelCheckerParams(
   /**
    * The SMT encoding to be used.
    */
-  var smtEncoding: SMTEncoding = oopsla19Encoding
+  var smtEncoding: SMTEncoding = SMTEncoding.Oopsla19
 
   /**
    * Is random simulation mode enabled.

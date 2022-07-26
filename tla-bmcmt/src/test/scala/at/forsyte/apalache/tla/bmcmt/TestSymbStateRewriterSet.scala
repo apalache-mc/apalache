@@ -818,8 +818,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 2} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case `oopsla19Encoding` => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
-      case `arraysEncoding` =>
+      case SMTEncoding.Oopsla19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
         val left = enumSet(int(1), int(2)).as(intSetT)
         val right = enumSet(int(1), int(2), int(3)).as(intSetT)
         val ex = subseteq(left, right).as(boolT)
@@ -844,8 +844,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 2, 3} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case `oopsla19Encoding` => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
-      case `arraysEncoding` =>
+      case SMTEncoding.Oopsla19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
         val right = enumSet(int(1), int(2), int(3)).as(intSetT)
         val ex = subseteq(right, right).as(boolT)
         val state = new SymbState(ex, arena, Binding())
@@ -869,8 +869,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case `oopsla19Encoding` => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
-      case `arraysEncoding` =>
+      case SMTEncoding.Oopsla19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
         val right = enumSet(int(1), int(2), int(3)).as(intSetT)
         // an empty set requires a type annotation
         val ex = subseteq(enumSet().as(intSetT), right).as(boolT)
@@ -895,8 +895,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 4} \subseteq {1, 2, 3} ~~> (false)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case `oopsla19Encoding` => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
-      case `arraysEncoding` =>
+      case SMTEncoding.Oopsla19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
         val left = enumSet(int(1), int(4)).as(intSetT)
         val right = enumSet(int(1), int(2), int(3)).as(intSetT)
         val ex = subseteq(left, right).as(boolT)
@@ -921,8 +921,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{[x \in {1, 2} |-> TRUE ]} \subseteq {[x \in {1, 2} |-> TRUE ]} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case `oopsla19Encoding` => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
-      case `arraysEncoding` =>
+      case SMTEncoding.Oopsla19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
         val dom = enumSet(int(1), int(2)).as(intSetT)
         val mapping = bool(true).as(boolT)
         val fun = funDef(mapping, name("x").as(IntT1), dom).as(FunT1(IntT1, BoolT1))

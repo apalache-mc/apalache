@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -32,7 +33,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val fun = nextState.arena.topCell
 
             rewriter.solverContext.config.smtEncoding match {
-              case `arraysEncoding` =>
+              case SMTEncoding.Arrays =>
                 nextState = nextState.updateArena(_.appendCell(SetT1(keyType)))
                 val domainCell = nextState.arena.topCell
                 nextState = nextState.updateArena(_.appendCellNoSmt(setCell.cellType))
@@ -75,7 +76,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 for ((domElem, rangeElem) <- domainCells.zip(rangeCells).reverse)
                   addCellCons(domElem, rangeElem)
 
-              case `oopsla19Encoding` =>
+              case SMTEncoding.Oopsla19 =>
                 nextState = translateRelation(setCell, nextState)
                 val rel = nextState.asCell
                 nextState = nextState.updateArena(_.setCdm(fun, rel))

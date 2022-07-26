@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.bmcmt.{arraysEncoding, oopsla19Encoding, SMTEncoding}
 import java.io.{File, FileNotFoundException}
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
@@ -24,19 +24,15 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =
-    Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays") {
-      case "arrays"        => arraysEncoding
-      case "oopsla19"      => oopsla19Encoding
-      case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
-    }
+    Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays")(SMTEncoding.ofString)
 
   var nworkers: Int = opt[Int](name = "nworkers", default = 1,
       description = "the number of workers for the parallel checker (soon), default: 1")
   var algo: String = opt[String](name = "algo", default = "incremental",
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
-  var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = oopsla19Encoding,
+  var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = SMTEncoding.Oopsla19,
       description =
-        s"the SMT encoding: ${oopsla19Encoding}, ${arraysEncoding} (experimental), default: ${oopsla19Encoding} (overrides envvar SMT_ENCODING)")
+        s"the SMT encoding: ${SMTEncoding.Oopsla19}, ${SMTEncoding.Arrays} (experimental), default: ${SMTEncoding.Oopsla19} (overrides envvar SMT_ENCODING)")
   var tuningOptionsFile: String =
     opt[String](name = "tuning-options-file", default = "",
         description = "filename of the tuning options, see docs/tuning.md")
@@ -72,8 +68,8 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("checker.nworkers", nworkers)
+    executor.passOptions.set("general.tuning", tuning) // XXX
+    executor.passOptions.set("checker.nworkers", nworkers) // XXX
     executor.passOptions.set("checker.discardDisabled", discardDisabled)
     executor.passOptions.set("checker.noDeadlocks", noDeadlocks)
     executor.passOptions.set("checker.algo", algo)
