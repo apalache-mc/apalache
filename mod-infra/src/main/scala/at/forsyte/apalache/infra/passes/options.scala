@@ -25,22 +25,4 @@ object options {
       case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
     }
   }
-
-  trait Tuning {}
-
-  trait General {
-    val tuning: Tuning
-  }
-
-  trait Checker {
-    val nworkers: Int = 1
-    val discardDisabled: Boolean = true
-    val noDeadlocks: Boolean = false
-    val algo: String = "incremental" // TODO: convert to case class
-    val smtEncoding: SMTEncoding = SMTEncoding.Oopsla19
-    val maxError: Int = 1
-    val view: String = "" // TODO: convert to optional
-  }
-
-  trait Typechecker {}
 }
