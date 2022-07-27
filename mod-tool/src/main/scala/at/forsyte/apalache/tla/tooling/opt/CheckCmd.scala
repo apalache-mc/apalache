@@ -68,8 +68,8 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.passOptions.set("general.tuning", tuning) // XXX
-    executor.passOptions.set("checker.nworkers", nworkers) // XXX
+    executor.passOptions.set("general.tuning", tuning)
+    executor.passOptions.set("checker.nworkers", nworkers)
     executor.passOptions.set("checker.discardDisabled", discardDisabled)
     executor.passOptions.set("checker.noDeadlocks", noDeadlocks)
     executor.passOptions.set("checker.algo", algo)
