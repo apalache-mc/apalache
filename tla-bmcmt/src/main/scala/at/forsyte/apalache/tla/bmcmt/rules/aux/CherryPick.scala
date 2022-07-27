@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -481,10 +482,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
                 tla.apalacheStoreInSet(keyCell.toNameEx, newDom.toNameEx),
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx))
             val unchangedSet = rewriter.solverContext.config.smtEncoding match {
-              case `arraysEncoding` =>
+              case SMTEncoding.Arrays =>
                 // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-              case `oopsla19Encoding` =>
+              case SMTEncoding.OOPSLA19 =>
                 tla.bool(true)
               case oddEncodingType =>
                 throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -635,10 +636,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
               tla.apalacheStoreInSet(picked.toNameEx, resultCell.toNameEx),
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx))
           val unchangedSet = rewriter.solverContext.config.smtEncoding match {
-            case `arraysEncoding` =>
+            case SMTEncoding.Arrays =>
               // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-            case `oopsla19Encoding` =>
+            case SMTEncoding.OOPSLA19 =>
               tla.bool(true)
             case oddEncodingType =>
               throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -805,7 +806,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {
-      case `arraysEncoding` =>
+      case SMTEncoding.Arrays =>
         // We create an unconstrained SMT array that can be equated to the cells of funs for the oracle assertions
         nextState = nextState.updateArena(_.appendCell(funType, isUnconstrained = true))
         val funCell = nextState.arena.topCell
@@ -840,7 +841,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // That's it!
         nextState.setRex(funCell.toNameEx)
 
-      case `oopsla19Encoding` =>
+      case SMTEncoding.OOPSLA19 =>
         // Pick the relation
         val relationT = SetT1(TupT1(funType.arg, funType.res))
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert)
@@ -885,7 +886,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
       // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
       // are used to allow the SMT solver to consider all possible combinations of elems.
-      if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+      if (rewriter.solverContext.config.smtEncoding == SMTEncoding.Arrays) {
         nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
         val storeElem = tla.apalacheStoreInSet(elem.toNameEx, resultSet.toNameEx)
@@ -944,7 +945,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
 
       rewriter.solverContext.config.smtEncoding match {
-        case `arraysEncoding` =>
+        case SMTEncoding.Arrays =>
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
           // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
           val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
@@ -978,7 +979,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInFun(pickedResult.toNameEx, cdm.toNameEx))
           }
 
-        case `oopsla19Encoding` =>
+        case SMTEncoding.OOPSLA19 =>
           nextState = nextState.updateArena(_.appendHas(relationCell, pair))
           val ite = tla.ite(isNonDup.toNameEx, tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
               tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))

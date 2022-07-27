@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
@@ -199,7 +200,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (encoding == oopsla19Encoding) {
+      if (encoding == SMTEncoding.OOPSLA19) {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
@@ -540,20 +541,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case CellTFrom(IntT1) =>
             z3context.getIntSort
 
-          case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+          case CellTFrom(SetT1(elemType)) if encoding == SMTEncoding.Arrays =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(elemType)), z3context.getBoolSort)
 
-          case InfSetT(elemType) if encoding == arraysEncoding =>
+          case InfSetT(elemType) if encoding == SMTEncoding.Arrays =>
             z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
 
-          case PowSetT(domType) if encoding == arraysEncoding =>
+          case PowSetT(domType) if encoding == SMTEncoding.Arrays =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
-          case FinFunSetT(domType, cdmType) if encoding == arraysEncoding =>
+          case FinFunSetT(domType, cdmType) if encoding == SMTEncoding.Arrays =>
             val funSort = z3context.mkArraySort(mkCellElemSort(domType), mkCellElemSort(cdmType))
             z3context.mkArraySort(funSort, z3context.getBoolSort)
 
-          case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+          case CellTFrom(FunT1(argType, resType)) if encoding == SMTEncoding.Arrays =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(argType)), getOrMkCellSort(CellTFrom(resType)))
 
           case _ =>
@@ -609,16 +610,16 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case CellTFrom(IntT1) =>
         z3context.getIntSort
 
-      case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+      case CellTFrom(SetT1(elemType)) if encoding == SMTEncoding.Arrays =>
         mkCellElemSort(CellTFrom(elemType))
 
-      case PowSetT(domType) if encoding == arraysEncoding =>
+      case PowSetT(domType) if encoding == SMTEncoding.Arrays =>
         mkCellElemSort(CellTFrom(domType))
 
-      case FinFunSetT(argType, cdmType) if encoding == arraysEncoding =>
+      case FinFunSetT(argType, cdmType) if encoding == SMTEncoding.Arrays =>
         mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
 
-      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+      case CellTFrom(FunT1(argType, resType)) if encoding == SMTEncoding.Arrays =>
         z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
 
       case _ =>
@@ -742,11 +743,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
-          case `oopsla19Encoding` =>
+          case SMTEncoding.OOPSLA19 =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -755,7 +756,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(ApalacheInternalOper.selectInSet,
               OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(funName)), NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // Nested selects are used to check if the result of a function application is in a given set
             val set2Id = ArenaCell.idFromName(setName)
             val set1Id = ArenaCell.idFromName(funName)
@@ -768,11 +769,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1) // elem is the arg of the SMT store here, since the range is fixed for sets
-          case `oopsla19Encoding` =>
+          case SMTEncoding.OOPSLA19 =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -780,7 +781,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(funName), NameEx(argName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // Updates a function for a given argument
             val funId = ArenaCell.idFromName(funName)
             val argId = ArenaCell.idFromName(argName)
@@ -793,11 +794,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedArray(setId), 1)
-          case `oopsla19Encoding` =>
+          case SMTEncoding.OOPSLA19 =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
             toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
           case oddEncodingType =>

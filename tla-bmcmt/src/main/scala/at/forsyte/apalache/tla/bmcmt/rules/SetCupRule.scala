@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
@@ -40,7 +41,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val allDistinct = common.toSeq ++ onlyLeft.toSeq ++ onlyRight.toSeq
 
         rewriter.solverContext.config.smtEncoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // introduce a new set, encoded as a unconstrained array
             val newType = state.ex.typeTag.asTlaType1()
             nextState = nextState.updateArena(_.appendCell(newType, isUnconstrained = true))
@@ -57,7 +58,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
             // that's it
             nextState.setRex(newSetCell.toNameEx)
 
-          case `oopsla19Encoding` =>
+          case SMTEncoding.OOPSLA19 =>
             // introduce a new set
             val newType = state.ex.typeTag.asTlaType1()
             nextState = nextState.updateArena(_.appendCell(newType))

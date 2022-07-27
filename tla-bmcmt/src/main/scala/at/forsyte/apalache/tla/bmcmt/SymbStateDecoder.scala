@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
@@ -195,7 +196,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     def isInRelation(pair: ArenaCell): Boolean = {
       solverContext.config.smtEncoding match {
-        case `arraysEncoding` =>
+        case SMTEncoding.Arrays =>
           // in the arrays encoding the relation is only represented in the arena
           // given this, we query the solver about the function's domain instead
           val domain = arena.getDom(cell)
@@ -211,7 +212,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           val argsInDom = inDom(funArgs).typed(BoolT1)
           solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1)
 
-        case `oopsla19Encoding` =>
+        case SMTEncoding.OOPSLA19 =>
           val mem =
             tla
               .apalacheSelectInSet(pair.toNameEx.as(argT), relation.toNameEx.as(TupT1(argT, resT)))
