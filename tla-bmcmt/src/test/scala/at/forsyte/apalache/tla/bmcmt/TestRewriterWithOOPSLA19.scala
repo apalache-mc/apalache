@@ -21,9 +21,9 @@ class TestRewriterWithOOPSLA19
     with TestDefaultValueFactory {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = SMTEncoding.Oopsla19)))
+                smtEncoding = SMTEncoding.OOPSLA19)))
     arena = Arena.create(solverContext)
-    val result = test(SMTEncoding.Oopsla19)
+    val result = test(SMTEncoding.OOPSLA19)
     solverContext.dispose()
     result
   }

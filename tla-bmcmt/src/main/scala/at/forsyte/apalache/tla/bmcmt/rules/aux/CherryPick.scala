@@ -485,7 +485,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               case SMTEncoding.Arrays =>
                 // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-              case SMTEncoding.Oopsla19 =>
+              case SMTEncoding.OOPSLA19 =>
                 tla.bool(true)
               case oddEncodingType =>
                 throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -639,7 +639,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             case SMTEncoding.Arrays =>
               // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-            case SMTEncoding.Oopsla19 =>
+            case SMTEncoding.OOPSLA19 =>
               tla.bool(true)
             case oddEncodingType =>
               throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -841,7 +841,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // That's it!
         nextState.setRex(funCell.toNameEx)
 
-      case SMTEncoding.Oopsla19 =>
+      case SMTEncoding.OOPSLA19 =>
         // Pick the relation
         val relationT = SetT1(TupT1(funType.arg, funType.res))
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert)
@@ -979,7 +979,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInFun(pickedResult.toNameEx, cdm.toNameEx))
           }
 
-        case SMTEncoding.Oopsla19 =>
+        case SMTEncoding.OOPSLA19 =>
           nextState = nextState.updateArena(_.appendHas(relationCell, pair))
           val ite = tla.ite(isNonDup.toNameEx, tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
               tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))

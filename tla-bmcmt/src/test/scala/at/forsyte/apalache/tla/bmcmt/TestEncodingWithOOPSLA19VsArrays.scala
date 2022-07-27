@@ -14,7 +14,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class CrossTestEncodingsWithOOPSLA19VsArrays extends CrossTestEncodings {
   override def withFixture(test: NoArgTest): Outcome = {
-    oracleEncoding = SMTEncoding.Oopsla19
+    oracleEncoding = SMTEncoding.OOPSLA19
     verifierEncoding = SMTEncoding.Arrays
     test()
   }

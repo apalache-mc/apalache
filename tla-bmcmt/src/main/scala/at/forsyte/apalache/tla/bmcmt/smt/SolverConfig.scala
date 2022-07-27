@@ -30,5 +30,5 @@ object SolverConfig {
    * Get the default configuration.
    */
   val default: SolverConfig =
-    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.Oopsla19)
+    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19)
 }

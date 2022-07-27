@@ -200,7 +200,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (encoding == SMTEncoding.Oopsla19) {
+      if (encoding == SMTEncoding.OOPSLA19) {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
@@ -747,7 +747,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
-          case SMTEncoding.Oopsla19 =>
+          case SMTEncoding.OOPSLA19 =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -773,7 +773,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1) // elem is the arg of the SMT store here, since the range is fixed for sets
-          case SMTEncoding.Oopsla19 =>
+          case SMTEncoding.OOPSLA19 =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -798,7 +798,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedArray(setId), 1)
-          case SMTEncoding.Oopsla19 =>
+          case SMTEncoding.OOPSLA19 =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
             toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
           case oddEncodingType =>

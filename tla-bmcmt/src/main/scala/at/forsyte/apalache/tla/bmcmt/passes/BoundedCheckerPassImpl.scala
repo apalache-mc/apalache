@@ -68,7 +68,7 @@ class BoundedCheckerPassImpl @Inject() (
     val debug = options.getOrElse[Boolean]("general", "debug", false)
     val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
-    val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", SMTEncoding.Oopsla19)
+    val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", SMTEncoding.OOPSLA19)
 
     val params = new ModelCheckerParams(input, stepsBound, tuning)
     params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
@@ -109,7 +109,7 @@ class BoundedCheckerPassImpl @Inject() (
       }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case SMTEncoding.Oopsla19 =>
+      case SMTEncoding.OOPSLA19 =>
         new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
@@ -145,7 +145,7 @@ class BoundedCheckerPassImpl @Inject() (
     }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case SMTEncoding.Oopsla19 => new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
+      case SMTEncoding.OOPSLA19 => new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
       case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
@@ -216,7 +216,7 @@ class BoundedCheckerPassImpl @Inject() (
 
     val typeFinder = new TrivialTypeFinder
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case SMTEncoding.Oopsla19 => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+      case SMTEncoding.OOPSLA19 => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
       case SMTEncoding.Arrays   => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
       case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }

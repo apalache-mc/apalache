@@ -72,11 +72,11 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 }
 
                 // Here we iterate over the reverse order of the list to have, in case duplicate keys, the first entry
-                // in the list be the value encoded in the function. This is the semantics of SMTEncoding.Oopsla19.
+                // in the list be the value encoded in the function. This is the semantics of SMTEncoding.OOPSLA19.
                 for ((domElem, rangeElem) <- domainCells.zip(rangeCells).reverse)
                   addCellCons(domElem, rangeElem)
 
-              case SMTEncoding.Oopsla19 =>
+              case SMTEncoding.OOPSLA19 =>
                 nextState = translateRelation(setCell, nextState)
                 val rel = nextState.asCell
                 nextState = nextState.updateArena(_.setCdm(fun, rel))

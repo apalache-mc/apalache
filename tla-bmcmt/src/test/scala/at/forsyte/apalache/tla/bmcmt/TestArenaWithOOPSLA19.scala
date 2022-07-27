@@ -9,7 +9,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestArenaWithOOPSLA19 extends TestArena {
   override protected def withFixture(test: NoArgTest): Outcome = {
-    solver = new Z3SolverContext(SolverConfig.default.copy(debug = true, smtEncoding = SMTEncoding.Oopsla19))
+    solver = new Z3SolverContext(SolverConfig.default.copy(debug = true, smtEncoding = SMTEncoding.OOPSLA19))
     val result = test()
     solver.dispose()
     result

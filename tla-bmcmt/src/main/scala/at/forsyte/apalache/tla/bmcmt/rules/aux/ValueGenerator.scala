@@ -240,7 +240,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
           addCellCons(domElem, rangeElem)
 
-      case SMTEncoding.Oopsla19 =>
+      case SMTEncoding.OOPSLA19 =>
         // create a relation cell
         nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funType.arg, funType.res))))
         val relationCell = nextState.arena.topCell

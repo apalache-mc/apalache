@@ -212,7 +212,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           val argsInDom = inDom(funArgs).typed(BoolT1)
           solverContext.evalGroundExpr(argsInDom) == tla.bool(true).typed(BoolT1)
 
-        case SMTEncoding.Oopsla19 =>
+        case SMTEncoding.OOPSLA19 =>
           val mem =
             tla
               .apalacheSelectInSet(pair.toNameEx.as(argT), relation.toNameEx.as(TupT1(argT, resT)))

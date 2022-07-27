@@ -102,7 +102,7 @@ class ModelCheckerParams(
   /**
    * The SMT encoding to be used.
    */
-  var smtEncoding: SMTEncoding = SMTEncoding.Oopsla19
+  var smtEncoding: SMTEncoding = SMTEncoding.OOPSLA19
 
   /**
    * Is random simulation mode enabled.

@@ -247,7 +247,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         eqCache.put(left, right, EqCache.EqEntry())
         state
 
-      case SMTEncoding.Oopsla19 =>
+      case SMTEncoding.OOPSLA19 =>
         // in general, we need 2 * |X| * |Y| comparisons
         val leftToRight: SymbState = subsetEq(state, left, right)
         val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
@@ -442,7 +442,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         // That's it!
         state
 
-      case SMTEncoding.Oopsla19 =>
+      case SMTEncoding.OOPSLA19 =>
         val relEq = mkSetEq(state, leftRel, rightRel)
         rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
                 tla.eql(leftRel.toNameEx, rightRel.toNameEx)))

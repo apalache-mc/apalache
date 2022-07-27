@@ -58,7 +58,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
             // that's it
             nextState.setRex(newSetCell.toNameEx)
 
-          case SMTEncoding.Oopsla19 =>
+          case SMTEncoding.OOPSLA19 =>
             // introduce a new set
             val newType = state.ex.typeTag.asTlaType1()
             nextState = nextState.updateArena(_.appendCell(newType))
