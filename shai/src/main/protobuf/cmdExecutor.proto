@@ -1,0 +1,13 @@
+// Protobuf specification for the Apalache command executor service
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "at.forsyte.apalache.shai.v1";
+option java_outer_classname = "CmdExecutorProto";
+option objc_class_prefix = "TEP";
+
+package shai;
+
+service CmdExecutor {
+}
