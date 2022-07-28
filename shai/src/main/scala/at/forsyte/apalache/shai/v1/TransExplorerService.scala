@@ -16,7 +16,7 @@ import at.forsyte.apalache.shai.v1.transExplorer.{
   ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, ZioTransExplorer,
 }
 import at.forsyte.apalache.infra.Executor
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
 import at.forsyte.apalache.tla.imp.passes.ParserModule

@@ -14,7 +14,7 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 import scala.io.Source
 
 /**

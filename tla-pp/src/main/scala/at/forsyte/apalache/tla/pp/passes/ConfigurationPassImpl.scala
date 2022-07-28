@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.FilenameUtils
 
 import java.io.{File, FileReader, IOException}
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions. This pass also overrides
