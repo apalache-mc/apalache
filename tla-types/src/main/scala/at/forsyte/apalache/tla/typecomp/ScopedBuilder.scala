@@ -18,7 +18,8 @@ import scalaz.Scalaz._
  *       - `oper(args:_*)` corresponds to some TNT operator with a signature `(T1,...,Tn) => T`
  *       - There exists some substitution `s`, such that: `s(T1) = typeof(args[1]), ..., s(Tn) = typeof(args[n])` and
  *         `s(T) = resultType`. Example: For `e @ OperEx(TlaSetOper.union, 1..4, {5})` the subexpressions `1..4, {5}`
- *         and `e` will all have types `Set(Int)`, since [[TlaSetOper.union]] corresponds to `\union`, which has the
+ *         and `e` will all have types `Set(Int)`, since
+ *         [[at.forsyte.apalache.tla.lir.oper.TlaSetOper.union TlaSetOper.union]] corresponds to `\union`, which has the
  *         signature `(Set(t), Set(t)) => Set(t)`, and the substitution required is `t -> Int`.
  *   - Scope correctness: For each variable that appears as free in the IR tree, all instances of that variable will
  *     have the same type. For each sub-tree rooted at an operator, which introduces a bound variable, all instances of
@@ -35,10 +36,10 @@ import scalaz.Scalaz._
  * It is assumed that you are familiar with the package [[typecomp]]. If not, read the [[typecomp]] documentation first.
  *
  * Suppose we want to add a builder method `ScopedBuilder.foo`, for a binary TLA+ operator `Foo(x,y) == ...` which has
- * an internal representation of `foo` (a subclass of [[TlaOper]]). We need to implement (up to) three leayers, as
- * outlined by [[typecomp]].
+ * an internal representation of `foo` (a subclass of [[at.forsyte.apalache.tla.lir.oper.TlaOper TlaOper]]). We need to
+ * implement (up to) three leayers, as outlined by [[typecomp]].
  *
- * The Foo example is implemented in [[HOWTOFooBuilder]].
+ * The Foo example is implemented in `HOWTOFooBuilder` in the tests.
  *
  * ==Determining the type and signature of `Foo`==
  *
@@ -80,16 +81,17 @@ import scalaz.Scalaz._
  * usually equal to the TLA+ arity of the operator, though this is not always the case. Typically, the argument types
  * are `TlaEx` as well. An exception to this are, for example, operators which take type-hints. Take
  * [[unsafe.UnsafeApalacheInternalBuilder.notSupportedByModelChecker notSupportedByModelChecker]]; it requires a
- * `String` and a [[TlaType1]] argument, even though the TLA+ operator `NotSupportedByModelChecker` requires exactly one
- * argument (of type `Str`).
+ * `String` and a [[at.forsyte.apalache.tla.lir.TlaType1 TlaType1]] argument, even though the TLA+ operator
+ * `NotSupportedByModelChecker` requires exactly one argument (of type `Str`).
  *
- * In our case, `foo` will need to accept 2 arguments of type [[TlaEx]], so it will look like
+ * In our case, `foo` will need to accept 2 arguments of type [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]], so it will
+ * look like
  * {{{
  *   def foo(x: TlaEx, y: TlaEx): TlaEx = ...
  * }}}
  * The implementation depends on whether the operator has an associated signature. If yes, we just need to use
  * [[unsafe.ProtoBuilder.buildBySignatureLookup buildBySignatureLookup]]; All it needs are the operator (`foo`) and a
- * number of [[TlaEx]] arguments. In our case:
+ * number of [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] arguments. In our case:
  * {{{
  *   def foo(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(foo, x, y)
  * }}}
@@ -101,10 +103,12 @@ import scalaz.Scalaz._
  * Finally, we need to add the type-safe, scope-safe method to `FooOperBuilder` in [[subbuilder]]. This builder should
  * declare a method `foo(arg1: TT1, ..., argN: TTN): TBuilderInstruction` and a local instance of `UnsafeFooOperBuilder`
  * (typically named `unsafeBuilder`). The number of arguments should be the same as for the `UnsafeFooOperBuilder.foo`
- * method (we also typically use the same argument names). Each argument that is typed as [[TlaEx]] in
- * `UnsafeFooOperBuilder.foo` should be typed as [[TBuilderInstruction]] in `FooOperBuilder.foo` (though if an argument
- * in the scope-unsafe method has, for example, a `String` or [[TlaType1]] type, it would have that same type in the
- * scope-safe method; strings and [[TlaType1]] expressions cannot introduce scope violations). In our case:
+ * method (we also typically use the same argument names). Each argument that is typed as
+ * [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] in `UnsafeFooOperBuilder.foo` should be typed as [[TBuilderInstruction]]
+ * in `FooOperBuilder.foo` (though if an argument in the scope-unsafe method has, for example, a `String` or
+ * [[at.forsyte.apalache.tla.lir.TlaType1 TlaType1]] type, it would have that same type in the scope-safe method;
+ * strings and [[at.forsyte.apalache.tla.lir.TlaType1 TlaType1]] expressions cannot introduce scope violations). In our
+ * case:
  * {{{
  *   def foo(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction = ...
  * }}}
@@ -119,7 +123,7 @@ import scalaz.Scalaz._
  * For unary methods, you can just map the unsafe method over a [[TBuilderInstruction]] argument. For methods which deal
  * with bound variables, there are [[BuilderUtil.boundVarIntroductionBinary boundVarIntroductionBinary]],
  * [[BuilderUtil.boundVarIntroductionTernary boundVarIntroductionTernary]], and
- * [[BuilderUtil.boundVarIntroductionVariadic]] (see [[subbuilder.BoolBuilder.exists exists]] or
+ * [[BuilderUtil.boundVarIntroductionVariadic]] (see `subbuilder.BoolBuilder.exists` or
  * [[subbuilder.SetBuilder.map map]].
  *
  * Finally, we just need [[ScopedBuilder]] to extend `FooOperBuilder`, to make the `foo` method available for use.
