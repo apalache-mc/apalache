@@ -13,7 +13,7 @@ import com.typesafe.scalalogging.Logger
  * utilize much of Apalache's CLI functionality with the benefit of structured configuration, input, and output and
  * avoiding the repeated startup costs of the JVM.
  *
- * [[CmdExecutorSerive]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
+ * [[CmdExecutorService]] is meant to be registered with the [[RpcServer]], and should not need to be used directly.
  */
 
 class CmdExecutorService(parserSemaphore: Semaphore, logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEnv, Any] {
