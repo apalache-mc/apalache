@@ -61,7 +61,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 nextState = nextState.updateArena(_.setCdm(fun, relationCell))
 
                 def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-                  val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx)
+                  val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx)
                   val inRange =
                     tla.apalacheStoreInFun(rangeElem.toNameEx, fun.toNameEx, domElem.toNameEx)
                   val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, fun.toNameEx)
