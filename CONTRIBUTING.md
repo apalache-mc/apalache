@@ -285,14 +285,14 @@ https://scalameta.org/metals/docs/editors/emacs.html
 
 ## Documentation
 
-We maintain two main kinds of documentation: tutorials and manuals meant as user
-documentation and API documentation meant for developers.
+We maintain three principle kinds of documentation:
 
-The user documentation can be found in [./docs](./docs).
-
-The API documentation is written using
-[Scaladoc](https://docs.scala-lang.org/style/scaladoc.html) alongside the source
-code.
+- Tutorials and manuals meant as general user documentation can be found in [./docs/src](./docs/src).
+- ADRs and RFCs documenting design and technical decisions are meant for developers
+  and expert users and be found in [./docs/src/adr](./docs/src/adr)
+- API documentation meant for developers, which is written using
+  [Scaladoc](https://docs.scala-lang.org/style/scaladoc.html) and lives
+  alongside the source code.
 
 You can build and view the API docs locally by running the make target
 
