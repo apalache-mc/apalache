@@ -247,8 +247,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         eqCache.put(left, right, EqCache.EqEntry())
         nextState.setRex(state.ex)
 
-      case SMTEncoding.OOPSLA19 =>
-      case `oopsla19Encoding` | `arraysFunEncoding` =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
         // in general, we need 2 * |X| * |Y| comparisons
         val leftToRight: SymbState = subsetEq(state, left, right)
         val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
@@ -427,10 +426,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val rightRel = state.arena.getCdm(rightFun)
 
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays =>
-        // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
-        // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
-      case `arraysEncoding` | `arraysFunEncoding` =>
+      case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
         // We cache the equalities between the elements of the functions' ranges, which are pairs of form <arg,res>
         val leftElems = state.arena.getHas(leftRel)
         val rightElems = state.arena.getHas(rightRel)

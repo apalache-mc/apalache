@@ -20,23 +20,18 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case SMTEncoding.OOPSLA19 => new SymbStateRewriterAuto(solverContext, renaming)
-      case SMTEncoding.Arrays   => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
-      case oddRewriterType      => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
-      case `oopsla19Encoding`  => new SymbStateRewriterAuto(solverContext, renaming)
-      case `arraysEncoding`    => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
-      case `arraysFunEncoding` => new SymbStateRewriterAutoWithArraysFun(solverContext, renaming)
-      case oddRewriterType     => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
+      case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming)
+      case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
+      case SMTEncoding.ArraysFun => new SymbStateRewriterAutoWithArraysFun(solverContext, renaming)
+      case oddRewriterType       => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
 
   protected def createWithoutCache(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case SMTEncoding.OOPSLA19 => new SymbStateRewriterImpl(solverContext, renaming)
-      case SMTEncoding.Arrays   => new SymbStateRewriterImplWithArrays(solverContext, renaming)
-      case `oopsla19Encoding`  => new SymbStateRewriterImpl(solverContext, renaming)
-      case `arraysEncoding`    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
-      case `arraysFunEncoding` => new SymbStateRewriterImplWithArraysFun(solverContext, renaming)
+      case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, renaming)
+      case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
+      case SMTEncoding.ArraysFun => new SymbStateRewriterImplWithArraysFun(solverContext, renaming)
       case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }

@@ -196,8 +196,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
 
     def isInRelation(pair: ArenaCell): Boolean = {
       solverContext.config.smtEncoding match {
-        case SMTEncoding.Arrays =>
-        case `arraysEncoding` | `arraysFunEncoding` =>
+        case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
           // in the arrays encoding the relation is only represented in the arena
           // given this, we query the solver about the function's domain instead
           val domain = arena.getDom(cell)

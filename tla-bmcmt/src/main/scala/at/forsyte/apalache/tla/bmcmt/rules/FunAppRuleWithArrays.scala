@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types._
@@ -101,7 +102,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         val eql = tla.eql(res.toNameEx, select)
         rewriter.solverContext.assertGroundExpr(eql)
 
-        if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
+        if (rewriter.solverContext.config.smtEncoding == SMTEncoding.ArraysFun) {
           // If sets are not SMT arrays, their inPreds need to be declared
           nextState = nextState.updateArena(_.appendHas(res, nextState.arena.getHas(pickedRes): _*))
         } else {
@@ -122,7 +123,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
 
           case CellTFrom(SetT1(_)) =>
-            if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
+            if (rewriter.solverContext.config.smtEncoding == SMTEncoding.ArraysFun) {
               val relationElemsRes = relationElems.map(nextState.arena.getHas(_)(1))
               nextState = rewriter.lazyEq.cacheEqConstraints(nextState, relationElemsRes.map((_, res))) // fixes mod2
               nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, res, pickedRes)

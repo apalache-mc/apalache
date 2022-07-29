@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{arraysFunEncoding, ArenaCell, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.values.TlaBool
@@ -16,7 +17,7 @@ object FunOps {
       relation: ArenaCell): SymbState = {
 
     rewriter.solverContext.config.smtEncoding match {
-      case `arraysFunEncoding` =>
+      case SMTEncoding.ArraysFun =>
         var nextState = state
         val domainElems = nextState.arena.getHas(domain)
         val relationElems = nextState.arena.getHas(relation)

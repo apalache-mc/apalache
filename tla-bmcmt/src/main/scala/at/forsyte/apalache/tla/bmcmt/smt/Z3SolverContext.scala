@@ -200,8 +200,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (encoding == SMTEncoding.OOPSLA19) {
-      if (encoding == oopsla19Encoding || encoding == arraysFunEncoding) {
+      if (encoding == SMTEncoding.OOPSLA19 || encoding == SMTEncoding.ArraysFun) {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
@@ -555,8 +554,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val funSort = z3context.mkArraySort(mkCellElemSort(domType), mkCellElemSort(cdmType))
             z3context.mkArraySort(funSort, z3context.getBoolSort)
 
-          case CellTFrom(FunT1(argType, resType)) if encoding == SMTEncoding.Arrays =>
-          case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding || encoding == arraysFunEncoding =>
+          case CellTFrom(FunT1(argType, resType))
+              if encoding == SMTEncoding.Arrays || encoding == SMTEncoding.ArraysFun =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(argType)), getOrMkCellSort(CellTFrom(resType)))
 
           case _ =>
@@ -621,8 +620,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case FinFunSetT(argType, cdmType) if encoding == SMTEncoding.Arrays =>
         mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
 
-      case CellTFrom(FunT1(argType, resType)) if encoding == SMTEncoding.Arrays =>
-      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding || encoding == arraysFunEncoding =>
+      case CellTFrom(FunT1(argType, resType)) if encoding == SMTEncoding.Arrays || encoding == SMTEncoding.ArraysFun =>
         z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
 
       case _ =>
@@ -750,9 +748,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
-          case SMTEncoding.OOPSLA19 =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
-          case `oopsla19Encoding` | `arraysFunEncoding` =>
+          case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -760,11 +756,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.selectInFun, NameEx(elemName), NameEx(funName)) =>
         encoding match {
-          case `arraysEncoding` | `arraysFunEncoding` =>
+          case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
             val funId = ArenaCell.idFromName(funName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(funId, elemId), 1)
-          case `oopsla19Encoding` =>
+          case SMTEncoding.OOPSLA19 =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(funName)))
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -790,8 +786,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1) // elem is the arg of the SMT store here, since the range is fixed for sets
-          case SMTEncoding.OOPSLA19 =>
-          case `oopsla19Encoding` | `arraysFunEncoding` =>
+          case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
             toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -799,8 +794,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(funName), NameEx(argName)) =>
         encoding match {
-          case SMTEncoding.Arrays =>
-          case `arraysEncoding` | `arraysFunEncoding` =>
+          case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
             // Updates a function for a given argument
             val funId = ArenaCell.idFromName(funName)
             val argId = ArenaCell.idFromName(argName)
@@ -814,11 +808,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(ApalacheInternalOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays =>
-          case `arraysEncoding` =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedArray(setId), 1)
-          case `oopsla19Encoding` | `arraysFunEncoding` =>
+          case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
             toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
           case oddEncodingType =>
@@ -827,7 +820,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       case OperEx(ApalacheInternalOper.storeNotInFun, NameEx(elemName), NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` | `arraysFunEncoding` =>
+          case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedArray(setId), 1)

@@ -486,8 +486,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               case SMTEncoding.Arrays =>
                 // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-              case SMTEncoding.OOPSLA19 =>
-              case `oopsla19Encoding` | `arraysFunEncoding` =>
+              case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
                 tla.bool(true)
               case oddEncodingType =>
                 throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -641,8 +640,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             case SMTEncoding.Arrays =>
               // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-            case SMTEncoding.OOPSLA19 =>
-            case `oopsla19Encoding` | `arraysFunEncoding` =>
+            case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
               tla.bool(true)
             case oddEncodingType =>
               throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -809,8 +807,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays =>
-      case `arraysEncoding` | `arraysFunEncoding` =>
+      case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
         // We create an unconstrained SMT array that can be equated to the cells of funs for the oracle assertions
         nextState = nextState.updateArena(_.appendCell(funType, isUnconstrained = true))
         val funCell = nextState.arena.topCell
@@ -953,8 +950,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
 
       rewriter.solverContext.config.smtEncoding match {
-        case SMTEncoding.Arrays =>
-        case `arraysEncoding` | `arraysFunEncoding` =>
+        case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
           // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
           val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
@@ -985,7 +981,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               if (cdm == state.arena.cellNatSet()) rewriter.solverContext.assertGroundExpr(ge) // Add Nat constraint
 
             case _ =>
-              if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
+              if (rewriter.solverContext.config.smtEncoding == SMTEncoding.ArraysFun) {
                 // Since the cmd set is not an SMT array, we have to use lazy equality
                 val cmdElems = nextState.arena.getHas(cdm)
                 nextState = rewriter.lazyEq.cacheEqConstraints(nextState, cmdElems.map((_, pickedResult)))
