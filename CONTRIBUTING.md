@@ -289,7 +289,7 @@ We maintain three principle kinds of documentation:
 
 - Tutorials and manuals meant as general user documentation can be found in [./docs/src](./docs/src).
 - ADRs and RFCs documenting design and technical decisions are meant for developers
-  and expert users and be found in [./docs/src/adr](./docs/src/adr)
+  and expert users and can be found in [./docs/src/adr](./docs/src/adr)
 - API documentation meant for developers, which is written using
   [Scaladoc](https://docs.scala-lang.org/style/scaladoc.html) and lives
   alongside the source code.
