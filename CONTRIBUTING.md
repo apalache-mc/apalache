@@ -283,6 +283,26 @@ writeup][writeup]
 For installation and configuration in vanilla emacs, see
 https://scalameta.org/metals/docs/editors/emacs.html
 
+## Documentation
+
+We maintain two main kinds of documentation: tutorials and manuals meant as user
+documentation and API documentation meant for developers.
+
+The user documentation can be found in [./docs](./docs).
+
+The API documentation is written using
+[Scaladoc](https://docs.scala-lang.org/style/scaladoc.html) alongside the source
+code.
+
+You can build and view the API docs locally by running the make target
+
+```sh
+make docs-view
+```
+
+This will build current API docs, open the file in your browser, and watch the
+files for changes, rebuilding the docs on changes.
+
 ## Testing
 
 ### Build and run Apalache from source
