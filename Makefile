@@ -3,7 +3,7 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run
+.PHONY: all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run docs docs-view
 
 all: apalache
 
@@ -65,6 +65,12 @@ fmt-fix:
 clean:
 	sbt clean
 	rm -rf target/
+
+docs:
+	sbt unidoc
+
+docs-view:
+	sbt "browseApiDocs; ~unidoc"
 
 # Adapted from https://github.com/ocaml/dune/blob/d60cfbc0c78bb8733115d9100a8f7f6cb3dcf85b/Makefile#L121-L127
 # If the first argument is "run"...
