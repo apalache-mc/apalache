@@ -29,8 +29,6 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
     val relationElems = nextState.arena.getHas(relationCell)
     val nElems = relationElems.size
 
-    // nextState = rewriter.lazyEq.cacheEqConstraints(nextState, nextState.arena.getHas(domainCell).map((_, argCell)))
-
     nextState = nextState.updateArena(_.appendCellOld(elemT, isUnconstrained = true)) // The cell will be unconstrained
     val res = nextState.arena.topCell
 
@@ -49,11 +47,6 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         val impl = tla.impl(tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx), eql)
         // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
         // The constraining only happens if argCell is in the domain
-
-        // val domainElems = nextState.arena.getHas(domainCell)
-        // val relationElemsRes = relationElems.map(nextState.arena.getHas(_)(1))
-        // nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domainElems.map((_, elemArg)))
-        // nextState = rewriter.lazyEq.cacheEqConstraints(nextState, relationElemsRes.map((_, elemRes)))
 
         rewriter.solverContext.assertGroundExpr(impl)
         return nextState.setRex(elemRes.toNameEx)
@@ -140,7 +133,6 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
             // do nothing
             ()
         }
-        // return nextState.setRex(pickedRes.toNameEx)
       }
     }
 

@@ -432,19 +432,6 @@ class LazyEquality(rewriter: SymbStateRewriter)
         var nextState = cacheEqConstraints(state, leftElems.cross(rightElems))
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
-        /*
-        val leftElems1 = leftElems.map(e => state.arena.getHas(e)(0))
-        val leftElems2 = leftElems.map(e => state.arena.getHas(e)(1))
-        val rightElems1 = rightElems.map(e => state.arena.getHas(e)(0))
-        val rightElems2 = rightElems.map(e => state.arena.getHas(e)(1))
-        nextState = cacheEqConstraints(nextState, leftElems1.cross(rightElems1)) // Cache all the equalities
-        nextState = cacheEqConstraints(nextState, leftElems2.cross(rightElems2)) // Cache all the equalities
-
-        val leftDomElems = nextState.arena.getHas(nextState.arena.getDom(leftFun))
-        val rightDomElems = nextState.arena.getHas(nextState.arena.getDom(rightFun))
-        nextState = cacheEqConstraints(nextState, leftDomElems.cross(rightDomElems))
-         */
-
         // For the rare case in which one function has an empty domain, we need to be extra careful
         // See https://github.com/informalsystems/apalache/issues/1811
         val leftDom = nextState.arena.getDom(leftFun)
