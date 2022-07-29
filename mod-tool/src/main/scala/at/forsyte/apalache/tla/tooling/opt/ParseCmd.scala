@@ -6,7 +6,7 @@ import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * This command initiates the 'parse' command line.
