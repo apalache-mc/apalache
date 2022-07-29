@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, SetT1, TlaEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -29,6 +29,8 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
     val relationElems = nextState.arena.getHas(relationCell)
     val nElems = relationElems.size
 
+    // nextState = rewriter.lazyEq.cacheEqConstraints(nextState, nextState.arena.getHas(domainCell).map((_, argCell)))
+
     nextState = nextState.updateArena(_.appendCellOld(elemT, isUnconstrained = true)) // The cell will be unconstrained
     val res = nextState.arena.topCell
 
@@ -47,6 +49,12 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         val impl = tla.impl(tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx), eql)
         // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
         // The constraining only happens if argCell is in the domain
+
+        // val domainElems = nextState.arena.getHas(domainCell)
+        // val relationElemsRes = relationElems.map(nextState.arena.getHas(_)(1))
+        // nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domainElems.map((_, elemArg)))
+        // nextState = rewriter.lazyEq.cacheEqConstraints(nextState, relationElemsRes.map((_, elemRes)))
+
         rewriter.solverContext.assertGroundExpr(impl)
         return nextState.setRex(elemRes.toNameEx)
       } else {
@@ -100,13 +108,13 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         val eql = tla.eql(res.toNameEx, select)
         rewriter.solverContext.assertGroundExpr(eql)
 
-        // The edges, dom, and cdm are forwarded below
         if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
-          // If sets are not SMT arrays, they inPreds need to be declared
+          // If sets are not SMT arrays, their inPreds need to be declared
           nextState = nextState.updateArena(_.appendHas(res, nextState.arena.getHas(pickedRes): _*))
         } else {
           nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
         }
+        // The edges, dom, and cdm are forwarded below
         pickedRes.cellType match {
           case CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
@@ -120,10 +128,19 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
             // Records do not contain cdm metadata
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
 
+          case CellTFrom(SetT1(_)) =>
+            if (rewriter.solverContext.config.smtEncoding == `arraysFunEncoding`) {
+              val relationElemsRes = relationElems.map(nextState.arena.getHas(_)(1))
+              nextState = rewriter.lazyEq.cacheEqConstraints(nextState, relationElemsRes.map((_, res))) // fixes mod2
+              nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, res, pickedRes)
+              rewriter.solverContext.assertGroundExpr(tla.eql(res.toNameEx, pickedRes.toNameEx))
+            }
+
           case _ =>
             // do nothing
             ()
         }
+        // return nextState.setRex(pickedRes.toNameEx)
       }
     }
 
