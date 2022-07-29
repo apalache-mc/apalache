@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
@@ -155,7 +156,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val setCell = nextState.arena.topCell
     nextState = nextState.updateArena(a => a.appendHas(setCell, elems: _*))
     // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
-    if (rewriter.solverContext.config.smtEncoding == arraysEncoding) {
+    if (rewriter.solverContext.config.smtEncoding == SMTEncoding.Arrays) {
       for (elem <- elems) {
         nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
@@ -204,6 +205,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val funCell = nextState.arena.topCell
 
     rewriter.solverContext.config.smtEncoding match {
+      case SMTEncoding.Arrays =>
       case `arraysEncoding` | `arraysFunEncoding` =>
         // create a relation cell
         nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funType.arg, funType.res)))))
@@ -242,7 +244,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
           addCellCons(domElem, rangeElem)
 
-      case `oopsla19Encoding` =>
+      case SMTEncoding.OOPSLA19 =>
         // create a relation cell
         nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funType.arg, funType.res))))
         val relationCell = nextState.arena.topCell

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -32,6 +33,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val fun = nextState.arena.topCell
 
             rewriter.solverContext.config.smtEncoding match {
+              case SMTEncoding.Arrays =>
               case `arraysEncoding` | `arraysFunEncoding` =>
                 nextState = nextState.updateArena(_.appendCell(SetT1(keyType)))
                 val domainCell = nextState.arena.topCell
@@ -71,11 +73,11 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 }
 
                 // Here we iterate over the reverse order of the list to have, in case duplicate keys, the first entry
-                // in the list be the value encoded in the function. This is the semantics of oopsla19Encoding.
+                // in the list be the value encoded in the function. This is the semantics of SMTEncoding.OOPSLA19.
                 for ((domElem, rangeElem) <- domainCells.zip(rangeCells).reverse)
                   addCellCons(domElem, rangeElem)
 
-              case `oopsla19Encoding` =>
+              case SMTEncoding.OOPSLA19 =>
                 nextState = translateRelation(setCell, nextState)
                 val rel = nextState.asCell
                 nextState = nextState.updateArena(_.setCdm(fun, rel))

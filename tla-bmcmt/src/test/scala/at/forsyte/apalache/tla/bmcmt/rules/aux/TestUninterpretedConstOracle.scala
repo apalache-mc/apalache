@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SMTEncoding, SymbState}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.{BoolT1, TestingPredefs}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._

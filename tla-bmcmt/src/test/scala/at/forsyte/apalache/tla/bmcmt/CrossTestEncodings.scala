@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
@@ -178,6 +179,8 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val solverContext =
       new Z3SolverContext(new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = smtEncoding))
     val rewriter: SymbStateRewriterImpl = smtEncoding match {
+      case SMTEncoding.OOPSLA19 => new SymbStateRewriterImpl(solverContext, renaming)
+      case SMTEncoding.Arrays   => new SymbStateRewriterImplWithArrays(solverContext, renaming)
       case `oopsla19Encoding`  => new SymbStateRewriterImpl(solverContext, renaming)
       case `arraysEncoding`    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
       case `arraysFunEncoding` => new SymbStateRewriterImplWithArraysFun(solverContext, renaming)

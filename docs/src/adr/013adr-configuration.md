@@ -183,8 +183,8 @@ import pureconfig.generic.auto._
 case class Port(number: Int = 8080) extends AnyVal
 
 sealed trait SmtEncoding
-case class ArraysEncoding extends SmtEncoding
-case class Oopsla19Encoding extends SmtEncoding
+case class Arrays extends SmtEncoding
+case class OOPSLA19 extends SmtEncoding
 
 case class ApalacheConfig(
   runDir: Option[Path] = None,
@@ -192,7 +192,7 @@ case class ApalacheConfig(
   writeIntermediate: Boolean = false,
   profiling: Boolean = false,
   outDir: Path = Path("."),
-  smtEncding: SmtEncoding = Oopsla19Encoding,
+  smtEncding: SmtEncoding = OOPSLA19,
 )
 
 case classs ExampleUseOfConfigs() = {

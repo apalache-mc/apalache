@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
@@ -238,7 +239,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   private def mkSetEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
     rewriter.solverContext.config.smtEncoding match {
-      case `arraysEncoding` =>
+      case SMTEncoding.Arrays =>
         // In the arrays encoding we only cache the equalities between the sets' elements
         val leftElems = state.arena.getHas(left)
         val rightElems = state.arena.getHas(right)
@@ -246,6 +247,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         eqCache.put(left, right, EqCache.EqEntry())
         nextState.setRex(state.ex)
 
+      case SMTEncoding.OOPSLA19 =>
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         // in general, we need 2 * |X| * |Y| comparisons
         val leftToRight: SymbState = subsetEq(state, left, right)
@@ -425,6 +427,9 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val rightRel = state.arena.getCdm(rightFun)
 
     rewriter.solverContext.config.smtEncoding match {
+      case SMTEncoding.Arrays =>
+        // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
+        // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
       case `arraysEncoding` | `arraysFunEncoding` =>
         // We cache the equalities between the elements of the functions' ranges, which are pairs of form <arg,res>
         val leftElems = state.arena.getHas(leftRel)
@@ -442,7 +447,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         // That's it!
         nextState.setRex(state.ex)
 
-      case `oopsla19Encoding` =>
+      case SMTEncoding.OOPSLA19 =>
         val relEq = mkSetEq(state, leftRel, rightRel)
         rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(leftFun.toNameEx, rightFun.toNameEx),
                 tla.eql(leftRel.toNameEx, rightRel.toNameEx)))

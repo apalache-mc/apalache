@@ -4,7 +4,7 @@ import org.backuity.clist.{arg, opt}
 
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)

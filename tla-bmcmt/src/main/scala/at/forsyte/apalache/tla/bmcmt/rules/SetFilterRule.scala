@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, SetT1, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
  * Rewrites a set comprehension { x \in S: P }.
@@ -83,7 +84,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // add SMT constraints
         rewriter.solverContext.config.smtEncoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // we make an unconstrained array, constrain its needed entries, and intersect it with setCell using smtMap
             rewriter.solverContext.assertGroundExpr(tla.apalacheUnconstrainArray(newSetCell.toNameEx))
             for ((cell, pred) <- filteredCellsAndPreds)
@@ -91,6 +92,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val smtMap = tla.apalacheSmtMap(TlaBoolOper.and, setCell.toNameEx, newSetCell.toNameEx)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
+          case SMTEncoding.OOPSLA19 =>
           case `oopsla19Encoding` | `arraysFunEncoding` =>
             for ((cell, pred) <- filteredCellsAndPreds)
               addCellCons(cell, pred)

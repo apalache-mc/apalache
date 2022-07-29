@@ -17,15 +17,21 @@ object RpcServer extends ServerMain with LazyLogging {
   override def welcome: ZIO[ZEnv, Throwable, Unit] =
     console.putStrLn("The Apalache server is running. Press Ctrl-C to stop.")
 
-  val createService = for {
+  val parserSemaphore = Semaphore.make(permits = 1)
+
+  val createTransExplorerService = for {
     // A thread safe mutable reference to the active connections
     // See https://zio.dev/version-1.x/datatypes/concurrency/ref/
     connections <- Ref.make(Map[UUID, Conn]())
+    semaphore <- parserSemaphore
     // Ensure atomic access to the parser
     // See https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894
-    parserSemaphore <- Semaphore.make(permits = 1)
-  } yield new TransExplorerService(connections, parserSemaphore, logger)
+  } yield new TransExplorerService(connections, semaphore, logger)
+
+  val createCmdExecutorService = for {
+    semaphore <- parserSemaphore
+  } yield new CmdExecutorService(semaphore, logger)
 
   def services: ServiceList[ZEnv] =
-    ServiceList.addM(createService)
+    ServiceList.addM(createTransExplorerService).addM(createCmdExecutorService)
 }

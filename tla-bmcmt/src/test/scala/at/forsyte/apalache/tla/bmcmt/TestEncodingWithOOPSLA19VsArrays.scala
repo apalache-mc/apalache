@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
@@ -13,8 +14,8 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class CrossTestEncodingsWithOOPSLA19VsArrays extends CrossTestEncodings {
   override def withFixture(test: NoArgTest): Outcome = {
-    oracleEncoding = oopsla19Encoding
-    verifierEncoding = arraysEncoding
+    oracleEncoding = SMTEncoding.OOPSLA19
+    verifierEncoding = SMTEncoding.Arrays
     test()
   }
 }

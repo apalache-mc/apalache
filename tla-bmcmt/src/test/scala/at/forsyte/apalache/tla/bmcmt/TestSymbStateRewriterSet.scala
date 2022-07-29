@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -818,6 +819,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 2} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
+      case SMTEncoding.OOPSLA19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case `arraysEncoding` =>
@@ -845,6 +848,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 2, 3} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
+      case SMTEncoding.OOPSLA19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case `arraysEncoding` =>
@@ -871,6 +876,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
+      case SMTEncoding.OOPSLA19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case `arraysEncoding` =>
@@ -898,6 +905,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 4} \subseteq {1, 2, 3} ~~> (false)""") { rewriterType: SMTEncoding =>
     rewriterType match {
+      case SMTEncoding.OOPSLA19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case `arraysEncoding` =>
@@ -925,6 +934,8 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{[x \in {1, 2} |-> TRUE ]} \subseteq {[x \in {1, 2} |-> TRUE ]} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
+      case SMTEncoding.OOPSLA19 => () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
+      case SMTEncoding.Arrays =>
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case `arraysEncoding` =>
