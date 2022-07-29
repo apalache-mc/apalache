@@ -39,6 +39,8 @@ jobs:
         run: make fmt-check
 
   scaladoc-check:
+    env:
+      APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

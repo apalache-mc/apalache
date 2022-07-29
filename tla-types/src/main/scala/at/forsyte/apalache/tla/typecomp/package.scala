@@ -19,13 +19,16 @@ import scala.language.implicitConversions
  *
  * ==The signature layer==
  *
- * Each TLA+ operator has an associated [[TlaOper]] operator in the IR. Most operators have type signatures, that is,
- * they restrict the types of arguments allowed to construct valid [[OperEx]] expressions. For instance,
- * [[TlaArithOper.plus]] represents the arithmetic operator `+` and has the signature `(Int, Int) => Int` in the type
- * system, meaning that `e @ OperEx(TlaArithOper.plus, x, y)` is considered valid iff `x`, `y`, and `e` are all tagged
- * with `Typed(IntT1)`. Similarly, [[TlaOper.chooseBounded]] has the signature `(t, Set(t), Bool) => t`, meaning that an
- * expression`e @ OperEx(TlaOper.chooseBounded, x, S, p)` is considered valid if `x` and `e` are tagged with `Typed(t)`,
- * for some `t`, `S` is tagged with `Typed(SetT1(t))` (for the same `t`), and `p` is tagged with `Typed(BoolT1)`.
+ * Each TLA+ operator has an associated [[at.forsyte.apalache.tla.lir.oper.TlaOper TlaOper]] operator in the IR. Most
+ * operators have type signatures, that is, they restrict the types of arguments allowed to construct valid
+ * [[at.forsyte.apalache.tla.lir.OperEx OperEx]] expressions. For instance,
+ * [[at.forsyte.apalache.tla.lir.oper.TlaArithOper.plus TlaArithOper.plus]] represents the arithmetic operator `+` and
+ * has the signature `(Int, Int) => Int` in the type system, meaning that `e @ OperEx(TlaArithOper.plus, x, y)` is
+ * considered valid iff `x`, `y`, and `e` are all tagged with `Typed(IntT1)`. Similarly,
+ * [[at.forsyte.apalache.tla.lir.oper.TlaOper.chooseBounded TlaOper.chooseBounded]] has the signature `(t, Set(t), Bool)
+ * \=> t`, meaning that an expression`e @ OperEx(TlaOper.chooseBounded, x, S, p)` is considered valid if `x` and `e` are
+ * tagged with `Typed(t)`, for some `t`, `S` is tagged with `Typed(SetT1(t))` (for the same `t`), and `p` is tagged with
+ * `Typed(BoolT1)`.
  *
  * You can think of a signature `(a1,...,an) => b` as a partial function; given a sequence of argument types `v1, ...
  * vn`, it returns some type `c` (derived from `b`), if the types `v1, ..., vn` match the pattern `a1, ..., an`. More
@@ -56,9 +59,10 @@ import scala.language.implicitConversions
  * whether [[PartialSignature]] application failed because of the non-existence of a type substitution, or simply
  * because of an invalid arity.
  *
- * [[SignatureMap]] represents a map from [[TlaOper]]s to their [[Signature]]s (for those that have one). The module
- * [[signatures]] defines [[SignatureMap]]s for various subtypes of [[TlaOper]], grouped by their category. Each object
- * in [[signatures]] defines a
+ * [[SignatureMap]] represents a map from [[at.forsyte.apalache.tla.lir.oper.TlaOper TlaOper]]s to their [[Signature]]s
+ * (for those that have one). The module [[signatures]] defines [[SignatureMap]]s for various subtypes of
+ * [[at.forsyte.apalache.tla.lir.oper.TlaOper TlaOper]], grouped by their category. Each object in [[signatures]]
+ * defines a
  * {{{
  *   def getMap: SignatureMap
  * }}}
@@ -66,38 +70,42 @@ import scala.language.implicitConversions
  * [[SignatureMap]] entry from a partial signature and operator. Internally, it invokes
  * [[BuilderUtil.checkForArityException]], by reading the operator's name and arity.
  *
- * [[TypeComputationFactory.knownSignatures knownSignatures]] stores all operator signatures that are considered known
- * to [[ScopedBuilder]].
+ * `knownSignatures` stores all operator signatures that are considered known to [[ScopedBuilder]].
  *
  * ==The type-safe, scope-unsafe layer==
  *
- * In this layer, we define builder methods, which generate type-safe (though potentially scope-unsafe) [[TlaEx]]
- * values. For the most part, we focus on [[OperEx]] values, as literals can be trivially constructed as type-safe.
+ * In this layer, we define builder methods, which generate type-safe (though potentially scope-unsafe)
+ * [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] values. For the most part, we focus on
+ * [[at.forsyte.apalache.tla.lir.OperEx OperEx]] values, as literals can be trivially constructed as type-safe.
  *
- * We solve the following problem: Given [[TlaEx]] arguments `x1,...,xn` and a [[TlaOper]] argument `oper`, what type,
- * if any, can be assigned to `e @ OperEx(oper, x1, ..., xn)`, such that `e` is soundly typed w.r.t. the type signature
- * of the TLA+ operator represented by `oper` in the type system.
+ * We solve the following problem: Given [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] arguments `x1,...,xn` and a
+ * [[at.forsyte.apalache.tla.lir.oper.TlaOper TlaOper]] argument `oper`, what type, if any, can be assigned to `e @
+ * OperEx(oper, x1, ..., xn)`, such that `e` is soundly typed w.r.t. the type signature of the TLA+ operator represented
+ * by `oper` in the type system.
  *
- * [[TypeComputation]] describes a solution to the above problem. It is a function that takes a sequence of [[TlaEx]]
- * arguments (`x1, ..., xn`), and returns a [[TypeComputationResult]]: either a type (the type of `e`) or an exception
- * (if `e` cannot be assigned a valid type). Notice that [[TypeComputation]] operates over [[TlaEx]], and not
- * [[TlaType1]]. This is because the types of the expressions `x1,...,xn` are sometimes insufficient to determine the
- * type of `e`. A concrete example: if `r` is a record with the type `{ a: Int, b: Str }`, then the type of `OperEx(
- * TlaFunOper.app, r, x)` depends on whether `x` is the literal `"a"` or the literal `"b"` (not just on whether the type
- * of `x` is `Str`).
+ * [[TypeComputation]] describes a solution to the above problem. It is a function that takes a sequence of
+ * [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] arguments (`x1, ..., xn`), and returns a [[TypeComputationResult]]:
+ * either a type (the type of `e`) or an exception (if `e` cannot be assigned a valid type). Notice that
+ * [[TypeComputation]] operates over [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]], and not
+ * [[at.forsyte.apalache.tla.lir.TlaType1 TlaType1]]. This is because the types of the expressions `x1,...,xn` are
+ * sometimes insufficient to determine the type of `e`. A concrete example: if `r` is a record with the type `{ a: Int,
+ * b: Str }`, then the type of `OperEx( TlaFunOper.app, r, x)` depends on whether `x` is the literal `"a"` or the
+ * literal `"b"` (not just on whether the type of `x` is `Str`).
  *
  * In most cases it is sufficient to know just the types of `x1, ..., xn`, to determine the type of `e`. We therefore
- * define [[PureTypeComputation]]s as functions from sequences of [[TlaType1]] values to [[TypeComputationResult]]s.
- * Note that a [[PureTypeComputation]] naturally defines a [[TypeComputation]] (by only looking at the argument types).
- * This is implemented in the implicit conversion [[fromPure]].
+ * define [[PureTypeComputation]]s as functions from sequences of [[at.forsyte.apalache.tla.lir.TlaType1 TlaType1]]
+ * values to [[TypeComputationResult]]s. Note that a [[PureTypeComputation]] naturally defines a [[TypeComputation]] (by
+ * only looking at the argument types). This is implemented in the implicit conversion [[fromPure]].
  *
  * How do we obtain these [[TypeComputation]]s, for a given operator?
  *
  * There are two distinct cases:
  *   1. `oper` is associated with some [[Signature]], i.e. `TypeComputationFactory.knownSignatures.contains(oper)`. This
  *      is the case for most operators.
- *   1. `oper` does not have a signature in [[TypeComputationFactory.knownSignatures knownSignatures]]. This is the case
- *      for operators such as [[TlaFunOper.app]] or [[ApalacheInternalOper.notSupportedByModelChecker]] (and more).
+ *   1. `oper` does not have a signature in `knownSignatures`. This is the case for operators such as
+ *      [[at.forsyte.apalache.tla.lir.oper.TlaFunOper.app TlaFunOper.app]] or
+ *      [[at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper.notSupportedByModelChecker ApalacheInternalOper.notSupportedByModelChecker]]
+ *      (and more).
  *
  * Observe that a [[Signature]] is already a [[PureTypeComputation]]. Therefore, any operator with an associated
  * signature has a naturally associated [[TypeComputation]] (obtained by applying [[fromPure]] to the [[Signature]]). In
@@ -119,7 +127,9 @@ import scala.language.implicitConversions
  * arg1, ..., argN)`.
  *
  * [[unsafe]] contains collections of builder methods, categorized by the type of IR operator they build
- * ([[TlaBoolOper]], [[TlaArithOper]], [[ApalacheOper]], etc.)
+ * ([[at.forsyte.apalache.tla.lir.oper.TlaBoolOper TlaBoolOper]],
+ * [[at.forsyte.apalache.tla.lir.oper.TlaArithOper TlaArithOper]],
+ * [[at.forsyte.apalache.tla.lir.oper.ApalacheOper ApalacheOper]], etc.)
  *
  * ==The type-safe, scope-safe layer==
  *
@@ -143,16 +153,16 @@ import scala.language.implicitConversions
  * parallel sub-trees s.t. one is not an ancestor of the other).
  *
  * Because scope-safety is non-local, builder methods need to keep track of scope ''persistently, and in addition to''
- * constructing a [[TlaEx]] expression. Instead of a mutable `var` storage, or methods which return tuples (and thus
- * don't compose), we solve this problem by using [[scalaz.State]]. We define our notion of persistently stored
- * information in [[TBuilderContext]]; every builder method has the ability to read from, and write to, some
- * [[TBuilderContext]], to determine whether scope-safety would be violated in the construction of the desired
+ * constructing a [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] expression. Instead of a mutable `var` storage, or methods
+ * which return tuples (and thus don't compose), we solve this problem by using `scalaz.State`. We define our notion of
+ * persistently stored information in [[TBuilderContext]]; every builder method has the ability to read from, and write
+ * to, some [[TBuilderContext]], to determine whether scope-safety would be violated in the construction of the desired
  * expression.
  *
  * We define the (parameterized) alias [[TBuilderInternalState]]. A [[TBuilderInternalState]][T] value represents the
  * ''process'' of constructing a value of type `T`, while maintaining an internal, persistent [[TBuilderContext]]. Most
- * builder methods construct [[TlaEx]] expressions, so we introduce a shorthand type alias [[TBuilderInstruction]],
- * which is just [[TBuilderInternalState]][`TlaEx`].
+ * builder methods construct [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] expressions, so we introduce a shorthand type
+ * alias [[TBuilderInstruction]], which is just [[TBuilderInternalState]][`TlaEx`].
  *
  * It is important to note that constructing a [[TBuilderInternalState]] will not throw any kinds of exceptions, even if
  * a scope (or even type) violation would occur, because a [[TBuilderInternalState]] is conceptually a process, not a
@@ -175,7 +185,7 @@ import scala.language.implicitConversions
  *
  * What is left is to determine how to combine this approach with the scope-unsafe-layer builder methods in [[unsafe]],
  * which already guarantee type-safety. Each builder in [[unsafe]] has a corresponding scope-safe builder in
- * [[subbuilder]], following the same grouping strategy (by [[TlaOper]] sort).
+ * [[subbuilder]], following the same grouping strategy (by [[at.forsyte.apalache.tla.lir.oper.TlaOper TlaOper]] sort).
  *
  * For every scope-safe method `method` there is a 2nd-layer method `method(arg1: TlaEx, ..., argN: TlaEx): TlaEx`
  * defined in some `unsafeBuilder` used as a basis (a few methods take arguments, which are not `TlaEx`, we omit them
@@ -194,10 +204,9 @@ import scala.language.implicitConversions
  * (the unary case is just a `map`).
  *
  * The exceptions to this general rule are the [[subbuilder.LiteralAndNameBuilder.name name]] method, which introduces a
- * variable with a given name and type, and the various methods, which introduce bound variables (e.g.
- * [[subbuilder.BoolBuilder.exists exists]], [[subbuilder.FunBuilder.funDef funDef]],
- * [[subbuilder.BaseBuilder.choose choose]], etc.). These methods manipulate (or read) the internal [[TBuilderContext]],
- * to ensure scope-safety. The latter utilize the convenience methods
+ * variable with a given name and type, and the various methods, which introduce bound variables (e.g. `exists`,
+ * [[subbuilder.FunBuilder.funDef funDef]], `choose`, etc.). These methods manipulate (or read) the internal
+ * [[TBuilderContext]], to ensure scope-safety. The latter utilize the convenience methods
  * [[BuilderUtil.boundVarIntroductionBinary boundVarIntroductionBinary]],
  * [[BuilderUtil.boundVarIntroductionTernary boundVarIntroductionTernary]], and
  * [[BuilderUtil.boundVarIntroductionVariadic boundVarIntroductionVariadic]] to handle bound-variable-introduction,
@@ -205,9 +214,10 @@ import scala.language.implicitConversions
  * [[BuilderUtil.getAllUsed getAllUsed]].
  *
  * [[ScopedBuilder]] is the amalgamation of all the builder methods defined in [[subbuilder]] (as well as a handful of
- * methods, which construct [[TlaEx]] expressions unrelated to [[TlaOper]], such as [[ScopedBuilder.decl decl]] or
- * [[ScopedBuilder.letIn letIn]]). The package [[types]] offers a premade instance of [[ScopedBuilder]] and is
- * recommended to be used whenever one needs to construct type- and scope-safe TLA+ expressions.
+ * methods, which construct [[at.forsyte.apalache.tla.lir.TlaEx TlaEx]] expressions unrelated to
+ * [[at.forsyte.apalache.tla.lir.oper TlaOper]], such as [[ScopedBuilder.decl decl]] or `letIn`). The package `types`
+ * offers a premade instance of [[ScopedBuilder]] and is recommended to be used whenever one needs to construct type-
+ * and scope-safe TLA+ expressions.
  *
  * @author
  *   Jure Kukovec
