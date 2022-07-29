@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, TlaEx}
  *   Rodrigo Otoni
  */
 class SetInRuleWithArraysFun(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
-  private val simplifier = new ConstSimplifierForSmt
+  new ConstSimplifierForSmt
 
   override protected def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
     // checking whether f \in [S -> T]

@@ -54,7 +54,7 @@ object ApalacheInternalOperSignatures {
     val storeNotInSetSig = signatureMapEntry(storeNotInSet, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 })
 
     // (a, a -> b) => Bool
-    val storeNotInFunSig = signatureMapEntry(storeNotInFun, { case Seq(aa, FunT1(a, b)) if a == aa => BoolT1 })
+    val storeNotInFunSig = signatureMapEntry(storeNotInFun, { case Seq(aa, FunT1(a, _)) if a == aa => BoolT1 })
 
     // (Set(t)) => Bool
     val unconstrainArraySig = signatureMapEntry(unconstrainArray, { case Seq(_: SetT1) => BoolT1 })
