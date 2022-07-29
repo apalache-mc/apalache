@@ -6,7 +6,7 @@ import java.io.File
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * This command initiates the 'test' command line.

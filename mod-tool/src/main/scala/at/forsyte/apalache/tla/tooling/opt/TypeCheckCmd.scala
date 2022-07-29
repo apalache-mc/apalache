@@ -6,7 +6,7 @@ import org.backuity.clist._
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.SourceOption
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * This command initiates the 'typecheck' command line.
