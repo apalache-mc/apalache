@@ -1,3 +1,4 @@
+import scala.util.Failure
 import Dependencies._
 
 import scala.sys.process._
@@ -83,9 +84,9 @@ ThisBuild / scalafmtPrintDiff := true
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-///////////////////////////////
+////////////////////////
 // Test configuration //
-///////////////////////////////
+///////////////////////
 
 lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
@@ -101,6 +102,25 @@ lazy val testSanyBugSettings = Seq(
     // Tests calling SanyImporter must execute sequentially until fixed.
     Test / parallelExecution := false
 )
+
+///////////////////////
+// API Documentation //
+///////////////////////
+
+lazy val browseApiDocs = taskKey[Unit]("Build and browse the API docs")
+browseApiDocs := {
+  val buildDirs = (Compile / unidoc).value
+  require(buildDirs.nonEmpty, "unidoc failed to return build path")
+  val index = buildDirs(0) / "index.html"
+  val operSys = System.getProperty("os.name").toLowerCase();
+  if (operSys.contains("nix") || operSys.contains("nux") || operSys.contains("aix")) {
+    s"xdg-open ${index}" !
+  } else if (operSys.contains("mac")) {
+    s"open ${index}" !
+  } else {
+    println(s"Open you browser to ${index}")
+  }
+}
 
 /////////////////////////////
 // Sub-project definitions //
