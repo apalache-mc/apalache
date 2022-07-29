@@ -242,9 +242,9 @@ class LazyEquality(rewriter: SymbStateRewriter)
         // In the arrays encoding we only cache the equalities between the sets' elements
         val leftElems = state.arena.getHas(left)
         val rightElems = state.arena.getHas(right)
-        cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
+        val nextState = cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
         eqCache.put(left, right, EqCache.EqEntry())
-        state
+        nextState.setRex(state.ex)
 
       case `oopsla19Encoding` | `arraysFunEncoding` =>
         // in general, we need 2 * |X| * |Y| comparisons
@@ -426,20 +426,34 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
     rewriter.solverContext.config.smtEncoding match {
       case `arraysEncoding` | `arraysFunEncoding` =>
-        // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
-        // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
+        // We cache the equalities between the elements of the functions' ranges, which are pairs of form <arg,res>
         val leftElems = state.arena.getHas(leftRel)
         val rightElems = state.arena.getHas(rightRel)
-        cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
+        var nextState = cacheEqConstraints(state, leftElems.cross(rightElems))
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+
+        /*
+        val leftElems1 = leftElems.map(e => state.arena.getHas(e)(0))
+        val leftElems2 = leftElems.map(e => state.arena.getHas(e)(1))
+        val rightElems1 = rightElems.map(e => state.arena.getHas(e)(0))
+        val rightElems2 = rightElems.map(e => state.arena.getHas(e)(1))
+        nextState = cacheEqConstraints(nextState, leftElems1.cross(rightElems1)) // Cache all the equalities
+        nextState = cacheEqConstraints(nextState, leftElems2.cross(rightElems2)) // Cache all the equalities
+
+        val leftDomElems = nextState.arena.getHas(nextState.arena.getDom(leftFun))
+        val rightDomElems = nextState.arena.getHas(nextState.arena.getDom(rightFun))
+        nextState = cacheEqConstraints(nextState, leftDomElems.cross(rightDomElems))
+         */
+
         // For the rare case in which one function has an empty domain, we need to be extra careful
         // See https://github.com/informalsystems/apalache/issues/1811
-        val leftDom = state.arena.getDom(leftFun)
-        val rightDom = state.arena.getDom(rightFun)
+        val leftDom = nextState.arena.getDom(leftFun)
+        val rightDom = nextState.arena.getDom(rightFun)
+        nextState = cacheOneEqConstraint(nextState, leftDom, rightDom)
         val funEq = cachedEq(leftFun, rightFun)
         rewriter.solverContext.assertGroundExpr(tla.impl(funEq, tla.eql(leftDom.toNameEx, rightDom.toNameEx)))
         // That's it!
-        state
+        nextState.setRex(state.ex)
 
       case `oopsla19Encoding` =>
         val relEq = mkSetEq(state, leftRel, rightRel)
