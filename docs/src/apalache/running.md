@@ -65,8 +65,8 @@ The arguments are as follows:
       using the non-incremental
       (offline) SMT solver
     - `--smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses QF_UFNIA, and
-      `arrays` (experimental) uses arrays with extensionality. This parameter can also be set via the
-      `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
+      `arrays` (experimental) and `funArrays` (experimental) use SMT arrays with extensionality. This parameter can also
+      be set via the `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
