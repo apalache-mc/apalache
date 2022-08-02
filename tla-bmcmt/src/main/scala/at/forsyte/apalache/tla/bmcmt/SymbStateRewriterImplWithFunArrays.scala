@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 
 /**
- * This class extends SymbStateRewriterImpl with encoding rules for the encoding with SMT arrays.
+ * This class extends SymbStateRewriterImpl with encoding rules for the encoding of functions with SMT arrays.
  *
  * @param _solverContext
  *   a fresh solver context that will be populated with constraints

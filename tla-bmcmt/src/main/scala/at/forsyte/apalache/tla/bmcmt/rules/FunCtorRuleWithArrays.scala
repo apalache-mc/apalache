@@ -34,7 +34,6 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
 
     // A constant SMT array constrained to a default value is used to encode the function
     // Constant arrays are used to allow for sound use of SMT equality of functions
-    // TODO: consider making array constraining consistent with CherryPick.pickFunFromFunSet
     nextState = nextState.updateArena(_.appendCell(funT1))
     val funCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, domainCell))
@@ -47,24 +46,23 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     nextState = constrainRelationArgs(nextState, rewriter, domainCell, relation)
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      // inDomain with lazy equality
+      // Domain membership with lazy equality
       val domElems = nextState.arena.getHas(domainCell)
       nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElems.map((_, domElem)))
 
       def inAndEq(elem: ArenaCell) = {
+        // Use lazy equality
         tla
           .and(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx).typed(BoolT1),
               rewriter.lazyEq.safeEq(elem, domElem))
-          .typed(BoolT1) // use lazy equality
+          .typed(BoolT1)
       }
 
       nextState = nextState.updateArena(_.appendCell(BoolT1))
       val inDomain = nextState.arena.topCell.toNameEx.typed(BoolT1)
-
       val elemsInAndEq = nextState.arena.getHas(domainCell).map(inAndEq)
       rewriter.solverContext.assertGroundExpr(tla.eql(inDomain, tla.or(elemsInAndEq: _*).typed(BoolT1)).typed(BoolT1))
 
-      // val inDomain = tla.apalacheSelectInSet(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
       val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
       val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1)
       // Function updates are guarded by the inDomain predicate

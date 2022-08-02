@@ -69,10 +69,10 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     val eql = tla.eql(resultFunCell.toNameEx, funCell.toNameEx)
     rewriter.solverContext.assertGroundExpr(eql)
 
+    // We need to constrain resultRelationElems w.r.t relationCells and newPairCell
     val resultRelationElems = nextState.arena.getHas(resultRelation)
-    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.zip(relationCells)) // fixes mod1
-
-    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.map((_, newPairCell))) // fixes mod3
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.zip(relationCells))
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.map((_, newPairCell)))
 
     // There is no need to constrain updates, only accesses
     val updateFun = tla.apalacheStoreInFun(valueCell.toNameEx, resultFunCell.toNameEx, indexCell.toNameEx)

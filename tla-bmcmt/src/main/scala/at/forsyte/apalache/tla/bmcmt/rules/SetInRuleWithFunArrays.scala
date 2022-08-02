@@ -82,10 +82,6 @@ class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewr
     // S = DOMAIN f
     val domainEx = tla.eql(funsetDom.toNameEx, funDom.toNameEx)
 
-    rewriter.rewriteUntilDone(
-        nextState.setRex(
-            tla.and(pred.toNameEx, domainEx)
-        )
-    )
+    rewriter.rewriteUntilDone(nextState.setRex(tla.and(pred.toNameEx, domainEx)))
   }
 }

@@ -928,8 +928,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val (newState, nonDups) = new SetOps(rewriter).dedup(state, dom)
     var nextState = newState
     val cdm = state.arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
-    // create the unconstrained function cell
-    nextState = nextState.updateArena(_.appendCell(funT, isUnconstrained = true))
+    // create the function cell
+    nextState = nextState.updateArena(_.appendCell(funT))
     val funCell = nextState.arena.topCell
     // create the relation cell
     nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT.arg, funT.res))))
@@ -947,15 +947,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       nextState = nextState.updateArena(_.appendCell(TupT1(funT.arg, funT.res)))
       val pair = nextState.arena.topCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
 
       rewriter.solverContext.config.smtEncoding match {
         case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
-          nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
-          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
-          val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
-          val eql = tla.eql(pickedResult.toNameEx, select)
-          rewriter.solverContext.assertGroundExpr(eql)
+          // We carry the metadata here
+          nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
+          nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair))
+          // We update the SMT array here
+          // We don't use isNonDup because writing on an array entry twice has no adverse effect, if pickedResult is valid
+          val store = tla.apalacheStoreInFun(pickedResult.toNameEx, funCell.toNameEx, arg.toNameEx)
+          rewriter.solverContext.assertGroundExpr(store)
 
           cdm.cellType match {
             case _: PowSetT =>
@@ -1000,6 +1001,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           }
 
         case SMTEncoding.OOPSLA19 =>
+          nextState = nextState.updateArena(_.appendHas(pair, arg, pickedResult))
           nextState = nextState.updateArena(_.appendHas(relationCell, pair))
           val ite = tla.ite(isNonDup.toNameEx, tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
               tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))

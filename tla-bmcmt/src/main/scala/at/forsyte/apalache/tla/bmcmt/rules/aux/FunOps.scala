@@ -2,12 +2,18 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
+/**
+ * Auxiliary methods for handling TLA+ functions.
+ *
+ * @author
+ *   Rodrigo Otoni
+ */
 object FunOps {
 
   def constrainRelationArgs(
@@ -17,12 +23,15 @@ object FunOps {
       relation: ArenaCell): SymbState = {
 
     rewriter.solverContext.config.smtEncoding match {
+      // If only TLA+ functions are encoded as SMT arrays, we need to propagate constraints from the set of pairs kept
+      // in the arena which is used by the decoder. Without the propagation, we could have, e.g., Set1 and Set2 being
+      // equal, but `5_in_Set1` not being equated to `5_in_Set2`.
       case SMTEncoding.FunArrays =>
         var nextState = state
         val domainElems = nextState.arena.getHas(domain)
         val relationElems = nextState.arena.getHas(relation)
 
-        def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell) = {
+        def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell): BuilderEx = {
           val eq = rewriter.lazyEq.safeEq(domainElem, checkedElem)
           val selectInSet = tla.apalacheSelectInSet(domainElem.toNameEx, domain.toNameEx)
           tla.and(eq, selectInSet)
@@ -32,6 +41,7 @@ object FunOps {
           if (domainElems.isEmpty) {
             ValEx(TlaBool(false))
           } else {
+            // We check if elem is in the domain
             val elemInDomain = domainElems.zipAll(List(), elem, elem).map(zip => eqAndInDomain(zip._1, zip._2))
             tla.or(elemInDomain: _*)
           }
@@ -41,7 +51,7 @@ object FunOps {
           val funArg = nextState.arena.getHas(tuple).head
           val argInDomain = tla.apalacheSelectInSet(funArg.toNameEx, domain.toNameEx)
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domainElems.map((_, funArg)))
-          rewriter.solverContext.declareInPredIfNeeded(domain, funArg)
+          rewriter.solverContext.declareInPredIfNeeded(domain, funArg) // inPreds might not be declared
           rewriter.solverContext.assertGroundExpr(OperEx(TlaBoolOper.equiv, argInDomain, isInDomain(funArg)))
         }
 
