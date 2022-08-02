@@ -44,17 +44,17 @@ object ApalacheInternalOperSignatures {
           },
       )
 
-    // (Set(t), Set(t)) => Set(t)
-    val smtMapSig = Seq(
-        TlaBoolOper.and,
-        TlaBoolOper.or,
-    ).map { op => signatureMapEntry(smtMap(op), { case Seq(SetT1(t), SetT1(tt)) if t == tt => SetT1(t) }) }.toMap
-
     // (t, Set(t)) => Bool
     val storeNotInSetSig = signatureMapEntry(storeNotInSet, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 })
 
     // (a, a -> b) => Bool
     val storeNotInFunSig = signatureMapEntry(storeNotInFun, { case Seq(aa, FunT1(a, _)) if a == aa => BoolT1 })
+
+    // (Set(t), Set(t)) => Set(t)
+    val smtMapSig = Seq(
+        TlaBoolOper.and,
+        TlaBoolOper.or,
+    ).map { op => signatureMapEntry(smtMap(op), { case Seq(SetT1(t), SetT1(tt)) if t == tt => SetT1(t) }) }.toMap
 
     // (Set(t)) => Bool
     val unconstrainArraySig = signatureMapEntry(unconstrainArray, { case Seq(_: SetT1) => BoolT1 })
