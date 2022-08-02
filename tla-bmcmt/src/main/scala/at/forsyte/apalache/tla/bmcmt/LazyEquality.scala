@@ -430,7 +430,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         // We cache the equalities between the elements of the functions' ranges, which are pairs of form <arg,res>
         val leftElems = state.arena.getHas(leftRel)
         val rightElems = state.arena.getHas(rightRel)
-        var nextState = cacheEqConstraints(state, leftElems.cross(rightElems))
+        var nextState = cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
         // For the rare case in which one function has an empty domain, we need to be extra careful
