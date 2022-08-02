@@ -8,7 +8,7 @@ import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestRewriterWithArraysFun
+class TestRewriterWithFunArrays
     extends TestCherryPick with TestSymbStateDecoder with TestSymbStateRewriter with TestSymbStateRewriterAction
     with TestSymbStateRewriterApalacheGen with TestSymbStateRewriterAssignment with TestSymbStateRewriterBool
     with TestSymbStateRewriterChooseOrGuess with TestSymbStateRewriterControl with TestSymbStateRewriterExpand
@@ -20,9 +20,9 @@ class TestRewriterWithArraysFun
     with TestSymbStateRewriterApalache with TestSymbStateRewriterMkSeq {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = SMTEncoding.ArraysFun)))
+                smtEncoding = SMTEncoding.FunArrays)))
     arena = Arena.create(solverContext)
-    val result = test(SMTEncoding.ArraysFun)
+    val result = test(SMTEncoding.FunArrays)
     solverContext.dispose()
     result
   }

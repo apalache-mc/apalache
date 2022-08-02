@@ -17,7 +17,7 @@ object FunOps {
       relation: ArenaCell): SymbState = {
 
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.ArraysFun =>
+      case SMTEncoding.FunArrays =>
         var nextState = state
         val domainElems = nextState.arena.getHas(domain)
         val relationElems = nextState.arena.getHas(relation)

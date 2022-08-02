@@ -7,9 +7,9 @@ import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestArenaWithArraysFun extends TestArena {
+class TestArenaWithFunArrays extends TestArena {
   override protected def withFixture(test: NoArgTest): Outcome = {
-    solver = new Z3SolverContext(SolverConfig.default.copy(debug = true, smtEncoding = SMTEncoding.ArraysFun))
+    solver = new Z3SolverContext(SolverConfig.default.copy(debug = true, smtEncoding = SMTEncoding.FunArrays))
     val result = test()
     solver.dispose()
     result

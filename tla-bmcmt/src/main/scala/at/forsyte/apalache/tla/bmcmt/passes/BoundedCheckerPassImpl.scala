@@ -113,8 +113,8 @@ class BoundedCheckerPassImpl @Inject() (
         new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
-      case SMTEncoding.ArraysFun =>
-        new SymbStateRewriterImplWithArraysFun(solverContext, renaming, exprGradeStore, metricProfilerListener)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
@@ -151,8 +151,8 @@ class BoundedCheckerPassImpl @Inject() (
         new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
       case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore)
-      case SMTEncoding.ArraysFun =>
-        new SymbStateRewriterImplWithArraysFun(solverContext, renaming, exprGradeStore)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.config = RewriterConfig(tuning)
@@ -223,7 +223,7 @@ class BoundedCheckerPassImpl @Inject() (
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
       case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
-      case SMTEncoding.ArraysFun => new SymbStateRewriterImplWithArraysFun(solverContext, typeFinder, exprGradeStore)
+      case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, typeFinder, exprGradeStore)
       case oddEncoding           => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.formulaHintsStore = hintsStore

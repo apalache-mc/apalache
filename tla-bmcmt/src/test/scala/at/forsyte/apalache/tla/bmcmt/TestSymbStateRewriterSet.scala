@@ -819,7 +819,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 2} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case SMTEncoding.Arrays =>
         val left = enumSet(int(1), int(2)).as(intSetT)
@@ -846,7 +846,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 2, 3} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case SMTEncoding.Arrays =>
         val right = enumSet(int(1), int(2), int(3)).as(intSetT)
@@ -872,7 +872,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{} \subseteq {1, 2, 3} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case SMTEncoding.Arrays =>
         val right = enumSet(int(1), int(2), int(3)).as(intSetT)
@@ -899,7 +899,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{1, 4} \subseteq {1, 2, 3} ~~> (false)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case SMTEncoding.Arrays =>
         val left = enumSet(int(1), int(4)).as(intSetT)
@@ -926,7 +926,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
   test("""{[x \in {1, 2} |-> TRUE ]} \subseteq {[x \in {1, 2} |-> TRUE ]} ~~> (true)""") { rewriterType: SMTEncoding =>
     rewriterType match {
-      case SMTEncoding.OOPSLA19 | SMTEncoding.ArraysFun =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
         () // \subseteq is rewritten in Keramelizer, and SetInclusionRule was removed
       case SMTEncoding.Arrays =>
         val dom = enumSet(int(1), int(2)).as(intSetT)

@@ -33,7 +33,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val fun = nextState.arena.topCell
 
             rewriter.solverContext.config.smtEncoding match {
-              case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
+              case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
                 nextState = nextState.updateArena(_.appendCell(SetT1(keyType)))
                 val domainCell = nextState.arena.topCell
                 nextState = nextState.updateArena(_.appendCellNoSmt(setCell.cellType))

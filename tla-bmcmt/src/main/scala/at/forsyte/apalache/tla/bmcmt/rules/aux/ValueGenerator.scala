@@ -205,7 +205,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val funCell = nextState.arena.topCell
 
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
+      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
         // create a relation cell
         nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funType.arg, funType.res)))))
         val relationCell = nextState.arena.topCell

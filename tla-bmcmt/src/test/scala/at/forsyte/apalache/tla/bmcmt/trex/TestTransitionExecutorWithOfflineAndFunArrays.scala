@@ -12,11 +12,11 @@ import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestTransitionExecutorWithOfflineAndArraysFun
+class TestTransitionExecutorWithOfflineAndFunArrays
     extends TestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.ArraysFun))
+      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.FunArrays))
     new UniqueNameGenerator
     val renaming = new IncrementalRenaming(new IdleTracker)
     val rewriter = new SymbStateRewriterImpl(solver, renaming, new ExprGradeStoreImpl())

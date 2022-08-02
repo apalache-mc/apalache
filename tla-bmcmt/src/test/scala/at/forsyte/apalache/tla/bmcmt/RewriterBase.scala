@@ -22,7 +22,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
     rewriterType match {
       case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming)
       case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
-      case SMTEncoding.ArraysFun => new SymbStateRewriterAutoWithArraysFun(solverContext, renaming)
+      case SMTEncoding.FunArrays => new SymbStateRewriterAutoWithFunArrays(solverContext, renaming)
       case oddRewriterType       => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
@@ -31,7 +31,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
     rewriterType match {
       case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, renaming)
       case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
-      case SMTEncoding.ArraysFun => new SymbStateRewriterImplWithArraysFun(solverContext, renaming)
+      case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, renaming)
       case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }

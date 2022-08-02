@@ -32,7 +32,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
   var smtEncoding: SMTEncoding = opt[SMTEncoding](name = "smt-encoding", useEnv = true, default = SMTEncoding.OOPSLA19,
       description =
-        s"the SMT encoding: ${SMTEncoding.OOPSLA19}, ${SMTEncoding.Arrays} (experimental), ${SMTEncoding.ArraysFun} (experimental), default: ${SMTEncoding.OOPSLA19} (overrides envvar SMT_ENCODING)")
+        s"the SMT encoding: ${SMTEncoding.OOPSLA19}, ${SMTEncoding.Arrays} (experimental), ${SMTEncoding.FunArrays} (experimental), default: ${SMTEncoding.OOPSLA19} (overrides envvar SMT_ENCODING)")
   var tuningOptionsFile: String =
     opt[String](name = "tuning-options-file", default = "",
         description = "filename of the tuning options, see docs/tuning.md")

@@ -41,13 +41,13 @@ object SMTEncoding {
     override def toString: String = "arrays"
   }
 
-  final case object ArraysFun extends SMTEncoding {
-    override def toString: String = "arraysFun"
+  final case object FunArrays extends SMTEncoding {
+    override def toString: String = "funArrays"
   }
 
   val ofString: String => SMTEncoding = {
     case "arrays"        => Arrays
-    case "arraysFun"     => ArraysFun
+    case "funArrays"     => FunArrays
     case "oopsla19"      => OOPSLA19
     case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
   }

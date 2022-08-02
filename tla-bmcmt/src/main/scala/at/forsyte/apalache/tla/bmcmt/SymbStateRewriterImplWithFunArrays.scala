@@ -21,7 +21,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
  * @author
  *   Rodrigo Otoni
  */
-class SymbStateRewriterImplWithArraysFun(
+class SymbStateRewriterImplWithFunArrays(
     _solverContext: SolverContext,
     renaming: IncrementalRenaming,
     exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
@@ -35,15 +35,15 @@ class SymbStateRewriterImplWithArraysFun(
     Map(
         // sets
         key(tla.in(tla.name("x"), tla.name("S")))
-          -> List(new SetInRuleWithArraysFun(this)),
+          -> List(new SetInRuleWithFunArrays(this)),
         key(tla.apalacheSelectInSet(tla.name("x"), tla.name("S")))
-          -> List(new SetInRuleWithArraysFun(this)),
+          -> List(new SetInRuleWithFunArrays(this)),
         key(tla.apalacheSelectInFun(tla.name("x"), tla.name("F")))
-          -> List(new SetInRuleWithArraysFun(this)),
+          -> List(new SetInRuleWithFunArrays(this)),
         // TODO: \subseteq is rewritten in Keramelizer
         // Remove after the delegation to this rule in `CherryPick` is removed
         key(tla.subseteq(tla.name("x"), tla.name("S")))
-          -> List(new SetInclusionRuleWithArraysFun(this)),
+          -> List(new SetInclusionRuleWithFunArrays(this)),
         // functions
         key(tla.funDef(tla.name("e"), tla.name("x"), tla.name("S")))
           -> List(new FunCtorRuleWithArrays(this)),

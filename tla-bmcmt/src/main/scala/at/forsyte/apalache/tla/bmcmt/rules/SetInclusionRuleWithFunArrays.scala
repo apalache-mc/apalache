@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 
-class SetInclusionRuleWithArraysFun(rewriter: SymbStateRewriter) extends RewritingRule {
+class SetInclusionRuleWithFunArrays(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def isApplicable(state: SymbState): Boolean = {
     state.ex match {

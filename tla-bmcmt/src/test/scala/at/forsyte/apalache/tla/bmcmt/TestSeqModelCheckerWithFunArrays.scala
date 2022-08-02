@@ -10,10 +10,10 @@ import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSeqModelCheckerWithArraysFun extends TestSeqModelCheckerTrait {
+class TestSeqModelCheckerWithFunArrays extends TestSeqModelCheckerTrait {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None, SolverConfig(debug = false, profile = false, 0, smtEncoding = SMTEncoding.ArraysFun))
+      .createZ3(None, SolverConfig(debug = false, profile = false, 0, smtEncoding = SMTEncoding.FunArrays))
     val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl)
     test(rewriter)
   }

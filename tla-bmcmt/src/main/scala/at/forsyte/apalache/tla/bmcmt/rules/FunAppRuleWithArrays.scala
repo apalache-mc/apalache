@@ -102,7 +102,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         val eql = tla.eql(res.toNameEx, select)
         rewriter.solverContext.assertGroundExpr(eql)
 
-        if (rewriter.solverContext.config.smtEncoding == SMTEncoding.ArraysFun) {
+        if (rewriter.solverContext.config.smtEncoding == SMTEncoding.FunArrays) {
           // If sets are not SMT arrays, their inPreds need to be declared
           nextState = nextState.updateArena(_.appendHas(res, nextState.arena.getHas(pickedRes): _*))
         } else {
@@ -123,7 +123,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
 
           case CellTFrom(SetT1(_)) =>
-            if (rewriter.solverContext.config.smtEncoding == SMTEncoding.ArraysFun) {
+            if (rewriter.solverContext.config.smtEncoding == SMTEncoding.FunArrays) {
               val relationElemsRes = relationElems.map(nextState.arena.getHas(_)(1))
               nextState = rewriter.lazyEq.cacheEqConstraints(nextState, relationElemsRes.map((_, res))) // fixes mod2
               nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, res, pickedRes)

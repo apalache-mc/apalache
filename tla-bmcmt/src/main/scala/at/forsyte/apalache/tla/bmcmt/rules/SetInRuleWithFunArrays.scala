@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, TlaEx}
  * @author
  *   Rodrigo Otoni
  */
-class SetInRuleWithArraysFun(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
+class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
   new ConstSimplifierForSmt
 
   override protected def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {

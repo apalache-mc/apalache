@@ -73,7 +73,7 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val inRelation = tla.apalacheStoreInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1)
       val expr = rewriter.solverContext.config.smtEncoding match {
         // TODO: remove due to FunCtorRuleWithArrays
-        case SMTEncoding.Arrays | SMTEncoding.ArraysFun =>
+        case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
           // In the arrays encoding we also need to update the array if inDomain does not hold
           val notInRelation = tla.apalacheStoreNotInSet(relElem.toNameEx, relation.toNameEx).typed(BoolT1)
           tla.ite(inDomain, inRelation, notInRelation).typed(BoolT1)
