@@ -59,9 +59,9 @@ class FilteredTransitionExecutor[SnapshotT](stepFilter: String, invFilter: Strin
     val prevExcluded = (stepNo > 0) && invFilter.nonEmpty && !invRe.pattern.matcher("%d".format(stepNo - 1)).matches
     val thisExcluded = invFilter.nonEmpty && !invRe.pattern.matcher(s"$stepNo").matches
     val mayChange = trex.mayChangeAssertion(transitionNo, assertion)
-    // One of the options is allowed, unless it is excluded at the current step:
-    // 1. The assertion was excluded at the previous step, or
-    // 2. The transition may have changed the assertion.
+    // Unless the invariant is excluded at the current step, it may change satisfiability if:
+    // 1. The assertion was excluded at the previous step (it may have changed then), or
+    // 2. The current transition may change satisfiability.
     !thisExcluded && (prevExcluded || mayChange)
   }
 
