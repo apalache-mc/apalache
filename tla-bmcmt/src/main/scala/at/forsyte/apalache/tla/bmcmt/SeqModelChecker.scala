@@ -156,7 +156,7 @@ class SeqModelChecker[ExecutorContextT](
     }
 
     if (params.invariantMode == InvariantMode.AfterJoin && isNext) {
-      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
+      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, ActionInvariant)
       if (!searchState.canContinue) {
         return
       }
@@ -167,7 +167,7 @@ class SeqModelChecker[ExecutorContextT](
 
     // check the state invariants
     if (params.invariantMode == InvariantMode.AfterJoin) {
-      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
+      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, StateInvariant)
       if (!searchState.canContinue) {
         return
       }
@@ -233,7 +233,7 @@ class SeqModelChecker[ExecutorContextT](
               if (params.invariantMode == InvariantMode.BeforeJoin) {
                 // check the action invariants, unless we process Init
                 if (isNext) {
-                  checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, "action")
+                  checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, ActionInvariant)
                   if (!searchState.canContinue) {
                     // an invariant is violated and we cannot continue the search, return immediately
                     return (maybeInvariantNos, maybeActionInvariantNos)
@@ -242,7 +242,7 @@ class SeqModelChecker[ExecutorContextT](
 
                 // check the state invariants
                 trex.nextState() // advance to the next state
-                checkInvariants(trex.stepNo - 1, notInvariants, transitionInvs, "state")
+                checkInvariants(trex.stepNo - 1, notInvariants, transitionInvs, StateInvariant)
                 if (!searchState.canContinue) {
                   // an invariant is violated and we cannot continue the search, return immediately
                   return (maybeInvariantNos, maybeActionInvariantNos)
@@ -318,11 +318,11 @@ class SeqModelChecker[ExecutorContextT](
     trex.assumeTransition(transitionNo)
     if (isNext) {
       // check action invariants
-      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
+      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, ActionInvariant)
     }
     if (searchState.canContinue) {
       trex.nextState()
-      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
+      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, StateInvariant)
     }
     // and recover
     trex.recover(snapshot)
@@ -333,7 +333,7 @@ class SeqModelChecker[ExecutorContextT](
       stateNo: Int,
       notInvs: Seq[TlaEx],
       numbersToCheck: Set[Int],
-      kind: String): Unit = {
+      kind: InvariantKind): Unit = {
     // check the invariants
     if (numbersToCheck.nonEmpty) {
       logger.info(s"State $stateNo: Checking ${numbersToCheck.size} $kind invariants")
