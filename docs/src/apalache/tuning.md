@@ -43,6 +43,10 @@ Apalache has enough memory. The default mode is `before`.
 
 ## Guided search
 
+### Preliminaries
+
+In the following, step 0 corresponds to the initialization with ``Init``, step 1 is the first step with ``Next``, etc.
+
 ### Transition filter
 
 `search.transitionFilter=<regex>`. Restrict the choice of symbolic transitions
@@ -66,16 +70,23 @@ the actions in the TLA+ spec. To find the numbers, run Apalache with
 ### Invariant filter
 
 `search.invariantFilter=<regex>`. Check the invariant only at the steps that
-satisfy the regular expression.
+satisfy the regular expression. The regular expression should recognize words
+over of the form 's->ki', where `s` is a step number, `k` is an invariant kind
+(["state" or "action"][invariants]) and `i` is a invariant number.
 
-For instance, `search.invariantFilter=10|15|20` tells the model checker to
-check the invariant only *after* exactly 10, 15, or 20 step were made. Step 0
-corresponds to the initialization with ``Init``, step 1 is the first step
-with ``Next``, etc.
+For instance, `search.invariantFilter=10->.*|15->state0|20->action1` tells the
+model checker to check
 
-This option is useful for checking consensus algorithms, where the decision
-cannot be revoked. So instead of checking the invariant after each step, we can
-do that after the algorithm has made a good number of steps.
+* all invariants only *after* exactly 10 steps have been made,
+* the *first* state invariant only after exactly 15 steps, and
+* the *second* action invariant after exactly 20 steps.
+
+[Trace invariants][] are checked regardless of this filter.
+
+This option is useful, e.g., for checking consensus algorithms,
+where the decision cannot be revoked. So instead of checking the invariant
+after each step, we can do that after the algorithm has made a good number of
+steps.
 
 ## Translation to SMT
 
@@ -86,3 +97,7 @@ B` and `A /\ B` are translated to SMT as if-then-else expressions, e.g., `(ite A
 true B)`. Otherwise, disjunctions and conjunctions are directly translated to
 `(or ...)` and `(and ...)` respectively. By default,
 `rewriter.shortCircuit=false`.
+
+
+[invariants]: ../apalache/principles/invariants.md
+[trace invariants]: ../apalache/principles/invariants.md#trace-invariants
