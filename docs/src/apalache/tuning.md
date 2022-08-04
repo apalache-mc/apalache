@@ -44,6 +44,8 @@ default mode is `before`.
 
 ## Guided search
 
+### Transition filter
+
 `search.transitionFilter=<regex>`. Restrict the choice of
 symbolic transitions at every step with a regular expression. The regular
 expression should recognize words over of the form 's->t', where `s` is a
@@ -60,7 +62,7 @@ check the transition numbers in
 transition is called `Next_si_0000`, 1st transition is called `Next_si_0001`,
 etc.
 
-## Invariant checking at certain steps
+### Invariant filter
 
 `search.invariantFilter=regex`.
 Check the invariant only at the steps that satisfy the regular expression.
