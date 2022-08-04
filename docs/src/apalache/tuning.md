@@ -63,7 +63,7 @@ etc.
 
 ### Invariant filter
 
-`search.invariantFilter=regex`.
+`search.invariantFilter=<regex>`.
 Check the invariant only at the steps that satisfy the regular expression.
 For instance, `search.invariantFilter=10|15|20` tells the model checker to
 check the invariant only *after* exactly 10, 15, or 20 step were made. Step 0
