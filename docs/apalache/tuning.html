@@ -184,69 +184,56 @@ passing the option <code>--tuning-options</code> that has the following format:<
 ```
 </code></pre>
 <p>The following options are supported:</p>
-<ol>
-<li>
-<p><strong>Randomization</strong>: <code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via
-<code>z3</code>'s parameters <code>sat.random_seed</code> and <code>smt.random_seed</code>).</p>
-</li>
-<li>
-<p><strong>Timeouts</strong>: <code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the SMT
-solver in seconds. The default value is <code>0</code>, which stands for the unbounded
-timeout.  For instance, the timeout is used in the following cases: checking
-if a transition is enabled, checking an invariant, checking for deadlocks.
-If the solver times out, it reports 'UNKNOWN', and the model checker reports
-a runtime error.</p>
-</li>
-<li>
-<p><strong>Invariant mode</strong>: <code>search.invariant.mode=(before|after)</code> defines the moment
-when the invariant is checked. In the <code>after</code> mode, all transitions are first
-translated, one of them is picked non-deterministically and then the
-invariant is checked. Although this mode reduces the number of SMT queries,
-it usually requires more memory than the <code>before</code> mode. In the <code>before</code> mode,
-the invariant is checked for every enabled transition independently. The
-<code>before</code> mode may drastically reduce memory consumption, but it may take
-longer than the <code>after</code> mode, provided that Apalache has enough memory. The
-default mode is <code>before</code>.</p>
-</li>
-<li>
-<p><strong>Guided search</strong>: <code>search.transitionFilter=&lt;regex&gt;</code>. Restrict the choice of
-symbolic transitions at every step with a regular expression. The regular
-expression should recognize words over of the form 's-&gt;t', where <code>s</code> is a
-regular expression over step numbers and <code>t</code> is a regular expression over
-transition numbers. For instance,
+<h2><a class="header" href="#randomization" id="randomization">Randomization</a></h2>
+<p><code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via <code>z3</code>'s parameters
+<code>sat.random_seed</code> and <code>smt.random_seed</code>).</p>
+<h2><a class="header" href="#timeouts" id="timeouts">Timeouts</a></h2>
+<p><code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the SMT solver in seconds.
+The default value is <code>0</code>, which stands for the unbounded timeout.  For instance,
+the timeout is used in the following cases: checking if a transition is enabled,
+checking an invariant, checking for deadlocks. If the solver times out, it
+reports 'UNKNOWN', and the model checker reports a runtime error.</p>
+<h2><a class="header" href="#invariant-mode" id="invariant-mode">Invariant mode</a></h2>
+<p><code>search.invariant.mode=(before|after)</code> defines the moment when the invariant is
+checked. In the <code>after</code> mode, all transitions are first translated, one of them
+is picked non-deterministically and then the invariant is checked. Although this
+mode reduces the number of SMT queries, it usually requires more memory than the
+<code>before</code> mode. In the <code>before</code> mode, the invariant is checked for every enabled
+transition independently. The <code>before</code> mode may drastically reduce memory
+consumption, but it may take longer than the <code>after</code> mode, provided that
+Apalache has enough memory. The default mode is <code>before</code>.</p>
+<h2><a class="header" href="#guided-search" id="guided-search">Guided search</a></h2>
+<h3><a class="header" href="#transition-filter" id="transition-filter">Transition filter</a></h3>
+<p><code>search.transitionFilter=&lt;regex&gt;</code>. Restrict the choice of symbolic transitions
+at every step with a regular expression. The regular expression should recognize
+words over of the form <code>s-&gt;t</code>, where <code>s</code> is a step number and <code>t</code> is a
+transition number.</p>
+<p>For instance,
 <code>search.transitionFilter=(0-&gt;0|1-&gt;5|2-&gt;(2|3)|[3-9]-&gt;.*|[1-9][0-9]+-&gt;.*)</code>
 requires to start with the 0th transition, continue with the 5th transition,
 then execute either the 2nd or the 3rd transition and after that execute
-arbitrary transitions until the <code>length.</code> Note that there is no direct
-correspondence between the transition numbers and the actions in the TLA+
-spec. To find the numbers, run Apalache with <code>--write-intermediate=true</code> and
-check the transition numbers in
-<code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/XX_OutTransitionFinderPass.tla</code>: the 0th
-transition is called <code>Next_si_0000</code>, 1st transition is called <code>Next_si_0001</code>,
-etc.</p>
-</li>
-<li>
-<p><strong>Invariant checking at certain steps</strong>: <code>search.invariantFilter=regex</code>.
-Check the invariant only at the steps that satisfy the regular expression.
-For instance, <code>search.invariantFilter=10|15|20</code> tells the model checker to
+arbitrary transitions until the <code>length.</code></p>
+<p>Note that there is no direct correspondence between the transition numbers and
+the actions in the TLA+ spec. To find the numbers, run Apalache with
+<code>--write-intermediate=true</code> and check the transition numbers in
+<code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/XX_OutTransitionFinderPass.tla</code>: the
+0th transition is called <code>Next_si_0000</code>, 1st transition is called
+<code>Next_si_0001</code>, etc.</p>
+<h3><a class="header" href="#invariant-filter" id="invariant-filter">Invariant filter</a></h3>
+<p><code>search.invariantFilter=&lt;regex&gt;</code>. Check the invariant only at the steps that
+satisfy the regular expression.</p>
+<p>For instance, <code>search.invariantFilter=10|15|20</code> tells the model checker to
 check the invariant only <em>after</em> exactly 10, 15, or 20 step were made. Step 0
 corresponds to the initialization with <code>Init</code>, step 1 is the first step
-with <code>Next</code>, etc. This option is useful for checking consensus algorithms,
-where the decision cannot be revoked. So instead of checking the invariant
-after each step, we can do that after the algorithm has made a good number of
-steps.</p>
-</li>
-<li>
-<p><strong>Translation to SMT</strong>:</p>
-<ol>
-<li><strong>Short circuiting</strong>: <code>rewriter.shortCircuit=(false|true)</code>. When
-<code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT
-as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise,
-disjunctions and conjunctions are directly translated to <code>(or ...)</code> and
-<code>(and ...)</code> respectively. By default, <code>rewriter.shortCircuit=false</code>.</li>
-</ol>
-</li>
-</ol>
+with <code>Next</code>, etc.</p>
+<p>This option is useful for checking consensus algorithms, where the decision
+cannot be revoked. So instead of checking the invariant after each step, we can
+do that after the algorithm has made a good number of steps.</p>
+<h2><a class="header" href="#translation-to-smt" id="translation-to-smt">Translation to SMT</a></h2>
+<h3><a class="header" href="#short-circuiting" id="short-circuiting">Short circuiting</a></h3>
+<p><code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to
+<code>(or ...)</code> and <code>(and ...)</code> respectively. By default,
+<code>rewriter.shortCircuit=false</code>.</p>
 
                     </main>
 
