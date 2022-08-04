@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.tla.bmcmt.StateInvariant
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -54,7 +55,7 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     impl.debug = true
     val transFilter = ""
-    val invFilter = "(0|2)"
+    val invFilter = "(0->.*|2->.*)"
     val trex = new FilteredTransitionExecutor[SnapshotT](transFilter, invFilter, impl)
     trex.prepareTransition(1, init)
     trex.pickTransition()
@@ -62,21 +63,21 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     // prepare Next
     trex.prepareTransition(1, nextTrans)
     // check what has changed + what is filtered
-    val inv1 = tla.ge(tla.name("x"), tla.int(3))
-    val mayChange1 = trex.mayChangeAssertion(1, inv1)
+    val inv0 = tla.ge(tla.name("x"), tla.int(3))
+    val mayChange0 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange0)
+    val inv1 = tla.ge(tla.name("y"), tla.name("x"))
+    val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
     assert(!mayChange1)
-    val inv2 = tla.ge(tla.name("y"), tla.name("x"))
-    val mayChange2 = trex.mayChangeAssertion(1, inv2)
-    assert(!mayChange2)
     trex.pickTransition()
     trex.nextState()
     // prepare Next
     trex.prepareTransition(1, nextTrans)
     // everything could have changed as the invariant filter was applied in the previous step
-    val mayChange21 = trex.mayChangeAssertion(1, inv1)
+    val mayChange20 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(mayChange20)
+    val mayChange21 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
     assert(mayChange21)
-    val mayChange22 = trex.mayChangeAssertion(1, inv2)
-    assert(mayChange22)
   }
 
   test("filtered regression on #108") { exeCtx: ExecutorContextT =>
@@ -85,27 +86,27 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     // y' <- y + 1
     val nextTrans = mkAssign("y", tla.plus(tla.name("y"), tla.int(1)))
     // push Init
-    val invFilter = "(1|2)"
+    val invFilter = "(1->.*|2->.*)"
     val impl = new TransitionExecutorImpl(Set.empty, Set("y"), exeCtx)
     val trex = new FilteredTransitionExecutor[SnapshotT]("", invFilter, impl)
     trex.prepareTransition(1, init)
     trex.pickTransition()
     // the user told us not to check the invariant in state 0
     val notInv = tla.bool(false)
-    val mayChange1 = trex.mayChangeAssertion(1, notInv)
+    val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(!mayChange1)
     trex.nextState()
     // apply Next
     trex.prepareTransition(1, nextTrans)
     // we must check the invariant right now, as it was skipped earlier
-    val mayChange2 = trex.mayChangeAssertion(1, notInv)
+    val mayChange2 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(mayChange2)
     trex.pickTransition()
     trex.nextState()
     // apply Next
     trex.prepareTransition(1, nextTrans)
     // this time we should skip the check
-    val mayChange3 = trex.mayChangeAssertion(1, notInv)
+    val mayChange3 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(!mayChange3)
   }
 

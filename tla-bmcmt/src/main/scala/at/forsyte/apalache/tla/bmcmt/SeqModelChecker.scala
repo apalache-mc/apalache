@@ -186,7 +186,7 @@ class SeqModelChecker[ExecutorContextT](
 
     def addMaybeInvariants(trNo: Int): Set[Int] = {
       val indices = notInvariants.zipWithIndex
-        .filter(p => trex.mayChangeAssertion(trNo, p._1))
+        .filter(p => trex.mayChangeAssertion(trNo, StateInvariant, p._2, p._1))
         .map(_._2)
       val newIndices = indices.toSet
       maybeInvariantNos ++= newIndices
@@ -195,7 +195,7 @@ class SeqModelChecker[ExecutorContextT](
 
     def addMaybeActionInvariants(trNo: Int): Set[Int] = {
       val indices = notActionInvariants.zipWithIndex
-        .filter(p => trex.mayChangeAssertion(trNo, p._1))
+        .filter(p => trex.mayChangeAssertion(trNo, ActionInvariant, p._2, p._1))
         .map(_._2)
       val newIndices = indices.toSet
       maybeActionInvariantNos ++= newIndices

@@ -1,4 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.trex
+import at.forsyte.apalache.tla.bmcmt.InvariantKind
 import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.rules.aux.Oracle
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -78,12 +79,20 @@ trait TransitionExecutor[ExecutorContextT] extends Recoverable[ExecutionSnapshot
    *
    * @param transitionNo
    *   the index of a previously prepared transition
+   * @param invariantKind
+   *   the kind of assertion being tested
+   * @param invariantNo
+   *   an index identifying the tested assertion among those of the same `invariantKind`
    * @param assertion
-   *   a state expression
+   *   the tested assertion
    * @return
    *   true, if the transition may affect satisfiability of the assertion
    */
-  def mayChangeAssertion(transitionNo: Int, assertion: TlaEx): Boolean
+  def mayChangeAssertion(
+      transitionNo: Int,
+      invariantKind: InvariantKind,
+      invariantNo: Int,
+      assertion: TlaEx): Boolean
 
   /**
    * Push an assertion about the current controlState.
