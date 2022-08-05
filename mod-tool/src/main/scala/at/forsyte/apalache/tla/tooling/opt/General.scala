@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.io.CliConfig
 import at.forsyte.apalache.tla.lir.Feature
-import at.forsyte.apalache.infra.ExitCodes
 
 import java.io.File
 import org.backuity.clist._
