@@ -51,8 +51,8 @@ In the following, step 0 corresponds to the initialization with ``Init``, step 1
 
 `search.transitionFilter=<regex>`. Restrict the choice of symbolic transitions
 at every step with a regular expression. The regular expression should recognize
-words over of the form `s->t`, where `s` is a step number and `t` is a
-transition number.
+words of the form `s->t`, where `s` is a step number and `t` is a transition
+number.
 
 For instance,
 `search.transitionFilter=(0->0|1->5|2->(2|3)|[3-9]->.*|[1-9][0-9]+->.*)`
@@ -70,9 +70,9 @@ the actions in the TLA+ spec. To find the numbers, run Apalache with
 ### Invariant filter
 
 `search.invariantFilter=<regex>`. Check the invariant only at the steps that
-satisfy the regular expression. The regular expression should recognize words
-over of the form 's->ki', where `s` is a step number, `k` is an invariant kind
-(["state" or "action"][invariants]) and `i` is a invariant number.
+satisfy the regular expression. The regular expression should recognize words of
+the form `s->ki`, where `s` is a step number, `k` is an invariant kind (["state"
+or "action"][invariants]), and `i` is an invariant number.
 
 For instance, `search.invariantFilter=10->.*|15->state0|20->action1` tells the
 model checker to check
