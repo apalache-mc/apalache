@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.tla.bmcmt.{ActionInvariant, StateInvariant}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -54,29 +55,83 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     impl.debug = true
     val transFilter = ""
-    val invFilter = "(0|2)"
+    val invFilter = "(0->.*|2->.*|3->state0|4->.*|5->state1|6->action1|7->action1)"
     val trex = new FilteredTransitionExecutor[SnapshotT](transFilter, invFilter, impl)
     trex.prepareTransition(1, init)
     trex.pickTransition()
     trex.nextState()
     // prepare Next
     trex.prepareTransition(1, nextTrans)
-    // check what has changed + what is filtered
-    val inv1 = tla.ge(tla.name("x"), tla.int(3))
-    val mayChange1 = trex.mayChangeAssertion(1, inv1)
+    // Step 1: Both invariants are excluded by the filter (no word starting in `1->`).
+    // inv0 == x >= 3 (unchanged by `Next`)
+    // inv1 == y >= x (maybe changed by `Next`)
+    val inv0 = tla.ge(tla.name("x"), tla.int(3))
+    val mayChange0 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange0)
+    val inv1 = tla.ge(tla.name("y"), tla.name("x"))
+    val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
     assert(!mayChange1)
-    val inv2 = tla.ge(tla.name("y"), tla.name("x"))
-    val mayChange2 = trex.mayChangeAssertion(1, inv2)
-    assert(!mayChange2)
     trex.pickTransition()
     trex.nextState()
     // prepare Next
     trex.prepareTransition(1, nextTrans)
-    // everything could have changed as the invariant filter was applied in the previous step
-    val mayChange21 = trex.mayChangeAssertion(1, inv1)
+    // Step 2: Both invariants are included by the filter.
+    //         Both may have changed, as the invariant filter excluded them both in the previous step.
+    val mayChange20 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(mayChange20)
+    val mayChange21 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
     assert(mayChange21)
-    val mayChange22 = trex.mayChangeAssertion(1, inv2)
-    assert(mayChange22)
+    trex.pickTransition()
+    trex.nextState()
+    // prepare Next
+    trex.prepareTransition(1, nextTrans)
+    // Step 3: Only state invariant 0 is included by the filter.
+    //         State invariant 0 is not changed by `next` (and was included in the last state).
+    //         State invariant 1 is ignored by the filter.
+    val mayChange30 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange30)
+    val mayChange31 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
+    assert(!mayChange31)
+    trex.pickTransition()
+    trex.nextState()
+    // prepare Next
+    trex.prepareTransition(1, nextTrans)
+    // Step 4: Both invariants are included by the filter.
+    //         State invariant 0 is not changed by `next` (and was included in the last state).
+    //         State invariant 1 may have changed, as the invariant filter excluded it in the previous step.
+    val mayChange40 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange40)
+    val mayChange41 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
+    assert(mayChange41)
+    trex.pickTransition()
+    trex.nextState()
+    // prepare Next
+    trex.prepareTransition(1, nextTrans)
+    // Step 5: Only state invariant 1 is included by the filter.
+    //         State invariant 0 is excluded by the filter
+    //         State invariant 1 is included by the filter, was included at the previous step, and may change.
+    val mayChange50 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange50)
+    val mayChange51 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
+    assert(mayChange51)
+    trex.pickTransition()
+    trex.nextState()
+    // prepare Next
+    trex.prepareTransition(1, nextTrans)
+    // Step 6: Both state invariants are excluded by the filter.
+    val mayChange60 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange60)
+    val mayChange61 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
+    assert(!mayChange61)
+    trex.pickTransition()
+    trex.nextState()
+    // prepare Next
+    trex.prepareTransition(1, nextTrans)
+    // Step 7: Pretend that both invariants are action invariants; the 2nd is included by the filter.
+    val mayChange70 = trex.mayChangeAssertion(1, ActionInvariant, 0, inv0)
+    assert(!mayChange70)
+    val mayChange71 = trex.mayChangeAssertion(1, ActionInvariant, 1, inv1)
+    assert(mayChange71)
   }
 
   test("filtered regression on #108") { exeCtx: ExecutorContextT =>
@@ -85,27 +140,27 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     // y' <- y + 1
     val nextTrans = mkAssign("y", tla.plus(tla.name("y"), tla.int(1)))
     // push Init
-    val invFilter = "(1|2)"
+    val invFilter = "(1->.*|2->.*)"
     val impl = new TransitionExecutorImpl(Set.empty, Set("y"), exeCtx)
     val trex = new FilteredTransitionExecutor[SnapshotT]("", invFilter, impl)
     trex.prepareTransition(1, init)
     trex.pickTransition()
     // the user told us not to check the invariant in state 0
     val notInv = tla.bool(false)
-    val mayChange1 = trex.mayChangeAssertion(1, notInv)
+    val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(!mayChange1)
     trex.nextState()
     // apply Next
     trex.prepareTransition(1, nextTrans)
     // we must check the invariant right now, as it was skipped earlier
-    val mayChange2 = trex.mayChangeAssertion(1, notInv)
+    val mayChange2 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(mayChange2)
     trex.pickTransition()
     trex.nextState()
     // apply Next
     trex.prepareTransition(1, nextTrans)
     // this time we should skip the check
-    val mayChange3 = trex.mayChangeAssertion(1, notInv)
+    val mayChange3 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(!mayChange3)
   }
 

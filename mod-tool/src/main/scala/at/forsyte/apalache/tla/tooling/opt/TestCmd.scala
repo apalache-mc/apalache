@@ -40,7 +40,7 @@ class TestCmd
     //   1. Check the invariant only after the action took place.
     //   2. Randomize
     val seed = Math.abs(System.currentTimeMillis().toInt)
-    val tuning = Map("search.invariantFilter" -> "1", "smt.randomSeed" -> seed.toString)
+    val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.passOptions.set("general.tuning", tuning)

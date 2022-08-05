@@ -163,12 +163,20 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    *
    * @param transitionNo
    *   the index of a previously prepared transition
+   * @param invariantKind
+   *   the kind of assertion being tested
+   * @param invariantNo
+   *   an index identifying the tested assertion among those of the same `invariantKind`
    * @param assertion
    *   a state expression
    * @return
    *   true, if the transition may affect satisfiability of the assertion
    */
-  override def mayChangeAssertion(transitionNo: Int, assertion: TlaEx): Boolean = {
+  override def mayChangeAssertion(
+      transitionNo: Int,
+      invariantKind: InvariantKind,
+      invariantNo: Int,
+      assertion: TlaEx): Boolean = {
     val trans = preparedTransitions(transitionNo)
     val binding = trans.binding
 
