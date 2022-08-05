@@ -7,6 +7,8 @@ import at.forsyte.apalache.tla.lir.Feature
 import java.io.File
 import org.backuity.clist._
 import org.backuity.clist.util.Read
+import at.forsyte.apalache.infra.passes.options.ApalacheConfig
+import at.forsyte.apalache.io.ConfigManager
 
 /**
  * The base class used by all Apalache CLI subcommands.
@@ -56,6 +58,7 @@ abstract class ApalacheCommand(name: String, description: String)
 
   private var _invocation = ""
   private var _env = ""
+  private var _configure: Either[String, ApalacheConfig] = Left("UNCONFIGURED")
 
   // A comma separated name of supported features
   private val featureList = Feature.all.map(_.name).mkString(", ")
@@ -84,6 +87,15 @@ abstract class ApalacheCommand(name: String, description: String)
   /** CLI options that are set through environment variables */
   def env: String = _env
 
+  /**
+   * The application configuration, derived by loading all configuration sources, concluding with the CLI options
+   *
+   * See [[at.forsyte.apalache.infra.passes.options.ApalacheConfig ApalacheConfig]] for details.
+   *
+   * TODO: Ultimately, we would like all application configuration to be derived from this value
+   */
+  def configuration = _configure
+
   override def read(args: List[String]) = {
     _env = super.options
       .filter(_.useEnv.getOrElse(false))
@@ -93,5 +105,8 @@ abstract class ApalacheCommand(name: String, description: String)
     _invocation = args.mkString(" ")
 
     super.read(args)
+
+    // This must be invoked after we parse the CLI args
+    _configure = ConfigManager(this)
   }
 }
