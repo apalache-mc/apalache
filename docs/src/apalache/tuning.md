@@ -96,6 +96,8 @@ This option is useful, e.g., for checking consensus algorithms,
 where the decision cannot be revoked. So instead of checking the invariant
 after each step, we can do that after the algorithm has made a good number of
 steps.
+You can also use this option to check different parts of an invariant on
+different machines to speed up turnaround time.
 
 ## Translation to SMT
 
