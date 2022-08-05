@@ -203,11 +203,13 @@ transition independently. The <code>before</code> mode may drastically reduce me
 consumption, but it may take longer than the <code>after</code> mode, provided that
 Apalache has enough memory. The default mode is <code>before</code>.</p>
 <h2><a class="header" href="#guided-search" id="guided-search">Guided search</a></h2>
+<h3><a class="header" href="#preliminaries" id="preliminaries">Preliminaries</a></h3>
+<p>In the following, step 0 corresponds to the initialization with <code>Init</code>, step 1 is the first step with <code>Next</code>, etc.</p>
 <h3><a class="header" href="#transition-filter" id="transition-filter">Transition filter</a></h3>
 <p><code>search.transitionFilter=&lt;regex&gt;</code>. Restrict the choice of symbolic transitions
 at every step with a regular expression. The regular expression should recognize
-words over of the form <code>s-&gt;t</code>, where <code>s</code> is a step number and <code>t</code> is a
-transition number.</p>
+words of the form <code>s-&gt;t</code>, where <code>s</code> is a step number and <code>t</code> is a transition
+number.</p>
 <p>For instance,
 <code>search.transitionFilter=(0-&gt;0|1-&gt;5|2-&gt;(2|3)|[3-9]-&gt;.*|[1-9][0-9]+-&gt;.*)</code>
 requires to start with the 0th transition, continue with the 5th transition,
@@ -217,18 +219,35 @@ arbitrary transitions until the <code>length.</code></p>
 the actions in the TLA+ spec. To find the numbers, run Apalache with
 <code>--write-intermediate=true</code> and check the transition numbers in
 <code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/XX_OutTransitionFinderPass.tla</code>: the
-0th transition is called <code>Next_si_0000</code>, 1st transition is called
+0th transition is called <code>Next_si_0000</code>, the 1st transition is called
 <code>Next_si_0001</code>, etc.</p>
 <h3><a class="header" href="#invariant-filter" id="invariant-filter">Invariant filter</a></h3>
 <p><code>search.invariantFilter=&lt;regex&gt;</code>. Check the invariant only at the steps that
-satisfy the regular expression.</p>
-<p>For instance, <code>search.invariantFilter=10|15|20</code> tells the model checker to
-check the invariant only <em>after</em> exactly 10, 15, or 20 step were made. Step 0
-corresponds to the initialization with <code>Init</code>, step 1 is the first step
-with <code>Next</code>, etc.</p>
-<p>This option is useful for checking consensus algorithms, where the decision
-cannot be revoked. So instead of checking the invariant after each step, we can
-do that after the algorithm has made a good number of steps.</p>
+satisfy the regular expression. The regular expression should recognize words of
+the form <code>s-&gt;ki</code>, where <code>s</code> is a step number, <code>k</code> is an invariant kind (<a href="../apalache/principles/invariants.html">&quot;state&quot;
+or &quot;action&quot;</a>), and <code>i</code> is an invariant number.</p>
+<p>For instance, <code>search.invariantFilter=10-&gt;.*|15-&gt;state0|20-&gt;action1</code> tells the
+model checker to check</p>
+<ul>
+<li>all invariants only <em>after</em> exactly 10 steps have been made,</li>
+<li>the <em>first</em> state invariant only after exactly 15 steps, and</li>
+<li>the <em>second</em> action invariant after exactly 20 steps.</li>
+</ul>
+<p><a href="../apalache/principles/invariants.html#trace-invariants">Trace invariants</a> are checked regardless of this filter.</p>
+<p>Note that there is no direct correspondence between invariant numbers and the
+operators in a TLA+ spec. Rather, the numbers refer to <em>verification conditions</em>
+(i.e., broken up parts of a TLA+ invariant operator). To find these numbers, run
+Apalache with <code>--write-intermediate=true</code> and check the invariant numbers in
+<code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/XX_OutVCGen.tla</code>. The 0th state
+invariant is called <code>VCInv_si_0</code>, the 1st state invariant is called
+<code>VCInv_si_1</code>, and so on. For action invariants, the declarations are named
+<code>VCActionInv_si_0</code>, <code>VCActionInv_si_1</code> etc.</p>
+<p>This option is useful, e.g., for checking consensus algorithms,
+where the decision cannot be revoked. So instead of checking the invariant
+after each step, we can do that after the algorithm has made a good number of
+steps.
+You can also use this option to check different parts of an invariant on
+different machines to speed up turnaround time.</p>
 <h2><a class="header" href="#translation-to-smt" id="translation-to-smt">Translation to SMT</a></h2>
 <h3><a class="header" href="#short-circuiting" id="short-circuiting">Short circuiting</a></h3>
 <p><code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to
