@@ -64,7 +64,7 @@ Note that there is no direct correspondence between the transition numbers and
 the actions in the TLA+ spec. To find the numbers, run Apalache with
 `--write-intermediate=true` and check the transition numbers in
 `_apalache-out/<MySpec>.tla/*/intermediate/XX_OutTransitionFinderPass.tla`: the
-0th transition is called `Next_si_0000`, 1st transition is called
+0th transition is called `Next_si_0000`, the 1st transition is called
 `Next_si_0001`, etc.
 
 ### Invariant filter
@@ -82,6 +82,15 @@ model checker to check
 * the *second* action invariant after exactly 20 steps.
 
 [Trace invariants][] are checked regardless of this filter.
+
+Note that there is no direct correspondence between invariant numbers and the
+operators in a TLA+ spec. Rather, the numbers refer to *verification conditions*
+(i.e., broken up parts of a TLA+ invariant operator). To find these numbers, run
+Apalache with `--write-intermediate=true` and check the invariant numbers in
+`_apalache-out/<MySpec>.tla/*/intermediate/XX_OutVCGen.tla`. The 0th state
+invariant is called `VCInv_si_0`, the 1st state invariant is called
+`VCInv_si_1`, and so on. For action invariants, the declarations are named
+`VCActionInv_si_0`, `VCActionInv_si_1` etc.
 
 This option is useful, e.g., for checking consensus algorithms,
 where the decision cannot be revoked. So instead of checking the invariant
