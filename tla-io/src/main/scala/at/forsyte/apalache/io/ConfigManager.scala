@@ -5,6 +5,7 @@ import pureconfig.generic.auto._
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import at.forsyte.apalache.tla.lir.Feature
+import at.forsyte.apalache.infra.passes.options.ApalacheConfig
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -27,7 +28,8 @@ private object Converters {
 /**
  * The configuration values that can be overriden based on CLI arguments
  *
- * For documentation on the use and meaning of these fields, see `at.forsyte.apalache.tla.tooling.opt.General`.
+ * For documentation on the use and meaning of these fields as CLI paramter, see
+ * `at.forsyte.apalache.tla.tooling.opt.General`.
  */
 trait CliConfig {
 
@@ -41,16 +43,12 @@ trait CliConfig {
   def features: Seq[Feature]
 }
 
-/** The application's configurable values, along with their base defaults */
-case class ApalacheConfig(
-    file: Option[File] = None,
-    outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
-    runDir: Option[File] = None,
-    configFile: Option[File] = None,
-    writeIntermediate: Boolean = false,
-    profiling: Boolean = false,
-    features: Seq[Feature] = Seq())
-
+/**
+ * Manage cascade loading program configurations from the supported sources
+ *
+ * @param cmd
+ *   The configurations supplied via CLI
+ */
 case class ConfigManager(cmd: CliConfig) {
   private val TLA_PLUS_DIR = ".tlaplus"
   private val APALACHE_CFG = "apalache.cfg"
@@ -75,10 +73,14 @@ case class ConfigManager(cmd: CliConfig) {
   /**
    * Load the application configuration from all sources supported by apalache
    *
-   * The following precedence is maintained, wherein lower numbered items override highest numbered items:
+   * The following precedence is maintained, wherein configured values found from lower numbered sources override values
+   * from higher numbered sources:
    *
-   *   1. CLI arguments 2. Environment variables (Overiding is taken care of by CLI parsing library) 3. Local config
-   *      file 4. Globacl config file 5. `ApalacheConfig` defaults (as specified in the case class definition)
+   *   1. CLI arguments
+   *   1. Environment variables (Overiding is taken care of by the CLI parsing library)
+   *   1. Local config file
+   *   1. Global config file
+   *   1. `ApalacheConfig` defaults (as specified in the case class definition)
    */
   def load(): ConfigReader.Result[ApalacheConfig] = {
 
