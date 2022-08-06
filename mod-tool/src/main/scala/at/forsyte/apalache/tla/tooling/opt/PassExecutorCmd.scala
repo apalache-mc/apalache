@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.infra.Executor
 
 /**
@@ -44,8 +43,5 @@ abstract class PassExecutorCmd(name: String, description: String)
     executor.passOptions.set("general.debug", debug)
     executor.passOptions.set("smt.prof", smtprof)
     executor.passOptions.set("general.features", features)
-
-    // TODO: Remove pass option, and just rely on OutputManager config
-    executor.passOptions.set("io.outdir", OutputManager.outDir)
   }
 }

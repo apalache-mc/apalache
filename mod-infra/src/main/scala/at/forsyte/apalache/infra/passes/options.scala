@@ -2,7 +2,6 @@ package at.forsyte.apalache.infra.passes.options
 
 // TODO: Use either File or Path consistently (preference for File)
 import java.io.File
-import java.nio.file.Path
 import at.forsyte.apalache.tla.lir.Feature
 
 /**
@@ -86,7 +85,6 @@ trait Parser {
 /** Options used to configure program input and output */
 trait IO {
   val output: Option[String] = None
-  val outdir: Path
 }
 
 trait Checker {
