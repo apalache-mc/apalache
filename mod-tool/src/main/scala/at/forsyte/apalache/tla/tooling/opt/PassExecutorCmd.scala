@@ -40,7 +40,8 @@ abstract class PassExecutorCmd(name: String, description: String)
    * NOTE: It is not invoked automatically, and you should invoke it explicitly in your `Cmd` class' [[run]] method.
    */
   def setCommonOptions(): Unit = {
-    executor.passOptions.set("general.debug", debug)
+    executor.passOptions
+      .set("general.debug", configuration.getOrElse(throw new Exception("TODO: Move into static options")).debug)
     executor.passOptions.set("smt.prof", smtprof)
     executor.passOptions.set("general.features", features)
   }

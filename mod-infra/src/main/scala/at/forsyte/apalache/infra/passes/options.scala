@@ -16,6 +16,7 @@ case class ApalacheConfig(
     file: Option[File] = None,
     outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
     runDir: Option[File] = None,
+    debug: Boolean = false,
     configFile: Option[File] = None,
     writeIntermediate: Boolean = false,
     profiling: Boolean = false,

@@ -37,6 +37,7 @@ trait CliConfig {
   def file: File
   def outDir: Option[File]
   def runDir: Option[File]
+  def debug: Option[Boolean]
   def writeIntermediate: Option[Boolean]
   def profiling: Option[Boolean]
   def configFile: Option[File]
@@ -98,6 +99,7 @@ case class ConfigManager(cmd: CliConfig) {
             file = Some(cmd.file),
             outDir = cmd.outDir.getOrElse(cfg.outDir),
             runDir = cmd.runDir.orElse(cfg.runDir),
+            debug = cmd.debug.getOrElse(cfg.debug),
             configFile = cmd.configFile.orElse(cfg.configFile),
             writeIntermediate = cmd.writeIntermediate.getOrElse(cfg.writeIntermediate),
             profiling = cmd.profiling.getOrElse(cfg.profiling),
