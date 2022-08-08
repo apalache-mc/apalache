@@ -20,7 +20,7 @@ assignees: ''
 ## Impact
 
 <!-- Whether this is blocking your work or whether you are able to proceed using -->
-<!-- workarounds or alternative approaces. -->
+<!-- workarounds or alternative approaches. -->
 
 ## Input specification
 
@@ -40,7 +40,7 @@ assignees: ''
 
 ## Log files
 
-<!-- If possible, attach of include the contents `detailed.log` and the tools
+<!-- If possible, attach or include the contents `detailed.log` and the tool's
      output on the command line. -->
 
 ## System information

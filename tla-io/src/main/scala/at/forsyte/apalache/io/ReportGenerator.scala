@@ -49,7 +49,7 @@ object ReportGenerator {
       |## Impact
       |
       |<!-- Whether this is blocking your work or whether you are able to proceed using -->
-      |<!-- workarounds or alternative approaces. -->
+      |<!-- workarounds or alternative approaches. -->
       |
       |## Input specification
       |
