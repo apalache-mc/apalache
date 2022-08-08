@@ -14,13 +14,13 @@ assignees: ''
 
 ## Description
 
-<!-- A clear and concise description of what the bug is. If you report an
-    exception with a stack trace, no bug explanation is needed. -->
+<!-- A clear and concise description of what the bug is. If you report an -->
+<!-- exception with a stack trace, no bug explanation is needed. -->
 
 ## Impact
 
 <!-- Whether this is blocking your work or whether you are able to proceed using -->
-<!-- workarounds or alternative approaces. -->
+<!-- workarounds or alternative approaches. -->
 
 ## Input specification
 
@@ -40,7 +40,7 @@ assignees: ''
 
 ## Log files
 
-<!-- If possible, attach of include the contents `detailed.log` and the tools
+<!-- If possible, attach or include the contents `detailed.log` and the tool's
      output on the command line. -->
 
 ## System information

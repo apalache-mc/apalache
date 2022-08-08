@@ -24,7 +24,7 @@ abstract class ApalacheCommand(name: String, description: String)
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
       useEnv = true)
-  var debug = opt[Boolean](description = "extensive logging in detailed.log and log.smt, default: false")
+  var debug = opt[Option[Boolean]](description = "extensive logging in detailed.log and log.smt, default: false")
   var smtprof = opt[Boolean](description = "profile SMT constraints in profile.csv, default: false")
   var profiling = opt[Option[Boolean]](description =
         s"write general profiling data to profile-rules.txt in the run directory, default: false (overrides envvar PROFILING)",
@@ -75,6 +75,21 @@ abstract class ApalacheCommand(name: String, description: String)
       str.split(",").map(featureRead.reads).toIndexedSeq
     }
   }
+
+  // Improve parsing of "Option[Boolean]" flags so that flags of type `opt[Option[Boolean]]` can
+  // be supplied without an explicit argument, like `--foo` instead of requiring `--foo=true`
+  // If the flag is "not" given and no default is specified in the declaration of the cli flag, then clist defaults to "None".
+  //
+  // This enables to us read CLI boolean flags using the usual syntax, but also
+  // to differentiate whether the user supplied a value. The latter information
+  // allows us to use the CLI flags as possible overrides for configurations
+  // loaded from other sources.
+  implicit def optionBoolRead: Read[Option[Boolean]] =
+    Read.reads[Option[Boolean]](expecting = "a boolean, such as 'true', 'yes', '1' or 'false', 'no', '0'") {
+      // If "" is supplied, the user gave the flag with no argument
+      case "" | "true" | "yes" | "1" => Some(true)
+      case "false" | "no" | "0"      => Some(false)
+    }
 
   private def getOptionEnvVar(option: CliOption[_]): Option[String] = {
     val envVar = option.name.replace("-", "_").toUpperCase()
