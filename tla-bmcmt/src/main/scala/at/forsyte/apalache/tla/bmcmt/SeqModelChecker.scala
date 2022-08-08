@@ -67,7 +67,7 @@ class SeqModelChecker[ExecutorContextT](
         makeStep(isNext = true, checkerInput.nextTransitions)
       }
 
-      if (params.saveRuns) {
+      if (params.isRandomSimulation && params.saveRuns) {
         outputExampleRun()
       }
 
