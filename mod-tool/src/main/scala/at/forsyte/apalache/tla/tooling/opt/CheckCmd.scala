@@ -63,7 +63,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   def collectTuningOptions(): Map[String, String] = {
     val tuning =
       if (tuningOptionsFile != "") loadProperties(tuningOptionsFile) else Map[String, String]()
-    overrideProperties(tuning, tuningOptions)
+    overrideProperties(tuning, tuningOptions) ++ Map("search.saveRuns" -> saveRuns.toString)
   }
 
   def run() = {

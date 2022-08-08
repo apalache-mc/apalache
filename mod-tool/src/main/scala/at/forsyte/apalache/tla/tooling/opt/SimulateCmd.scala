@@ -13,7 +13,6 @@ class SimulateCmd extends CheckCmd(name = "simulate", "Symbolically simulate a T
     super.collectTuningOptions() ++ Map(
         "search.simulation" -> "true",
         "search.simulation.maxRun" -> maxRun.toString,
-        "search.simulation.saveRuns" -> saveRuns.toString,
     )
   }
 

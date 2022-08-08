@@ -117,9 +117,9 @@ class ModelCheckerParams(
     tuningOptions.getOrElse("search.simulation.maxRun", "100").toInt
 
   /**
-   * Whether to save all visited simulation runs.
+   * Whether to save an example trace for each symbolic run.
    */
   val saveRuns: Boolean =
-    tuningOptions.getOrElse("search.simulation.saveRuns", "false").toBoolean
+    tuningOptions.getOrElse("search.saveRuns", "false").toBoolean
 
 }
