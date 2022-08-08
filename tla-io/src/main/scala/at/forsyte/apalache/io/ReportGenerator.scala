@@ -41,11 +41,6 @@ object ReportGenerator {
       |<!-- NOTE: Please try to ensure the bug can be produced on the latest release of -->
       |<!-- Apalache. See https://github.com/informalsystems/apalache/releases -->
       |
-      |## Description
-      |
-      |<!-- A clear and concise description of what the bug is. If you report an -->
-      |<!-- exception with a stack trace, no bug explanation is needed. -->
-      |
       |## Impact
       |
       |<!-- Whether this is blocking your work or whether you are able to proceed using -->
