@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.tla.bmcmt.Binding
+import at.forsyte.apalache.tla.bmcmt.{Binding, StateInvariant}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -186,12 +186,12 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // prepare Next
     trex.prepareTransition(1, nextTrans)
     // check what has changed
-    val inv1 = tla.ge(tla.name("x"), tla.int(3))
-    val mayChange1 = trex.mayChangeAssertion(1, inv1)
-    assert(!mayChange1)
-    val inv2 = tla.ge(tla.name("y"), tla.name("x"))
-    val mayChange2 = trex.mayChangeAssertion(1, inv2)
-    assert(mayChange2)
+    val inv0 = tla.ge(tla.name("x"), tla.int(3))
+    val mayChange0 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
+    assert(!mayChange0)
+    val inv1 = tla.ge(tla.name("y"), tla.name("x"))
+    val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
+    assert(mayChange1)
   }
 
   test("regression on #108") { exeCtx: ExecutorContextT =>
@@ -206,13 +206,13 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // The invariant negation does not refer to any variables.
     // We flag that it's satisfiability may change, as it could not be checked before
     val notInv = tla.bool(false)
-    val mayChange1 = trex.mayChangeAssertion(1, notInv)
+    val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(mayChange1)
     trex.nextState()
     // apply Next
     trex.prepareTransition(1, nextTrans)
     // this time the invariant's validity should not change
-    val mayChange2 = trex.mayChangeAssertion(1, notInv)
+    val mayChange2 = trex.mayChangeAssertion(1, StateInvariant, 0, notInv)
     assert(!mayChange2)
   }
 

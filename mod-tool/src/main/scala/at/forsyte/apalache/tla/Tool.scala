@@ -4,7 +4,7 @@ package at.forsyte.apalache.tla
 import apalache.BuildInfo
 import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.io.{ConfigManager, ConfigurationError, OutputManager, ReportGenerator}
+import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -48,7 +48,7 @@ object Tool extends LazyLogging {
 
   // Returns `Left(errmsg)` in case of configuration errors
   private def outputAndLogConfig(cmd: ApalacheCommand): Either[String, Unit] = {
-    ConfigManager(cmd).map { cfg =>
+    cmd.configuration.map { cfg =>
       try {
         OutputManager.configure(cfg)
       } catch {

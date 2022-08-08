@@ -6,6 +6,7 @@ import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import at.forsyte.apalache.infra.passes.options.ApalacheConfig
 
 import scala.io.Source
 

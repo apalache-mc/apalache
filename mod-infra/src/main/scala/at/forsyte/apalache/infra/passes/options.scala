@@ -1,14 +1,26 @@
 package at.forsyte.apalache.infra.passes.options
 
-import at.forsyte.apalache.tla.lir.Feature
+// TODO: Use either File or Path consistently (preference for File)
+import java.io.File
 import java.nio.file.Path
+import at.forsyte.apalache.tla.lir.Feature
 
 /**
- * Collects the passoptions supported for configuring Apalache's various passes
+ * Collects the options supported for configuring Apalache's various modes of execution
  *
  * @author
  *   Shon Feder
  */
+
+/** The application's configurable values, along with their base defaults */
+case class ApalacheConfig(
+    file: Option[File] = None,
+    outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
+    runDir: Option[File] = None,
+    configFile: Option[File] = None,
+    writeIntermediate: Boolean = false,
+    profiling: Boolean = false,
+    features: Seq[Feature] = Seq())
 
 /** Defines the data sources supported */
 sealed abstract class SourceOption
