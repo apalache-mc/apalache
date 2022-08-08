@@ -78,15 +78,16 @@ trait Smt {
   val prof: Boolean
 }
 
-// TODO: Move into "IO"
-trait Parser {
+trait Input {
   val source: SourceOption
 }
 
 /** Options used to configure program input and output */
-trait IO {
+trait Output {
   val output: Option[String] = None
 }
+
+trait IO extends Input with Output
 
 trait Checker {
   val algo: String = "incremental" // TODO: convert to case class
