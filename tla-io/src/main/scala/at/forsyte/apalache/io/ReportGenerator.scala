@@ -54,9 +54,11 @@ object ReportGenerator {
       |
       |## Log files
       |
+      |<details>
       |```
       |$log
       |```
+      |</details>
       |
       |## System information
       |
