@@ -41,7 +41,9 @@ abstract class PassExecutorCmd(name: String, description: String)
    */
   def setCommonOptions(): Unit = {
     executor.passOptions
-      .set("general.debug", configuration.getOrElse(throw new Exception("TODO: Move into static options")).debug)
+      .set("general.debug",
+          // The exception here should be impossible under all intended use of this class
+          configuration.getOrElse(throw new Exception("illegal access to options before configuration")).debug)
     executor.passOptions.set("smt.prof", smtprof)
     executor.passOptions.set("general.features", features)
   }
