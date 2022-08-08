@@ -60,9 +60,9 @@ object ReportGenerator {
       |
       |## System information
       |
-      |- Apalache version: `$version`:
-      |- OS: `$os`:
-      |- JDK version: `$jdk`:
+      |- Apalache version: `$version`
+      |- OS: `$os`
+      |- JDK version: `$jdk`
       |""".stripMargin
 
 }
