@@ -14,8 +14,8 @@ assignees: ''
 
 ## Description
 
-<!-- A clear and concise description of what the bug is. If you report an
-    exception with a stack trace, no bug explanation is needed. -->
+<!-- A clear and concise description of what the bug is. If you report an -->
+<!-- exception with a stack trace, no bug explanation is needed. -->
 
 ## Impact
 
