@@ -216,7 +216,7 @@ object Tool extends LazyLogging {
     Console.err.println(
         s"""|Please report an issue at $ISSUES_LINK: $e
             |A bug report template has been generated at [$absPath].
-            |If you choose to use it, please complete the template with a description of the expected behavior.""".stripMargin
+            |If you choose to use it, please complete the template with a description of the expected behavior and impact.""".stripMargin
     )
   }
 }
