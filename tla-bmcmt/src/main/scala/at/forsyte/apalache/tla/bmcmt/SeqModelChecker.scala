@@ -82,7 +82,7 @@ class SeqModelChecker[ExecutorContextT](
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
-    } else if (!params.isRandomSimulation) {
+    } else if (!params.isRandomSimulation && params.saveRuns) {
       // Output an example in the end of the search.
       outputExampleRun()
     }
