@@ -76,7 +76,7 @@ abstract class ApalacheCommand(name: String, description: String)
     }
   }
 
-  // Improve parsing of "Optional[Boolean]" flags so that falgs of type `opt[Optional[Boolean]]` can
+  // Improve parsing of "Option[Boolean]" flags so that flags of type `opt[Option[Boolean]]` can
   // be supplied without an explicit argument, like `--foo` instead of requiring `--foo=true`
   // If the flag is "not" given and no default is specified in the declaration of the cli flag, then clist defaults to "None".
   //
