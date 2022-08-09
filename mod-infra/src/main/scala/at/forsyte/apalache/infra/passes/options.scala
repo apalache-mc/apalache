@@ -3,6 +3,11 @@ package at.forsyte.apalache.infra.passes.options
 // TODO: Use either File or Path consistently (preference for File)
 import java.io.File
 import at.forsyte.apalache.tla.lir.Feature
+import com.google.inject.Provider
+import com.google.inject.ProvisionException
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 /**
  * Collects the options supported for configuring Apalache's various modes of execution
@@ -20,6 +25,7 @@ case class ApalacheConfig(
     configFile: Option[File] = None,
     writeIntermediate: Boolean = false,
     profiling: Boolean = false,
+    /** Enables features protected by feature-flags */
     features: Seq[Feature] = Seq())
 
 /** Defines the data sources supported */
@@ -65,52 +71,115 @@ object SMTEncoding {
   }
 }
 
-trait General {
+/**
+ * A group of related options
+ */
+sealed trait OptionGroup
 
-  /** Tuning options control a wide variety of model checker behavior */
-  // TODO: Make tuning params defined statically
-  // TODO: Move these into the `Checker` options?
-  val tuning: Map[String, String]
-  val debug: Boolean
+object OptionGroup {
 
-  /** Enables features protected by feature-flags */
-  val features: Seq[Feature]
-}
+  /**
+   * Interface for classes that can be produced from an [[ApalacheConfig]]
+   *
+   * The intended use of this class is to identify configurable options, which is to say case class representing program
+   * configuration that can be derived from configuration input.
+   *
+   * @param cfg
+   *   An instnace of the apalche configuration class.
+   */
+  sealed trait Configurable[T] {
+    def apply(cfg: ApalacheConfig): Try[T]
+  }
 
-/** Options used to configure interaction with the SMT solver */
+  /** Options used to configure interaction with the SMT solver */
 // TODO: Should this be removed/merged
-trait Smt {
-  val prof: Boolean
+  case class Smt(prof: Boolean)
+
+  object Smt extends Configurable[Smt] {
+    // TODO Is this the right meaning for the "profiling" config?
+    def apply(cfg: ApalacheConfig) = Success(Smt(cfg.profiling))
+  }
+
+  /** Options used to configure program input */
+  case class Input(source: SourceOption)
+
+  object Input extends Configurable[Input] {
+    def apply(cfg: ApalacheConfig) =
+      cfg.file match {
+        case Some(file) => Success(Input(SourceOption.FileSource(file)))
+        case None       => Failure(new Exception("TODO: make configuration error exception"))
+      }
+  }
+
+  /** Options used to configure program output */
+  case class Output(output: Option[String] = None)
+
+  // object Output extends Configurable[Output] {
+  //   def apply(cfg: ApalacheConfig) =
+
+  // }
+
+  /** Options used to configure the typechecker */
+  case class Typechecker(inferPoly: Boolean = true)
+
+  /** Options used to configure model checking */
+  case class Checker(
+      /** Tuning options control a wide variety of model checker behavior */
+      // TODO: Make tuning params defined statically
+      tuning: Map[String, String],
+      algo: String = "incremental", // TODO: convert to case class
+      cinit: String = "", // TODO: conver to optional
+      config: String = "", // TODO: convert to optional
+      discardDisabled: Boolean = true,
+      init: String = "", // TODO: convert to optional
+      inv: List[String] = List(),
+      length: Int = 10,
+      maxError: Int = 1,
+      next: String = "", // TODO: convert to optional
+      noDeadlocks: Boolean = false,
+      nworkers: Int = 1,
+      smtEncoding: SMTEncoding = SMTEncoding.OOPSLA19,
+      temporal: List[String] = List(),
+      view: String = "", // TODO: convert to optional
+    )
+
+  /* TODO Maybe we can supply the whole ApalacheConfig, then refine it down by hiding the parts that
+   * a particular invocation doesn't need? */
+  /** Options used in all modes of execution */
+  case class Common(
+      debug: Boolean,
+      features: Seq[Feature],
+      smt: Smt)
+
 }
 
-trait Input {
-  val source: SourceOption
+// case class Parse(cfg: ApalacheConfig) extends Configurable(cfg) with IO {
+//   val input: Common = Common(cfg)
+//   val debug:
+// }
+
+/**
+ * Provides a configured option instance via a Google Guice Provider
+ *
+ * The [[OptionsProvider]] enables late binding of a configured option instance supplied to all classes via the Guice
+ * dependency injection
+ */
+class OptionsProvider[T] extends Provider[T] {
+  protected var _options: Option[T] = None
+
+  def configure(opt: ApalacheConfig => Try[T], cfg: ApalacheConfig): Try[Unit] =
+    for {
+      options <- opt(cfg)
+      _options = Some(options)
+    } yield ()
+
+  def get(): T = _options.getOrElse(throw new ProvisionException("pass options were not configured"))
 }
 
-/** Options used to configure program input and output */
-trait Output {
-  val output: Option[String] = None
-}
-
-trait IO extends Input with Output
-
-trait Checker {
-  val algo: String = "incremental" // TODO: convert to case class
-  val cinit: String = "" // TODO: conver to optional
-  val config: String = "" // TODO: convert to optional
-  val discardDisabled: Boolean = true
-  val init: String = "" // TODO: convert to optional
-  val inv: List[String] = List()
-  val length: Int = 10
-  val maxError: Int = 1
-  val next: String = "" // TODO: convert to optional
-  val noDeadlocks: Boolean = false
-  val nworkers: Int = 1
-  val smtEncoding: SMTEncoding = SMTEncoding.OOPSLA19
-  val temporal: List[String] = List()
-  val view: String = "" // TODO: convert to optional
-}
-
-trait Typechecker {
-  val inferPoly: Boolean = true
+// Yeah!
+class test {
+  import OptionGroup._
+  val op: OptionsProvider[Smt] = new OptionsProvider[Smt]()
+  val t = op.configure(Smt(_), ApalacheConfig())
+  val ops = op.get().prof
 }
