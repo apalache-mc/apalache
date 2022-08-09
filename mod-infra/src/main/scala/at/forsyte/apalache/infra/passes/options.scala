@@ -19,6 +19,8 @@ import scala.util.Failure
 /** The application's configurable values, along with their base defaults */
 case class ApalacheConfig(
     file: Option[File] = None,
+    /** A file into which output can be written */
+    output: Option[File] = None,
     outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
     runDir: Option[File] = None,
     debug: Boolean = false,

@@ -18,8 +18,7 @@ object utils {
       writerFactory: TlaWriterFactory,
       logger: Logger,
       sourceStore: SourceStore): Unit =
-    options.get[String]("io", "output").foreach { output =>
-      val outfile = new File(output)
+    options.get[File]("io", "output").foreach { outfile =>
       val outfileName = outfile.toString()
 
       val ext = FilenameUtils.getExtension(outfileName)
