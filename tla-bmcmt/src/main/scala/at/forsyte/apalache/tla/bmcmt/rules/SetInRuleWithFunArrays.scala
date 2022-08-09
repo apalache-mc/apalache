@@ -26,7 +26,7 @@ class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewr
     }
 
     funCell.cellType match {
-      case CellTFrom(FunT1(domT, _)) => domT // OK
+      case CellTFrom(FunT1(domT, _)) => () // OK
       case _                         => flagTypeError()
     }
     funsetCell.cellType match {
