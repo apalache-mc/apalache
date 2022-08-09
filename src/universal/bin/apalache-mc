@@ -31,8 +31,8 @@ then
     echo "       build jar."
 fi
 
-# Check of the heap size is already set
-if ! [[ "$JVM_ARGS" =~ -Xmx ]]
+# Check if the heap size is already set
+if ! [[ "$JVM_ARGS" =~ -Xmx || "$JVM_ARGS" =~ -XX:MaxRAMPercentage ]]
 then
     # If not, set our default heap size
     JVM_ARGS="${JVM_ARGS} -Xmx4096m"
