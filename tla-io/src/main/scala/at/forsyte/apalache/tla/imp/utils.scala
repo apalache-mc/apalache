@@ -46,10 +46,5 @@ object utils {
           SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
         module.operDeclarations.foreach(sourceLocator.checkConsistency)
       }
-      if (options.getOrElse[Boolean]("general", "debug", false)) {
-        val sourceLocator =
-          SourceLocator(sourceStore.makeSourceMap, new ChangeListener())
-        module.operDeclarations.foreach(sourceLocator.checkConsistency)
-      }
     }
 }
