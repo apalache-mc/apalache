@@ -6,7 +6,7 @@ import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import at.forsyte.apalache.infra.passes.options.ApalacheConfig
+import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
 
 import scala.io.Source
 
@@ -119,16 +119,19 @@ object OutputManager extends LazyLogging {
     // Replace the default config used for initialiation with the config loaded on startup
     cfg = config
 
-    val fileName = cfg.file
+    val fileName = cfg.common.file
       .getOrElse(throw new IllegalStateException("OutputManager configured without file"))
       .getName
 
-    setOutDir(cfg.outDir.toPath(), fileName)
+    // TODO replace cfg with options
+    val _outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out"))
+    setOutDir(_outDir.toPath(), fileName)
     ensureDirExists(outDir)
     createRunDirectory()
-    setCustomRunDir(config.runDir)
+    setCustomRunDir(config.common.runDir)
 
-    if (cfg.writeIntermediate) {
+    // TODO replace cfg with options
+    if (cfg.common.writeIntermediate.getOrElse(false)) {
       setIntermediateDir()
       intermediateDirOpt.foreach(ensureDirExists)
       customIntermediateRunDir.foreach(ensureDirExists)
@@ -217,7 +220,8 @@ object OutputManager extends LazyLogging {
    * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set
    */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
-    if (cfg.profiling) {
+    // TODO replace cfg with options
+    if (cfg.common.profiling.getOrElse(false)) {
       withWriterInRunDir("profile-rules.txt")(f)
       true
     } else {

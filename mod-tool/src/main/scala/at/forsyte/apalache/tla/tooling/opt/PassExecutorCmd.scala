@@ -43,7 +43,7 @@ abstract class PassExecutorCmd(name: String, description: String)
     executor.passOptions
       .set("general.debug",
           // The exception here should be impossible under all intended use of this class
-          configuration.getOrElse(throw new Exception("illegal access to options before configuration")).debug)
+          configuration.getOrElse(throw new Exception("illegal access to options before configuration")).common.debug)
     executor.passOptions.set("smt.prof", smtprof)
     executor.passOptions.set("general.features", features)
   }

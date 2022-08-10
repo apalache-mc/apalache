@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.Feature
 import java.io.File
 import org.backuity.clist._
 import org.backuity.clist.util.Read
-import at.forsyte.apalache.infra.passes.options.ApalacheConfig
+import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigManager
 
 /**
@@ -44,6 +44,18 @@ abstract class ApalacheCommand(name: String, description: String)
         ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
       })
 
+  // TODO: Doc
+  def toConfig(): Config.ApalacheConfig = Config.ApalacheConfig(common = Config.Common(
+      configFile = configFile,
+      debug = debug,
+      smtprof = smtprof,
+      profiling = profiling,
+      outDir = outDir,
+      runDir = runDir,
+      writeIntermediate = writeIntermediate,
+      features = features,
+  ))
+
   /**
    * Run the process corresponding to the specified subcommand
    *
@@ -58,7 +70,7 @@ abstract class ApalacheCommand(name: String, description: String)
 
   private var _invocation = ""
   private var _env = ""
-  private var _configure: Either[String, ApalacheConfig] = Left("UNCONFIGURED")
+  private var _configure: Either[String, Config.ApalacheConfig] = Left("UNCONFIGURED")
 
   // A comma separated name of supported features
   private val featureList = Feature.all.map(_.name).mkString(", ")
@@ -111,6 +123,10 @@ abstract class ApalacheCommand(name: String, description: String)
    */
   def configuration = _configure
 
+  /** Override as `true` to mark a subcommand for use with the new config system */
+  // TODO Temporary: used to incrementally implement https://github.com/informalsystems/apalache/issues/2050
+  val useNewConfigSystem = false
+
   override def read(args: List[String]) = {
     _env = super.options
       .filter(_.useEnv.getOrElse(false))
@@ -121,7 +137,11 @@ abstract class ApalacheCommand(name: String, description: String)
 
     super.read(args)
 
-    // This must be invoked after we parse the CLI args
-    _configure = ConfigManager(this)
+    if (useNewConfigSystem) {
+      _configure = ConfigManager(this.toConfig())
+    } else {
+      // This must be invoked after we parse the CLI args
+      _configure = ConfigManager(this)
+    }
   }
 }

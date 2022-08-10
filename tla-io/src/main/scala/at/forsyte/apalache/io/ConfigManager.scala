@@ -5,7 +5,8 @@ import pureconfig.generic.auto._
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import at.forsyte.apalache.tla.lir.Feature
-import at.forsyte.apalache.infra.passes.options.ApalacheConfig
+import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
+import com.typesafe.config.{Config, ConfigObject}
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -31,6 +32,7 @@ private object Converters {
  * For documentation on the use and meaning of these fields as CLI paramter, see
  * `at.forsyte.apalache.tla.tooling.opt.General`.
  */
+// TODO rm
 trait CliConfig {
 
   /** Input file */
@@ -79,6 +81,7 @@ class ConfigManager() {
    *   1. Global config file
    *   1. `ApalacheConfig` defaults (as specified in the case class definition)
    */
+  // TODO: remove once loading from `CliConfiguration` is fully integrated
   def load(cmd: CliConfig): ConfigReader.Result[ApalacheConfig] = {
 
     val home = System.getProperty("user.home")
@@ -94,16 +97,35 @@ class ConfigManager() {
       .load[ApalacheConfig]
       .map(cfg =>
         // TODO Is there no better way than hardcoding these overrides?
-        cfg.copy(
+        cfg.copy(common = cfg.common.copy(
             file = Some(cmd.file),
-            outDir = cmd.outDir.getOrElse(cfg.outDir),
-            runDir = cmd.runDir.orElse(cfg.runDir),
-            debug = cmd.debug.getOrElse(cfg.debug),
-            configFile = cmd.configFile.orElse(cfg.configFile),
-            writeIntermediate = cmd.writeIntermediate.getOrElse(cfg.writeIntermediate),
-            profiling = cmd.profiling.getOrElse(cfg.profiling),
-            features = if (cmd.features.nonEmpty) cmd.features else cfg.features,
-        ))
+            outDir = cmd.outDir.orElse(cfg.common.outDir),
+            runDir = cmd.runDir.orElse(cfg.common.runDir),
+            debug = cmd.debug.orElse(cfg.common.debug),
+            configFile = cmd.configFile.orElse(cfg.common.configFile),
+            writeIntermediate = cmd.writeIntermediate.orElse(cfg.common.writeIntermediate),
+            profiling = cmd.profiling.orElse(cfg.common.profiling),
+            features = if (cmd.features.nonEmpty) cmd.features else cfg.common.features,
+        )))
+  }
+
+  def load(cfg: ApalacheConfig): ConfigReader.Result[ApalacheConfig] = {
+
+    val home = System.getProperty("user.home")
+    val globalConfig = ConfigSource.file(Paths.get(home, TLA_PLUS_DIR, APALACHE_CFG))
+
+    val localConfig: Option[ConfigObjectSource] =
+      cfg.common.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
+
+    val cliConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()
+
+    ConfigSource
+      .fromConfig(cliConfig)
+      // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
+      .withFallback(localConfig
+            .getOrElse(ConfigSource.empty))
+      .withFallback(globalConfig.optional)
+      .load[ApalacheConfig]
   }
 }
 
@@ -112,4 +134,8 @@ object ConfigManager {
   /** Load the application configuration, converting any configuration error into a pretty printed message */
   def apply(cmd: CliConfig): Either[String, ApalacheConfig] =
     new ConfigManager().load(cmd).left.map(_.prettyPrint())
+
+  def apply(cfg: ApalacheConfig): Either[String, ApalacheConfig] =
+    new ConfigManager().load(cfg).left.map(_.prettyPrint())
+
 }

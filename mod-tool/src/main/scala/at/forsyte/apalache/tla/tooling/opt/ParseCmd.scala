@@ -23,6 +23,13 @@ class ParseCmd
 
   val executor = Executor(new ParserModule)
 
+  override val useNewConfigSystem = true
+  override def toConfig() = {
+    val cfg = super.toConfig()
+    cfg.copy(common = cfg.common.copy(file = Some(file)), output = cfg.output.copy(output = output))
+  }
+
+  // TODO Factor out execution, use ProgramConfiguration, etc.
   def run() = {
     logger.info("Parse " + file)
 

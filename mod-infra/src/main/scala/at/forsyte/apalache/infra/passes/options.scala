@@ -16,19 +16,40 @@ import scala.util.Failure
  *   Shon Feder
  */
 
-/** The application's configurable values, along with their base defaults */
-case class ApalacheConfig(
-    file: Option[File] = None,
-    /** A file into which output can be written */
-    output: Option[File] = None,
-    outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
-    runDir: Option[File] = None,
-    debug: Boolean = false,
-    configFile: Option[File] = None,
-    writeIntermediate: Boolean = false,
-    profiling: Boolean = false,
-    /** Enables features protected by feature-flags */
-    features: Seq[Feature] = Seq())
+object Config {
+
+  /** The application's configurable values, along with their base defaults */
+  // TODO Rename to "Common"
+  case class Common(
+      file: Option[File] = None,
+      outDir: Option[File] = None,
+      runDir: Option[File] = None,
+      debug: Option[Boolean] = None, // false,
+      smtprof: Boolean = false, // TODO make optional
+      configFile: Option[File] = None,
+      writeIntermediate: Option[Boolean] = None, // false,
+      profiling: Option[Boolean] = None, // false,
+      /** Enables features protected by feature-flags */
+      features: Seq[Feature] = Seq())
+
+  case class Output(
+      /** A file into which output can be written */
+      output: Option[File] = None)
+
+  // TODO: Add values to feed to `Checker` options group
+  case class Checker()
+  // TODO implement to achieve parity with options
+  // case class Input()
+
+  case class ApalacheConfig(
+      common: Common = Common(),
+      output: Output = Output(),
+      // input: Input,
+      checker: Checker = Checker())
+}
+
+// TODO rm
+import Config._
 
 /** Defines the data sources supported */
 sealed abstract class SourceOption
@@ -90,16 +111,8 @@ object OptionGroup {
    *   An instnace of the apalche configuration class.
    */
   sealed trait Configurable[T] {
+    //  TODO could manual apply methods be replaced with pureconfig merging?
     def apply(cfg: ApalacheConfig): Try[T]
-  }
-
-  /** Options used to configure interaction with the SMT solver */
-// TODO: Should this be removed/merged
-  case class Smt(prof: Boolean)
-
-  object Smt extends Configurable[Smt] {
-    // TODO Is this the right meaning for the "profiling" config?
-    def apply(cfg: ApalacheConfig) = Success(Smt(cfg.profiling))
   }
 
   /** Options used to configure program input */
@@ -107,24 +120,24 @@ object OptionGroup {
 
   object Input extends Configurable[Input] {
     def apply(cfg: ApalacheConfig) =
-      cfg.file match {
+      cfg.common.file match {
         case Some(file) => Success(Input(SourceOption.FileSource(file)))
         case None       => Failure(new Exception("TODO: make configuration error exception"))
       }
   }
 
   /** Options used to configure program output */
-  case class Output(output: Option[String] = None)
+  case class Output(output: Option[File] = None)
 
-  // object Output extends Configurable[Output] {
-  //   def apply(cfg: ApalacheConfig) =
-
-  // }
+  object Output extends Configurable[Output] {
+    def apply(cfg: ApalacheConfig) = Success(Output(cfg.output.output))
+  }
 
   /** Options used to configure the typechecker */
   case class Typechecker(inferPoly: Boolean = true)
 
   /** Options used to configure model checking */
+  // TODO make configurable
   case class Checker(
       /** Tuning options control a wide variety of model checker behavior */
       // TODO: Make tuning params defined statically
@@ -149,10 +162,38 @@ object OptionGroup {
    * a particular invocation doesn't need? */
   /** Options used in all modes of execution */
   case class Common(
+      configFile: Option[File],
+      smtprof: Boolean,
+      profiling: Boolean,
+      outDir: File,
+      runDir: Option[File], // TODO Should be optional?
+      writeIntermediate: Boolean,
       debug: Boolean,
-      features: Seq[Feature],
-      smt: Smt)
+      features: Seq[Feature])
 
+  private def getConfig[T](ov: Option[T], name: String): T =
+    ov.getOrElse(throw new Exception(s"TODO: Proper err ${name}"))
+
+  object Common extends Configurable[Common] {
+    def apply(cfg: ApalacheConfig): Try[Common] =
+      Success(Common(
+              configFile = cfg.common.configFile,
+              smtprof = cfg.common.smtprof,
+              profiling = cfg.common.profiling.getOrElse(false),
+              outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out")),
+              runDir = cfg.common.runDir,
+              writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
+              debug = cfg.common.debug.getOrElse(false),
+              features = cfg.common.features,
+          ))
+  }
+
+  case class AllOptions(
+      common: Common,
+      output: Output,
+      input: Input,
+      checker: Checker,
+      typechecker: Typechecker)
 }
 
 // case class Parse(cfg: ApalacheConfig) extends Configurable(cfg) with IO {
@@ -170,10 +211,7 @@ class OptionsProvider[T] extends Provider[T] {
   protected var _options: Option[T] = None
 
   def configure(opt: ApalacheConfig => Try[T], cfg: ApalacheConfig): Try[Unit] =
-    for {
-      options <- opt(cfg)
-      _options = Some(options)
-    } yield ()
+    opt(cfg).map(os => _options = Some(os))
 
   def get(): T = _options.getOrElse(throw new ProvisionException("pass options were not configured"))
 }
@@ -181,7 +219,7 @@ class OptionsProvider[T] extends Provider[T] {
 // Yeah!
 class test {
   import OptionGroup._
-  val op: OptionsProvider[Smt] = new OptionsProvider[Smt]()
-  val t = op.configure(Smt(_), ApalacheConfig())
-  val ops = op.get().prof
+  val op: OptionsProvider[Output] = new OptionsProvider[Output]()
+  val t = op.configure(Output(_), ApalacheConfig())
+  val ops = op.get().output
 }
