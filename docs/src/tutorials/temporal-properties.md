@@ -29,13 +29,13 @@ But don't worry - we will dissect the spec in the following.
 
 In the TLA specification, we declare two variables:
 
-```
+```tla
 {{#include TrafficLight.tla:vars}}
 ```
 
 Initially, the light is red and green has not yet been requested:
 
-```
+```tla
 {{#include TrafficLight.tla:init}}
 ```
 
@@ -44,7 +44,7 @@ We have three possible actions:
 2. The traffic light can switch from green to red, or
 3. The button can be pushed, thus requesting that the traffic light becomes green.
 
-```
+```tla
 {{#include TrafficLight.tla:actions}}
 ```
 
@@ -57,7 +57,7 @@ Now, we are ready to specify the properties that we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
 We can write the property like this:
 
-```
+```tla
 {{#include TrafficLight.tla:prop}}
 ```
 Intuitively, the property says: 
@@ -67,7 +67,7 @@ then at some future point in time, `IsGreen` is true."
 
 Let's run Apalache to check this property:
 
-```
+```tla
 apalache-mc check --temporal=RequestWillBeFulfilled TrafficLight.tla
 ```
 ```
@@ -95,7 +95,7 @@ just let time pass and take no action.
 We can write a new next predicate that explicitly allows
 stuttering like this:
 
-```
+```tla
 {{#include TrafficLight.tla:stutternext}}
 ```
 
@@ -126,7 +126,7 @@ Let's take a look at `/home/user/apalache/docs/src/tutorials/_apalache-out/Traff
 
 Let's first focus on the initial state.
 
-```
+```tla
 (* Initial state *)
 (* State0 ==
   RequestWillBeFulfilled_init = FALSE
@@ -211,7 +211,7 @@ Additionally, at the first state of the loop, i.e., when `__loop_InLoop` switche
 we store the valuation of each variable in a shadow copy whose name is prefixed by `__loop_`.
 Before the first state of the loop, the `__loop_` carry arbitrary values.
 In our example, it looks like this:
-```
+```tla
 (* State0 ==
     ...
     /\ __loop_InLoop = FALSE
@@ -279,7 +279,7 @@ Next, let us discuss the other auxiliary variables that are introduced by Apalac
 These extra variables correspond to parts of the temporal property we want to check.
 These are the following variables with their valuations in the initial state:
 
-```
+```tla
 (* State0 ==
   RequestWillBeFulfilled_init = FALSE
     ...
@@ -340,7 +340,7 @@ if there is a state on the loop such that `isGreen` is true.
 
 Let us take a look at the valuations of `☐(requestedGreen ⇒ ♢isGreen)_unroll` along our counterexample to see this.
 
-```
+```tla
 (* State0 ==
     ...
     /\ __loop_InLoop = FALSE
@@ -383,7 +383,7 @@ we also introduce copies for all (temporal) subformulas, e.g., `__loop_☐(reque
 These fulfill the same function as the `__loop_` copies for the
 original variables of the model, i.e., retaining the state of variables from the first state of the loop, e.g.,
 
-```
+```tla
 (* State0 ==
     ...
     /\ __loop_☐(requestedGreen ⇒ ♢isGreen) = FALSE
