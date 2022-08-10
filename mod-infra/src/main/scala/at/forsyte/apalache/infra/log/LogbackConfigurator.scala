@@ -80,7 +80,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
     encoder.setContext(loggerContext)
     val layout = new PatternLayout()
-    layout.setPattern("%date [%thread] %-5level %logger{12} - %msg%n")
+    layout.setPattern("%d{\"yyyy-MM-dd'T'HH:mm:ss,SSS\"} [%thread] %-5level %logger{12} - %msg%n")
     layout.setContext(loggerContext)
     layout.start()
     encoder.setLayout(layout)
