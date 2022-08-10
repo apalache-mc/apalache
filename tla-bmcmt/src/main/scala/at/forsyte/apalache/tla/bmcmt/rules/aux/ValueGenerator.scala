@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -225,7 +225,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
         nextState = nextState.updateArena(_.setDom(funCell, domainCell))
-        // For the decoder to work, the relations' arguments need to be constrained
+        // For the decoder to work, the relation's arguments may need to be equated to the domain elements
         nextState = constrainRelationArgs(nextState, rewriter, domainCell, relationCell)
 
         def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -15,24 +15,21 @@ import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, OperEx, TlaEx}
  *   Rodrigo Otoni
  */
 class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewriter) {
-  new ConstSimplifierForSmt
 
   override protected def funSetIn(state: SymbState, funsetCell: ArenaCell, funCell: ArenaCell): SymbState = {
     // checking whether f \in [S -> T]
     def flagTypeError(): Nothing = {
-      val msg = s"Not implemented (open an issue): f \\in S for f: %s and S: %s."
-        .format(funCell.cellType, funsetCell.cellType)
+      val msg = s"Illegal state: f \\in S for f: %s and S: %s.".format(funCell.cellType, funsetCell.cellType)
       throw new RewriterException(msg, state.ex)
     }
 
     funCell.cellType match {
-      case CellTFrom(FunT1(domT, _)) => domT // OK
+      case CellTFrom(FunT1(domT, _)) => () // OK
       case _                         => flagTypeError()
     }
     funsetCell.cellType match {
-      case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) =>
-        flagTypeError()
-      case _ => () // OK
+      case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) => flagTypeError()
+      case _                                                           => () // OK
     }
 
     val funDom = state.arena.getDom(funCell)
@@ -40,6 +37,8 @@ class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewr
     val funsetCdm = state.arena.getCdm(funsetCell)
     var nextState = state
 
+    // This method checks if there is a pair (x,y) \in RELATION f s.t. x = arg \land arg \in DOMAIN f
+    // The goal is to ensure that f's range is a subset of T, by applying it to every arg \in DOMAIN f
     def onPair(arg: ArenaCell): TlaEx = {
       val funApp = OperEx(TlaFunOper.app, funCell.toNameEx, arg.toNameEx)
       nextState = rewriter.rewriteUntilDone(nextState.setRex(funApp))
@@ -58,15 +57,11 @@ class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewr
           // cache equality constraints first
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, funsetCdmElems.map((_, funAppRes)))
 
-          def inAndEq(elem: ArenaCell) = {
-            tla.and(tla.apalacheSelectInSet(elem.toNameEx, funsetCdm.toNameEx),
-                rewriter.lazyEq.safeEq(elem, funAppRes)) // use lazy equality
-          }
-
           nextState = nextState.updateArena(_.appendCell(BoolT1))
           val pred = nextState.arena.topCell.toNameEx
 
-          val elemsInAndEq = funsetCdmElems.map(inAndEq)
+          // inAndEq checks if funAppRes is in funsetCdm
+          val elemsInAndEq = funsetCdmElems.map(inAndEq(rewriter, _, funAppRes, funsetCdm, lazyEq = true))
           rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
 
           val dom = tla.apalacheSelectInSet(arg.toNameEx, funDom.toNameEx)

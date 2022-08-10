@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
@@ -9,13 +10,30 @@ import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 /**
- * Auxiliary methods for handling TLA+ functions.
+ * Auxiliary methods for handling rewriting rules.
  *
  * @author
  *   Rodrigo Otoni
  */
-object FunOps {
+object AuxOps {
+  private lazy val simplifier = new ConstSimplifierForSmt
 
+  /**
+   * Constrains the values of a function's relation to be in line with its domain values, if the chosen SMT encoding
+   * does not ensure this inherently. <p> Concretely, x \in DOMAIN \iff ((x1,y1) \in RELATION \land x = x1) \lor ...
+   * \lor ((xn,yn) \in RELATION \land x = xn), with #RELATION = n.
+   *
+   * @param state
+   *   current symbolic state
+   * @param rewriter
+   *   symbolic state rewriter
+   * @param domain
+   *   function's domain
+   * @param relation
+   *   function's relation
+   * @return
+   *   new symbolic state
+   */
   def constrainRelationArgs(
       state: SymbState,
       rewriter: SymbStateRewriter,
@@ -60,5 +78,42 @@ object FunOps {
       case _ =>
         state
     }
+  }
+
+  /**
+   * Returns the expression: checkedElem \in setCell \land checkedElem = setElem
+   *
+   * @param rewriter
+   *   symbolic state rewriter
+   * @param checkedElem
+   *   element to be checked
+   * @param setElem
+   *   element to be compared against
+   * @param setCell
+   *   set to be compared against
+   * @param lazyEq
+   *   flag for use of lazy equality
+   * @return
+   *   a conjunction as described above
+   */
+  def inAndEq(
+      rewriter: SymbStateRewriter,
+      checkedElem: ArenaCell,
+      setElem: ArenaCell,
+      setCell: ArenaCell,
+      lazyEq: Boolean): TlaEx = {
+
+    val conjunction = if (lazyEq) {
+      tla.and(
+          tla.apalacheSelectInSet(checkedElem.toNameEx, setCell.toNameEx),
+          rewriter.lazyEq.cachedEq(checkedElem, setElem),
+      )
+    } else {
+      tla.and(
+          tla.apalacheSelectInSet(checkedElem.toNameEx, setCell.toNameEx),
+          tla.eql(checkedElem.toNameEx, setElem.toNameEx),
+      )
+    }
+    simplifier.simplifyShallow(conjunction)
   }
 }

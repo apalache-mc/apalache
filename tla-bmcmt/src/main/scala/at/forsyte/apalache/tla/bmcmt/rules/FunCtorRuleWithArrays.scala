@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 
 /**
  * Encodes the construction of a function f = [x \in S |-> e]. We carry the domain set in a separate set cell. The
@@ -25,11 +25,11 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     // Rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
-    val domainCells = nextState.arena.getHas(domainCell)
+    val domElems = nextState.arena.getHas(domainCell)
 
     // We calculate and propagate the set of pairs <arg,res> for cex generation
     val pairEx = tla.tuple(tla.name(varName).typed(funT1.arg), mapEx).typed(TupT1(funT1.arg, funT1.res))
-    val (afterMapPairExState, relationCells) = mapCells(nextState, pairEx, varName, domainCells)
+    val (afterMapPairExState, relationCells) = mapCells(nextState, pairEx, varName, domElems)
     nextState = afterMapPairExState
 
     // A constant SMT array constrained to a default value is used to encode the function
@@ -42,25 +42,17 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     val relation = nextState.arena.topCell
     nextState = nextState.updateArena(_.appendHasNoSmt(relation, relationCells: _*))
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
-    // For the decoder to work, the pairs' arguments may need to be constrained
+    // For the decoder to work, the pairs' arguments may need to be equated to the domain elements
     nextState = constrainRelationArgs(nextState, rewriter, domainCell, relation)
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
       // Domain membership with lazy equality
-      val domElems = nextState.arena.getHas(domainCell)
       nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElems.map((_, domElem)))
-
-      def inAndEq(elem: ArenaCell) = {
-        // Use lazy equality
-        tla
-          .and(tla.apalacheSelectInSet(elem.toNameEx, domainCell.toNameEx).typed(BoolT1),
-              rewriter.lazyEq.safeEq(elem, domElem))
-          .typed(BoolT1)
-      }
 
       nextState = nextState.updateArena(_.appendCell(BoolT1))
       val inDomain = nextState.arena.topCell.toNameEx.typed(BoolT1)
-      val elemsInAndEq = nextState.arena.getHas(domainCell).map(inAndEq)
+      // inAndEq checks if domElem is in domainCell
+      val elemsInAndEq = domElems.map(inAndEq(rewriter, _, domElem, domainCell, lazyEq = true))
       rewriter.solverContext.assertGroundExpr(tla.eql(inDomain, tla.or(elemsInAndEq: _*).typed(BoolT1)).typed(BoolT1))
 
       val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
@@ -71,8 +63,8 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     }
 
     // Add SMT constraints
-    val rangeCells = relationCells.map(c => nextState.arena.getHas(c)(1))
-    for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
+    val rangeElems = relationCells.map(c => nextState.arena.getHas(c)(1))
+    for ((domElem, rangeElem) <- domElems.zip(rangeElems))
       addCellCons(domElem, rangeElem)
 
     nextState.setRex(funCell.toNameEx)

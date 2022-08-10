@@ -24,9 +24,9 @@ class SetInclusionRuleWithFunArrays(rewriter: SymbStateRewriter) extends Rewriti
       case OperEx(TlaSetOper.subseteq, left, right) =>
         // switch to cell theory
         val leftState = rewriter.rewriteUntilDone(state.setRex(left))
-        val leftCell = leftState.arena.findCellByNameEx(leftState.ex)
+        val leftCell = leftState.asCell
         val rightState = rewriter.rewriteUntilDone(leftState.setRex(right))
-        val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
+        val rightCell = rightState.asCell
         (leftCell.cellType, rightCell.cellType) match {
           case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
             rewriter.lazyEq.subsetEq(rightState, leftCell, rightCell)
@@ -40,7 +40,7 @@ class SetInclusionRuleWithFunArrays(rewriter: SymbStateRewriter) extends Rewriti
             }
 
           case _ =>
-            throw new RewriterException("Unexpected set types: %s and %s in %s"
+            throw new RewriterException("Not implemented (open an issue): %s and %s in %s"
                   .format(leftCell.cellType, rightCell.cellType, state.ex), state.ex)
         }
 
@@ -52,9 +52,10 @@ class SetInclusionRuleWithFunArrays(rewriter: SymbStateRewriter) extends Rewriti
   private def subsetInPowset(startState: SymbState, leftCell: ArenaCell, rightCell: ArenaCell): SymbState = {
     val powDom = startState.arena.getDom(rightCell)
     def eachElem(state: SymbState, elem: ArenaCell): SymbState = {
+      val stateEx = state.ex
       val newState = rewriter.lazyEq.subsetEq(state, elem, powDom)
       val outOrSubsetEq = tla.or(tla.not(tla.apalacheSelectInSet(elem.toNameEx, leftCell.toNameEx)), newState.ex)
-      newState.setRex(outOrSubsetEq)
+      newState.setRex(tla.and(stateEx, outOrSubsetEq))
     }
 
     startState.arena.getHas(leftCell).foldLeft(startState)(eachElem)

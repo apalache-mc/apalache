@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
@@ -317,13 +318,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // SE-SUBSETEQ3
       var newState = cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
       def exists(lelem: ArenaCell) = {
-        def inAndEq(relem: ArenaCell) = {
-          simplifier
-            .simplifyShallow(tla.and(tla.apalacheSelectInSet(relem.toNameEx, right.toNameEx), cachedEq(lelem, relem)))
-        }
 
+        // inAndEq checks if lelem is in right
+        val inAndEqList = rightElems.map(inAndEq(rewriter, _, lelem, right, lazyEq = true))
         // There are plenty of valid subformulas. Simplify!
-        simplifier.simplifyShallow(tla.or(rightElems.map(inAndEq): _*))
+        simplifier.simplifyShallow(tla.or(inAndEqList: _*))
       }
 
       def notInOrExists(lelem: ArenaCell) = {

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience._
@@ -180,12 +181,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       // cache equality constraints first
       val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
-      def inAndEq(elem: ArenaCell) = {
-        tla.and(tla.apalacheSelectInSet(elem.toNameEx, setCell.toNameEx),
-            rewriter.lazyEq.safeEq(elem, elemCell)) // use lazy equality
-      }
-
-      val elemsInAndEq = potentialElems.map(inAndEq)
+      // inAndEq checks if elemCell is in setCell
+      val elemsInAndEq = potentialElems.map(inAndEq(rewriter, _, elemCell, setCell, lazyEq = true))
       rewriter.solverContext.assertGroundExpr(tla.eql(pred, tla.or(elemsInAndEq: _*)))
       eqState.setRex(pred)
     }

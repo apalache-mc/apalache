@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.FunOps.constrainRelationArgs
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -827,7 +827,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert, noSmt = true)
         val pickedRelation = nextState.asCell
         nextState = nextState.updateArena(_.setCdm(funCell, pickedRelation))
-        // For the decoder to work, the relations' arguments may need to be constrained
+        // For the decoder to work, the relation's arguments may need to be equated to the domain elements
         nextState = constrainRelationArgs(nextState, rewriter, pickedDom, pickedRelation)
 
         // The function's relation is used by the decoder to produce counter-examples. The first elements of its tuples
@@ -935,7 +935,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT.arg, funT.res))))
     val relationCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, dom).setCdm(funCell, relationCell))
-    // For the decoder to work, the relations' arguments may need to be constrained
+    // For the decoder to work, the relation's arguments may need to be equated to the domain elements
     nextState = constrainRelationArgs(nextState, rewriter, dom, relationCell)
 
     // For every domain cell, pick a result from the co-domain.
@@ -987,13 +987,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
                 val cmdElems = nextState.arena.getHas(cdm)
                 nextState = rewriter.lazyEq.cacheEqConstraints(nextState, cmdElems.map((_, pickedResult)))
 
-                def inAndEq(elem: ArenaCell) = {
-                  tla.and(tla.apalacheSelectInSet(elem.toNameEx, cdm.toNameEx),
-                      rewriter.lazyEq.safeEq(elem, pickedResult)) // use lazy equality
-                }
-
-                // We ensure that the pickedResult is in cdm. Correctness of the domain is ensured by the for-loop.
-                val elemsInAndEq = nextState.arena.getHas(cdm).map(inAndEq)
+                // We ensure that the pickedResult is in cdm. Correctness of the domain is ensured by the for-loop
+                // inAndEq checks if pickedResult is in cdm
+                val elemsInAndEq = cmdElems.map(inAndEq(rewriter, _, pickedResult, cdm, lazyEq = true))
                 rewriter.solverContext.assertGroundExpr(tla.or(elemsInAndEq: _*))
               } else {
                 rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInSet(pickedResult.toNameEx, cdm.toNameEx))
