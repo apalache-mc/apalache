@@ -191,7 +191,7 @@ and whether the button has been pushed that requests the traffic light to switch
 <a href="TrafficLight.tla">TrafficLight.tla</a>.<br />
 But don't worry - we will dissect the spec in the following.</p>
 <p>In the TLA specification, we declare two variables:</p>
-<pre><code>VARIABLES 
+<pre><code class="language-tla">VARIABLES 
     \* If true, the traffic light is green. If false, it is red.
     \* @type: Bool;
     isGreen,
@@ -204,7 +204,7 @@ But don't worry - we will dissect the spec in the following.</p>
     requestedGreen
 </code></pre>
 <p>Initially, the light is red and green has not yet been requested:</p>
-<pre><code>\* The light is initially red, and the button was not pressed.
+<pre><code class="language-tla">\* The light is initially red, and the button was not pressed.
 Init ==
     /\ isGreen = FALSE
     /\ requestedGreen = FALSE
@@ -215,7 +215,7 @@ Init ==
 <li>The traffic light can switch from green to red, or</li>
 <li>The button can be pushed, thus requesting that the traffic light becomes green.</li>
 </ol>
-<pre><code>(* ---------------------- *)
+<pre><code class="language-tla">(* ---------------------- *)
 (* requesting green light *)
 \* The switch to green can only be requested when the light is not green, and
 \* the switch has not *already* been requested since the light last turned green.
@@ -269,7 +269,7 @@ already green.</p>
 <p>Now, we are ready to specify the properties that we are interested in.
 For example, when green is requested, at some point afterwards the light should actually turn green.
 We can write the property like this:</p>
-<pre><code>RequestWillBeFulfilled ==
+<pre><code class="language-tla">RequestWillBeFulfilled ==
     [](requestedGreen =&gt; &lt;&gt;isGreen)
 </code></pre>
 <p>Intuitively, the property says: 
@@ -277,7 +277,7 @@ We can write the property like this:</p>
 if right now, <code>RequestGreen</code> is true, 
 then at some future point in time, <code>IsGreen</code> is true.&quot;</p>
 <p>Let's run Apalache to check this property:</p>
-<pre><code>apalache-mc check --temporal=RequestWillBeFulfilled TrafficLight.tla
+<pre><code class="language-tla">apalache-mc check --temporal=RequestWillBeFulfilled TrafficLight.tla
 </code></pre>
 <pre><code>...
 The outcome is: NoError       
@@ -299,7 +299,7 @@ We will allow the model to stutter, that is,
 just let time pass and take no action.</p>
 <p>We can write a new next predicate that explicitly allows
 stuttering like this:</p>
-<pre><code>\* @type: &lt;&lt;Bool, Bool&gt;&gt;;
+<pre><code class="language-tla">\* @type: &lt;&lt;Bool, Bool&gt;&gt;;
 vars == &lt;&lt; isGreen, requestedGreen &gt;&gt;
 
 StutteringNext ==
@@ -326,7 +326,7 @@ Total time: 2.542 sec                                             I@18:04:16.354
 <p>This time, we get a counterexample.
 Let's take a look at <code>/home/user/apalache/docs/src/tutorials/_apalache-out/TrafficLight.tla/2022-05-30T18-04-13_3349613574715319837/counterexample1.tla</code>.</p>
 <p>Let's first focus on the initial state.</p>
-<pre><code>(* Initial state *)
+<pre><code class="language-tla">(* Initial state *)
 (* State0 ==
   RequestWillBeFulfilled_init = FALSE
     /\ __loop_InLoop = FALSE
@@ -399,7 +399,7 @@ Additionally, at the first state of the loop, i.e., when <code>__loop_InLoop</co
 we store the valuation of each variable in a shadow copy whose name is prefixed by <code>__loop_</code>.
 Before the first state of the loop, the <code>__loop_</code> carry arbitrary values.
 In our example, it looks like this:</p>
-<pre><code>(* State0 ==
+<pre><code class="language-tla">(* State0 ==
     ...
     /\ __loop_InLoop = FALSE
     ...
@@ -458,7 +458,7 @@ so in state 1 the property <code>requestedGreen =&gt; &lt;&gt;isGreen</code> is 
 <p>Next, let us discuss the other auxiliary variables that are introduced by Apalache to check the temporal property.
 These extra variables correspond to parts of the temporal property we want to check.
 These are the following variables with their valuations in the initial state:</p>
-<pre><code>(* State0 ==
+<pre><code class="language-tla">(* State0 ==
   RequestWillBeFulfilled_init = FALSE
     ...
     /\ ☐(requestedGreen ⇒ ♢isGreen) = FALSE
@@ -509,7 +509,7 @@ That's why there is an extra variable, which stores whether <code>isGreen</code>
 Similarly, the unroll-variable <code>♢isGreen_unroll</code> holds true
 if there is a state on the loop such that <code>isGreen</code> is true.</p>
 <p>Let us take a look at the valuations of <code>☐(requestedGreen ⇒ ♢isGreen)_unroll</code> along our counterexample to see this.</p>
-<pre><code>(* State0 ==
+<pre><code class="language-tla">(* State0 ==
     ...
     /\ __loop_InLoop = FALSE
     ...
@@ -548,7 +548,7 @@ does not hold in state 2, which is on the loop.</p>
 we also introduce copies for all (temporal) subformulas, e.g., <code>__loop_☐(requestedGreen ⇒ ♢isGreen)</code> for <code>☐(requestedGreen ⇒ ♢isGreen)</code>.
 These fulfill the same function as the <code>__loop_</code> copies for the
 original variables of the model, i.e., retaining the state of variables from the first state of the loop, e.g.,</p>
-<pre><code>(* State0 ==
+<pre><code class="language-tla">(* State0 ==
     ...
     /\ __loop_☐(requestedGreen ⇒ ♢isGreen) = FALSE
     /\ __loop_requestedGreen ⇒ ♢isGreen = TRUE
