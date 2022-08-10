@@ -3757,6 +3757,7 @@ It terminates successfully, if there are no invariant violations.</p>
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
     [--profiling=false] \
+    [--output-traces=false] \
     &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
@@ -3805,6 +3806,7 @@ will prevent Apalache from looking for any local <code>.apalache.cfg</code> file
 used in <a href="apalache/profiling.html">profiling</a>. The file is only created if <code>profiling</code>
 is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the
 <code>--smtprof</code> flag. The default is <code>False</code>.</li>
+<li><code>--output-traces</code>: save an example trace for each symbolic run, default: <code>false</code></li>
 </ul>
 </li>
 </ul>
@@ -3820,20 +3822,14 @@ the command line, the command line parameters take precedence over those in the 
 <h3><a class="header" href="#12-simulator-command-line-parameters" id="12-simulator-command-line-parameters">1.2. Simulator command-line parameters</a></h3>
 <p>The simulator can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc simulate
-    [all-checker-options] [--max-run=NUM] [--save-runs] &lt;myspec&gt;.tla
+    [all-checker-options] [--max-run=NUM] &lt;myspec&gt;.tla
 </code></pre>
 <p>The arguments are as follows:</p>
 <ul>
 <li>
 <p>Special parameters:</p>
 <ul>
-<li>
-<p><code>--max-run=NUM</code>: but produce up to <code>NUM</code> simulation runs (unless <code>--max-error</code> errors have been found), default: <code>100</code></p>
-</li>
-<li>
-<p><code>--save-runs</code>: save an example trace for each simulated run, default:
-<code>false</code></p>
-</li>
+<li><code>--max-run=NUM</code>: but produce up to <code>NUM</code> simulation runs (unless <code>--max-error</code> errors have been found), default: <code>100</code></li>
 </ul>
 </li>
 </ul>
