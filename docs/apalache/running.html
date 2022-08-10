@@ -239,8 +239,8 @@ It terminates successfully, if there are no invariant violations.</p>
 using the non-incremental
 (offline) SMT solver</li>
 <li><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
-<code>arrays</code> (experimental) uses arrays with extensionality. This parameter can also be set via the
-<code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</li>
+<code>arrays</code> (experimental) and <code>funArrays</code> (experimental) use SMT arrays with extensionality. This parameter can also
+be set via the <code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</li>
 <li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
 many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
 invariant. Default: true.</li>

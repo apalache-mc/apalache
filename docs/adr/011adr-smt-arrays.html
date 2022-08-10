@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Rodrigo Otoni</td><td align="right">1.6</td></tr>
+<tr><td>Rodrigo Otoni</td><td align="right">1.7</td></tr>
 </tbody></table>
 <p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
@@ -187,8 +187,10 @@ treatment of different TLA+ operators are described.</p>
 <p>The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the <code>check</code> command of the CLI. The default encoding will be
 the existing one. The option description is shown below. The envvar <code>SMT_ENCODING</code> can also be used to
-set the encoding, see the <a href="https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details.</p>
-<pre><code>--smt-encoding : the SMT encoding: oopsla19, arrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)
+set the encoding, see the <a href="https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details. In addition to the <code>arrays</code> encoding,
+which uses SMT arrays to encode TLA+ sets and functions, we also have the <code>funArrays</code> encoding, which
+restricts itself to encoding only TLA+ functions as SMT arrays.</p>
+<pre><code>--smt-encoding : the SMT encoding: oopsla19, arrays (experimental), funArrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)
 </code></pre>
 <h3><a class="header" href="#code-changes" id="code-changes">Code changes</a></h3>
 <p>The following changes will be made to implement the new CLI option:</p>
@@ -198,6 +200,8 @@ set the encoding, see the <a href="https://apalache.informal.systems/docs/apalac
 <li>Add new class <code>SymbStateRewriterImplWithArrays</code>, which extends class <code>SymbStateRewriterImpl</code>.</li>
 <li>Use the new option to set the <code>SolverConfig</code> encoding field and select between different <code>SymbStateRewriter</code>
 implementations in classes <code>BoundedCheckerPassImpl</code> and <code>SymbStateRewriterAuto</code>.</li>
+<li>The infrastructure changes made for the <code>funArrays</code> encoding mirror the ones made for the <code>arrays</code> one.
+See <a href="https://github.com/informalsystems/apalache/pull/2027">PR 2027</a> for details.</li>
 </ul>
 <h2><a class="header" href="#2-testing-the-new-encoding" id="2-testing-the-new-encoding">2. Testing the new encoding</a></h2>
 <p>The new encoding should provide the same results as the existing one, the available test suite
@@ -443,10 +447,9 @@ argument's default value is <code>true</code>, for the handling of sets.</li>
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#5-encoding-tuples-and-records" id="5-encoding-tuples-and-records">5. Encoding tuples and records</a></h2>
-<p>TODO</p>
-<h2><a class="header" href="#6-encoding-control-operators-and-tla-quantifiers" id="6-encoding-control-operators-and-tla-quantifiers">6. Encoding control operators and TLA+ quantifiers</a></h2>
-<p>TODO</p>
+<h2><a class="header" href="#5-encoding-the-remaining-tla-features" id="5-encoding-the-remaining-tla-features">5. Encoding the remaining TLA+ features</a></h2>
+<p>The use of SMT arrays will be restricted to TLA+ sets and functions for the moment. The encoding of
+additional features using SMT arrays, or potentially ADTs, will be left for the future.</p>
 
                     </main>
 
