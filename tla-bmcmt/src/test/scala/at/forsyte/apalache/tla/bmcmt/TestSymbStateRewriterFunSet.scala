@@ -108,7 +108,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   }
 
   // the existential over a function set should work correctly in presence of duplicates
-  test("""Skolem(\E f \in [{1, 2 - 1, 2} -> {FALSE, TRUE}]: g' <- f)""") { rewriterType: SMTEncoding =>
+  test("""Skolem(\E f \in [{1, 2 - 1, 2} -> SUBSET {FALSE, TRUE}]: g' <- f)""") { rewriterType: SMTEncoding =>
     val iToB = FunT1(IntT1, SetT1(BoolT1))
     val intSetT = SetT1(IntT1)
     val domain = enumSet(int(1), minus(int(2), int(1)).as(IntT1), int(2)).as(intSetT)

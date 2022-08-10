@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -204,7 +205,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val funCell = nextState.arena.topCell
 
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays =>
+      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
         // create a relation cell
         nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funType.arg, funType.res)))))
         val relationCell = nextState.arena.topCell
@@ -224,6 +225,8 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
         nextState = nextState.updateArena(_.setDom(funCell, domainCell))
+        // For the decoder to work, the relation's arguments may need to be equated to the domain elements
+        nextState = constrainRelationArgs(nextState, rewriter, domainCell, relationCell)
 
         def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
           // TODO: when #1916 is closed, remove tlaLegacy and use tla directly

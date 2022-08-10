@@ -2547,6 +2547,46 @@ $ apalache-mc check --inv=Inv InfDomFun.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (12)
 ```
 
+### check Consensus_epr
+
+A regression test for function operations.
+
+```sh
+$ apalache-mc check --inv=Safety Consensus_epr.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check FunExcept1 (array-encoding)
+
+A regression test for EXCEPT.
+
+```sh
+$ apalache-mc check --inv=Sanity FunExcept1.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check FunExcept2 (array-encoding)
+
+A regression test for EXCEPT.
+
+```sh
+$ apalache-mc check --inv=Sanity FunExcept2.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check FunExcept3 (array-encoding)
+
+A regression test for EXCEPT.
+
+```sh
+$ apalache-mc check --inv=Sanity FunExcept3.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error

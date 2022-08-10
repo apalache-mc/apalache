@@ -104,7 +104,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     )
   }
 
-  test("selectInSet(Set)/storeInSet2/storeNotInSet") {
+  test("selectInSet/storeInSet2/storeNotInSet") {
     type T = (TBuilderInstruction, TBuilderInstruction)
 
     def mkWellTyped(tt: TlaType1): T =
@@ -149,7 +149,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     checkRun(Generators.singleTypeGen)(run(ApalacheInternalOper.storeNotInSet, builder.storeNotInSet))
   }
 
-  test("selectInSet(Fun)") {
+  test("selectInFun") {
     type T = (TBuilderInstruction, TBuilderInstruction)
     type TParam = (TlaType1, TlaType1)
 
@@ -177,7 +177,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
 
     def resultIsExpected = {
       expectEqTyped[TParam, T](
-          ApalacheInternalOper.selectInSet,
+          ApalacheInternalOper.selectInFun,
           mkWellTyped,
           ToSeq.binary,
           { case (_, t) => t },
@@ -186,7 +186,52 @@ class TestApalacheInternalBuilder extends BuilderTest {
 
     checkRun(Generators.doubleTypeGen)(
         runBinary(
-            builder.selectInSet,
+            builder.selectInFun,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+  }
+
+  test("storeNotInFun") {
+    type T = (TBuilderInstruction, TBuilderInstruction)
+    type TParam = (TlaType1, TlaType1)
+
+    def mkWellTyped(tparam: TParam): T = {
+      val (a, b) = tparam
+      (
+          builder.name("x", a),
+          builder.name("f", FunT1(a, b)),
+      )
+    }
+
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (a, b) = tparam
+      Seq(
+          (
+              builder.name("x", InvalidTypeMethods.differentFrom(a)),
+              builder.name("f", FunT1(a, b)),
+          ),
+          (
+              builder.name("x", a),
+              builder.name("f", FunT1(InvalidTypeMethods.differentFrom(a), b)),
+          ),
+      )
+    }
+
+    def resultIsExpected = {
+      expectEqTyped[TParam, T](
+          ApalacheInternalOper.storeNotInFun,
+          mkWellTyped,
+          ToSeq.binary,
+          _ => BoolT1,
+      )
+    }
+
+    checkRun(Generators.doubleTypeGen)(
+        runBinary(
+            builder.storeNotInFun,
             mkWellTyped,
             mkIllTyped,
             resultIsExpected,

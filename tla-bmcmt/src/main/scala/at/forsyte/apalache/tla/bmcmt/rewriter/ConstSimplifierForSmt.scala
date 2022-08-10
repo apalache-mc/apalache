@@ -51,8 +51,9 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
 
     // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
     case ex @ OperEx(op, _*)
-        if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet ||
-          op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+        if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+          op == ApalacheInternalOper.storeInSet || op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet ||
+          op == ApalacheInternalOper.storeNotInFun =>
       ex
 
     // using isTrueConst and isFalseConst that are more precise than those of ConstSimplifierBase

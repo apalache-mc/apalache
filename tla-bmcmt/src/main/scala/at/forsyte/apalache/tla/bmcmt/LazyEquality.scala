@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
@@ -243,11 +244,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
         // In the arrays encoding we only cache the equalities between the sets' elements
         val leftElems = state.arena.getHas(left)
         val rightElems = state.arena.getHas(right)
-        cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
+        val nextState = cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
         eqCache.put(left, right, EqCache.EqEntry())
-        state
+        nextState.setRex(state.ex)
 
-      case SMTEncoding.OOPSLA19 =>
+      case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
         // in general, we need 2 * |X| * |Y| comparisons
         val leftToRight: SymbState = subsetEq(state, left, right)
         val rightToLeft: SymbState = subsetEq(leftToRight, right, left)
@@ -317,13 +318,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
       // SE-SUBSETEQ3
       var newState = cacheEqConstraints(state, leftElems.cross(rightElems)) // cache all the equalities
       def exists(lelem: ArenaCell) = {
-        def inAndEq(relem: ArenaCell) = {
-          simplifier
-            .simplifyShallow(tla.and(tla.apalacheSelectInSet(relem.toNameEx, right.toNameEx), cachedEq(lelem, relem)))
-        }
 
+        // inAndEq checks if lelem is in right
+        val inAndEqList = rightElems.map(inAndEq(rewriter, _, lelem, right, lazyEq = true))
         // There are plenty of valid subformulas. Simplify!
-        simplifier.simplifyShallow(tla.or(rightElems.map(inAndEq): _*))
+        simplifier.simplifyShallow(tla.or(inAndEqList: _*))
       }
 
       def notInOrExists(lelem: ArenaCell) = {
@@ -426,21 +425,22 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val rightRel = state.arena.getCdm(rightFun)
 
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays =>
-        // In the arrays encoding we only cache the equalities between the elements of the functions' ranges
-        // This is because the ranges consist of pairs of form <arg,res>, thus the domains are also handled
+      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+        // We cache the equalities between the elements of the functions' ranges, which are pairs of form <arg,res>
         val leftElems = state.arena.getHas(leftRel)
         val rightElems = state.arena.getHas(rightRel)
-        cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
+        var nextState = cacheEqConstraints(state, leftElems.cross(rightElems)) // Cache all the equalities
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
+
         // For the rare case in which one function has an empty domain, we need to be extra careful
         // See https://github.com/informalsystems/apalache/issues/1811
-        val leftDom = state.arena.getDom(leftFun)
-        val rightDom = state.arena.getDom(rightFun)
+        val leftDom = nextState.arena.getDom(leftFun)
+        val rightDom = nextState.arena.getDom(rightFun)
+        nextState = cacheOneEqConstraint(nextState, leftDom, rightDom)
         val funEq = cachedEq(leftFun, rightFun)
         rewriter.solverContext.assertGroundExpr(tla.impl(funEq, tla.eql(leftDom.toNameEx, rightDom.toNameEx)))
         // That's it!
-        state
+        nextState.setRex(state.ex)
 
       case SMTEncoding.OOPSLA19 =>
         val relEq = mkSetEq(state, leftRel, rightRel)

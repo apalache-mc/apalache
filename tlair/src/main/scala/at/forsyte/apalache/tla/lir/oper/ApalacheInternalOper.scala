@@ -60,6 +60,17 @@ object ApalacheInternalOper {
   }
 
   /**
+   * The selectInFun operator returns the result of applying a function to a given element.
+   */
+  object selectInFun extends ApalacheInternalOper {
+    override def name: String = "Apalache!SelectInFun"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
    * The storeInSet operator is a variant of TlaSetOper.in when handling sets. It signals set membership. It is also
    * used to update functions, in which case the updated value is provided as an additional argument.
    */
@@ -76,7 +87,19 @@ object ApalacheInternalOper {
    * enforced.
    */
   object storeNotInSet extends ApalacheInternalOper {
-    override def name: String = "Apalache!UnchangedSet"
+    override def name: String = "Apalache!storeNotInSet"
+
+    override def arity: OperArity = FixedArity(2)
+
+    override def precedence: (Int, Int) = (5, 5)
+  }
+
+  /**
+   * The storeNotInFun operator is a variant of storeNotInSet. It signals that a function is undefined for a given
+   * argument.
+   */
+  object storeNotInFun extends ApalacheInternalOper {
+    override def name: String = "Apalache!storeNotInFun"
 
     override def arity: OperArity = FixedArity(2)
 

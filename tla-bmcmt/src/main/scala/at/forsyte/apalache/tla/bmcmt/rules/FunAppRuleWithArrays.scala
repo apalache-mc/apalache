@@ -1,10 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{FunT1, RecT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, SetT1, TlaEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.
@@ -70,7 +72,17 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         for ((elem, no) <- relationElems.zipWithIndex) {
           val elemArg = nextState.arena.getHas(elem).head
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((elemArg, argCell)))
-          val inDom = tla.apalacheSelectInSet(elemArg.toNameEx, domainCell.toNameEx)
+
+          // Domain memberhsip with lazy equality
+          val domElems = nextState.arena.getHas(domainCell)
+          nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElems.map((_, elemArg)))
+
+          nextState = nextState.updateArena(_.appendCell(BoolT1))
+          val inDom = nextState.arena.topCell.toNameEx
+          // inAndEq checks if elemArg is in domainCell
+          val elemsInAndEq = domElems.map(inAndEq(rewriter, _, elemArg, domainCell, lazyEq = true))
+          rewriter.solverContext.assertGroundExpr(tla.eql(inDom, tla.or(elemsInAndEq: _*)))
+
           val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
           val found = tla.not(oracle.whenEqualTo(nextState, nElems))
           // ~inDom \/ neqArg \/ found, or equivalently, (inDom /\ elemArg = argCell) => found
@@ -85,15 +97,35 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         rewriter.solverContext.assertGroundExpr(eql)
 
         // The edges, dom, and cdm are forwarded below
-        nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
+        if (
+            rewriter.solverContext.config.smtEncoding == SMTEncoding.FunArrays &&
+            pickedRes.cellType.toTlaType1.isInstanceOf[SetT1]
+        ) {
+          // If sets are not SMT arrays, their inPreds need to be declared
+          nextState = nextState.updateArena(_.appendHas(res, nextState.arena.getHas(pickedRes): _*))
+        } else {
+          nextState = nextState.updateArena(_.appendHasNoSmt(res, nextState.arena.getHas(pickedRes): _*))
+        }
         pickedRes.cellType match {
           case CellTFrom(FunT1(_, _)) | FinFunSetT(_, _) =>
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
             nextState = nextState.updateArena(_.setCdm(res, nextState.arena.getCdm(pickedRes)))
+            // For the decoder to work, the relation's arguments may need to be equated to the domain elements
+            val resDomain = nextState.arena.getDom(res)
+            val resRelation = nextState.arena.getCdm(res)
+            nextState = constrainRelationArgs(nextState, rewriter, resDomain, resRelation)
 
           case CellTFrom(RecT1(_)) =>
             // Records do not contain cdm metadata
             nextState = nextState.updateArena(_.setDom(res, nextState.arena.getDom(pickedRes)))
+
+          case CellTFrom(SetT1(_)) =>
+            if (rewriter.solverContext.config.smtEncoding == SMTEncoding.FunArrays) {
+              // If funApp results in a QF_UF set, we need establish the equality between res and pickedRes, as this is
+              // not inherit to the encoding with QF_UF
+              nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, res, pickedRes)
+              rewriter.solverContext.assertGroundExpr(tla.eql(res.toNameEx, pickedRes.toNameEx))
+            }
 
           case _ =>
             // do nothing
