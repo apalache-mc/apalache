@@ -76,9 +76,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // since newSetCell is assumed to be unconstrained we simple use SMT select here
           val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
           val notInNewSet = tla.not(tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx))
-          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-          val inOldSetAndPred = tla.and(pred, inOldSet)
-          val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
+          val ite = tla.ite(pred, inNewSet, notInNewSet)
           rewriter.solverContext.assertGroundExpr(ite)
         }
 
@@ -89,6 +87,8 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
             rewriter.solverContext.assertGroundExpr(tla.apalacheUnconstrainArray(newSetCell.toNameEx))
             for ((cell, pred) <- filteredCellsAndPreds)
               addCellConsForUnconstrainedNewSetCell(cell, pred)
+            // using SMT map with conjunction ensures that elements of newSetCell are added only if they are present in
+            // setCell, so we don't need membership constraints in addCellConsForUnconstrainedNewSetCell
             val smtMap = tla.apalacheSmtMap(TlaBoolOper.and, setCell.toNameEx, newSetCell.toNameEx)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
