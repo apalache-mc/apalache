@@ -1628,14 +1628,46 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
-### simulate y2k with --save-runs succeeds
+### simulate y2k with --output-traces succeeds
 
 ```sh
-$ apalache-mc simulate --length=10 --max-run=5 --save-runs --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc simulate --out-dir=./test-out-dir --length=10 --max-run=5 --output-traces --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
 EXITCODE: OK
+```
+
+```sh
+$ find ./test-out-dir/y2k_instance.tla/* -type f -exec basename {} \; | ./sort.sh
+detailed.log
+example1.itf.json
+example1.json
+example1.tla
+example2.itf.json
+example2.json
+example2.tla
+example3.itf.json
+example3.json
+example3.tla
+example4.itf.json
+example4.json
+example4.tla
+example5.itf.json
+example5.json
+example5.tla
+example.itf.json
+example.json
+example.tla
+log0.smt
+MCexample1.out
+MCexample2.out
+MCexample3.out
+MCexample4.out
+MCexample5.out
+MCexample.out
+run.txt
+$ rm -rf ./test-out-dir
 ```
 
 ## configure the check command
@@ -2131,6 +2163,32 @@ EXITCODE: OK
 $ head -n 1 ./profile-run-dir/profile.csv
 # weight,nCells,nConsts,nSmtExprs,location
 $ rm -rf ./profile-run-dir
+```
+
+### check y2k with --output-traces succeeds
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=10 --output-traces --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+```sh
+$ find ./test-out-dir/y2k_instance.tla/* -type f -exec basename {} \; | ./sort.sh
+detailed.log
+example0.itf.json
+example0.json
+example0.tla
+example.itf.json
+example.json
+example.tla
+log0.smt
+MCexample0.out
+MCexample.out
+run.txt
+$ rm -rf ./test-out-dir
 ```
 
 ### check ModelVal.tla succeeds
@@ -3152,15 +3210,7 @@ EXITCODE: OK
 ```sh
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 detailed.log
-example0.itf.json
-example0.json
-example0.tla
-example.itf.json
-example.json
-example.tla
 log0.smt
-MCexample0.out
-MCexample.out
 run.txt
 ```
 
@@ -3225,15 +3275,7 @@ $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
 12_OutAnalysisPass.json
 12_OutAnalysisPass.tla
 detailed.log
-example0.itf.json
-example0.json
-example0.tla
-example.itf.json
-example.json
-example.tla
 log0.smt
-MCexample0.out
-MCexample.out
 run.txt
 $ rm -rf ./test-out-dir
 ```
@@ -3303,14 +3345,6 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 12_OutAnalysisPass.json
 12_OutAnalysisPass.tla
 detailed.log
-example0.itf.json
-example0.json
-example0.tla
-example.itf.json
-example.json
-example.tla
-MCexample0.out
-MCexample.out
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
@@ -3346,14 +3380,6 @@ $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 $ ls ./configured-run-dir | ./sort.sh
 detailed.log
-example0.itf.json
-example0.json
-example0.tla
-example.itf.json
-example.json
-example.tla
-MCexample0.out
-MCexample.out
 run.txt
 $ rm -rf ./configured-run-dir ./.apalache.cfg
 ```

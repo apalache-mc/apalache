@@ -50,6 +50,6 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
     // for automation scripts, produce ${prefix}${index}.{tla,json,...}
     val filenames = dump(index.toString)
 
-    logger.error(s"Check the trace in: ${filenames.mkString(", ")}")
+    logger.info(s"Check the trace in: ${filenames.mkString(", ")}")
   }
 }
