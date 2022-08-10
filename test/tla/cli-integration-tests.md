@@ -1628,10 +1628,10 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
-### simulate y2k with --save-runs succeeds
+### simulate y2k with --output-traces succeeds
 
 ```sh
-$ apalache-mc simulate --out-dir=./test-out-dir --length=10 --max-run=5 --save-runs --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc simulate --out-dir=./test-out-dir --length=10 --max-run=5 --output-traces --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -2165,10 +2165,10 @@ $ head -n 1 ./profile-run-dir/profile.csv
 $ rm -rf ./profile-run-dir
 ```
 
-### check y2k with --save-runs succeeds
+### check y2k with --output-traces succeeds
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=10 --save-runs --inv=Safety y2k_instance.tla | sed 's/I@.*//'
+$ apalache-mc check --out-dir=./test-out-dir --length=10 --output-traces --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

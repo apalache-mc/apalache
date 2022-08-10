@@ -120,6 +120,6 @@ class ModelCheckerParams(
    * Whether to save an example trace for each symbolic run.
    */
   val saveRuns: Boolean =
-    tuningOptions.getOrElse("search.saveRuns", "false").toBoolean
+    tuningOptions.getOrElse("search.outputTraces", "false").toBoolean
 
 }

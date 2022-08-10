@@ -57,13 +57,13 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
         default = "")
 
   var saveRuns: Boolean =
-    opt[Boolean](name = "save-runs", description = "save an example trace for each symbolic run, default: false",
+    opt[Boolean](name = "output-traces", description = "save an example trace for each symbolic run, default: false",
         default = false)
 
   def collectTuningOptions(): Map[String, String] = {
     val tuning =
       if (tuningOptionsFile != "") loadProperties(tuningOptionsFile) else Map[String, String]()
-    overrideProperties(tuning, tuningOptions) ++ Map("search.saveRuns" -> saveRuns.toString)
+    overrideProperties(tuning, tuningOptions) ++ Map("search.outputTraces" -> saveRuns.toString)
   }
 
   def run() = {

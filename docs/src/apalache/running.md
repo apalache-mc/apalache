@@ -46,6 +46,7 @@ $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
     [--profiling=false] \
+    [--output-traces=false] \
     <myspec>.tla
 ```
 
@@ -90,6 +91,7 @@ The arguments are as follows:
       used in [profiling](profiling.md). The file is only created if `profiling`
       is set to `True`.  Setting `profiling` to `False` is incompatible with the
       `--smtprof` flag. The default is `False`.
+    - `--output-traces`: save an example trace for each symbolic run, default: `false`
 
 Options passed with `--tuning-options` have priority over options passed with `--tuning-options-file`.
 
@@ -108,7 +110,7 @@ The simulator can be run as follows:
 
 ```bash
 $ apalache-mc simulate
-    [all-checker-options] [--max-run=NUM] [--save-runs] <myspec>.tla
+    [all-checker-options] [--max-run=NUM] <myspec>.tla
 ```
 
 The arguments are as follows:
@@ -116,9 +118,6 @@ The arguments are as follows:
 * Special parameters:
 
   - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
-
-  - `--save-runs`: save an example trace for each simulated run, default:
-    `false`
 
 ### 1.3. Supplying JVM arguments
 
