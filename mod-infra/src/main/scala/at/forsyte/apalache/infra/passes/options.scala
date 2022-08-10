@@ -2,7 +2,6 @@ package at.forsyte.apalache.infra.passes.options
 
 // TODO: Use either File or Path consistently (preference for File)
 import java.io.File
-import java.nio.file.Path
 import at.forsyte.apalache.tla.lir.Feature
 
 /**
@@ -17,6 +16,7 @@ case class ApalacheConfig(
     file: Option[File] = None,
     outDir: File = new File(System.getProperty("user.dir"), "_apalache-out"),
     runDir: Option[File] = None,
+    debug: Boolean = false,
     configFile: Option[File] = None,
     writeIntermediate: Boolean = false,
     profiling: Boolean = false,
@@ -78,16 +78,16 @@ trait Smt {
   val prof: Boolean
 }
 
-// TODO: Move into "IO"
-trait Parser {
+trait Input {
   val source: SourceOption
 }
 
 /** Options used to configure program input and output */
-trait IO {
+trait Output {
   val output: Option[String] = None
-  val outdir: Path
 }
+
+trait IO extends Input with Output
 
 trait Checker {
   val algo: String = "incremental" // TODO: convert to case class

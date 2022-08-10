@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.infra.Executor
 
 /**
@@ -41,11 +40,11 @@ abstract class PassExecutorCmd(name: String, description: String)
    * NOTE: It is not invoked automatically, and you should invoke it explicitly in your `Cmd` class' [[run]] method.
    */
   def setCommonOptions(): Unit = {
-    executor.passOptions.set("general.debug", debug)
+    executor.passOptions
+      .set("general.debug",
+          // The exception here should be impossible under all intended use of this class
+          configuration.getOrElse(throw new Exception("illegal access to options before configuration")).debug)
     executor.passOptions.set("smt.prof", smtprof)
     executor.passOptions.set("general.features", features)
-
-    // TODO: Remove pass option, and just rely on OutputManager config
-    executor.passOptions.set("io.outdir", OutputManager.outDir)
   }
 }
