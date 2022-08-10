@@ -67,7 +67,7 @@ class SeqModelChecker[ExecutorContextT](
         makeStep(isNext = true, checkerInput.nextTransitions)
       }
 
-      if (params.saveRuns) {
+      if (params.isRandomSimulation && params.saveRuns) {
         outputExampleRun()
       }
 
@@ -82,7 +82,7 @@ class SeqModelChecker[ExecutorContextT](
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
-    } else {
+    } else if (!params.isRandomSimulation && params.saveRuns) {
       // Output an example in the end of the search.
       outputExampleRun()
     }
@@ -90,12 +90,18 @@ class SeqModelChecker[ExecutorContextT](
     searchState.finalResult
   }
 
-  // output an example of a run, if the context is satisfiable
-  def outputExampleRun(): Unit = {
+  /**
+   * Output an example of the current symbolic run, if the context is satisfiable.
+   */
+  private def outputExampleRun(): Unit = {
+    logger.info("Constructing an example run")
     trex.sat(params.smtTimeoutSec) match {
       case Some(true) =>
         listeners.foreach(_.onExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft))
-      case _ => ()
+      case Some(false) =>
+        logger.warn("All executions are shorter than the provided bound")
+      case None =>
+        logger.error("SMT timeout while constructing an example run")
     }
   }
 

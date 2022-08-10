@@ -9,15 +9,10 @@ class SimulateCmd extends CheckCmd(name = "simulate", "Symbolically simulate a T
           "do not stop after a first simulation run, but produce up to a given number of runs (unless reached --max-error), default: 100",
         default = 100)
 
-  var saveRuns: Boolean =
-    opt[Boolean](name = "save-runs", description = "save an example trace for each simulated run, default: false",
-        default = false)
-
   override def collectTuningOptions(): Map[String, String] = {
     super.collectTuningOptions() ++ Map(
         "search.simulation" -> "true",
         "search.simulation.maxRun" -> maxRun.toString,
-        "search.simulation.saveRuns" -> saveRuns.toString,
     )
   }
 
