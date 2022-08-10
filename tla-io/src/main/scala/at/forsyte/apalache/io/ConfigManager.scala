@@ -50,7 +50,7 @@ trait CliConfig {
  * @param cmd
  *   The configurations supplied via CLI
  */
-case class ConfigManager(cmd: CliConfig) {
+class ConfigManager() {
   private val TLA_PLUS_DIR = ".tlaplus"
   private val APALACHE_CFG = "apalache.cfg"
   private val DOT_APALACHE_CFG = "." + APALACHE_CFG
@@ -67,10 +67,6 @@ case class ConfigManager(cmd: CliConfig) {
     }
   }
 
-  private def localConfig(): Option[ConfigObjectSource] = {
-    cmd.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
-  }
-
   /**
    * Load the application configuration from all sources supported by apalache
    *
@@ -83,12 +79,15 @@ case class ConfigManager(cmd: CliConfig) {
    *   1. Global config file
    *   1. `ApalacheConfig` defaults (as specified in the case class definition)
    */
-  def load(): ConfigReader.Result[ApalacheConfig] = {
+  def load(cmd: CliConfig): ConfigReader.Result[ApalacheConfig] = {
 
     val home = System.getProperty("user.home")
     val globalConfig = ConfigSource.file(Paths.get(home, TLA_PLUS_DIR, APALACHE_CFG))
 
-    localConfig()
+    val localConfig: Option[ConfigObjectSource] =
+      cmd.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
+
+    localConfig
       .getOrElse(ConfigSource.empty)
       // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
       .withFallback(globalConfig.optional)
@@ -112,5 +111,5 @@ object ConfigManager {
 
   /** Load the application configuration, converting any configuration error into a pretty printed message */
   def apply(cmd: CliConfig): Either[String, ApalacheConfig] =
-    new ConfigManager(cmd).load().left.map(_.prettyPrint())
+    new ConfigManager().load(cmd).left.map(_.prettyPrint())
 }
