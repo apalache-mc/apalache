@@ -17,6 +17,10 @@ specification, check the comments in the original [PlusCal specification][].
 We assume that you have Apalache installed. If not, check the manual page on
 [Apalache installation][]. The minimal required version is 0.22.0.
 
+We provide all source files referenced in this tutorial as a [ZIP archive][]
+download. We still recommend that you follow along typing the TLA+ examples
+yourself.
+
 ## Running example: Bakery
 
 We start with the [PlusCal specification][] of the [Bakery algorithm][]. This
@@ -282,4 +286,4 @@ or drop us a message on [Zulip chat].
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
 [Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
 [Bakery algorithm]: https://en.wikipedia.org/wiki/Lamport%27s_bakery_algorithm
-
+[ZIP archive]: https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bakery-pluscal

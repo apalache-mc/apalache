@@ -39,6 +39,10 @@ of Apalache.
 We assume that you have Apalache installed. If not, check the manual page on
 [Apalache installation][]. The minimal required version is 0.22.0.
 
+We provide all source files referenced in this tutorial as a [ZIP archive][]
+download. We still recommend that you follow along typing the TLA+ examples
+yourself.
+
 ## Running example: Binary search
 
 We are not going to explain the idea of binary search in this tutorial. If you
@@ -1199,5 +1203,4 @@ or drop us a message on [Zulip chat].
 [Test-driven development]: https://en.wikipedia.org/wiki/Test-driven_development
 [TLC]: https://github.com/tlaplus/tlaplus/
 [Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
-
-
+[ZIP archive]: https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bin-search
