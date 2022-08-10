@@ -102,7 +102,7 @@ sealed trait OptionGroup
 object OptionGroup {
 
   /**
-   * Interface for classes that can be produced from an [[ApalacheConfig]]
+   * Interface for classes that can be produced from a [[Config.ApalacheConfig]]
    *
    * The intended use of this class is to identify configurable options, which is to say case class representing program
    * configuration that can be derived from configuration input.
