@@ -42,9 +42,17 @@ class UnsafeApalacheInternalBuilder extends ProtoBuilder {
   def selectInSet(elem: TlaEx, set: TlaEx): TlaEx =
     buildBySignatureLookup(ApalacheInternalOper.selectInSet, elem, set)
 
+  /** selectInFun */
+  def selectInFun(elem: TlaEx, fun: TlaEx): TlaEx =
+    buildBySignatureLookup(ApalacheInternalOper.selectInFun, elem, fun)
+
   /** storeNotInSet */
   def storeNotInSet(elem: TlaEx, set: TlaEx): TlaEx =
     buildBySignatureLookup(ApalacheInternalOper.storeNotInSet, elem, set)
+
+  /** storeNotInFun */
+  def storeNotInFun(elem: TlaEx, fun: TlaEx): TlaEx =
+    buildBySignatureLookup(ApalacheInternalOper.storeNotInFun, elem, fun)
 
   /** storeInSet */
   def storeInSet(elem: TlaEx, set: TlaEx): TlaEx =

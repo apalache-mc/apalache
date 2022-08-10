@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -485,7 +486,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
               case SMTEncoding.Arrays =>
                 // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
                 tla.apalacheStoreNotInSet(keyCell.toNameEx, newDom.toNameEx)
-              case SMTEncoding.OOPSLA19 =>
+              case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
                 tla.bool(true)
               case oddEncodingType =>
                 throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -639,7 +640,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             case SMTEncoding.Arrays =>
               // In the arrays encoding we need to propagate the SSA representation of the array if nothing changes
               tla.apalacheStoreNotInSet(picked.toNameEx, resultCell.toNameEx)
-            case SMTEncoding.OOPSLA19 =>
+            case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
               tla.bool(true)
             case oddEncodingType =>
               throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
@@ -806,7 +807,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays =>
+      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
         // We create an unconstrained SMT array that can be equated to the cells of funs for the oracle assertions
         nextState = nextState.updateArena(_.appendCell(funType, isUnconstrained = true))
         val funCell = nextState.arena.topCell
@@ -826,6 +827,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
         nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert, noSmt = true)
         val pickedRelation = nextState.asCell
         nextState = nextState.updateArena(_.setCdm(funCell, pickedRelation))
+        // For the decoder to work, the relation's arguments may need to be equated to the domain elements
+        nextState = constrainRelationArgs(nextState, rewriter, pickedDom, pickedRelation)
 
         // The function's relation is used by the decoder to produce counter-examples. The first elements of its tuples
         // have to be equated to the function's domain, otherwise some tuples might be erroneously filtered out by the
@@ -925,13 +928,15 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val (newState, nonDups) = new SetOps(rewriter).dedup(state, dom)
     var nextState = newState
     val cdm = state.arena.getCdm(funSet) // this is a set of potential results, may be expanded, may be not.
-    // create the unconstrained function cell
-    nextState = nextState.updateArena(_.appendCell(funT, isUnconstrained = true))
+    // create the function cell
+    nextState = nextState.updateArena(_.appendCell(funT))
     val funCell = nextState.arena.topCell
     // create the relation cell
     nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funT.arg, funT.res))))
     val relationCell = nextState.arena.topCell
     nextState = nextState.updateArena(_.setDom(funCell, dom).setCdm(funCell, relationCell))
+    // For the decoder to work, the relation's arguments may need to be equated to the domain elements
+    nextState = constrainRelationArgs(nextState, rewriter, dom, relationCell)
 
     // For every domain cell, pick a result from the co-domain.
     // The beauty of CherryPick: when the co-domain is not expanded, CherryPick will pick one value out of the co-domain,
@@ -942,15 +947,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
       nextState = nextState.updateArena(_.appendCell(TupT1(funT.arg, funT.res)))
       val pair = nextState.arena.topCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
 
       rewriter.solverContext.config.smtEncoding match {
-        case SMTEncoding.Arrays =>
-          nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair)) // We only carry the metadata here
-          // We need the SMT eql because funCell might be unconstrained, if it originates from a function set
-          val select = tla.apalacheSelectInFun(arg.toNameEx, funCell.toNameEx)
-          val eql = tla.eql(pickedResult.toNameEx, select)
-          rewriter.solverContext.assertGroundExpr(eql)
+        case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+          // We carry the metadata here
+          nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, pickedResult))
+          nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair))
+          // We update the SMT array here
+          // We don't use isNonDup because writing on an array entry twice has no adverse effect, if pickedResult is valid
+          val store = tla.apalacheStoreInFun(pickedResult.toNameEx, funCell.toNameEx, arg.toNameEx)
+          rewriter.solverContext.assertGroundExpr(store)
 
           cdm.cellType match {
             case _: PowSetT =>
@@ -976,10 +982,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
               if (cdm == state.arena.cellNatSet()) rewriter.solverContext.assertGroundExpr(ge) // Add Nat constraint
 
             case _ =>
-              rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInFun(pickedResult.toNameEx, cdm.toNameEx))
+              if (rewriter.solverContext.config.smtEncoding == SMTEncoding.FunArrays) {
+                // Since the cmd set is not an SMT array, we have to use lazy equality
+                val cmdElems = nextState.arena.getHas(cdm)
+                nextState = rewriter.lazyEq.cacheEqConstraints(nextState, cmdElems.map((_, pickedResult)))
+
+                // We ensure that the pickedResult is in cdm. Correctness of the domain is ensured by the for-loop
+                // inAndEq checks if pickedResult is in cdm
+                val elemsInAndEq = cmdElems.map(inAndEq(rewriter, _, pickedResult, cdm, lazyEq = true))
+                rewriter.solverContext.assertGroundExpr(tla.or(elemsInAndEq: _*))
+              } else {
+                rewriter.solverContext.assertGroundExpr(tla.apalacheSelectInSet(pickedResult.toNameEx, cdm.toNameEx))
+              }
           }
 
         case SMTEncoding.OOPSLA19 =>
+          nextState = nextState.updateArena(_.appendHas(pair, arg, pickedResult))
           nextState = nextState.updateArena(_.appendHas(relationCell, pair))
           val ite = tla.ite(isNonDup.toNameEx, tla.apalacheStoreInSet(pair.toNameEx, relationCell.toNameEx),
               tla.apalacheStoreNotInSet(pair.toNameEx, relationCell.toNameEx))

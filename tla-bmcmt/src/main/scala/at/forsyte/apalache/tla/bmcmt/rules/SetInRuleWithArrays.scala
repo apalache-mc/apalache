@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -83,6 +84,8 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     nextState = nextState.updateArena(_.appendCell(BoolT1))
     val pred = nextState.arena.topCell
 
+    // This method checks if f(x) \in T, for a given x
+    // The goal is to ensure that \forall x \in DOMAIN f : f(x) \in T, by applying it to every arg \in DOMAIN f
     def onFun(funsetDomElem: ArenaCell): TlaEx = {
       funsetCdm.cellType match {
         case _: PowSetT =>
@@ -128,13 +131,8 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
         // EqConstraints need to be generated, since missing in-relations, e.g. in sets of tuples, will lead to errors.
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))
 
-        def inAndEq(elem: ArenaCell) = {
-          val select = tla.apalacheSelectInSet(elem.toNameEx, setCell.toNameEx)
-          val eql = tla.eql(elem.toNameEx, elemCell.toNameEx)
-          simplifier.simplifyShallow(tla.and(select, eql))
-        }
-
-        val elemsInAndEq = potentialElems.map(inAndEq)
+        // inAndEq checks if elemCell is in setCell
+        val elemsInAndEq = potentialElems.map(inAndEq(rewriter, _, elemCell, setCell, lazyEq = false))
         rewriter.solverContext.assertGroundExpr(simplifier.simplifyShallow(tla.eql(pred, tla.or(elemsInAndEq: _*))))
         nextState.setRex(pred)
       }

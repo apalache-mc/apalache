@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, TlaEx, TupT1}
@@ -61,17 +62,21 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     // Add the appropriate pairs <arg,res> to resultRelation
     relationCells.foreach(eachRelationPair)
     nextState = nextState.updateArena(_.setCdm(resultFunCell, resultRelation))
+    // For the decoder to work, the pairs' arguments may need to be equated to the domain elements
+    nextState = constrainRelationArgs(nextState, rewriter, domainCell, resultRelation)
 
     // Add a constraint equating resultFunCell to funCell, since resultFunCell is initially unconstrained
     val eql = tla.eql(resultFunCell.toNameEx, funCell.toNameEx)
     rewriter.solverContext.assertGroundExpr(eql)
 
-    // Add a constraint updating resultFunCell if needed
-    val inDomain = tla.apalacheSelectInFun(indexCell.toNameEx, domainCell.toNameEx)
+    // We need to constrain resultRelationElems w.r.t relationCells and newPairCell
+    val resultRelationElems = nextState.arena.getHas(resultRelation)
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.zip(relationCells))
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.map((_, newPairCell)))
+
+    // There is no need to constrain updates, only accesses
     val updateFun = tla.apalacheStoreInFun(valueCell.toNameEx, resultFunCell.toNameEx, indexCell.toNameEx)
-    val unchanged = tla.apalacheStoreNotInFun(valueCell.toNameEx, resultFunCell.toNameEx)
-    val ite = tla.ite(inDomain, updateFun, unchanged)
-    rewriter.solverContext.assertGroundExpr(ite)
+    rewriter.solverContext.assertGroundExpr(updateFun)
 
     nextState.setRex(resultFunCell.toNameEx)
   }
