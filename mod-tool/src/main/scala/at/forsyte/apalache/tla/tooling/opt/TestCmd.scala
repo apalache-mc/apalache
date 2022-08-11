@@ -7,6 +7,8 @@ import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.options.Config
+import at.forsyte.apalache.io.ConfigurationError
 
 /**
  * This command initiates the 'test' command line.
@@ -27,30 +29,49 @@ class TestCmd
   var assertion: String =
     arg[String](name = "assertion",
         description = "the name of an operator that should evaluate to true after executing `action`")
-  var cinit: String = opt[String](name = "cinit", default = "",
+  var cinit: Option[String] = opt[Option[String]](name = "cinit", default = None,
       description = "the name of an operator that initializes CONSTANTS,\n" +
         "default: None")
+
+  override def toConfig(): Config.ApalacheConfig = {
+    val cfg = super.toConfig()
+
+    // Tune for testing:
+    //   1. Check the invariant only after the action took place.
+    //   2. Randomize
+    val seed = Math.abs(System.currentTimeMillis().toInt)
+
+    cfg.copy(
+        common = cfg.common.copy(
+            file = Some(file)
+        ),
+        checker = cfg.checker.copy(
+            tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString),
+            init = Some(before),
+            next = Some(action),
+            inv = Some(assertion),
+            cinit = cinit,
+        ),
+    )
+  }
 
   def run() = {
     // This is a special version of the `check` command that is tuned towards testing scenarios
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
           .format(file, before, action, assertion))
 
-    // Tune for testing:
-    //   1. Check the invariant only after the action took place.
-    //   2. Randomize
-    val seed = Math.abs(System.currentTimeMillis().toInt)
-    val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
-    logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
+    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
 
-    executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("parser.source", SourceOption.FileSource(file.getAbsoluteFile))
-    executor.passOptions.set("checker.init", before)
-    executor.passOptions.set("checker.next", action)
-    executor.passOptions.set("checker.inv", List(assertion))
-    if (cinit != "") {
-      executor.passOptions.set("checker.cinit", cinit)
-    }
+    // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
+    logger.info("Tuning: " + cfg.checker.tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
+
+    executor.passOptions.set("general.tuning", cfg.checker.tuning)
+    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
+    executor.passOptions.set("checker.init", cfg.checker.init.get)
+    executor.passOptions.set("checker.next", cfg.checker.next.get)
+    executor.passOptions.set("checker.inv", List(cfg.checker.inv))
+    cfg.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
+    // TODO: move into options provider
     executor.passOptions.set("checker.nworkers", 1)
     // check only one instance of the action
     executor.passOptions.set("checker.length", 1)

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.Executor
+import at.forsyte.apalache.io.ConfigurationError
 
 /**
  * Interface for the subcommands that run an `Executor`
@@ -40,11 +41,12 @@ abstract class PassExecutorCmd(name: String, description: String)
    * NOTE: It is not invoked automatically, and you should invoke it explicitly in your `Cmd` class' [[run]] method.
    */
   def setCommonOptions(): Unit = {
+    // TODO: rm after optoins provider
+    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    // The values access by `get` here should be set under all intended use of this class
     executor.passOptions
-      .set("general.debug",
-          // The exception here should be impossible under all intended use of this class
-          configuration.getOrElse(throw new Exception("illegal access to options before configuration")).common.debug)
-    executor.passOptions.set("smt.prof", smtprof)
-    executor.passOptions.set("general.features", features)
+      .set("general.debug", cfg.common.debug.get)
+    executor.passOptions.set("smt.prof", cfg.common.smtprof)
+    executor.passOptions.set("general.features", cfg.common.features)
   }
 }

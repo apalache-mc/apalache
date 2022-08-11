@@ -24,28 +24,82 @@ object Config {
       file: Option[File] = None,
       outDir: Option[File] = None,
       runDir: Option[File] = None,
-      debug: Option[Boolean] = None, // false,
-      smtprof: Boolean = false, // TODO make optional
+      debug: Option[Boolean] = None,
+      smtprof: Boolean = false,
       configFile: Option[File] = None,
-      writeIntermediate: Option[Boolean] = None, // false,
-      profiling: Option[Boolean] = None, // false,
+      writeIntermediate: Option[Boolean] = None,
+      profiling: Option[Boolean] = None,
       /** Enables features protected by feature-flags */
-      features: Seq[Feature] = Seq())
+      features: Seq[Feature] = Seq(), // TODO make optionals
+    )
+  object Common {
+    val default = Common(file = None, outDir = None, runDir = None, debug = Some(false), smtprof = false,
+        configFile = None, writeIntermediate = None, profiling = None, features = Seq())
+  }
 
   case class Output(
       /** A file into which output can be written */
       output: Option[File] = None)
 
+  object Output {
+    val default = Output()
+  }
+
   // TODO: Add values to feed to `Checker` options group
-  case class Checker()
+  case class Checker(
+      tuning: Map[String, String] = Map(), // TODO make optional
+      algo: Option[String] = None, // TODO: convert to case class
+      cinit: Option[String] = None, // "",
+      config: Option[String] = None, // ""
+      discardDisabled: Option[Boolean] = None, // true,
+      init: Option[String] = None, // ""
+      inv: Option[String] = None, // TODO Should be list?
+      length: Option[Int] = None,
+      maxError: Option[Int] = None,
+      next: Option[String] = None,
+      noDeadlocks: Option[Boolean] = None,
+      nworkers: Option[Int] = None,
+      smtEncoding: Option[SMTEncoding] = None,
+      temporal: Option[String] = None, // TODO SHould be list?
+      view: Option[String] = None,
+      saveRuns: Option[Boolean] = None)
+
+  object Checker {
+    val default = Checker(tuning = Map(), algo = Some("incremental"), cinit = None, config = None,
+        discardDisabled = Some(true), init = Some("Init"), inv = None, length = Some(10), maxError = Some(1),
+        next = Some("Next"), noDeadlocks = Some(false), nworkers = Some(1), smtEncoding = Some(SMTEncoding.OOPSLA19),
+        temporal = None, view = None, saveRuns = Some(false))
+  }
   // TODO implement to achieve parity with options
   // case class Input()
+
+  // TODO
+  case class Typechecker(
+      inferpoly: Option[Boolean] = None)
+
+  object Typechecker {
+    val default = Typechecker(
+        inferpoly = Some(false)
+    )
+  }
 
   case class ApalacheConfig(
       common: Common = Common(),
       output: Output = Output(),
-      // input: Input,
-      checker: Checker = Checker())
+      checker: Checker = Checker(),
+      typechecker: Typechecker = Typechecker())
+
+  object ApalacheConfig {
+    val default = ApalacheConfig(
+        common = Common.default,
+        output = Output.default,
+        checker = Checker.default,
+        typechecker = Typechecker.default,
+    )
+
+  }
+
+  // Fix formatting to put each value on own line
 }
 
 // TODO rm
@@ -115,6 +169,35 @@ object OptionGroup {
     def apply(cfg: ApalacheConfig): Try[T]
   }
 
+  private def getConfig[T](ov: Option[T], name: String): T =
+    ov.getOrElse(throw new Exception(s"TODO: Proper err ${name}"))
+
+  /** Options used in all modes of execution */
+  case class Common(
+      configFile: Option[File],
+      smtprof: Boolean,
+      profiling: Boolean,
+      outDir: File,
+      runDir: Option[File], // TODO Should be optional?
+      writeIntermediate: Boolean,
+      debug: Boolean,
+      features: Seq[Feature])
+
+  object Common extends Configurable[Common] {
+    def apply(cfg: ApalacheConfig): Try[Common] =
+      // TODO: Move defaults into case class?
+      Success(Common(
+              configFile = cfg.common.configFile,
+              smtprof = cfg.common.smtprof,
+              profiling = cfg.common.profiling.getOrElse(false),
+              outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out")),
+              runDir = cfg.common.runDir,
+              writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
+              debug = cfg.common.debug.getOrElse(false),
+              features = cfg.common.features,
+          ))
+  }
+
   /** Options used to configure program input */
   case class Input(source: SourceOption)
 
@@ -158,42 +241,16 @@ object OptionGroup {
       view: String = "", // TODO: convert to optional
     )
 
-  /* TODO Maybe we can supply the whole ApalacheConfig, then refine it down by hiding the parts that
-   * a particular invocation doesn't need? */
-  /** Options used in all modes of execution */
-  case class Common(
-      configFile: Option[File],
-      smtprof: Boolean,
-      profiling: Boolean,
-      outDir: File,
-      runDir: Option[File], // TODO Should be optional?
-      writeIntermediate: Boolean,
-      debug: Boolean,
-      features: Seq[Feature])
-
-  private def getConfig[T](ov: Option[T], name: String): T =
-    ov.getOrElse(throw new Exception(s"TODO: Proper err ${name}"))
-
-  object Common extends Configurable[Common] {
-    def apply(cfg: ApalacheConfig): Try[Common] =
-      Success(Common(
-              configFile = cfg.common.configFile,
-              smtprof = cfg.common.smtprof,
-              profiling = cfg.common.profiling.getOrElse(false),
-              outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out")),
-              runDir = cfg.common.runDir,
-              writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
-              debug = cfg.common.debug.getOrElse(false),
-              features = cfg.common.features,
-          ))
-  }
-
-  case class AllOptions(
+  case class WithOutput(
       common: Common,
-      output: Output,
-      input: Input,
-      checker: Checker,
-      typechecker: Typechecker)
+      output: Output)
+
+  object WithOutput extends Configurable[WithOutput] {
+    def apply(cfg: ApalacheConfig) = for {
+      common <- Common(cfg)
+      output <- Output(cfg)
+    } yield WithOutput(common, output)
+  }
 }
 
 // case class Parse(cfg: ApalacheConfig) extends Configurable(cfg) with IO {

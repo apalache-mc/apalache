@@ -123,10 +123,6 @@ abstract class ApalacheCommand(name: String, description: String)
    */
   def configuration = _configure
 
-  /** Override as `true` to mark a subcommand for use with the new config system */
-  // TODO Temporary: used to incrementally implement https://github.com/informalsystems/apalache/issues/2050
-  val useNewConfigSystem = false
-
   override def read(args: List[String]) = {
     _env = super.options
       .filter(_.useEnv.getOrElse(false))
@@ -137,11 +133,7 @@ abstract class ApalacheCommand(name: String, description: String)
 
     super.read(args)
 
-    if (useNewConfigSystem) {
-      _configure = ConfigManager(this.toConfig())
-    } else {
-      // This must be invoked after we parse the CLI args
-      _configure = ConfigManager(this)
-    }
+    // Load configuration and merge in cli config
+    _configure = ConfigManager(this.toConfig())
   }
 }

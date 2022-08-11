@@ -7,6 +7,7 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.io.ConfigurationError
 
 /**
  * This command initiates the 'parse' command line.
@@ -23,7 +24,6 @@ class ParseCmd
 
   val executor = Executor(new ParserModule)
 
-  override val useNewConfigSystem = true
   override def toConfig() = {
     val cfg = super.toConfig()
     cfg.copy(common = cfg.common.copy(file = Some(file)), output = cfg.output.copy(output = output))
@@ -31,10 +31,13 @@ class ParseCmd
 
   // TODO Factor out execution, use ProgramConfiguration, etc.
   def run() = {
+    // TODO: rm once OptionProvider is wired in
+    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+
     logger.info("Parse " + file)
 
-    executor.passOptions.set("parser.source", SourceOption.FileSource(file.getAbsoluteFile))
-    output.foreach(executor.passOptions.set("io.output", _))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
+    cfg.output.output.foreach(executor.passOptions.set("io.output", _))
 
     setCommonOptions()
 

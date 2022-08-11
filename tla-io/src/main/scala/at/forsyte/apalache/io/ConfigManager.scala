@@ -117,14 +117,16 @@ class ConfigManager() {
     val localConfig: Option[ConfigObjectSource] =
       cfg.common.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
 
+    val defaults: Config =
+      ConfigWriter[ApalacheConfig].to(ApalacheConfig.default).asInstanceOf[ConfigObject].toConfig()
     val cliConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()
 
     ConfigSource
       .fromConfig(cliConfig)
-      // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
-      .withFallback(localConfig
-            .getOrElse(ConfigSource.empty))
+      // `withFallback` supplies configuration sources that only apply if values in the preceding configs aren't set
+      .withFallback(localConfig.getOrElse(ConfigSource.empty))
       .withFallback(globalConfig.optional)
+      .withFallback(ConfigSource.fromConfig(defaults))
       .load[ApalacheConfig]
   }
 }
