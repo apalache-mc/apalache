@@ -45,6 +45,7 @@ object Config {
     val default = Output()
   }
 
+  // TODO: Switch defaults and empty values
   // TODO: Add values to feed to `Checker` options group
   case class Checker(
       tuning: Map[String, String] = Map(), // TODO make optional
@@ -61,14 +62,13 @@ object Config {
       nworkers: Option[Int] = None,
       smtEncoding: Option[SMTEncoding] = None,
       temporal: Option[String] = None, // TODO SHould be list?
-      view: Option[String] = None,
-      saveRuns: Option[Boolean] = None)
+      view: Option[String] = None)
 
   object Checker {
     val default = Checker(tuning = Map(), algo = Some("incremental"), cinit = None, config = None,
         discardDisabled = Some(true), init = Some("Init"), inv = None, length = Some(10), maxError = Some(1),
         next = Some("Next"), noDeadlocks = Some(false), nworkers = Some(1), smtEncoding = Some(SMTEncoding.OOPSLA19),
-        temporal = None, view = None, saveRuns = Some(false))
+        temporal = None, view = None)
   }
   // TODO implement to achieve parity with options
   // case class Input()

@@ -33,8 +33,9 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
     cfg.copy(
+        common = cfg.common.copy(file = Some(file)),
         checker = cfg.checker.copy(cinit = cinit, init = init, next = next, inv = inv, temporal = temporal,
-            length = length)
+            length = length),
     )
   }
   override def setCommonOptions(): Unit = {

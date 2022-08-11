@@ -59,9 +59,9 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     opt[Option[String]](name = "view",
         description = "the state view to use with --max-error=n, default: transition index", default = None)
 
-  var saveRuns: Option[Boolean] =
-    opt[Option[Boolean]](name = "output-traces",
-        description = "save an example trace for each symbolic run, default: false", default = None)
+  var saveRuns: Boolean =
+    opt[Boolean](name = "output-traces", description = "save an example trace for each symbolic run, default: false",
+        default = false)
 
   def collectTuningOptions(): Map[String, String] = {
     val tuning = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
@@ -80,7 +80,6 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
             noDeadlocks = noDeadlocks,
             maxError = maxError,
             view = view,
-            saveRuns = saveRuns,
         )
     )
   }
