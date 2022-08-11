@@ -3414,7 +3414,7 @@ $ rm -rf ./test-out-dir ./test-run-dir
 ### configuration management: read run-dir from local `.apalache.cfg`
 
 ```sh
-$ echo "run-dir: ./configured-run-dir" > .apalache.cfg
+$ echo "common.run-dir: ./configured-run-dir" > .apalache.cfg
 $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
@@ -3427,8 +3427,8 @@ $ rm -rf ./configured-run-dir ./.apalache.cfg
 ### configuration management: CLI config file overrides local `.apalache.cfg`
 
 ```sh
-$ echo "run-dir: ./to-override-dir" > .apalache.cfg
-$ echo "run-dir: ./configured-run-dir" > cli-config.cfg
+$ echo "common.run-dir: ./to-override-dir" > .apalache.cfg
+$ echo "common.run-dir: ./configured-run-dir" > cli-config.cfg
 $ apalache-mc check --config-file=cli-config.cfg --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
@@ -3440,7 +3440,7 @@ $ rm -rf ./configured-run-dir ./.apalache.cfg ./cli-config.cfg
 ### configuration management: CLI argument overrides config-file
 
 ```sh
-$ echo "run-dir: ./to-override-dir" > cli-config.cfg
+$ echo "common.run-dir: ./to-override-dir" > cli-config.cfg
 $ apalache-mc check --config-file=cli-config.cfg --run-dir=./configured-run-dir --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
@@ -3458,7 +3458,7 @@ NOTE: We need to set the home to a relative path to the cwd in order to
 ensure the tests also works in the docker container.
 
 ```sh
-$ echo "run-dir: ~/run-dir" > .apalache.cfg
+$ echo "common.run-dir: ~/run-dir" > .apalache.cfg
 $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
@@ -3469,7 +3469,7 @@ $ rm -rf ./run-dir ./.apalache.cfg
 ### configuration management: invalid features are rejected with error
 
 ```sh
-$ echo "features: [ invalid-feature ]" > .apalache.cfg
+$ echo "common.features: [ invalid-feature ]" > .apalache.cfg
 $ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error: at 'features.0'" -e "Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature"
 ...
 Configuration error: at 'features.0'
