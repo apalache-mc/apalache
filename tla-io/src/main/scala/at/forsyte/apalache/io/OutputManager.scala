@@ -23,7 +23,7 @@ object OutputManager extends LazyLogging {
   import Names._
 
   // TODO RM once OutputManager isn't a singleton
-  private var cfg: ApalacheConfig = ApalacheConfig()
+  private var config: ApalacheConfig = ApalacheConfig()
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
   // This should only be set if the IntermediateFlag is true
@@ -113,25 +113,28 @@ object OutputManager extends LazyLogging {
   }
 
   /**
-   * Configure OutputManager, with cli configuration taking precedence over the configuration file
+   * Configure OutputManager
    */
-  def configure(config: ApalacheConfig): Unit = {
-    // Replace the default config used for initialiation with the config loaded on startup
-    cfg = config
+  // TODO replace config with options
+  def configure(cfg: ApalacheConfig): Unit = {
+    // Mutable update of the confiugration shared within the singleton
+    config = cfg
 
-    val fileName = cfg.common.file
-      .getOrElse(throw new IllegalStateException("OutputManager configured without file"))
-      .getName
+    val fileName =
+      config.common.file
+        .map(_.getName) // Either the name of the file
+        .orElse(config.common.routine) // Or the name of the routine
+        .get // One of those two will always be available
 
-    // TODO replace cfg with options
-    val _outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out"))
+    // TODO replace config with options
+    val _outDir = config.common.outDir.get
     setOutDir(_outDir.toPath(), fileName)
     ensureDirExists(outDir)
     createRunDirectory()
     setCustomRunDir(config.common.runDir)
 
-    // TODO replace cfg with options
-    if (cfg.common.writeIntermediate.getOrElse(false)) {
+    // TODO replace config with options
+    if (config.common.writeIntermediate.getOrElse(false)) {
       setIntermediateDir()
       intermediateDirOpt.foreach(ensureDirExists)
       customIntermediateRunDir.foreach(ensureDirExists)
@@ -220,8 +223,8 @@ object OutputManager extends LazyLogging {
    * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set
    */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
-    // TODO replace cfg with options
-    if (cfg.common.profiling.getOrElse(false)) {
+    // TODO replace config with options
+    if (config.common.profiling.getOrElse(false)) {
       withWriterInRunDir("profile-rules.txt")(f)
       true
     } else {

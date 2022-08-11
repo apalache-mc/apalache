@@ -21,6 +21,8 @@ object Config {
   /** The application's configurable values, along with their base defaults */
   // TODO Rename to "Common"
   case class Common(
+      /** The subcommand or process being executed */
+      routine: Option[String] = None,
       file: Option[File] = None,
       outDir: Option[File] = None,
       runDir: Option[File] = None,
@@ -33,8 +35,10 @@ object Config {
       features: Seq[Feature] = Seq(), // TODO make optionals
     )
   object Common {
-    val default = Common(file = None, outDir = None, runDir = None, debug = Some(false), smtprof = false,
-        configFile = None, writeIntermediate = None, profiling = None, features = Seq())
+    val default =
+      Common(routine = Some("UNCONFIGURED-ROUTINE"), file = None,
+          outDir = Some(new File(System.getProperty("user.dir"), "_apalache-out")), runDir = None, debug = Some(false),
+          smtprof = false, configFile = None, writeIntermediate = None, profiling = None, features = Seq())
   }
 
   case class Output(

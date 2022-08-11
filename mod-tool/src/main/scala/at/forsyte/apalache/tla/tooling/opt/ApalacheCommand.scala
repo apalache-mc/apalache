@@ -46,6 +46,7 @@ abstract class ApalacheCommand(name: String, description: String)
 
   // TODO: Doc
   def toConfig(): Config.ApalacheConfig = Config.ApalacheConfig(common = Config.Common(
+      routine = Some(name),
       configFile = configFile,
       debug = debug,
       smtprof = smtprof,
