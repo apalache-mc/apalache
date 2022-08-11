@@ -47,6 +47,6 @@ abstract class PassExecutorCmd(name: String, description: String)
     executor.passOptions
       .set("general.debug", cfg.common.debug.get)
     executor.passOptions.set("smt.prof", cfg.common.smtprof)
-    executor.passOptions.set("general.features", cfg.common.features)
+    executor.passOptions.set("general.features", cfg.common.features.get)
   }
 }
