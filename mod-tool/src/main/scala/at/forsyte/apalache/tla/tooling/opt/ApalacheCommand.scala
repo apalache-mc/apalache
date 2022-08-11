@@ -117,7 +117,7 @@ abstract class ApalacheCommand(name: String, description: String)
   /**
    * The application configuration, derived by loading all configuration sources, concluding with the CLI options
    *
-   * See [[at.forsyte.apalache.infra.passes.options.ApalacheConfig ApalacheConfig]] for details.
+   * See [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] for details.
    *
    * TODO: Ultimately, we would like all application configuration to be derived from this value
    */
