@@ -24,6 +24,8 @@ private object Converters {
   implicit val overrideFileReader = ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
   // PureConfig's optF will convert None values to appropriate configuration errors
   implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
+  implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
+
 }
 
 /**
