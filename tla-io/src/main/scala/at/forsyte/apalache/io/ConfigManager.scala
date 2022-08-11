@@ -62,10 +62,10 @@ class ConfigManager() {
   import Converters._
 
   // Recursively search parents of given `dir`, looking for .apalache.cfg file
-  private def findLocalConfig(dir: Path): Option[ConfigObjectSource] = {
+  private def findLocalConfig(dir: Path): Option[File] = {
     val localCfg = dir.resolve(DOT_APALACHE_CFG)
     if (Files.exists(localCfg)) {
-      Some(ConfigSource.file(localCfg))
+      Some(localCfg.toFile())
     } else {
       Option(dir.getParent).flatMap(findLocalConfig)
     }
@@ -89,11 +89,13 @@ class ConfigManager() {
     val home = System.getProperty("user.home")
     val globalConfig = ConfigSource.file(Paths.get(home, TLA_PLUS_DIR, APALACHE_CFG))
 
-    val localConfig: Option[ConfigObjectSource] =
-      cmd.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
+    val localConfig: ConfigObjectSource =
+      cmd.configFile.orElse(findLocalConfig(Paths.get(".").toAbsolutePath())) match {
+        case Some(cfgFile) => ConfigSource.file(cfgFile)
+        case None          => ConfigSource.empty
+      }
 
     localConfig
-      .getOrElse(ConfigSource.empty)
       // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
       .withFallback(globalConfig.optional)
       .load[ApalacheConfig]
@@ -116,8 +118,11 @@ class ConfigManager() {
     val home = System.getProperty("user.home")
     val globalConfig = ConfigSource.file(Paths.get(home, TLA_PLUS_DIR, APALACHE_CFG))
 
-    val localConfig: Option[ConfigObjectSource] =
-      cfg.common.configFile.map(ConfigSource.file).orElse(findLocalConfig(Paths.get(".").toAbsolutePath()))
+    val localConfig: ConfigObjectSource =
+      cfg.common.configFile.orElse(findLocalConfig(Paths.get(".").toAbsolutePath())) match {
+        case Some(cfgFile) => ConfigSource.file(cfgFile)
+        case None          => ConfigSource.empty
+      }
 
     val defaults: Config =
       ConfigWriter[ApalacheConfig].to(ApalacheConfig.default).asInstanceOf[ConfigObject].toConfig()
@@ -126,7 +131,7 @@ class ConfigManager() {
     ConfigSource
       .fromConfig(cliConfig)
       // `withFallback` supplies configuration sources that only apply if values in the preceding configs aren't set
-      .withFallback(localConfig.getOrElse(ConfigSource.empty))
+      .withFallback(localConfig)
       .withFallback(globalConfig.optional)
       .withFallback(ConfigSource.fromConfig(defaults))
       .load[ApalacheConfig]
