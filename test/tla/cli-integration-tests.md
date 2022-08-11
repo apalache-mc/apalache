@@ -3470,10 +3470,8 @@ $ rm -rf ./run-dir ./.apalache.cfg
 
 ```sh
 $ echo "common.features: [ invalid-feature ]" > .apalache.cfg
-$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error: at 'features.0'" -e "Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature"
-...
-Configuration error: at 'features.0'
-Cannot convert 'invalid-feature' to at.forsyte.apalache.tla.lir.Feature
+$ apalache-mc check --length=0 Counter.tla | grep -o "Configuration error: .*'"
+Configuration error: at 'common.features.0'
 $ rm -rf ./.apalache.cfg
 ```
 

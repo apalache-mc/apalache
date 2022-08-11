@@ -32,13 +32,12 @@ object Config {
       writeIntermediate: Option[Boolean] = None,
       profiling: Option[Boolean] = None,
       /** Enables features protected by feature-flags */
-      features: Seq[Feature] = Seq(), // TODO make optionals
-    )
+      features: Option[Seq[Feature]] = None)
   object Common {
     val default =
       Common(routine = Some("UNCONFIGURED-ROUTINE"), file = None,
           outDir = Some(new File(System.getProperty("user.dir"), "_apalache-out")), runDir = None, debug = Some(false),
-          smtprof = false, configFile = None, writeIntermediate = None, profiling = None, features = Seq())
+          smtprof = false, configFile = None, writeIntermediate = None, profiling = None, features = Some(Seq()))
   }
 
   case class Output(
@@ -198,7 +197,7 @@ object OptionGroup {
               runDir = cfg.common.runDir,
               writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
               debug = cfg.common.debug.getOrElse(false),
-              features = cfg.common.features,
+              features = cfg.common.features.getOrElse(Seq()),
           ))
   }
 

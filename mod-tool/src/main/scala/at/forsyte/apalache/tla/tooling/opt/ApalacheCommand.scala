@@ -38,7 +38,7 @@ abstract class ApalacheCommand(name: String, description: String)
   var writeIntermediate = opt[Option[Boolean]](description =
         "write intermediate output files to `out-dir`, default: false (overrides envvar WRITE_INTERMEDIATE)",
       useEnv = true)
-  var features = opt[Seq[Feature]](default = Seq(),
+  var features = opt[Option[Seq[Feature]]](default = None,
       description = {
         val featureDescriptions = Feature.all.map(f => s"  ${f.name}: ${f.description}")
         ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")

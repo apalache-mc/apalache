@@ -45,7 +45,7 @@ trait CliConfig {
   def writeIntermediate: Option[Boolean]
   def profiling: Option[Boolean]
   def configFile: Option[File]
-  def features: Seq[Feature]
+  def features: Option[Seq[Feature]]
 }
 
 /**
@@ -109,7 +109,7 @@ class ConfigManager() {
             configFile = cmd.configFile.orElse(cfg.common.configFile),
             writeIntermediate = cmd.writeIntermediate.orElse(cfg.common.writeIntermediate),
             profiling = cmd.profiling.orElse(cfg.common.profiling),
-            features = if (cmd.features.nonEmpty) cmd.features else cfg.common.features,
+            features = cfg.common.features,
         )))
   }
 
