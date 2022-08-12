@@ -29,26 +29,6 @@ private object Converters {
 }
 
 /**
- * The configuration values that can be overriden based on CLI arguments
- *
- * For documentation on the use and meaning of these fields as CLI paramter, see
- * `at.forsyte.apalache.tla.tooling.opt.General`.
- */
-// TODO rm
-trait CliConfig {
-
-  /** Input file */
-  def file: File
-  def outDir: Option[File]
-  def runDir: Option[File]
-  def debug: Option[Boolean]
-  def writeIntermediate: Option[Boolean]
-  def profiling: Option[Boolean]
-  def configFile: Option[File]
-  def features: Option[Seq[Feature]]
-}
-
-/**
  * Manage cascade loading program configurations from the supported sources
  *
  * @param cmd
@@ -69,48 +49,6 @@ class ConfigManager() {
     } else {
       Option(dir.getParent).flatMap(findLocalConfig)
     }
-  }
-
-  /**
-   * Load the application configuration from all sources supported by apalache
-   *
-   * The following precedence is maintained, wherein configured values found from lower numbered sources override values
-   * from higher numbered sources:
-   *
-   *   1. CLI arguments
-   *   1. Environment variables (Overiding is taken care of by the CLI parsing library)
-   *   1. Local config file
-   *   1. Global config file
-   *   1. `ApalacheConfig` defaults (as specified in the case class definition)
-   */
-  // TODO: remove once loading from `CliConfiguration` is fully integrated
-  def load(cmd: CliConfig): ConfigReader.Result[ApalacheConfig] = {
-
-    val home = System.getProperty("user.home")
-    val globalConfig = ConfigSource.file(Paths.get(home, TLA_PLUS_DIR, APALACHE_CFG))
-
-    val localConfig: ConfigObjectSource =
-      cmd.configFile.orElse(findLocalConfig(Paths.get(".").toAbsolutePath())) match {
-        case Some(cfgFile) => ConfigSource.file(cfgFile)
-        case None          => ConfigSource.empty
-      }
-
-    localConfig
-      // `withFallback` supplies configuration sources that only apply if the preceding configs aren't set
-      .withFallback(globalConfig.optional)
-      .load[ApalacheConfig]
-      .map(cfg =>
-        // TODO Is there no better way than hardcoding these overrides?
-        cfg.copy(common = cfg.common.copy(
-            file = Some(cmd.file),
-            outDir = cmd.outDir.orElse(cfg.common.outDir),
-            runDir = cmd.runDir.orElse(cfg.common.runDir),
-            debug = cmd.debug.orElse(cfg.common.debug),
-            configFile = cmd.configFile.orElse(cfg.common.configFile),
-            writeIntermediate = cmd.writeIntermediate.orElse(cfg.common.writeIntermediate),
-            profiling = cmd.profiling.orElse(cfg.common.profiling),
-            features = cfg.common.features,
-        )))
   }
 
   /**
@@ -163,9 +101,6 @@ class ConfigManager() {
 object ConfigManager {
 
   /** Load the application configuration, converting any configuration error into a pretty printed message */
-  def apply(cmd: CliConfig): Either[String, ApalacheConfig] =
-    new ConfigManager().load(cmd).left.map(_.prettyPrint())
-
   def apply(cfg: ApalacheConfig): Either[String, ApalacheConfig] =
     new ConfigManager().load(cfg).left.map(_.prettyPrint())
 

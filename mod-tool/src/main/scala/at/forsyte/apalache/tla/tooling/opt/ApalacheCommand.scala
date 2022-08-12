@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes
-import at.forsyte.apalache.io.CliConfig
 import at.forsyte.apalache.tla.lir.Feature
 
 import java.io.File
@@ -18,8 +17,7 @@ import at.forsyte.apalache.io.ConfigManager
  * @author
  *   Igor Konnov, Shon Feder
  */
-abstract class ApalacheCommand(name: String, description: String)
-    extends Command(name: String, description: String) with CliConfig {
+abstract class ApalacheCommand(name: String, description: String) extends Command(name: String, description: String) {
   // TODO Fix excessively long strings
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
