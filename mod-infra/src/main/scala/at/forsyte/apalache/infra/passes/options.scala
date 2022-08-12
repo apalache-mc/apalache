@@ -10,16 +10,15 @@ import scala.util.Success
 import scala.util.Failure
 
 /**
- * Collects the options supported for configuring Apalache's various modes of execution
+ * The supported configurations for Apalache's various modes of execution
+ *
+ * The classes within specify the application's configurable values, along with their base defaults.
  *
  * @author
  *   Shon Feder
  */
-
 object Config {
 
-  /** The application's configurable values, along with their base defaults */
-  // TODO Rename to "Common"
   case class Common(
       /** The subcommand or process being executed */
       routine: Option[String] = None,
@@ -40,6 +39,8 @@ object Config {
           smtprof = false, configFile = None, writeIntermediate = None, profiling = None, features = Some(Seq()))
   }
 
+  /** Configuration of program output */
+  // TODO Move the outer output vues into this section?
   case class Output(
       /** A file into which output can be written */
       output: Option[File] = None)
@@ -48,6 +49,7 @@ object Config {
     val default = Output()
   }
 
+  /** Confguration of program output */
   // TODO: Switch defaults and empty values
   // TODO: Add values to feed to `Checker` options group
   case class Checker(
