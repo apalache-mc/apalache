@@ -113,6 +113,20 @@ class ConfigManager() {
         )))
   }
 
+  /**
+   * Load the application configuration from all sources supported by apalache, and merge with the primary $cfg
+   *
+   * The following precedence is maintained, wherein configured values found from lower numbered sources override values
+   * from higher numbered sources:
+   *
+   *   1. The primary $cfg supplied as a parameter (typically derived from the CLI)
+   *   1. Local config file
+   *   1. Global config file
+   *   1. `ApalacheConfig` defaults (as specified in the case class definition)
+   *
+   * @param cfg
+   *   The primary configuration, which will be used to override values from other configs.
+   */
   def load(cfg: ApalacheConfig): ConfigReader.Result[ApalacheConfig] = {
 
     val home = System.getProperty("user.home")
@@ -124,15 +138,23 @@ class ConfigManager() {
         case None          => ConfigSource.empty
       }
 
+    // Derive lightbend `Config` objects from the default and primary config
+    // case classes.
+    //
+    // The case to `ConfigObject` is guaranteed to be safe: `ConfigWriter.to`
+    // produces a `ConfigValue`, of which `ConfigObject` is a subtype
+    // representing values that are dictionaries. Case classes are always
+    // represented as dictionaries, so we can be sure any `ConfigValue` derived
+    // from an instance of an `ApalacheConfig` .
     val defaults: Config =
       ConfigWriter[ApalacheConfig].to(ApalacheConfig.default).asInstanceOf[ConfigObject].toConfig()
-    val cliConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()
+    val primaryConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()
 
     ConfigSource
-      .fromConfig(cliConfig)
+      .fromConfig(primaryConfig)
       // `withFallback` supplies configuration sources that only apply if values in the preceding configs aren't set
       .withFallback(localConfig)
-      .withFallback(globalConfig.optional)
+      .withFallback(globalConfig.optional) // "optional" entails this will be empty if the file is absent
       .withFallback(ConfigSource.fromConfig(defaults))
       .load[ApalacheConfig]
   }
