@@ -3471,6 +3471,7 @@ $ rm -rf ./run-dir ./.apalache.cfg
 ```sh
 $ echo "common.features: [ invalid-feature ]" > .apalache.cfg
 $ apalache-mc check --length=0 Counter.tla | grep -o "Configuration error: .*'"
+...
 Configuration error: at 'common.features.0'
 $ rm -rf ./.apalache.cfg
 ```
