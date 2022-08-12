@@ -26,7 +26,7 @@ object Config {
       outDir: Option[File] = None,
       runDir: Option[File] = None,
       debug: Option[Boolean] = None,
-      smtprof: Boolean = false,
+      smtprof: Option[Boolean] = None,
       configFile: Option[File] = None,
       writeIntermediate: Option[Boolean] = None,
       profiling: Option[Boolean] = None,
@@ -36,7 +36,7 @@ object Config {
     val default =
       Common(routine = Some("UNCONFIGURED-ROUTINE"), file = None,
           outDir = Some(new File(System.getProperty("user.dir"), "_apalache-out")), runDir = None, debug = Some(false),
-          smtprof = false, configFile = None, writeIntermediate = None, profiling = None, features = Some(Seq()))
+          smtprof = Some(false), configFile = None, writeIntermediate = None, profiling = None, features = Some(Seq()))
   }
 
   /** Configuration of program output */
@@ -49,11 +49,11 @@ object Config {
     val default = Output()
   }
 
-  /** Confguration of program output */
+  /** Configuration of program output */
   // TODO: Switch defaults and empty values
   // TODO: Add values to feed to `Checker` options group
   case class Checker(
-      tuning: Map[String, String] = Map(), // TODO make optional
+      tuning: Option[Map[String, String]] = None, // TODO make optional
       algo: Option[String] = None, // TODO: convert to case class
       cinit: Option[String] = None, // "",
       config: Option[String] = None, // ""
@@ -73,12 +73,10 @@ object Config {
     // TODO Init and Next defaults should be set HERE, but the current, stateful
     // architecture requires that setting these be deferred until
     // `ConfigurationPassImpl`
-    val default = Checker(tuning = Map(), algo = Some("incremental"), discardDisabled = Some(true), length = Some(10),
-        maxError = Some(1), noDeadlocks = Some(false), nworkers = Some(1), smtEncoding = Some(SMTEncoding.OOPSLA19),
-        temporal = None, view = None)
+    val default = Checker(tuning = Some(Map()), algo = Some("incremental"), discardDisabled = Some(true),
+        length = Some(10), maxError = Some(1), noDeadlocks = Some(false), nworkers = Some(1),
+        smtEncoding = Some(SMTEncoding.OOPSLA19), temporal = None, view = None)
   }
-  // TODO implement to achieve parity with options
-  // case class Input()
 
   // TODO
   case class Typechecker(
@@ -201,7 +199,7 @@ object OptionGroup {
               outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out")),
               runDir = cfg.common.runDir,
               debug = cfg.common.debug.getOrElse(false),
-              smtprof = cfg.common.smtprof,
+              smtprof = cfg.common.smtprof.getOrElse(false),
               configFile = cfg.common.configFile,
               writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
               profiling = cfg.common.profiling.getOrElse(false),

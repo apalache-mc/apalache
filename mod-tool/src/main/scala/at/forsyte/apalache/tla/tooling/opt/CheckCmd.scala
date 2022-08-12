@@ -75,7 +75,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
             nworkers = nworkers,
             algo = algo,
             smtEncoding = smtEncoding,
-            tuning = collectTuningOptions(),
+            tuning = Some(collectTuningOptions()),
             discardDisabled = discardDisabled,
             noDeadlocks = noDeadlocks,
             maxError = maxError,
@@ -91,7 +91,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
 
-    val tuning = cfg.checker.tuning
+    val tuning = cfg.checker.tuning.get
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 

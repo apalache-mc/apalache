@@ -23,7 +23,7 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
       useEnv = true)
   var debug = opt[Option[Boolean]](description = "extensive logging in detailed.log and log.smt, default: false")
-  var smtprof = opt[Boolean](description = "profile SMT constraints in profile.csv, default: false")
+  var smtprof = opt[Option[Boolean]](description = "profile SMT constraints in profile.csv, default: false")
   var profiling = opt[Option[Boolean]](description =
         s"write general profiling data to profile-rules.txt in the run directory, default: false (overrides envvar PROFILING)",
       useEnv = true)
