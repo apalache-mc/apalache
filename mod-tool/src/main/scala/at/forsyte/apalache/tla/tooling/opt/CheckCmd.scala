@@ -80,7 +80,10 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
             noDeadlocks = noDeadlocks,
             maxError = maxError,
             view = view,
-        )
+        ),
+        typechecker = cfg.typechecker.copy(
+            inferpoly = Some(true)
+        ),
     )
   }
 
@@ -101,7 +104,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     executor.passOptions.set("checker.maxError", cfg.checker.maxError.get)
     cfg.checker.view.foreach(executor.passOptions.set("checker.view", _))
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", true)
+    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
     setCommonOptions()
     executor.run() match {
       case Right(_)   => Right("Checker reports no error up to computation length " + length)

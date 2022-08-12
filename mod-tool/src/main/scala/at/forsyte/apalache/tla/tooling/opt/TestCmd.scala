@@ -51,16 +51,25 @@ class TestCmd
             next = Some(action),
             inv = Some(assertion),
             cinit = cinit,
+            nworkers = Some(1),
+            length = Some(1),
+            discardDisabled = Some(false),
+            noDeadlocks = Some(false),
+            algo = Some("offline"),
+        ),
+        typechecker = cfg.typechecker.copy(
+            inferpoly = Some(true)
         ),
     )
   }
 
   def run() = {
+    // TODO: rm once OptionProvider is wired in
+    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+
     // This is a special version of the `check` command that is tuned towards testing scenarios
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
           .format(file, before, action, assertion))
-
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
 
     // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
     logger.info("Tuning: " + cfg.checker.tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
@@ -72,16 +81,16 @@ class TestCmd
     executor.passOptions.set("checker.inv", List(cfg.checker.inv.get))
     cfg.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
     // TODO: move into options provider
-    executor.passOptions.set("checker.nworkers", 1)
+    executor.passOptions.set("checker.nworkers", cfg.checker.nworkers.get)
     // check only one instance of the action
-    executor.passOptions.set("checker.length", 1)
+    executor.passOptions.set("checker.length", cfg.checker.length.get)
     // no preliminary pruning of disabled transitions
-    executor.passOptions.set("checker.discardDisabled", false)
-    executor.passOptions.set("checker.noDeadlocks", false)
+    executor.passOptions.set("checker.discardDisabled", cfg.checker.discardDisabled.get)
+    executor.passOptions.set("checker.noDeadlocks", cfg.checker.noDeadlocks.get)
     // prefer the offline mode as we have a single query
-    executor.passOptions.set("checker.algo", "offline")
+    executor.passOptions.set("checker.algo", cfg.checker.algo.get)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", true)
+    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
     setCommonOptions()
 
     executor.run() match {
