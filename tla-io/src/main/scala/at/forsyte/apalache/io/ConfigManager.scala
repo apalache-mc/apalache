@@ -52,12 +52,12 @@ class ConfigManager() {
   }
 
   /**
-   * Load the application configuration from all sources supported by apalache, and merge with the primary $cfg
+   * Load the application configuration from all sources supported by apalache, and merge with the primary `cfg`
    *
    * The following precedence is maintained, wherein configured values found from lower numbered sources override values
    * from higher numbered sources:
    *
-   *   1. The primary $cfg supplied as a parameter (typically derived from the CLI)
+   *   1. The primary `cfg` supplied as a parameter (typically derived from the CLI)
    *   1. Local config file
    *   1. Global config file
    *   1. `ApalacheConfig` defaults (as specified in the case class definition)
