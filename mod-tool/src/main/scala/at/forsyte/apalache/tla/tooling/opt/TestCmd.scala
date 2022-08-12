@@ -69,7 +69,7 @@ class TestCmd
     executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
     executor.passOptions.set("checker.init", cfg.checker.init.get)
     executor.passOptions.set("checker.next", cfg.checker.next.get)
-    executor.passOptions.set("checker.inv", List(cfg.checker.inv))
+    executor.passOptions.set("checker.inv", List(cfg.checker.inv.get))
     cfg.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
     // TODO: move into options provider
     executor.passOptions.set("checker.nworkers", 1)

@@ -68,9 +68,11 @@ object Config {
       view: Option[String] = None)
 
   object Checker {
-    val default = Checker(tuning = Map(), algo = Some("incremental"), cinit = None, config = None,
-        discardDisabled = Some(true), init = Some("Init"), inv = None, length = Some(10), maxError = Some(1),
-        next = Some("Next"), noDeadlocks = Some(false), nworkers = Some(1), smtEncoding = Some(SMTEncoding.OOPSLA19),
+    // TODO Init and Next defaults should be set HERE, but the current, stateful
+    // architecture requires that setting these be deferred until
+    // `ConfigurationPassImpl`
+    val default = Checker(tuning = Map(), algo = Some("incremental"), discardDisabled = Some(true), length = Some(10),
+        maxError = Some(1), noDeadlocks = Some(false), nworkers = Some(1), smtEncoding = Some(SMTEncoding.OOPSLA19),
         temporal = None, view = None)
   }
   // TODO implement to achieve parity with options
@@ -177,26 +179,30 @@ object OptionGroup {
 
   /** Options used in all modes of execution */
   case class Common(
-      configFile: Option[File],
-      smtprof: Boolean,
-      profiling: Boolean,
+      routine: String,
+      file: Option[File],
       outDir: File,
-      runDir: Option[File], // TODO Should be optional?
-      writeIntermediate: Boolean,
+      runDir: Option[File],
       debug: Boolean,
+      smtprof: Boolean,
+      configFile: Option[File],
+      writeIntermediate: Boolean,
+      profiling: Boolean,
       features: Seq[Feature])
 
   object Common extends Configurable[Common] {
     def apply(cfg: ApalacheConfig): Try[Common] =
       // TODO: Move defaults into case class?
       Success(Common(
-              configFile = cfg.common.configFile,
-              smtprof = cfg.common.smtprof,
-              profiling = cfg.common.profiling.getOrElse(false),
+              routine = getConfig(cfg.common.routine, "routine"),
+              file = cfg.common.file,
               outDir = cfg.common.outDir.getOrElse(new File(System.getProperty("user.dir"), "_apalache-out")),
               runDir = cfg.common.runDir,
-              writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
               debug = cfg.common.debug.getOrElse(false),
+              smtprof = cfg.common.smtprof,
+              configFile = cfg.common.configFile,
+              writeIntermediate = getConfig(cfg.common.writeIntermediate, "write-intermediate"),
+              profiling = cfg.common.profiling.getOrElse(false),
               features = cfg.common.features.getOrElse(Seq()),
           ))
   }

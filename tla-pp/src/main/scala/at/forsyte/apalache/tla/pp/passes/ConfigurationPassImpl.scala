@@ -184,7 +184,7 @@ class ConfigurationPassImpl @Inject() (
 
         case Some(cmdInit) =>
           logger.warn(
-              s"  > $basename: Init operator is set in TLC config but overridden via --init command line option; using $cmdInit"
+              s"  > $basename: Init operator is set in TLC config but overridden via `init` cli option or apalache.cfg; using $cmdInit"
           )
           outOptions.set("checker.init", cmdInit)
       }
@@ -198,7 +198,7 @@ class ConfigurationPassImpl @Inject() (
 
         case Some(cmdNext) =>
           val msg =
-            s"  > $basename: Next operator is set in TLC config but overridden via --next command line option; using $cmdNext"
+            s"  > $basename: Next operator is set in TLC config but overridden via next cli option or apalache.cfg; using $cmdNext"
           logger.warn(msg)
           outOptions.set("checker.next", cmdNext)
       }

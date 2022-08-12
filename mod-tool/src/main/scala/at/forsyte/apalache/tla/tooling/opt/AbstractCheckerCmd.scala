@@ -34,8 +34,8 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     val cfg = super.toConfig()
     cfg.copy(
         common = cfg.common.copy(file = Some(file)),
-        checker = cfg.checker.copy(cinit = cinit, init = init, next = next, inv = inv, temporal = temporal,
-            length = length),
+        checker = cfg.checker.copy(config = config, cinit = cinit, init = init, next = next, inv = inv,
+            temporal = temporal, length = length),
     )
   }
   override def setCommonOptions(): Unit = {
