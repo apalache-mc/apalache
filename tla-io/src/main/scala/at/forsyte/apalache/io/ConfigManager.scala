@@ -85,7 +85,7 @@ class ConfigManager() {
     // represented as dictionaries, so we can be sure any `ConfigValue` derived
     // from an instance of an `ApalacheConfig` .
     val defaults: Config =
-      ConfigWriter[ApalacheConfig].to(ApalacheConfig.default).asInstanceOf[ConfigObject].toConfig()
+      ConfigWriter[ApalacheConfig].to(ApalacheConfig()).asInstanceOf[ConfigObject].toConfig()
     val primaryConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()
 
     ConfigSource

@@ -43,17 +43,26 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
       })
 
   // TODO: Doc
-  def toConfig(): Config.ApalacheConfig = Config.ApalacheConfig(common = Config.Common(
-      routine = Some(name),
-      configFile = configFile,
-      debug = debug,
-      smtprof = smtprof,
-      profiling = profiling,
-      outDir = outDir,
-      runDir = runDir,
-      writeIntermediate = writeIntermediate,
-      features = features,
-  ))
+  def toConfig(): Config.ApalacheConfig = {
+
+    // We start with an *empty* base config, so that any values which are *not*
+    // set by the CLI will be `None`.  This is required to allow the configs
+    // derived from the CLI to override the configs from other source, while
+    // still letting other config values that are not overriden to propagate
+    // through.
+    val cfg = Config.ApalacheConfig().empty
+    cfg.copy(common = cfg.common.copy(
+        routine = Some(name),
+        configFile = configFile,
+        debug = debug,
+        smtprof = smtprof,
+        profiling = profiling,
+        outDir = outDir,
+        runDir = runDir,
+        writeIntermediate = writeIntermediate,
+        features = features,
+    ))
+  }
 
   /**
    * Run the process corresponding to the specified subcommand

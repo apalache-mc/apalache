@@ -37,26 +37,20 @@ object Config {
 
   case class Common(
       /** The subcommand or process being executed */
-      routine: Option[String] = None,
+      routine: Option[String] = Some("UNCONFIGURED-ROUTINE"),
       file: Option[File] = None,
-      outDir: Option[File] = None,
+      outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
-      debug: Option[Boolean] = None,
-      smtprof: Option[Boolean] = None,
+      debug: Option[Boolean] = Some(false),
+      smtprof: Option[Boolean] = Some(false),
       configFile: Option[File] = None,
       writeIntermediate: Option[Boolean] = None,
       profiling: Option[Boolean] = None,
       /** Enables features protected by feature-flags */
-      features: Option[Seq[Feature]] = None)
+      features: Option[Seq[Feature]] = Some(Seq()))
       extends Config[Common] {
-    def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
-  }
 
-  object Common {
-    val default =
-      Common(routine = Some("UNCONFIGURED-ROUTINE"), file = None,
-          outDir = Some(new File(System.getProperty("user.dir"), "_apalache-out")), runDir = None, debug = Some(false),
-          smtprof = Some(false), configFile = None, writeIntermediate = None, profiling = None, features = Some(Seq()))
+    def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
   }
 
   /** Configuration of program output */
@@ -65,56 +59,43 @@ object Config {
       /** A file into which output can be written */
       output: Option[File] = None)
       extends Config[Output] {
-    def empty: Output = Generic[Output].from(Generic[Output].to(this).map(emptyPoly))
-  }
 
-  object Output {
-    val default = Output()
+    def empty: Output = Generic[Output].from(Generic[Output].to(this).map(emptyPoly))
   }
 
   /** Configuration of program output */
   // TODO: Switch defaults and empty values
   // TODO: Add values to feed to `Checker` options group
   case class Checker(
-      tuning: Option[Map[String, String]] = None, // TODO make optional
-      algo: Option[String] = None, // TODO: convert to case class
-      cinit: Option[String] = None, // "",
-      config: Option[String] = None, // ""
-      discardDisabled: Option[Boolean] = None, // true,
-      init: Option[String] = None, // ""
-      inv: Option[String] = None, // TODO Should be list?
-      length: Option[Int] = None,
-      maxError: Option[Int] = None,
+      tuning: Option[Map[String, String]] = Some(Map()),
+      algo: Option[String] = Some("incremental"), // TODO: convert to case class
+      cinit: Option[String] = None,
+      config: Option[String] = None,
+      discardDisabled: Option[Boolean] = Some(true),
+      // TODO Set default here once ConfigurationPassImpl is fixed
+      init: Option[String] = None,
+      // TODO Should be list?
+      inv: Option[String] = None,
+      length: Option[Int] = Some(10),
+      maxError: Option[Int] = Some(1),
+      // TODO Set default here once ConfigurationPassImpl is fixed
       next: Option[String] = None,
-      noDeadlocks: Option[Boolean] = None,
-      nworkers: Option[Int] = None,
-      smtEncoding: Option[SMTEncoding] = None,
+      noDeadlocks: Option[Boolean] = Some(false),
+      nworkers: Option[Int] = Some(1),
+      smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporal: Option[String] = None, // TODO SHould be list?
       view: Option[String] = None)
       extends Config[Checker] {
-    def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
-  }
 
-  object Checker {
-    // TODO Init and Next defaults should be set HERE, but the current, stateful
-    // architecture requires that setting these be deferred until
-    // `ConfigurationPassImpl`
-    val default = Checker(tuning = Some(Map()), algo = Some("incremental"), discardDisabled = Some(true),
-        length = Some(10), maxError = Some(1), noDeadlocks = Some(false), nworkers = Some(1),
-        smtEncoding = Some(SMTEncoding.OOPSLA19), temporal = None, view = None)
+    def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
   }
 
   // TODO
   case class Typechecker(
-      inferpoly: Option[Boolean] = None)
+      inferpoly: Option[Boolean] = Some(false))
       extends Config[Typechecker] {
-    def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
-  }
 
-  object Typechecker {
-    val default = Typechecker(
-        inferpoly = Some(false)
-    )
+    def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
   }
 
   case class ApalacheConfig(
@@ -125,15 +106,6 @@ object Config {
       extends Config[ApalacheConfig] {
 
     def empty: ApalacheConfig = Generic[ApalacheConfig].from(Generic[ApalacheConfig].to(this).map(emptyPoly))
-  }
-
-  object ApalacheConfig {
-    val default = ApalacheConfig(
-        common = Common.default,
-        output = Output.default,
-        checker = Checker.default,
-        typechecker = Typechecker.default,
-    )
   }
 }
 
