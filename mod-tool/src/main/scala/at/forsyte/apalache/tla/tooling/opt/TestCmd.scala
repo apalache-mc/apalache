@@ -46,7 +46,7 @@ class TestCmd
             file = Some(file)
         ),
         checker = cfg.checker.copy(
-            tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString),
+            tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
             init = Some(before),
             next = Some(action),
             inv = Some(assertion),
@@ -71,10 +71,11 @@ class TestCmd
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
           .format(file, before, action, assertion))
 
+    val tuning = cfg.checker.tuning.get
     // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
-    logger.info("Tuning: " + cfg.checker.tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
+    logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.passOptions.set("general.tuning", cfg.checker.tuning)
+    executor.passOptions.set("general.tuning", tuning)
     executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
     executor.passOptions.set("checker.init", cfg.checker.init.get)
     executor.passOptions.set("checker.next", cfg.checker.next.get)

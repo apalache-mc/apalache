@@ -17,7 +17,23 @@ import scala.util.Failure
  * @author
  *   Shon Feder
  */
+sealed trait Config[T] {
+  def empty: T
+}
+
 object Config {
+
+  // We use shapeless to derive empty values of the configs generically, without
+  // having to manually set each field.
+  import shapeless._
+
+  // Constructs a higher-ranked function that can map HLists of config values that can be made "empty"
+  private object emptyPoly extends Poly1 {
+    // Takes a `v : Option[T]` to `None : Option[T]`
+    implicit def noneCase[T]: Case.Aux[Option[T], Option[T]] = at(o => o.flatMap(_ => None))
+    // Takes a `Config[T]` to an empty version of the config (with all fields set to `None`)
+    implicit def configCase[T <: Config[T]]: Case.Aux[T, T] = at(cfg => cfg.empty)
+  }
 
   case class Common(
       /** The subcommand or process being executed */
@@ -32,6 +48,10 @@ object Config {
       profiling: Option[Boolean] = None,
       /** Enables features protected by feature-flags */
       features: Option[Seq[Feature]] = None)
+      extends Config[Common] {
+    def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
+  }
+
   object Common {
     val default =
       Common(routine = Some("UNCONFIGURED-ROUTINE"), file = None,
@@ -44,6 +64,9 @@ object Config {
   case class Output(
       /** A file into which output can be written */
       output: Option[File] = None)
+      extends Config[Output] {
+    def empty: Output = Generic[Output].from(Generic[Output].to(this).map(emptyPoly))
+  }
 
   object Output {
     val default = Output()
@@ -68,6 +91,9 @@ object Config {
       smtEncoding: Option[SMTEncoding] = None,
       temporal: Option[String] = None, // TODO SHould be list?
       view: Option[String] = None)
+      extends Config[Checker] {
+    def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
+  }
 
   object Checker {
     // TODO Init and Next defaults should be set HERE, but the current, stateful
@@ -81,6 +107,9 @@ object Config {
   // TODO
   case class Typechecker(
       inferpoly: Option[Boolean] = None)
+      extends Config[Typechecker] {
+    def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
+  }
 
   object Typechecker {
     val default = Typechecker(
@@ -93,6 +122,10 @@ object Config {
       output: Output = Output(),
       checker: Checker = Checker(),
       typechecker: Typechecker = Typechecker())
+      extends Config[ApalacheConfig] {
+
+    def empty: ApalacheConfig = Generic[ApalacheConfig].from(Generic[ApalacheConfig].to(this).map(emptyPoly))
+  }
 
   object ApalacheConfig {
     val default = ApalacheConfig(
@@ -101,10 +134,7 @@ object Config {
         checker = Checker.default,
         typechecker = Typechecker.default,
     )
-
   }
-
-  // Fix formatting to put each value on own line
 }
 
 // TODO rm
