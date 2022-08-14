@@ -7,17 +7,36 @@ import com.google.inject.{Provider, ProvisionException}
 import scala.util.{Failure, Success, Try}
 
 /**
- * The supported configurations for Apalache's various modes of execution
- *
- * The classes within specify the application's configurable values, along with their base defaults.
+ * The components of this package specify the configurations and options used to configure Apalache
  *
  * @author
  *   Shon Feder
  */
+
+/**
+ * The basic interface of classes that specify application configurations
+ */
 sealed trait Config[T] {
+
+  /**
+   * Produces a copy of the config group `T` with all it's attributes (attributes nested config groups) set to `None`
+   */
   def empty: T
 }
 
+/**
+ * Specifies the program configuration for Apalache
+ *
+ * The case classes extending `Config` aim to specify the entirety of Apalache's configurable values, along with their
+ * defaults. Each case class specifies a group of related configuration values.
+ *
+ * Each subclass `T` of [[Config]][T] should have the following properties:
+ *
+ *   - Each case class' arguments should either be a ''configurable value'' or a child configuration group of type
+ *     `Config[U]`.
+ *   - Each configurable value should be of type `Option[T]`, wherein `None` indicates the configuration source has
+ *     omitted the value and `Some(v)` sets the value to `v`.
+ */
 object Config {
 
   // We use shapeless to derive empty values of the configs generically, without
@@ -32,10 +51,34 @@ object Config {
     implicit def configCase[T <: Config[T]]: Case.Aux[T, T] = at(cfg => cfg.empty)
   }
 
+  /**
+   * The common configurations shared by all of Apalache's modes of execution
+   *
+   * @param routine
+   *   The subcommand or process being executed
+   * @param file
+   *   The file from which input data can be read
+   * @param outDir
+   *   A directory into which the historical `runDir`s will be written containing diagnostic output data
+   * @param runDir
+   *   A directory into which logging and diagnostic outputs for the latest run will be written (in addition to the
+   *   run-dirs accumulated in the `outDir`)
+   * @param debug
+   *   Whether or not to enable debug level output
+   * @param smtprof
+   *   Whether or not to write SMT profiling into the `runDir`
+   * @param configFile
+   *   A file from which a local configuration is to be read
+   * @param writeIntermediate
+   *   Whether or not to write intermediate data into the `runDir`
+   * @param profiling
+   *   Whether or not to write general profiling data into the `runDir`
+   * @param features
+   *   Enable experimental features
+   */
   case class Common(
-      /** The subcommand or process being executed */
       routine: Option[String] = Some("UNCONFIGURED-ROUTINE"),
-      file: Option[File] = None,
+      file: Option[File] = None, // TODO Move "file" into an "Input" configuration group
       outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
       debug: Option[Boolean] = Some(false),
@@ -43,40 +86,71 @@ object Config {
       configFile: Option[File] = None,
       writeIntermediate: Option[Boolean] = None,
       profiling: Option[Boolean] = None,
-      /** Enables features protected by feature-flags */
       features: Option[Seq[Feature]] = Some(Seq()))
       extends Config[Common] {
 
     def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
   }
 
-  /** Configuration of program output */
-  // TODO Move the outer output vues into this section?
-  case class Output(
-      /** A file into which output can be written */
-      output: Option[File] = None)
-      extends Config[Output] {
+  /**
+   * Configuration of program output
+   *
+   * @param output
+   *   File into which output data is to be written
+   */
+  case class Output(output: Option[File] = None) extends Config[Output] {
 
     def empty: Output = Generic[Output].from(Generic[Output].to(this).map(emptyPoly))
   }
 
-  /** Configuration of program output */
-  // TODO: Switch defaults and empty values
-  // TODO: Add values to feed to `Checker` options group
+  /**
+   * Configuration of model checking
+   *
+   * @param tuning
+   *   A map of various settings to alter the model checking behavior
+   * @param algo
+   *   the search algorithm: offline, incremental, parallel (soon), default: incremental
+   * @param config
+   *   location of a configuration file in TLC format
+   * @param cinit
+   *   the name of an operator that initializes CONSTANTS,
+   * @param discardDisabled
+   *   pre-check whether a transition is disabled, and discard it, to make SMT queries smaller
+   * @param init
+   *   the name of an operator that initializes VARIABLES
+   * @param inv
+   *   the name of a transition operator
+   * @param next
+   *   the name of a transition operator
+   * @param length
+   *   maximal number of Next steps
+   * @param maxError
+   *   whether to stop on the first error or to produce up to a given number of counterexamples
+   * @param noDeadLocks
+   *   do not check for deadlocks
+   * @param nworkers
+   *   the number of workers for the parallel checker (not currently used)
+   * @param smtEncoding
+   *   the SMT encoding to use
+   * @param temporal
+   *   the name of a temporal property, e.g. Property
+   * @param view
+   *   the state view to use for generating counter examples when `maxError` is set
+   */
   case class Checker(
       tuning: Option[Map[String, String]] = Some(Map()),
       algo: Option[String] = Some("incremental"), // TODO: convert to case class
-      cinit: Option[String] = None,
       config: Option[String] = None,
       discardDisabled: Option[Boolean] = Some(true),
+      cinit: Option[String] = None,
       // TODO Set default here once ConfigurationPassImpl is fixed
       init: Option[String] = None,
       // TODO Should be list?
       inv: Option[String] = None,
-      length: Option[Int] = Some(10),
-      maxError: Option[Int] = Some(1),
       // TODO Set default here once ConfigurationPassImpl is fixed
       next: Option[String] = None,
+      length: Option[Int] = Some(10),
+      maxError: Option[Int] = Some(1),
       noDeadlocks: Option[Boolean] = Some(false),
       nworkers: Option[Int] = Some(1),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
@@ -87,7 +161,12 @@ object Config {
     def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
   }
 
-  // TODO
+  /**
+   * Configuration of type checking
+   *
+   * @param inferpoly
+   *   allow the type checker to infer polymorphic types *
+   */
   case class Typechecker(
       inferpoly: Option[Boolean] = Some(false))
       extends Config[Typechecker] {
@@ -95,6 +174,11 @@ object Config {
     def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
   }
 
+  /**
+   * The complete configuration
+   *
+   * Gathers all configuration groups
+   */
   case class ApalacheConfig(
       common: Common = Common(),
       output: Output = Output(),
@@ -105,9 +189,6 @@ object Config {
     def empty: ApalacheConfig = Generic[ApalacheConfig].from(Generic[ApalacheConfig].to(this).map(emptyPoly))
   }
 }
-
-// TODO rm
-import Config._
 
 /** Defines the data sources supported */
 sealed abstract class SourceOption
@@ -158,6 +239,8 @@ object SMTEncoding {
 sealed trait OptionGroup
 
 object OptionGroup {
+
+  import Config._
 
   /**
    * Interface for classes that can be produced from a [[Config.ApalacheConfig]]
@@ -261,11 +344,6 @@ object OptionGroup {
   }
 }
 
-// case class Parse(cfg: ApalacheConfig) extends Configurable(cfg) with IO {
-//   val input: Common = Common(cfg)
-//   val debug:
-// }
-
 /**
  * Provides a configured option instance via a Google Guice Provider
  *
@@ -275,16 +353,21 @@ object OptionGroup {
 class OptionsProvider[T] extends Provider[T] {
   protected var _options: Option[T] = None
 
-  def configure(opt: ApalacheConfig => Try[T], cfg: ApalacheConfig): Try[Unit] =
+  def configure(opt: Config.ApalacheConfig => Try[T], cfg: Config.ApalacheConfig): Try[Unit] =
     opt(cfg).map(os => _options = Some(os))
 
   def get(): T = _options.getOrElse(throw new ProvisionException("pass options were not configured"))
 }
 
-// Yeah!
+// Example of using the configuration provider
+// TODO  rm once provider is integrated into Guice pipeline
 class test {
   import OptionGroup._
-  val op: OptionsProvider[Output] = new OptionsProvider[Output]()
-  val t = op.configure(Output(_), ApalacheConfig())
-  val ops = op.get().output
+  // Creation of the provider will happen during the DI priming
+  val provider: OptionsProvider[WithOutput] = new OptionsProvider[WithOutput]()
+  // This is how we will late-bind a particular option-set to the provider
+  // (when setting up the Executor)
+  val configure = provider.configure(WithOutput(_), Config.ApalacheConfig()).get
+  // This is an example of accessing a value from the options provider
+  val ops: Boolean = provider.get().common.profiling
 }
