@@ -3,11 +3,8 @@ package at.forsyte.apalache.infra.passes.options
 // TODO: Use either File or Path consistently (preference for File)
 import java.io.File
 import at.forsyte.apalache.tla.lir.Feature
-import com.google.inject.Provider
-import com.google.inject.ProvisionException
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
+import com.google.inject.{Provider, ProvisionException}
+import scala.util.{Failure, Success, Try}
 
 /**
  * The supported configurations for Apalache's various modes of execution
