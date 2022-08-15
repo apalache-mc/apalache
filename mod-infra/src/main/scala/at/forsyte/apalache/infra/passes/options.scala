@@ -2,9 +2,24 @@ package at.forsyte.apalache.infra.passes.options
 
 import java.io.File
 import at.forsyte.apalache.tla.lir.Feature
+import com.google.inject
+import scala.util.{Failure, Success, Try}
+import at.forsyte.apalache.infra.PassOptionException
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
+ *
+ * Configurations are represented by extension of the [[Config]] trait. Configurations are derived via injective maps
+ * from configuration sources (souch as CLI arguments or .cfg files) to config classes. As such, each value in a config
+ * class is an `Option`, where a value of `None` indicates that value was left unconfigured.
+ *
+ * Options are represeneted by extensions of the [[OptionGroup]] trait. Option groups are typically derived via
+ * surjective maps from from [[Config]]s. As such, for every field in the option group, there must be a value given in
+ * the originating config.
+ *
+ * See
+ * [[https://github.com/informalsystems/apalache/blob/main/docs/src/adr/022adr-unification-of-configs-and-options.md ADR022]]
+ * for motivation and details.
  *
  * @author
  *   Shon Feder
@@ -86,8 +101,8 @@ object Config {
       debug: Option[Boolean] = Some(false),
       smtprof: Option[Boolean] = Some(false),
       configFile: Option[File] = None,
-      writeIntermediate: Option[Boolean] = None,
-      profiling: Option[Boolean] = None,
+      writeIntermediate: Option[Boolean] = Some(false),
+      profiling: Option[Boolean] = Some(false),
       features: Option[Seq[Feature]] = Some(Seq()))
       extends Config[Common] {
 
@@ -145,12 +160,9 @@ object Config {
       config: Option[String] = None,
       discardDisabled: Option[Boolean] = Some(true),
       cinit: Option[String] = None,
-      // TODO Set default here once ConfigurationPassImpl is fixed
-      init: Option[String] = None,
-      // TODO Should be list?
-      inv: Option[String] = None,
-      // TODO Set default here once ConfigurationPassImpl is fixed
-      next: Option[String] = None,
+      init: Option[String] = None, // TODO Set proper default here once ConfigurationPassImpl is fixed
+      inv: Option[String] = None, // TODO Should be list?
+      next: Option[String] = None, // TODO Set proper default here once ConfigurationPassImpl is fixed
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       noDeadlocks: Option[Boolean] = Some(false),
@@ -232,5 +244,297 @@ object SMTEncoding {
     case "funArrays"     => FunArrays
     case "oopsla19"      => OOPSLA19
     case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
+  }
+}
+
+/** The basic interface for groups of options used to control program behavior */
+sealed trait OptionGroup
+
+/**
+ * Specifies the options used to control pass executions
+ *
+ * Typically, each pass will need a subset of the available option groups, and the sequence of passes run by the
+ * `PassExecutor` will require the union of the option groups required by its constituent passes.
+ *
+ * The unions can be specified via the `Has*` traits, such as [[OptionGroup.HasInput]] and constructed via the `With*`
+ * classes, such as [[OptionGroup.WithInput]].
+ */
+object OptionGroup {
+
+  /**
+   * Interface for a group of related options that can be be produced from a [[Config]]
+   *
+   * The intended use of this class is to identify '''configurable''' options. Configurable options are extensions of
+   * `OptionGroup` that can be derived from a `Config`. Typically, these are case classes.
+   *
+   * @param cfg
+   *   An instance of [[Config config group]].
+   */
+  sealed trait Configurable[C <: Config[C], O] {
+    //  TODO could manual apply methods be replaced with pureconfig merging?
+    def apply(cfg: C): Try[O]
+  }
+
+  // Convert optional values into `Try`'s
+  // see https://stackoverflow.com/questions/17521709/how-can-i-best-convert-an-option-into-a-try/45017589#45017589
+  implicit class OptionOps[A](opt: Option[A]) {
+
+    def toTry(field: String): Try[A] = {
+      opt
+        .map(Success(_))
+        .getOrElse(Failure(new PassOptionException(s"Missing value for required option ${field}")))
+    }
+  }
+
+  /** Options used in all modes of execution */
+  case class Common(
+      command: String,
+      debug: Boolean,
+      features: Seq[Feature],
+      outDir: File,
+      profiling: Boolean,
+      runDir: Option[File],
+      smtprof: Boolean,
+      writeIntermediate: Boolean)
+      extends OptionGroup
+
+  object Common extends Configurable[Config.Common, Common] {
+    // NOTE: These conversions can probably be automated via some
+    // clever use of shapeless records, but not sure if it's worth the
+    // complexity at this point.
+    //
+    // If we change the needed options so that all values are non `Option`, the
+    // automated conversion would be trivially.
+    //
+    def apply(common: Config.Common): Try[Common] = {
+      for {
+        // Required fields
+        command <- common.command.toTry("common.command")
+        debug <- common.debug.toTry("debug")
+        features <- common.features.toTry("common.features")
+        outDir <- common.outDir.toTry("common.outDir")
+        profiling <- common.profiling.toTry("common.profiling")
+        smtprof <- common.debug.toTry("common.smtprog")
+        writeIntermediate <- common.writeIntermediate.toTry("common.writeIntermediate")
+      } yield Common(
+          command = command,
+          debug = debug,
+          features = features,
+          outDir = outDir,
+          profiling = profiling,
+          runDir = common.runDir, // Remains optional
+          smtprof = smtprof,
+          writeIntermediate = writeIntermediate,
+      )
+    }
+  }
+
+  /** Options used to configure program input */
+  case class Input(source: SourceOption) extends OptionGroup
+
+  object Input extends Configurable[Config.Common, Input] {
+    def apply(common: Config.Common): Try[Input] = for {
+      file <- common.inputfile.toTry("input.source")
+    } yield Input(SourceOption.FileSource(file.getAbsoluteFile))
+  }
+
+  /** Options used to configure program output */
+  case class Output(output: Option[File]) extends OptionGroup
+
+  object Output extends Configurable[Config.Output, Output] {
+    def apply(output: Config.Output): Try[Output] = Try(Output(output = output.output))
+  }
+
+  /** Options used to configure the typechecker */
+  case class Typechecker(inferpoly: Boolean) extends OptionGroup
+
+  object Typechecker extends Configurable[Config.Typechecker, Typechecker] {
+    def apply(typechecker: Config.Typechecker): Try[Typechecker] = for {
+      inferpoly <- typechecker.inferpoly.toTry("typechecker.inferpoly")
+    } yield Typechecker(inferpoly)
+  }
+
+  /** Options used to configure model checking */
+  case class Checker(
+      algo: String,
+      cinit: Option[String],
+      config: Option[String], // TODO: rm once ConfigurationPassImpl is moved into configuration stage
+      discardDisabled: Boolean,
+      init: Option[String], // TODO Make required after ConfigurationPassImpl is refactored
+      inv: Option[String],
+      length: Int,
+      maxError: Int,
+      next: Option[String], // TODO Make required after ConfigurationPassImpl is refactored
+      noDeadlocks: Boolean,
+      nworkers: Int,
+      smtEncoding: SMTEncoding,
+      temporal: Option[String],
+      tuning: Map[String, String],
+      view: Option[String])
+      extends OptionGroup
+
+  object Checker extends Configurable[Config.Checker, Checker] {
+    def apply(checker: Config.Checker): Try[Checker] = for {
+      // Required options
+      algo <- checker.algo.toTry("checker.algo")
+      discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
+      // init <- checker.init.toTry("checker.init")
+      length <- checker.length.toTry("checker.length")
+      maxError <- checker.maxError.toTry("checker.maxError")
+      // next <- checker.next.toTry("checker.next")
+      noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
+      nworkers <- checker.nworkers.toTry("checker.nworkers")
+      smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
+      tuning <- checker.tuning.toTry("checker.tuning")
+    } yield Checker(
+        algo = algo,
+        cinit = checker.cinit, // optional
+        config = checker.config, // optional
+        discardDisabled = discardDisabled,
+        init = checker.init, // TODO: should be required
+        inv = checker.inv, // optional
+        length = length,
+        maxError = maxError,
+        next = checker.next, // TODO: should be required
+        noDeadlocks = noDeadlocks,
+        nworkers = nworkers,
+        smtEncoding = smtEncoding,
+        temporal = checker.temporal, // optional
+        tuning = tuning,
+        view = checker.view, // optional
+    )
+  }
+
+  /**
+   * Provides a configured [[OptionGroup]] instance via a Google Guice `Provider`
+   *
+   * The provider enables late-binding of a configured option instance, which is then made available to any inject
+   * annotated class classes via google Guice's dependency injection.
+   *
+   * For more on Guice providers, see https://github.com/google/guice/wiki/InjectingProviders
+   */
+  class Provider[O <: OptionGroup] extends inject.Provider[O] {
+    protected var _options: Option[O] = None
+
+    /**
+     * Set the option to be provided
+     *
+     * This is typically called once, after parsing [[Config]]s into [[OptionGroup]]s. Use of it is to mutate the stored
+     * options to communicate between passes is strongly discouraged (but not forbidden).
+     */
+    def set(options: O): Unit = _options = Some(options)
+
+    /** Get the provided option */
+    def get(): O = _options.getOrElse(throw new inject.ProvisionException("pass options were not configured"))
+  }
+
+  ////////////////
+  // Interfaces //
+  ////////////////
+
+  // The following traits specify combinations of needed options.
+
+  trait HasCommon extends OptionGroup {
+    val common: Common
+  }
+
+  trait HasInput extends HasCommon {
+    val input: Input
+  }
+
+  trait HasOutput extends HasCommon {
+    val output: Output
+  }
+
+  trait HasIO extends HasInput with HasOutput
+
+  trait HasTypechecker extends HasIO {
+    val typechecker: Typechecker
+  }
+
+  trait HasChecker extends HasInput {
+    val checker: Checker
+    val typechecker: Typechecker
+  }
+
+  // This is the maximal interface, that should always be the greatest upper
+  // bound on all combinations of option groups
+  trait HasAll extends HasChecker with HasOutput
+
+  //////////////////
+  // Constructors //
+  //////////////////
+
+  // The following classes provide ways of constructing the option group
+  // combinations specified in the interfaces above.
+
+  /** The empty option group, providing no values */
+  case class WithNone() extends OptionGroup
+
+  case class WithInput(
+      common: Common,
+      input: Input)
+      extends HasInput
+
+  object WithInput extends Configurable[Config.ApalacheConfig, WithInput] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithInput] = for {
+      common <- Common(cfg.common)
+      input <- Input(cfg.common)
+    } yield WithInput(common, input)
+  }
+
+  case class WithOutput(
+      common: Common,
+      output: Output)
+      extends HasOutput
+
+  object WithOutput extends Configurable[Config.ApalacheConfig, WithOutput] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithOutput] = for {
+      common <- Common(cfg.common)
+      output <- Output(cfg.output)
+    } yield WithOutput(common, output)
+  }
+
+  case class WithIO(
+      common: Common,
+      input: Input,
+      output: Output)
+      extends HasIO
+
+  object WithIO extends Configurable[Config.ApalacheConfig, WithIO] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithIO] = for {
+      input <- WithInput(cfg)
+      output <- WithOutput(cfg)
+    } yield WithIO(input.common, input.input, output.output)
+  }
+
+  case class WithChecker(
+      common: Common,
+      input: Input,
+      checker: Checker,
+      typechecker: Typechecker)
+      extends HasChecker
+
+  object WithChecker extends Configurable[Config.ApalacheConfig, WithChecker] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithChecker] = for {
+      common <- Common(cfg.common)
+      input <- Input(cfg.common)
+      checker <- Checker(cfg.checker)
+      typechecker <- Typechecker(cfg.typechecker)
+    } yield WithChecker(common, input, checker, typechecker)
+  }
+
+  case class WithTypechecker(
+      common: Common,
+      input: Input,
+      output: Output,
+      typechecker: Typechecker)
+      extends HasTypechecker
+
+  object WithTypechecker extends Configurable[Config.ApalacheConfig, WithTypechecker] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithTypechecker] = for {
+      io <- WithIO(cfg)
+      typechecker <- Typechecker(cfg.typechecker)
+    } yield WithTypechecker(common = io.common, input = io.input, output = io.output, typechecker)
   }
 }
