@@ -79,11 +79,11 @@ class ConfigManager() {
     // Derive lightbend `Config` objects from the default and primary config
     // case classes.
     //
-    // The case to `ConfigObject` is guaranteed to be safe: `ConfigWriter.to`
+    // The cast to `ConfigObject` is guaranteed to be safe: `ConfigWriter.to`
     // produces a `ConfigValue`, of which `ConfigObject` is a subtype
     // representing values that are dictionaries. Case classes are always
     // represented as dictionaries, so we can be sure any `ConfigValue` derived
-    // from an instance of an `ApalacheConfig` .
+    // from an instance of an `ApalacheConfig` can be cast `asInstanceOf[ConfigObject]`.
     val defaults: Config =
       ConfigWriter[ApalacheConfig].to(ApalacheConfig()).asInstanceOf[ConfigObject].toConfig()
     val primaryConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()

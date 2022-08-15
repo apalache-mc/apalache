@@ -41,9 +41,8 @@ abstract class PassExecutorCmd(name: String, description: String)
    * NOTE: It is not invoked automatically, and you should invoke it explicitly in your `Cmd` class' [[run]] method.
    */
   def setCommonOptions(): Unit = {
-    // TODO: rm after optoins provider
+    // TODO: rm after options provider wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    // The values access by `get` here should be set under all intended use of this class
     executor.passOptions
       .set("general.debug", cfg.common.debug.get)
     executor.passOptions.set("smt.prof", cfg.common.smtprof.get)

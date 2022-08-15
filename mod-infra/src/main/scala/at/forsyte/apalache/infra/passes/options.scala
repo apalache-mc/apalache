@@ -1,6 +1,5 @@
 package at.forsyte.apalache.infra.passes.options
 
-// TODO: Use either File or Path consistently (preference for File)
 import java.io.File
 import at.forsyte.apalache.tla.lir.Feature
 import com.google.inject.{Provider, ProvisionException}

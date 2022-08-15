@@ -115,9 +115,9 @@ object OutputManager extends LazyLogging {
   /**
    * Configure OutputManager
    */
-  // TODO replace config with options
+  // TODO replace `ApalacheConfig` with derived options
   def configure(cfg: ApalacheConfig): Unit = {
-    // Mutable update of the confiugration shared within the singleton
+    // Mutable update of the `config` object shared within the singleton
     config = cfg
 
     val fileName =
@@ -126,14 +126,12 @@ object OutputManager extends LazyLogging {
         .orElse(config.common.routine) // Or the name of the routine
         .get // One of those two will always be available
 
-    // TODO replace config with options
     val _outDir = config.common.outDir.get
     setOutDir(_outDir.toPath(), fileName)
     ensureDirExists(outDir)
     createRunDirectory()
     setCustomRunDir(config.common.runDir)
 
-    // TODO replace config with options
     if (config.common.writeIntermediate.getOrElse(false)) {
       setIntermediateDir()
       intermediateDirOpt.foreach(ensureDirExists)

@@ -42,7 +42,13 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
         ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
       })
 
-  // TODO: Doc
+  /**
+   * Derives an instance of [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] from the
+   * command line arguments
+   *
+   * Any configuration values that determine program behavior outside of the class implementing the command line praser
+   * instance should be communicated through the derived `ApalacheConfig`.
+   */
   def toConfig(): Config.ApalacheConfig = {
 
     // We start with an *empty* base config, so that any values which are *not*
@@ -142,6 +148,7 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
     super.read(args)
 
     // Load configuration and merge in cli config
+    // This must be invoked after we parse the CLI args
     _configure = ConfigManager(this.toConfig())
   }
 }
