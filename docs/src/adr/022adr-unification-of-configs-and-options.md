@@ -19,7 +19,7 @@ In the context of extending Apalache's functionality and adding new features\
 facing the need to reason about our program configuration and make execution thread safe\
 we decided for unifying our CLI input with our configuration management system\
 to achieve a more modular architecture and greater static guarantees\
-accepting the development costs and possible increased cost of introducing new CLI inputs in the future.\
+accepting the development costs and possible increased cost of introducing new CLI inputs in the future.
 
 ## Context
 
