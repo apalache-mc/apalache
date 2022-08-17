@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes
-import at.forsyte.apalache.io.CliConfig
 import at.forsyte.apalache.tla.lir.Feature
 
 import java.io.File
 import org.backuity.clist._
 import org.backuity.clist.util.Read
-import at.forsyte.apalache.infra.passes.options.ApalacheConfig
+import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigManager
 
 /**
@@ -18,14 +17,13 @@ import at.forsyte.apalache.io.ConfigManager
  * @author
  *   Igor Konnov, Shon Feder
  */
-abstract class ApalacheCommand(name: String, description: String)
-    extends Command(name: String, description: String) with CliConfig {
+abstract class ApalacheCommand(name: String, description: String) extends Command(name: String, description: String) {
   // TODO Fix excessively long strings
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
       useEnv = true)
   var debug = opt[Option[Boolean]](description = "extensive logging in detailed.log and log.smt, default: false")
-  var smtprof = opt[Boolean](description = "profile SMT constraints in profile.csv, default: false")
+  var smtprof = opt[Option[Boolean]](description = "profile SMT constraints in profile.csv, default: false")
   var profiling = opt[Option[Boolean]](description =
         s"write general profiling data to profile-rules.txt in the run directory, default: false (overrides envvar PROFILING)",
       useEnv = true)
@@ -38,11 +36,39 @@ abstract class ApalacheCommand(name: String, description: String)
   var writeIntermediate = opt[Option[Boolean]](description =
         "write intermediate output files to `out-dir`, default: false (overrides envvar WRITE_INTERMEDIATE)",
       useEnv = true)
-  var features = opt[Seq[Feature]](default = Seq(),
+  var features = opt[Option[Seq[Feature]]](default = None,
       description = {
         val featureDescriptions = Feature.all.map(f => s"  ${f.name}: ${f.description}")
         ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
       })
+
+  /**
+   * Derives an instance of [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] from the
+   * command line arguments
+   *
+   * Any configuration values that determine program behavior outside of the class implementing the command line praser
+   * instance should be communicated through the derived `ApalacheConfig`.
+   */
+  def toConfig(): Config.ApalacheConfig = {
+
+    // We start with an *empty* base config, so that any values which are *not*
+    // set by the CLI will be `None`.  This is required to allow the configs
+    // derived from the CLI to override the configs from other source, while
+    // still letting other config values that are not overriden to propagate
+    // through.
+    val cfg = Config.ApalacheConfig().empty
+    cfg.copy(common = cfg.common.copy(
+        command = Some(name),
+        configFile = configFile,
+        debug = debug,
+        smtprof = smtprof,
+        profiling = profiling,
+        outDir = outDir,
+        runDir = runDir,
+        writeIntermediate = writeIntermediate,
+        features = features,
+    ))
+  }
 
   /**
    * Run the process corresponding to the specified subcommand
@@ -58,7 +84,7 @@ abstract class ApalacheCommand(name: String, description: String)
 
   private var _invocation = ""
   private var _env = ""
-  private var _configure: Either[String, ApalacheConfig] = Left("UNCONFIGURED")
+  private var _configure: Either[String, Config.ApalacheConfig] = Left("UNCONFIGURED")
 
   // A comma separated name of supported features
   private val featureList = Feature.all.map(_.name).mkString(", ")
@@ -105,7 +131,7 @@ abstract class ApalacheCommand(name: String, description: String)
   /**
    * The application configuration, derived by loading all configuration sources, concluding with the CLI options
    *
-   * See [[at.forsyte.apalache.infra.passes.options.ApalacheConfig ApalacheConfig]] for details.
+   * See [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] for details.
    *
    * TODO: Ultimately, we would like all application configuration to be derived from this value
    */
@@ -121,7 +147,8 @@ abstract class ApalacheCommand(name: String, description: String)
 
     super.read(args)
 
+    // Load configuration and merge in cli config
     // This must be invoked after we parse the CLI args
-    _configure = ConfigManager(this)
+    _configure = ConfigManager(this.toConfig())
   }
 }
