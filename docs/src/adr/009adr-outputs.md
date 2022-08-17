@@ -3,7 +3,7 @@ authors: Jure Kukovec, Shon Feder
 last revised: 2021-12-14
 ---
 
-# ADR-008: Apalache Outputs
+# ADR-009: Apalache Outputs
 
 This ADR documents the various files produced by Apalache, and where they get written to.
 

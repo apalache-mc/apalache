@@ -3,7 +3,7 @@ authors: Shon Feder, Gabriela Moreira
 last revised: 2022-05-24
 ---
 
-# RFC-21: Prioritization of Work
+# RFC-021: Prioritization of Work
 
 **Table of Contents**
 

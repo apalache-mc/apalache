@@ -3,7 +3,7 @@ authors: Shon Feder
 last revised: 2022-08-15
 ---
 
-# ADR-012: Configuration Management Component
+# ADR-013: Configuration Management Component
 
 **Table of Contents**
 
