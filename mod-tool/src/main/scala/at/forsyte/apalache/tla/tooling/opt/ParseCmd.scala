@@ -26,7 +26,7 @@ class ParseCmd
 
   override def toConfig() = {
     val cfg = super.toConfig()
-    cfg.copy(common = cfg.common.copy(file = Some(file)), output = cfg.output.copy(output = output))
+    cfg.copy(common = cfg.common.copy(inputfile = Some(file)), output = cfg.output.copy(output = output))
   }
 
   // TODO Factor out execution, use ProgramConfiguration, etc.
@@ -36,7 +36,7 @@ class ParseCmd
 
     logger.info("Parse " + file)
 
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
     cfg.output.output.foreach(executor.passOptions.set("io.output", _))
 
     setCommonOptions()

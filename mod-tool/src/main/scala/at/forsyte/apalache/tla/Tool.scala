@@ -55,7 +55,7 @@ object Tool extends LazyLogging {
         case e: ConfigurationError => return Left(e.getMessage)
       }
 
-      cfg.common.file.foreach { file =>
+      cfg.common.inputfile.foreach { file =>
         // The sourceLines file is only relevant if we are loading a TLA file
         if (file.getName.endsWith(".tla") && file.exists()) {
           OutputManager.initSourceLines(file)

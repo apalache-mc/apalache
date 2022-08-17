@@ -57,7 +57,7 @@ object Config {
    *
    * @param command
    *   The subcommand or process being executed
-   * @param file
+   * @param inputfile
    *   The file from which input data can be read
    * @param outDir
    *   A directory into which the historical `runDir`s will be written containing diagnostic output data
@@ -79,7 +79,7 @@ object Config {
    */
   case class Common(
       command: Option[String] = None,
-      file: Option[File] = None, // TODO Move "file" into an "Input" configuration group
+      inputfile: Option[File] = None, // TODO Move "inputfile" into an "Input" configuration group
       outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
       debug: Option[Boolean] = Some(false),

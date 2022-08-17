@@ -43,7 +43,7 @@ class TestCmd
 
     cfg.copy(
         common = cfg.common.copy(
-            file = Some(file)
+            inputfile = Some(file)
         ),
         checker = cfg.checker.copy(
             tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
@@ -76,7 +76,7 @@ class TestCmd
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
     executor.passOptions.set("checker.init", cfg.checker.init.get)
     executor.passOptions.set("checker.next", cfg.checker.next.get)
     executor.passOptions.set("checker.inv", List(cfg.checker.inv.get))

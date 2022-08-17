@@ -33,7 +33,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
     cfg.copy(
-        common = cfg.common.copy(file = Some(file)),
+        common = cfg.common.copy(inputfile = Some(file)),
         checker = cfg.checker.copy(config = config, cinit = cinit, init = init, next = next, inv = inv,
             temporal = temporal, length = length),
     )
@@ -47,7 +47,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
       val environment = if (env != "") s"(${env}) " else ""
       s"Checker options: ${environment}${name} ${invocation}"
     }
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
     cfg.checker.config.foreach(executor.passOptions.set("checker.config", _))
     cfg.checker.init.foreach(executor.passOptions.set("checker.init", _))
     cfg.checker.next.foreach(executor.passOptions.set("checker.next", _))

@@ -30,7 +30,7 @@ class TypeCheckCmd
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
     cfg.copy(
-        common = cfg.common.copy(file = Some(file)),
+        common = cfg.common.copy(inputfile = Some(file)),
         output = cfg.output.copy(output = output),
         typechecker = cfg.typechecker.copy(inferpoly = inferPoly),
     )
@@ -41,7 +41,7 @@ class TypeCheckCmd
 
     logger.info("Type checking " + file)
 
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.file.get.getAbsoluteFile))
+    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
     cfg.output.output.foreach(executor.passOptions.set("io.output", _))
     executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
     setCommonOptions()

@@ -121,7 +121,7 @@ object OutputManager extends LazyLogging {
     config = cfg
 
     val fileName =
-      config.common.file
+      config.common.inputfile
         .map(_.getName) // Either the name of the file
         .orElse(config.common.command) // Or the name of the command running
         .get // One of those two will always be available
