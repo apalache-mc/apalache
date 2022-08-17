@@ -78,7 +78,7 @@ object Config {
    *   Enable experimental features
    */
   case class Common(
-      routine: Option[String] = Some("UNCONFIGURED-ROUTINE"),
+      routine: Option[String] = None,
       file: Option[File] = None, // TODO Move "file" into an "Input" configuration group
       outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
