@@ -12,6 +12,9 @@ import at.forsyte.apalache.tla.lir.Feature
 
 /**
  * The basic interface of classes that specify application configurations
+ *
+ * Each subclass of `Config` is a case class that specifies a set of related configurations, which we refer to as a
+ * "config group".
  */
 sealed trait Config[T] {
 
