@@ -19,7 +19,8 @@ import at.forsyte.apalache.tla.lir.Feature
 sealed trait Config[T] {
 
   /**
-   * Produces a copy of the config group `T` with all it's attributes (attributes nested config groups) set to `None`
+   * Produces a copy of the config group `T` with all its attributes (and all the attributes of possibly nested config
+   * groups) set to `None`
    */
   def empty: T
 }
