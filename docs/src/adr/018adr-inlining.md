@@ -1,8 +1,8 @@
 # ADR-018: Inlining in Apalache
 
-| author       | revision | last revised |
-| ------------ | --------:| ------------ |
-| Jure Kukovec |        1 | Apr 21, 2022 |
+| author       | revision  | last revised |
+| ------------ | --------: | ------------ |
+| Jure Kukovec | 1         | 2022-04-21   |
 
 **Table of Contents**
 
