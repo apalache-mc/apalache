@@ -60,7 +60,8 @@ object Config {
    * @param inputfile
    *   The file from which input data can be read
    * @param outDir
-   *   A directory into which the historical `runDir`s will be written containing diagnostic output data
+   *   An additional directory wherein logging and diagnostic outputs for this run will be written (in addition to a run
+   *   directory inside the `outDir`)
    * @param runDir
    *   A directory into which logging and diagnostic outputs for the latest run will be written (in addition to the
    *   run-dirs accumulated in the `outDir`)
@@ -75,7 +76,7 @@ object Config {
    * @param profiling
    *   Whether or not to write general profiling data into the `runDir`
    * @param features
-   *   Enable experimental features
+   *   Control experimental features
    */
   case class Common(
       command: Option[String] = None,
@@ -114,13 +115,13 @@ object Config {
    * @param config
    *   location of a configuration file in TLC format
    * @param cinit
-   *   the name of an operator that initializes CONSTANTS,
+   *   the name of an operator that initializes CONSTANTS
    * @param discardDisabled
    *   pre-check whether a transition is disabled, and discard it, to make SMT queries smaller
    * @param init
    *   the name of an operator that initializes VARIABLES
    * @param inv
-   *   the name of a transition operator
+   *   the name of an invariant operator
    * @param next
    *   the name of a transition operator
    * @param length
@@ -166,7 +167,7 @@ object Config {
    * Configuration of type checking
    *
    * @param inferpoly
-   *   allow the type checker to infer polymorphic types *
+   *   allow the type checker to infer polymorphic types
    */
   case class Typechecker(
       inferpoly: Option[Boolean] = Some(false))
