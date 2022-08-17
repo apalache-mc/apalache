@@ -58,7 +58,7 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
     // through.
     val cfg = Config.ApalacheConfig().empty
     cfg.copy(common = cfg.common.copy(
-        routine = Some(name),
+        command = Some(name),
         configFile = configFile,
         debug = debug,
         smtprof = smtprof,

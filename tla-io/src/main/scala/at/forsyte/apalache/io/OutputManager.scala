@@ -123,7 +123,7 @@ object OutputManager extends LazyLogging {
     val fileName =
       config.common.file
         .map(_.getName) // Either the name of the file
-        .orElse(config.common.routine) // Or the name of the routine
+        .orElse(config.common.command) // Or the name of the command running
         .get // One of those two will always be available
 
     val _outDir = config.common.outDir.get

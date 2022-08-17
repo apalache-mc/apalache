@@ -55,7 +55,7 @@ object Config {
   /**
    * The common configurations shared by all of Apalache's modes of execution
    *
-   * @param routine
+   * @param command
    *   The subcommand or process being executed
    * @param file
    *   The file from which input data can be read
@@ -78,7 +78,7 @@ object Config {
    *   Enable experimental features
    */
   case class Common(
-      routine: Option[String] = None,
+      command: Option[String] = None,
       file: Option[File] = None, // TODO Move "file" into an "Input" configuration group
       outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
