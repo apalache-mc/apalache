@@ -9,6 +9,7 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * This command initiates the 'test' command line.
@@ -19,7 +20,7 @@ import at.forsyte.apalache.io.ConfigurationError
 class TestCmd
     extends PassExecutorCmd(name = "test", description = "Quickly test a TLA+ specification") with LazyLogging {
 
-  val executor = Executor(new CheckerModule)
+  type Options = OptionGroup.HasChecker
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var before: String =
@@ -66,6 +67,8 @@ class TestCmd
   def run() = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    val options: Options = OptionGroup.WithChecker(cfg).get
+    val executor = Executor(new CheckerModule, options)
 
     // This is a special version of the `check` command that is tuned towards testing scenarios
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
@@ -92,7 +95,7 @@ class TestCmd
     executor.passOptions.set("checker.algo", cfg.checker.algo.get)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
     executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
-    setCommonOptions()
+    setCommonOptions(executor)
 
     executor.run() match {
       case Right(_)   => Right("No example found")

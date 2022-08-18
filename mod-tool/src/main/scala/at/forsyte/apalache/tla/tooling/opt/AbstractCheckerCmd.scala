@@ -7,10 +7,15 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.Executor
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
     extends PassExecutorCmd(name, description) with LazyLogging {
+
+  type Options <: OptionGroup.HasChecker
+
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var config: Option[String] =
     opt[Option[String]](name = "config", default = None, description = "configuration file in TLC format")
@@ -38,11 +43,12 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
             temporal = temporal, length = length),
     )
   }
-  override def setCommonOptions(): Unit = {
+
+  override def setCommonOptions(executor: Executor[Options]): Unit = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
 
-    super.setCommonOptions()
+    super.setCommonOptions(executor)
     logger.info {
       val environment = if (env != "") s"(${env}) " else ""
       s"Checker options: ${environment}${name} ${invocation}"

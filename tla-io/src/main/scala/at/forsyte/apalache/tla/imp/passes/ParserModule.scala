@@ -7,6 +7,7 @@ import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * A module that consists only of the parsing pass.
@@ -14,7 +15,7 @@ import com.google.inject.TypeLiteral
  * @author
  *   Igor Konnov
  */
-class ParserModule extends ToolModule {
+class ParserModule[O <: OptionGroup.HasIO] extends ToolModule[O] {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.Executor
-import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * Interface for the subcommands that run an `Executor`
@@ -12,40 +12,21 @@ import at.forsyte.apalache.io.ConfigurationError
 abstract class PassExecutorCmd(name: String, description: String)
     extends ApalacheCommand(name: String, description: String) {
 
-  /**
-   * The executor used to sequence a chain of passes
-   *
-   * Executors are created using `at.forsyte.apalache.infra.passes.ToolModule`. E.g.,
-   *
-   * {{{
-   * val executor = Executor(new TypeCheckerModule)
-   * }}}
-   *
-   * The [[run]] methods of a subcommand implementing this trait will generally end with an invication of
-   * `executor.run`, such as
-   *
-   * {{{
-   * executor.run() match {
-   *   case Right(module) => Right("Success msg")
-   *   case Left(errCode) => Left(errorCode, "Failure msg")
-   * }
-   * }}}
-   */
-  val executor: Executor
+  // TODO: we should be able to remove this type once `PassOptions` is replaced by the options provider
+  type Options <: OptionGroup.HasCommon
 
   /**
-   * Sets the common options in the [[executor]]
+   * Sets the common options in the supplied [[infra.Executor Executor]]
    *
    * This may be overridden by classes to change which options the class considers common.
    *
    * NOTE: It is not invoked automatically, and you should invoke it explicitly in your `Cmd` class' [[run]] method.
    */
-  def setCommonOptions(): Unit = {
-    // TODO: rm after options provider wired in
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    executor.passOptions
-      .set("general.debug", cfg.common.debug.get)
-    executor.passOptions.set("smt.prof", cfg.common.smtprof.get)
-    executor.passOptions.set("general.features", cfg.common.features.get)
+  // TODO: rm once options provider is fully integrated
+  def setCommonOptions(executor: Executor[Options]): Unit = {
+    val options = executor.options.common
+    executor.passOptions.set("general.debug", options.debug)
+    executor.passOptions.set("smt.prof", options.smtprof)
+    executor.passOptions.set("general.features", options.features)
   }
 }

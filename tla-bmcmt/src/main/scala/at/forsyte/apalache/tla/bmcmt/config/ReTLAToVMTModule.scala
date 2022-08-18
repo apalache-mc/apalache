@@ -14,6 +14,7 @@ import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, Transformation
 import at.forsyte.apalache.tla.pp.passes._
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * Transpiels reTLA inputs to VMT
@@ -21,7 +22,7 @@ import com.google.inject.TypeLiteral
  * @author
  *   Jure Kukovec
  */
-class ReTLAToVMTModule extends ToolModule {
+class ReTLAToVMTModule[O <: OptionGroup.HasChecker] extends ToolModule[O] {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])

@@ -10,9 +10,9 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
-class TypeCheckerModule extends ToolModule {
-
+class TypeCheckerModule[O <: OptionGroup.HasTypechecker] extends ToolModule[O] {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
@@ -39,6 +39,8 @@ class TypeCheckerModule extends ToolModule {
     // Bind all passes
     bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
     bind(classOf[EtcTypeCheckerPass]).to(classOf[EtcTypeCheckerPassImpl])
+
+    super.configure()
   }
 
   override def passes: Seq[Class[_ <: Pass]] = {

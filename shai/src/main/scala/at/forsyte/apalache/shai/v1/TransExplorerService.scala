@@ -26,6 +26,7 @@ import java.util.UUID
 import zio.{Ref, Semaphore, ZEnv, ZIO}
 import zio.duration._
 import com.typesafe.scalalogging.Logger
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -167,7 +168,25 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
     // run by more than one thread at a time.
     result <- parserSemaphore
       .withPermit(ZIO.effectTotal(try {
-        val parser = Executor(new ParserModule)
+        // TODO: replace hard-coded options with options derived from CLI params
+        val options = {
+          import OptionGroup._
+          WithIO(
+              common = Common(
+                  command = "server",
+                  outDir = new java.io.File("."),
+                  runDir = None,
+                  debug = false,
+                  smtprof = false,
+                  writeIntermediate = false,
+                  profiling = false,
+                  features = Seq(),
+              ),
+              input = Input(SourceOption.StringSource(spec, aux)),
+              output = Output(new java.io.File(".")),
+          )
+        }
+        val parser = Executor(new ParserModule, options)
         parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
         parser.run().left.map(code => s"Parsing failed with error code: ${code}")
       } catch {

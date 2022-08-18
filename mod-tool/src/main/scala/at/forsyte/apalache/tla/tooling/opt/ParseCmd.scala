@@ -8,6 +8,7 @@ import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * This command initiates the 'parse' command line.
@@ -18,11 +19,11 @@ import at.forsyte.apalache.io.ConfigurationError
 class ParseCmd
     extends PassExecutorCmd(name = "parse", description = "Parse a TLA+ specification and quit") with LazyLogging {
 
+  type Options = OptionGroup.HasIO
+
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var output: Option[File] = opt[Option[File]](name = "output",
       description = "file to which the parsed source is written (.tla or .json), default: None")
-
-  val executor = Executor(new ParserModule)
 
   override def toConfig() = {
     val cfg = super.toConfig()
@@ -33,13 +34,15 @@ class ParseCmd
   def run() = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    val options: Options = OptionGroup.WithIO(cfg).get
+    val executor = Executor(new ParserModule, options)
 
     logger.info("Parse " + file)
 
     executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
     cfg.output.output.foreach(executor.passOptions.set("io.output", _))
 
-    setCommonOptions()
+    setCommonOptions(executor)
 
     executor.run() match {
       case Right(m) => Right(s"Parsed successfully\nRoot module: ${m.name} with ${m.declarations.length} declarations.")

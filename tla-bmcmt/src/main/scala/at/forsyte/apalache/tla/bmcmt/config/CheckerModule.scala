@@ -14,6 +14,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, Tran
 import at.forsyte.apalache.tla.pp.passes._
 import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * A configuration that binds all the passes from the parser to the checker. If you are not sure how the binding works,
@@ -22,7 +23,7 @@ import com.google.inject.TypeLiteral
  * @author
  *   Igor Konnov
  */
-class CheckerModule extends ToolModule {
+class CheckerModule[O <: OptionGroup.HasChecker] extends ToolModule[O] {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
