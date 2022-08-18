@@ -10,12 +10,15 @@ import at.forsyte.apalache.infra.PassOptionException
  * The components of this package specify the configurations and options used to configure Apalache
  *
  * Configurations are represented by extension of the [[Config]] trait. Configurations are derived via injective maps
- * from configuration sources (souch as CLI arguments or .cfg files) to config classes. As such, each value in a config
- * class is an `Option`, where a value of `None` indicates that value was left unconfigured.
+ * from configuration sources (souch as CLI arguments or .cfg files) to instances of [[Config]]. As such, each value in
+ * an extension of [[Config]] should be an `Option`, where a value of `None` indicates that value was left unconfigured.
  *
- * Options are represeneted by extensions of the [[OptionGroup]] trait. Option groups are typically derived via
- * surjective maps from from [[Config]]s. As such, for every field in the option group, there must be a value given in
- * the originating config.
+ * Options are represented by extensions of the [[OptionGroup]] trait. Option groups are typically derived via
+ * surjective maps from from [[Config]]s to instances of [[OptionGroup]]. As such, for every field in the option group,
+ * there must be a value given in the originating config.
+ *
+ * The aforementioned maps can be defined in any number of ways, via methods on a companion object, by using
+ * `PureConfig` for automatic derivation (see, e.g. 'apalache.io.ConfigManager'), or via arbitrary functions.
  *
  * See
  * [[https://github.com/informalsystems/apalache/blob/main/docs/src/adr/022adr-unification-of-configs-and-options.md ADR022]]
@@ -262,7 +265,7 @@ sealed trait OptionGroup
 object OptionGroup {
 
   /**
-   * Interface for a group of related options that can be be produced from a [[Config]]
+   * Interface for a group of related options that can be produced from a [[Config]]
    *
    * The intended use of this class is to identify '''configurable''' options. Configurable options are extensions of
    * `OptionGroup` that can be derived from a `Config`. Typically, these are case classes.
