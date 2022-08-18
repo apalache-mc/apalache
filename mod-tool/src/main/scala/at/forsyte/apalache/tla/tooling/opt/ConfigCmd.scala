@@ -21,9 +21,6 @@ class ConfigCmd extends ApalacheCommand(name = "config", description = "Configur
       description = "Let Apalache submit usage statistics to tlapl.us\n"
         + "(shared with TLC and TLA+ Toolbox)\nSee: https://apalache.informal.systems/docs/apalache/statistics.html")
 
-  // Used for application (esp. output) configuration
-  def file = new File("config")
-
   def run() = {
     logger.info("Configuring Apalache")
 

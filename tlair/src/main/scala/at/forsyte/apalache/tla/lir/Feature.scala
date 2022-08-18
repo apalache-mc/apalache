@@ -15,7 +15,9 @@ sealed trait Feature {
 case class RowsFeature(
     name: String = "rows",
     description: String = "enable row typing as explained in ADR-014")
-    extends Feature
+    extends Feature {
+  override val toString = name
+}
 
 object Feature {
 

@@ -54,10 +54,14 @@ object Tool extends LazyLogging {
       } catch {
         case e: ConfigurationError => return Left(e.getMessage)
       }
-      // We currently use dummy files for some commands, so we skip here on non-existing files
-      if (cmd.file.getName.endsWith(".tla") && cmd.file.exists()) {
-        OutputManager.initSourceLines(cmd.file)
+
+      cfg.common.inputfile.foreach { file =>
+        // The sourceLines file is only relevant if we are loading a TLA file
+        if (file.getName.endsWith(".tla") && file.exists()) {
+          OutputManager.initSourceLines(file)
+        }
       }
+
       println(s"Output directory: ${OutputManager.runDir.normalize()}")
       OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
           _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")

@@ -22,8 +22,11 @@ ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 ThisBuild / organization := "at.forsyte"
 ThisBuild / scalaVersion := "2.13.8"
 
-// Add resolver for Sonatype OSS Snapshots Maven repository
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+// Add resolver for Sonatype OSS Snapshots and Releases Maven repository
+ThisBuild / resolvers ++= Seq(
+    Resolver.sonatypeRepo("snapshots"),
+    Resolver.sonatypeRepo("releases"),
+)
 
 // Shared dependencies accross all sub projects
 ThisBuild / libraryDependencies ++= Seq(
@@ -36,6 +39,7 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.slf4j,
     Deps.tla2tools,
     Deps.z3,
+    Deps.shapeless,
     TestDeps.junit,
     TestDeps.easymock,
     TestDeps.scalatest,
