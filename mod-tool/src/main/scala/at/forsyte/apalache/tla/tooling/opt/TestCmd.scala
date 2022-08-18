@@ -6,7 +6,6 @@ import java.io.File
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
@@ -74,27 +73,27 @@ class TestCmd
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
           .format(file, before, action, assertion))
 
-    val tuning = cfg.checker.tuning.get
+    val tuning = options.checker.tuning
     // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
-    executor.passOptions.set("checker.init", cfg.checker.init.get)
-    executor.passOptions.set("checker.next", cfg.checker.next.get)
-    executor.passOptions.set("checker.inv", List(cfg.checker.inv.get))
-    cfg.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
+    executor.passOptions.set("parser.source", options.input.source)
+    executor.passOptions.set("checker.init", options.checker.init.get)
+    executor.passOptions.set("checker.next", options.checker.next.get)
+    executor.passOptions.set("checker.inv", List(options.checker.inv.get))
+    options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
     // TODO: move into options provider
-    executor.passOptions.set("checker.nworkers", cfg.checker.nworkers.get)
+    executor.passOptions.set("checker.nworkers", options.checker.nworkers)
     // check only one instance of the action
-    executor.passOptions.set("checker.length", cfg.checker.length.get)
+    executor.passOptions.set("checker.length", options.checker.length)
     // no preliminary pruning of disabled transitions
-    executor.passOptions.set("checker.discardDisabled", cfg.checker.discardDisabled.get)
-    executor.passOptions.set("checker.noDeadlocks", cfg.checker.noDeadlocks.get)
+    executor.passOptions.set("checker.discardDisabled", options.checker.discardDisabled)
+    executor.passOptions.set("checker.noDeadlocks", options.checker.noDeadlocks)
     // prefer the offline mode as we have a single query
-    executor.passOptions.set("checker.algo", cfg.checker.algo.get)
+    executor.passOptions.set("checker.algo", options.checker.algo)
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
+    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
     setCommonOptions(executor)
 
     executor.run() match {

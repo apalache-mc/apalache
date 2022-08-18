@@ -6,7 +6,6 @@ import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 
@@ -32,15 +31,15 @@ class ParseCmd
 
   // TODO Factor out execution, use ProgramConfiguration, etc.
   def run() = {
-    // TODO: rm once OptionProvider is wired in
+    // TODO: Error handling
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options: Options = OptionGroup.WithIO(cfg).get
     val executor = Executor(new ParserModule, options)
 
     logger.info("Parse " + file)
 
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
-    cfg.output.output.foreach(executor.passOptions.set("io.output", _))
+    executor.passOptions.set("parser.source", options.input.source)
+    options.output.output.foreach(executor.passOptions.set("io.output", _))
 
     setCommonOptions(executor)
 

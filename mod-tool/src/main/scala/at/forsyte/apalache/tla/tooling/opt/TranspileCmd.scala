@@ -23,9 +23,8 @@ class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = 
     val options: Options = OptionGroup.WithChecker(cfg).get
     val executor = Executor(new ReTLAToVMTModule, options)
 
-    // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    // TODO pass options
-    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
+    // TODO rm
+    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
     setCommonOptions(executor)
     val outFilePath = OutputManager.runDirPathOpt
       .map { p =>

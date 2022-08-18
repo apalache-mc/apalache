@@ -91,23 +91,24 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   def run() = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    // TODO Handle error case
     val options: Options = OptionGroup.WithChecker(cfg).get
     val executor = Executor(new CheckerModule, options)
 
-    val tuning = cfg.checker.tuning.get
+    val tuning = options.checker.tuning
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("checker.nworkers", cfg.checker.nworkers.get)
-    executor.passOptions.set("checker.discardDisabled", cfg.checker.discardDisabled.get)
-    executor.passOptions.set("checker.noDeadlocks", cfg.checker.noDeadlocks.get)
-    executor.passOptions.set("checker.algo", cfg.checker.algo.get)
-    executor.passOptions.set("checker.smt-encoding", cfg.checker.smtEncoding.get)
-    executor.passOptions.set("checker.maxError", cfg.checker.maxError.get)
-    cfg.checker.view.foreach(executor.passOptions.set("checker.view", _))
+    executor.passOptions.set("checker.nworkers", options.checker.nworkers)
+    executor.passOptions.set("checker.discardDisabled", options.checker.discardDisabled)
+    executor.passOptions.set("checker.noDeadlocks", options.checker.noDeadlocks)
+    executor.passOptions.set("checker.algo", options.checker.algo)
+    executor.passOptions.set("checker.smt-encoding", options.checker.smtEncoding)
+    executor.passOptions.set("checker.maxError", options.checker.maxError)
+    options.checker.view.foreach(executor.passOptions.set("checker.view", _))
     // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
+    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
     setCommonOptions(executor)
     executor.run() match {
       case Right(_) =>

@@ -6,7 +6,6 @@ import org.backuity.clist._
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
@@ -44,9 +43,9 @@ class TypeCheckCmd
 
     logger.info("Type checking " + file)
 
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
-    cfg.output.output.foreach(executor.passOptions.set("io.output", _))
-    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
+    executor.passOptions.set("parser.source", options.input.source)
+    options.output.output.foreach(executor.passOptions.set("io.output", _))
+    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
     setCommonOptions(executor)
     executor.run() match {
       case Right(_)   => Right("Type checker [OK]")

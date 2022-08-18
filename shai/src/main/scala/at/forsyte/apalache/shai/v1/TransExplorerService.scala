@@ -183,7 +183,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
                   features = Seq(),
               ),
               input = Input(SourceOption.StringSource(spec, aux)),
-              output = Output(new java.io.File(".")),
+              output = Output(Some(new java.io.File("."))),
           )
         }
         val parser = Executor(new ParserModule, options)

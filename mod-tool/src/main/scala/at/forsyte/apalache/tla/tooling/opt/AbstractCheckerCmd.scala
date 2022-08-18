@@ -4,9 +4,7 @@ import org.backuity.clist.{arg, opt}
 
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.Executor
 
@@ -46,20 +44,20 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
 
   override def setCommonOptions(executor: Executor[Options]): Unit = {
     // TODO: rm once OptionProvider is wired in
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    val options = executor.options
 
     super.setCommonOptions(executor)
     logger.info {
       val environment = if (env != "") s"(${env}) " else ""
       s"Checker options: ${environment}${name} ${invocation}"
     }
-    executor.passOptions.set("parser.source", SourceOption.FileSource(cfg.common.inputfile.get.getAbsoluteFile))
-    cfg.checker.config.foreach(executor.passOptions.set("checker.config", _))
-    cfg.checker.init.foreach(executor.passOptions.set("checker.init", _))
-    cfg.checker.next.foreach(executor.passOptions.set("checker.next", _))
-    cfg.checker.inv.foreach(inv => executor.passOptions.set("checker.inv", List(inv)))
-    cfg.checker.temporal.foreach(temporal => executor.passOptions.set("checker.temporal", List(temporal)))
-    cfg.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
-    executor.passOptions.set("checker.length", cfg.checker.length.get)
+    executor.passOptions.set("parser.source", options.input.source)
+    options.checker.config.foreach(executor.passOptions.set("checker.config", _))
+    options.checker.init.foreach(executor.passOptions.set("checker.init", _))
+    options.checker.next.foreach(executor.passOptions.set("checker.next", _))
+    options.checker.inv.foreach(inv => executor.passOptions.set("checker.inv", List(inv)))
+    options.checker.temporal.foreach(temporal => executor.passOptions.set("checker.temporal", List(temporal)))
+    options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
+    executor.passOptions.set("checker.length", options.checker.length)
   }
 }
