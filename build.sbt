@@ -24,8 +24,8 @@ ThisBuild / scalaVersion := "2.13.8"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots"),
-    Resolver.sonatypeRepo("releases"),
+    Resolver.sonatypeOssRepos("snapshots"),
+    Resolver.sonatypeOssRepos("releases"),
 )
 
 // Shared dependencies accross all sub projects
