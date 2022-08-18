@@ -1,9 +1,8 @@
----
-authors: Jure Kukovec, Shon Feder
-last revised: 2021-12-14
----
+# ADR-009: Apalache Outputs
 
-# ADR-008: Apalache Outputs
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Jure Kukovec, Shon Feder               | 2021-12-14      |
 
 This ADR documents the various files produced by Apalache, and where they get written to.
 

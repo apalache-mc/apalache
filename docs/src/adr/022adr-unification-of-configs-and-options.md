@@ -1,9 +1,8 @@
----
-authors: Shon Feder
-last revised: 2022-08-15
----
+# ADR-022: Unify Configuration Management and "Pass Options"
 
-# ADR-003: Unify Configuration Management and "Pass Options"
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Shon Feder                             | 2022-08-15      |
 
 **Table of Contents**
 

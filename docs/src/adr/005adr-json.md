@@ -1,8 +1,8 @@
 # ADR-005: JSON Serialization Format
 
-| author       | revision |
-| ------------ | --------:|
-| Jure Kukovec |        1.1 |
+| author       | revision  |
+| ------------ | --------: |
+| Jure Kukovec | 1.1       |
 
 This ADR documents our decision on serializing the Apalache internal representation (IR) as JSON.
 The purpose of introducing such a serialization is to expose the internal representation in a standardized format, which can be used for persistent storage, or for analysis by third-party tools in the future.

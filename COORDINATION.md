@@ -109,7 +109,7 @@ nothing is a priority".
 
 We use a modified action-priority matrix. Our prioritization process is
 recorded in
-[RFC-21](https://github.com/informalsystems/apalache/blob/main/docs/src/adr/021rfc-prioritization.md)
+[RFC-021](https://github.com/informalsystems/apalache/blob/main/docs/src/adr/021rfc-prioritization.md)
 
 ### Milestones
 

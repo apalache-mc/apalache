@@ -1,8 +1,8 @@
 # ADR-008: Apalache Exceptions
 
-| author     | revision |
-| ------------ | --------:|
-| Jure Kukovec |    1 |
+| author       | revision  |
+| ------------ | --------: |
+| Jure Kukovec | 1         |
 
 This ADR documents the various exception thrown in Apalache, and the circumstances that trigger them.
 

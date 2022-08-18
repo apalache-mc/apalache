@@ -1,8 +1,8 @@
 # ADR-002: types and type annotations
 
-| authors                                | revision | revision date  |
-| -------------------------------------- | --------:| --------------:|
-| Shon Feder, Igor Konnov, Jure Kukovec  |        8 | July 22, 2022 |
+| authors                                | revision  | revision date   |
+| -------------------------------------- | --------: | --------------: |
+| Shon Feder, Igor Konnov, Jure Kukovec  | 8         | July 22, 2022   |
 
 *This is an architectural decision record. For user documentation, check the
 [Snowcat tutorial][] and [Snowcat HOWTO][].*

@@ -1,8 +1,8 @@
 # ADR-16: ReTLA - Relational TLA
 
-| author     | revision |
-| ------------ | --------:|
-| Jure Kukovec |    1 |
+| author       | revision  |
+| ------------ | --------: |
+| Jure Kukovec | 1         |
 
 **Table of Contents**
 

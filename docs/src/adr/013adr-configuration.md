@@ -1,9 +1,8 @@
----
-authors: Shon Feder
-last revised: 2022-08-15
----
+# ADR-013: Configuration Management Component
 
-# ADR-012: Configuration Management Component
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Shon Feder                             | 2022-08-15      |
 
 **Table of Contents**
 

@@ -1,12 +1,8 @@
----
-
-**authors:** Igor Konnov
-
-**last revised:** 2022-06-01
-
----
-
 # ADR-020: Introduce static membership in arenas
+
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Igor Konnov                            | 2022-06-01      |
 
 **Table of Contents**
 

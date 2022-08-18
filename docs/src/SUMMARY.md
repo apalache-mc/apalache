@@ -89,6 +89,7 @@
 
 # Design Documents
 
+- [RFC 001: types and type annotations](./adr/001rfc-types.md)
 - [ADR-002: types and type annotations](./adr/002adr-types.md)
 - [ADR-003: transition executor (TRex)](./adr/003adr-trex.md)
 - [ADR-004: code annotations](./adr/004adr-annotations.md)
@@ -97,9 +98,16 @@
 - [ADR-007: restructuring](./adr/007adr-restructuring.md)
 - [ADR-008: exceptions](./adr/008adr-exceptions.md)
 - [ADR-009: outputs](./adr/009adr-outputs.md)
+- [RFC-010: Implementation of Transition Exploration Server](./adr/010rfc-transition-explorer.md)
 - [ADR-011: alternative SMT encoding using arrays](./adr/011adr-smt-arrays.md)
+- [ADR-012: Adopt an ADR Template](./adr/012adr-adopt-adr-template.md)
+- [ADR-013: Configuration Management Component](./adr/013adr-configuration.md)
+- [ADR-014: Precise type inference for records and variants](./adr/014adr-precise-records.md)
 - [ADR-015: ITF: informal trace format](./adr/015adr-trace.md)
 - [ADR-016: ReTLA: Relational TLA](./adr/016adr-retla.md)
 - [PDR-017: Checking temporal properties](./adr/017pdr-temporal.md)
 - [ADR-018: Inlining in Apalache](./adr/018adr-inlining.md)
+- [ADR-019: Harmonize changelog management](./adr/019adr-harmonize-changelog.md)
 - [ADR-020: Improving membership in arenas](./adr/020adr-arenas.md)
+- [RFC-021: Prioritization of Work](./adr/021rfc-prioritization.md)
+- [ADR-022: Unify Configuration Management and "Pass Options"](./adr/022adr-unification-of-configs-and-options.md)
