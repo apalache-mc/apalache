@@ -1,0 +1,774 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ADR-014: Precise type inference for records and variants - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded "><a href="../tutorials/temporal-properties.html"><strong aria-hidden="true">7.</strong> Specifying temporal properties and understanding counterexamples</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">8.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">9.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">10.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">11.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">11.1.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">11.1.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">11.1.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">11.1.3.</strong> Build from Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">11.2.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">11.3.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">11.4.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">11.5.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">11.5.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">11.5.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">11.5.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">11.5.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">11.5.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">11.5.6.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">11.6.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">11.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">11.8.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">11.9.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">12.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">13.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">14.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">15.</strong> Obsolete: Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">16.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">17.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">18.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">19.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">20.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">21.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">23.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">23.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">23.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">23.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">23.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">23.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">23.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">23.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">23.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">23.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">23.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">23.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-extensions.html"><strong aria-hidden="true">24.</strong> Apalache extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">24.1.</strong> Apalache module</a></li><li class="chapter-item expanded "><a href="../lang/variants.html"><strong aria-hidden="true">24.2.</strong> Variants</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">25.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">25.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">25.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">25.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">25.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">25.5.</strong> Local operator definitions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">26.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">27.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">28.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">29.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">30.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">31.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">32.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">33.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">34.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">35.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">36.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">37.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">38.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">39.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">40.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">41.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/010rfc-transition-explorer.html"><strong aria-hidden="true">42.</strong> RFC-010: Implementation of Transition Exploration Server</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">43.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/012adr-adopt-adr-template.html"><strong aria-hidden="true">44.</strong> ADR-012: Adopt an ADR Template</a></li><li class="chapter-item expanded "><a href="../adr/013adr-configuration.html"><strong aria-hidden="true">45.</strong> ADR-013: Configuration Management Component</a></li><li class="chapter-item expanded "><a href="../adr/014adr-precise-records.html" class="active"><strong aria-hidden="true">46.</strong> ADR-014: Precise type inference for records and variants</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">47.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">48.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017pdr-temporal.html"><strong aria-hidden="true">49.</strong> PDR-017: Checking temporal properties</a></li><li class="chapter-item expanded "><a href="../adr/018adr-inlining.html"><strong aria-hidden="true">50.</strong> ADR-018: Inlining in Apalache</a></li><li class="chapter-item expanded "><a href="../adr/019adr-harmonize-changelog.html"><strong aria-hidden="true">51.</strong> ADR-019: Harmonize changelog management</a></li><li class="chapter-item expanded "><a href="../adr/020adr-arenas.html"><strong aria-hidden="true">52.</strong> ADR-020: Improving membership in arenas</a></li><li class="chapter-item expanded "><a href="../adr/021rfc-prioritization.html"><strong aria-hidden="true">53.</strong> RFC-021: Prioritization of Work</a></li><li class="chapter-item expanded "><a href="../adr/022adr-unification-of-configs-and-options.html"><strong aria-hidden="true">54.</strong> ADR-022: Unify Configuration Management and &quot;Pass Options&quot;</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#adr-014-precise-type-inference-for-records-and-variants" id="adr-014-precise-type-inference-for-records-and-variants">ADR-014: Precise type inference for records and variants</a></h1>
+<table><thead><tr><th>authors</th><th align="right">last revised</th></tr></thead><tbody>
+<tr><td>Igor Konnov</td><td align="right">2021-12-12</td></tr>
+</tbody></table>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary">Summary (Overview)</a></li>
+<li><a href="#context">Context (Problem)</a></li>
+<li><a href="#options">Options (Alternatives)</a></li>
+<li><a href="#solution">Solution (Decision)</a></li>
+<li><a href="#consequences">Consequences (Retrospection)</a></li>
+</ul>
+<h2><a class="header" href="#1-summary" id="1-summary">1. Summary</a></h2>
+<p>This ADR extends
+<a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a> on
+types and type annotations.</p>
+<p>Virtually every user of Snowcat has faced the issue of record type checking
+being imprecise. Some people call it &quot;unsound&quot;, though soundness depends on the
+type system. This is due to our decision to support the variant pattern that
+can be found in untyped TLA+ specifications. In this ADR, we are proposing a
+plan of action for introducing precise type inference for records and variants
+(discriminated unions) in the type checker. This would deliver the most asked
+feature. On the downside, we would have to:</p>
+<ol>
+<li>
+<p>Increase the complexity of the type checker.</p>
+</li>
+<li>
+<p>Slightly update the rewriting rules in the model checker.</p>
+</li>
+<li>
+<p>Require the users to modify their specs to use the variant operators.</p>
+</li>
+</ol>
+<p>As much as possible, we have tried to make the type annotations non-intrusive and compatible with
+TLC. After precisely specifying the requirements for the variant
+type, we have found that it would be impossible to do sound type checking
+without introducing additional operators.</p>
+<p>We believe that the benefits outweigh the downsides in the long run. Moreover,
+it will improve user experience, as this is the most requested feature.</p>
+<h2><a class="header" href="#2-context" id="2-context">2. Context</a></h2>
+<p>As discussed in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR002</a>, the type checker is not checking the record types
+precisely. Consider the following operator:</p>
+<pre><code class="language-tla">Foo ==
+  LET S == {[ type |-&gt; &quot;A&quot;, a |-&gt; 1], [ type |-&gt; &quot;B&quot;, b |-&gt; 2 ]} IN
+  \E m \in S:
+    m.a &gt; m.b
+</code></pre>
+<p>The type checker assigns the type <code>Set([type: Str, a: Int, b: Int])</code> to <code>S</code>. As
+a result, one can write the expression <code>m.a &gt; m.b</code>, which does not make a lot
+of sense. This may lead to unexpected results in a large specification. In the
+above example, the model checker would just produce some values for <code>m.a</code> or
+<code>m.b</code>, which will probably result in a spurious counterexample.</p>
+<p>Further, multiple related issues and potential solutions were underlined in
+<a href="https://github.com/informalsystems/apalache/issues/401">#401</a> and <a href="https://github.com/informalsystems/apalache/discussions/789">#789</a>.</p>
+<p>There are two main patterns of record use in TLA+:</p>
+<ol>
+<li>
+<p><strong>Plain records</strong>. A record with a fixed number of fields is passed around.</p>
+</li>
+<li>
+<p><strong>Variants</strong>. Records of various shapes are collected in a single
+set and passed around. The precise record shape is controlled with a special
+field (discriminator), which is usually called <code>type</code> in TLA+ specs.</p>
+</li>
+</ol>
+<h3><a class="header" href="#21-untyped-plain-records" id="21-untyped-plain-records">2.1. Untyped plain records</a></h3>
+<p>When it comes to records, it is clear that users expect the type checker to complain about missing record fields. Indeed, it is very
+easy to introduce a spurious record field by mistyping the field name. It
+happened to all of us.</p>
+<p>Interestingly, plain records are used less often than variants.
+Perhaps, if records are required, the specification is quite complex already,
+so it would also need variants.</p>
+<p>Occurences in <a href="https://github.com/tlaplus/Examples">tlaplus-examples</a>:</p>
+<ul>
+<li><a href="https://members.loria.fr/SMerz/talks/argentina2005/Charpentier/charpov/Teaching/CS-986/TLC/ACP_NB.tla">ACP_NB</a></li>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/c1cs/c1cs.tla">c1cs</a></li>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/detector_chan96/EnvironmentController.tla">EnvironmentController</a></li>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla">LamportMutex</a></li>
+<li><a href="https://github.com/muratdem/PlusCal-examples/blob/master/VoldemortKV/voldchain.tla">voldchain</a></li>
+<li><a href="https://github.com/Starydark/Tencent-Paxos-TLA/blob/master/TPaxos.tla">TPaxos</a></li>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/echo/Echo.tla">Echo</a></li>
+</ul>
+<p><a href="https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla">LamportMutex</a>
+is an interesting borderline case, in which the spec uses the variant pattern,
+but it could be typed with a single record type. Here are the interesting pieces
+in this spec:</p>
+<pre><code class="language-tla">ReqMessage(c) == [type |-&gt; &quot;req&quot;, clock |-&gt; c]
+AckMessage == [type |-&gt; &quot;ack&quot;, clock |-&gt; 0]
+RelMessage == [type |-&gt; &quot;rel&quot;, clock |-&gt; 0]
+
+Message == {AckMessage, RelMessage} \union {ReqMessage(c) : c \in Clock}
+
+...
+Broadcast(s, m) ==
+  [r \in Proc |-&gt; IF s=r THEN network[s][r] ELSE Append(network[s][r], m)]
+...
+Request(p) ==
+  ...
+  /\ network' = [network EXCEPT ![p] = Broadcast(p, ReqMessage(clock[p]))]
+  ...
+</code></pre>
+<p>Although, every message record is accompanied with the field <code>type</code>, all
+records have the same shape, namely, they have two fields: A string field
+<code>type</code> and an integer field <code>clock</code>.</p>
+<h3><a class="header" href="#22-untyped-variants" id="22-untyped-variants">2.2. Untyped variants</a></h3>
+<p>Most of the benchmarks stem from the Paxos specification. They all follow the
+same pattern. Messages are represented with records of various shapes. Every
+record carries the field <code>type</code> that characterizes the record shape. For instance,
+here is how records are used in Paxos:</p>
+<pre><code class="language-tla">Message ==      [type : {&quot;1a&quot;}, bal : Ballot]
+           \cup [type : {&quot;1b&quot;}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
+           \cup [type : {&quot;2a&quot;}, bal : Ballot, val : Value]
+           \cup [type : {&quot;2b&quot;}, acc : Acceptor, bal : Ballot, val : Value]
+...
+Send(m) == msgs' = msgs \cup {m}
+...
+Phase1b(a) == /\ \E m \in msgs : 
+                  /\ m.type = &quot;1a&quot;
+                  /\ m.bal &gt; maxBal[a]
+                  ...
+                  /\ Send([type |-&gt; &quot;1b&quot;, acc |-&gt; a, bal |-&gt; m.bal, 
+                            mbal |-&gt; maxVBal[a], mval |-&gt; maxVal[a]])
+              ...
+</code></pre>
+<p>Occurences in <a href="https://github.com/tlaplus/Examples">tlaplus-examples</a>:</p>
+<ul>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos</a></li>
+<li><a href="https://github.com/tlaplus/Examples/tree/master/specifications/802.16">802.16</a></li>
+<li><a href="https://github.com/byisystems/byihive/blob/master/specifications/tla%2B/VoucherIssue.tla">byihive</a></li>
+<li><a href="https://github.com/tbg/caspaxos-tla/blob/master/CASPaxos.tla">CASPaxos</a></li>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/cbc_max/cbc_max.tla">cbc_max</a></li>
+<li><a href="https://github.com/efficient/epaxos/blob/master/tla%2B/EgalitarianPaxos.tla">EgalitarianPaxos</a></li>
+<li><a href="https://github.com/fpaxos/fpaxos-tlaplus/blob/master/FPaxos.tla">FPaxos</a></li>
+<li><a href="https://github.com/ongardie/raft.tla/blob/master/raft.tla">raft</a></li>
+<li><a href="https://github.com/sanjosh/tlaplus/blob/master/amazon/serializableSnapshotIsolation.tla">SnapshotIsolation</a></li>
+<li><a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/PaxosCommit.tla">PaxosCommit</a></li>
+</ul>
+<p>More advanced code patterns over variants can be found in <a href="https://github.com/ongardie/raft.tla/blob/master/raft.tla">Raft</a>:</p>
+<pre><code class="language-tla">Receive(m) ==
+    LET i == m.mdest
+        j == m.msource
+    IN \* Any RPC with a newer term causes the recipient to advance
+       \* its term first. Responses with stale terms are ignored.
+       \/ UpdateTerm(i, j, m)
+       \/ /\ m.mtype = RequestVoteRequest
+          /\ HandleRequestVoteRequest(i, j, m)
+       \/ /\ m.mtype = RequestVoteResponse
+          /\ \/ DropStaleResponse(i, j, m)
+             \/ HandleRequestVoteResponse(i, j, m)
+       \/ /\ m.mtype = AppendEntriesRequest
+          /\ HandleAppendEntriesRequest(i, j, m)
+       \/ /\ m.mtype = AppendEntriesResponse
+          /\ \/ DropStaleResponse(i, j, m)
+             \/ HandleAppendEntriesResponse(i, j, m)
+    ...
+Next ==
+    ...
+           \/ \E m \in DOMAIN messages : Receive(m)
+           \/ \E m \in DOMAIN messages : DuplicateMessage(m)
+           \/ \E m \in DOMAIN messages : DropMessage(m)
+    ...
+</code></pre>
+<h3><a class="header" href="#3-other-issues" id="3-other-issues">3. Other issues</a></h3>
+<p>As can be seen from the Paxos example, we should take care of sets of
+records that are used as sets of variants:</p>
+<pre><code class="language-tla">Message ==      [type : {&quot;1a&quot;}, bal : Ballot]
+           \cup [type : {&quot;1b&quot;}, acc : Acceptor, bal : Ballot, 
+                 mbal : Ballot \cup {-1}, mval : Value \cup {None}]
+           \cup [type : {&quot;2a&quot;}, bal : Ballot, val : Value]
+           \cup [type : {&quot;2b&quot;}, acc : Acceptor, bal : Ballot, val : Value]
+</code></pre>
+<h2><a class="header" href="#4-options" id="4-options">4. Options</a></h2>
+<p>There are several solutions to the issue of precise record typing.</p>
+<h3><a class="header" href="#41-support-only-plain-records" id="41-support-only-plain-records">4.1. Support only plain records</a></h3>
+<p>In this case, we would only allow to mix records that have exactly the same
+shape. As a result, when we use variants, we would have to add extra
+fields to all of them. This solution is not very different from the current
+implementation of record type checking, though it would allow us to quickly
+detect spelling errors.</p>
+<p><strong>Blocker.</strong> This does not look like a real solution, as it would immediately
+render the existing examples invalid. Moreover, they would be no obvious way to
+repair these examples.</p>
+<h3><a class="header" href="#42-support-plain-records-and-variants-but-no-row-typing" id="42-support-plain-records-and-variants-but-no-row-typing">4.2. Support plain records and variants, but no row typing</a></h3>
+<p>In this scenario, the type checker would issue an error, if a record expression
+accesses a field that is outside of its type:</p>
+<pre><code class="language-tla">FieldAccess ==
+  LET m == [ a |-&gt; 2, b |-&gt; &quot;B&quot; ] IN
+  /\ m.a &gt; 1        \* type OK
+  /\ m.b = &quot;B&quot;      \* type OK
+  /\ m.c = { 1, 2 } \* should flag a type error
+</code></pre>
+<p>Moreover, the following example would require a type annotation:</p>
+<pre><code class="language-tla">RowAccess(m) ==
+    m.a &gt; 0         \* should flag a type error
+</code></pre>
+<p>In the above example, the type checker would not be able to infer the type of
+<code>m</code> and would require an explicit type annotation:</p>
+<pre><code class="language-tla">\* @type: [ a: Int, b: Str ];
+RowAccessAnnotated(m) ==
+    m.a &gt; 0         \* should not flag a type error
+</code></pre>
+<p><strong>Blocker.</strong> It is not clear to me, what type we would assign to the record
+access operator. Although the type of <code>m</code> in <code>FieldAccess</code> is obvious to a
+human reader, as it simply requires us to do the top-to-the-bottom type
+propagation, Snowcat constructs a set of equality constraints that are solved
+by unification. This approach requires that we capture the record access
+operator <code>.</code> as an equality over type variables and types.</p>
+<h3><a class="header" href="#43-support-plain-records-and-variants-including-row-typing" id="43-support-plain-records-and-variants-including-row-typing">4.3. Support plain records and variants, including row typing</a></h3>
+<p>This solution is inspired by the approach outlined by <a href="https://www.microsoft.com/en-us/research/publication/extensible-records-with-scoped-labels">Leijen05</a>, but is much more limited. The following features discussed in <a href="https://www.microsoft.com/en-us/research/publication/extensible-records-with-scoped-labels">Leijen05</a> are neither needed needed nor supported:</p>
+<ul>
+<li>extension for records</li>
+<li>extension for variants</li>
+<li>record restriction</li>
+<li>scoped labels</li>
+</ul>
+<p>Our use is limited to a few special cases that give support for subtyping and incremental inference of anonymous record types, in which we cannot know the full set of fields up front. </p>
+<h2><a class="header" href="#5-solution" id="5-solution">5. Solution</a></h2>
+<p>In the following, we present row types as type terms. We discuss the
+user-facing syntax of the type system later in the text.</p>
+<h3><a class="header" href="#51-plain-records" id="51-plain-records">5.1. Plain records</a></h3>
+<p>By using <a href="https://www.microsoft.com/en-us/research/publication/extensible-records-with-scoped-labels/">Row types</a>, we should be able to infer a polymorphic record type for  <code>m</code> in the unannotated
+<code>RowAccess</code> operator:</p>
+<pre><code>Rec(RowCons(&quot;a&quot;, Int, z))
+</code></pre>
+<p>In this example, <code>RowCons(&quot;a&quot;, Int, z)</code> indicates a row indicating that the type of the record enclosing it
+has the field <code>a</code> of type <code>Int</code>. On top of that, this row
+extends a parametric type <code>z</code>, which either contains a non-empty sequence of
+rows, or is an empty sequence, that is, <code>RowNil</code>. Importantly, <code>RowCons</code> is
+wrapped with the term <code>Rec</code>, so no additional fields can be added to the type.</p>
+<p>The example <code>FieldAccess</code> contains a record constructor
+<code>[ a |-&gt; 2, b |-&gt; &quot;B&quot; ]</code>. We can write a general type inference rule for it:</p>
+<pre><code>e_1: t_1, ..., e_n: t_n
+-------------------------------- [rec]
+[ f_1 |-&gt; e_1, ..., f_n |-&gt; e_n]:
+  Rec(
+    RowCons(f_1, t_1,
+      RowCons(f_2, t_2,
+        ...
+          RowCons(f_n, t_n, RowNil)
+      ...)
+    )
+  )
+</code></pre>
+<p>In <code>FieldAccess</code>, we use row types to construct a series of type equations
+(over free type variables <code>k</code>, ..., <code>q</code>):</p>
+<pre><code>// from LET m == [ a |-&gt; 2, b |-&gt; &quot;B&quot; ] IN
+m_type = Rec(&quot;a&quot;, Int, RowCons(&quot;b&quot;, Str, RowNil))
+// from m.a &gt; 1
+m_type = Rec(RowCons(&quot;a&quot;, k, l))
+k = Int
+// from m.b = &quot;B&quot;
+m_type = Rec(RowCons(&quot;b&quot;, m, n))
+m = Str
+// from m.c = { 1, 2 }
+m_type = Rec(RowCons(&quot;c&quot;, p, q))
+p = Set(Int)
+</code></pre>
+<p>To solve the above equations, one has to apply unification rules. Precise
+unification rules for rows are given in the paper by <a href="https://www.microsoft.com/en-us/research/publication/extensible-records-with-scoped-labels">Leijen05</a>. Importantly,
+their unification rules allow <code>RowCons(f1, t1, RowCons(f2, t2, r3))</code> to be
+unified with <code>RowCons(f2, t2, RowCons(f1, t1, r3))</code>. Hence, fields may bubble
+up to the head, and it should be possible to isolate a single field and assign
+the rest to a type variable. By partially solving the above equation, we would
+arrive at contradiction. This supports our intuition that the operator
+<code>FieldAccess</code> is ill-typed.</p>
+<p>Hence, we formulate the type inference rule for record access in our type
+system as follows:</p>
+<pre><code>r: Rec(RowCons(&quot;f&quot;, t_1, t_2))
+-------------------------------- [rec_acc]
+r.f: t_1
+</code></pre>
+<p>Note that the above rule can be rewritten into a series of equalities over
+types variables and type terms, which is how this would be implemented in the
+type checker.</p>
+<p>If we only had to deal with records, that would be a complete solution.
+Unfortunately, variants introduce additional complexity.</p>
+<h3><a class="header" href="#52-variants" id="52-variants">5.2. Variants</a></h3>
+<p><strong>Example 5.2.1.</strong> Now we have to figure out how to deal with TLA+ expressions
+like:</p>
+<pre><code class="language-tla">  { [ tag |-&gt; &quot;1a&quot;, bal |-&gt; 3 ], [ tag |-&gt; &quot;2a&quot;, bal |-&gt; 4, val |-&gt; 0 ] }
+</code></pre>
+<p>Obviously, we cannot fit both of the records into a single plain record type,
+provided that we want to precisely track the fields that are present in a
+record. So the type checker should report a type error, if we only implement
+type inference for the case explained in Section 5.1. To support this important
+pattern, we introduce variants. They are similar to <a href="https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types">unions in
+TypeScript</a>.
+In contrast to TypeScript, we fix one field to designate the record type in a
+variant. Also, we are using the word &quot;variant&quot;, to avoid any confusion
+with the TLA+ operators <code>UNION</code> and <code>\union</code>.</p>
+<p>We reserve the field name <code>tag</code> for the record discriminator.</p>
+<p><strong>Variant constructor.</strong> We introduce a special TLA+ operator <code>Variant</code>
+that extracts the tag from a record and wraps the record into a variant.
+We need this operator to distinguish between plain records and records that
+belong to a variant. The operator <code>Variant</code> is defined in TLA+ as follows:</p>
+<pre><code class="language-tla">  Variant(r) ==
+    \* fallback untyped implementation
+    r
+</code></pre>
+<p>This operator does not change its argument, but it provides the type checker
+with a hint that the record should be treated as a member of a variant.</p>
+<p>Consider the record constructor of <code>n+1</code> fields, one of them being the field
+<code>&quot;tag&quot;</code>:</p>
+<pre><code class="language-tla">  [ tag |-&gt; &quot;&lt;TAG&gt;&quot;, f_1 |-&gt; e_1, ..., f_n |-&gt; e_n ]
+</code></pre>
+<p>Here, <code>&quot;&lt;TAG&gt;&quot;</code> stands for a string literal such as <code>&quot;1a&quot;</code> or <code>&quot;2a&quot;</code>. The
+general rule for <code>Variant([ tag |-&gt; &quot;&lt;TAG&gt;&quot;, f_1 |-&gt; e_1, ..., f_n |-&gt; e_n ])</code>
+looks as follows:</p>
+<pre><code>e_1: t_1, ..., e_n: t_n
+z is a fresh type variable
+------------------------------------------------------------ [variant]
+Variant([ tag |-&gt; &quot;&lt;TAG&gt;&quot;, f_1 |-&gt; e_1, ..., f_n |-&gt; e_n ]):
+  Variant(
+    RowCons(&quot;&lt;TAG&gt;&quot;,
+      Rec(
+        RowCons(&quot;tag&quot;, Str,
+          RowCons(f_1, t_1,
+            ...
+              RowNil)...)
+      ),
+      z
+    )
+  )
+</code></pre>
+<p>According to the rule <code>[variant]</code>, the operator <code>Variant</code> wraps a record
+constructor that contains a string literal for the field <code>tag</code>. The variant
+contains the record that was passed in the constructor, whereas the other
+alternatives of the variant are captured with a fresh type variable <code>z</code>, which must
+be a row.</p>
+<p>Importantly, we use rows at two levels:</p>
+<ol>
+<li>
+<p>To construct a single record, whose shape is defined precisely.</p>
+</li>
+<li>
+<p>To construct a variant, whose only record is known at the time,
+while the rest is captured with the type variable <code>z</code>.</p>
+</li>
+</ol>
+<p>Going back to <strong>Example 5.2.1</strong>, the set constructor would produce a set of
+equalities:</p>
+<pre><code>  a = Set(b)
+  a = Set(d)
+  b = Variant(RowCons(&quot;1a&quot;,
+                Rec(RowCons(&quot;tag&quot;, Str, RowCons(&quot;bal&quot;, Int, RowNil))),
+              c))
+  d = Variant(RowCons(&quot;2a&quot;,
+                Rec(RowCons(&quot;tag&quot;, Str,
+                  RowCons(&quot;bal&quot;, Int,
+                    RowCons(&quot;val&quot;, Int, RowNil)))),
+              e))
+</code></pre>
+<p>By solving these equalities with unification, we will arrive at the following
+variant:</p>
+<pre><code>  Set(Variant(RowCons(
+               &quot;1a&quot;,
+               Rec(RowCons(&quot;tag&quot;, Str, RowCons(&quot;bal&quot;, Int, RowNil))),
+               RowCons(
+                 &quot;2a&quot;,
+                 Rec(RowCons(&quot;tag&quot;, Str,
+                       RowCons(&quot;bal&quot;, Int,
+                         RowCons(&quot;val&quot;, Int, RowNil)))),
+                 t
+     ))))
+</code></pre>
+<p>Note that we still do not know the precise shape of the variant, as it
+closes with the type variable <code>t</code>. This is actually what we expect, as the set
+may be combined with records of other shapes. Normally, the final shape of a
+variant propagates via state variables of the TLA+ specification.</p>
+<p><strong>Type annotations for variants.</strong> Snowcat requires that all state variables
+are annotated. What shall we write for variants?  We introduce the common type
+notation for variants that separates records with a pipe, that is, <code>|</code>. For
+instance, consider the following variable declaration in a TLA+ specification:</p>
+<pre><code class="language-tla">VARIABLES
+  \* @type: Set([ tag: &quot;1a&quot;, bal: Int ] | [ tag: &quot;2a&quot;, bal: Int, val: Int ]);
+  msgs
+</code></pre>
+<p>Note that even though the syntax of individual elements of a variant is very
+similar to that of a record, there is small difference: The tag field is not
+declared as a string type, but carries the values of the tag itself.</p>
+<p>As variants can grow large very quick, it is more convenient to introduce them
+via a type alias. For instance:</p>
+<pre><code class="language-tla">VARIABLES
+  (*
+    @typeAlias: MESSAGE =
+       [ tag: &quot;1a&quot;, bal: Int ]
+     | [ tag: &quot;2a&quot;, bal: Int, val: Int ]);
+    @type: Set(MESSAGE);
+   *)  
+  msgs
+</code></pre>
+<p><strong>Filter a set of variants.</strong> As we have seen, the following pattern
+is quite common in TLA+ specifications, e.g., it is met in Paxos:</p>
+<pre><code class="language-tla">  \E m \in msgs:
+    /\ m.type = &quot;1a&quot;
+    ...
+  LET Q1b == { m \in msgs : m.type = &quot;1b&quot; /\ ... }
+</code></pre>
+<p>We introduce the operator <code>FilterByTag</code> that is a type-safe version of this
+pattern:</p>
+<pre><code class="language-tla">FilterByTag(Set, tag) == { e \in Set: e.tag = tag }
+</code></pre>
+<p>We introduce a special type inference rule for <code>FilterByTag</code>:</p>
+<pre><code>set: Set(Variant(RowCons(&quot;&lt;TAG&gt;&quot;, r, z)))
+------------------------------------------- [variant_filter]
+FilterByTag(set, &quot;&lt;TAG&gt;&quot;): Set(r)
+</code></pre>
+<p>Importantly, <code>FilterByTag</code> returns a set of records that carry the tag <code>&lt;TAG&gt;</code>,
+so we can access record fields of every individual record in the set.</p>
+<p><strong>Match by tag.</strong> In rare cases, we do not have a set to filter. For instance,
+we could have a sequence of log messages:</p>
+<pre><code class="language-tla">VARIABLE
+  \* @type: Seq([ tag: &quot;EventA&quot;, val: Int ] | [ tag: &quot;EventB&quot;, src: Str ]);
+  log
+</code></pre>
+<p>In this case, we would not be able to easily use <code>FilterByTag</code>. Of course, we
+could wrap a variant into a singleton set and then apply <code>FilterByTag</code> to it
+and <code>CHOOSE</code> on top of it. However, this looks clunky and does not guarantee
+type safety. A much simpler solution is to introduce another special operator:</p>
+<pre><code class="language-tla">MatchTag(variant, tag, ThenOper(_), ElseOper(_)) ==
+  \* fallback untyped implementation
+  IF variant.tag = tag
+  THEN ThenOper(variant)
+  ELSE ElseOper(variant)
+</code></pre>
+<p>The idea of <code>MatchTag</code> is that it passes the extracted record to <code>ThenOper</code>,
+when its tag value matches <code>tag</code>; otherwise, it passes the reduced variant to
+<code>ElseOper</code>. This is precisely captured by the inference rule:</p>
+<pre><code>variant: Variant(RowCons(&quot;&lt;TAG&gt;&quot;, r, t))
+ThenOper: r =&gt; z
+ElseOper: Variant(t) =&gt; z
+------------------------------------------------ [variant_match]
+MatchTag(variant, &quot;&lt;TAG&gt;&quot;, ThenOper, ElseOper):
+  (Variant(RowCons(&quot;&lt;TAG&gt;&quot;, r, t)),
+   Str,
+   r =&gt; z,
+   Variant(t) =&gt; z
+  ) =&gt; z
+</code></pre>
+<p>The above rule looks menacing. Here is an example of matching a record
+in the above example with the variable <code>log</code>:</p>
+<pre><code class="language-tla">IsDefined(eventAOrB) ==
+  LET ElseB(onlyB) ==
+    MatchTag(onlyB, &quot;EventB&quot;, LAMBDA b: b.src /= &quot;&quot;, LAMBDA elseValue: FALSE)
+  IN  
+  MatchTag(event, &quot;EventA&quot;, LAMBDA a: a.val /= -1, ElseB)
+</code></pre>
+<p>The operator <code>ElseB</code> looks redundant, as we know that <code>onlyB</code> is a singleton
+variant. To this end, we introduce the operator <code>MatchOnly</code>:</p>
+<pre><code class="language-tla">MatchOnly(variant, ThenOper(_)) ==
+  \* fallback untyped implementation
+  ThenOper(variant)
+</code></pre>
+<p>For completeness, we give the inference rule for <code>MatchOnly</code>:</p>
+<pre><code>variant: Variant(RowCons(&quot;&lt;TAG&gt;&quot;, r, RowNil))
+ThenOper: r =&gt; z
+------------------------------------------------ [variant_match_only]
+MatchOnly(variant, ThenOper):
+  (Variant(RowCons(&quot;&lt;TAG&gt;&quot;, r, RowNil)),
+   r =&gt; z
+  ) =&gt; z
+</code></pre>
+<p>It looks like the solution with <code>MatchTag</code> and <code>MatchOnly</code> introduce a lot of
+boilerplate. However, this is probably the best solution that we can have,
+unless we can extend the grammar of TLA+.</p>
+<h3><a class="header" href="#53-changes-in-the-model-checker" id="53-changes-in-the-model-checker">5.3. Changes in the model checker</a></h3>
+<p>Having precise types for variants, we have two options:</p>
+<ol>
+<li>
+<p>Keep the current encoding, that is, a variant is encoded as a super-record
+that contains all possible fields of the member records. The type checker
+will guarantee that we do not access the fields of the super-record that are
+not present in the actual record type.</p>
+</li>
+<li>
+<p>Implement the
+<a href="https://github.com/informalsystems/apalache/discussions/789#discussioncomment-1592118">suggestion by Shon Feder</a>.</p>
+</li>
+</ol>
+<p>Although Option 2 looks nicer, we prefer keeping Option 1. The reason is that
+the current implementation introduces the minimal number of constraints
+by mashing all possible fields into a super-record. The alternative solution
+(option 2) would introduce additional constraints, when the spec requires us
+to extract an element from a set.</p>
+<p>Recall the example with a set of messages:</p>
+<pre><code class="language-tla">VARIABLES
+  (*
+    @typeAlias: MESSAGE =
+       [ tag: &quot;1a&quot;, bal: Int ]
+     | [ tag: &quot;2a&quot;, bal: Int, val: Int ]);
+    @type: Set(MESSAGE);
+   *)  
+  msgs
+</code></pre>
+<p>Consider an existential quantifier over the variable <code>msgs</code>:</p>
+<pre><code class="language-tla">Next ==
+  \E m \in msgs:
+    P
+</code></pre>
+<p>In the current encoding, <code>m</code> is a super-record that contains three fields:
+<code>tag</code>, <code>bal</code>, and <code>val</code>, even if some of these fields are not required by the
+actual type of <code>m</code>. In the alternative encoding, <code>m</code> is a tuple <code>tup</code>,
+which equals to one of the following tuples, depending on the value of the
+field <code>m.tag</code>:</p>
+<pre><code>tup = IF m.tag = &quot;1a&quot;
+      THEN &lt;&lt; { [ tag |-&gt; &quot;1a&quot;, bal |-&gt; b ] }, {} &gt;&gt;
+      ELSE &lt;&lt; {}, [ tag |-&gt; &quot;2a&quot;, bal |-&gt; b, val |-&gt; v ] }, {} &gt;&gt;
+</code></pre>
+<p>Since it is impossible to statically compute the actual type of <code>m</code>, the
+rewriting rules would have to replicate the structure of both elements of the
+tuple <code>tup</code>. This would lead to a blow-up in the number of constraints.</p>
+<h3><a class="header" href="#54-additional-requirements" id="54-additional-requirements">5.4. Additional requirements</a></h3>
+<p>Given the decisions in Section 5.3, we additionally require that all records in
+a variant type have compatible field types. In more detail, if a variant type
+contains two record types <code>[ tag: &quot;A&quot;, value: a, ... ]</code> and <code>[ tag: &quot;B&quot;, value: b, ...]</code>, then the types <code>a</code> and <code>b</code> must be unifiable.  In practice, this
+often implies that <code>a</code> and <code>b</code> are simply the same type.</p>
+<h3><a class="header" href="#55-the-variants-module" id="55-the-variants-module">5.5. The Variants module</a></h3>
+<p>We introduce a new module that is called <code>Variants.tla</code>. It contains the
+operators <code>Variant</code>, <code>FilterByTag</code>, <code>MatchTag</code>, and <code>MatchOnly</code>. This module
+will be distributed with Apalache. As is custom in the TLA+ community, the
+users should be also able to copy <code>Variants.tla</code> next to their specification.</p>
+<h2><a class="header" href="#6-consequences" id="6-consequences">6. Consequences</a></h2>
+<p>This will be a relatively big change in the types and the type checker.
+Additionally, it would render many existing specifications ill-typed, as the
+proposed solution imposes a stricter typing discipline. On the positive, the
+proposed solution is backwards-compatible with TLC, as we are proposing the
+default untyped implementation for the operators.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/013adr-configuration.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/015adr-trace.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/013adr-configuration.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/015adr-trace.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+        <script type="text/javascript" src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>
+        
+        <script type="text/javascript" src=".././theme/highlightTla.js"></script>
+        
+
+        
+
+    </body>
+</html>

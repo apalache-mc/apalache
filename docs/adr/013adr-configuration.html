@@ -1,0 +1,442 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ADR-013: Configuration Management Component - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded "><a href="../tutorials/temporal-properties.html"><strong aria-hidden="true">7.</strong> Specifying temporal properties and understanding counterexamples</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">8.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">9.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">10.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">11.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">11.1.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">11.1.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">11.1.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">11.1.3.</strong> Build from Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">11.2.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">11.3.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">11.4.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">11.5.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">11.5.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">11.5.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">11.5.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">11.5.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">11.5.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">11.5.6.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">11.6.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">11.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">11.8.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">11.9.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">12.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">13.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">14.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">15.</strong> Obsolete: Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">16.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">17.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">18.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">19.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">20.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">21.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">23.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">23.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">23.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">23.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">23.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">23.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">23.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">23.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">23.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">23.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">23.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">23.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-extensions.html"><strong aria-hidden="true">24.</strong> Apalache extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">24.1.</strong> Apalache module</a></li><li class="chapter-item expanded "><a href="../lang/variants.html"><strong aria-hidden="true">24.2.</strong> Variants</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">25.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">25.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">25.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">25.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">25.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">25.5.</strong> Local operator definitions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">26.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">27.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">28.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">29.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">30.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">31.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">32.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">33.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">34.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">35.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">36.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">37.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">38.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">39.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">40.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">41.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/010rfc-transition-explorer.html"><strong aria-hidden="true">42.</strong> RFC-010: Implementation of Transition Exploration Server</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">43.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/012adr-adopt-adr-template.html"><strong aria-hidden="true">44.</strong> ADR-012: Adopt an ADR Template</a></li><li class="chapter-item expanded "><a href="../adr/013adr-configuration.html" class="active"><strong aria-hidden="true">45.</strong> ADR-013: Configuration Management Component</a></li><li class="chapter-item expanded "><a href="../adr/014adr-precise-records.html"><strong aria-hidden="true">46.</strong> ADR-014: Precise type inference for records and variants</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">47.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">48.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017pdr-temporal.html"><strong aria-hidden="true">49.</strong> PDR-017: Checking temporal properties</a></li><li class="chapter-item expanded "><a href="../adr/018adr-inlining.html"><strong aria-hidden="true">50.</strong> ADR-018: Inlining in Apalache</a></li><li class="chapter-item expanded "><a href="../adr/019adr-harmonize-changelog.html"><strong aria-hidden="true">51.</strong> ADR-019: Harmonize changelog management</a></li><li class="chapter-item expanded "><a href="../adr/020adr-arenas.html"><strong aria-hidden="true">52.</strong> ADR-020: Improving membership in arenas</a></li><li class="chapter-item expanded "><a href="../adr/021rfc-prioritization.html"><strong aria-hidden="true">53.</strong> RFC-021: Prioritization of Work</a></li><li class="chapter-item expanded "><a href="../adr/022adr-unification-of-configs-and-options.html"><strong aria-hidden="true">54.</strong> ADR-022: Unify Configuration Management and &quot;Pass Options&quot;</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#adr-013-configuration-management-component" id="adr-013-configuration-management-component">ADR-013: Configuration Management Component</a></h1>
+<table><thead><tr><th>authors</th><th align="right">last revised</th></tr></thead><tbody>
+<tr><td>Shon Feder</td><td align="right">2022-08-15</td></tr>
+</tbody></table>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary">Summary (Overview)</a></li>
+<li><a href="#context">Context (Problem)</a></li>
+<li><a href="#options">Options (Alternatives)</a></li>
+<li><a href="#solution">Solution (Decision)</a></li>
+<li><a href="#consequences">Consequences (Retrospection)</a></li>
+</ul>
+<h2><a class="header" href="#summary" id="summary">Summary</a></h2>
+<!-- Statement to summarize, following the following formula: -->
+<p>In the context of using Apalache from other programs, different environments, and
+in different planned modes (see, e.g., <a href="https://github.com/informalsystems/apalache/issues/730">#703</a>),<br />
+facing the need to supply different configurations for different use cases<br />
+we decided for adopting the <a href="https://github.com/pureconfig/pureconfig">PureConfig</a> library and for introducing a small component to
+integrate <code>PureConfig</code> with our CLI parsing <br />
+in order to achieve maintainable, reasonable, and extensible management of configurations<br />
+accepting the additional external dependency and development costs.</p>
+<h2><a class="header" href="#context" id="context">Context</a></h2>
+<!-- Communicates the forces at play (technical, political, social, project).
+     This is the story explaining the problem we are looking to resolve.
+-->
+<p>As our application grows more flexible, gains more adoption and usage in
+programmatic pipelines, and strives to provide more functionality, we inevitably
+need to make it more configurable.</p>
+<p>Recent additions that have extended configurability include:</p>
+<ul>
+<li><a href="https://github.com/informalsystems/apalache/pull/1081">#1081</a>, introducing
+the <code>run-dir</code> flag.</li>
+<li><a href="https://github.com/informalsystems/apalache/pull/1036">#1036</a>, introducing
+the <code>write-intermediate</code>, and <code>profiling</code>, <code>out-dir</code> configuration parameters,
+exposed both via CLI and configuration file.</li>
+<li><a href="https://github.com/informalsystems/apalache/pull/1054">#1054</a>, introducing
+the <code>smt-encoding</code> flag.</li>
+</ul>
+<p>The ongoing work for <a href="https://github.com/informalsystems/apalache/issues/730">the server
+mode</a> is expected to
+require introducing several more configurable paramters.</p>
+<p>As discussed in <a href="https://github.com/informalsystems/apalache/issues/1069">#1069</a>
+and <a href="https://github.com/informalsystems/apalache/issues/1929">#1929</a> we have at
+least 5 different sources from which we need to load configuration parameters,
+and the loading must cascade, with the first listed source taking priority:</p>
+<ul>
+<li>CLI arguments <strong>OR</strong> data supplied by RPC</li>
+<li>environment variables</li>
+<li>A local configuration files (perhaps with the location overridden by a CLI
+flag)</li>
+<li>A global configuration </li>
+<li>Predetermined defaults</li>
+</ul>
+<p>We are currently managing this configuration in an ad hoc way, with a bespoke
+configuration loading system, and various ad hoc methods for effecting
+overrides.</p>
+<h2><a class="header" href="#options" id="options">Options</a></h2>
+<!-- Communicate the options considered.
+     This records evidence of our consideration and the various alternatives
+     considered.
+-->
+<p>The problem can be decomposed into three parts:</p>
+<ol>
+<li>Reading parameters from CLI and environment variables (currently done through
+our CLI library).</li>
+<li>Reading parameters from configuration files (currently done in an ad hoc way)</li>
+<li>Cascade loading these paramters in the correct order, to end up with the
+correct intended configuration.</li>
+</ol>
+<p>To address (2) and (3), we should use an existing configuration management
+library, since this will save us development time, and allow us to take
+advantage of other developer's careful engineering around this problem, freeing
+us to focus on our core problem domain.</p>
+<p>There are some configuration libraries that aim to provide an integrated
+solutions to all three problems, but I have dismissed them for reasons described
+below.</p>
+<h3><a class="header" href="#comparison-of-configuration-management-libraries" id="comparison-of-configuration-management-libraries">Comparison of configuration management libraries</a></h3>
+<p>I considered four actively maintained libraries focused on application
+configuration. This section reports my findings.</p>
+<h4><a class="header" href="#activity" id="activity">Activity</a></h4>
+<table><thead><tr><th align="left">Library</th><th align="left">Contributors</th><th align="left">Last Release</th><th>GitHub Stars</th><th>Build Status</th></tr></thead><tbody>
+<tr><td align="left"><a href="https://github.com/lightbend/config">config</a></td><td align="left">89</td><td align="left">2020-10-22</td><td>5.5k</td><td>passing</td></tr>
+<tr><td align="left"><a href="https://github.com/outr/profig">profig</a></td><td align="left">5</td><td align="left">2021-01-14</td><td>23</td><td>failing</td></tr>
+<tr><td align="left"><a href="https://github.com/scalameta/metaconfig">metaconfig</a></td><td align="left">23</td><td align="left">2021-05-31</td><td>29</td><td>passing</td></tr>
+<tr><td align="left"><a href="https://github.com/pureconfig/pureconfig">PureConfig</a></td><td align="left">58</td><td align="left">2021-11-21</td><td>1.2k</td><td>passing</td></tr>
+</tbody></table>
+<h4><a class="header" href="#features" id="features">Features</a></h4>
+<table><thead><tr><th align="left">Library</th><th align="left">Formats</th><th align="left">File Merging</th><th>Envvar Fallback</th><th>CLI Arg Merging</th><th>Language</th><th>Typing</th><th>Documentation</th></tr></thead><tbody>
+<tr><td align="left"><a href="https://github.com/lightbend/config">config</a></td><td align="left">java properties, JSON, HOCON</td><td align="left">yes</td><td>yes</td><td>manual</td><td>Java</td><td>dynamic</td><td>excellent</td></tr>
+<tr><td align="left"><a href="https://github.com/outr/profig">profig</a></td><td align="left">java properties, JSON, YAML, HOCON, XML</td><td align="left">yes</td><td>yes</td><td>automatic</td><td>Scala</td><td>dynamic</td><td>decent</td></tr>
+<tr><td align="left"><a href="https://github.com/scalameta/metaconfig">metaconfig</a></td><td align="left">JSON, HOCON</td><td align="left">?</td><td>?</td><td>automatic</td><td>Scala</td><td>static</td><td>poor</td></tr>
+<tr><td align="left"><a href="https://github.com/pureconfig/pureconfig">PureConfig</a></td><td align="left">java properties, JSON, HOCON</td><td align="left">yes</td><td>semi</td><td>automatic</td><td>Scala</td><td>static</td><td>excellent</td></tr>
+</tbody></table>
+<h4><a class="header" href="#additional-notes" id="additional-notes">Additional notes</a></h4>
+<ul>
+<li>[conifg][]
+<ul>
+<li>Integrates with Guice</li>
+<li>Lots of support due to Java usage</li>
+</ul>
+</li>
+<li><a href="https://github.com/outr/profig">profig</a>
+<ul>
+<li>only apparent advantage over <a href="https://github.com/lightbend/config">config</a> is automatic CLI parsing, but that
+also requires swapping out our CLI library.</li>
+</ul>
+</li>
+<li><a href="https://github.com/scalameta/metaconfig">metaconfig</a>
+<ul>
+<li>Automatically generates markdown CLI documentation</li>
+<li>Reports errors with location in configuration source</li>
+<li>Treats CLI args just as another source for configuration data </li>
+<li>Maintained by <a href="https://github.com/scalameta">scalameta</a></li>
+<li>Used by <a href="https://github.com/scalacenter/scalafix">scalafix</a> and scalafmt</li>
+</ul>
+</li>
+<li><a href="https://github.com/pureconfig/pureconfig">PureConfig</a>
+<ul>
+<li>Type safe wrapper around <a href="https://github.com/lightbend/config">config</a>, so should inherit all features of that
+basis (including Guice integration)</li>
+<li>Will automatically merge configs based on a priority list of files.</li>
+<li>Support optional configuration fallback</li>
+<li>Supports writing out configs (can be used in bug reports or populating
+default config to help guide users)</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#evaluation" id="evaluation">Evaluation</a></h3>
+<p>I discount <a href="https://github.com/outr/profig">profig</a> because it has nothing significant to recommend it over <a href="https://github.com/lightbend/config">config</a>.</p>
+<p><a href="https://github.com/scalameta/metaconfig">metaconfig</a> is attractive due its support for type safe configuration,
+generation of markdown documentation, but the poor documentation and relatively
+small user base counts against it. Those other factors are not sufficiently
+attractive to outweigh the risks.</p>
+<p>The choice between <a href="https://github.com/lightbend/config">config</a> and <a href="https://github.com/pureconfig/pureconfig">PureConfig</a> is easy: <a href="https://github.com/pureconfig/pureconfig">PureConfig</a>
+includes everything provided by <a href="https://github.com/lightbend/config">config</a>, but exposes a types safe,
+Scala-native API. Moreover, it's got a substantial user-base and excellent
+documentation.</p>
+<h2><a class="header" href="#solution" id="solution">Solution</a></h2>
+<p>We will adopt <a href="https://github.com/pureconfig/pureconfig">PureConfig</a> as our configuration management library. It will
+enable us to cascade load configuration files from many exernal sources
+(including a json blob passed in via CLI inputs) and provide type-safe access to
+the configured values.</p>
+<p>We will continue to rely on <code>clist</code> for CLI parsing for the time being, which
+takes care of loading environment variable settings and CLI arguments with our
+desired overriding precedence. This will require we add a thin abstraction that
+will ensure the CLI arguments end up overriding the configured values. This
+abstraction will replace the more ad hoc process we are currently employing to
+this end.</p>
+<p>Here's a short example of how basic usage should look (approximately), allowing
+us to replace dozens of lines of code in the <code>OutputManager</code> implementing our
+current adhoc configuration parsing:</p>
+<pre><code class="language-scala">import pureconfig._
+import pureconfig.generic.auto._
+
+// Setting a defaul value
+case class Port(number: Int = 8080) extends AnyVal
+
+sealed trait SmtEncoding
+case class Arrays extends SmtEncoding
+case class OOPSLA19 extends SmtEncoding
+
+case class ApalacheConfig(
+  runDir: Option[Path] = None,
+  serverPort: Port = Port(),
+  writeIntermediate: Boolean = false,
+  profiling: Boolean = false,
+  outDir: Path = Path(&quot;.&quot;),
+  smtEncding: SmtEncoding = OOPSLA19,
+)
+
+case classs ExampleUseOfConfigs() = {
+  val cli = CliParseResults()
+  val localConfig = ConfigSource.file(Path.cwd.resolve(&quot;.aplache.config&quot;))
+  val globalConfig = ConfigSource.file(ApalacheHome.resolve(&quot;apalache.config&quot;))
+  val loadedConfig: ConfigReader.Result[ApalacheConfig] = globalConfig
+    .withFallback(localConfig)
+    .load[ApalacheConfig]
+
+  // Finally, override with CLI arguments
+  // Unfortunatley, I've not found a robust way to automate this yet
+  val config = loadedConfig.copy(
+    runDir = cli.runDir.getOrElse(loadedConfig.runDir),
+    serverPort = cli.runDir.getOrElse(loadedConfig.serverPort),
+    // etc..
+  )
+
+}
+</code></pre>
+<p>This <code>ApalacheConfig</code> class can then be passed around to all parts of the
+program that need to read such configurations.</p>
+<h2><a class="header" href="#consequences" id="consequences">Consequences</a></h2>
+<p>After utilizing the approach proposed here for nearly a year, we were able to
+introduce several additional configurations easily, and we found the local
+configuration files useful for tweaking program behavior. We subsequently
+decided to further extend the configuration system by integrating the CLI within
+the configuration system and use it as the basis for statically representing all
+program options. See <a href="./022adr-unification-of-configs-and-options.html">ADR 022</a>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/012adr-adopt-adr-template.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/014adr-precise-records.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/012adr-adopt-adr-template.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/014adr-precise-records.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+        <script type="text/javascript" src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>
+        
+        <script type="text/javascript" src=".././theme/highlightTla.js"></script>
+        
+
+        
+
+    </body>
+</html>

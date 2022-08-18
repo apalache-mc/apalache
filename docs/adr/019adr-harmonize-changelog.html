@@ -1,0 +1,411 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>ADR-019: Harmonize changelog management - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded "><a href="../tutorials/temporal-properties.html"><strong aria-hidden="true">7.</strong> Specifying temporal properties and understanding counterexamples</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">8.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">9.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">10.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">11.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">11.1.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">11.1.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">11.1.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">11.1.3.</strong> Build from Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">11.2.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">11.3.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">11.4.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">11.5.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">11.5.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">11.5.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">11.5.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">11.5.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">11.5.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">11.5.6.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">11.6.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">11.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">11.8.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">11.9.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">12.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">13.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">14.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">15.</strong> Obsolete: Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">16.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">17.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">18.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">19.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">20.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">21.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">23.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">23.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">23.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">23.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">23.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">23.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">23.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">23.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">23.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">23.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">23.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">23.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-extensions.html"><strong aria-hidden="true">24.</strong> Apalache extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">24.1.</strong> Apalache module</a></li><li class="chapter-item expanded "><a href="../lang/variants.html"><strong aria-hidden="true">24.2.</strong> Variants</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">25.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">25.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">25.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">25.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">25.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">25.5.</strong> Local operator definitions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">26.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">27.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">28.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">29.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">30.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">31.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">32.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">33.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">34.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">35.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">36.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">37.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">38.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">39.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">40.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">41.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/010rfc-transition-explorer.html"><strong aria-hidden="true">42.</strong> RFC-010: Implementation of Transition Exploration Server</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">43.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/012adr-adopt-adr-template.html"><strong aria-hidden="true">44.</strong> ADR-012: Adopt an ADR Template</a></li><li class="chapter-item expanded "><a href="../adr/013adr-configuration.html"><strong aria-hidden="true">45.</strong> ADR-013: Configuration Management Component</a></li><li class="chapter-item expanded "><a href="../adr/014adr-precise-records.html"><strong aria-hidden="true">46.</strong> ADR-014: Precise type inference for records and variants</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">47.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">48.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017pdr-temporal.html"><strong aria-hidden="true">49.</strong> PDR-017: Checking temporal properties</a></li><li class="chapter-item expanded "><a href="../adr/018adr-inlining.html"><strong aria-hidden="true">50.</strong> ADR-018: Inlining in Apalache</a></li><li class="chapter-item expanded "><a href="../adr/019adr-harmonize-changelog.html" class="active"><strong aria-hidden="true">51.</strong> ADR-019: Harmonize changelog management</a></li><li class="chapter-item expanded "><a href="../adr/020adr-arenas.html"><strong aria-hidden="true">52.</strong> ADR-020: Improving membership in arenas</a></li><li class="chapter-item expanded "><a href="../adr/021rfc-prioritization.html"><strong aria-hidden="true">53.</strong> RFC-021: Prioritization of Work</a></li><li class="chapter-item expanded "><a href="../adr/022adr-unification-of-configs-and-options.html"><strong aria-hidden="true">54.</strong> ADR-022: Unify Configuration Management and &quot;Pass Options&quot;</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#adr-019-harmonize-changelog-management" id="adr-019-harmonize-changelog-management">ADR-019: Harmonize changelog management</a></h1>
+<table><thead><tr><th>authors</th><th align="right">last revised</th></tr></thead><tbody>
+<tr><td>Shon Feder</td><td align="right">2022-05-06</td></tr>
+</tbody></table>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary">Summary (Overview)</a></li>
+<li><a href="#context">Context (Problem)</a></li>
+<li><a href="#options">Options (Alternatives)</a></li>
+<li><a href="#solution">Solution (Decision)</a></li>
+<li><a href="#consequences">Consequences (Retrospection)</a></li>
+</ul>
+<h2><a class="header" href="#summary" id="summary">Summary</a></h2>
+<p>In the context of maintaining a changelog to communicate salient changes about
+our software, facing the friction caused by frequent merge conflicts in our
+<code>UNRELEASED</code> changelog, we decided to find a lightweight, conflict free,
+changelog process in order to achieve a smoother development process. We have
+accepted the development cost and learning curve required by adopting a new
+process.</p>
+<h2><a class="header" href="#context" id="context">Context</a></h2>
+<p>We maintain a <a href="https://keepachangelog.com/en/1.0.0/">changelog</a></p>
+<blockquote>
+<p>to make it easier for users and contributors to see precisely what notable
+changes have been made between each release (or version) of the project.</p>
+</blockquote>
+<p>Any changeset that introduces observable changes to the behavior of our software
+should include additions to the changelog.  Currently, <a href="https://github.com/informalsystems/apalache/blob/60e6a14d451cb67c93dfd29cffd0cc0eb9d7922d/CONTRIBUTING.md#changelog">additions are made</a> by
+updating the <code>UNRELEASED.md</code> file. The changes recorded there are then added to
+the <code>CHANGES.md</code> file during our automated release process.</p>
+<p>This process creates a race condition over <code>UNRELEASED.md</code> between any
+concurrent pull requests. This consequently results in developers constantly
+having to resolve merge conflicts. This busy-work slows down development and
+adds no value.</p>
+<h2><a class="header" href="#options" id="options">Options</a></h2>
+<p>We now enumerate and consider the various options we've conceived for addressing
+this problem.</p>
+<p>With the exception of option (0), all of the following options would resolve the
+problem of merge conflicts and could be integrated into our existing automated
+deployment pipeline.  However each option has different costs w/r/t
+dependencies, processes, and learning curve.</p>
+<p>All of the following options will likely require ongoing maintenance, even
+option (0): this is because we already have a set of scripts that manage our
+changelog entries in order to support our fully automated releases. So this is
+not a space where we are introducing automation for the first time, but is
+instead a situation where we are changing an existing automated system.</p>
+<h3><a class="header" href="#0-dont-change-anything" id="0-dont-change-anything">0. Don't change anything</a></h3>
+<p>We could do nothing. Developers would continue to resolve changelog conflicts manually.</p>
+<h4><a class="header" href="#pros" id="pros">Pros</a></h4>
+<ul>
+<li>Requires no development time on a solution.</li>
+<li>Would require no additional maintenance.</li>
+</ul>
+<h4><a class="header" href="#cons" id="cons">Cons</a></h4>
+<ul>
+<li>We'll continue having developer slow-down and busy work when merge conflicts arise.</li>
+</ul>
+<h3><a class="header" href="#1-use-one-of-the-automated-changelog-generators" id="1-use-one-of-the-automated-changelog-generators">1. Use one of the automated changelog generators</a></h3>
+<p>There is a <a href="https://github.com/search?q=changelog+auto">superabundance</a> of tools
+for automatically generating changelogs. These tools extract changelogs from
+various different sources such as commit messages, issues, or pull requests.</p>
+<h4><a class="header" href="#pros-1" id="pros-1">Pros</a></h4>
+<ul>
+<li>Requires no new development</li>
+<li>Would eliminate the need to add changelog entries in a separate file</li>
+</ul>
+<h4><a class="header" href="#cons-1" id="cons-1">Cons</a></h4>
+<ul>
+<li>Developers have to learn the annotation format required by the tool, and they
+have to remember to deploy it in their commits/PRs/issues.</li>
+<li>Infrastructure maintainers have to learn how to configure and maintain the tool.</li>
+<li>We pickup a dependency external to both the company and our project</li>
+<li>Changelogs are meant to communicate a very specific kind of information to a
+specific audience. Git commit messages, pull requests, and issues are for
+communicating quite different information to an entirely different audience.
+Requiring that these communication channels be overloaded risks degrading the
+quality of communications in all the conflated channels.
+<ul>
+<li>However, it's possible we could work out some conventions to add empty
+commits or designate special PR labels to work around this interference?</li>
+</ul>
+</li>
+</ul>
+<h3><a class="header" href="#2-use-unclog" id="2-use-unclog">2. Use Unclog</a></h3>
+<p><a href="https://github.com/thanethomson">@thanethomson</a> has written the <a href="https://github.com/informalsystems/unclog">unclog</a> utility, which is used in both
+<a href="https://github.com/informalsystems/tendermint-rs">informalsystems/tendermint-rs</a> and <a href="https://github.com/informalsystems/ibc-rs">informalsystems/ibc-rs</a>. The tool
+stores changelog entries in a directory structure, with each entry in its own
+file, ensuring merge conflicts can't arise. </p>
+<p>Entries are added via the CLI. E.g.:</p>
+<pre><code class="language-sh">unclog add --id some-new-feature \
+  --issue 23 \
+  --section breaking-changes \
+  --message &quot;Some *new* feature&quot;
+</code></pre>
+<p>If the <code>--messages</code> argument is omitted, it will open your configured editor for
+authoring the message.</p>
+<p>The tool has subcommands to generate and update the <code>CHANGES.md</code>, and it supports
+a variety of options via its TOML configuration.</p>
+<h4><a class="header" href="#pros-2" id="pros-2">Pros</a></h4>
+<ul>
+<li>Requires no new development</li>
+<li>It is developed internally to informal</li>
+</ul>
+<h4><a class="header" href="#cons-2" id="cons-2">Cons</a></h4>
+<ul>
+<li>Adds cognitive and procedural overhead to adding changelog entries</li>
+<li>Would add a rust dependency to our devenv</li>
+<li>Requires external contributors to either install a CLI tool or figure out a
+relatively complex file and folder structure to add changelog entries</li>
+</ul>
+<h3><a class="header" href="#3-use-a-custom-git-merge-driver" id="3-use-a-custom-git-merge-driver">3. Use a custom git merge driver</a></h3>
+<p>If we wrote a <a href="https://git-scm.com/docs/gitattributes#_defining_a_custom_merge_driver">custom git merge driver</a> to work on the simple changelog format we
+could continue our current practice, and just fall back to the custom merge
+driver in case of merge conflicts.</p>
+<h4><a class="header" href="#pros-3" id="pros-3">Pros</a></h4>
+<ul>
+<li>Allows us to keep our current process of simply updating a markdown file,
+with which, moreover, most devs are already familiar</li>
+</ul>
+<h4><a class="header" href="#cons-3" id="cons-3">Cons</a></h4>
+<ul>
+<li>Could require external dependencies to be installed, depending on
+implementation.</li>
+<li>It's not possible to configure custom merge drivers for github, so we'd either
+need to develop a github action or bot to monitor for merge conflicts in the
+changelog and merge them automatically, or devs would be back to having to
+resolve merge conflicts locally.</li>
+</ul>
+<h3><a class="header" href="#4-write-some-lightweight-tooling" id="4-write-some-lightweight-tooling">4. Write some lightweight tooling</a></h3>
+<p>We could author some simple tooling that would capture the core behavior of
+<code>unclog</code>, using files in directories, but neither require external dependencies
+nor knowledge of a new CLI.</p>
+<h4><a class="header" href="#pros-4" id="pros-4">Pros</a></h4>
+<ul>
+<li>No new tooling to learn</li>
+<li>No external dependencies to integrate</li>
+</ul>
+<h4><a class="header" href="#cons-4" id="cons-4">Cons</a></h4>
+<ul>
+<li>Would require some development time (I estimate approx. 1 day, see the design
+sketch below for details on the implementation)</li>
+<li>Would require contributors to understand the folder structure</li>
+</ul>
+<h2><a class="header" href="#solution" id="solution">Solution</a></h2>
+<p>We have opted for option 4. Despite the added cost of development, we think the
+simplicity of use and maintenance will offset the development cost.</p>
+<h3><a class="header" href="#design" id="design">Design</a></h3>
+<p>We will introduce a new directory tree to the project:</p>
+<pre><code class="language-sh">.unreleased/
+├── breaking-changes/
+├── bug-fixes/
+├── documentation/
+└── features/
+</code></pre>
+<p>Each change will be added as a single markdown file in the appropriate
+directory.</p>
+<p>Two <code>sbt</code> targets will be added to facilitate our continuous deployment:</p>
+<ul>
+<li><code>releaseNotes</code>, merges the unreleased notes into a single new file of the expected format in our <code>target</code> directory. This can be used for upload to github releases.</li>
+<li><code>changeLog</code> updates <code>CHANGES.md</code> by prepending the output of <code>releaseNotes</code>. It then removes all notes
+from the <code>.unreleased</code> directory so that the next iteration of development starts from a clean slate.</li>
+</ul>
+<h2><a class="header" href="#consequences" id="consequences">Consequences</a></h2>
+<p>TBD</p>
+<!-- Records the results of the decision over the long term.
+     Did it work, not work, was changed, upgraded, etc.
+-->
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/018adr-inlining.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/020adr-arenas.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/018adr-inlining.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/020adr-arenas.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+        <script type="text/javascript" src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>
+        
+        <script type="text/javascript" src=".././theme/highlightTla.js"></script>
+        
+
+        
+
+    </body>
+</html>

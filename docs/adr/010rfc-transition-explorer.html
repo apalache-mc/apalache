@@ -1,0 +1,668 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>RFC-010: Implementation of Transition Exploration Server - Apalache Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded "><a href="../tutorials/temporal-properties.html"><strong aria-hidden="true">7.</strong> Specifying temporal properties and understanding counterexamples</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">8.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">9.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">10.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">11.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">11.1.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">11.1.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">11.1.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">11.1.3.</strong> Build from Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">11.2.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">11.3.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">11.4.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">11.5.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">11.5.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">11.5.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">11.5.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">11.5.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">11.5.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">11.5.6.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">11.6.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">11.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">11.8.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">11.9.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">12.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">13.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">14.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">15.</strong> Obsolete: Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">16.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">17.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">18.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">19.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">20.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">21.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">23.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">23.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">23.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">23.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">23.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">23.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">23.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">23.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">23.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">23.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">23.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">23.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-extensions.html"><strong aria-hidden="true">24.</strong> Apalache extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">24.1.</strong> Apalache module</a></li><li class="chapter-item expanded "><a href="../lang/variants.html"><strong aria-hidden="true">24.2.</strong> Variants</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">25.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">25.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">25.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">25.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">25.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">25.5.</strong> Local operator definitions</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">26.</strong> Modules, Extends, and Instances</div></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">27.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">28.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">29.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">30.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">31.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">32.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">33.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">34.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">35.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">36.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">37.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html"><strong aria-hidden="true">38.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">39.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">40.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">41.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/010rfc-transition-explorer.html" class="active"><strong aria-hidden="true">42.</strong> RFC-010: Implementation of Transition Exploration Server</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">43.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/012adr-adopt-adr-template.html"><strong aria-hidden="true">44.</strong> ADR-012: Adopt an ADR Template</a></li><li class="chapter-item expanded "><a href="../adr/013adr-configuration.html"><strong aria-hidden="true">45.</strong> ADR-013: Configuration Management Component</a></li><li class="chapter-item expanded "><a href="../adr/014adr-precise-records.html"><strong aria-hidden="true">46.</strong> ADR-014: Precise type inference for records and variants</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">47.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">48.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017pdr-temporal.html"><strong aria-hidden="true">49.</strong> PDR-017: Checking temporal properties</a></li><li class="chapter-item expanded "><a href="../adr/018adr-inlining.html"><strong aria-hidden="true">50.</strong> ADR-018: Inlining in Apalache</a></li><li class="chapter-item expanded "><a href="../adr/019adr-harmonize-changelog.html"><strong aria-hidden="true">51.</strong> ADR-019: Harmonize changelog management</a></li><li class="chapter-item expanded "><a href="../adr/020adr-arenas.html"><strong aria-hidden="true">52.</strong> ADR-020: Improving membership in arenas</a></li><li class="chapter-item expanded "><a href="../adr/021rfc-prioritization.html"><strong aria-hidden="true">53.</strong> RFC-021: Prioritization of Work</a></li><li class="chapter-item expanded "><a href="../adr/022adr-unification-of-configs-and-options.html"><strong aria-hidden="true">54.</strong> ADR-022: Unify Configuration Management and &quot;Pass Options&quot;</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Apalache Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#rfc-010-implementation-of-transition-exploration-server" id="rfc-010-implementation-of-transition-exploration-server">RFC-010: Implementation of Transition Exploration Server</a></h1>
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#rfc-010-implementation-of-transition-exploration-server">RFC-010: Implementation of Transition Exploration Server</a></li>
+<li><a href="#problem">Problem</a></li>
+<li><a href="#proposal">Proposal</a>
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#requirements">Requirements</a></li>
+<li><a href="#architecture">Architecture</a></li>
+<li><a href="#api">API</a></li>
+<li><a href="#constructing-the-ir">Constructing the IR</a></li>
+<li><a href="#protocol">Protocol</a>
+<ul>
+<li><a href="#grpc-example">gRPC Example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<!-- markdown-toc end -->
+<h2><a class="header" href="#problem" id="problem">Problem</a></h2>
+<p>Users of Apalache have voiced a need for the following kinds of behavior:</p>
+<ul>
+<li>incremental results (that can be iterated through to exhaustively enumerate all counterexamples)</li>
+<li>interactive selection of checking strategies</li>
+<li>interactive selection of parameter values</li>
+</ul>
+<p>The discussion around these needs is summarized and linked in
+<a href="https://github.com/informalsystems/apalache/issues/79">#79</a> .</p>
+<p>The proximal use cases motivating this feature are discovered in the needs of or
+collaborators working on implementing model based testing (MBT) via the
+<a href="https://github.com/informalsystems/modelator">Modelator</a> project.
+<a href="https://github.com/konnov">@konnov</a> has given the following articulation of the
+general concern:</p>
+<blockquote>
+<p>For MBT we need some way to exhaustively enumerate all counterexamples
+according to some strategy. There could be different strategies that vary in
+terms of implementation complexity or the number of produced counterexamples</p>
+</blockquote>
+<p>The upshot: we can provide value by adding a utility that will allow users to
+interactively and incrementally explore the transition systems defined by a
+given TLA+ spec.</p>
+<h2><a class="header" href="#proposal" id="proposal">Proposal</a></h2>
+<h3><a class="header" href="#overview" id="overview">Overview</a></h3>
+<p>In the current architecture, there is a single mode of operation in which</p>
+<ul>
+<li>the user invokes Apalache with an initial configuration, including an input
+specification,</li>
+<li>the specification and configurations are parsed and pre-processed,</li>
+<li>and then the model checker proper drives the
+<a href="./003adr-trex.html">TransitionExecutor</a> to effect symbolic
+executions verifying the specified properties for the specified model.</li>
+</ul>
+<p>This RFC proposes the addition of a <em>symbolic transition exploration server</em>.
+The server will allow a client to interact with the various steps of the
+verification process. The client is thus empowered  to call upon the parser and
+preprocessors at will, and to drive the <code>TransitionExecutor</code> interactively, via
+a simplified API.</p>
+<p>The specific functionality that should be available for interaction is
+enumerated in the <a href="#requirements">Requirements</a>.</p>
+<p>As per <a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">previous
+discussions</a>,
+interactivity will be supported by running a daemon (or &quot;service&quot;) that serves
+incoming requests. Clients will interact via a simple, well supported protocol,
+that provides an online RPC interface.</p>
+<p>As a followup, we can create our own front-end clients to interact with this
+server. In the near term, we envision a CLI, a web front-end, and editor
+integrations. Many aspects of such clients should be trivial, once we can use
+the client code generated by the gRPC library . See the <a href="#grpc-example">gRPC
+Example</a> for details.</p>
+<h3><a class="header" href="#requirements" id="requirements">Requirements</a></h3>
+<p>The following requirements have been gathered through conversation and discussion
+on our GitHub issues:</p>
+<p>| TRANS-EX.1::QCHECK.1 |
+: enable checking specs without repeated JVM startup costs
+<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<p>| TRANS-EX.1::EXPLORE.1 |
+: enable exploring model checking results for a spec without repeated
+preprocessing costs
+<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<p>| TRANS-EX.1::LOAD.1 |
+: enable loading and unloading specs
+<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issuecomment-818201654</a></p>
+<p>| TRANS-EX.1::EXTENSIBLE.1 |
+: The transition explorer should be extensible in the following ways:</p>
+<p>| TRANS-EX.1::EXTENSIBLE.1::CLOUD.1 |
+: extensible for cloud-based usage</p>
+<p>| TRANS-EX.1::EXTENSIBLE.1::CLI.1 |
+: extensible for interactive terminal usage |</p>
+<p>| TRANS-EX.1::SBMC.1 |
+: expose symbolic model checking
+<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<p>| TRANS-EX.1::SBMC.1::ADVANCE.1 |
+: can incrementally advance symbolic states</p>
+<p>| TRANS-EX.1::SBMC.1::ROLLBACK.1 |
+: can incrementally rollback symbolic states</p>
+<p>| TRANS-EX.1::SBMC.1::TRANSITIONS.1 |
+: can send data on available transitions</p>
+<p>| TRANS-EX.1::SBMC.1::SELECT.1 |
+: can execute a specific transition given a selected action</p>
+<p>| TRANS-EX.1::SBMC.1::COUNTER.1 |
+: supports enumerating counterexamples
+<a href="https://github.com/informalsystems/apalache/issues/79#issue-534407916">79#issue-534407916</a></p>
+<p>| TRANS-EX.1::SBMC.1::PARAMS.1 |
+: supports enumerating parameter values (<code>CONSTANTS</code>) that lead to a
+counterexample
+<a href="https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107">79#issuecomment-576449107</a></p>
+<h3><a class="header" href="#architecture" id="architecture">Architecture</a></h3>
+<p>The interactive mode will take advantage of the <code>TransitionExecutor</code>'s
+abstraction for writing different model checking strategies, to give the user an
+abstracted, interactive interface for dynamically specifying checking
+strategies.</p>
+<p>I propose the following high-level architecture:</p>
+<ul>
+<li>Use an RPC protocol to allow the client and server mutually transparent
+interaction. (This allows us to abstract away the communication protocol and
+only consider the functional API in what follows.)</li>
+<li>Introduce a new module, <code>ServerModule</code>, into the <code>apa-tool</code> package. This
+module will abstract over the relevant BMC passes which lead up to, and
+provide input for, the <code>TransitionExplorer</code>, described below.</li>
+<li>Introduce a new module, <code>TransitionExplorer</code> that enables the interactive
+exploration of the transition system.</li>
+<li>Internally, the <code>TransitionExplorer</code> will make use of the <code>TransitionExecutor</code>
+and relevant aspects of the <code>SeqModelChecker</code> (or slightly altered versions of
+its methods).</li>
+</ul>
+<p><em>NOTE</em>: The high-level sketch above assumes the new code organization proposed
+in <a href="https://github.com/informalsystems/apalache/tree/main/docs/src/adr/007adr-restructuring.md">ADR 7</a>.</p>
+<h4><a class="header" href="#api" id="api">API</a></h4>
+<p>The following is a rough sketch of the proposed API for the transition explorer.
+It aims to present a highly abstracted interface, but in terms of existing data
+structures. Naturally, refinements and alterations are to be expected during
+implementation.</p>
+<p>We refer to symbolic states as <code>Frames</code>, which are understood as a set of
+constraints, and we put this terminology in the API in order to help users
+understand when they should be thinking in terms of constraint sets as opposed
+to concrete states. Concrete states can be obtained by the functions suffixed
+with <code>Example</code>.</p>
+<p>In essence, this proposed API is only a thin wrapper around the
+<a href="https://github.com/informalsystems/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala">TransitionExecutor
+class</a>.
+During previous iterations of the proposed API we discussed exposing a
+higher-level API, targeted at meeting the requirements more directly.  However,
+discussion revealed that the expensive computational costs of SAT solving in
+most cases made it infeasible to meet the requirements in this way.  Instead, we
+must expose most of the underlying logic of the <code>TransitionExecutor</code>, and task
+the users with building their own exploration strategies with these primitives.</p>
+<p>It is likely that we will be able to provide some higher-level functionality to users
+by way of wrapper libraries we implement on top of the proposed API, but that
+work should be left to a subsequent iteration.</p>
+<p><strong>NOTE:</strong> This interface is intended as an abstract API, to communicate the
+mappings from request to reply. See the <a href="#grpc-example">gRPC Example</a> for a
+sketch of what the actual implementation may look like.</p>
+<pre><code class="language-scala">/** A State is a map from variable names to values, and represents a concrete state.  */
+type State = Map[String, TlaEx]
+
+/** An abstract representation of a transition.
+ *
+ * These correspond to the numbered transitions that the `TransitionExectur` uses
+ * to advance frames. But we likely want to present some more illuminating metadata
+ * associated with the transitions to the users. E.g., ability to view a
+ * representation as a `TlaEx` or see an associated operator name (if any)?  */
+type Transition
+
+/** An execution is an alternating sequence of states and transitions,
+ *  terminating in a state with no transition.
+ *
+ * It is a high-level representation of the `EncodedExecution` maintained by the
+ * transition executor).
+ *
+ * E.g., an execution from `s1` to `sn` with transitions `ti` for each `i` in `1..n-1`:
+ * 
+ *     List((s1, Some(t1)), (s2, Some(t2)), ..., (sn, None))
+ */
+type Execution = List[(State, Option[Transition])]
+
+trait UninitializedModel = {
+  val spec: TlaModule
+  val transitions: List(Transition)
+}
+
+trait InitializedModel extends UninitializedModel {
+  val constInitPrimed: Map[String, TlaEx]
+}
+
+/** An abstract representation of the `CheckerInput`
+ *
+ * A `Model` includes all static data representing a model.
+ * 
+ * An `UninitializedModel` is missing the information that would be needed in
+ * order to actually explore its symbolic states (such as the initial values of
+ * its constants).
+ *
+ * An `InitializedModel` has all data needed to explore its symbolic states. */
+type Model = Either[UninitializedModel, InitializedModel]
+
+/**  The type of errors that can result from failures when loading a spec. */
+type LoadErr
+
+/**  The type of errors that can result from failures to assert a constraint. */
+type AssertErr
+
+/**  The type of errors that can result from checking satisfiability of a frame. */
+type SatError
+
+/**  Maintains session and connection information */
+type Connection
+
+trait TransEx {
+
+  /** Used internally */
+  private def connection(): Connection
+
+  /** Reset the state of the explorer
+   *
+   * Returns the explorer to the same state as when the currently loaded model
+   * was freshly loaded. Used to restart exploration from a clean slate.
+   *
+   * [TRANS-EX.1::LOAD.1]
+   */
+  def reset(): Unit
+
+  /** Load a model for exploration
+   *
+   * If a model is already loaded, it will be replaced and the state of the exploration
+   * [[reset]].
+   *
+   * [TRANS-EX.1::QCHECK.1]
+   * [TRANS-EX.1::LOAD.1]
+   * [TRANS-EX.1::SBMC.1::TRANSITIONS.1]
+   * 
+   * @param spec the root TLA+ module 
+   * @param aux auxiliary modules that may be required by the root module
+   * @return `Left(LoadErr)` if parsing or loading the model from `spec` goes
+   *          wrong, or `Right(UninitializedModel)` if the model is loaded successfully.
+   */
+  def loadModel(spec: String, aux: List[String] = List()): Either[LoadErr, UninitializedModel]
+
+  /** Initialize the constants of a model
+   *
+   * This will always also reset an exploration back to its initial frame. */
+  def initializeConstants(constants: Map[String, TlaEx]): Either[AssertErr, InitializedModel]
+
+  /** Prepare the loaded modle with the given `transition` */
+  def prepareTransition(transition: Transition): Either[AssertErr, Unit]
+
+  /** The transitions that have been prepared. */
+  def preparedTransitions(): Set[Transition]
+
+  /** Apply a (previously prepared) transition to the current frame.
+   *
+   * Without any arguments, a previously prepared transition is selected
+   * nondeterministically.
+   *
+   * When given a `transition`, apply it if it is already prepared, or prepare
+   * it and then apply it, if not.
+   * 
+   * Interfaces to `assumeTransition` and `pickTransition`, followed by
+   * `nextState`. */
+  def applyTransition(): Either[AssertErr, Unit]
+  def applyTransition(transition: Transition): Either[AssertErr, Unit]
+
+  /** Assert a constraint into the current frame
+   *
+   *  Interface to `assertState` */
+  def assert(assertion: TlaEx): Either[AssertErr, Unit]
+
+  /** The example of an execution from the an initial state up to the current symbolic state
+   *
+   * Additional executions can be onbtained by asserting constraints that alter the
+   * search space. */
+  def execution: Either[SatErr, Execution]
+
+  /**
+   * Check, whether the current context of the symbolic execution is satisfiable.
+   *
+   * @return Right(true), if the context is satisfiable;
+   *         Right(false), if the context is unsatisfiable;
+   *         Left(SatErr) inidicating if the solver timed out or reported *unknown*.
+   */
+  def sat(): Either[SatErr, Boolean]
+
+  /** Terminate the session. */
+  def terminate(): Unit
+}
+
+object TransEx {
+  /**  Create a transition explorer
+   *
+   * Establishes the connection and a running session
+   *
+   * The channel is managed by the gRPC framework. */
+  def apply(channel: Channel): TransEx = ...
+}
+</code></pre>
+<h4><a class="header" href="#constructing-the-ir" id="constructing-the-ir">Constructing the IR</a></h4>
+<p>In order to form assertions (represented in the spec as values of <code>TlaEx</code>),
+users will need a way of constructing the Apalache IR. Similarly, they'll need a
+way of deconstructing and inspecting the IR in order to extract useful content
+from the transitions.</p>
+<p>To meet this need, the gRPC libraries we generate for client code will also
+include ASTs in the client language along with generated serialization and
+deserialization of JSON represents into and out of the AST. This will enable
+users to construct and inspect expressions as needed.</p>
+<h4><a class="header" href="#protocol" id="protocol">Protocol</a></h4>
+<p>We have briefly discussed the following options:</p>
+<ul>
+<li>Custom protocol on top of HTTP</li>
+<li>JSON-rpc</li>
+<li>gRPC</li>
+</ul>
+<p>I propose use of gRPC for the following reasons:</p>
+<ul>
+<li>It will automate most of the IO and protocol plumbing we'd otherwise have to
+do ourselves.</li>
+<li>It is battle tested by <a href="https://grpc.io/">industry</a></li>
+<li>It is already used in Rust projects within Informal Systems. This should make
+it easier to integrate into modelator.</li>
+<li>The <a href="https://scalapb.github.io/docs/grpc/">Scala library</a> appears to be well
+documented and actively maintained.</li>
+<li><a href="https://grpc.io/docs/languages/">Official support</a> is provided in many
+popular languages, and we can expect well-maintained library support in most
+languages.</li>
+<li>The gRPC libraries include both the RPC protocol and plumbing for the
+transport layer, and these are decomposable, in case we end up wanting to use
+different transport (i.e., sockets) or a different protocol for some purpose
+down the line.</li>
+</ul>
+<p>For a discussion of some comparison between JSON-rpc and gRPC, see</p>
+<ul>
+<li>https://www.mertech.com/blog/know-your-api-protocols</li>
+<li>https://stackoverflow.com/questions/58767467/what-the-difference-between-json-rpc-with-http2-vs-grpc</li>
+</ul>
+<p>I have asked internally, and engineers on both <code>tendermint-rs</code> and <code>hermes</code> have
+vouched for the ease of use and reliability of gRPC.</p>
+<p>Using gRPC can help satisfy [TRANS-EX.1::EXTENSIBLE.1] in the following ways:</p>
+<ul>
+<li>[TRANS-EX.1::EXTENSIBLE.1::CLOUD.1] should be satisfied out of the box, since
+HTTP is the default transport for gRPC.</li>
+<li>[TRANS-EX.1::EXTENSIBLE.1::CLI.1] can be satisfied by implementing a CLI
+client that we can launch via an Apalache subcommand.</li>
+</ul>
+<h5><a class="header" href="#grpc-example" id="grpc-example">gRPC Example</a></h5>
+<p>Here is as simple example of what it would actually look like to configure gRPC
+for the server (adapted from <a href="https://scalapb.github.io/docs/grpc/">ScalaPB grpc</a>):</p>
+<p>We define our messages in a <code>proto</code> file:</p>
+<pre><code class="language-proto">syntax = &quot;proto3&quot;;
+
+package com.trans-ex.protos;
+
+service TransExServer {
+        rpc LoadModel (LoadRequest) returns (LoadReply) {}
+}
+
+message LoadRequest {
+  required string spec = 1;
+  optional repeated string aux = 2;
+}
+
+message LoadReply {
+  enum Result {
+    OK = 0;
+    PARSE_ERROR = 1;
+    TYPE_ERROR = 2;
+    // etc...
+  };
+  
+  required Result result;
+  required Model model;
+}
+</code></pre>
+<p>The generated Scala will look roughly as follows:</p>
+<pre><code class="language-scala">
+object TransExGrpc {
+  // Abstract class for server
+  trait TransEx extends AbstractService {
+    def serviceCompanion = TransEx
+    def loadModel(request: LoadRequest): Future[LoadReply]
+  }
+
+  // Abstract class for block client
+  trait TransExBlockingClient {
+    def serviceCompanion = TransEx
+    def loadModel(request: LoadRequest): LoadReply
+  }
+
+  // Abstract classes for asynch client + various other boilerplate
+}
+</code></pre>
+<p>A sketch of implementing a server using the gRPC interface:</p>
+<pre><code class="language-scala">
+class TransExImpl extends TransExGrpc.Greeter {
+  override def loadModel(req: LoadRequest) = {
+    val rootModule = req.model
+    val auxModules = req.aux
+    
+    // run incomming specs through parsing passes
+    val model : UninitializedModel = Helper.loadModel(rootModule, auxModules)
+    
+    val reply = LoadReply(result = Ok, model = model)
+    Future.successful(reply)
+  }
+}
+</code></pre>
+<p>A sketch of using the client (e.g., to implement our CLI client):</p>
+<pre><code class="language-scala">// Create a channel
+val channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build
+// Make a blocking call
+val request = LoadRequest(spec = &lt;loaded module as string&gt;)
+val blockingStub = TransExGrpc.blockingStub(channel)
+val reply: LoadReply = blockingStub.loadModel(request)
+
+reply.result match {
+  ParseError =&gt; // ...
+  Ok =&gt;
+    val model: UninitializedModel = reply.model
+    // ...
+}
+</code></pre>
+<p>NOTE: To ensure that we are able to maintain a stable API, we should version the
+API from the start.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../adr/009adr-outputs.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../adr/011adr-smt-arrays.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../adr/009adr-outputs.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../adr/011adr-smt-arrays.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+        <script type="text/javascript" src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>
+        
+        <script type="text/javascript" src=".././theme/highlightTla.js"></script>
+        
+
+        
+
+    </body>
+</html>
