@@ -93,7 +93,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     // TODO Handle error case
     val options: Options = OptionGroup.WithChecker(cfg).get
-    val executor = Executor(new CheckerModule, options)
+    val executor = Executor(new CheckerModule(options))
 
     val tuning = options.checker.tuning
 

@@ -39,7 +39,7 @@ class TypeCheckCmd
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options: Options = OptionGroup.WithTypechecker(cfg).get
-    val executor = Executor(new TypeCheckerModule, options)
+    val executor = Executor(new TypeCheckerModule(options))
 
     logger.info("Type checking " + file)
 

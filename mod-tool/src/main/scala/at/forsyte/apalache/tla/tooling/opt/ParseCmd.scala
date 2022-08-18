@@ -34,7 +34,7 @@ class ParseCmd
     // TODO: Error handling
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options: Options = OptionGroup.WithIO(cfg).get
-    val executor = Executor(new ParserModule, options)
+    val executor = Executor(new ParserModule(options))
 
     logger.info("Parse " + file)
 

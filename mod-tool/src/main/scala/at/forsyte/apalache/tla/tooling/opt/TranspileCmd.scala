@@ -21,7 +21,7 @@ class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = 
   def run() = {
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options: Options = OptionGroup.WithChecker(cfg).get
-    val executor = Executor(new ReTLAToVMTModule, options)
+    val executor = Executor(new ReTLAToVMTModule(options))
 
     // TODO rm
     executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)

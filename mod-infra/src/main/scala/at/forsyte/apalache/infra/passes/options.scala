@@ -2,7 +2,6 @@ package at.forsyte.apalache.infra.passes.options
 
 import java.io.File
 import at.forsyte.apalache.tla.lir.Feature
-import com.google.inject
 import scala.util.{Failure, Success, Try}
 import at.forsyte.apalache.infra.PassOptionException
 
@@ -406,29 +405,6 @@ object OptionGroup {
         tuning = tuning,
         view = checker.view, // optional
     )
-  }
-
-  /**
-   * Provides a configured [[OptionGroup]] instance via a Google Guice `Provider`
-   *
-   * The provider enables late-binding of a configured option instance, which is then made available to any inject
-   * annotated class classes via google Guice's dependency injection.
-   *
-   * For more on Guice providers, see https://github.com/google/guice/wiki/InjectingProviders
-   */
-  class Provider[O <: OptionGroup] extends inject.Provider[O] {
-    protected var _options: Option[O] = None
-
-    /**
-     * Set the option to be provided
-     *
-     * This is typically called once, after parsing [[Config]]s into [[OptionGroup]]s. Use of it is to mutate the stored
-     * options to communicate between passes is strongly discouraged (but not forbidden).
-     */
-    def set(options: O): Unit = _options = Some(options)
-
-    /** Get the provided option */
-    def get(): O = _options.getOrElse(throw new inject.ProvisionException("pass options were not configured"))
   }
 
   ////////////////

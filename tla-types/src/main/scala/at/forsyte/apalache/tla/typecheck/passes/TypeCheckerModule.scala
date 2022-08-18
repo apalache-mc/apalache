@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.TypeLiteral
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 
-class TypeCheckerModule[O <: OptionGroup.HasTypechecker] extends ToolModule[O] {
+class TypeCheckerModule[O <: OptionGroup.HasTypechecker](options: O) extends ToolModule(options) {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])

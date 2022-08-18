@@ -67,7 +67,7 @@ class TestCmd
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options: Options = OptionGroup.WithChecker(cfg).get
-    val executor = Executor(new CheckerModule, options)
+    val executor = Executor(new CheckerModule(options))
 
     // This is a special version of the `check` command that is tuned towards testing scenarios
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"

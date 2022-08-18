@@ -15,7 +15,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  * @author
  *   Igor Konnov
  */
-class ParserModule[O <: OptionGroup.HasIO] extends ToolModule[O] {
+class ParserModule[O <: OptionGroup.HasIO](options: O) extends ToolModule(options) {
   override def configure(): Unit = {
     // the options singleton
     bind(classOf[PassOptions])
