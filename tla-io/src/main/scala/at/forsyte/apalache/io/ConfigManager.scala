@@ -4,29 +4,8 @@ import pureconfig._
 import pureconfig.generic.auto._
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
-import at.forsyte.apalache.tla.lir.Feature
 import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
-import com.typesafe.config.{Config, ConfigObject}
-
-// Provides implicit conversions used when deserializing into configurable values.
-private object Converters {
-  import pureconfig.ConvertHelpers._
-
-  private def expandedFilePath(s: String): Path = {
-    Paths.get(if (s.startsWith("~")) s.replaceFirst("~", System.getProperty("user.home")) else s)
-  }
-
-  // Bringing these implicits in scope lets us override the existing File and
-  // Path deserialization behavior, so we get path expansion in all configured
-  // paths.
-  // See https://pureconfig.github.io/docs/overriding-behavior-for-types.html
-  implicit val overridePathReader = ConfigReader.fromString[Path](catchReadError(expandedFilePath))
-  implicit val overrideFileReader = ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
-  // PureConfig's optF will convert None values to appropriate configuration errors
-  implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
-  implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
-
-}
+import at.forsyte.apalache.infra.passes.options.Converters
 
 /**
  * Manage cascade loading program configurations from the supported sources
@@ -76,24 +55,14 @@ class ConfigManager() {
         case None          => ConfigSource.empty
       }
 
-    // Derive lightbend `Config` objects from the default and primary config
-    // case classes.
-    //
-    // The cast to `ConfigObject` is guaranteed to be safe: `ConfigWriter.to`
-    // produces a `ConfigValue`, of which `ConfigObject` is a subtype
-    // representing values that are dictionaries. Case classes are always
-    // represented as dictionaries, so we can be sure any `ConfigValue` derived
-    // from an instance of an `ApalacheConfig` can be cast `asInstanceOf[ConfigObject]`.
-    val defaults: Config =
-      ConfigWriter[ApalacheConfig].to(ApalacheConfig()).asInstanceOf[ConfigObject].toConfig()
-    val primaryConfig: Config = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].toConfig()
+    val defaults: ConfigObjectSource = ApalacheConfig().toConfigSource()
+    val primaryConfig: ConfigObjectSource = cfg.toConfigSource()
 
-    ConfigSource
-      .fromConfig(primaryConfig)
-      // `withFallback` supplies configuration sources that only apply if values in the preceding configs aren't set
+    // `withFallback` supplies configuration sources that only apply if values in the preceding configs aren't set
+    primaryConfig
       .withFallback(localConfig)
       .withFallback(globalConfig.optional) // "optional" entails this will be empty if the file is absent
-      .withFallback(ConfigSource.fromConfig(defaults))
+      .withFallback(defaults)
       .load[ApalacheConfig]
   }
 }

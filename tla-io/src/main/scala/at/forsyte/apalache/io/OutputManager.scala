@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter
 import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
 
 import scala.io.Source
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * The OutputManager is the central source of truth, for all IO related locations. Any IO operation should request
@@ -121,10 +122,13 @@ object OutputManager extends LazyLogging {
     config = cfg
 
     val fileName =
-      config.common.inputfile
-        .map(_.getName) // Either the name of the file
-        .orElse(config.common.command) // Or the name of the command running
-        .get // One of those two will always be available
+      config.input.source
+        .flatMap {
+          case SourceOption.FileSource(file)   => Some(file.getName)
+          case SourceOption.StringSource(_, _) => None
+        }
+        .orElse(config.common.command)
+        .get
 
     val _outDir = config.common.outDir.get
     setOutDir(_outDir.toPath(), fileName)

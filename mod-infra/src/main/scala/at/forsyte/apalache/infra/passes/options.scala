@@ -5,6 +5,32 @@ import at.forsyte.apalache.tla.lir.Feature
 import com.google.inject
 import scala.util.{Failure, Success, Try}
 import at.forsyte.apalache.infra.PassOptionException
+// import pureconfig._
+// import pureconfig.generic.auto._
+import com.typesafe.config.{ConfigObject => TypesafeConfigObject}
+import pureconfig._
+import pureconfig.generic.auto._
+import java.nio.file.{Path, Paths}
+
+/** Implicit converters used when deserializing values from config sources */
+object Converters {
+  import pureconfig.ConvertHelpers._
+
+  private def expandedFilePath(s: String): Path = {
+    Paths.get(if (s.startsWith("~")) s.replaceFirst("~", System.getProperty("user.home")) else s)
+  }
+
+  // Bringing these implicits in scope lets us override the existing File and
+  // Path deserialization behavior, so we get path expansion in all configured
+  // paths.
+  // See https://pureconfig.github.io/docs/overriding-behavior-for-types.html
+  implicit val overridePathReader = ConfigReader.fromString[Path](catchReadError(expandedFilePath))
+  implicit val overrideFileReader = ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
+  // PureConfig's optF will convert None values to appropriate configuration errors
+  implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
+  implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
+}
+import Converters._
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -95,7 +121,6 @@ object Config {
    */
   case class Common(
       command: Option[String] = None,
-      inputfile: Option[File] = None, // TODO Move "inputfile" into an "Input" configuration group
       outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
       debug: Option[Boolean] = Some(false),
@@ -107,6 +132,17 @@ object Config {
       extends Config[Common] {
 
     def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
+  }
+
+  /**
+   * Configuration of program input
+   *
+   * @param input
+   *   File from which input data is to be read
+   */
+  case class Input(source: Option[SourceOption] = None) extends Config[Input] {
+
+    def empty: Input = Generic[Input].from(Generic[Input].to(this).map(emptyPoly))
   }
 
   /**
@@ -195,12 +231,27 @@ object Config {
    */
   case class ApalacheConfig(
       common: Common = Common(),
+      input: Input = Input(),
       output: Output = Output(),
       checker: Checker = Checker(),
       typechecker: Typechecker = Typechecker())
       extends Config[ApalacheConfig] {
 
     def empty: ApalacheConfig = Generic[ApalacheConfig].from(Generic[ApalacheConfig].to(this).map(emptyPoly))
+
+    /**
+     * Derive a `PureConfig` configuration source from an `ApalacheConfig`
+     */
+    def toConfigSource(): ConfigObjectSource = {
+      // The cast to `TypesafeConfigObject` is guaranteed to be safe: `ConfigWriter.to`
+      // produces a `typesafe.config.ConfigValue`, of which `TypesafeConfigObject` is a subtype
+      // representing values that are dictionaries. Case classes are always
+      // represented as dictionaries, so we can be sure any `ConfigValue`
+      // derived from an instance of an `ApalacheConfig` can be cast
+      // `asInstanceOf[TypesafeConfigObject]`.
+      val config = ConfigWriter[ApalacheConfig].to(this).asInstanceOf[TypesafeConfigObject].toConfig()
+      ConfigSource.fromConfig(config)
+    }
   }
 }
 
@@ -332,10 +383,10 @@ object OptionGroup {
   /** Options used to configure program input */
   case class Input(source: SourceOption) extends OptionGroup
 
-  object Input extends Configurable[Config.Common, Input] {
-    def apply(common: Config.Common): Try[Input] = for {
-      file <- common.inputfile.toTry("input.source")
-    } yield Input(SourceOption.FileSource(file.getAbsoluteFile))
+  object Input extends Configurable[Config.Input, Input] {
+    def apply(input: Config.Input): Try[Input] = for {
+      source <- input.source.toTry("input.source")
+    } yield Input(source)
   }
 
   /** Options used to configure program output */
@@ -477,10 +528,14 @@ object OptionGroup {
       extends HasInput
 
   object WithInput extends Configurable[Config.ApalacheConfig, WithInput] {
-    def apply(cfg: Config.ApalacheConfig): Try[WithInput] = for {
-      common <- Common(cfg.common)
-      input <- Input(cfg.common)
-    } yield WithInput(common, input)
+    def apply(cfg: Config.ApalacheConfig): Try[WithInput] = {
+      cfg
+        .toConfigSource()
+        .load[WithInput]
+        .left
+        .map(err => new PassOptionException(s"Missing value for required option ${err.prettyPrint()}"))
+        .toTry
+    }
   }
 
   case class WithOutput(
@@ -518,7 +573,7 @@ object OptionGroup {
   object WithChecker extends Configurable[Config.ApalacheConfig, WithChecker] {
     def apply(cfg: Config.ApalacheConfig): Try[WithChecker] = for {
       common <- Common(cfg.common)
-      input <- Input(cfg.common)
+      input <- Input(cfg.input)
       checker <- Checker(cfg.checker)
       typechecker <- Typechecker(cfg.typechecker)
     } yield WithChecker(common, input, checker, typechecker)
