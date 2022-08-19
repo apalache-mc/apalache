@@ -184,7 +184,7 @@ object Config {
    *   allow the type checker to infer polymorphic types
    */
   case class Typechecker(
-      inferpoly: Option[Boolean] = Some(false))
+      inferpoly: Option[Boolean] = Some(true))
       extends Config[Typechecker] {
 
     def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
