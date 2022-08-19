@@ -2,10 +2,11 @@ package at.forsyte.apalache.infra.passes
 
 import com.google.inject.AbstractModule
 import at.forsyte.apalache.infra.passes.options.OptionGroup
-import com.google.inject.TypeLiteral
 
 /**
  * An extension of Google Guice AbstractModule to be used by apalache modules to configure pass order and options.
+ *
+ * TODO: Remove bad data
  *
  * `ToolModule`'s are parameterized on a [[at.forsyte.apalache.infra.passes.options.OptionGroup OptionGroup]], which
  * statically enforces the connection between a particular sequence of passes and the set of options which are required
@@ -23,7 +24,7 @@ import com.google.inject.TypeLiteral
  * @author
  *   Shon Feder
  */
-abstract class ToolModule[O <: OptionGroup](options: O) extends AbstractModule {
+abstract class ToolModule[O <: OptionGroup](val options: O) extends AbstractModule {
 
   /**
    * The sequence of passes that need to be run for the module
@@ -32,16 +33,4 @@ abstract class ToolModule[O <: OptionGroup](options: O) extends AbstractModule {
    *   the sequence of passes
    */
   def passes: Seq[Class[_ <: Pass]]
-
-  /** The base configuration of the passes */
-  override def configure(): Unit = {
-    // The specific type of `OptionGroup` is determined by the `options`  to
-    // which the `ToolModule` is applied.  `TypeLiteral` lets us bind the
-    // supplied options to the type that is eventually derived for the generic
-    // `O`.
-    //
-    // For more on `TypeLiteral`, see
-    // https://google.github.io/guice/api-docs/4.1/javadoc/com/google/inject/TypeLiteral.html
-    bind(new TypeLiteral[O]() {}).toInstance(options)
-  }
 }

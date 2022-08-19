@@ -8,10 +8,6 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
 import com.google.inject.Guice
 import com.typesafe.scalalogging.LazyLogging
 
-// TODO rm
-import scala.reflect.ClassTag
-import scala.reflect._
-
 /**
  * This Executor abstracts the dependency injection and execution logic required for executing a PassChainExecutor
  *
@@ -33,7 +29,7 @@ case class Executor[O <: OptionGroup](val toolModule: ToolModule[O], val options
   /** Exposes mutable access to options configuring the behavior of the [passChainExecutor] */
   // TODO: rm after OptionGroup provider is wired into to replace all access to the PassOptions
   val passOptions = injector.getInstance(classOf[WriteablePassOptions])
-  val options = injector.getInstance(classTag[O].runtimeClass).asInstanceOf[O]
+  val options = toolModule.options
 
   private val exceptionAdapter = injector.getInstance(classOf[ExceptionAdapter])
 

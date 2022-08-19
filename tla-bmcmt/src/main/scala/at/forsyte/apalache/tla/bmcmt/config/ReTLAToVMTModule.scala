@@ -22,8 +22,11 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  * @author
  *   Jure Kukovec
  */
-class ReTLAToVMTModule[O <: OptionGroup.HasChecker](options: O) extends ToolModule(options) {
+class ReTLAToVMTModule(options: OptionGroup.HasChecker) extends ToolModule(options) {
   override def configure(): Unit = {
+    bind(classOf[OptionGroup.HasChecker])
+      .toInstance(options)
+
     // the options singleton
     bind(classOf[PassOptions])
       .to(classOf[WriteablePassOptions])
