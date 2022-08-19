@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
@@ -27,9 +27,6 @@ class ParserModule(options: OptionGroup.HasIO) extends ToolModule(options) {
     bind(classOf[OptionGroup.HasIO])
       .toInstance(options)
 
-    // the options singleton
-    bind(classOf[PassOptions])
-      .to(classOf[WriteablePassOptions])
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[ParserExceptionAdapter])

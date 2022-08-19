@@ -31,17 +31,12 @@ class ParseCmd
 
   // TODO Factor out execution, use ProgramConfiguration, etc.
   def run() = {
-    // TODO: Error handling
+    // TODO: Use typed error handling
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options: Options = OptionGroup.WithIO(cfg).get
     val executor = Executor(new ParserModule(options))
 
     logger.info("Parse " + file)
-
-    executor.passOptions.set("parser.source", options.input.source)
-    options.output.output.foreach(executor.passOptions.set("io.output", _))
-
-    setCommonOptions(executor)
 
     executor.run() match {
       case Right(m) => Right(s"Parsed successfully\nRoot module: ${m.name} with ${m.declarations.length} declarations.")
