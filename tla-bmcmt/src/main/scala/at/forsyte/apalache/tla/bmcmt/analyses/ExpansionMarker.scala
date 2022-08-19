@@ -35,7 +35,8 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       if (shallExpand) {
         // Expand the set as well as the underlying set!
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
+        logger.warn(s"The set S = $ex will be expanded, producing 2^Cardinality(S) constraints.")
+        logger.warn("Expansion may significantly slowdown the solver, e.g., when Cardinality(S) >= 10.")
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(underlyingSet))(tag))(tag)
       } else {
         // Do not expand the set itself, but expand the underlying set!
@@ -46,7 +47,10 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       if (shallExpand) {
         // Expand everything, including the function set.
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
+        logger.warn(
+            s"The function set [ S -> T ] = $ex will be expanded, producing Cardinality(T)^Cardinality(S) constraints.")
+        logger.warn(
+            "Expansion may significantly slowdown the solver, e.g., when Cardinality(T) >= 4 or Cardinality(S) >= 5.")
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,
