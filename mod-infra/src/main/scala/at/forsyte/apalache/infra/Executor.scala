@@ -13,8 +13,6 @@ import com.typesafe.scalalogging.LazyLogging
  *
  * @param toolModule
  *   The [[infra.passes.ToolModule]] that specifies the sequence of passes
- * @param options
- *   The type of the [[infra.passes.options.OptionGroup OptionsGroup]] interface required to run the specified passes
  *
  * @throws AdaptedException
  *   if any exceptions are caught by the configured [[ExceptionAdapter]]

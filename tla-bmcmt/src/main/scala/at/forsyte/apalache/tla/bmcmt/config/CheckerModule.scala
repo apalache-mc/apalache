@@ -25,6 +25,12 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  */
 class CheckerModule(options: OptionGroup.HasChecker) extends ToolModule(options) {
   override def configure(): Unit = {
+    bind(classOf[OptionGroup.HasIO])
+      .to(classOf[OptionGroup.HasTypechecker])
+    bind(classOf[OptionGroup.HasTypechecker])
+      .to(classOf[OptionGroup.HasChecker])
+    bind(classOf[OptionGroup.HasChecker])
+      .toInstance(options)
     // the options singleton
     bind(classOf[PassOptions])
       .to(classOf[WriteablePassOptions])

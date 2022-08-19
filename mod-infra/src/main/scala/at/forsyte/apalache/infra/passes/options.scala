@@ -431,14 +431,13 @@ object OptionGroup {
     val typechecker: Typechecker
   }
 
-  trait HasChecker extends HasInput {
+  trait HasChecker extends HasTypechecker {
     val checker: Checker
-    val typechecker: Typechecker
   }
 
   // This is the maximal interface, that should always be the greatest upper
   // bound on all combinations of option groups
-  trait HasAll extends HasChecker with HasOutput
+  trait HasAll extends HasChecker
 
   //////////////////
   // Constructors //
@@ -490,17 +489,16 @@ object OptionGroup {
   case class WithChecker(
       common: Common,
       input: Input,
-      checker: Checker,
-      typechecker: Typechecker)
+      output: Output,
+      typechecker: Typechecker,
+      checker: Checker)
       extends HasChecker
 
   object WithChecker extends Configurable[Config.ApalacheConfig, WithChecker] {
     def apply(cfg: Config.ApalacheConfig): Try[WithChecker] = for {
-      common <- Common(cfg.common)
-      input <- Input(cfg.common)
+      opts <- WithTypechecker(cfg)
       checker <- Checker(cfg.checker)
-      typechecker <- Typechecker(cfg.typechecker)
-    } yield WithChecker(common, input, checker, typechecker)
+    } yield WithChecker(opts.common, opts.input, opts.output, opts.typechecker, checker)
   }
 
   case class WithTypechecker(
