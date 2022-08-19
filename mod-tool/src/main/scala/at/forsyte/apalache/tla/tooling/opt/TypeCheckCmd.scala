@@ -19,8 +19,6 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
 class TypeCheckCmd
     extends PassExecutorCmd(name = "typecheck", description = "Check types in a TLA+ specification") with LazyLogging {
 
-  type Options = OptionGroup.HasTypechecker
-
   var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
   var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = "infer-poly", default = None,
       description = "allow the type checker to infer polymorphic types, default: true")
@@ -38,15 +36,11 @@ class TypeCheckCmd
   override def run() = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    val options: Options = OptionGroup.WithTypechecker(cfg).get
+    val options = OptionGroup.WithTypechecker(cfg).get
     val executor = Executor(new TypeCheckerModule(options))
 
     logger.info("Type checking " + file)
 
-    executor.passOptions.set("parser.source", options.input.source)
-    options.output.output.foreach(executor.passOptions.set("io.output", _))
-    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
-    setCommonOptions(executor)
     executor.run() match {
       case Right(_)   => Right("Type checker [OK]")
       case Left(code) => Left(code, "Type checker [FAILED]")

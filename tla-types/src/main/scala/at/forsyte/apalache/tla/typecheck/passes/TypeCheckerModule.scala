@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
@@ -24,9 +24,6 @@ class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(
     bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
     bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
 
-    // the options singleton
-    bind(classOf[PassOptions])
-      .to(classOf[WriteablePassOptions])
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[EtcTypeCheckerAdapter])
