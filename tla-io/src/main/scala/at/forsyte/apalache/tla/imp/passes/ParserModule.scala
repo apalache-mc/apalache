@@ -17,7 +17,13 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  */
 class ParserModule(options: OptionGroup.HasIO) extends ToolModule(options) {
   override def configure(): Unit = {
-    // TODO
+    // Set up the sub-trait hierarchy.
+    // TODO This is mad, and must be replaced.
+    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
+    bind(classOf[OptionGroup]).to(classOf[OptionGroup.HasCommon])
+    bind(classOf[OptionGroup.HasCommon]).to(classOf[OptionGroup.HasInput])
+    bind(classOf[OptionGroup.HasInput]).to(classOf[OptionGroup.HasIO])
+    bind(classOf[OptionGroup.HasOutput]).to(classOf[OptionGroup.HasIO])
     bind(classOf[OptionGroup.HasIO])
       .toInstance(options)
 
