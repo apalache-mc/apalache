@@ -25,12 +25,16 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  */
 class CheckerModule(options: OptionGroup.HasChecker) extends ToolModule(options) {
   override def configure(): Unit = {
-    bind(classOf[OptionGroup.HasIO])
-      .to(classOf[OptionGroup.HasTypechecker])
-    bind(classOf[OptionGroup.HasTypechecker])
-      .to(classOf[OptionGroup.HasChecker])
-    bind(classOf[OptionGroup.HasChecker])
-      .toInstance(options)
+    // Set up the sub-trait hierarchy.
+    // TODO This is mad, and must be replaced.
+    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
+    bind(classOf[OptionGroup]).to(classOf[OptionGroup.HasCommon])
+    bind(classOf[OptionGroup.HasCommon]).to(classOf[OptionGroup.HasInput])
+    bind(classOf[OptionGroup.HasInput]).to(classOf[OptionGroup.HasIO])
+    bind(classOf[OptionGroup.HasOutput]).to(classOf[OptionGroup.HasIO])
+    bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
+    bind(classOf[OptionGroup.HasTypechecker]).to(classOf[OptionGroup.HasChecker])
+    bind(classOf[OptionGroup.HasChecker]).toInstance(options)
     // the options singleton
     bind(classOf[PassOptions])
       .to(classOf[WriteablePassOptions])
@@ -71,6 +75,7 @@ class CheckerModule(options: OptionGroup.HasChecker) extends ToolModule(options)
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
     bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
     bind(classOf[BoundedCheckerPass]).to(classOf[BoundedCheckerPassImpl])
+    super.configure()
   }
 
   override def passes: Seq[Class[_ <: Pass]] = {
