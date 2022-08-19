@@ -316,7 +316,7 @@ object OptionGroup {
         features <- common.features.toTry("common.features")
         outDir <- common.outDir.toTry("common.outDir")
         profiling <- common.profiling.toTry("common.profiling")
-        smtprof <- common.debug.toTry("common.smtprog")
+        smtprof <- common.smtprof.toTry("common.smtprog")
         writeIntermediate <- common.writeIntermediate.toTry("common.writeIntermediate")
       } yield Common(
           command = command,
