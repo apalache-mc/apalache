@@ -35,7 +35,6 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       if (shallExpand) {
         // Expand the set as well as the underlying set!
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(underlyingSet))(tag))(tag)
       } else {
         // Do not expand the set itself, but expand the underlying set!
@@ -46,7 +45,8 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       if (shallExpand) {
         // Expand everything, including the function set.
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
+        // Expansion of function sets is not implemented yet, see:
+        // https://github.com/informalsystems/apalache/issues/1452
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,
