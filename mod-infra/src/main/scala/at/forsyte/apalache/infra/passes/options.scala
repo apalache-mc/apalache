@@ -4,6 +4,11 @@ import java.io.File
 import at.forsyte.apalache.tla.lir.Feature
 import scala.util.{Failure, Success, Try}
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
+import at.forsyte.apalache.infra.tlc.config.TlcConfig
+import java.io.FileReader
+import at.forsyte.apalache.infra.tlc.config.BehaviorSpec
+import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -162,9 +167,9 @@ object Config {
       config: Option[String] = None,
       discardDisabled: Option[Boolean] = Some(true),
       cinit: Option[String] = None,
-      init: Option[String] = None, // TODO Set proper default here once ConfigurationPassImpl is fixed
+      init: Option[String] = Some("Init"),
       inv: Option[String] = None, // TODO Should be list?
-      next: Option[String] = None, // TODO Set proper default here once ConfigurationPassImpl is fixed
+      next: Option[String] = Some("Next"),
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       noDeadlocks: Option[Boolean] = Some(false),
@@ -360,13 +365,12 @@ object OptionGroup {
   case class Checker(
       algo: String,
       cinit: Option[String],
-      config: Option[String], // TODO: rm once ConfigurationPassImpl is moved into configuration stage
+      config: Option[TlcConfig],
       discardDisabled: Boolean,
-      init: Option[String], // TODO Make required after ConfigurationPassImpl is refactored
+      behaviorSpec: BehaviorSpec,
       inv: Option[String],
       length: Int,
       maxError: Int,
-      next: Option[String], // TODO Make required after ConfigurationPassImpl is refactored
       noDeadlocks: Boolean,
       nworkers: Int,
       smtEncoding: SMTEncoding,
@@ -376,28 +380,36 @@ object OptionGroup {
       extends OptionGroup
 
   object Checker extends Configurable[Config.Checker, Checker] {
+    // private def loadTlcConfig(filename: String): TlcConfigParserApalache = {}
+
     def apply(checker: Config.Checker): Try[Checker] = for {
+      config <- Try(checker.config.map(fname => TlcConfigParserApalache(new FileReader(fname))))
       // Required options
       algo <- checker.algo.toTry("checker.algo")
       discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
-      // init <- checker.init.toTry("checker.init")
+      init <- checker.init.toTry("checker.init")
       length <- checker.length.toTry("checker.length")
       maxError <- checker.maxError.toTry("checker.maxError")
-      // next <- checker.next.toTry("checker.next")
+      next <- checker.next.toTry("checker.next")
       noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
       nworkers <- checker.nworkers.toTry("checker.nworkers")
       smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
       tuning <- checker.tuning.toTry("checker.tuning")
+      behaviorSpec = {
+        config match {
+          case None    => InitNextSpec(init = init, next = next)
+          case Some(c) => c.behaviorSpec
+        }
+      }
     } yield Checker(
         algo = algo,
+        behaviorSpec = behaviorSpec,
         cinit = checker.cinit, // optional
-        config = checker.config, // optional
+        config = config, // XXX checker.config, // optional
         discardDisabled = discardDisabled,
-        init = checker.init, // TODO: should be required
-        inv = checker.inv, // optional
+        inv = checker.inv,
         length = length,
         maxError = maxError,
-        next = checker.next, // TODO: should be required
         noDeadlocks = noDeadlocks,
         nworkers = nworkers,
         smtEncoding = smtEncoding,

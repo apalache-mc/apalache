@@ -79,8 +79,7 @@ class TestCmd
 
     executor.passOptions.set("general.tuning", tuning)
     executor.passOptions.set("parser.source", options.input.source)
-    executor.passOptions.set("checker.init", options.checker.init.get)
-    executor.passOptions.set("checker.next", options.checker.next.get)
+    executor.passOptions.set("checker.behaviorSpec", options.checker.behaviorSpec)
     executor.passOptions.set("checker.inv", List(options.checker.inv.get))
     options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
     // TODO: move into options provider
