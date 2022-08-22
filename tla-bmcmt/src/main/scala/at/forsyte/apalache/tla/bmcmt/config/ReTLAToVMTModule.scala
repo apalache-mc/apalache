@@ -35,9 +35,6 @@ class ReTLAToVMTModule(options: OptionGroup.HasChecker) extends ToolModule(optio
     bind(classOf[OptionGroup.HasChecker])
       .toInstance(options)
 
-    // the options singleton
-    bind(classOf[PassOptions])
-      .to(classOf[WriteablePassOptions])
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[CheckerExceptionAdapter])
