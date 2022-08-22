@@ -34,7 +34,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     rootLogger.setLevel(Level.OFF)
   }
 
-  override def configure(loggerContext: LoggerContext): Unit = {
+  override def configure(loggerContext: LoggerContext): Configurator.ExecutionStatus = {
     addInfo("Setting up a logback configuration")
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
@@ -47,6 +47,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     // debug messages at the apalache level
     val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")
     apalacheLogger.setLevel(Level.DEBUG)
+    Configurator.ExecutionStatus.NEUTRAL
   }
 
   private def mkConsoleAppender(loggerContext: LoggerContext): ConsoleAppender[ILoggingEvent] = {
