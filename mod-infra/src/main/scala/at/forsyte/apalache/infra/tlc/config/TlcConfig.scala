@@ -1,6 +1,6 @@
-package at.forsyte.apalache.io.tlc.config
+package at.forsyte.apalache.infra.tlc.config
 
-import at.forsyte.apalache.io.tlc.config.ConfigModelValue.STR_PREFIX
+import at.forsyte.apalache.infra.tlc.config.ConfigModelValue.STR_PREFIX
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, StrT1, TlaEx, Typed, VarT1}
 import at.forsyte.apalache.tla.lir.TypedPredefs._

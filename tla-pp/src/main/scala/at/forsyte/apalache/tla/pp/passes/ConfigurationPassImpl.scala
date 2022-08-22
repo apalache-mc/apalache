@@ -4,8 +4,8 @@ import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.{PassOptions, WriteablePassOptions}
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
-import at.forsyte.apalache.io.tlc.config._
+import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
+import at.forsyte.apalache.infra.tlc.config._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
