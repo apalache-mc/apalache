@@ -61,8 +61,8 @@ class ConfigurationPassImpl @Inject() (
       if (constOverrides.nonEmpty) {
         // If there are constant overrides, we need a CInit predicate, so either
         // fetch the configured one or use the default operator name "CInit"
-        derivedPreds.cinit = options.checker.cinit.getOrElse("CInit")
-        extendCinitWithOverrides(constOverrides, tlaModule)
+        derivedPreds.cinit = options.checker.cinit.orElse(Some("CInit"))
+        extendCinitWithOverrides(constOverrides, tlaModule, derivedPreds.cinit.get)
       } else {
         tlaModule.declarations
       }
@@ -85,7 +85,10 @@ class ConfigurationPassImpl @Inject() (
 
   // Returns new declarations, where CInit has been extended (or constructed)
   // with OVERRIDEs relating to specification constants
-  private def extendCinitWithOverrides(constOverrides: Seq[TlaDecl], tlaModule: TlaModule): Seq[TlaDecl] = {
+  private def extendCinitWithOverrides(
+      constOverrides: Seq[TlaDecl],
+      tlaModule: TlaModule,
+      cinitName: String): Seq[TlaDecl] = {
     val oldCinitOpt = tlaModule.operDeclarations
       .find {
         _.name == derivedPreds.cinit
@@ -102,8 +105,8 @@ class ConfigurationPassImpl @Inject() (
         d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*)(boolTag))
       }
       .getOrElse {
-        TlaOperDecl(derivedPreds.cinit, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(
-            Typed(OperT1(Seq.empty, BoolT1)))
+        TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(Typed(OperT1(Seq.empty,
+                    BoolT1)))
       }
 
     // Since declarations are a Seq not a Set, we may need to remove the old CInit first

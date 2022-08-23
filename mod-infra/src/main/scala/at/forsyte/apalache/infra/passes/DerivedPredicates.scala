@@ -9,7 +9,7 @@ class DerivedPredicates(
     var temporal: List[String],
     var next: String,
     var init: String,
-    var cinit: String)
+    var cinit: Option[String])
 
 object DerivedPredicates {
   def apply(
@@ -17,6 +17,6 @@ object DerivedPredicates {
       temporal: List[String] = List.empty,
       next: String = "",
       init: String = "",
-      cinit: String = ""): DerivedPredicates =
-    new DerivedPredicates(invariants: List[String], temporal: List[String], next: String, init: String, cinit: String)
+      cinit: Option[String] = None): DerivedPredicates =
+    new DerivedPredicates(invariants = invariants, temporal = temporal, next = next, init = init, cinit = cinit)
 }
