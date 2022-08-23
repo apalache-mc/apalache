@@ -394,7 +394,18 @@ EXITCODE: ERROR (12)
 
 ## running the check command
 
-#### check factorization find a counterexample (array-encoding)
+### Prints default computation length of 10 (regression #2087)
+
+```sh
+$ apalache-mc check y2k_instance.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+Checker reports no error up to computation length 10
+...
+EXITCODE: OK
+```
+
+### check factorization find a counterexample (array-encoding)
 
 ```sh
 $ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
@@ -825,6 +836,7 @@ EXITCODE: ERROR (12)
 $ apalache-mc check --length=19 --inv=Safety y2k_instance.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
+Checker reports no error up to computation length 19
 ...
 EXITCODE: OK
 ```
