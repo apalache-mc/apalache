@@ -197,11 +197,19 @@ $ apalache-mc parse --features=rows Empty.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### parse Empty with --features=imprecise.records succeeds
+
+```sh
+$ apalache-mc parse --features=imprecise.records Empty.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### parse Empty with an unsupported feature fails
 
 ```sh
 $ apalache-mc parse --features=feature.unsupported Empty.tla 2>&1 | grep 'Failed to parse'
-Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows
+Failed to parse command parse: Incorrect value for option features, got 'feature.unsupported', expected a feature: rows, imprecise.records
 ```
 
 ### parse LocalDefClash576 succeeds
