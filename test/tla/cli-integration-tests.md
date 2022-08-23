@@ -392,7 +392,7 @@ EXITCODE: ERROR (255)
 This simple test demonstrates how to test a spec by isolating the input with generators.
 
 ```sh
-$ apalache-mc test --features=rows TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
+$ apalache-mc test TestGen.tla Prepare Test Assertion | sed 's/I@.*//'
 ...
 The outcome is: Error
 Found a violation of the postcondition. Check violation.tla.
@@ -497,7 +497,7 @@ EXITCODE: OK
 ### check Fix365_ExistsSubset3 succeeds: regression for issue 365 (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 Fix365_ExistsSubset3.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -507,7 +507,7 @@ EXITCODE: OK
 ### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -527,7 +527,7 @@ EXITCODE: OK
 ### check Bug540 succeeds: regression for issue 540 (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --cinit=CInit Bug540.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=CInit Bug540.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -537,7 +537,7 @@ EXITCODE: OK
 ### check Bug593 fails correctly: regression for issue 593 (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows Bug593.tla | sed 's/I@.*//'
+$ apalache-mc check Bug593.tla | sed 's/I@.*//'
 ...
 EXITCODE: ERROR (255)
 ```
@@ -545,7 +545,7 @@ EXITCODE: ERROR (255)
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --features=rows --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --init=Init --next=Next --inv=Inv Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -555,7 +555,7 @@ EXITCODE: OK
 ### check mis.tla succeeds
 
 ```sh
-$ apalache-mc check --features=rows --cinit=AvoidBug --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=AvoidBug --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -565,7 +565,7 @@ EXITCODE: OK
 ### check mis.tla errors on IntroBug
 
 ```sh
-$ apalache-mc check --features=rows --cinit=IntroBug --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=IntroBug --length=5 --inv=IsIndependent mis.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -607,7 +607,7 @@ EXITCODE: OK
 ### check Paxos.tla succeeds
 
 ```sh
-$ apalache-mc check --features=rows --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv Paxos.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -617,7 +617,7 @@ EXITCODE: OK
 ### check Bug20190118 succeeds
 
 ```sh
-$ apalache-mc check --features=rows --length=1 Bug20190118.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 Bug20190118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -894,7 +894,7 @@ EXITCODE: OK
 ### check HandshakeWithTypes.tla with length 4 succeeds (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --length=4 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -904,7 +904,7 @@ EXITCODE: OK
 ### check HandshakeWithTypes.tla with length 5 deadlocks (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: Deadlock
 ...
@@ -918,7 +918,7 @@ extend an execution prefix. See a discussion in
 [#1640](https://github.com/informalsystems/apalache/issues/1640).
 
 ```sh
-$ apalache-mc check --features=rows --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
+$ apalache-mc check --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
 ...
 The outcome is: ExecutionsTooShort
 ...
@@ -1348,7 +1348,7 @@ mismatching record types. The new type checker with row typing is reporting a
 type error, and this is what we expect.
 
 ```sh
-$ apalache-mc typecheck --features=rows Bug914.tla | sed 's/[IE]@.*//'
+$ apalache-mc typecheck Bug914.tla | sed 's/[IE]@.*//'
 ...
 [Bug914.tla:21:9-21:26]: Arguments to = should have the same type. For arguments m, ["foo" ↦ TRUE] with types {  }, { foo: Bool }, in expression m = (["foo" ↦ TRUE])
 [Bug914.tla:21:1-21:26]: Error when computing the type of Init
@@ -1362,7 +1362,7 @@ Regression test for https://github.com/informalsystems/apalache/issues/987
 We should always use sorted keys on record types.
 
 ```sh
-$ apalache-mc check --features=rows RecordExcept987.tla | sed 's/I@.*//'
+$ apalache-mc check RecordExcept987.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -1599,7 +1599,7 @@ EXITCODE: OK
 ### check PizzaOrder succeeds (array-encoding)
 
 ```sh
-$ apalache-mc check --features=rows --cinit=ConstInit --inv=NoDoubleDelivery PizzaOrder.tla | sed 's/I@.*//'
+$ apalache-mc check --cinit=ConstInit --inv=NoDoubleDelivery PizzaOrder.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 ...
@@ -2072,7 +2072,7 @@ With the new records, this spec is failing at type checking.
 See https://github.com/informalsystems/apalache/issues/874
 
 ```sh
-$ apalache-mc typecheck --features=rows Bug874.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck Bug874.tla | sed 's/[IEW]@.*//'
 ...
 [Bug874.tla:4:17-4:27]: Cannot apply ["a" ↦ 2] to the argument "b" in (["a" ↦ 2])["b"].
 ...
@@ -2134,7 +2134,7 @@ EXITCODE: ERROR (255)
 ### check Bug1682.tla
 
 ```sh
-$ apalache-mc check --features=rows --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --init=Inv --inv=Inv --length=1 Bug1682.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2246,7 +2246,7 @@ EXITCODE: OK
 Test that variants are working as expected.
 
 ```sh
-$ apalache-mc check --features=rows --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2332,7 +2332,7 @@ EXITCODE: OK
 ### check MegaSpec1.tla reports no error with `--debug`: regression for #1313
 
 ```sh
-$ apalache-mc check --features=rows --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --debug --cinit=CInit MegaSpec1.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2504,7 +2504,7 @@ EXITCODE: OK
 A test for folds with excepts, the fast case.
 
 ```sh
-$ apalache-mc check --features=rows --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=TypeOK --length=1 RecMem1627.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2524,7 +2524,7 @@ EXITCODE: OK
 Check row-based records support row typing.
 
 ```sh
-$ apalache-mc check --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check TestRecordsNew.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2534,7 +2534,7 @@ EXITCODE: OK
 Check the mutex algorithm with new records.
 
 ```sh
-$ apalache-mc check --features=rows --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2544,7 +2544,7 @@ EXITCODE: OK
 Variant operators work in the model checker.
 
 ```sh
-$ apalache-mc check --features=rows --inv=AllTests TestVariants.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --inv=AllTests TestVariants.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2552,7 +2552,7 @@ EXITCODE: OK
 ### check TestReqAckVariants.tla
 
 ```sh
-$ apalache-mc check --features=rows TestReqAckVariants.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check TestReqAckVariants.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2620,7 +2620,7 @@ EXITCODE: OK
 ### typecheck Empty.tla reports no error when rows enabled
 
 ```sh
-$ apalache-mc typecheck --features=rows Empty.tla | sed 's/I@.*//'
+$ apalache-mc typecheck Empty.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2654,7 +2654,7 @@ EXITCODE: OK
 ### typecheck CigaretteSmokersTyped.tla
 
 ```sh
-$ apalache-mc typecheck --features=rows CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck CigaretteSmokersTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -2741,7 +2741,7 @@ EXITCODE: OK
 ### typecheck TwoPhaseTyped.tla
 
 ```sh
-$ apalache-mc typecheck --features=rows TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -2810,7 +2810,7 @@ EXITCODE: ERROR (255)
 ### typecheck ChannelTyped.tla
 
 ```sh
-$ apalache-mc typecheck --features=rows ChannelTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck ChannelTyped.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -2900,7 +2900,7 @@ EXITCODE: OK
 ### typecheck Except617.tla
 
 ```sh
-$ apalache-mc typecheck --features=rows Except617.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck Except617.tla | sed 's/[IEW]@.*//'
 ...
 PASS #1: TypeCheckerSnowcat
  > Running Snowcat .::.
@@ -3020,7 +3020,7 @@ Type unification should not recurse infinitely.
 See: https://github.com/informalsystems/apalache/issues/925
 
 ```sh
-$ apalache-mc typecheck --features=rows Bug925.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
 ...
 [Bug925.tla:7:1-7:24]: Error when computing the type of Optional
 ...
@@ -3134,7 +3134,7 @@ EXITCODE: OK
 Typecheck a real spec by Leslie Lamport.
 
 ```sh
-$ apalache-mc typecheck --features=rows LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3144,7 +3144,7 @@ EXITCODE: OK
 Typecheck a model checking instance.
 
 ```sh
-$ apalache-mc typecheck --features=rows MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3164,7 +3164,7 @@ EXITCODE: OK
 Typecheck new records that support row typing.
 
 ```sh
-$ apalache-mc typecheck --features=rows TestRecordsNew.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestRecordsNew.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3174,7 +3174,7 @@ EXITCODE: OK
 No ill-typed record access.
 
 ```sh
-$ apalache-mc typecheck --features=rows TestRecordsNewIll1.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestRecordsNewIll1.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (120)
 ```
@@ -3184,7 +3184,7 @@ EXITCODE: ERROR (120)
 No ill-typed record access.
 
 ```sh
-$ apalache-mc typecheck --features=rows TestRecordsNewIll2.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestRecordsNewIll2.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (120)
 ```
@@ -3194,7 +3194,7 @@ EXITCODE: ERROR (120)
 No ill-typed record access.
 
 ```sh
-$ apalache-mc typecheck --features=rows TestRecordsNewIll3.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestRecordsNewIll3.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (120)
 ```
@@ -3204,7 +3204,7 @@ EXITCODE: ERROR (120)
 No ill-typed record access.
 
 ```sh
-$ apalache-mc typecheck --features=rows TestRecordsNewIll4.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestRecordsNewIll4.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (120)
 ```
@@ -3214,7 +3214,7 @@ EXITCODE: ERROR (120)
 Variant operators are type correct.
 
 ```sh
-$ apalache-mc typecheck --features=rows TestVariants.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestVariants.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3222,7 +3222,7 @@ EXITCODE: OK
 ### typecheck TestReqAckVariants.tla
 
 ```sh
-$ apalache-mc typecheck --features=rows TestReqAckVariants.tla | sed 's/[IEW]@.*//'
+$ apalache-mc typecheck TestReqAckVariants.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
