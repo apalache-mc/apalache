@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.io.annotations.{AnnotationStr, StandardAnnotations}
+import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 import com.typesafe.scalalogging.LazyLogging
@@ -17,6 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   Igor Konnov
  */
 class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useRows: Boolean) extends LazyLogging {
+  private val type1Parser = DefaultType1Parser
 
   /**
    * Check the types in a module. All type checking events are sent to a listener.
@@ -31,8 +32,9 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
   def check(listener: TypeCheckerListener, module: TlaModule): Boolean = {
     val maxTypeVar = findMaxUsedTypeVar(module)
     val varPool = new TypeVarPool(maxTypeVar + 1)
-    val aliasSubstitution = loadTypeAliases(module.declarations)
-    val toEtc = new ToEtcExpr(annotationStore, aliasSubstitution, varPool, useRows)
+    val aliasSubstitution = parseAllTypeAliases(module.declarations)
+    val typeAnnotations = parseTypeAnnotations(module.declarations)
+    val toEtc = new ToEtcExpr(typeAnnotations, aliasSubstitution, varPool, useRows)
 
     // Bool is the final expression in the chain of let-definitions
     val terminalExpr: EtcExpr = EtcConst(BoolT1)(BlameRef(UID.unique))
@@ -86,7 +88,8 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     }
   }
 
-  private def loadTypeAliases(declarations: Seq[TlaDecl]): TypeAliasSubstitution = {
+  // Parse type aliases from the annotations.
+  private def parseAllTypeAliases(declarations: Seq[TlaDecl]): TypeAliasSubstitution = {
     var aliases = Map[String, lir.TlaType1]()
 
     // extract all aliases from the annotations
@@ -95,7 +98,7 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
         annotations.filter(_.name == StandardAnnotations.TYPE_ALIAS).foreach { annot =>
           annot.args match {
             case Seq(AnnotationStr(text)) =>
-              val (alias, assignedType) = parseTypeAlias(decl.name, text)
+              val (alias, assignedType) = parseOneTypeAlias(decl.name, decl.ID, text)
               if (!ConstT1.isAliasReference(alias)) {
                 val msg =
                   s"Operator ${decl.name}: Deprecated syntax in type alias $alias. Use camelCase of Type System 1.2."
@@ -116,14 +119,51 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
   }
 
   // parse type from its text representation
-  private def parseTypeAlias(where: String, text: String): (String, TlaType1) = {
+  private def parseOneTypeAlias(where: String, causeUid: UID, text: String): (String, TlaType1) = {
     try {
-      DefaultType1Parser.parseAlias(text)
+      val (alias, tt) = DefaultType1Parser.parseAlias(text)
+      ensureTypeSystem12(causeUid, tt)
+      (alias, tt)
     } catch {
       case e: Type1ParseError =>
         logger.error("Parsing error in the alias annotation: " + text)
-        throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}", UID.nullId)
+        throw new TypingInputException(s"Parser error in type alias of $where: ${e.msg}", causeUid)
     }
+  }
+
+  // Parse type annotations into TlaType1.
+  private def parseTypeAnnotations(declarations: Seq[TlaDecl]): Map[UID, TlaType1] = {
+    def findDeclarationName(uid: UID): String = {
+      declarations.find(_.ID == uid).map(_.name).getOrElse("some declaration")
+    }
+
+    annotationStore
+      .map { case (uid, annotations) =>
+        annotations.filter(_.name == StandardAnnotations.TYPE) match {
+          case Nil =>
+            None
+
+          case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) :: Nil =>
+            try {
+              val typeFromText = type1Parser.parseType(annotationText)
+              ensureTypeSystem12(uid, typeFromText)
+              Some(uid, typeFromText)
+            } catch {
+              case e: Type1ParseError =>
+                logger.error("Parsing error in the type annotation: " + annotationText)
+                val where = findDeclarationName(uid)
+                throw new TypingInputException(s"Parser error in type annotation of $where: ${e.msg}", UID.nullId)
+            }
+
+          case multiple =>
+            val where = findDeclarationName(uid)
+            val n = multiple.size
+            val msg = s"Found $n @${StandardAnnotations.TYPE} annotations in front of $where"
+            throw new TypingInputException(msg, uid)
+        }
+      }
+      .flatten
+      .toMap
   }
 
   // Find the maximum index used in type tags of a module.
@@ -159,5 +199,58 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     }
 
     module.declarations.map(findInDecl).foldLeft(-1)(Math.max)
+  }
+
+  // Ensure that all type annotations are using Type System 1.2, unless `useRows=false`.
+  private def ensureTypeSystem12(exprId: UID, typeInAnnotation: TlaType1): Unit = {
+    // recursively check that the use of rows is consistent with useRows
+    def containsExpectedRecordTypes: TlaType1 => Boolean = {
+      case RecT1(_) =>
+        // OK, if rows are disabled
+        !useRows
+
+      case RecRowT1(_) =>
+        // OK, if rows are enabled
+        useRows
+
+      case VariantT1(_) =>
+        // OK, if rows are enabled
+        useRows
+
+      case RowT1(_, _) =>
+        useRows
+
+      case SetT1(elemT) =>
+        containsExpectedRecordTypes(elemT)
+
+      case SeqT1(elemT) =>
+        containsExpectedRecordTypes(elemT)
+
+      case FunT1(argT, resT) =>
+        containsExpectedRecordTypes(argT) && containsExpectedRecordTypes(resT)
+
+      case TupT1(elemTs @ _*) =>
+        // tuples are non-empty, hence using reduce should be fine
+        elemTs.map(containsExpectedRecordTypes).forall(_ == true)
+
+      case SparseTupT1(fieldTypes) =>
+        fieldTypes.values.map(containsExpectedRecordTypes).forall(_ == true)
+
+      case OperT1(argTs, resT) =>
+        (argTs :+ resT).map(containsExpectedRecordTypes).forall(_ == true)
+
+      case IntT1 | StrT1 | BoolT1 | RealT1 | ConstT1(_) | VarT1(_) =>
+        true
+    }
+
+    if (!containsExpectedRecordTypes(typeInAnnotation)) {
+      val msg = if (useRows) {
+        s"Found imprecise record types, while Type System 1.2 is enabled. Either update the annotations, or use --rows=imprecise.records"
+      } else {
+        s"Found row types, while Type System 1.2 is disabled. Do not use --rows=imprecise.records"
+      }
+
+      throw new TypingInputException(msg, exprId)
+    }
   }
 }

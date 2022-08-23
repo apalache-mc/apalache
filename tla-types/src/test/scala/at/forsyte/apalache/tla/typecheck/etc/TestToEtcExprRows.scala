@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -18,15 +17,12 @@ import org.scalatestplus.junit.JUnitRunner
  */
 @RunWith(classOf[JUnitRunner])
 class TestToEtcExprRows extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBase {
-  private var parser: Type1Parser = _
-  private var annotationStore: AnnotationStore = _
+  private val parser: Type1Parser = DefaultType1Parser
   private var gen: ToEtcExpr = _
 
   override protected def beforeEach(): Unit = {
-    parser = DefaultType1Parser
-    annotationStore = createAnnotationStore()
     // a new instance of the translator, as it gives unique names to the variables
-    gen = new ToEtcExpr(annotationStore, TypeAliasSubstitution.empty, new TypeVarPool(), useRows = true)
+    gen = new ToEtcExpr(Map(), TypeAliasSubstitution.empty, new TypeVarPool(), useRows = true)
   }
 
   test("record set constructor") {

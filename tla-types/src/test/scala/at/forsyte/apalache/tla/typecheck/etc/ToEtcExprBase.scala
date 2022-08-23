@@ -1,11 +1,18 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{OperT1, SetT1, TlaType1, TupT1, VarT1}
+import at.forsyte.apalache.tla.lir.{OperT1, SetT1, TlaType1, TupT1, UID, VarT1}
 
 /**
  * The base class to be used by TestToEtcExprFoo classes.
  */
 protected trait ToEtcExprBase extends EtcBuilder {
+  protected def mkToEtcExpr(
+      annotations: Map[UID, TlaType1] = Map.empty,
+      aliases: TypeAliasSubstitution = TypeAliasSubstitution.empty,
+      useRows: Boolean = false): ToEtcExpr = {
+    new ToEtcExpr(annotations, aliases, new TypeVarPool(), useRows)
+  }
+
   protected def mkAppByType(operTypes: Seq[TlaType1], args: TlaType1*): EtcApp = {
     mkUniqApp(operTypes, args.map(a => mkUniqConst(a)): _*)
   }

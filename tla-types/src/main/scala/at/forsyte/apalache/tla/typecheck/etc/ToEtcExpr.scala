@@ -1,8 +1,5 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.annotations.store.{findAnnotation, AnnotationStore}
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
@@ -22,13 +19,11 @@ import scala.annotation.nowarn
  *   Igor Konnov
  */
 class ToEtcExpr(
-    annotationStore: AnnotationStore,
+    typeAnnotations: Map[UID, TlaType1],
     aliasSubstitution: TypeAliasSubstitution,
     varPool: TypeVarPool,
     val useRows: Boolean = false)
     extends EtcBuilder with LazyLogging {
-  private val type1Parser = DefaultType1Parser
-
   def apply(decl: TlaDecl, inScopeEx: EtcExpr): EtcExpr = {
     decl match {
       case TlaConstDecl(_) | TlaVarDecl(_) =>
@@ -104,18 +99,6 @@ class ToEtcExpr(
     }
   }
 
-  // parse type from its text representation
-  private def parseType(where: String, text: String): TlaType1 = {
-    try {
-      val (tt, _) = aliasSubstitution(type1Parser.parseType(text))
-      renameVars(tt)
-    } catch {
-      case e: Type1ParseError =>
-        logger.error("Parsing error in the type annotation: " + text)
-        throw new TypingInputException(s"Parser error in type annotation of $where: ${e.msg}", UID.nullId)
-    }
-  }
-
   private def findTypeFromTagOrAnnotation(decl: TlaDecl): Option[TlaType1] = {
     decl.typeTag match {
       case Typed(tt: TlaType1) =>
@@ -123,12 +106,9 @@ class ToEtcExpr(
 
       case _ =>
         // use a type annotation, if there is any
-        findAnnotation(annotationStore, decl.ID, StandardAnnotations.TYPE).map {
-          case Annotation(StandardAnnotations.TYPE, AnnotationStr(annotationText)) =>
-            parseType(decl.name, annotationText)
-
-          case a =>
-            throw new TypingInputException(s"Unexpected annotation of ${decl.name}: $a", decl.ID)
+        typeAnnotations.get(decl.ID).map { tt =>
+          val (substituted, _) = aliasSubstitution(tt)
+          renameVars(substituted)
         }
     }
   }

@@ -1,7 +1,5 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.annotations.StandardAnnotations
-import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -18,16 +16,8 @@ import org.scalatestplus.junit.JUnitRunner
  *   Igor Konnov
  */
 @RunWith(classOf[JUnitRunner])
-class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBuilder {
-  var parser: Type1Parser = _
-  var annotationStore: AnnotationStore = _
-  var gen: ToEtcExpr = _
-
-  override protected def beforeEach(): Unit = {
-    parser = DefaultType1Parser
-    annotationStore = createAnnotationStore()
-    gen = new ToEtcExpr(annotationStore, TypeAliasSubstitution.empty, new TypeVarPool())
-  }
+class TestToEtcExprDecls extends AnyFunSuite with ToEtcExprBase with BeforeAndAfterEach with EtcBuilder {
+  var parser: Type1Parser = DefaultType1Parser
 
   test("An operator declaration with a java-like annotation") {
     // translating the definition
@@ -37,7 +27,6 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
     val cmp = tla.lt(tla.name("x"), tla.int(0))
     // "be like a proton, always positive"
     val positive = TlaOperDecl("Positive", List(OperParam("x")), cmp)
-    annotationStore += positive.ID -> List(StandardAnnotations.mkType("Int => Bool"))
 
     // becomes:
     // Foo: (Int => Bool) in
@@ -49,14 +38,14 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
     val expected = mkUniqTypeDecl("Positive", parser("Int => Bool"), positiveLet)
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
-    assert(expected == gen(positive, mkUniqConst(BoolT1)))
+    assert(expected == mkToEtcExpr(Map(positive.ID -> parser("Int => Bool")))(positive, mkUniqConst(BoolT1)))
   }
 
   test("constant declarations with java-like annotations") {
     // CONSTANT N
     val constDecl = TlaConstDecl("N")
     // @type: Int;
-    annotationStore += constDecl.ID -> List(StandardAnnotations.mkType("Int"))
+    val annotations = Map(constDecl.ID -> parser("Int"))
 
     val terminal = mkUniqConst(BoolT1)
     // becomes:
@@ -65,14 +54,14 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
     val expected = mkUniqTypeDecl("N", parser("Int"), terminal)
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
-    assert(expected == gen(constDecl, mkUniqConst(BoolT1)))
+    assert(expected == mkToEtcExpr(annotations)(constDecl, mkUniqConst(BoolT1)))
   }
 
   test("variable declarations with java-like annotations") {
     // VARIABLE set
     val varDecl = TlaVarDecl("set")
     // @type: Set(Int);
-    annotationStore += varDecl.ID -> List(StandardAnnotations.mkType("Set(Str)"))
+    val annotations = Map(varDecl.ID -> parser("Set(Str)"))
 
     val terminal = mkUniqConst(BoolT1)
     // becomes:
@@ -81,13 +70,12 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
     val expected = mkUniqTypeDecl("set", parser("Set(Str)"), terminal)
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
-    assert(expected == gen(varDecl, mkUniqConst(BoolT1)))
+    assert(expected == mkToEtcExpr(annotations)(varDecl, mkUniqConst(BoolT1)))
   }
 
   test("variable declarations with java-like annotations and aliases") {
     val aliases = TypeAliasSubstitution(Map("ENTRY" -> IntT1))
     // redefine gen to use aliases
-    gen = new ToEtcExpr(annotationStore, aliases, new TypeVarPool())
 
     /*
         VARIABLES
@@ -99,10 +87,12 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
      */
     val entryDecl = TlaVarDecl("entry")
     val setDecl = TlaVarDecl("set")
-    // @type: entry;
-    annotationStore += entryDecl.ID -> List(StandardAnnotations.mkType("ENTRY"))
-    // @type: Set(entry);
-    annotationStore += setDecl.ID -> List(StandardAnnotations.mkType("Set(ENTRY)"))
+    val annotations = Map(
+        // @type: entry;
+        entryDecl.ID -> parser("ENTRY"),
+        // @type: Set(entry);
+        setDecl.ID -> parser("Set(ENTRY)"),
+    ) ///
 
     val terminal = mkUniqConst(BoolT1)
     // becomes:
@@ -112,7 +102,8 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
       mkUniqTypeDecl("entry", parser("Int"), mkUniqTypeDecl("set", parser("Set(Int)"), terminal))
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
-    assert(expected == gen(entryDecl, gen(setDecl, terminal)))
+    def gen() = mkToEtcExpr(annotations, aliases)
+    assert(expected == gen()(entryDecl, gen()(setDecl, terminal)))
   }
 
   test("assumes") {
@@ -128,6 +119,6 @@ class TestToEtcExprDecls extends AnyFunSuite with BeforeAndAfterEach with EtcBui
     val expected = mkUniqLet("__Assume_" + assume.ID, mkUniqAbs(application), terminal)
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
-    assert(expected == gen(assume, terminal))
+    assert(expected == mkToEtcExpr(Map())(assume, terminal))
   }
 }
