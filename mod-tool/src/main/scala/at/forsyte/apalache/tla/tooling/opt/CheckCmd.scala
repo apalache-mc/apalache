@@ -107,7 +107,9 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
     setCommonOptions()
     executor.run() match {
-      case Right(_)   => Right("Checker reports no error up to computation length " + length)
+      case Right(_) =>
+        Right("Checker reports no error up to computation length " + executor.passOptions.getOrError[Int]("checker",
+            "length"))
       case Left(code) => Left(code, "Checker has found an error")
     }
   }
