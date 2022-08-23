@@ -13,6 +13,7 @@ import scala.jdk.CollectionConverters._
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import org.apache.commons.io.FilenameUtils
 
 /**
  * This command initiates the 'check' command line.
@@ -93,6 +94,20 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     // TODO Handle error case
     val options: Options = OptionGroup.WithChecker(cfg).get
+
+    if (options.checker.predicates.tlcConfig.isEmpty && options.input.source.isFile) {
+      // The older versions of apalache were loading a TLC config file of the same basename as the spec.
+      // We have flipped this behavior in version 0.25.0.
+      // Hence, warn the user that their config is not loaded by default.
+      val stem = FilenameUtils.removeExtension(file.getName())
+      val defaultConfig = new File(stem + ".cfg")
+      if (defaultConfig.exists()) {
+        val msg =
+          s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
+        logger.info(msg)
+      }
+
+    }
     val executor = Executor(new CheckerModule(options))
 
     val tuning = options.checker.tuning
