@@ -35,6 +35,10 @@ class ReTLAToVMTModule(options: OptionGroup.HasChecker) extends ToolModule(optio
     bind(classOf[OptionGroup.HasChecker])
       .toInstance(options)
 
+    // TODO Doc
+    bind(classOf[DerivedPredicates])
+      .to(classOf[DerivedPredicates])
+
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[CheckerExceptionAdapter])

@@ -15,8 +15,8 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
   type Options <: OptionGroup.HasChecker
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
-  var config: Option[String] =
-    opt[Option[String]](name = "config", default = None, description = "configuration file in TLC format")
+  var config =
+    opt[Option[File]](name = "config", default = None, description = "configuration file in TLC format")
   var cinit: Option[String] = opt[Option[String]](name = "cinit", default = None,
       description = "the name of an operator that initializes CONSTANTS,\n" +
         "default: None")

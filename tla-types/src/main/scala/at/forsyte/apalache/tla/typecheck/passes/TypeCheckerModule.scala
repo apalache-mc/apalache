@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, Tran
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.TypeLiteral
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(options) {
   override def configure(): Unit = {
@@ -23,6 +24,10 @@ class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(
     bind(classOf[OptionGroup.HasOutput]).to(classOf[OptionGroup.HasIO])
     bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
     bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
+
+    // TODO Doc
+    bind(classOf[DerivedPredicates])
+      .to(classOf[DerivedPredicates])
 
     // exception handler
     bind(classOf[ExceptionAdapter])

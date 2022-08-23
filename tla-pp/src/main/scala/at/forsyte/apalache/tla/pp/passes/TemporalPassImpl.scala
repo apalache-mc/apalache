@@ -95,6 +95,7 @@ class TemporalPassImpl @Inject() (
       val inlinedTemporalFormulas =
         temporalFormulas.map(operDecl => operDecl.copy(body = transformation(operDecl.body)))
 
+      // XXX
       // the encoding will transform the temporal properties into invariants, so add them to the
       // list of invariants (otherwise, they would not be treated as invariants by later passes)
       val newInvs = options.get[List[String]]("checker", "inv").getOrElse(List()) ++ inlinedTemporalFormulas.map(_.name)

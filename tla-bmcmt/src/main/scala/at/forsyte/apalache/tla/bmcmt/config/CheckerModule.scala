@@ -35,6 +35,11 @@ class CheckerModule(options: OptionGroup.HasChecker) extends ToolModule(options)
     bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
     bind(classOf[OptionGroup.HasTypechecker]).to(classOf[OptionGroup.HasChecker])
     bind(classOf[OptionGroup.HasChecker]).toInstance(options)
+
+    // TODO Doc
+    bind(classOf[DerivedPredicates])
+      .to(classOf[DerivedPredicates])
+
     // the options singleton
     bind(classOf[PassOptions])
       .to(classOf[WriteablePassOptions])

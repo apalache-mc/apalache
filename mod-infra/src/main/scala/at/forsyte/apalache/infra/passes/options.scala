@@ -168,7 +168,7 @@ object Config {
   case class Checker(
       tuning: Option[Map[String, String]] = Some(Map()),
       algo: Option[String] = Some("incremental"), // TODO: convert to case class
-      config: Option[String] = None,
+      config: Option[File] = None,
       discardDisabled: Option[Boolean] = Some(true),
       cinit: Option[String] = None,
       init: Option[String] = None,
@@ -384,7 +384,7 @@ object OptionGroup extends LazyLogging {
       behaviorSpec: BehaviorSpec,
       temporal: List[String],
       invariants: List[String],
-      tlcConfig: Option[(TlcConfig, String)])
+      tlcConfig: Option[(TlcConfig, File)])
       extends OptionGroup
 
   object Predicates extends Configurable[Config.Checker, Predicates] {
@@ -400,7 +400,7 @@ object OptionGroup extends LazyLogging {
 
         case Some(fname) =>
           for {
-            tlcConfig <- Try(TlcConfigParserApalache(new FileReader(fname)))
+            tlcConfig <- Try(loadTLCCfg(fname))
             behaviorSpec =
               tlcConfig.behaviorSpec match {
                 case InitNextSpec(cfgInit, cfgNext) =>
@@ -416,12 +416,20 @@ object OptionGroup extends LazyLogging {
               behaviorSpec = behaviorSpec,
               temporal = temporal,
               invariants = invariants,
-              tlcConfig = Some(tlcConfig, fname),
+              tlcConfig = Some((tlcConfig, fname)),
           )
       }
     }
 
-    private def tryToOverrideFromCli[T](ov: Option[T], tlcConfigValue: T, name: String) = ov match {
+    private def loadTLCCfg(f: File): TlcConfig = {
+      if (!f.exists()) {
+        throw new PassOptionException(s"Specified TLC config file not found: ${f.getAbsolutePath()}")
+      }
+      logger.info(s"  > ${f.getName()}: Loading TLC configuration")
+      TlcConfigParserApalache(new FileReader(f))
+    }
+
+    private def tryToOverrideFromCli[T](ov: Option[T], tlcConfigValue: T, name: String): T = ov match {
       case Some(v) =>
         val msg =
           s"  >  $name is set in TLC config but overridden via `$name` cli option or apalache.cfg; using $v"
