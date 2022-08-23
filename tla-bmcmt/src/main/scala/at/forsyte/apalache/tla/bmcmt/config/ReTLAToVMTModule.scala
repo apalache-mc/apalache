@@ -37,7 +37,7 @@ class ReTLAToVMTModule(options: OptionGroup.HasChecker) extends ToolModule(optio
 
     // TODO Doc
     bind(classOf[DerivedPredicates])
-      .to(classOf[DerivedPredicates])
+      .to(classOf[DerivedPredicates.Impl])
 
     // exception handler
     bind(classOf[ExceptionAdapter])
