@@ -1,14 +1,18 @@
 package at.forsyte.apalache.infra.passes.options
 
-import java.io.File
-import at.forsyte.apalache.tla.lir.Feature
-import scala.util.{Failure, Success, Try}
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
-import at.forsyte.apalache.infra.tlc.config.TlcConfig
-import java.io.FileReader
 import at.forsyte.apalache.infra.tlc.config.BehaviorSpec
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
+import at.forsyte.apalache.infra.tlc.config.TlcConfig
+import at.forsyte.apalache.tla.lir.Feature
+
+import java.io.File
+import java.io.FileReader
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -167,19 +171,26 @@ object Config {
       config: Option[String] = None,
       discardDisabled: Option[Boolean] = Some(true),
       cinit: Option[String] = None,
-      init: Option[String] = Some("Init"),
-      inv: Option[String] = None, // TODO Should be list?
-      next: Option[String] = Some("Next"),
+      init: Option[String] = None,
+      inv: Option[List[String]] = None,
+      next: Option[String] = None,
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       noDeadlocks: Option[Boolean] = Some(false),
       nworkers: Option[Int] = Some(1),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
-      temporal: Option[String] = None, // TODO SHould be list?
+      temporal: Option[List[String]] = None,
       view: Option[String] = None)
       extends Config[Checker] {
 
     def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
+
+    // TODO: doc -- lets us record the default here, while still being able to tell whether the value
+    // was set in the CLI or not, which then allows integrating TLC configs
+    def initOrDefault = init.getOrElse("Init")
+    def nextOrDefault = next.getOrElse("Next")
+    def invOrDefault = inv.getOrElse(List.empty)
+    def temporalOrDefault = temporal.getOrElse(List.empty)
   }
 
   /**
@@ -212,12 +223,16 @@ object Config {
 }
 
 /** Defines the data sources supported */
-sealed abstract class SourceOption
+sealed abstract class SourceOption {
+  def isFile: Boolean
+}
 
 object SourceOption {
 
   /** Data to be loaded from a file */
-  final case class FileSource(file: java.io.File) extends SourceOption
+  final case class FileSource(file: java.io.File) extends SourceOption {
+    def isFile = true
+  }
 
   /**
    * Data supplied as a string
@@ -227,7 +242,9 @@ object SourceOption {
    * @param aux
    *   auxiliary data sources
    */
-  final case class StringSource(content: String, aux: Seq[String] = Seq()) extends SourceOption
+  final case class StringSource(content: String, aux: Seq[String] = Seq()) extends SourceOption {
+    def isFile = false
+  }
 }
 
 /** Defines the SMT encoding options supported */
@@ -266,7 +283,7 @@ sealed trait OptionGroup
  * The unions can be specified via the `Has*` traits, such as [[OptionGroup.HasInput]] and constructed via the `With*`
  * classes, such as [[OptionGroup.WithInput]].
  */
-object OptionGroup {
+object OptionGroup extends LazyLogging {
 
   /**
    * Interface for a group of related options that can be produced from a [[Config]]
@@ -361,59 +378,100 @@ object OptionGroup {
     } yield Typechecker(inferpoly)
   }
 
+  /** Spec property options */
+// TODO Docs
+  case class Predicates(
+      behaviorSpec: BehaviorSpec,
+      temporal: List[String],
+      invariants: List[String],
+      tlcConfig: Option[(TlcConfig, String)])
+      extends OptionGroup
+
+  object Predicates extends Configurable[Config.Checker, Predicates] {
+    def apply(checker: Config.Checker): Try[Predicates] = {
+      checker.config match {
+        case None =>
+          Try(Predicates(
+                  behaviorSpec = InitNextSpec(init = checker.initOrDefault, next = checker.nextOrDefault),
+                  temporal = checker.temporalOrDefault,
+                  invariants = checker.invOrDefault,
+                  tlcConfig = None,
+              ))
+
+        case Some(fname) =>
+          for {
+            tlcConfig <- Try(TlcConfigParserApalache(new FileReader(fname)))
+            behaviorSpec =
+              tlcConfig.behaviorSpec match {
+                case InitNextSpec(cfgInit, cfgNext) =>
+                  val init = tryToOverrideFromCli(checker.init, cfgInit, "init")
+                  val next = tryToOverrideFromCli(checker.next, cfgNext, "next")
+                  InitNextSpec(init = init, next = next)
+                case spec => spec
+              }
+
+            temporal = tryToOverrideFromCli(checker.temporal, tlcConfig.temporalProps, "temporal")
+            invariants = tryToOverrideFromCli(checker.inv, tlcConfig.invariants, "inv")
+          } yield Predicates(
+              behaviorSpec = behaviorSpec,
+              temporal = temporal,
+              invariants = invariants,
+              tlcConfig = Some(tlcConfig, fname),
+          )
+      }
+    }
+
+    private def tryToOverrideFromCli[T](ov: Option[T], tlcConfigValue: T, name: String) = ov match {
+      case Some(v) =>
+        val msg =
+          s"  >  $name is set in TLC config but overridden via `$name` cli option or apalache.cfg; using $v"
+        logger.warn(msg)
+        v
+      case None =>
+        logger.info(s"  > Using $name predicate(s) $tlcConfigValue from the TLC config")
+        tlcConfigValue
+    }
+  }
+
   /** Options used to configure model checking */
   case class Checker(
       algo: String,
       cinit: Option[String],
-      config: Option[TlcConfig],
       discardDisabled: Boolean,
-      behaviorSpec: BehaviorSpec,
-      inv: Option[String],
       length: Int,
       maxError: Int,
       noDeadlocks: Boolean,
       nworkers: Int,
+      predicates: Predicates,
       smtEncoding: SMTEncoding,
-      temporal: Option[String],
       tuning: Map[String, String],
       view: Option[String])
       extends OptionGroup
 
-  object Checker extends Configurable[Config.Checker, Checker] {
+  object Checker extends Configurable[Config.Checker, Checker] with LazyLogging {
     // private def loadTlcConfig(filename: String): TlcConfigParserApalache = {}
 
     def apply(checker: Config.Checker): Try[Checker] = for {
-      config <- Try(checker.config.map(fname => TlcConfigParserApalache(new FileReader(fname))))
       // Required options
       algo <- checker.algo.toTry("checker.algo")
       discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
-      init <- checker.init.toTry("checker.init")
       length <- checker.length.toTry("checker.length")
       maxError <- checker.maxError.toTry("checker.maxError")
-      next <- checker.next.toTry("checker.next")
       noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
       nworkers <- checker.nworkers.toTry("checker.nworkers")
+      predicates <- Predicates(checker)
       smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
       tuning <- checker.tuning.toTry("checker.tuning")
-      behaviorSpec = {
-        config match {
-          case None    => InitNextSpec(init = init, next = next)
-          case Some(c) => c.behaviorSpec
-        }
-      }
     } yield Checker(
         algo = algo,
-        behaviorSpec = behaviorSpec,
         cinit = checker.cinit, // optional
-        config = config, // XXX checker.config, // optional
         discardDisabled = discardDisabled,
-        inv = checker.inv,
         length = length,
         maxError = maxError,
         noDeadlocks = noDeadlocks,
         nworkers = nworkers,
+        predicates = predicates,
         smtEncoding = smtEncoding,
-        temporal = checker.temporal, // optional
         tuning = tuning,
         view = checker.view, // optional
     )

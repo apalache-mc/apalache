@@ -138,6 +138,10 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
       case "false" | "no" | "0"      => Some(false)
     }
 
+  implicit def listStringRead: Read[List[String]] =
+    Read.reads[List[String]](expecting = "A comma separated list of strings, such as 'foo,bar,baz'")(
+        _.split(",").toList)
+
   private def getOptionEnvVar(option: CliOption[_]): Option[String] = {
     val envVar = option.name.replace("-", "_").toUpperCase()
     sys.env.get(envVar).map(value => s"${envVar}=${value}")

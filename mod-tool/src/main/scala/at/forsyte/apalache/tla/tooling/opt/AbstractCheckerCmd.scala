@@ -25,11 +25,11 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
         "default: Init")
   var next: Option[String] =
     opt[Option[String]](name = "next", default = None, description = "the name of a transition operator, default: Next")
-  var inv: Option[String] =
-    opt[Option[String]](name = "inv", default = None, description = "the name of an invariant operator, e.g., Inv")
-  var temporal: Option[String] =
-    opt[Option[String]](name = "temporal", default = None,
-        description = "the name of a temporal property, e.g. Property")
+  var inv =
+    opt[Option[List[String]]](name = "inv", default = None,
+        description = "the name of an invariant operator, e.g., Inv")
+  var temporal = opt[Option[List[String]]](name = "temporal", default = None,
+      description = "the name of a temporal property, e.g. Property")
   var length: Option[Int] =
     opt[Option[Int]](name = "length", default = None, description = "maximal number of Next steps, default: 10")
 
@@ -52,10 +52,9 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
       s"Checker options: ${environment}${name} ${invocation}"
     }
     executor.passOptions.set("parser.source", options.input.source)
-    options.checker.config.foreach(executor.passOptions.set("checker.config", _))
-    executor.passOptions.set("checker.behaviorSpec", options.checker.behaviorSpec)
-    options.checker.inv.foreach(inv => executor.passOptions.set("checker.inv", List(inv)))
-    options.checker.temporal.foreach(temporal => executor.passOptions.set("checker.temporal", List(temporal)))
+    options.checker.predicates.tlcConfig.foreach { case (c, _) => executor.passOptions.set("checker.config", c) }
+    executor.passOptions.set("checker.inv", options.checker.predicates.invariants)
+    executor.passOptions.set("checker.temporal", options.checker.predicates.temporal)
     options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
     executor.passOptions.set("checker.length", options.checker.length)
   }

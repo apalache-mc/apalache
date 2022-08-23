@@ -49,7 +49,7 @@ class TestCmd
             tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
             init = Some(before),
             next = Some(action),
-            inv = Some(assertion),
+            inv = Some(List(assertion)),
             cinit = cinit,
             nworkers = Some(1),
             length = Some(1),
@@ -79,8 +79,7 @@ class TestCmd
 
     executor.passOptions.set("general.tuning", tuning)
     executor.passOptions.set("parser.source", options.input.source)
-    executor.passOptions.set("checker.behaviorSpec", options.checker.behaviorSpec)
-    executor.passOptions.set("checker.inv", List(options.checker.inv.get))
+    executor.passOptions.set("checker.inv", options.checker.predicates.invariants)
     options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
     // TODO: move into options provider
     executor.passOptions.set("checker.nworkers", options.checker.nworkers)
