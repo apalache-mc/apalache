@@ -4,8 +4,8 @@ import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 import com.typesafe.scalalogging.LazyLogging
@@ -245,9 +245,9 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
 
     if (!containsExpectedRecordTypes(typeInAnnotation)) {
       val msg = if (useRows) {
-        s"Found imprecise record types, while Type System 1.2 is enabled. Either update the annotations, or use --rows=imprecise.records"
+        s"Found imprecise record types, while Type System 1.2 is enabled. Either update the annotations, or use --features=imprecise.records"
       } else {
-        s"Found row types, while Type System 1.2 is disabled. Do not use --rows=imprecise.records"
+        s"Found row types, while Type System 1.2 is disabled. Do not use --features=imprecise.records"
       }
 
       throw new TypingInputException(msg, exprId)
