@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.{PassOptions, WriteablePassOptions}
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -46,11 +45,9 @@ class ConfigurationPassImpl @Inject() (
     // Since this is the 1st pass after Inline, check absence of recursion first
     LanguageWatchdog(NonrecursiveLanguagePred).check(tlaModule)
 
-    // this pass is hard to read, too many things are happening here...
-    val relevantOptions = new WriteablePassOptions()
     // try to read from the TLC configuration file and produce constant overrides
     val overrides = options.checker.predicates.tlcConfig match {
-      case None                             => List.empty
+      case None                             => setDerivedPredicates(); List.empty // No overrides
       case Some((tlcConfig, tlcConfigFile)) => loadOptionsFromTlcConfig(tlaModule, tlcConfig, tlcConfigFile)
     }
 
@@ -70,7 +67,7 @@ class ConfigurationPassImpl @Inject() (
     val currentAndOverrides = TlaModule(tlaModule.name, newDecls ++ otherOverrides)
 
     // make sure that the required operators are defined
-    ensureDeclarationsArePresent(currentAndOverrides, relevantOptions)
+    ensureDeclarationsArePresent(currentAndOverrides)
 
     // rewrite constants and declarations
     val configuredModule = new ConstAndDefRewriter(tracker)(currentAndOverrides)
@@ -113,15 +110,27 @@ class ConfigurationPassImpl @Inject() (
     tlaModule.declarations.filterNot(_.name == derivedPreds.cinit) :+ newCinitDecl
   }
 
+  private def setDerivedPredicates(): Unit = {
+    options.checker.predicates.behaviorSpec match {
+      case InitNextSpec(next, init) => derivedPreds.next = next; derivedPreds.init = init
+      // Should we change data structure to make this state unrepresentable?
+      case _ => throw new Exception("TODO: should be impossible, since this arises only with no TLCC config")
+    }
+    derivedPreds.temporal = options.checker.predicates.temporal
+    derivedPreds.invariants = options.checker.predicates.invariants
+    derivedPreds.cinit = options.checker.cinit
+  }
+
   /**
-   * Produce the configuration options from a TLC config, if a filename was passed in the options. Warn the user if
-   * there is a config file of a similar name that was not passed. Throw an error if the filename was passed in the
-   * options, but the file does not exist.
+   * Extract the data from a TlaModule needed to finalize the configuration options provided in a specified TlcConfig
    *
    * @param module
    *   the input module
-   * @param outOptions
-   *   the pass options to update from the configuration file
+   * @param config
+   *   the TlcConfig parsed during program configuration
+   * @param configFile
+   *   the name of the file from which the TlcConfig was loaded
+   *
    * @return
    *   additional declarations, which originate from assignments and replacements
    */
@@ -158,6 +167,7 @@ class ConfigurationPassImpl @Inject() (
           .map(ConstAndDefRewriter.OVERRIDE_PREFIX + _)
       configuredModule.declarations.filter(d => namesOfOverrides.contains(d.name))
     } catch {
+      // TODO Move into config parsing section
       case e: IOException =>
         val msg = s"  > $basename: IO error when loading the TLC config: ${e.getMessage}"
         throw new TLCConfigurationError(msg)
@@ -168,10 +178,8 @@ class ConfigurationPassImpl @Inject() (
     }
   }
 
-  // Make sure that all operators passed via --init, --cinit, --next, --inv, --temporal are present.
-  private def ensureDeclarationsArePresent(
-      mod: TlaModule,
-      configOptions: PassOptions): Unit = {
+  // Make sure that all operators passed via --init, --cinit, --next, --inv, --temporal are present in the module.
+  private def ensureDeclarationsArePresent(mod: TlaModule): Unit = {
     def assertDecl(role: String, name: String): Unit = {
       logger.info(s"  > Set $role to $name")
       if (mod.operDeclarations.forall(_.name != name)) {
@@ -181,43 +189,13 @@ class ConfigurationPassImpl @Inject() (
       }
     }
 
-    // let's make this code as fool-proof as possible, so the following passes do not fail with exceptions
-    configOptions.get[String]("checker", "init") match {
-      case Some(init) => assertDecl("the initialization predicate", init)
-
-      case None =>
-        throw new IrrecoverablePreprocessingError("Option checker.init not set")
-    }
-
-    configOptions.get[String]("checker", "cinit") match {
-      case Some(cinit) =>
-        assertDecl("the constant initialization predicate", cinit)
-
-      case None => () // cinit is optional
-    }
-
-    configOptions.get[String]("checker", "next") match {
-      case Some(next) => assertDecl("the transition predicate", next)
-
-      case None =>
-        throw new IrrecoverablePreprocessingError("Option checker.next not set")
-    }
-
-    configOptions.get[List[String]]("checker", "inv") match {
-      case Some(invs) =>
-        invs.foreach(assertDecl("an invariant", _))
-
-      case None =>
-        () // this is fine, invariants are optional
-    }
-
-    configOptions.get[List[String]]("checker", "temporal") match {
-      case Some(props) =>
-        props.foreach(assertDecl("a temporal property", _))
-
-      case None =>
-        () // this is fine, temporal properties are optional
-    }
+    // Required predicates
+    assertDecl("the initialization predicate", derivedPreds.init)
+    assertDecl("the transition predicate", derivedPreds.next)
+    // Optional predicates
+    derivedPreds.cinit.foreach(assertDecl("the constant initialization predicate", _))
+    derivedPreds.invariants.foreach(assertDecl("an invariant", _))
+    derivedPreds.temporal.foreach(assertDecl("a temporal property", _))
   }
 
   /**
