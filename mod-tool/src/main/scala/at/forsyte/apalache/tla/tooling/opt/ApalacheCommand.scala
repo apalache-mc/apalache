@@ -8,6 +8,7 @@ import org.backuity.clist._
 import org.backuity.clist.util.Read
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigManager
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * The base class used by all Apalache CLI subcommands.
@@ -17,7 +18,8 @@ import at.forsyte.apalache.io.ConfigManager
  * @author
  *   Igor Konnov, Shon Feder
  */
-abstract class ApalacheCommand(name: String, description: String) extends Command(name: String, description: String) {
+abstract class ApalacheCommand(name: String, description: String)
+    extends Command(name: String, description: String) with LazyLogging {
   // TODO Fix excessively long strings
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
@@ -50,6 +52,7 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
    * instance should be communicated through the derived `ApalacheConfig`.
    */
   def toConfig(): Config.ApalacheConfig = {
+    logger.info("Loading configuration")
 
     // We start with an *empty* base config, so that any values which are *not*
     // set by the CLI will be `None`.  This is required to allow the configs

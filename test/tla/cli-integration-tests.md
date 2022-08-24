@@ -1872,8 +1872,10 @@ The replacements make the invariant hold true.
 $ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
 ...
   > ConfigReplacements2.cfg: Loading TLC configuration
-  > Using the init predicate Init from the TLC config
-  > Using the next predicate Next from the TLC config
+  > Using init predicate(s) Init from the TLC config
+  > Using next predicate(s) Next from the TLC config
+  > Using inv predicate(s) Inv from the TLC config
+...
   > ConfigReplacements2.cfg: found INVARIANTS: Inv
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
@@ -1890,10 +1892,8 @@ EXITCODE: OK
 When a configuration file does not exist, the tool should error.
 
 ```sh
-$ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
-...
-Configuration error (see the manual): TLC config file not found: ThisConfigDoesNotExist.cfg
-...
+$ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla | grep -o -e "Specified TLC config file not found" -e "EXITCODE: ERROR (255)"
+Specified TLC config file not found
 EXITCODE: ERROR (255)
 ```
 
