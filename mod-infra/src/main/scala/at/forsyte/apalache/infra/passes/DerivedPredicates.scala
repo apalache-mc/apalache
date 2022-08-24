@@ -56,7 +56,7 @@ object DerivedPredicates {
 
     def setCinit(cinit: String): Unit = this.cinit = Some(cinit)
 
-    def addInvariants(invs: List[String]): Unit = this.invariants ++ invs
+    def addInvariants(invs: List[String]): Unit = this.invariants = this.invariants ++ invs
   }
 
   object Impl {
