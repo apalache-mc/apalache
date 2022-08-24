@@ -2,11 +2,14 @@
 
 **Difficulty: Blue trail – Easy**
 
-**Revision:** July 22, 2022
+**Revision:** August 24, 2022
 
-In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.
-We give concrete steps on running the type checker and
-annotating a specification with types.
+In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.  We
+give concrete steps on running the type checker and annotating a specification
+with types.
+
+This tutorial uses Type System 1.2, which guarantees safe record access. To see
+how to upgrade to Type System 1.2, check [Migrating to Type System 1.2][].
 
 ## Related documents
 
@@ -17,12 +20,7 @@ annotating a specification with types.
 ## Setup
 
 We assume that you have Apalache installed. If not, check the manual page on
-[Apalache installation][]. The minimal required version is 0.25.9.
-
-**Note**: This tutorial uses a new feature in Apalache that makes type checking of
-records more precise. Currently, this experimental feature is activated with the
-option `--features=rows`.
-<!-- TODO(#1943): Remove --features=rows when it becomes default. -->
+[Apalache installation][]. The minimal required version is 0.29.0.
 
 ## Running example: Lamport's mutex
 
@@ -200,15 +198,10 @@ same type. In this case, we have three options:
 Now we should run the type checker again:
 
 ```sh
-$ apalache-mc typecheck --features=rows LamportMutexTyped.tla
+$ apalache-mc typecheck LamportMutexTyped.tla
 ...
 Typing input error: Expected a type annotation for CONSTANT maxClock
 ```
-
-Note that we pass the option `--features=rows`, as we are using the new syntax
-for record types `{ ... }`, which needs to be activated. This feature will
-become the default in the future.
-<!-- TODO(#1943): Remove --features=rows when it becomes default. -->
 
 The type checker is still not happy: We have not annotated `CONSTANTS`.
 
@@ -231,7 +224,7 @@ integers. We add the type annotations:
 Let's run the type checker once again:
 
 ```sh
-$ apalache-mc typecheck --features=rows LamportMutexTyped.tla
+$ apalache-mc typecheck LamportMutexTyped.tla
 ...
  > All expressions are typed
 Type checker [OK]
@@ -291,7 +284,6 @@ For more advanced type annotations, check the following examples:
 
 - [CigaretteSmokersTyped.tla][],
 - [CarTalkPuzzleTyped.tla][],
-- [FunctionsTyped.tla][],
 - [QueensTyped.tla][].
 - [TwoPhaseTyped.tla][].
 
@@ -306,6 +298,7 @@ or drop us a message on [Zulip chat][].
 [ADR002]: ../adr/002adr-types.html
 [ADR004]: ../adr/004adr-annotations.html
 [HOWTO on writing type annotations]: ../HOWTOs/howto-write-type-annotations.md
+[Migrating to Type System 1.2]: ../HOWTOs/howto-write-type-annotations.md#recipe9
 [Apalache installation]: ../apalache/installation/index.md
 [Two-phase commit]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit
 [Lamport's mutex]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex
@@ -314,11 +307,10 @@ or drop us a message on [Zulip chat][].
 [LamportMutexTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/LamportMutexTyped.tla
 [TwoPhaseTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/TwoPhaseTyped.tla
 [Stephan Merz]: https://members.loria.fr/Stephan.Merz/
-[GameOfLifeTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/GameOfLifeTyped.tla 
-[CigaretteSmokersTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CigaretteSmokersTyped.tla
-[CarTalkPuzzleTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CarTalkPuzzleTyped.tla
-[FunctionsTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/FunctionsTyped.tla
-[QueensTyped.tla]: https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/QueensTyped.tla
+[GameOfLifeTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/GameOfLifeTyped.tla
+[CigaretteSmokersTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla
+[CarTalkPuzzleTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla
+[QueensTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/QueensTyped.tla
 [open an issue]: https://github.com/informalsystems/apalache/issues
 [Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
 [Idiom 15]: ../idiomatic/003record-sets.md

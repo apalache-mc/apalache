@@ -1,8 +1,13 @@
 # How to write type annotations
 
-**Revision:** July 22, 2022
+**Revision:** August 24, 2022
 
 **Important updates:**
+
+ - Version 0.29.0: The new syntax for records and variants is enabled by
+   default (previously, enabled with `--features=rows`). For the transition
+   period, the old type syntax can be activated with `--features=no-rows`.
+   See [Recipe 9](#recipe9) on transitioning to Type System 1.2.
 
  - Version 0.25.10: This HOWTO introduces new syntax for type aliases. See
    [Type Aliases][] in ADR-002.
@@ -75,6 +80,7 @@ Run the type checker again. You should see the following message:
 ...
 ```
 
+<a id="recipe2"></a>
 ## Recipe 2: Annotating constants
 
 Consider the example [Channel.tla][] from [Specifying Systems][]:
@@ -130,15 +136,12 @@ types and values.
 Run the type checker again. You should see the following message:
 
 ```
-$ apalache-mc typecheck --features=rows ChannelTyped.tla
+$ apalache-mc typecheck ChannelTyped.tla
 ...
 > Running Snowcat .::.
 > Your types are purrfect!
 > All expressions are typed 
 ```
-
-Note that we had to pass the option `--features=rows`, as we are using the
-experimental syntax for records.
 
 ## Recipe 3: Annotating operators
 
@@ -205,6 +208,7 @@ This time the type checker can find the types of all expressions:
 ...
 ```
 
+<a id="recipe4"></a>
 ## Recipe 4: Using variants in heterogenous sets
 
 Check the example [TwoPhase.tla][] from the repository of TLA+ examples (you
@@ -292,11 +296,10 @@ Now it should be clear how to specify the type of the variable `msgs`:
 {{#include ../../../test/tla/TwoPhaseTyped.tla:vars2}}
 ```
 
-We run the type checker once again (pay attention to the option
-`--features=rows`, required for variants):
+We run the type checker once again:
 
 ```sh
-$ apalache-mc typecheck --features=rows TwoPhaseTyped.tla
+$ apalache-mc typecheck TwoPhaseTyped.tla
 ...
  > All expressions are typed
 Type checker [OK]
@@ -306,7 +309,7 @@ As you can see, variants require quite a bit of boilerplate. If you can simply
 introduce a set of records of the same type, this is usually a simpler
 solution. For instance, we could partition `msgs` into three subsets: the
 subset of `Commit` messages, the subset of `Abort` messages, and the subset of
-`Prepared` messages. See the discussion in [Idiom 3][].
+`Prepared` messages. See the discussion in [Idiom 15][].
 
 <a id="funAsSeq"></a>
 ## Recipe 5: functions as sequences
@@ -492,6 +495,69 @@ Attacks(queens,i,j)
 You don't have to do that, but if you feel that types can also help you in documenting
 your specification, you have this option.
 
+<a id="recipe9"></a>
+## Recipe 9: Migrate from Type System 1 to Type System 1.2
+
+As explained in [ADR002][], [Type System 1.2][] (TS1.2) differs from [Type
+System 1][] (TS1) as follows:
+
+ - TS1 allows one to mix records of varying domains, as long as the records
+   agree on the types of the common fields. Hence, record access is not
+   enforced by the type checker and thus is error-prone.
+
+ - TS1 is using the syntax `[ field_n: T_1, ..., field_n: T_n ]`, which is
+   sometimes confused with the TLA+ expression `[ field_n: e_1, ..., field_n:
+   e_n ]`.
+
+ - TS1.2 is using the syntax `{ field_n: T_1, ..., field_n: T_n }`
+   for record types and the syntax `Tag_1(T_1) | ... | Tag_n(T_n)`
+   for variant types.
+
+ - TS1.2 differentiates between records of different domains and does not allow
+   the specification writer to mix them. As a result, TS1.2 can catch incorrect
+   record access. Instead of mixing records, TS1.2 allows one to mix
+   [Variants][].
+
+ - TS1.2 supports [Row polymorphism][] and thus lets the user write type
+   annotations over records and variants, whose shape is only
+   partially-defined.  For example, `{ foo: Int, bar: Bool, a }` defines a
+   record type that has at least two fields (that is, `foo` of type `Int` and
+   `bar` of type `Bool`), but may have more fields, which are captured with the
+   row variable `a`.
+
+### Case 1: plain records
+
+Many specifications are using plain records. For instance, they do not assign
+records of different domains to the same variable. Nor do they mix records of
+different domains in the same set. Plenty of specifications fall into this
+class.
+
+For example, check [Recipe 2](#recipe2). In this recipe, the variable `chan` is
+always carrying a record with the domain `{ "val", "rdy", "ack" }`.
+
+In this case, all you have to do is to replace the old record types of the form
+`[ field_n: T_1, ..., field_n: T_n ]` with the new record types of the form `{
+field_n: T_1, ..., field_n: T_n }`. That is, replace `[` and `]` with `{` and
+`}`, respectively.
+
+### Case 2: mixed records
+
+Some specifications are using mixed records, which are similar to unions in C.
+
+For example, check [Recipe 4](#recipe4). In this recipe, the variable
+`tmPrepared` is a set that contains records of different domains. For instance,
+`tmPrepared` may be equal to:
+
+```tla
+{ [ type |-> "Commit" ], [ type |-> "Prepared", rm |-> "0_OF_RM" ] }
+```
+
+In this case, you have two choices:
+
+ - Partition the single variable into multiple variables, see [Idiom 15][].
+
+ - Introduce variant types, see [Recipe 4](#recipe4).
+
 
 ## Known issues
 
@@ -512,6 +578,8 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [Apalache.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla
 [Snowcat]: ../apalache/typechecker-snowcat.md
 [ADR002]: ../adr/002adr-types.md
+[Type System 1]: ../adr/002adr-types.md#ts1
+[Type System 1.2]: ../adr/002adr-types.md#ts12
 [HourClock.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/RealTime/HourClock.tla
 [Channel.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla
 [CarTalkPuzzle.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/CarTalkPuzzle/CarTalkPuzzle.tla
@@ -525,7 +593,9 @@ This may change later, when the tlaplus [Issue 578][] is resolved.
 [MissionariesAndCannibals.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla
 [Variants module]: https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla
 [Chapter on variants]: ../lang/variants.md
-[Idiom 3]: ../idiomatic/003record-sets.md
+[Variants]: ../lang/variants.md
+[Idiom 15]: ../idiomatic/003record-sets.md
 [LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla
 [Type Aliases]: ../adr/002adr-types.md#defTypeAlias
 [MissionariesAndCannibalsTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
+[Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism
