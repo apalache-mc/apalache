@@ -171,9 +171,15 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#how-to-write-type-annotations" id="how-to-write-type-annotations">How to write type annotations</a></h1>
-<p><strong>Revision:</strong> July 22, 2022</p>
+<p><strong>Revision:</strong> August 24, 2022</p>
 <p><strong>Important updates:</strong></p>
 <ul>
+<li>
+<p>Version 0.29.0: The new syntax for records and variants is enabled by
+default (previously, enabled with <code>--features=rows</code>). For the transition
+period, the old type syntax can be activated with <code>--features=no-rows</code>.
+See <a href="#recipe9">Recipe 9</a> on transitioning to Type System 1.2.</p>
+</li>
 <li>
 <p>Version 0.25.10: This HOWTO introduces new syntax for type aliases. See
 <a href="../adr/002adr-types.html#defTypeAlias">Type Aliases</a> in ADR-002.</p>
@@ -246,6 +252,7 @@ In this case, you have to write one type annotation per name.</p>
  &gt; All expressions are typed
 ...
 </code></pre>
+<p><a id="recipe2"></a></p>
 <h2><a class="header" href="#recipe-2-annotating-constants" id="recipe-2-annotating-constants">Recipe 2: Annotating constants</a></h2>
 <p>Consider the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla">Channel.tla</a> from <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>:</p>
 <pre><code class="language-tla">
@@ -309,14 +316,12 @@ from TLA+'s syntax for records <code>[ val |-&gt; v, rdy |-&gt; r, ack |-&gt; a 
 and record sets <code>[ val: V, rdy: R, ack: A ]</code>, to avoid confusion between
 types and values.</p>
 <p>Run the type checker again. You should see the following message:</p>
-<pre><code>$ apalache-mc typecheck --features=rows ChannelTyped.tla
+<pre><code>$ apalache-mc typecheck ChannelTyped.tla
 ...
 &gt; Running Snowcat .::.
 &gt; Your types are purrfect!
 &gt; All expressions are typed 
 </code></pre>
-<p>Note that we had to pass the option <code>--features=rows</code>, as we are using the
-experimental syntax for records.</p>
 <h2><a class="header" href="#recipe-3-annotating-operators" id="recipe-3-annotating-operators">Recipe 3: Annotating operators</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/CarTalkPuzzle/CarTalkPuzzle.tla">CarTalkPuzzle.tla</a> from the repository of TLA+
 examples. This example has 160 lines of code, so we do not inline it here.
@@ -362,6 +367,7 @@ of integers to integers, that is, <code>Int -&gt; Int</code>:</p>
 &gt; All expressions are typed 
 ...
 </code></pre>
+<p><a id="recipe4"></a></p>
 <h2><a class="header" href="#recipe-4-using-variants-in-heterogenous-sets" id="recipe-4-using-variants-in-heterogenous-sets">Recipe 4: Using variants in heterogenous sets</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> from the repository of TLA+ examples (you
 will also need <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TCommit.tla">TCommit.tla</a>, which is imported by TwoPhase.tla). This
@@ -453,9 +459,8 @@ which makes it possible to add them to a single set of messages.</p>
 <pre><code class="language-tla">  \* @type: Set($message);
   msgs
 </code></pre>
-<p>We run the type checker once again (pay attention to the option
-<code>--features=rows</code>, required for variants):</p>
-<pre><code class="language-sh">$ apalache-mc typecheck --features=rows TwoPhaseTyped.tla
+<p>We run the type checker once again:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck TwoPhaseTyped.tla
 ...
  &gt; All expressions are typed
 Type checker [OK]
@@ -464,7 +469,7 @@ Type checker [OK]
 introduce a set of records of the same type, this is usually a simpler
 solution. For instance, we could partition <code>msgs</code> into three subsets: the
 subset of <code>Commit</code> messages, the subset of <code>Abort</code> messages, and the subset of
-<code>Prepared</code> messages. See the discussion in <a href="../idiomatic/003record-sets.html">Idiom 3</a>.</p>
+<code>Prepared</code> messages. See the discussion in <a href="../idiomatic/003record-sets.html">Idiom 15</a>.</p>
 <p><a id="funAsSeq"></a></p>
 <h2><a class="header" href="#recipe-5-functions-as-sequences" id="recipe-5-functions-as-sequences">Recipe 5: functions as sequences</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/N-Queens/Queens.tla">Queens.tla</a> from the repository of TLA+ examples.  It has
@@ -607,6 +612,66 @@ Attacks(queens,i,j)
 </code></pre>
 <p>You don't have to do that, but if you feel that types can also help you in documenting
 your specification, you have this option.</p>
+<p><a id="recipe9"></a></p>
+<h2><a class="header" href="#recipe-9-migrate-from-type-system-1-to-type-system-12" id="recipe-9-migrate-from-type-system-1-to-type-system-12">Recipe 9: Migrate from Type System 1 to Type System 1.2</a></h2>
+<p>As explained in <a href="../adr/002adr-types.html">ADR002</a>, <a href="../adr/002adr-types.html#ts12">Type System 1.2</a> (TS1.2) differs from <a href="../adr/002adr-types.html#ts1">Type
+System 1</a> (TS1) as follows:</p>
+<ul>
+<li>
+<p>TS1 allows one to mix records of varying domains, as long as the records
+agree on the types of the common fields. Hence, record access is not
+enforced by the type checker and thus is error-prone.</p>
+</li>
+<li>
+<p>TS1 is using the syntax <code>[ field_n: T_1, ..., field_n: T_n ]</code>, which is
+sometimes confused with the TLA+ expression <code>[ field_n: e_1, ..., field_n: e_n ]</code>.</p>
+</li>
+<li>
+<p>TS1.2 is using the syntax <code>{ field_n: T_1, ..., field_n: T_n }</code>
+for record types and the syntax <code>Tag_1(T_1) | ... | Tag_n(T_n)</code>
+for variant types.</p>
+</li>
+<li>
+<p>TS1.2 differentiates between records of different domains and does not allow
+the specification writer to mix them. As a result, TS1.2 can catch incorrect
+record access. Instead of mixing records, TS1.2 allows one to mix
+<a href="../lang/variants.html">Variants</a>.</p>
+</li>
+<li>
+<p>TS1.2 supports <a href="https://en.wikipedia.org/wiki/Row_polymorphism">Row polymorphism</a> and thus lets the user write type
+annotations over records and variants, whose shape is only
+partially-defined.  For example, <code>{ foo: Int, bar: Bool, a }</code> defines a
+record type that has at least two fields (that is, <code>foo</code> of type <code>Int</code> and
+<code>bar</code> of type <code>Bool</code>), but may have more fields, which are captured with the
+row variable <code>a</code>.</p>
+</li>
+</ul>
+<h3><a class="header" href="#case-1-plain-records" id="case-1-plain-records">Case 1: plain records</a></h3>
+<p>Many specifications are using plain records. For instance, they do not assign
+records of different domains to the same variable. Nor do they mix records of
+different domains in the same set. Plenty of specifications fall into this
+class.</p>
+<p>For example, check <a href="#recipe2">Recipe 2</a>. In this recipe, the variable <code>chan</code> is
+always carrying a record with the domain <code>{ &quot;val&quot;, &quot;rdy&quot;, &quot;ack&quot; }</code>.</p>
+<p>In this case, all you have to do is to replace the old record types of the form
+<code>[ field_n: T_1, ..., field_n: T_n ]</code> with the new record types of the form <code>{ field_n: T_1, ..., field_n: T_n }</code>. That is, replace <code>[</code> and <code>]</code> with <code>{</code> and
+<code>}</code>, respectively.</p>
+<h3><a class="header" href="#case-2-mixed-records" id="case-2-mixed-records">Case 2: mixed records</a></h3>
+<p>Some specifications are using mixed records, which are similar to unions in C.</p>
+<p>For example, check <a href="#recipe4">Recipe 4</a>. In this recipe, the variable
+<code>tmPrepared</code> is a set that contains records of different domains. For instance,
+<code>tmPrepared</code> may be equal to:</p>
+<pre><code class="language-tla">{ [ type |-&gt; &quot;Commit&quot; ], [ type |-&gt; &quot;Prepared&quot;, rm |-&gt; &quot;0_OF_RM&quot; ] }
+</code></pre>
+<p>In this case, you have two choices:</p>
+<ul>
+<li>
+<p>Partition the single variable into multiple variables, see <a href="../idiomatic/003record-sets.html">Idiom 15</a>.</p>
+</li>
+<li>
+<p>Introduce variant types, see <a href="#recipe4">Recipe 4</a>.</p>
+</li>
+</ul>
 <h2><a class="header" href="#known-issues" id="known-issues">Known issues</a></h2>
 <h3><a class="header" href="#annotations-of-local-operators" id="annotations-of-local-operators">Annotations of LOCAL operators</a></h3>
 <p>In contrast to all other cases, a local operator definition does require

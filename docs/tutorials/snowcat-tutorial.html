@@ -172,10 +172,12 @@
                     <main>
                         <h1><a class="header" href="#tutorial-on-the-snowcat-type-checker" id="tutorial-on-the-snowcat-type-checker">Tutorial on the Snowcat❄🐱 Type Checker</a></h1>
 <p><strong>Difficulty: Blue trail – Easy</strong></p>
-<p><strong>Revision:</strong> July 22, 2022</p>
-<p>In this tutorial, we introduce the Snowcat ❄ 🐱 type checker.
-We give concrete steps on running the type checker and
-annotating a specification with types.</p>
+<p><strong>Revision:</strong> August 24, 2022</p>
+<p>In this tutorial, we introduce the Snowcat ❄ 🐱 type checker.  We
+give concrete steps on running the type checker and annotating a specification
+with types.</p>
+<p>This tutorial uses Type System 1.2, which guarantees safe record access. To see
+how to upgrade to Type System 1.2, check <a href="../HOWTOs/howto-write-type-annotations.html#recipe9">Migrating to Type System 1.2</a>.</p>
 <h2><a class="header" href="#related-documents" id="related-documents">Related documents</a></h2>
 <ul>
 <li><a href="../adr/002adr-types.html">ADR002</a> that introduces Type Systems 1 and 1.2, used by Snowcat.</li>
@@ -184,11 +186,7 @@ annotating a specification with types.</p>
 </ul>
 <h2><a class="header" href="#setup" id="setup">Setup</a></h2>
 <p>We assume that you have Apalache installed. If not, check the manual page on
-<a href="../apalache/installation/index.html">Apalache installation</a>. The minimal required version is 0.25.9.</p>
-<p><strong>Note</strong>: This tutorial uses a new feature in Apalache that makes type checking of
-records more precise. Currently, this experimental feature is activated with the
-option <code>--features=rows</code>.</p>
-<!-- TODO(#1943): Remove --features=rows when it becomes default. -->
+<a href="../apalache/installation/index.html">Apalache installation</a>. The minimal required version is 0.29.0.</p>
 <h2><a class="header" href="#running-example-lamports-mutex" id="running-example-lamports-mutex">Running example: Lamport's mutex</a></h2>
 <p>As a running example, we are using the specification of <a href="https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex">Lamport's Mutex</a>
 (written by <a href="https://members.loria.fr/Stephan.Merz/">Stephan Merz</a>). We recommend to reproduce the steps in this
@@ -354,14 +352,10 @@ same type. In this case, we have three options:</p>
 </li>
 </ul>
 <p>Now we should run the type checker again:</p>
-<pre><code class="language-sh">$ apalache-mc typecheck --features=rows LamportMutexTyped.tla
+<pre><code class="language-sh">$ apalache-mc typecheck LamportMutexTyped.tla
 ...
 Typing input error: Expected a type annotation for CONSTANT maxClock
 </code></pre>
-<p>Note that we pass the option <code>--features=rows</code>, as we are using the new syntax
-for record types <code>{ ... }</code>, which needs to be activated. This feature will
-become the default in the future.</p>
-<!-- TODO(#1943): Remove --features=rows when it becomes default. -->
 <p>The type checker is still not happy: We have not annotated <code>CONSTANTS</code>.</p>
 <h2><a class="header" href="#step-4-annotating-constants" id="step-4-annotating-constants">Step 4: Annotating constants</a></h2>
 <p>Now we have to figure out the types of the constants: <code>N</code> and <code>maxClock</code>.  This
@@ -378,7 +372,7 @@ integers. We add the type annotations:</p>
     maxClock
 </code></pre>
 <p>Let's run the type checker once again:</p>
-<pre><code class="language-sh">$ apalache-mc typecheck --features=rows LamportMutexTyped.tla
+<pre><code class="language-sh">$ apalache-mc typecheck LamportMutexTyped.tla
 ...
  &gt; All expressions are typed
 Type checker [OK]
@@ -398,7 +392,7 @@ engineering-oriented peers find these annotations to be quite important.</p>
 usually happens when you declare an operator of a parameter that can be: a
 function, a tuple, a record, or a sequence (or a subset of these four types
 that has at least two elements). For instance, here is a definition from
-<a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/GameOfLifeTyped.tla">GameOfLifeTyped.tla</a>:</p>
+<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/GameOfLifeTyped.tla">GameOfLifeTyped.tla</a>:</p>
 <pre><code class="language-tla">Pos ==
     { &lt;&lt;x, y&gt;&gt;: x, y \in 1..N }
 </code></pre>
@@ -419,10 +413,9 @@ Pos ==
 <h2><a class="header" href="#further-reading" id="further-reading">Further reading</a></h2>
 <p>For more advanced type annotations, check the following examples:</p>
 <ul>
-<li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/CarTalkPuzzleTyped.tla">CarTalkPuzzleTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/FunctionsTyped.tla">FunctionsTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/d5138a33fce3d77abc07a39bfb4f448942e6f641/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
+<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
+<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla">CarTalkPuzzleTyped.tla</a>,</li>
+<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
 <li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/TwoPhaseTyped.tla">TwoPhaseTyped.tla</a>.</li>
 </ul>
 <p>We have not discussed type aliases, which are a more advanced feature of the
