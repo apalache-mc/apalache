@@ -528,12 +528,12 @@ System 1][] (TS1) as follows:
 ### Case 1: plain records
 
 Many specifications are using plain records. For instance, they do not assign
-records of different domains to the same variable. Nor they mix records of
+records of different domains to the same variable. Nor do they mix records of
 different domains in the same set. Plenty of specifications fall into this
 class.
 
 For example, check [Recipe 2](#recipe2). In this recipe, the variable `chan` is
-always carrying a record of the domain `{ "val", "rdy", "ack" }`.
+always carrying a record with the domain `{ "val", "rdy", "ack" }`.
 
 In this case, all you have to do is to replace the old record types of the form
 `[ field_n: T_1, ..., field_n: T_n ]` with the new record types of the form `{

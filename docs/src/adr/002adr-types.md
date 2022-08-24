@@ -288,7 +288,7 @@ type to the set:
 This pattern often occurs in practice, e.g., see [Paxos][].  The type of that
 set will be `Set([type: Str, bal: Int, val: Int])`, which is probably not what
 you expected, but it is the best type we can actually compute without having
-algebraic datatypes in TLA+. It also reminds the user that one better tests the
+algebraic datatypes in TLA+. It also reminds the user that one must test the
 field `type` carefully.
 
 In retrospect, we have found that almost every user of Apalache made typos in
