@@ -8,7 +8,12 @@ import com.google.inject.Guice
 import com.typesafe.scalalogging.LazyLogging
 
 /**
- * This Executor abstracts the dependency injection and execution logic required for executing a PassChainExecutor
+ * `Executor` class abstracts the dependency injection and execution logic required for executing a
+ * [[infra.passes.PassChainExecutor PassChainExecutor]]
+ *
+ * The `Exectuor` is parameterized by a [[infra.passes.options.OptionGroup]] subclass. Typically, the actual type
+ * provided is one of the `OptionGroup` interfaces `Has*`. This is used to statically declare the set of configuration
+ * parameters upon which the pass chain execution depends.
  *
  * @param toolModule
  *   The [[infra.passes.ToolModule]] that specifies the sequence of passes
