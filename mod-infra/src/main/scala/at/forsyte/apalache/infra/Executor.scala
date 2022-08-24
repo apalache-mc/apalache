@@ -2,6 +2,7 @@ package at.forsyte.apalache.infra
 
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor, ToolModule, WriteablePassOptions}
 import com.google.inject.Guice
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This Executor abstracts the dependency injection and execution logic required for executing a PassChainExecutor
@@ -13,7 +14,7 @@ import com.google.inject.Guice
  * @author
  *   Shon Feder
  */
-case class Executor(val toolModule: ToolModule) {
+case class Executor(val toolModule: ToolModule) extends LazyLogging {
   private val injector = Guice.createInjector(toolModule)
 
   /** Exposes mutable access to options configuring the behavior of the [passChainExecutor] */
@@ -34,6 +35,8 @@ case class Executor(val toolModule: ToolModule) {
       passChainExecutor.run()
     } catch {
       case e: Throwable if exceptionAdapter.toMessage.isDefinedAt(e) =>
+        // Ensure we can get the full stack trace from the logs
+        logger.debug("Adapted exception intercepted: ", e)
         throw new AdaptedException(exceptionAdapter.toMessage(e))
     }
   }
