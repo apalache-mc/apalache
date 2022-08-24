@@ -11,7 +11,6 @@ import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
@@ -20,8 +19,7 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  * formula. The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
  */
 class TemporalPassImpl @Inject() (
-    val options: OptionGroup.HasChecker,
-    val derivedPreds: DerivedPredicates,
+    derivedPreds: DerivedPredicates,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory,
