@@ -1700,9 +1700,6 @@ the TLC config. So we have to test that it all works together.
 ```sh
 $ apalache-mc check Config.tla | sed 's/I@.*//'
 ...
-  > Command line option --init is not set. Using Init
-  > Command line option --next is not set. Using Next
-...
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
 ...
