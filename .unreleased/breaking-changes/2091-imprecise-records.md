@@ -1,2 +1,2 @@
-Introduce --features=imprecise.records for the old record syntax and
-switch to `rows` by default
+Introduce --features=no-rows for the old record syntax and
+switch to `--features=rows` by default

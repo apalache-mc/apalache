@@ -30,8 +30,8 @@ case class RowsFeature(
  * compatibility.
  */
 case class ImpreciseRecordsFeature(
-    name: String = "imprecise.records",
-    description: String = "enable imprecise typing for records (default in versions prior to 0.29.0)")
+    name: String = "no-rows",
+    description: String = "disable row types, make records imprecise (default in versions prior to 0.29.0)")
     extends Feature {
   override val toString: String = name
 }

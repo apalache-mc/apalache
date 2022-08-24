@@ -25,7 +25,7 @@ class EtcTypeCheckerPassImpl @Inject() (
 
   protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
 
-  // use rows by default, unless the user passed --features=imprecise.records
+  // use rows by default, unless the user passed --features=no-rows
   protected def useRows: Boolean =
     !options.getOrElse[Seq[Feature]]("general", "features", Seq()).contains(ImpreciseRecordsFeature())
 
