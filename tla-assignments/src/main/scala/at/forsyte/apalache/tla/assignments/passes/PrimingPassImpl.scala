@@ -25,7 +25,6 @@ class PrimingPassImpl @Inject() (
 
   override def execute(tlaModule: TlaModule): PassResult = {
     val declarations = tlaModule.declarations
-    println(s">>>>> Declarations ${declarations}")
     val varSet = tlaModule.varDeclarations.map(_.name).toSet
     val constSet = tlaModule.constDeclarations.map(_.name).toSet
     val deepCopy = DeepCopy(tracker)
@@ -47,13 +46,8 @@ class PrimingPassImpl @Inject() (
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val newBody = {
-      println(s">>>>> BodyMap ${bodyMap}")
-      println(s">>>>> initName ${initName}")
-      primeTransformer(
-          deepCopy.deepCopyEx(bodyMap(initName).body)
-      )
-    }
+    val newBody = primeTransformer(deepCopy.deepCopyEx(bodyMap(initName).body))
+
     // Safe constructor: cannot be recursive
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
 
