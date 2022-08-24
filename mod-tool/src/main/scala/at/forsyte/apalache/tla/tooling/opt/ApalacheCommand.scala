@@ -38,8 +38,8 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
       useEnv = true)
   var features = opt[Option[Seq[Feature]]](default = None,
       description = {
-        val featureDescriptions = Feature.all.map(f => s"  ${f.name}: ${f.description}")
-        ("a comma-separated list of experimental features:" :: featureDescriptions).mkString("\n")
+        val featureDescriptions: Seq[String] = Feature.all.map(f => s"  ${f.name}: ${f.description}")
+        ("a comma-separated list of experimental features:" +: featureDescriptions).mkString("\n")
       })
 
   /**

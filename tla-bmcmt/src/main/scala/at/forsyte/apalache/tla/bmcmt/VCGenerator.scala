@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.{BoolT1, _}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
-import TypedPredefs._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec
@@ -110,7 +110,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   private def assertTraceInvType(module: TlaModule, traceInv: TlaOperDecl): Unit = {
     val varTypes = SortedMap(module.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
     // the history variable is a sequence of records over variable names
-    val histType = SeqT1(RecT1(varTypes))
+    val histType = SeqT1(RecRowT1(RowT1(varTypes, None)))
     if (traceInv.typeTag.asTlaType1() != OperT1(Seq(histType), BoolT1)) {
       val msg =
         s"Expected the trace invariant ${traceInv.name} to be a predicate of a sequence of records over the names of state variables"
