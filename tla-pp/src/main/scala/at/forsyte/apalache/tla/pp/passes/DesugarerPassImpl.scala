@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -21,7 +20,6 @@ import com.typesafe.scalalogging.LazyLogging
  *   next pass to call
  */
 class DesugarerPassImpl @Inject() (
-    val options: PassOptions,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory)
