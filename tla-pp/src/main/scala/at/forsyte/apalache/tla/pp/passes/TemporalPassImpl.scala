@@ -9,9 +9,10 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.infra.passes.WriteablePassOptions
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -19,7 +20,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
  * formula. The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
  */
 class TemporalPassImpl @Inject() (
-    val options: WriteablePassOptions,
+    val options: OptionGroup.HasChecker,
+    val derivedPreds: DerivedPredicates,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory,
@@ -31,15 +33,13 @@ class TemporalPassImpl @Inject() (
   override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Rewriting temporal operators...")
 
-    val temporalProps = options.get[List[String]]("checker", "temporal")
+    val temporalProps = derivedPreds.temporal
     val newModule = temporalProps match {
-      case None =>
+      case List() =>
         logger.info("  > No temporal property specified, nothing to encode")
         tlaModule
-      case Some(formulas) =>
-        val init = options.get[String]("checker", "init")
-        val next = options.get[String]("checker", "next")
-        temporalToInvariants(tlaModule, formulas, init.get, next.get)
+      case formulas =>
+        temporalToInvariants(tlaModule, formulas)
     }
 
     writeOut(writerFactory, newModule)
@@ -47,11 +47,7 @@ class TemporalPassImpl @Inject() (
     Right(newModule)
   }
 
-  def temporalToInvariants(
-      module: TlaModule,
-      temporalProperties: List[String],
-      initName: String,
-      nextName: String): TlaModule = {
+  def temporalToInvariants(module: TlaModule, temporalProperties: List[String]): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
     val temporalFormulas = temporalProperties
@@ -80,8 +76,8 @@ class TemporalPassImpl @Inject() (
 
       // if init and next don't exist, Apalache should throw already in an earlier pass
       // so it's safe to assume they exist
-      val initDecl = module.declarations.find(_.name == initName).get.asInstanceOf[TlaOperDecl]
-      val nextDecl = module.declarations.find(_.name == nextName).get.asInstanceOf[TlaOperDecl]
+      val initDecl = module.declarations.find(_.name == derivedPreds.init).get.asInstanceOf[TlaOperDecl]
+      val nextDecl = module.declarations.find(_.name == derivedPreds.next).get.asInstanceOf[TlaOperDecl]
 
       val loopEncoder = new LoopEncoder(tracker)
 
@@ -95,11 +91,9 @@ class TemporalPassImpl @Inject() (
       val inlinedTemporalFormulas =
         temporalFormulas.map(operDecl => operDecl.copy(body = transformation(operDecl.body)))
 
-      // XXX
       // the encoding will transform the temporal properties into invariants, so add them to the
       // list of invariants (otherwise, they would not be treated as invariants by later passes)
-      val newInvs = options.get[List[String]]("checker", "inv").getOrElse(List()) ++ inlinedTemporalFormulas.map(_.name)
-      options.set("checker.inv", newInvs)
+      derivedPreds.invariants = derivedPreds.invariants ++ inlinedTemporalFormulas.map(_.name)
 
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
       tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas: _*)
