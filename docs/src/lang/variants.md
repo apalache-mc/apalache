@@ -1,8 +1,5 @@
 # Variants
 
-**Warning:** This feature is currently under testing. To enable variants
-support in Apalache, pass the option `--features=rows`.
-
 [[Back to Apalache extensions]](./apalache-extensions.md)
 
 [Variants][] (also called *tagged unions* or *sum types*) are useful, when you want to combine
@@ -102,6 +99,7 @@ Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
 \* @type: (Str, Int) => DRINK;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
+```
 
 Once a variant is constructed, it becomes opaque to the type checker, that is,
 the type checker only knows that `Water(TRUE)` and `Beer("Dark", 5)` are both
