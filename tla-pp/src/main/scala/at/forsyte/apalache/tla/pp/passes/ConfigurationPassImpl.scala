@@ -112,7 +112,7 @@ class ConfigurationPassImpl @Inject() (
 
   private def setDerivedPredicates(): Unit = {
     options.checker.predicates.behaviorSpec match {
-      case InitNextSpec(next, init) => derivedPreds.next = next; derivedPreds.init = init
+      case InitNextSpec(init, next) => derivedPreds.init = init; derivedPreds.next = next
       // Should we change data structure to make this state unrepresentable?
       case _ => throw new Exception("TODO: should be impossible, since this arises only with no TLCC config")
     }

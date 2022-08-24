@@ -38,7 +38,7 @@ class CheckerModule(options: OptionGroup.HasChecker) extends ToolModule(options)
 
     // TODO Doc
     bind(classOf[DerivedPredicates])
-      .to(classOf[DerivedPredicates.Impl])
+      .toInstance(DerivedPredicates.Impl())
 
     // the options singleton
     bind(classOf[PassOptions])
