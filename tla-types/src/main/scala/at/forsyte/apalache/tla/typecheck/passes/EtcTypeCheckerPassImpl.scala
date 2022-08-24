@@ -4,13 +4,13 @@ import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
+import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.imp.utils
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.{Feature, ModuleProperty, RowsFeature, TlaModule, TypeTag, UID, Untyped}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
-import at.forsyte.apalache.tla.imp.utils
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -25,8 +25,9 @@ class EtcTypeCheckerPassImpl @Inject() (
 
   protected def inferPoly: Boolean = options.getOrElse[Boolean]("typecheck", "inferPoly", true)
 
+  // use rows by default, unless the user passed --features=no-rows
   protected def useRows: Boolean =
-    options.getOrElse[Seq[Feature]]("general", "features", Seq()).contains(RowsFeature())
+    !options.getOrElse[Seq[Feature]]("general", "features", Seq()).contains(ImpreciseRecordsFeature())
 
   override def name: String = "TypeCheckerSnowcat"
 
