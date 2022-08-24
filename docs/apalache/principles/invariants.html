@@ -183,16 +183,16 @@ reason about finite executions.</p>
 EXTENDS Integers, Sequences, FiniteSets
 
 VARIABLES
-    \* @typeAlias: S = Set(Int);
-    \* @typeAlias: STATE = [ In: S, Done: S, Out: S ];
-    \* @type: S;
+    \* @typeAlias: set = Set(Int);
+    \* @typeAlias: state = { In: $set, Done: $set, Out: $set };
+    \* @type: $set;
     In,
-    \* @type: S;
+    \* @type: $set;
     Done,
-    \* @type: S;
+    \* @type: $set;
     Out
 
-\* @type: &lt;&lt;S, S, S&gt;&gt;;
+\* @type: &lt;&lt;$set, $set, $set&gt;&gt;;
 vars == &lt;&lt;In, Done, Out&gt;&gt;
 
 Init ==
@@ -275,13 +275,13 @@ what kind of invariant it is dealing with.</p>
 <p>Let's have a look at the following two predicates in <code>Invariants.tla</code>:</p>
 <pre><code class="language-tla">\* trace invariants that reason about executions
 
-\* @type: Seq(STATE) =&gt; Bool;
+\* @type: Seq($state) =&gt; Bool;
 TraceInv(hist) ==
     \/ hist[Len(hist)].In /= {}
     \* note that we are using the last state in the history and the first one
     \/ { 2 * x: x \in hist[1].In } = hist[Len(hist)].Out
 
-\* @type: Seq(STATE) =&gt; Bool;
+\* @type: Seq($state) =&gt; Bool;
 BuggyTraceInv(hist) ==
     \/ hist[Len(hist)].In /= {}
     \* note that we are using the last state in the history and the first one

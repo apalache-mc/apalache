@@ -460,8 +460,8 @@ TestExec_n0_n1 ==
 <pre><code class="language-tla">\* We expect no winner in the final state.
 \* Note that Assert_noWinner is a predicate over a trace of states.
 \*
-\* @typeAlias: state = [ msgs: Int -&gt; Set(Int), pc: Int -&gt; Str,
-\*                       initiator: Int -&gt; Bool, state: Int -&gt; Str ];
+\* @typeAlias: state = { msgs: Int -&gt; Set(Int), pc: Int -&gt; Str,
+\*                       initiator: Int -&gt; Bool, state: Int -&gt; Str };
 \* @type: Seq($state) =&gt; Bool;
 Assert_noWinner(trace) ==
     LET last == trace[Len(trace)] IN
