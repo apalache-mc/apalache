@@ -26,8 +26,8 @@ class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(
     bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
 
     // TODO Doc
-    bind(classOf[DerivedPredicates])
-      .toInstance(DerivedPredicates.Impl())
+    bind(classOf[DerivedPredicates]).to(classOf[DerivedPredicates.Configurable])
+    bind(classOf[DerivedPredicates.Configurable]).toInstance(DerivedPredicates.Impl())
 
     // exception handler
     bind(classOf[ExceptionAdapter])

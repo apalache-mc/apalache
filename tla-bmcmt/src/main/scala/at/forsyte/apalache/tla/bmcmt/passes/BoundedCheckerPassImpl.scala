@@ -29,7 +29,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  *   Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (
-    options: OptionGroup.WithChecker,
+    options: OptionGroup.HasChecker,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,

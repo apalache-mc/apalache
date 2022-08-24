@@ -38,8 +38,8 @@ class CheckerModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(opt
     bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
 
     // TODO Doc
-    bind(classOf[DerivedPredicates])
-      .toInstance(DerivedPredicates.Impl())
+    bind(classOf[DerivedPredicates]).to(classOf[DerivedPredicates.Configurable])
+    bind(classOf[DerivedPredicates.Configurable]).toInstance(DerivedPredicates.Impl())
 
     // exception handler
     bind(classOf[ExceptionAdapter])
