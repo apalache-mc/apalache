@@ -25,25 +25,40 @@ when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
+<a id="ts1"></a>
 ### 1.1. Type grammar (Type System 1, or TS1)
 
-**Upgrade warning.** This system will be replaced with [Type System 1.2](#ts12)
-in September of 2022.
+**Upgrade warning.** This system is replaced with [Type System 1.2](#ts12).
+In October of 2022, we will stop supporting Type System 1. For the transition
+period, pass `--features=no-rows` to Apalache, to enable Type System 1.
 
-We simply write types as strings that follow the type grammar:
+We write types as strings that follow the type grammar:
 
 ```
-T ::=   'Bool' | 'Int' | 'Str'
+T ::=   // Booleans
+      | 'Bool'
+        // integers
+      | 'Int'
+        // immutable constant strings
+      | 'Str'
+        // functions
       | T '->' T
+        // sets
       | 'Set' '(' T ')'
+        // sequences
       | 'Seq' '(' T ')'
+        // tuples
       | '<<' T ',' ...',' T '>>'
-        // warning: the following type will be removed in Type System 1.2
-      | '[' field ':' T ',' ...',' field ':' T ']'
+        // operators
       | '(' T ',' ...',' T ')' '=>' T
+        // constant types (uninterpreted types)
       | typeConst
+        // type variables
       | typeVar
+        // groups
       | '(' T ')'
+        // imprecise records of Type System 1, removed in Type System 1.2
+      | '[' field ':' T ',' ...',' field ':' T ']'
 
 field     ::= <an identifier that matches [a-zA-Z_][a-zA-Z0-9_]*>
 
@@ -99,6 +114,7 @@ type aliases: tools should always exchange data with types in the alias-free for
     Its type is `Set(Int) -> Set(Int)`.
 * `r` is a record that has the fields `a` and `b`, where `a` is an integer
     and `b` is a string. Its type is `[a: Int, b: Str]`.
+   This is the old syntax for record types, see [Type System 1.2](#ts12).
 * `F` is a set of functions from a pair of integers to an integer.
    Its type is `Set(<<Int, Int>> -> Int)`.
 * `Foo` is an operator of an integer and of a string that returns an integer.
@@ -169,14 +185,6 @@ error messages.
 <a id="ts12"></a>
 ### 1.3. Type System 1.2, including precise records, variants, and rows
 
-**Feature under test.** By default, Snowcat is using Type System 1. To enable
-Type System 1.2, pass `--features=rows` to `typecheck` or another command,
-e.g., `check`:
-
-```sh
-$ apalache-mc typecheck --features=rows MySpec.tla
-```
-
 As discussed in [ADR014][], many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
@@ -188,7 +196,7 @@ records, variants, and rows as follows:
 ```
 // Type System 1.2
 T12 ::=
-    // all types of Type System 1
+    // all types of Type System 1 except records
     T
     // A new record type with a fully defined structure.
     // The set of fields may be empty. If typeVar is present,
@@ -270,23 +278,26 @@ captures all interesting cases that occur in practice. Obviously, this type
 system considers ill-typed some perfectly legal TLA+ values. For instance, we
 cannot assign a reasonable type to `{1, TRUE}`.
 
-**Sets of tagged records in Type System 1.**
-We can assign a reasonable type to `{[type |-> "1a", bal |-> 1], [type
-|-> "2a", bal |-> 2, val |-> 3]}`, a pattern that often occurs in practice,
-e.g., see
-[Paxos](https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla).
-The type of that set will be `Set([type: Str, bal: Int, val: Int])`, which is
-probably not what you expected, but it is the best type we can actually compute
-without having algebraic datatypes in TLA+. It also reminds the user that one
-better tests the field `type` carefully.
+**Legacy: Sets of tagged records in Type System 1.** We can assign a reasonable
+type to the set:
+
+```tla
+{[type |-> "1a", bal |-> 1], [type |-> "2a", bal |-> 2, val |-> 3]}
+```
+
+This pattern often occurs in practice, e.g., see [Paxos][].  The type of that
+set will be `Set([type: Str, bal: Int, val: Int])`, which is probably not what
+you expected, but it is the best type we can actually compute without having
+algebraic datatypes in TLA+. It also reminds the user that one better tests the
+field `type` carefully.
 
 In retrospect, we have found that almost every user of Apalache made typos in
 their record types (including the Apalache developers!). Hence, we are
 migrating to Type System 1.2.
 
-**Sets of tagged records (variants) in Type System 1.2.** Apalache provides the
-user with the module [Variants.tla][] that implements operators over [variant
-types][].
+**Default: Sets of tagged records (variants) in Type System 1.2.** Apalache
+provides the user with the module [Variants.tla][] that implements operators
+over [variant types][].
 
 Using variants, we can write the above set of messages as follows:
 
@@ -594,3 +605,4 @@ AtMostOne ==
 [Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism
 [Variants.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla
 [variant types]: https://en.wikipedia.org/wiki/Tagged_union
+[Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
