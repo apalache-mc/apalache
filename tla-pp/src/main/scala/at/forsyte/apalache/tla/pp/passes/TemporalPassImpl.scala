@@ -19,7 +19,7 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  * formula. The encoding is described in https://lmcs.episciences.org/2236, Sections 3.2 and 4.
  */
 class TemporalPassImpl @Inject() (
-    derivedPreds: DerivedPredicates,
+    derivedPreds: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory,
@@ -91,7 +91,7 @@ class TemporalPassImpl @Inject() (
 
       // the encoding will transform the temporal properties into invariants, so add them to the
       // list of invariants (otherwise, they would not be treated as invariants by later passes)
-      derivedPreds.invariants = derivedPreds.invariants ++ inlinedTemporalFormulas.map(_.name)
+      derivedPreds.addInvariants(inlinedTemporalFormulas.map(_.name))
 
       val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
       tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas: _*)

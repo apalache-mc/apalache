@@ -17,9 +17,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  *   Igor Konnov
  */
 class TestCmd
-    extends PassExecutorCmd(name = "test", description = "Quickly test a TLA+ specification") with LazyLogging {
-
-  type Options = OptionGroup.HasChecker
+    extends ApalacheCommand(name = "test", description = "Quickly test a TLA+ specification") with LazyLogging {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var before: String =
@@ -66,7 +64,7 @@ class TestCmd
   def run() = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    val options: Options = OptionGroup.WithChecker(cfg).get
+    val options = OptionGroup.WithCheckerPreds(cfg).get
     val executor = Executor(new CheckerModule(options))
 
     // This is a special version of the `check` command that is tuned towards testing scenarios

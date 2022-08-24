@@ -17,7 +17,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  *   Igor Konnov
  */
 class TypeCheckCmd
-    extends PassExecutorCmd(name = "typecheck", description = "Check types in a TLA+ specification") with LazyLogging {
+    extends ApalacheCommand(name = "typecheck", description = "Check types in a TLA+ specification") with LazyLogging {
 
   var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
   var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = "infer-poly", default = None,

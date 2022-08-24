@@ -7,7 +7,6 @@ import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
@@ -17,7 +16,6 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  *   Igor Konnov
  */
 class VCGenPassImpl @Inject() (
-    options: OptionGroup.HasChecker,
     derivedPreds: DerivedPredicates,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
@@ -34,7 +32,7 @@ class VCGenPassImpl @Inject() (
         case invariants =>
           invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            val optView = options.checker.view
+            val optView = derivedPreds.view
             optView.foreach { viewName => logger.info(s"  > Using state view ${viewName}") }
             new VCGenerator(tracker).gen(mod, invName, optView)
           }

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
@@ -31,17 +30,17 @@ object NormalizedNames {
    * Extract operator names from the standard option names.
    *
    * @param options
-   *   the options object
+   *   TODO the options object
    * @return
    */
-  def userOperatorNamesFromOptions(derivedPreds: DerivedPredicates, options: OptionGroup.HasChecker): List[String] = {
-    // first, get the operators whose names are passed as single strings
-    val single: List[String] =
-      // TODO Move all preds into same location?
-      List(derivedPreds.init, derivedPreds.next) ++ derivedPreds.cinit.toList ++ options.checker.view.toList
-    // second, get the operators whose names are passed as lists of strings
-    val multiple: List[String] = derivedPreds.invariants ++ derivedPreds.temporal
-    single ++ multiple
+  // TODO move into DerivedPredicates
+  def userOperatorNamesFromOptions(derivedPreds: DerivedPredicates): List[String] = {
+    derivedPreds.init ::
+      derivedPreds.next ::
+      derivedPreds.cinit.toList ++
+      derivedPreds.view.toList ++
+      derivedPreds.invariants ++
+      derivedPreds.temporal
   }
 
   /**

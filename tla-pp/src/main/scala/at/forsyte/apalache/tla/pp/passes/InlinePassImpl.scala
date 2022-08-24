@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
@@ -17,7 +16,6 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  */
 class InlinePassImpl @Inject() (
     derivedPreds: DerivedPredicates,
-    options: OptionGroup.HasChecker,
     tracker: TransformationTracker,
     renaming: IncrementalRenaming,
     writerFactory: TlaWriterFactory)
@@ -35,7 +33,7 @@ class InlinePassImpl @Inject() (
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
-    val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(derivedPreds, options).toSet
+    val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(derivedPreds).toSet
     val relevantOperatorsAndInitCInitPrimed = relevantOperators + initPrimedName + cinitPrimedName
 
     logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))

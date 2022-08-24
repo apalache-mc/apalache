@@ -24,8 +24,6 @@ import org.apache.commons.io.FilenameUtils
 class CheckCmd(name: String = "check", description: String = "Check a TLA+ specification")
     extends AbstractCheckerCmd(name, description) {
 
-  type Options = OptionGroup.HasChecker
-
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =
     Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays")(SMTEncoding.ofString)
@@ -72,7 +70,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
-    cfg.copy(
+    val newCfg = cfg.copy(
         checker = cfg.checker.copy(
             nworkers = nworkers,
             algo = algo,
@@ -87,27 +85,30 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
             inferpoly = Some(true)
         ),
     )
+
+    cfg.common.inputfile.foreach { file =>
+      if (newCfg.checker.config.isEmpty) {
+        // The older versions of apalache were loading a TLC config file of the same basename as the spec.
+        // We have flipped this behavior in version 0.25.0.
+        // Hence, warn the user that their config is not loaded by default.
+        val stem = FilenameUtils.removeExtension(file.getName())
+        val defaultConfig = new File(stem + ".cfg")
+        if (defaultConfig.exists()) {
+          val msg =
+            s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
+          logger.info(msg)
+        }
+      }
+    }
+
+    newCfg
   }
 
   def run() = {
     // TODO: rm once OptionProvider is wired in
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     // TODO Handle error case
-    val options: Options = OptionGroup.WithChecker(cfg).get
-
-    if (options.checker.predicates.tlcConfig.isEmpty && options.input.source.isFile) {
-      // The older versions of apalache were loading a TLC config file of the same basename as the spec.
-      // We have flipped this behavior in version 0.25.0.
-      // Hence, warn the user that their config is not loaded by default.
-      val stem = FilenameUtils.removeExtension(file.getName())
-      val defaultConfig = new File(stem + ".cfg")
-      if (defaultConfig.exists()) {
-        val msg =
-          s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
-        logger.info(msg)
-      }
-
-    }
+    val options = OptionGroup.WithCheckerPreds(cfg).get
     val executor = Executor(new CheckerModule(options))
 
     val tuning = options.checker.tuning

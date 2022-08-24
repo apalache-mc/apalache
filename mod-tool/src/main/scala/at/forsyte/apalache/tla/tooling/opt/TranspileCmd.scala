@@ -10,8 +10,6 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = "Transpile and quit") {
 
-  type Options = OptionGroup.HasChecker
-
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
 
@@ -20,7 +18,7 @@ class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = 
 
   def run() = {
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    val options: Options = OptionGroup.WithChecker(cfg).get
+    val options = OptionGroup.WithCheckerPreds(cfg).get
     val executor = Executor(new ReTLAToVMTModule(options))
 
     val outFilePath = OutputManager.runDirPathOpt

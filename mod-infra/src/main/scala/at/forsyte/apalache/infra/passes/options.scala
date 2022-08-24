@@ -378,13 +378,15 @@ object OptionGroup extends LazyLogging {
     } yield Typechecker(inferpoly)
   }
 
-  /** Spec property options */
+  /** Specification predicates options */
 // TODO Docs
   case class Predicates(
       behaviorSpec: BehaviorSpec,
-      temporal: List[String],
+      cinit: Option[String],
       invariants: List[String],
-      tlcConfig: Option[(TlcConfig, File)])
+      temporal: List[String],
+      tlcConfig: Option[(TlcConfig, File)],
+      view: Option[String])
       extends OptionGroup
 
   object Predicates extends Configurable[Config.Checker, Predicates] {
@@ -393,9 +395,11 @@ object OptionGroup extends LazyLogging {
         case None =>
           Try(Predicates(
                   behaviorSpec = InitNextSpec(init = checker.initOrDefault, next = checker.nextOrDefault),
-                  temporal = checker.temporalOrDefault,
+                  cinit = checker.cinit,
                   invariants = checker.invOrDefault,
+                  temporal = checker.temporalOrDefault,
                   tlcConfig = None,
+                  view = checker.view,
               ))
 
         case Some(fname) =>
@@ -414,9 +418,11 @@ object OptionGroup extends LazyLogging {
             invariants = tryToOverrideFromCli(checker.inv, tlcConfig.invariants, "inv")
           } yield Predicates(
               behaviorSpec = behaviorSpec,
-              temporal = temporal,
+              cinit = checker.cinit,
               invariants = invariants,
+              temporal = temporal,
               tlcConfig = Some((tlcConfig, fname)),
+              view = checker.view,
           )
       }
     }
@@ -444,16 +450,13 @@ object OptionGroup extends LazyLogging {
   /** Options used to configure model checking */
   case class Checker(
       algo: String,
-      cinit: Option[String],
       discardDisabled: Boolean,
       length: Int,
       maxError: Int,
       noDeadlocks: Boolean,
       nworkers: Int,
-      predicates: Predicates,
       smtEncoding: SMTEncoding,
-      tuning: Map[String, String],
-      view: Option[String])
+      tuning: Map[String, String])
       extends OptionGroup
 
   object Checker extends Configurable[Config.Checker, Checker] with LazyLogging {
@@ -467,21 +470,17 @@ object OptionGroup extends LazyLogging {
       maxError <- checker.maxError.toTry("checker.maxError")
       noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
       nworkers <- checker.nworkers.toTry("checker.nworkers")
-      predicates <- Predicates(checker)
       smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
       tuning <- checker.tuning.toTry("checker.tuning")
     } yield Checker(
         algo = algo,
-        cinit = checker.cinit, // optional
         discardDisabled = discardDisabled,
         length = length,
         maxError = maxError,
         noDeadlocks = noDeadlocks,
         nworkers = nworkers,
-        predicates = predicates,
         smtEncoding = smtEncoding,
         tuning = tuning,
-        view = checker.view, // optional
     )
   }
 
@@ -513,9 +512,13 @@ object OptionGroup extends LazyLogging {
     val checker: Checker
   }
 
+  trait HasCheckerPreds extends HasChecker {
+    val predicates: Predicates
+  }
+
   // This is the maximal interface, that should always be the greatest upper
   // bound on all combinations of option groups
-  trait HasAll extends HasChecker
+  trait HasAll extends HasCheckerPreds
 
   //////////////////
   // Constructors //
@@ -564,6 +567,20 @@ object OptionGroup extends LazyLogging {
     } yield WithIO(input.common, input.input, output.output)
   }
 
+  case class WithTypechecker(
+      common: Common,
+      input: Input,
+      output: Output,
+      typechecker: Typechecker)
+      extends HasTypechecker
+
+  object WithTypechecker extends Configurable[Config.ApalacheConfig, WithTypechecker] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithTypechecker] = for {
+      io <- WithIO(cfg)
+      typechecker <- Typechecker(cfg.typechecker)
+    } yield WithTypechecker(common = io.common, input = io.input, output = io.output, typechecker)
+  }
+
   case class WithChecker(
       common: Common,
       input: Input,
@@ -579,17 +596,19 @@ object OptionGroup extends LazyLogging {
     } yield WithChecker(opts.common, opts.input, opts.output, opts.typechecker, checker)
   }
 
-  case class WithTypechecker(
+  case class WithCheckerPreds(
       common: Common,
       input: Input,
       output: Output,
-      typechecker: Typechecker)
-      extends HasTypechecker
+      typechecker: Typechecker,
+      checker: Checker,
+      predicates: Predicates)
+      extends HasCheckerPreds
 
-  object WithTypechecker extends Configurable[Config.ApalacheConfig, WithTypechecker] {
-    def apply(cfg: Config.ApalacheConfig): Try[WithTypechecker] = for {
-      io <- WithIO(cfg)
-      typechecker <- Typechecker(cfg.typechecker)
-    } yield WithTypechecker(common = io.common, input = io.input, output = io.output, typechecker)
+  object WithCheckerPreds extends Configurable[Config.ApalacheConfig, WithCheckerPreds] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithCheckerPreds] = for {
+      opts <- WithChecker(cfg)
+      predicates <- Predicates(cfg.checker)
+    } yield WithCheckerPreds(opts.common, opts.input, opts.output, opts.typechecker, opts.checker, predicates)
   }
 }

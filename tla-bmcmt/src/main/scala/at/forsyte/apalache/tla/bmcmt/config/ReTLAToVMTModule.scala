@@ -22,7 +22,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  * @author
  *   Jure Kukovec
  */
-class ReTLAToVMTModule(options: OptionGroup.HasChecker) extends ToolModule(options) {
+class ReTLAToVMTModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(options) {
   override def configure(): Unit = { // Set up the sub-trait hierarchy.
     // TODO This is mad, and must be replaced.
     // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
@@ -32,8 +32,8 @@ class ReTLAToVMTModule(options: OptionGroup.HasChecker) extends ToolModule(optio
     bind(classOf[OptionGroup.HasOutput]).to(classOf[OptionGroup.HasIO])
     bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
     bind(classOf[OptionGroup.HasTypechecker]).to(classOf[OptionGroup.HasChecker])
-    bind(classOf[OptionGroup.HasChecker])
-      .toInstance(options)
+    bind(classOf[OptionGroup.HasChecker]).to(classOf[OptionGroup.HasCheckerPreds])
+    bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
 
     // TODO Doc
     bind(classOf[DerivedPredicates])

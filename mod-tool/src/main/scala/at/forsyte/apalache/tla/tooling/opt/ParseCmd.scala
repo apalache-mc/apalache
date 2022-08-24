@@ -16,9 +16,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  *   Igor Konnov
  */
 class ParseCmd
-    extends PassExecutorCmd(name = "parse", description = "Parse a TLA+ specification and quit") with LazyLogging {
-
-  type Options = OptionGroup.HasIO
+    extends ApalacheCommand(name = "parse", description = "Parse a TLA+ specification and quit") with LazyLogging {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var output: Option[File] = opt[Option[File]](name = "output",
@@ -33,7 +31,7 @@ class ParseCmd
   def run() = {
     // TODO: Use typed error handling
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    val options: Options = OptionGroup.WithIO(cfg).get
+    val options = OptionGroup.WithIO(cfg).get
     val executor = Executor(new ParserModule(options))
 
     logger.info("Parse " + file)

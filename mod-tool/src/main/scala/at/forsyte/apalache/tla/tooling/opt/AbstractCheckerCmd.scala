@@ -5,13 +5,10 @@ import org.backuity.clist.{arg, opt}
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
-    extends PassExecutorCmd(name, description) with LazyLogging {
-
-  type Options <: OptionGroup.HasChecker
+    extends ApalacheCommand(name, description) with LazyLogging {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var config =

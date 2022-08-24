@@ -33,8 +33,8 @@ import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
  *   next pass to call
  */
 class ConfigurationPassImpl @Inject() (
-    val options: OptionGroup.HasChecker,
-    val derivedPreds: DerivedPredicates,
+    val options: OptionGroup.HasCheckerPreds,
+    val derivedPreds: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends ConfigurationPass with LazyLogging {
@@ -46,7 +46,7 @@ class ConfigurationPassImpl @Inject() (
     LanguageWatchdog(NonrecursiveLanguagePred).check(tlaModule)
 
     // try to read from the TLC configuration file and produce constant overrides
-    val overrides = options.checker.predicates.tlcConfig match {
+    val overrides = options.predicates.tlcConfig match {
       case None                             => setDerivedPredicates(); List.empty // No overrides
       case Some((tlcConfig, tlcConfigFile)) => loadOptionsFromTlcConfig(tlaModule, tlcConfig, tlcConfigFile)
     }
@@ -58,7 +58,7 @@ class ConfigurationPassImpl @Inject() (
       if (constOverrides.nonEmpty) {
         // If there are constant overrides, we need a CInit predicate, so either
         // fetch the configured one or use the default operator name "CInit"
-        derivedPreds.cinit = options.checker.cinit.orElse(Some("CInit"))
+        derivedPreds.setCinit(options.predicates.cinit.getOrElse("CInit"))
         extendCinitWithOverrides(constOverrides, tlaModule, derivedPreds.cinit.get)
       } else {
         tlaModule.declarations
@@ -111,14 +111,19 @@ class ConfigurationPassImpl @Inject() (
   }
 
   private def setDerivedPredicates(): Unit = {
-    options.checker.predicates.behaviorSpec match {
-      case InitNextSpec(init, next) => derivedPreds.init = init; derivedPreds.next = next
+    val (init, next) = options.predicates.behaviorSpec match {
+      case InitNextSpec(init, next) => (init, next)
       // Should we change data structure to make this state unrepresentable?
       case _ => throw new Exception("TODO: should be impossible, since this arises only with no TLCC config")
     }
-    derivedPreds.temporal = options.checker.predicates.temporal
-    derivedPreds.invariants = options.checker.predicates.invariants
-    derivedPreds.cinit = options.checker.cinit
+    derivedPreds.configure(
+        init = init,
+        next = next,
+        temporal = options.predicates.temporal,
+        invariants = options.predicates.invariants,
+        cinit = options.predicates.cinit,
+        view = options.predicates.view,
+    )
   }
 
   /**
@@ -140,7 +145,7 @@ class ConfigurationPassImpl @Inject() (
 
     try {
       configuredModule = new TlcConfigImporter(config)(module)
-      val (init, next) = options.checker.predicates.behaviorSpec match {
+      val (init, next) = options.predicates.behaviorSpec match {
         case InitNextSpec(init, next) => (init, next)
 
         case TemporalSpec(specName) =>
@@ -150,10 +155,8 @@ class ConfigurationPassImpl @Inject() (
         case NullSpec() => ("Init", "Next")
       }
 
-      derivedPreds.init = init
-      derivedPreds.next = next
-      derivedPreds.invariants = options.checker.predicates.invariants // TODO rm?
-      derivedPreds.temporal = options.checker.predicates.temporal // TODO rm?
+      derivedPreds.configure(init = init, next = next, invariants = options.predicates.invariants,
+          temporal = options.predicates.temporal, view = options.predicates.view, cinit = options.predicates.cinit)
 
       if (derivedPreds.invariants.nonEmpty) {
         logger.info(s"""  > $basename: found INVARIANTS: ${derivedPreds.invariants.mkString(", ")}""")
