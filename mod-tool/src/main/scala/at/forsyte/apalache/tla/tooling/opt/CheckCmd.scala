@@ -116,7 +116,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     executor.run() match {
-      case Right(_)   => Right(s"Checker reports no error up to computation length ${executor.options.checker.length}")
+      case Right(_)   => Right(s"Checker reports no error up to computation length ${options.checker.length}")
       case Left(code) => Left(code, "Checker has found an error")
     }
   }

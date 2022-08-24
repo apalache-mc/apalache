@@ -28,10 +28,6 @@ import com.typesafe.scalalogging.LazyLogging
 case class Executor[O <: OptionGroup](val toolModule: ToolModule[O]) extends LazyLogging {
   private val injector = Guice.createInjector(toolModule)
 
-  /** Exposes mutable access to options configuring the behavior of the [passChainExecutor] */
-  // TODO: rm after OptionGroup provider is wired into to replace all access to the PassOptions
-  val options = toolModule.options
-
   private val exceptionAdapter = injector.getInstance(classOf[ExceptionAdapter])
 
   private val passChainExecutor = {
