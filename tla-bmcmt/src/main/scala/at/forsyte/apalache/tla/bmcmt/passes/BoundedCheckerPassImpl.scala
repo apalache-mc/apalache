@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt.passes
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
@@ -21,6 +20,7 @@ import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -29,7 +29,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (
-    val options: PassOptions,
+    options: OptionGroup.WithChecker,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
@@ -64,23 +64,23 @@ class BoundedCheckerPassImpl @Inject() (
         TODO: uncomment when the parallel checker is transferred from ik/multicore
     val nworkers = options.getOrElse("checker", "nworkers", 1)
      */
-    val stepsBound = options.getOrElse[Int]("checker", "length", 10)
-    val debug = options.getOrElse[Boolean]("general", "debug", false)
-    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
+    val stepsBound = options.checker.length
+    val debug = options.common.debug
+    val tuning = options.checker.tuning
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
-    val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", SMTEncoding.OOPSLA19)
+    val smtEncoding = options.checker.smtEncoding
 
     val params = new ModelCheckerParams(input, stepsBound, tuning)
-    params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
-    params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
-    params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)
+    params.discardDisabled = options.checker.discardDisabled
+    params.checkForDeadlocks = !options.checker.noDeadlocks
+    params.nMaxErrors = options.checker.maxError
     params.smtEncoding = smtEncoding
 
-    val smtProfile = options.getOrElse[Boolean]("smt", "prof", false)
+    val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
 
-    val result = options.getOrElse[String]("checker", "algo", "incremental") match {
+    val result = options.checker.algo match {
       /*
         TODO: uncomment when the parallel checker is transferred from ik/multicore
       case "parallel" => runParallelChecker(params, input, tuning, nworkers)

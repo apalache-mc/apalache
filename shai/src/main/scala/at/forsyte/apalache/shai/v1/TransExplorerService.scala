@@ -187,7 +187,6 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
           )
         }
         val parser = Executor(new ParserModule(options))
-        parser.passOptions.set("parser.source", SourceOption.StringSource(spec, aux))
         parser.run().left.map(code => s"Parsing failed with error code: ${code}")
       } catch {
         case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")

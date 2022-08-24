@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.assignments.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -13,12 +12,13 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * This pass finds symbolic transitions in Init and Next.
  */
 class TransitionPassImpl @Inject() (
-    options: PassOptions,
+    derivedPreds: DerivedPredicates,
     sourceStore: SourceStore,
     tracker: TransformationTracker,
     changeListener: ChangeListener,
@@ -30,24 +30,23 @@ class TransitionPassImpl @Inject() (
 
   override def execute(tlaModule: TlaModule): PassResult = {
     // extract transitions from InitPrimed
-    val initOperName = options.getOrElse("checker", "init", "Init")
+    val initOperName = derivedPreds.init
     val initOperNamePrimed = initOperName + "Primed"
     val initDeclarations = extractTransitions(tlaModule, initOperNamePrimed, NormalizedNames.INIT_PREFIX)
     logger.info(s"  > Found ${initDeclarations.size} initializing transitions")
 
     // extract transitions from Next
-    val nextOperName = options.getOrElse("checker", "next", "Next")
+    val nextOperName = derivedPreds.next
     val nextDeclarations = extractTransitions(tlaModule, nextOperName, NormalizedNames.NEXT_PREFIX)
     logger.info(s"  > Found ${nextDeclarations.size} transitions")
 
-    val invDeclarations: Seq[TlaDecl] = options.get[List[String]]("checker", "inv") match {
-      case Some(invariants) => invariants.map { invariant => tlaModule.declarations.find(_.name == invariant).get }
-      case None             => Seq()
+    val invDeclarations: Seq[TlaDecl] = derivedPreds.invariants.map { invariant =>
+      tlaModule.declarations.find(_.name == invariant).get
     }
 
     // convert an optional CInit operator
     val cinitDeclarations =
-      options.get[String]("checker", "cinit") match {
+      derivedPreds.cinit match {
         case None =>
           logger.info(s"  > No constant initializer")
           Seq()

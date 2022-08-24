@@ -40,9 +40,6 @@ class CheckerModule(options: OptionGroup.HasChecker) extends ToolModule(options)
     bind(classOf[DerivedPredicates])
       .toInstance(DerivedPredicates.Impl())
 
-    // the options singleton
-    bind(classOf[PassOptions])
-      .to(classOf[WriteablePassOptions])
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[CheckerExceptionAdapter])

@@ -6,7 +6,6 @@ import java.io.File
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
-import at.forsyte.apalache.infra.Executor
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
@@ -40,22 +39,5 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
         checker = cfg.checker.copy(config = config, cinit = cinit, init = init, next = next, inv = inv,
             temporal = temporal, length = length),
     )
-  }
-
-  override def setCommonOptions(executor: Executor[Options]): Unit = {
-    // TODO: rm once OptionProvider is wired in
-    val options = executor.options
-
-    super.setCommonOptions(executor)
-    logger.info {
-      val environment = if (env != "") s"(${env}) " else ""
-      s"Checker options: ${environment}${name} ${invocation}"
-    }
-    executor.passOptions.set("parser.source", options.input.source)
-    options.checker.predicates.tlcConfig.foreach { case (c, _) => executor.passOptions.set("checker.config", c) }
-    executor.passOptions.set("checker.inv", options.checker.predicates.invariants)
-    executor.passOptions.set("checker.temporal", options.checker.predicates.temporal)
-    options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
-    executor.passOptions.set("checker.length", options.checker.length)
   }
 }

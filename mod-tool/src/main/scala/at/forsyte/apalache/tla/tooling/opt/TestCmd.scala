@@ -77,23 +77,6 @@ class TestCmd
     // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("parser.source", options.input.source)
-    executor.passOptions.set("checker.inv", options.checker.predicates.invariants)
-    options.checker.cinit.foreach(executor.passOptions.set("checker.cinit", _))
-    // TODO: move into options provider
-    executor.passOptions.set("checker.nworkers", options.checker.nworkers)
-    // check only one instance of the action
-    executor.passOptions.set("checker.length", options.checker.length)
-    // no preliminary pruning of disabled transitions
-    executor.passOptions.set("checker.discardDisabled", options.checker.discardDisabled)
-    executor.passOptions.set("checker.noDeadlocks", options.checker.noDeadlocks)
-    // prefer the offline mode as we have a single query
-    executor.passOptions.set("checker.algo", options.checker.algo)
-    // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
-    setCommonOptions(executor)
-
     executor.run() match {
       case Right(_)   => Right("No example found")
       case Left(code) => Left(code, "Found a violation of the postcondition. Check violation.tla.")

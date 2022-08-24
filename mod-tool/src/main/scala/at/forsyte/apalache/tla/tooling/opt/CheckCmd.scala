@@ -114,21 +114,8 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("checker.nworkers", options.checker.nworkers)
-    executor.passOptions.set("checker.discardDisabled", options.checker.discardDisabled)
-    executor.passOptions.set("checker.noDeadlocks", options.checker.noDeadlocks)
-    executor.passOptions.set("checker.algo", options.checker.algo)
-    executor.passOptions.set("checker.smt-encoding", options.checker.smtEncoding)
-    executor.passOptions.set("checker.maxError", options.checker.maxError)
-    options.checker.view.foreach(executor.passOptions.set("checker.view", _))
-    // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
-    setCommonOptions(executor)
     executor.run() match {
-      case Right(_) =>
-        Right("Checker reports no error up to computation length " + executor.passOptions.getOrError[Int]("checker",
-            "length"))
+      case Right(_)   => Right(s"Checker reports no error up to computation length ${executor.options.checker.length}")
       case Left(code) => Left(code, "Checker has found an error")
     }
   }

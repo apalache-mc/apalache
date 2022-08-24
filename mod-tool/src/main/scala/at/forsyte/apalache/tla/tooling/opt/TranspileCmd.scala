@@ -23,9 +23,6 @@ class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = 
     val options: Options = OptionGroup.WithChecker(cfg).get
     val executor = Executor(new ReTLAToVMTModule(options))
 
-    // TODO rm
-    executor.passOptions.set("typechecker.inferPoly", options.typechecker.inferpoly)
-    setCommonOptions(executor)
     val outFilePath = OutputManager.runDirPathOpt
       .map { p =>
         p.resolve(TlaExToVMTWriter.outFileName).toAbsolutePath
