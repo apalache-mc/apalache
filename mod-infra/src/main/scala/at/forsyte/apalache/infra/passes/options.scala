@@ -390,6 +390,28 @@ object OptionGroup extends LazyLogging {
       extends OptionGroup
 
   object Predicates extends Configurable[Config.Checker, Predicates] {
+
+    // Enables uniform reporting of overriden configuration values
+    abstract private class EmptyShowable[T] {
+      def isEmpty(t: T): Boolean
+      def toString(t: T): String
+      def empty: T
+    }
+
+    private object EmptyShowable {
+      implicit object stringList extends EmptyShowable[List[String]] {
+        def isEmpty(t: List[String]) = t.isEmpty
+        def toString(t: List[String]) = t.mkString(", ")
+        def empty = List.empty
+      }
+
+      implicit object string extends EmptyShowable[String] {
+        def isEmpty(t: String) = t.isEmpty
+        def toString(t: String) = t
+        def empty = ""
+      }
+    }
+
     def apply(checker: Config.Checker): Try[Predicates] = {
       checker.config match {
         case None =>
@@ -435,15 +457,21 @@ object OptionGroup extends LazyLogging {
       TlcConfigParserApalache(new FileReader(f))
     }
 
-    private def tryToOverrideFromCli[T](ov: Option[T], tlcConfigValue: T, name: String): T = ov match {
+    // Overrdie TLCConfig from CLI/Config args, reporting the resulting value
+    private def tryToOverrideFromCli[T](
+        cliValue: Option[T],
+        tlcConfigValue: T,
+        name: String,
+      )(implicit es: EmptyShowable[T]): T = cliValue match {
       case Some(v) =>
         val msg =
-          s"  >  $name is set in TLC config but overridden via `$name` cli option or apalache.cfg; using $v"
+          s"  >  $name is set in TLC config but overridden via `$name` cli option or apalache.cfg; using ${es.toString(v)}"
         logger.warn(msg)
         v
-      case None =>
-        logger.info(s"  > Using $name predicate(s) $tlcConfigValue from the TLC config")
+      case None if !(es.isEmpty(tlcConfigValue)) =>
+        logger.info(s"  > Using $name predicate(s) ${es.toString(tlcConfigValue)} from the TLC config")
         tlcConfigValue
+      case _ => es.empty
     }
   }
 
