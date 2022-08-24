@@ -55,7 +55,7 @@ T ::=   // Booleans
       | typeConst
         // type variables
       | typeVar
-        // groups
+        // parentheses, e.g., to change associativity of functions
       | '(' T ')'
         // imprecise records of Type System 1, removed in Type System 1.2
       | '[' field ':' T ',' ...',' field ':' T ']'
