@@ -23,9 +23,10 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  *   Jure Kukovec
  */
 class ReTLAToVMTModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(options) {
-  override def configure(): Unit = { // Set up the sub-trait hierarchy.
-    // TODO This is mad, and must be replaced.
+  override def configure(): Unit = {
+    // Ensure the given `options` will be bound to any OptionGroup interface
     // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
+    // for why we cannot just specify the upper bound.
     bind(classOf[OptionGroup.HasCommon]).toInstance(options)
     bind(classOf[OptionGroup.HasInput]).toInstance(options)
     bind(classOf[OptionGroup.HasOutput]).toInstance(options)
