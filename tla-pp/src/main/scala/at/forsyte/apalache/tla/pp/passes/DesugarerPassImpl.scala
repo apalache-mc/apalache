@@ -12,8 +12,6 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * Desugarer pass.
  *
- * @param options
- *   pass options
  * @param tracker
  *   transformation tracker
  * @param nextPass
