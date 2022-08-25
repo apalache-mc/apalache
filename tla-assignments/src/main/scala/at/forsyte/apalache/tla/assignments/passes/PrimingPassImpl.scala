@@ -46,7 +46,9 @@ class PrimingPassImpl @Inject() (
     val initPrimedName = initName + "Primed"
     logger.info(s"  > Introducing $initPrimedName for $initName'")
     // add primes to variables
-    val newBody = primeTransformer(deepCopy.deepCopyEx(bodyMap(initName).body))
+    val newBody = primeTransformer(
+        deepCopy.deepCopyEx(bodyMap(initName).body)
+    )
 
     // Safe constructor: cannot be recursive
     val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
