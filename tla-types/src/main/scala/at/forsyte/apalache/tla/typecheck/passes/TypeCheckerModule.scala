@@ -24,9 +24,12 @@ class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(
     bind(classOf[OptionGroup.HasIO]).toInstance(options)
     bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
 
-    // TODO Doc
-    bind(classOf[DerivedPredicates]).to(classOf[DerivedPredicates.Configurable])
-    bind(classOf[DerivedPredicates.Configurable]).toInstance(DerivedPredicates.Impl())
+    // The `DerivedPredicate` instance used to communicate specification predicates between passes
+    val derivedPreds = DerivedPredicates.Impl()
+    // Read-only access to the derivedPreds
+    bind(classOf[DerivedPredicates]).toInstance(derivedPreds)
+    // Writeable access to the derivedPreds
+    bind(classOf[DerivedPredicates.Configurable]).toInstance(derivedPreds)
 
     // exception handler
     bind(classOf[ExceptionAdapter])

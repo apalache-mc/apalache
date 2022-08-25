@@ -190,7 +190,7 @@ object Config {
     // TLC config file. Since values set by CLI and apalache.cfg override
     // subsequently derived parameters, we need to track whether or not the
     // value was set when we go to parse out a TLC cfg file.
-    //
+
     def initOrDefault = init.getOrElse("Init")
     def nextOrDefault = next.getOrElse("Next")
     def invOrDefault = inv.getOrElse(List.empty)

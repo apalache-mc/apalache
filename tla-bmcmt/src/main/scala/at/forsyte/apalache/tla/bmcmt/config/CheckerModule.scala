@@ -24,6 +24,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
  *   Igor Konnov
  */
 class CheckerModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(options) {
+
   override def configure(): Unit = {
     // Ensure the given `options` will be bound to any OptionGroup interface
     // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
@@ -36,9 +37,12 @@ class CheckerModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(opt
     bind(classOf[OptionGroup.HasChecker]).toInstance(options)
     bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
 
-    // TODO Doc
-    bind(classOf[DerivedPredicates]).to(classOf[DerivedPredicates.Configurable])
-    bind(classOf[DerivedPredicates.Configurable]).toInstance(DerivedPredicates.Impl())
+    // The `DerivedPredicate` instance used to communicate specification predicates between passes
+    val derivedPreds = DerivedPredicates.Impl()
+    // Read-only access to the derivedPreds
+    bind(classOf[DerivedPredicates]).toInstance(derivedPreds)
+    // Writeable access to the derivedPreds
+    bind(classOf[DerivedPredicates.Configurable]).toInstance(derivedPreds)
 
     // exception handler
     bind(classOf[ExceptionAdapter])
