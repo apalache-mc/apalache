@@ -53,8 +53,6 @@ class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(
     // Bind all passes
     bind(classOf[SanyParserPass]).to(classOf[SanyParserPassImpl])
     bind(classOf[EtcTypeCheckerPass]).to(classOf[EtcTypeCheckerPassImpl])
-
-    super.configure()
   }
 
   override def passes: Seq[Class[_ <: Pass]] = {

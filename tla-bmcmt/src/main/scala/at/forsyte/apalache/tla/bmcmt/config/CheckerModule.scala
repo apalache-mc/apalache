@@ -81,7 +81,6 @@ class CheckerModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(opt
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
     bind(classOf[AnalysisPass]).to(classOf[AnalysisPassImpl])
     bind(classOf[BoundedCheckerPass]).to(classOf[BoundedCheckerPassImpl])
-    super.configure()
   }
 
   override def passes: Seq[Class[_ <: Pass]] = {
