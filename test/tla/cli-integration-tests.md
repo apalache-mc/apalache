@@ -3260,7 +3260,9 @@ EXITCODE: ERROR (255)
 ```sh
 $ apalache-mc typecheck TestUnsafeRecord.tla | sed 's/[IEW]@.*//'
 ...
-[TestUnsafeRecord.tla:6:17-6:19]: Cannot apply R() to the argument "b" in R()["b"]
+[TestUnsafeRecord.tla:6:17-6:19]: Cannot apply R() to the argument "b" in R()["b"].
+...
+EXITCODE: ERROR (120)
 ```
 
 ### typecheck TestGetX.tla
@@ -3269,6 +3271,8 @@ $ apalache-mc typecheck TestUnsafeRecord.tla | sed 's/[IEW]@.*//'
 $ apalache-mc typecheck TestGetX.tla | sed 's/[IEW]@.*//'
 ...
 [TestGetX.tla:2:12-2:14]: Cannot apply r to the argument "x" in r["x"].
+...
+EXITCODE: ERROR (120)
 ```
 
 ### typecheck TestGetXWithRows.tla
