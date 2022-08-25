@@ -27,9 +27,7 @@ class ParseCmd
     cfg.copy(common = cfg.common.copy(inputfile = Some(file)), output = cfg.output.copy(output = output))
   }
 
-  // TODO Factor out execution, use ProgramConfiguration, etc.
   def run() = {
-    // TODO: Use typed error handling
     val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
     val options = OptionGroup.WithIO(cfg).get
     val executor = Executor(new ParserModule(options))
