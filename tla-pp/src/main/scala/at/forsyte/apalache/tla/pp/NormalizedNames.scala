@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
-import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * Normalized names for various operator definitions that are produced by pre-processing.
@@ -25,23 +24,6 @@ object NormalizedNames {
 
   // the names of the options that capture the critical specification pieces
   val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporal")
-
-  /**
-   * Extract operator names from the standard option names.
-   *
-   * @param options
-   *   TODO the options object
-   * @return
-   */
-  // TODO move into DerivedPredicates
-  def userOperatorNamesFromOptions(derivedPreds: DerivedPredicates): List[String] = {
-    derivedPreds.init ::
-      derivedPreds.next ::
-      derivedPreds.cinit.toList ++
-      derivedPreds.view.toList ++
-      derivedPreds.invariants ++
-      derivedPreds.temporal
-  }
 
   /**
    * Has been an operator declaration produced by the VCGenerator

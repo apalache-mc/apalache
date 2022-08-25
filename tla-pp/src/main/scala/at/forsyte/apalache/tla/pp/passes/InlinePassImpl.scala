@@ -33,7 +33,7 @@ class InlinePassImpl @Inject() (
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
-    val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(derivedPreds).toSet
+    val relevantOperators = derivedPreds.operatorNames().toSet
     val relevantOperatorsAndInitCInitPrimed = relevantOperators + initPrimedName + cinitPrimedName
 
     logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))

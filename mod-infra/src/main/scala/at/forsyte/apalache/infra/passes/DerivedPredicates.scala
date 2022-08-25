@@ -92,6 +92,18 @@ trait DerivedPredicates {
 
   /** The name of an operator that produces a state view (works with max-error)  (optional) */
   def view: Option[String]
+
+  /**
+   * List all operator names for the derived predicates
+   */
+  def operatorNames(): List[String] = {
+    init ::
+      next ::
+      cinit.toList ++
+      view.toList ++
+      invariants ++
+      temporal
+  }
 }
 
 object DerivedPredicates {
