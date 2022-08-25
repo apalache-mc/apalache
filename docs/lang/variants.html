@@ -171,8 +171,6 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#variants" id="variants">Variants</a></h1>
-<p><strong>Warning:</strong> This feature is currently under testing. To enable variants
-support in Apalache, pass the option <code>--features=rows</code>.</p>
 <p><a href="./apalache-extensions.html">[Back to Apalache extensions]</a></p>
 <p><a href="https://en.wikipedia.org/wiki/Tagged_union">Variants</a> (also called <em>tagged unions</em> or <em>sum types</em>) are useful, when you want to combine
 values of different shapes in a single set or a sequence.</p>
@@ -242,19 +240,16 @@ Water(sparkling) == Variant(&quot;Water&quot;, [ sparkling |-&gt; sparkling ])
 
 \* @type: (Str, Int) =&gt; DRINK;
 Beer(malt, strength) == Variant(&quot;Beer&quot;, [ malt |-&gt; malt, strength |-&gt; strength ])
-
-Once a variant is constructed, it becomes opaque to the type checker, that is,
-the type checker only knows that `Water(TRUE)` and `Beer(&quot;Dark&quot;, 5)` are both
-of type `DRINK`. This is exactly what we want, in order to combine these values
+</code></pre>
+<p>Once a variant is constructed, it becomes opaque to the type checker, that is,
+the type checker only knows that <code>Water(TRUE)</code> and <code>Beer(&quot;Dark&quot;, 5)</code> are both
+of type <code>DRINK</code>. This is exactly what we want, in order to combine these values
 in a single set. However, we have lost the ability to access the fields of
 these values. To deconstruct values of a variant type, we have to use other
-operators, presented below.
-
-**Filtering by tag name.** Following the idiomatic use of tagged unions in
-untyped TLA+, we can filter a set of variants:
-
-```tla
-LET Drinks == { Water(TRUE), Water(FALSE), Beer(&quot;Radler&quot;, 2) } IN
+operators, presented below.</p>
+<p><strong>Filtering by tag name.</strong> Following the idiomatic use of tagged unions in
+untyped TLA+, we can filter a set of variants:</p>
+<pre><code class="language-tla">LET Drinks == { Water(TRUE), Water(FALSE), Beer(&quot;Radler&quot;, 2) } IN
 \E d \in VariantFilter(&quot;Beer&quot;, Drink):
     d.strength &lt; 3
 </code></pre>

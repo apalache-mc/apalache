@@ -209,17 +209,56 @@ Similarly, Apalache assigns the type of a set of records, when it processes a
 record set constructor.  See the <a href="../adr/002adr-types.html">Apalache ADR002</a> on types.</p>
 <p><em>Owing to the type information, records are translated into SMT more efficiently
 by Apalache than the general functions.</em></p>
-<p>It is quite common to mix records of different shapes into sets. For instance,
-see how the variable <code>msgs</code> is updated in <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos</a>. To address this pattern,
-Apalache treats records that do not disagree on field types to be
-type-compatible. For instance, the records <code>[type |-&gt; &quot;A&quot;, a |-&gt; 3]</code>
-and <code>[type |-&gt; &quot;B&quot;, b |-&gt; TRUE]</code> have the joint type:</p>
-<pre><code>  [type: Str, a: Int, b: Bool]
+<p>Every record is assigned a type in Apalache. For instance, the record
+<code>[name |-&gt; &quot;A&quot;, a |-&gt; 3]</code> has the type <code>{ name: Str, a: Int }</code>. In contrast to
+TLC, the type checker statically flags an error, if a spec is trying to access
+a non-existent field. Consider the following example:</p>
+<pre><code class="language-tla">--------------------------- MODULE TestUnsafeRecord ---------------------------
+\* the record in R has the type { name: Str, a: Int}
+R == [name |-&gt; &quot;A&quot;, a |-&gt; 3]
+
+\* the type checker will report a type error in UnsafeAccess
+UnsafeAccess == R.b
+===============================================================================
 </code></pre>
-<p>If your spec tries to access a field on a record without that field, Apalache
-will fail with the following error:</p>
-<pre><code>Access to non-existent record field ...
+<p>If we run the type checker, it will immediately find unsafe record access:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck TestUnsafeRecord.tla
+...
+[TestUnsafeRecord.tla:6:17-6:19]: Cannot apply R() to the argument &quot;b&quot; in R()[&quot;b&quot;]
 </code></pre>
+<p>Sometimes, record types can get tricky, when operators in a spec only have
+partial type information. For example, consider operator <code>GetX</code>:</p>
+<pre><code class="language-tla">----------------------------- MODULE TestGetX ---------------------------------
+GetX(r) == r.x
+===============================================================================
+</code></pre>
+<p>If we run the type checker, it will complain about not being able to infer
+the type of <code>r</code>:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck TestGetX.tla
+...
+[TestGetX.tla:2:12-2:14]: Cannot apply r to the argument &quot;x&quot; in r[&quot;x&quot;].
+</code></pre>
+<p>The reason is simple: The type checker could not decide, whether <code>r</code> was a
+record or a function. Even if we knew that <code>r</code> was a record, what type should
+it have? Luckily, the Apalache type checker supports <a href="https://en.wikipedia.org/wiki/Row_polymorphism">Row polymorphism</a>.
+Hence, we can specify the type of <code>r</code> as follows:</p>
+<pre><code class="language-tla">--------------------- MODULE TestGetXWithRows ---------------------------------
+\* @type: { x: a, b } =&gt; a;
+GetX(r) == r.x
+===============================================================================
+</code></pre>
+<p>In the type annotation, we are saying that <code>r</code> is a record that has the field
+<code>x</code> of some type <code>a</code> (which we don't know), and the rest of the record does not
+matter. This matches our intuition about the behavior of <code>GetX</code>. This time the
+type checker does not complain:</p>
+<pre><code class="language-sh">$ apalache-mc typecheck TestGetXWithRows.tla
+...
+Type checker [OK]
+</code></pre>
+<p>In untyped TLA+, it is common to mix records of different shapes into sets. For
+instance, see how the variable <code>msgs</code> is updated in <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla">Paxos</a>. It is not
+possible to do so with records in Apalache. To address this pattern, Apalache
+supports <a href="./variants.html">Variants</a>.</p>
 <hr />
 <h2><a class="header" href="#operators" id="operators">Operators</a></h2>
 <p>In the Python examples, we are using the package <a href="https://pypi.org/project/frozendict/">frozendict</a>, to produce an
@@ -232,7 +271,7 @@ immutable dictionary.</p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
-<p><strong>Apalache type:</strong> <code>(a_1, ..., a_n) =&gt; [field_1: a_1, ..., field_n: a_n]</code>, for
+<p><strong>Apalache type:</strong> <code>(a_1, ..., a_n) =&gt; { field_1: a_1, ..., field_n: a_n }</code>, for
 some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The record constructor returns a function <code>r</code> that is constructed
 as follows:</p>
@@ -247,6 +286,7 @@ as follows:</p>
     \* A record that has two fields:
     \* field &quot;name&quot; that is equal to &quot;Printer&quot;, and field &quot;port&quot; that is equal to 631.
 </code></pre>
+<p><strong>Example in Python:</strong></p>
 <pre><code class="language-python">&gt;&gt;&gt; { &quot;name&quot;: &quot;Printer&quot;, &quot;port&quot;: 631 }
 {'name': 'Printer', 'port': 631}
 
@@ -259,7 +299,7 @@ as follows:</p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
-<p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set([field_1: a_1, ..., field_n: a_n])</code>, for some types <code>a_1, ..., a_n</code>.</p>
+<p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set({ field_1: a_1, ..., field_n: a_n })</code>, for some types <code>a_1, ..., a_n</code>.</p>
 <p><strong>Effect:</strong> The record set constructor <code>[ field_1: S_1, ..., field_n: S_n]</code>
 is syntax sugar for the set comprehension:</p>
 <pre><code class="language-tla">{ [ field_1 |-&gt; e_1, ..., field_n |-&gt; e_n]: e_1 \in S_1, ..., e_n \in S_n }
@@ -287,11 +327,12 @@ is picked with <code>\E r \in [ field_1: S_1, ..., field_n: S_n]</code>.</p>
 <p><strong>Notation:</strong> <code>r.field_i</code></p>
 <p><strong>LaTeX notation:</strong> <code>r.field_i</code></p>
 <p><strong>Arguments:</strong> Two arguments: a record and a field name (as an identifier).</p>
-<p><strong>Apalache type:</strong> <code>[field_1: a_1, ..., field_i: a_i, ..., field_n: a_n]) =&gt; a_i</code>, for some types <code>a_1, ..., a_n</code>. Due to the record unification rule, we
-usually write this type simply as: <code>[field_i: a_i] =&gt; a_i</code>.</p>
+<p><strong>Apalache type:</strong> <code>{ field_i: a, b } =&gt; b</code>, for some types <code>a</code> and <code>b</code>
+(technically, <code>b</code> is a row that captures the other fields).</p>
 <p>Note that <code>r.field_i</code> is just a syntax sugar for <code>r[&quot;field_i&quot;]</code> in TLA+.
-Hence, if the type of <code>r</code> cannot be inferred, you can see an error message
-about Apalache not knowing, whether <code>r</code> is a record, or a function.</p>
+Hence, if the Apalache type checker cannot choose between <code>r</code> being a record or
+a function, the type checker fails with a type error. In this case, you have to
+type-annotate the definition that contains <code>r</code>.</p>
 <p><strong>Effect:</strong> As records are also functions, this operator works as <code>r[&quot;field_i&quot;]</code>.</p>
 <p>Apalache treats records as values of a record type. In comparison to the
 general function application <code>r[&quot;field&quot;]</code>, the operator <code>r.field</code> is handled
