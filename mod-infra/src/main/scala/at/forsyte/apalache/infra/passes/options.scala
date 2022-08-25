@@ -13,6 +13,8 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import com.typesafe.scalalogging.LazyLogging
+import java.io.IOException
+import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -456,8 +458,19 @@ object OptionGroup extends LazyLogging {
       if (!f.exists()) {
         throw new PassOptionException(s"Specified TLC config file not found: ${f.getAbsolutePath()}")
       }
-      logger.info(s"  > ${f.getName()}: Loading TLC configuration")
-      TlcConfigParserApalache(new FileReader(f))
+      val basename = f.getName()
+      logger.info(s"  > $basename: Loading TLC configuration")
+      try {
+        TlcConfigParserApalache(new FileReader(f))
+      } catch {
+        case e: IOException =>
+          val msg = s"  > $basename: IO error when loading the TLC config: ${e.getMessage}"
+          throw new PassOptionException(msg)
+
+        case e: TlcConfigParseError =>
+          val msg = s"  > $basename:${e.pos}:  Error parsing the TLC config file: ${e.msg}"
+          throw new PassOptionException(msg)
+      }
     }
 
     // Overrdie TLCConfig from CLI/Config args, reporting the resulting value

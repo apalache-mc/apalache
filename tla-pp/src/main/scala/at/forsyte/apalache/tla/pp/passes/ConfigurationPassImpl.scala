@@ -12,14 +12,13 @@ import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.{File, IOException}
+import java.io.File
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.tlc.config.TlcConfig
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.infra.tlc.config.TemporalSpec
 import at.forsyte.apalache.infra.tlc.config.NullSpec
-import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions. This pass also
@@ -141,44 +140,32 @@ class ConfigurationPassImpl @Inject() (
    */
   private def loadOptionsFromTlcConfig(module: TlaModule, config: TlcConfig, configFile: File): Seq[TlaDecl] = {
     val basename = configFile.getName()
-    var configuredModule = module
+    val configuredModule = new TlcConfigImporter(config)(module)
+    val (init, next) = options.predicates.behaviorSpec match {
+      case InitNextSpec(init, next) => (init, next)
 
-    try {
-      configuredModule = new TlcConfigImporter(config)(module)
-      val (init, next) = options.predicates.behaviorSpec match {
-        case InitNextSpec(init, next) => (init, next)
+      case TemporalSpec(specName) =>
+        logger.info(s"  > $basename: Using SPECIFICATION $specName")
+        extractFromSpec(module, basename, specName)
 
-        case TemporalSpec(specName) =>
-          logger.info(s"  > $basename: Using SPECIFICATION $specName")
-          extractFromSpec(module, basename, specName)
-
-        case NullSpec() => ("Init", "Next")
-      }
-
-      derivedPreds.configure(init = init, next = next, invariants = options.predicates.invariants,
-          temporal = options.predicates.temporal, view = options.predicates.view, cinit = options.predicates.cinit)
-
-      if (derivedPreds.invariants.nonEmpty) {
-        logger.info(s"""  > $basename: found INVARIANTS: ${derivedPreds.invariants.mkString(", ")}""")
-      }
-      if (derivedPreds.temporal.nonEmpty) {
-        logger.info(s"""  > $basename: found PROPERTIES: ${derivedPreds.temporal.mkString(", ")}""")
-      }
-
-      val namesOfOverrides =
-        (config.constAssignments.keySet ++ config.constReplacements.keySet)
-          .map(ConstAndDefRewriter.OVERRIDE_PREFIX + _)
-      configuredModule.declarations.filter(d => namesOfOverrides.contains(d.name))
-    } catch {
-      // TODO Move into config parsing section
-      case e: IOException =>
-        val msg = s"  > $basename: IO error when loading the TLC config: ${e.getMessage}"
-        throw new TLCConfigurationError(msg)
-
-      case e: TlcConfigParseError =>
-        val msg = s"  > $basename:${e.pos}:  Error parsing the TLC config file: ${e.msg}"
-        throw new TLCConfigurationError(msg)
+      case NullSpec() => ("Init", "Next")
     }
+
+    derivedPreds.configure(init = init, next = next, invariants = options.predicates.invariants,
+        temporal = options.predicates.temporal, view = options.predicates.view, cinit = options.predicates.cinit)
+
+    if (derivedPreds.invariants.nonEmpty) {
+      logger.info(s"""  > $basename: found INVARIANTS: ${derivedPreds.invariants.mkString(", ")}""")
+    }
+    if (derivedPreds.temporal.nonEmpty) {
+      logger.info(s"""  > $basename: found PROPERTIES: ${derivedPreds.temporal.mkString(", ")}""")
+    }
+
+    val namesOfOverrides =
+      (config.constAssignments.keySet ++ config.constReplacements.keySet)
+        .map(ConstAndDefRewriter.OVERRIDE_PREFIX + _)
+
+    configuredModule.declarations.filter(d => namesOfOverrides.contains(d.name))
   }
 
   // Make sure that all operators passed via --init, --cinit, --next, --inv, --temporal are present in the module.
