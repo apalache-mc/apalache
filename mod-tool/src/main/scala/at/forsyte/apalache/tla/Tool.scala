@@ -49,7 +49,6 @@ object Tool extends LazyLogging {
     }
   }
 
-  // Returns `Left(errmsg)` in case of configuration errors
   private def outputAndLogConfig(cmd: ApalacheCommand): Try[Unit] = for {
     cfg <- cmd.configuration
     _ <- Try(OutputManager.configure(cfg))
