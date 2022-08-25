@@ -185,8 +185,12 @@ object Config {
 
     def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
 
-    // TODO: doc -- lets us record the default here, while still being able to tell whether the value
-    // was set in the CLI or not, which then allows integrating TLC configs
+    // The following helper methods record default values for derived
+    // specification predicates, that will need to be computed after parsing a
+    // TLC config file. Since values set by CLI and apalache.cfg override
+    // subsequently derived parameters, we need to track whether or not the
+    // value was set when we go to parse out a TLC cfg file.
+    //
     def initOrDefault = init.getOrElse("Init")
     def nextOrDefault = next.getOrElse("Next")
     def invOrDefault = inv.getOrElse(List.empty)
@@ -378,8 +382,7 @@ object OptionGroup extends LazyLogging {
     } yield Typechecker(inferpoly)
   }
 
-  /** Specification predicates options */
-// TODO Docs
+  /** Options used to rack specification predicates */
   case class Predicates(
       behaviorSpec: BehaviorSpec,
       cinit: Option[String],
@@ -488,10 +491,7 @@ object OptionGroup extends LazyLogging {
       extends OptionGroup
 
   object Checker extends Configurable[Config.Checker, Checker] with LazyLogging {
-    // private def loadTlcConfig(filename: String): TlcConfigParserApalache = {}
-
     def apply(checker: Config.Checker): Try[Checker] = for {
-      // Required options
       algo <- checker.algo.toTry("checker.algo")
       discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
       length <- checker.length.toTry("checker.length")
@@ -540,12 +540,21 @@ object OptionGroup extends LazyLogging {
     val checker: Checker
   }
 
+  /**
+   * Interface for the set of options used when computing derived predicates
+   *
+   * Set of option groups should only be required by the `ConfigurationPassImpl`, and should be replaced by
+   * `DerivedPredicates` in subsequent passes.
+   */
   trait HasCheckerPreds extends HasChecker {
     val predicates: Predicates
   }
 
-  // This is the maximal interface, that should always be the greatest upper
-  // bound on all combinations of option groups
+  /**
+   * The maximal set of option groups
+   *
+   * that should always be the greatest upper bound on all combinations of option groups
+   */
   trait HasAll extends HasCheckerPreds
 
   //////////////////
