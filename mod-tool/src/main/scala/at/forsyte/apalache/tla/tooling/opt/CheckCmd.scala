@@ -11,7 +11,6 @@ import org.backuity.clist._
 import org.backuity.clist.util.Read
 import scala.jdk.CollectionConverters._
 import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import org.apache.commons.io.FilenameUtils
 
@@ -105,9 +104,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   }
 
   def run() = {
-    // TODO: rm once OptionProvider is wired in
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
-    // TODO Handle error case
+    val cfg = configuration.get
     val options = OptionGroup.WithCheckerPreds(cfg).get
     val executor = Executor(new CheckerModule(options))
 

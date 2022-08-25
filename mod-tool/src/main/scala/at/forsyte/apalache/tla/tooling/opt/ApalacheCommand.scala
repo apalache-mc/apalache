@@ -9,6 +9,9 @@ import org.backuity.clist.util.Read
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigManager
 import com.typesafe.scalalogging.LazyLogging
+import scala.util.Try
+import scala.util.Failure
+import at.forsyte.apalache.io.ConfigurationError
 
 /**
  * The base class used by all Apalache CLI subcommands.
@@ -108,7 +111,8 @@ abstract class ApalacheCommand(name: String, description: String)
 
   private var _invocation = ""
   private var _env = ""
-  private var _configure: Either[String, Config.ApalacheConfig] = Left("UNCONFIGURED")
+  private var _configure: Try[Config.ApalacheConfig] =
+    Failure(new ConfigurationError("ApalacheCommand was never configured"))
 
   // A comma separated name of supported features
   private val featureList = Feature.all.map(_.name).mkString(", ")
@@ -160,10 +164,8 @@ abstract class ApalacheCommand(name: String, description: String)
    * The application configuration, derived by loading all configuration sources, concluding with the CLI options
    *
    * See [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] for details.
-   *
-   * TODO: Ultimately, we would like all application configuration to be derived from this value
    */
-  def configuration = _configure
+  def configuration: Try[Config.ApalacheConfig] = _configure
 
   override def read(args: List[String]) = {
     _env = super.options

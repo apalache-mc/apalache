@@ -6,7 +6,6 @@ import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
@@ -28,7 +27,7 @@ class ParseCmd
   }
 
   def run() = {
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    val cfg = configuration.get
     val options = OptionGroup.WithIO(cfg).get
     val executor = Executor(new ParserModule(options))
 

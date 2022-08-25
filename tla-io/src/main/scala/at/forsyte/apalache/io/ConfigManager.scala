@@ -7,6 +7,7 @@ import java.nio.file.{Files, Path, Paths}
 import at.forsyte.apalache.tla.lir.Feature
 import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
 import com.typesafe.config.{Config, ConfigObject}
+import scala.util.Try
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -101,7 +102,7 @@ class ConfigManager() {
 object ConfigManager {
 
   /** Load the application configuration, converting any configuration error into a pretty printed message */
-  def apply(cfg: ApalacheConfig): Either[String, ApalacheConfig] =
-    new ConfigManager().load(cfg).left.map(_.prettyPrint())
+  def apply(cfg: ApalacheConfig): Try[ApalacheConfig] =
+    new ConfigManager().load(cfg).left.map(err => new ConfigurationError(err.prettyPrint())).toTry
 
 }

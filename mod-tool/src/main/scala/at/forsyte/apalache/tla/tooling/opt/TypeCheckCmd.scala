@@ -7,7 +7,6 @@ import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
@@ -34,8 +33,7 @@ class TypeCheckCmd
     )
   }
   override def run() = {
-    // TODO: rm once OptionProvider is wired in
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    val cfg = configuration.get
     val options = OptionGroup.WithTypechecker(cfg).get
     val executor = Executor(new TypeCheckerModule(options))
 
