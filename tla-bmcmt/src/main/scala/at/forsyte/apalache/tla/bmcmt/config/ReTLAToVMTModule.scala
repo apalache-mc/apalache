@@ -26,13 +26,12 @@ class ReTLAToVMTModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(
   override def configure(): Unit = { // Set up the sub-trait hierarchy.
     // TODO This is mad, and must be replaced.
     // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
-    bind(classOf[OptionGroup]).to(classOf[OptionGroup.HasCommon])
-    bind(classOf[OptionGroup.HasCommon]).to(classOf[OptionGroup.HasInput])
-    bind(classOf[OptionGroup.HasInput]).to(classOf[OptionGroup.HasIO])
-    bind(classOf[OptionGroup.HasOutput]).to(classOf[OptionGroup.HasIO])
-    bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
-    bind(classOf[OptionGroup.HasTypechecker]).to(classOf[OptionGroup.HasChecker])
-    bind(classOf[OptionGroup.HasChecker]).to(classOf[OptionGroup.HasCheckerPreds])
+    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
+    bind(classOf[OptionGroup.HasInput]).toInstance(options)
+    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
+    bind(classOf[OptionGroup.HasIO]).toInstance(options)
+    bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
+    bind(classOf[OptionGroup.HasChecker]).toInstance(options)
     bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
 
     // TODO Doc

@@ -15,14 +15,13 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(options) {
   override def configure(): Unit = {
-    // Set up the sub-trait hierarchy.
-    // TODO This is mad, and must be replaced.
+    // Ensure the given `options` will be bound to any OptionGroup interface
     // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
-    bind(classOf[OptionGroup]).to(classOf[OptionGroup.HasCommon])
-    bind(classOf[OptionGroup.HasCommon]).to(classOf[OptionGroup.HasInput])
-    bind(classOf[OptionGroup.HasInput]).to(classOf[OptionGroup.HasIO])
-    bind(classOf[OptionGroup.HasOutput]).to(classOf[OptionGroup.HasIO])
-    bind(classOf[OptionGroup.HasIO]).to(classOf[OptionGroup.HasTypechecker])
+    // for why we cannot just specify the upper bound.
+    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
+    bind(classOf[OptionGroup.HasInput]).toInstance(options)
+    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
+    bind(classOf[OptionGroup.HasIO]).toInstance(options)
     bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
 
     // TODO Doc
