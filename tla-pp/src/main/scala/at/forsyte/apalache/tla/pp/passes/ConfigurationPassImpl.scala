@@ -22,13 +22,13 @@ import at.forsyte.apalache.infra.tlc.config.NullSpec
 import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
 
 /**
- * The pass that collects the configuration parameters and overrides constants and definitions. This pass also overrides
- * attributes in the PassOptions object: checker.init, checker.next, checker.cinit, checker.inv. In general, passes
- * should not override options. This is a reasonable exception to this rule, as this pass configures the options based
- * on the user input.
+ * The pass that collects the configuration parameters and overrides constants and definitions. This pass also
+ * configures attributes in the [[infra.passes.DerivedPredicates DerivedPredicates]] class.
  *
  * @param options
- *   pass options
+ *   the group of options used to configure the pass
+ * @param derivedPreds
+ *   used to communicate specification predicates to later passes
  * @param nextPass
  *   next pass to call
  */
