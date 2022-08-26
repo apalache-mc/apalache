@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SeqT1, SetT1, StrT1, TlaType1, TlaType1Scheme, TupT1, VarT1}
-import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck._
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
-import org.scalatestplus.easymock.EasyMockSugar
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.easymock.EasyMockSugar
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
@@ -521,7 +521,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
   test("annotated polymorphic let-definition") {
     // The names of type variables may change during type inference
-    // @type: a => b;
+    // @type: a => a;
     // let F == lambda x \in Set(a): ((c, c) => c) x d in F(Int)
     val xDomain = mkUniqConst(parser("Set(c)"))
     val xNameInApp = mkUniqName("x")
@@ -552,8 +552,8 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
       listener.onTypeFound(fName.sourceRef.asInstanceOf[ExactRef], parser("Int => Int"))
     }
     whenExecuting(listener) {
-      // add the type annotation F: \A a: a => b
-      val context = TypeContext("F" -> TlaType1Scheme(parser("a => b"), Set(0, 1)))
+      // add the type annotation F: \A a: a => a
+      val context = TypeContext("F" -> TlaType1Scheme(parser("a => a"), Set(0, 1)))
       val computed = checker.compute(listener, context, letIn)
       assert(computed.contains(parser("Int")))
     }
@@ -565,7 +565,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     // The bug appeared only in the case when using two instances of the constraint solver, so it needed a complex setup.
     //
     // let G ==
-    //   @type: a => b;
+    //   @type: a => a;
     //   let F == lambda x \in Set(a): ((c, c) => c) x d
     //   in F(Int)
     // in
@@ -580,7 +580,8 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val fName = mkUniqName("F")
     val fApp = mkUniqAppByName(fName, fArg)
     val letInF = mkUniqLet("F", fBody, fApp)
-    val annotatedLetInF = mkUniqTypeDecl("F", parser("a => b"), letInF)
+    // add the type annotation F: \A a: a => a
+    val annotatedLetInF = mkUniqTypeDecl("F", parser("a => a"), letInF)
     val bool = mkUniqConst(BoolT1)
     val gAbs = mkUniqAbs(annotatedLetInF) // we have to wrap the parameterless body of G with a lambda expression
     val letInG = mkUniqLet("G", gAbs, bool)
@@ -609,7 +610,6 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
       listener.onTypeFound(letInG.sourceRef.asInstanceOf[ExactRef], parser("Bool"))
     }
     whenExecuting(listener) {
-      // add the type annotation F: \A a, b: a => b
       val context = TypeContext.empty
       val computed = checker.compute(listener, context, letInG)
       assert(computed.contains(parser("Bool")))
@@ -896,6 +896,43 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
       val annotations = TypeContext("F" -> TlaType1Scheme(parser("<<Int, Int>>"), Set.empty))
       val computed = checker.compute(listener, annotations, letIn)
       assert(computed.contains(parser("<<Int, Int>>")))
+    }
+  }
+
+  test("imprecise annotation") {
+    // Test case for: https://github.com/informalsystems/apalache/issues/2102
+
+    // let @type: (a, b) => Bool;
+    //   F(x, y) == x = y in TRUE
+    //
+    // The principal type of F is (c, c) => Bool, which is more concrete than (a, b) => Bool.
+    val eq = parser("(c, c) => Bool")
+    val x = mkUniqName("x")
+    val y = mkUniqName("y")
+    val fBody = mkUniqApp(Seq(eq), x, y)
+    // introduce a lambda over the parameters x and y, whose domains are captured with type variables f and g
+    val domX = mkUniqConst(VarT1("f"))
+    val domY = mkUniqConst(VarT1("g"))
+    val lambda = mkUniqAbs(fBody, (x, domX), (y, domY))
+    val underLet = mkUniqConst(BoolT1)
+    val letIn = mkUniqLet("F", lambda, underLet)
+    val annotatedLetInF = mkUniqTypeDecl("F", parser("(a, b) => Bool"), letIn)
+    val bool = mkUniqConst(BoolT1)
+    val gAbs = mkUniqAbs(annotatedLetInF) // we have to wrap the parameterless body of G with a lambda expression
+    val letInG = mkUniqLet("G", gAbs, bool)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeError(letIn.sourceRef.asInstanceOf[ExactRef],
+        "F's type annotation ((a, b) => Bool) is too general, inferred: ((a, a) => Bool)")
+      // consume all found types
+      for (ex <- Seq(fBody, domX, domY, x, y, lambda, underLet, letIn, annotatedLetInF, bool, gAbs, letInG)) {
+        listener.onTypeFound(EasyMock.eq(ex.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1]).anyTimes()
+      }
+    }
+    whenExecuting(listener) {
+      // Notice that the annotation is imprecise! The type checker should complain.
+      checker.compute(listener, TypeContext(), letInG)
     }
   }
 
