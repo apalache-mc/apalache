@@ -298,39 +298,18 @@ lazy val root = (project in file("."))
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
       assembly / assembledMappings += {
-        val src_dir = (ThisBuild / baseDirectory).value / "src" / "tla"
+        // To make our custom TLA modules available for import in TLA specs, we add them
+        // to the tla2sany/StandardModules directory.
         // See https://github.com/sbt/sbt-assembly/issues/227#issuecomment-283504401
-        sbtassembly.MappingSet(
-            None,
-            Vector(
-                (src_dir / "Apalache.tla") ->
-                  "tla2sany/StandardModules/Apalache.tla",
-                (src_dir / "DummyForIntegrationTests.tla") ->
-                  "tla2sany/StandardModules/DummyForIntegrationTests.tla",
-                (src_dir / "Variants.tla") ->
-                  "tla2sany/StandardModules/Variants.tla",
-                (src_dir / "__rewire_tlc_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
-                (src_dir / "__rewire_sequences_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_sequences_in_apalache.tla",
-                (src_dir / "__rewire_bags_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_bags_in_apalache.tla",
-                (src_dir / "__rewire_bags_ext_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_bags_ext_in_apalache.tla",
-                (src_dir / "__apalache_folds.tla") ->
-                  "tla2sany/StandardModules/__apalache_folds.tla",
-                (src_dir / "__apalache_internal.tla") ->
-                  "tla2sany/StandardModules/__apalache_internal.tla",
-                (src_dir / "__rewire_functions_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_functions_in_apalache.tla",
-                (src_dir / "__rewire_finite_sets_ext_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_finite_sets_ext_in_apalache.tla",
-                (src_dir / "__rewire_sequences_ext_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_sequences_ext_in_apalache.tla",
-                (src_dir / "__rewire_folds_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_folds_in_apalache.tla",
-            ),
-        )
+        val tlaModuleMapping =
+          ((ThisBuild / baseDirectory).value / "src" / "tla")
+            .listFiles()
+            .collect {
+              case f if f.getName.endsWith(".tla") =>
+                f -> s"tla2sany/StandardModules/${f.getName}"
+            }
+            .toVector
+        sbtassembly.MappingSet(None, tlaModuleMapping)
       },
       assembly / assemblyMergeStrategy := {
         // Workaround for conflict with grpc-netty manifest files
