@@ -13,7 +13,7 @@ import com.google.inject.Inject
  *
  * A few specification predicates are determined purely on the basis of configuration input. However, most specification
  * predicates can only be finalized after inspecting the given `TlaModule` through a sequence of several passes. We call
- * specification predicates that cannot be determined based on configuration input alone "derived predicates". We an
+ * specification predicates that cannot be determined based on configuration input alone "derived predicates". We can
  * also view specification predicates which ''can'' be derived directly from configuration input as derived predicates
  * which, however, are derived via a constant function that ignores any additional input from the `TlaModule`.
  *
