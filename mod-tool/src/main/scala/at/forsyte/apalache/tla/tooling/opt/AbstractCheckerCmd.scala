@@ -23,9 +23,9 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     opt[Option[String]](name = "next", default = None, description = "the name of a transition operator, default: Next")
   var inv =
     opt[Option[List[String]]](name = "inv", default = None,
-        description = "the name of an invariant operator, e.g., Inv")
+        description = "the names of invariant operators, e.g., 'Inv' or 'InvA,InvB'")
   var temporal = opt[Option[List[String]]](name = "temporal", default = None,
-      description = "the name of a temporal property, e.g. Property")
+      description = "the names of temporal properties, e.g. 'Property' or 'PropertyA,PropertyB'")
   var length: Option[Int] =
     opt[Option[Int]](name = "length", default = None, description = "maximal number of Next steps, default: 10")
 
