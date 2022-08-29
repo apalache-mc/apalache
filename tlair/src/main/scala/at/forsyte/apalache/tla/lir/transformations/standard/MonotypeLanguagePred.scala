@@ -41,7 +41,9 @@ class MonotypeLanguagePred extends LanguagePred {
     if (tt.usedNames.isEmpty) {
       PredResultOk()
     } else {
-      PredResultFail(Seq((sourceUid, "Expected a non-polymorphic type, found: " + tt)))
+      val msg = s"""|Expected a non-polymorphic type, found: ${tt}
+                    |You may need to annotate an empty collection.""".stripMargin
+      PredResultFail(Seq((sourceUid, msg)))
     }
   }
 }
