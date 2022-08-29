@@ -329,7 +329,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
             case Some((_, unifiedType)) =>
               if (unifiedType.usedNames.size < operScheme.principalType.usedNames.size) {
-                // The number of free variables has decreased. The annotation by the user is imprecise.
+                // The number of free variables has decreased. The annotation by the user is to general.
                 val msg = s"$name's type annotation $userType is too general, inferred: $inferredType"
                 onTypeError(letEx.sourceRef, msg)
                 throw new UnwindException
