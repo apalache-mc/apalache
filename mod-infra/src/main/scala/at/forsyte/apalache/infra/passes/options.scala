@@ -344,7 +344,7 @@ object OptionGroup extends LazyLogging {
         features <- common.features.toTry("common.features")
         outDir <- common.outDir.toTry("common.outDir")
         profiling <- common.profiling.toTry("common.profiling")
-        smtprof <- common.smtprof.toTry("common.smtprog")
+        smtprof <- common.smtprof.toTry("common.smtprof")
         writeIntermediate <- common.writeIntermediate.toTry("common.writeIntermediate")
       } yield Common(
           command = command,
