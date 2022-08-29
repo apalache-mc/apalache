@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.findBodyOf
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
@@ -10,12 +9,13 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp._
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * A pass that expands operators and let-in definitions, as well as primitive-valued CONSTANTs.
  */
 class InlinePassImpl @Inject() (
-    options: PassOptions,
+    derivedPreds: DerivedPredicates,
     tracker: TransformationTracker,
     renaming: IncrementalRenaming,
     writerFactory: TlaWriterFactory)
@@ -25,15 +25,15 @@ class InlinePassImpl @Inject() (
 
   override def execute(module: TlaModule): PassResult = {
     // Since PrimingPass now happens before inlining, we have to add InitPrime and CInitPrime as well
-    val initName = options.getOrElse[String]("checker", "init", "Init")
-    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit")
+    val initName = derivedPreds.init
+    val cinitName = derivedPreds.cinit.getOrElse("CInit") // TODO: why default on None here?
     val initPrimedName = initName + "Primed"
     val cinitPrimedName = cinitName + "Primed"
 
     // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
-    val relevantOperators = NormalizedNames.userOperatorNamesFromOptions(options).toSet
+    val relevantOperators = derivedPreds.operatorNames().toSet
     val relevantOperatorsAndInitCInitPrimed = relevantOperators + initPrimedName + cinitPrimedName
 
     logger.info("Leaving only relevant operators: " + relevantOperatorsAndInitCInitPrimed.toList.sorted.mkString(", "))

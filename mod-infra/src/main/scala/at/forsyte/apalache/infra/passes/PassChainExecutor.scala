@@ -8,15 +8,13 @@ import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaMo
 /**
  * This class executes the passes starting with the initial one, until the final pass returns None.
  *
- * @param options
- *   the options that can be used by all the passes
  * @param initialPass
  *   the first pass to run
  * @author
  *   Igor Konnov
  */
 
-class PassChainExecutor(val options: WriteablePassOptions, passes: Seq[Pass]) extends LazyLogging {
+class PassChainExecutor(passes: Seq[Pass]) extends LazyLogging {
   def run(): PassResult = {
     def exec(seqNo: Int, passToRun: Pass, module: TlaModule): PassResult = {
       logger.info("PASS #%d: %s".format(seqNo, passToRun.name))

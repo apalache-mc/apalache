@@ -1,10 +1,20 @@
 package at.forsyte.apalache.infra.passes.options
 
-import java.io.File
-import at.forsyte.apalache.tla.lir.Feature
-import com.google.inject
-import scala.util.{Failure, Success, Try}
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
+import at.forsyte.apalache.infra.tlc.config.BehaviorSpec
+import at.forsyte.apalache.infra.tlc.config.InitNextSpec
+import at.forsyte.apalache.infra.tlc.config.TlcConfig
+import at.forsyte.apalache.tla.lir.Feature
+
+import java.io.File
+import java.io.FileReader
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import com.typesafe.scalalogging.LazyLogging
+import java.io.IOException
+import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -139,7 +149,7 @@ object Config {
    * @param init
    *   the name of an operator that initializes VARIABLES
    * @param inv
-   *   the name of an invariant operator
+   *   the names of invariant operators
    * @param next
    *   the name of a transition operator
    * @param length
@@ -152,30 +162,41 @@ object Config {
    *   the number of workers for the parallel checker (not currently used)
    * @param smtEncoding
    *   the SMT encoding to use
-   * @param temporal
-   *   the name of a temporal property, e.g. Property
+   * @param temporalProps
+   *   the names of temporal properties
    * @param view
    *   the state view to use for generating counter examples when `maxError` is set
    */
   case class Checker(
       tuning: Option[Map[String, String]] = Some(Map()),
       algo: Option[String] = Some("incremental"), // TODO: convert to case class
-      config: Option[String] = None,
+      config: Option[File] = None,
       discardDisabled: Option[Boolean] = Some(true),
       cinit: Option[String] = None,
-      init: Option[String] = None, // TODO Set proper default here once ConfigurationPassImpl is fixed
-      inv: Option[String] = None, // TODO Should be list?
-      next: Option[String] = None, // TODO Set proper default here once ConfigurationPassImpl is fixed
+      init: Option[String] = None,
+      inv: Option[List[String]] = None,
+      next: Option[String] = None,
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       noDeadlocks: Option[Boolean] = Some(false),
       nworkers: Option[Int] = Some(1),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
-      temporal: Option[String] = None, // TODO SHould be list?
+      temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
       extends Config[Checker] {
 
     def empty: Checker = Generic[Checker].from(Generic[Checker].to(this).map(emptyPoly))
+
+    // The following helper methods record default values for derived
+    // specification predicates, that will need to be computed after parsing a
+    // TLC config file. Since values set by CLI and apalache.cfg override
+    // subsequently derived parameters, we need to track whether or not the
+    // value was set when we go to parse out a TLC cfg file.
+
+    def initOrDefault = init.getOrElse("Init")
+    def nextOrDefault = next.getOrElse("Next")
+    def invOrDefault = inv.getOrElse(List.empty)
+    def temporalPropsOrDefault = temporalProps.getOrElse(List.empty)
   }
 
   /**
@@ -185,7 +206,7 @@ object Config {
    *   allow the type checker to infer polymorphic types
    */
   case class Typechecker(
-      inferpoly: Option[Boolean] = Some(false))
+      inferpoly: Option[Boolean] = Some(true))
       extends Config[Typechecker] {
 
     def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
@@ -208,12 +229,16 @@ object Config {
 }
 
 /** Defines the data sources supported */
-sealed abstract class SourceOption
+sealed abstract class SourceOption {
+  def isFile: Boolean
+}
 
 object SourceOption {
 
   /** Data to be loaded from a file */
-  final case class FileSource(file: java.io.File) extends SourceOption
+  final case class FileSource(file: java.io.File) extends SourceOption {
+    def isFile = true
+  }
 
   /**
    * Data supplied as a string
@@ -223,7 +248,9 @@ object SourceOption {
    * @param aux
    *   auxiliary data sources
    */
-  final case class StringSource(content: String, aux: Seq[String] = Seq()) extends SourceOption
+  final case class StringSource(content: String, aux: Seq[String] = Seq()) extends SourceOption {
+    def isFile = false
+  }
 }
 
 /** Defines the SMT encoding options supported */
@@ -262,7 +289,7 @@ sealed trait OptionGroup
  * The unions can be specified via the `Has*` traits, such as [[OptionGroup.HasInput]] and constructed via the `With*`
  * classes, such as [[OptionGroup.WithInput]].
  */
-object OptionGroup {
+object OptionGroup extends LazyLogging {
 
   /**
    * Interface for a group of related options that can be produced from a [[Config]]
@@ -317,7 +344,7 @@ object OptionGroup {
         features <- common.features.toTry("common.features")
         outDir <- common.outDir.toTry("common.outDir")
         profiling <- common.profiling.toTry("common.profiling")
-        smtprof <- common.debug.toTry("common.smtprog")
+        smtprof <- common.smtprof.toTry("common.smtprof")
         writeIntermediate <- common.writeIntermediate.toTry("common.writeIntermediate")
       } yield Common(
           command = command,
@@ -357,78 +384,164 @@ object OptionGroup {
     } yield Typechecker(inferpoly)
   }
 
-  /** Options used to configure model checking */
-  case class Checker(
-      algo: String,
+  /** Options used to rack specification predicates */
+  case class Predicates(
+      behaviorSpec: BehaviorSpec,
       cinit: Option[String],
-      config: Option[String], // TODO: rm once ConfigurationPassImpl is moved into configuration stage
-      discardDisabled: Boolean,
-      init: Option[String], // TODO Make required after ConfigurationPassImpl is refactored
-      inv: Option[String],
-      length: Int,
-      maxError: Int,
-      next: Option[String], // TODO Make required after ConfigurationPassImpl is refactored
-      noDeadlocks: Boolean,
-      nworkers: Int,
-      smtEncoding: SMTEncoding,
-      temporal: Option[String],
-      tuning: Map[String, String],
+      invariants: List[String],
+      temporalProps: List[String],
+      tlcConfig: Option[(TlcConfig, File)],
       view: Option[String])
       extends OptionGroup
 
-  object Checker extends Configurable[Config.Checker, Checker] {
+  // The `Predicates` option group loads configurations both from the usual
+  // sorces indicated by extending the `Configurable` class AND from TLC `.cfg`
+  // files, if such a file is specified in the usual configs. As a result, its
+  // configuration logic is much more complex than that of any other option group.
+  //
+  // Some of this complexity may be reduced in the future by figuring out how we
+  // can wire the TLC `.cfg` file into the existing configuration system.
+  object Predicates extends Configurable[Config.Checker, Predicates] {
+
+    // Enables uniform reporting of overriden configuration values
+    abstract private class EmptyShowable[T] {
+      def isEmpty(t: T): Boolean
+      def toString(t: T): String
+      def empty: T
+    }
+
+    // Implements required operations on the types of overrideable values
+    private object EmptyShowable {
+      implicit object stringList extends EmptyShowable[List[String]] {
+        def isEmpty(t: List[String]) = t.isEmpty
+        def toString(t: List[String]) = t.mkString(", ")
+        def empty = List.empty
+      }
+
+      implicit object string extends EmptyShowable[String] {
+        def isEmpty(t: String) = t.isEmpty
+        def toString(t: String) = t
+        def empty = ""
+      }
+    }
+
+    def apply(checker: Config.Checker): Try[Predicates] = {
+      // To derive the `Predicates` options group, we may need to load a TLC
+      // `.cfg` file such a file was specified by the input configuration.
+      checker.config match {
+        case None =>
+          // No TLC config was given, so derive all the predicate options from
+          // the input configuration.
+          Try(Predicates(
+                  behaviorSpec = InitNextSpec(init = checker.initOrDefault, next = checker.nextOrDefault),
+                  cinit = checker.cinit,
+                  invariants = checker.invOrDefault,
+                  temporalProps = checker.temporalPropsOrDefault,
+                  tlcConfig = None,
+                  view = checker.view,
+              ))
+
+        case Some(fname) =>
+          // A TLC config was given, so we need to try loading it, and determine
+          // whether to use it's values or if they should be overridden by values
+          // from the input configuration.
+          for {
+            tlcConfig <- Try(loadTLCCfg(fname))
+            behaviorSpec =
+              tlcConfig.behaviorSpec match {
+                case InitNextSpec(cfgInit, cfgNext) =>
+                  // Init and Next predicates were specified in the TLC config
+                  // but we may need to override them with CLI or apalache.cfg config values
+                  val init = tryToOverrideFromCli(checker.init, cfgInit, "init")
+                  val next = tryToOverrideFromCli(checker.next, cfgNext, "next")
+                  InitNextSpec(init = init, next = next)
+                case spec => spec // Any other behavior spec from the TLC config we can use as is
+              }
+
+            temporalProps = tryToOverrideFromCli(checker.temporalProps, tlcConfig.temporalProps, "temporal")
+            invariants = tryToOverrideFromCli(checker.inv, tlcConfig.invariants, "inv")
+          } yield Predicates(
+              behaviorSpec = behaviorSpec,
+              cinit = checker.cinit,
+              invariants = invariants,
+              temporalProps = temporalProps,
+              tlcConfig = Some((tlcConfig, fname)),
+              view = checker.view,
+          )
+      }
+    }
+
+    private def loadTLCCfg(f: File): TlcConfig = {
+      if (!f.exists()) {
+        throw new PassOptionException(s"Specified TLC config file not found: ${f.getAbsolutePath()}")
+      }
+      val basename = f.getName()
+      logger.info(s"  > $basename: Loading TLC configuration")
+      try {
+        TlcConfigParserApalache(new FileReader(f))
+      } catch {
+        case e: IOException =>
+          val msg = s"  > $basename: IO error when loading the TLC config: ${e.getMessage}"
+          throw new PassOptionException(msg)
+
+        case e: TlcConfigParseError =>
+          val msg = s"  > $basename:${e.pos}:  Error parsing the TLC config file: ${e.msg}"
+          throw new PassOptionException(msg)
+      }
+    }
+
+    // Override TLCConfig values from CLI/Config args, if the latter are given.
+    // Also report the resulting value and source from which the configuration
+    // ultimately loaded.
+    private def tryToOverrideFromCli[T](
+        cliValue: Option[T],
+        tlcConfigValue: T,
+        name: String,
+      )(implicit es: EmptyShowable[T]): T = cliValue match {
+      case Some(v) =>
+        val msg =
+          s"  >  $name is set in TLC config but overridden via `$name` cli option or apalache.cfg; using ${es.toString(v)}"
+        logger.warn(msg)
+        v
+      case None if !(es.isEmpty(tlcConfigValue)) =>
+        logger.info(s"  > Using $name predicate(s) ${es.toString(tlcConfigValue)} from the TLC config")
+        tlcConfigValue
+      case _ => es.empty
+    }
+  }
+
+  /** Options used to configure model checking */
+  case class Checker(
+      algo: String,
+      discardDisabled: Boolean,
+      length: Int,
+      maxError: Int,
+      noDeadlocks: Boolean,
+      nworkers: Int,
+      smtEncoding: SMTEncoding,
+      tuning: Map[String, String])
+      extends OptionGroup
+
+  object Checker extends Configurable[Config.Checker, Checker] with LazyLogging {
     def apply(checker: Config.Checker): Try[Checker] = for {
-      // Required options
       algo <- checker.algo.toTry("checker.algo")
       discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
-      // init <- checker.init.toTry("checker.init")
       length <- checker.length.toTry("checker.length")
       maxError <- checker.maxError.toTry("checker.maxError")
-      // next <- checker.next.toTry("checker.next")
       noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
       nworkers <- checker.nworkers.toTry("checker.nworkers")
       smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
       tuning <- checker.tuning.toTry("checker.tuning")
     } yield Checker(
         algo = algo,
-        cinit = checker.cinit, // optional
-        config = checker.config, // optional
         discardDisabled = discardDisabled,
-        init = checker.init, // TODO: should be required
-        inv = checker.inv, // optional
         length = length,
         maxError = maxError,
-        next = checker.next, // TODO: should be required
         noDeadlocks = noDeadlocks,
         nworkers = nworkers,
         smtEncoding = smtEncoding,
-        temporal = checker.temporal, // optional
         tuning = tuning,
-        view = checker.view, // optional
     )
-  }
-
-  /**
-   * Provides a configured [[OptionGroup]] instance via a Google Guice `Provider`
-   *
-   * The provider enables late-binding of a configured option instance, which is then made available to any inject
-   * annotated class classes via google Guice's dependency injection.
-   *
-   * For more on Guice providers, see https://github.com/google/guice/wiki/InjectingProviders
-   */
-  class Provider[O <: OptionGroup] extends inject.Provider[O] {
-    protected var _options: Option[O] = None
-
-    /**
-     * Set the option to be provided
-     *
-     * This is typically called once, after parsing [[Config]]s into [[OptionGroup]]s. Use of it is to mutate the stored
-     * options to communicate between passes is strongly discouraged (but not forbidden).
-     */
-    def set(options: O): Unit = _options = Some(options)
-
-    /** Get the provided option */
-    def get(): O = _options.getOrElse(throw new inject.ProvisionException("pass options were not configured"))
   }
 
   ////////////////
@@ -455,14 +568,26 @@ object OptionGroup {
     val typechecker: Typechecker
   }
 
-  trait HasChecker extends HasInput {
+  trait HasChecker extends HasTypechecker {
     val checker: Checker
-    val typechecker: Typechecker
   }
 
-  // This is the maximal interface, that should always be the greatest upper
-  // bound on all combinations of option groups
-  trait HasAll extends HasChecker with HasOutput
+  /**
+   * Interface for the set of options used when computing derived predicates
+   *
+   * Set of option groups should only be required by the `ConfigurationPassImpl`, and should be replaced by
+   * `DerivedPredicates` in subsequent passes.
+   */
+  trait HasCheckerPreds extends HasChecker {
+    val predicates: Predicates
+  }
+
+  /**
+   * The maximal set of option groups
+   *
+   * that should always be the greatest upper bound on all combinations of option groups
+   */
+  trait HasAll extends HasCheckerPreds
 
   //////////////////
   // Constructors //
@@ -511,22 +636,6 @@ object OptionGroup {
     } yield WithIO(input.common, input.input, output.output)
   }
 
-  case class WithChecker(
-      common: Common,
-      input: Input,
-      checker: Checker,
-      typechecker: Typechecker)
-      extends HasChecker
-
-  object WithChecker extends Configurable[Config.ApalacheConfig, WithChecker] {
-    def apply(cfg: Config.ApalacheConfig): Try[WithChecker] = for {
-      common <- Common(cfg.common)
-      input <- Input(cfg.common)
-      checker <- Checker(cfg.checker)
-      typechecker <- Typechecker(cfg.typechecker)
-    } yield WithChecker(common, input, checker, typechecker)
-  }
-
   case class WithTypechecker(
       common: Common,
       input: Input,
@@ -539,5 +648,36 @@ object OptionGroup {
       io <- WithIO(cfg)
       typechecker <- Typechecker(cfg.typechecker)
     } yield WithTypechecker(common = io.common, input = io.input, output = io.output, typechecker)
+  }
+
+  case class WithChecker(
+      common: Common,
+      input: Input,
+      output: Output,
+      typechecker: Typechecker,
+      checker: Checker)
+      extends HasChecker
+
+  object WithChecker extends Configurable[Config.ApalacheConfig, WithChecker] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithChecker] = for {
+      opts <- WithTypechecker(cfg)
+      checker <- Checker(cfg.checker)
+    } yield WithChecker(opts.common, opts.input, opts.output, opts.typechecker, checker)
+  }
+
+  case class WithCheckerPreds(
+      common: Common,
+      input: Input,
+      output: Output,
+      typechecker: Typechecker,
+      checker: Checker,
+      predicates: Predicates)
+      extends HasCheckerPreds
+
+  object WithCheckerPreds extends Configurable[Config.ApalacheConfig, WithCheckerPreds] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithCheckerPreds] = for {
+      opts <- WithChecker(cfg)
+      predicates <- Predicates(cfg.checker)
+    } yield WithCheckerPreds(opts.common, opts.input, opts.output, opts.typechecker, opts.checker, predicates)
   }
 }

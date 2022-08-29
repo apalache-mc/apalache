@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
@@ -10,13 +10,27 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 
-class TypeCheckerModule extends ToolModule {
-
+class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(options) {
   override def configure(): Unit = {
-    // the options singleton
-    bind(classOf[PassOptions])
-      .to(classOf[WriteablePassOptions])
+    // Ensure the given `options` will be bound to any OptionGroup interface
+    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
+    // for why we cannot just specify the upper bound.
+    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
+    bind(classOf[OptionGroup.HasInput]).toInstance(options)
+    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
+    bind(classOf[OptionGroup.HasIO]).toInstance(options)
+    bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
+
+    // The `DerivedPredicate` instance used to communicate specification predicates between passes
+    val derivedPreds = DerivedPredicates.Impl()
+    // Read-only access to the derivedPreds
+    bind(classOf[DerivedPredicates]).toInstance(derivedPreds)
+    // Writeable access to the derivedPreds
+    bind(classOf[DerivedPredicates.Configurable]).toInstance(derivedPreds)
+
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[EtcTypeCheckerAdapter])

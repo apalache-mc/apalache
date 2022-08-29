@@ -1700,9 +1700,6 @@ the TLC config. So we have to test that it all works together.
 ```sh
 $ apalache-mc check Config.tla | sed 's/I@.*//'
 ...
-  > Command line option --init is not set. Using Init
-  > Command line option --next is not set. Using Next
-...
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
 ...
@@ -1852,11 +1849,14 @@ EXITCODE: ERROR (255)
 $ apalache-mc check --config=ConfigParams.cfg ConfigParams.tla | sed 's/[IEW]@.*//'
 ...
   > ConfigParams.cfg: Loading TLC configuration
-  > Using the init predicate Init from the TLC config
-  > Using the next predicate Next from the TLC config
+  > Using init predicate(s) Init from the TLC config
+  > Using next predicate(s) Next from the TLC config
+  > Using inv predicate(s) Inv from the TLC config
+...
   > ConfigParams.cfg: found INVARIANTS: Inv
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
+  > Set the constant initialization predicate to CInit
   > Set an invariant to Inv
 ...
 The outcome is: NoError
@@ -1872,8 +1872,10 @@ The replacements make the invariant hold true.
 $ apalache-mc check --config=ConfigReplacements2.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
 ...
   > ConfigReplacements2.cfg: Loading TLC configuration
-  > Using the init predicate Init from the TLC config
-  > Using the next predicate Next from the TLC config
+  > Using init predicate(s) Init from the TLC config
+  > Using next predicate(s) Next from the TLC config
+  > Using inv predicate(s) Inv from the TLC config
+...
   > ConfigReplacements2.cfg: found INVARIANTS: Inv
   > Set the initialization predicate to Init
   > Set the transition predicate to Next
@@ -1889,11 +1891,14 @@ EXITCODE: OK
 
 When a configuration file does not exist, the tool should error.
 
+NOTE: We truncate the output to avoid printing the file name, making the test
+indifferent to the execution environment (including in docker). This is required
+since the error message includes an absolute file name, and this differs
+depending on which computer it is running on.
+
 ```sh
-$ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla | sed 's/[IEW]@.*//'
-...
-Configuration error (see the manual): TLC config file not found: ThisConfigDoesNotExist.cfg
-...
+$ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla 2>&1 | grep -o -e "Specified TLC config file not found" -e "EXITCODE: ERROR (255)"
+Specified TLC config file not found
 EXITCODE: ERROR (255)
 ```
 

@@ -4,7 +4,7 @@ package at.forsyte.apalache.tla
 import apalache.BuildInfo
 import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
+import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -14,6 +14,9 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters._
 import scala.util.Random
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 /**
  * Command line access to the APALACHE tools.
@@ -46,33 +49,27 @@ object Tool extends LazyLogging {
     }
   }
 
-  // Returns `Left(errmsg)` in case of configuration errors
-  private def outputAndLogConfig(cmd: ApalacheCommand): Either[String, Unit] = {
-    cmd.configuration.map { cfg =>
-      try {
-        OutputManager.configure(cfg)
-      } catch {
-        case e: ConfigurationError => return Left(e.getMessage)
+  private def outputAndLogConfig(cmd: ApalacheCommand): Try[Unit] = for {
+    cfg <- cmd.configuration
+    _ <- Try(OutputManager.configure(cfg))
+  } yield {
+    cfg.common.inputfile.foreach { file =>
+      // The sourceLines file is only relevant if we are loading a TLA file
+      if (file.getName.endsWith(".tla") && file.exists()) {
+        OutputManager.initSourceLines(file)
       }
-
-      cfg.common.inputfile.foreach { file =>
-        // The sourceLines file is only relevant if we are loading a TLA file
-        if (file.getName.endsWith(".tla") && file.exists()) {
-          OutputManager.initSourceLines(file)
-        }
-      }
-
-      println(s"Output directory: ${OutputManager.runDir.normalize()}")
-      OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
-          _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
-      )
-      // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-      new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
-      // TODO: update workers when the multicore branch is integrated
-      logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
-
-      submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
     }
+
+    println(s"Output directory: ${OutputManager.runDir.normalize()}")
+    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
+        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+    )
+    // force our programmatic logback configuration, as the autoconfiguration works unpredictably
+    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
+    // TODO: update workers when the multicore branch is integrated
+    logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
+
+    submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }
 
   /**
@@ -109,11 +106,11 @@ object Tool extends LazyLogging {
         printStatsConfig()
 
         val exitcode = outputAndLogConfig(cmd) match {
-          case Left(configurationErrorMessage) => {
-            logger.error(s"Configuration error: ${configurationErrorMessage}")
+          case Failure(cfgErr) => {
+            logger.error(s"Configuration error: ${cfgErr.getMessage()}")
             ExitCodes.ERROR
           }
-          case Right(()) => {
+          case Success(()) => {
             val startTime = LocalDateTime.now()
             try {
               runCommand(cmd)

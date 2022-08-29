@@ -24,13 +24,11 @@ class TestPassChainExecutor extends AnyFunSuite {
     override def transformations = transfs
   }
 
-  private val options = new WriteablePassOptions()
-
   test("""Executes a correctly ordered chain""") {
     val pass1 = new ParametrizedPass(true, Set(), Set(ModuleProperty.Inlined))
     val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
-    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
+    val executor = new PassChainExecutor(Seq(pass1, pass2))
     val result = executor.run()
     assert(result.isRight)
   }
@@ -40,7 +38,7 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set())
     val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
-    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
+    val executor = new PassChainExecutor(Seq(pass1, pass2))
     val thrown = intercept[Exception] {
       executor.run()
     }
@@ -53,7 +51,7 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set())
     val pass2 = new ParametrizedPass(false, Set(), Set())
 
-    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
+    val executor = new PassChainExecutor(Seq(pass1, pass2))
 
     val result = executor.run()
     assert(result.isLeft)

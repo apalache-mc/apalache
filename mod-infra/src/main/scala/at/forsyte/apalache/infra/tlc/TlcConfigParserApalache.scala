@@ -1,6 +1,6 @@
-package at.forsyte.apalache.io.tlc
+package at.forsyte.apalache.infra.tlc
 
-import at.forsyte.apalache.io.tlc.config._
+import at.forsyte.apalache.infra.tlc.config._
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.{Reader, StringReader}

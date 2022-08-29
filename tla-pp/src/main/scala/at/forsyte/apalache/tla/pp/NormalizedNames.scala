@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
 
 /**
@@ -25,21 +24,6 @@ object NormalizedNames {
 
   // the names of the options that capture the critical specification pieces
   val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporal")
-
-  /**
-   * Extract operator names from the standard option names.
-   *
-   * @param options
-   *   the options object
-   * @return
-   */
-  def userOperatorNamesFromOptions(options: PassOptions): List[String] = {
-    // first, get the operators whose names are passed as single strings
-    val single: List[String] = List("init", "cinit", "next", "view").flatMap(options.get[String]("checker", _))
-    // second, get the operators whose names are passed as lists of strings
-    val multiple: List[String] = List("inv", "temporal").flatMap(options.get[List[String]]("checker", _)).flatten
-    single ++ multiple
-  }
 
   /**
    * Has been an operator declaration produced by the VCGenerator

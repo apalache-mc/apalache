@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.{Pass, PassOptions, ToolModule, WriteablePassOptions}
+import at.forsyte.apalache.infra.passes.{Pass, ToolModule}
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.ParserExceptionAdapter
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import com.google.inject.TypeLiteral
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * A module that consists only of the parsing pass.
@@ -14,11 +15,17 @@ import com.google.inject.TypeLiteral
  * @author
  *   Igor Konnov
  */
-class ParserModule extends ToolModule {
+class ParserModule(options: OptionGroup.HasIO) extends ToolModule(options) {
   override def configure(): Unit = {
-    // the options singleton
-    bind(classOf[PassOptions])
-      .to(classOf[WriteablePassOptions])
+    // Ensure the given `options` will be bound to any OptionGroup interface
+    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
+    // for why we cannot just specify the upper bound.
+    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
+    bind(classOf[OptionGroup.HasInput]).toInstance(options)
+    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
+    bind(classOf[OptionGroup.HasIO])
+      .toInstance(options)
+
     // exception handler
     bind(classOf[ExceptionAdapter])
       .to(classOf[ParserExceptionAdapter])
