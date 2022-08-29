@@ -118,7 +118,7 @@ class ConfigurationPassImpl @Inject() (
     derivedPreds.configure(
         init = init,
         next = next,
-        temporal = options.predicates.temporal,
+        temporalProps = options.predicates.temporalProps,
         invariants = options.predicates.invariants,
         cinit = options.predicates.cinit,
         view = options.predicates.view,
@@ -152,13 +152,14 @@ class ConfigurationPassImpl @Inject() (
     }
 
     derivedPreds.configure(init = init, next = next, invariants = options.predicates.invariants,
-        temporal = options.predicates.temporal, view = options.predicates.view, cinit = options.predicates.cinit)
+        temporalProps = options.predicates.temporalProps, view = options.predicates.view,
+        cinit = options.predicates.cinit)
 
     if (derivedPreds.invariants.nonEmpty) {
       logger.info(s"""  > $basename: found INVARIANTS: ${derivedPreds.invariants.mkString(", ")}""")
     }
-    if (derivedPreds.temporal.nonEmpty) {
-      logger.info(s"""  > $basename: found PROPERTIES: ${derivedPreds.temporal.mkString(", ")}""")
+    if (derivedPreds.temporalProps.nonEmpty) {
+      logger.info(s"""  > $basename: found PROPERTIES: ${derivedPreds.temporalProps.mkString(", ")}""")
     }
 
     val namesOfOverrides =
@@ -185,7 +186,7 @@ class ConfigurationPassImpl @Inject() (
     // Optional predicates
     derivedPreds.cinit.foreach(assertDecl("the constant initialization predicate", _))
     derivedPreds.invariants.foreach(assertDecl("an invariant", _))
-    derivedPreds.temporal.foreach(assertDecl("a temporal property", _))
+    derivedPreds.temporalProps.foreach(assertDecl("a temporal property", _))
   }
 
   /**

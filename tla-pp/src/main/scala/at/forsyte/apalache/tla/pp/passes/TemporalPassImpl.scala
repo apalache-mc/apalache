@@ -31,7 +31,7 @@ class TemporalPassImpl @Inject() (
   override def execute(tlaModule: TlaModule): PassResult = {
     logger.info("  > Rewriting temporal operators...")
 
-    val temporalProps = derivedPreds.temporal
+    val temporalProps = derivedPreds.temporalProps
     val newModule = temporalProps match {
       case List() =>
         logger.info("  > No temporal property specified, nothing to encode")

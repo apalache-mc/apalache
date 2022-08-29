@@ -88,7 +88,7 @@ trait DerivedPredicates {
   def next: String
 
   /** A list of names of predicates that specify temporal properties (may be empty) */
-  def temporal: List[String]
+  def temporalProps: List[String]
 
   /** The name of an operator that produces a state view (works with max-error)  (optional) */
   def view: Option[String]
@@ -102,7 +102,7 @@ trait DerivedPredicates {
       cinit.toList ++
       view.toList ++
       invariants ++
-      temporal
+      temporalProps
   }
 }
 
@@ -128,7 +128,7 @@ object DerivedPredicates {
         cinit: Option[String],
         view: Option[String],
         invariants: List[String],
-        temporal: List[String]): Unit
+        temporalProps: List[String]): Unit
 
     /** The optional cinit predicate currently requires possible override at a later stage of derivation */
     def setCinit(cinit: String): Unit
@@ -144,7 +144,7 @@ object DerivedPredicates {
    */
   class Impl @Inject() extends DerivedPredicates.Configurable {
     var invariants: List[String] = List.empty
-    var temporal: List[String] = List.empty
+    var temporalProps: List[String] = List.empty
     var next: String = ""
     var init: String = ""
     var cinit: Option[String] = None
@@ -156,11 +156,11 @@ object DerivedPredicates {
         cinit: Option[String],
         view: Option[String],
         invariants: List[String],
-        temporal: List[String]): Unit = {
+        temporalProps: List[String]): Unit = {
       this.init = init
       this.next = next
       this.invariants = invariants
-      this.temporal = temporal
+      this.temporalProps = temporalProps
       this.view = view
       this.cinit = cinit
     }

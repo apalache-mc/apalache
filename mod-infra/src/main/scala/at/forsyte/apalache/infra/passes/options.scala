@@ -149,7 +149,7 @@ object Config {
    * @param init
    *   the name of an operator that initializes VARIABLES
    * @param inv
-   *   the name of an invariant operator
+   *   the names of invariant operators
    * @param next
    *   the name of a transition operator
    * @param length
@@ -162,8 +162,8 @@ object Config {
    *   the number of workers for the parallel checker (not currently used)
    * @param smtEncoding
    *   the SMT encoding to use
-   * @param temporal
-   *   the name of a temporal property, e.g. Property
+   * @param temporalProps
+   *   the names of temporal properties
    * @param view
    *   the state view to use for generating counter examples when `maxError` is set
    */
@@ -181,7 +181,7 @@ object Config {
       noDeadlocks: Option[Boolean] = Some(false),
       nworkers: Option[Int] = Some(1),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
-      temporal: Option[List[String]] = None,
+      temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
       extends Config[Checker] {
 
@@ -196,7 +196,7 @@ object Config {
     def initOrDefault = init.getOrElse("Init")
     def nextOrDefault = next.getOrElse("Next")
     def invOrDefault = inv.getOrElse(List.empty)
-    def temporalOrDefault = temporal.getOrElse(List.empty)
+    def temporalPropsOrDefault = temporalProps.getOrElse(List.empty)
   }
 
   /**
@@ -389,7 +389,7 @@ object OptionGroup extends LazyLogging {
       behaviorSpec: BehaviorSpec,
       cinit: Option[String],
       invariants: List[String],
-      temporal: List[String],
+      temporalProps: List[String],
       tlcConfig: Option[(TlcConfig, File)],
       view: Option[String])
       extends OptionGroup
@@ -424,7 +424,7 @@ object OptionGroup extends LazyLogging {
                   behaviorSpec = InitNextSpec(init = checker.initOrDefault, next = checker.nextOrDefault),
                   cinit = checker.cinit,
                   invariants = checker.invOrDefault,
-                  temporal = checker.temporalOrDefault,
+                  temporalProps = checker.temporalPropsOrDefault,
                   tlcConfig = None,
                   view = checker.view,
               ))
@@ -441,13 +441,13 @@ object OptionGroup extends LazyLogging {
                 case spec => spec
               }
 
-            temporal = tryToOverrideFromCli(checker.temporal, tlcConfig.temporalProps, "temporal")
+            temporalProps = tryToOverrideFromCli(checker.temporalProps, tlcConfig.temporalProps, "temporal")
             invariants = tryToOverrideFromCli(checker.inv, tlcConfig.invariants, "inv")
           } yield Predicates(
               behaviorSpec = behaviorSpec,
               cinit = checker.cinit,
               invariants = invariants,
-              temporal = temporal,
+              temporalProps = temporalProps,
               tlcConfig = Some((tlcConfig, fname)),
               view = checker.view,
           )

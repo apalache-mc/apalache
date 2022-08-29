@@ -34,7 +34,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     cfg.copy(
         common = cfg.common.copy(inputfile = Some(file)),
         checker = cfg.checker.copy(config = config, cinit = cinit, init = init, next = next, inv = inv,
-            temporal = temporal, length = length),
+            temporalProps = temporal, length = length),
     )
   }
 }
