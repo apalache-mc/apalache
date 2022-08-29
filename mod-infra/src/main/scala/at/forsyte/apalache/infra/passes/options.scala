@@ -394,6 +394,13 @@ object OptionGroup extends LazyLogging {
       view: Option[String])
       extends OptionGroup
 
+  // The `Predicates` option group loads configurations both from the usual
+  // sorces indicated by extending the `Configurable` class AND from TLC `.cfg`
+  // files, if such a file is specified in the usual configs. As a result, its
+  // configuration logic is much more complex than that of any other option group.
+  //
+  // Some of this complexity may be reduced in the future by figuring out how we
+  // can wire the TLC `.cfg` file into the existing configuration system.
   object Predicates extends Configurable[Config.Checker, Predicates] {
 
     // Enables uniform reporting of overriden configuration values
@@ -403,6 +410,7 @@ object OptionGroup extends LazyLogging {
       def empty: T
     }
 
+    // Implements required operations on the types of overrideable values
     private object EmptyShowable {
       implicit object stringList extends EmptyShowable[List[String]] {
         def isEmpty(t: List[String]) = t.isEmpty
@@ -418,8 +426,12 @@ object OptionGroup extends LazyLogging {
     }
 
     def apply(checker: Config.Checker): Try[Predicates] = {
+      // To derive the `Predicates` options group, we may need to load a TLC
+      // `.cfg` file such a file was specified by the input configuration.
       checker.config match {
         case None =>
+          // No TLC config was given, so derive all the predicate options from
+          // the input configuration.
           Try(Predicates(
                   behaviorSpec = InitNextSpec(init = checker.initOrDefault, next = checker.nextOrDefault),
                   cinit = checker.cinit,
@@ -430,15 +442,20 @@ object OptionGroup extends LazyLogging {
               ))
 
         case Some(fname) =>
+          // A TLC config was given, so we need to try loading it, and determine
+          // whether to use it's values or if they should be overridden by values
+          // from the input configuration.
           for {
             tlcConfig <- Try(loadTLCCfg(fname))
             behaviorSpec =
               tlcConfig.behaviorSpec match {
                 case InitNextSpec(cfgInit, cfgNext) =>
+                  // Init and Next predicates were specified in the TLC config
+                  // but we may need to override them with CLI or apalache.cfg config values
                   val init = tryToOverrideFromCli(checker.init, cfgInit, "init")
                   val next = tryToOverrideFromCli(checker.next, cfgNext, "next")
                   InitNextSpec(init = init, next = next)
-                case spec => spec
+                case spec => spec // Any other behavior spec from the TLC config we can use as is
               }
 
             temporalProps = tryToOverrideFromCli(checker.temporalProps, tlcConfig.temporalProps, "temporal")
@@ -473,7 +490,9 @@ object OptionGroup extends LazyLogging {
       }
     }
 
-    // Overrdie TLCConfig from CLI/Config args, reporting the resulting value
+    // Override TLCConfig values from CLI/Config args, if the latter are given.
+    // Also report the resulting value and source from which the configuration
+    // ultimately loaded.
     private def tryToOverrideFromCli[T](
         cliValue: Option[T],
         tlcConfigValue: T,
