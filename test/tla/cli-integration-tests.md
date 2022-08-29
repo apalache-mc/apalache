@@ -1891,8 +1891,10 @@ EXITCODE: OK
 
 When a configuration file does not exist, the tool should error.
 
-NOTE: We truncate the output to avoid printing the file, making the test
-indifferent to the execution environment (including in docker).
+NOTE: We truncate the output to avoid printing the file name, making the test
+indifferent to the execution environment (including in docker). This is required
+since the error message includes an absolute file name, and this differs
+depending on which computer it is running on.
 
 ```sh
 $ apalache-mc check --inv=Inv --config=ThisConfigDoesNotExist.cfg ConfigReplacements.tla 2>&1 | grep -o -e "Specified TLC config file not found" -e "EXITCODE: ERROR (255)"
