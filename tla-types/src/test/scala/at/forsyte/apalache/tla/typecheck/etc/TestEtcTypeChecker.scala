@@ -903,7 +903,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     // Test case for: https://github.com/informalsystems/apalache/issues/2102
 
     // let @type: (a, b) => Bool;
-    //   F(x, y) == x = y in TRUE
+    //   LET F(x, y) == x = y in TRUE
     //
     // The principal type of F is (c, c) => Bool, which is more specific than (a, b) => Bool.
     val eq = parser("(c, c) => Bool")
