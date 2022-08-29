@@ -17,6 +17,7 @@ on:
 
 jobs:
   prepare-release:
+    if: github.repository_owner == 'informalsystems'
     env:
       RELEASE_VERSION: ${{ github.event.inputs.release_version }}
       # NOTE: We must not use the default GITHUB_TOKEN for auth here,
