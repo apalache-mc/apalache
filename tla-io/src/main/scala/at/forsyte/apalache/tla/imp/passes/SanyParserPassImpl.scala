@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -16,6 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
 import java.io.File
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import scala.io.Source
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 /**
  * Parsing TLA+ code with SANY.
@@ -24,7 +24,7 @@ import scala.io.Source
  *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
-    val options: PassOptions,
+    val options: OptionGroup.HasIO,
     val sourceStore: SourceStore,
     val annotationStore: AnnotationStore,
     val writerFactory: TlaWriterFactory)
@@ -84,10 +84,9 @@ class SanyParserPassImpl @Inject() (
   }
 
   override def execute(module: TlaModule): PassResult = {
-    val source = options.getOrError[SourceOption]("parser", "source")
     for {
       rootModule <-
-        source match {
+        options.input.source match {
           case SourceOption.StringSource(content, aux) =>
             loadFromTlaString(content, aux)
           case SourceOption.FileSource(file) =>

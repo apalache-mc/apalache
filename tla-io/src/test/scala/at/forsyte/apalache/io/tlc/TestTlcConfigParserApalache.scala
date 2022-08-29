@@ -1,6 +1,6 @@
-package at.forsyte.apalache.io.tlc
+package at.forsyte.apalache.infra.tlc
 
-import at.forsyte.apalache.io.tlc.config.{
+import at.forsyte.apalache.infra.tlc.config.{
   ConfigBoolValue, ConfigIntValue, ConfigModelValue, ConfigSetValue, ConfigStrValue, InitNextSpec, TemporalSpec,
   TlcConfigParseError,
 }

@@ -11,7 +11,8 @@ import org.backuity.clist._
 import org.backuity.clist.util.Read
 import scala.jdk.CollectionConverters._
 import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.infra.passes.options.OptionGroup
+import org.apache.commons.io.FilenameUtils
 
 /**
  * This command initiates the 'check' command line.
@@ -21,8 +22,6 @@ import at.forsyte.apalache.io.ConfigurationError
  */
 class CheckCmd(name: String = "check", description: String = "Check a TLA+ specification")
     extends AbstractCheckerCmd(name, description) {
-
-  val executor = Executor(new CheckerModule)
 
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =
@@ -70,7 +69,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
-    cfg.copy(
+    val newCfg = cfg.copy(
         checker = cfg.checker.copy(
             nworkers = nworkers,
             algo = algo,
@@ -85,31 +84,36 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
             inferpoly = Some(true)
         ),
     )
+
+    cfg.common.inputfile.foreach { file =>
+      if (newCfg.checker.config.isEmpty) {
+        // The older versions of apalache were loading a TLC config file of the same basename as the spec.
+        // We have flipped this behavior in version 0.25.0.
+        // Hence, warn the user that their config is not loaded by default.
+        val stem = FilenameUtils.removeExtension(file.getName())
+        val defaultConfig = new File(stem + ".cfg")
+        if (defaultConfig.exists()) {
+          val msg =
+            s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
+          logger.info(msg)
+        }
+      }
+    }
+
+    newCfg
   }
 
   def run() = {
-    // TODO: rm once OptionProvider is wired in
-    val cfg = configuration.left.map(err => new ConfigurationError(err)).toTry.get
+    val cfg = configuration.get
+    val options = OptionGroup.WithCheckerPreds(cfg).get
+    val executor = Executor(new CheckerModule(options))
 
-    val tuning = cfg.checker.tuning.get
+    val tuning = options.checker.tuning
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.passOptions.set("general.tuning", tuning)
-    executor.passOptions.set("checker.nworkers", cfg.checker.nworkers.get)
-    executor.passOptions.set("checker.discardDisabled", cfg.checker.discardDisabled.get)
-    executor.passOptions.set("checker.noDeadlocks", cfg.checker.noDeadlocks.get)
-    executor.passOptions.set("checker.algo", cfg.checker.algo.get)
-    executor.passOptions.set("checker.smt-encoding", cfg.checker.smtEncoding.get)
-    executor.passOptions.set("checker.maxError", cfg.checker.maxError.get)
-    cfg.checker.view.foreach(executor.passOptions.set("checker.view", _))
-    // for now, enable polymorphic types. We probably want to disable this option for the type checker
-    executor.passOptions.set("typechecker.inferPoly", cfg.typechecker.inferpoly.get)
-    setCommonOptions()
     executor.run() match {
-      case Right(_) =>
-        Right("Checker reports no error up to computation length " + executor.passOptions.getOrError[Int]("checker",
-            "length"))
+      case Right(_)   => Right(s"Checker reports no error up to computation length ${options.checker.length}")
       case Left(code) => Left(code, "Checker has found an error")
     }
   }

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.io.tlc.config._
+import at.forsyte.apalache.infra.tlc.config._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._

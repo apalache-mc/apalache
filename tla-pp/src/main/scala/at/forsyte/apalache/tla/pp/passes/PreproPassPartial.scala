@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaModule, TlaOperDecl, UID}
@@ -13,10 +12,13 @@ import at.forsyte.apalache.tla.lir.transformations.{
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   IncrementalRenaming, ModuleByExTransformer, PrimePropagation,
 }
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 
 abstract class PreproPassPartial(
-    val options: PassOptions,
+    val options: OptionGroup.HasChecker,
+    derivedPreds: DerivedPredicates,
     renaming: IncrementalRenaming,
     tracker: TransformationTracker,
     sourceStore: SourceStore,
@@ -52,7 +54,7 @@ abstract class PreproPassPartial(
 
   protected def checkLocations(module: TlaModule): Unit = {
     // when --debug is enabled, check that all identifiers are assigned a location
-    if (options.getOrElse[Boolean]("general", "debug", false)) {
+    if (options.common.debug) {
       val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
       module.operDeclarations.foreach(sourceLocator.checkConsistency)
     }
@@ -85,7 +87,7 @@ abstract class PreproPassPartial(
   }
 
   protected def createModuleTransformerForPrimePropagation(varSet: Set[String]): ModuleByExTransformer = {
-    val cinitName = options.getOrElse[String]("checker", "cinit", "CInit") + "Primed"
+    val cinitName = derivedPreds.cinit.getOrElse("CInit") + "Primed" // TODO Why does this default?
     val includeAllButConstInit: TlaDecl => Boolean = {
       case TlaOperDecl(name, _, _) => cinitName != name
       case _                       => true
