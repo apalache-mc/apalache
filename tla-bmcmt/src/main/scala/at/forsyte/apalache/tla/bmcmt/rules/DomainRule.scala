@@ -17,8 +17,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaFunOper
  *   Igor Konnov
  */
 class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) extends RewritingRule {
-  private val proto = new ProtoSeqOps(rewriter)
-  private val recordOps = new RecordAndVariantOps(rewriter)
+  protected val proto = new ProtoSeqOps(rewriter)
+  protected val recordOps = new RecordAndVariantOps(rewriter)
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
