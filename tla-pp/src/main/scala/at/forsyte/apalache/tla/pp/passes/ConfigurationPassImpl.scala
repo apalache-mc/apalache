@@ -112,8 +112,9 @@ class ConfigurationPassImpl @Inject() (
   private def setDerivedPredicates(): Unit = {
     val (init, next) = options.predicates.behaviorSpec match {
       case InitNextSpec(init, next) => (init, next)
-      // Should we change data structure to make this state unrepresentable?
-      case _ => throw new Exception("TODO: should be impossible, since this arises only with no TLCC config")
+      // Any other case should be impossible, since we only call this function if no TLC config was provided
+      // TODO: Should we change data structure to make this state unrepresentable?
+      case _ => throw new Exception("Impossible: TLC config specbehavior when no TLC config was detected")
     }
     derivedPreds.configure(
         init = init,
