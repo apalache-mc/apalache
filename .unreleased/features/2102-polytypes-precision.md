@@ -1,2 +1,2 @@
 From now on, the type checker reports an error, when the inferred type
-is less specific than the type annotation, see #2109.
+is more specific than the annotated type, see #2109.

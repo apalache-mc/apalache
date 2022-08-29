@@ -905,7 +905,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     // let @type: (a, b) => Bool;
     //   F(x, y) == x = y in TRUE
     //
-    // The principal type of F is (c, c) => Bool, which is more concrete than (a, b) => Bool.
+    // The principal type of F is (c, c) => Bool, which is more specific than (a, b) => Bool.
     val eq = parser("(c, c) => Bool")
     val x = mkUniqName("x")
     val y = mkUniqName("y")
