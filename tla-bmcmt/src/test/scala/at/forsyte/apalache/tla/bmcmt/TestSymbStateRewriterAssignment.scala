@@ -11,10 +11,19 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
  */
 trait TestSymbStateRewriterAssignment extends RewriterBase {
   private val types =
-    Map("b" -> BoolT1, "B" -> SetT1(BoolT1), "i" -> IntT1, "I" -> SetT1(IntT1), "II" -> SetT1(SetT1(IntT1)),
-        "b_to_i" -> FunT1(BoolT1, IntT1), "b_TO_i" -> SetT1(FunT1(BoolT1, IntT1)), "i_to_b" -> FunT1(IntT1, BoolT1),
-        "i_to_i" -> FunT1(IntT1, IntT1), "i_TO_i" -> SetT1(FunT1(IntT1, IntT1)),
-        "ibI" -> TupT1(IntT1, BoolT1, SetT1(IntT1)))
+    Map(
+        "b" -> BoolT1,
+        "B" -> SetT1(BoolT1),
+        "i" -> IntT1,
+        "I" -> SetT1(IntT1),
+        "II" -> SetT1(SetT1(IntT1)),
+        "b_to_i" -> FunT1(BoolT1, IntT1),
+        "b_TO_i" -> SetT1(FunT1(BoolT1, IntT1)),
+        "i_to_b" -> FunT1(IntT1, BoolT1),
+        "i_to_i" -> FunT1(IntT1, IntT1),
+        "i_TO_i" -> SetT1(FunT1(IntT1, IntT1)),
+        "ibI" -> TupT1(IntT1, BoolT1, SetT1(IntT1)),
+    )
   private val set12: TlaEx = enumSet(int(1), int(2)).typed(SetT1(IntT1))
   private val x_prime: TlaEx = prime(name("x") ? "i").typed(types, "i")
   private val y_prime: TlaEx = prime(name("y") ? "i").typed(types, "i")

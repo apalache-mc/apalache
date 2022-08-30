@@ -37,8 +37,14 @@ class RuleStatLocator {
       val stats = ruleStats.values.toSeq.sortWith(_.nCalls > _.nCalls)
       for (rs <- stats) {
         writer.println("%-20s %9d %9d %9d %9d %9d"
-              .format(rs.ruleName, rs.nCalls, rs.nCellsSelf, rs.nSmtConstsSelf, rs.nSmtAssertsSelf,
-                  rs.smtAssertsSizeAvg))
+              .format(
+                  rs.ruleName,
+                  rs.nCalls,
+                  rs.nCellsSelf,
+                  rs.nSmtConstsSelf,
+                  rs.nSmtAssertsSelf,
+                  rs.smtAssertsSizeAvg,
+              ))
       }
     }
 }

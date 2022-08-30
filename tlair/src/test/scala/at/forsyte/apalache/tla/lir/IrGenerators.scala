@@ -67,40 +67,92 @@ trait IrGenerators extends TlaType1Gen {
   /**
    * Propositional operators and quantifiers, excluding unbounded quantifiers (`TlaBoolOper._`)
    */
-  val logicOperators = List(TlaBoolOper.and, TlaBoolOper.or, TlaBoolOper.not, TlaBoolOper.equiv, TlaBoolOper.implies,
-      TlaBoolOper.exists, TlaBoolOper.forall)
+  val logicOperators = List(
+      TlaBoolOper.and,
+      TlaBoolOper.or,
+      TlaBoolOper.not,
+      TlaBoolOper.equiv,
+      TlaBoolOper.implies,
+      TlaBoolOper.exists,
+      TlaBoolOper.forall,
+  )
 
   /**
    * Arithmetic operators (`TlaArithOper._`)
    */
-  val arithOperators = List(TlaArithOper.div, TlaArithOper.dotdot, TlaArithOper.exp, TlaArithOper.ge, TlaArithOper.gt,
-      TlaArithOper.le, TlaArithOper.lt, TlaArithOper.minus, TlaArithOper.mod, TlaArithOper.mult, TlaArithOper.plus,
-      TlaArithOper.uminus)
+  val arithOperators = List(
+      TlaArithOper.div,
+      TlaArithOper.dotdot,
+      TlaArithOper.exp,
+      TlaArithOper.ge,
+      TlaArithOper.gt,
+      TlaArithOper.le,
+      TlaArithOper.lt,
+      TlaArithOper.minus,
+      TlaArithOper.mod,
+      TlaArithOper.mult,
+      TlaArithOper.plus,
+      TlaArithOper.uminus,
+  )
 
   /**
    * Set operators (`TlaSetOper._`)
    */
-  val setOperators = List(TlaSetOper.cap, TlaSetOper.cup, TlaSetOper.enumSet, TlaSetOper.filter, TlaSetOper.funSet,
-      TlaSetOper.in, TlaSetOper.notin, TlaSetOper.map, TlaSetOper.powerset, TlaSetOper.recSet, TlaSetOper.seqSet,
-      TlaSetOper.setminus, TlaSetOper.subseteq, TlaSetOper.times, TlaSetOper.union)
+  val setOperators = List(
+      TlaSetOper.cap,
+      TlaSetOper.cup,
+      TlaSetOper.enumSet,
+      TlaSetOper.filter,
+      TlaSetOper.funSet,
+      TlaSetOper.in,
+      TlaSetOper.notin,
+      TlaSetOper.map,
+      TlaSetOper.powerset,
+      TlaSetOper.recSet,
+      TlaSetOper.seqSet,
+      TlaSetOper.setminus,
+      TlaSetOper.subseteq,
+      TlaSetOper.times,
+      TlaSetOper.union,
+  )
 
   /**
    * Function operators (`TlaFunOper._`)
    */
-  val functionOperators = List(TlaFunOper.rec, TlaFunOper.tuple, TlaFunOper.app, TlaFunOper.domain, TlaFunOper.funDef,
-      TlaFunOper.recFunDef, TlaFunOper.recFunRef, TlaFunOper.except)
+  val functionOperators = List(
+      TlaFunOper.rec,
+      TlaFunOper.tuple,
+      TlaFunOper.app,
+      TlaFunOper.domain,
+      TlaFunOper.funDef,
+      TlaFunOper.recFunDef,
+      TlaFunOper.recFunRef,
+      TlaFunOper.except,
+  )
 
   /**
    * Action operators (`TlaActionOper._`)
    */
-  val actionOperators = List(TlaActionOper.prime, TlaActionOper.enabled, TlaActionOper.stutter, TlaActionOper.nostutter,
-      TlaActionOper.unchanged, TlaActionOper.composition)
+  val actionOperators = List(
+      TlaActionOper.prime,
+      TlaActionOper.enabled,
+      TlaActionOper.stutter,
+      TlaActionOper.nostutter,
+      TlaActionOper.unchanged,
+      TlaActionOper.composition,
+  )
 
   /**
    * Temporal operators, excluding `\AA` and `\EE`, as those are not useful to us (`TlaTempOper._`)
    */
-  val temporalOperators = List(TlaTempOper.box, TlaTempOper.diamond, TlaTempOper.leadsTo, TlaTempOper.guarantees,
-      TlaTempOper.strongFairness, TlaTempOper.weakFairness)
+  val temporalOperators = List(
+      TlaTempOper.box,
+      TlaTempOper.diamond,
+      TlaTempOper.leadsTo,
+      TlaTempOper.guarantees,
+      TlaTempOper.strongFairness,
+      TlaTempOper.weakFairness,
+  )
 
   /**
    * Generates a type tag, either typed or untyped.
@@ -153,7 +205,14 @@ trait IrGenerators extends TlaType1Gen {
    *   a generator of `ValEx(_)`.
    */
   def genValEx: Gen[ValEx] =
-    oneOf(genInt, genBool, genStr, const(ValEx(TlaBoolSet)), const(ValEx(TlaIntSet)), const(ValEx(TlaNatSet)))
+    oneOf(
+        genInt,
+        genBool,
+        genStr,
+        const(ValEx(TlaBoolSet)),
+        const(ValEx(TlaIntSet)),
+        const(ValEx(TlaNatSet)),
+    )
 
   /**
    * Generate a name expression.
@@ -241,8 +300,13 @@ trait IrGenerators extends TlaType1Gen {
             if (ctx.nonEmpty) {
               // a value, a name,
               // an application of a user-defined operator in the context, an application of a built-in operator
-              oneOf(genValEx, genNameEx(ctx), genOperApply(genTlaEx(builtInOpers))(ctx),
-                  genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withTag(tt)))
+              oneOf(
+                  genValEx,
+                  genNameEx(ctx),
+                  genOperApply(genTlaEx(builtInOpers))(ctx),
+                  genLetInEx(genTlaEx(builtInOpers))(ctx),
+                  const(OperEx(oper, args: _*).withTag(tt)),
+              )
             } else {
               // as above but no user-defined operators
               oneOf(genValEx, genLetInEx(genTlaEx(builtInOpers))(ctx), const(OperEx(oper, args: _*).withTag(tt)))

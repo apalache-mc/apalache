@@ -40,23 +40,33 @@ class TestModule extends AnyFunSuite {
      * \in Data
      */
     new TlaOperDecl("ABInit", List(),
-        OperEx(TlaBoolOper.and, OperEx(TlaOper.eq, NameEx("msgQ"), emptySeq),
-            OperEx(TlaOper.eq, NameEx("ackQ"), emptySeq), OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet),
-            OperEx(TlaOper.eq, NameEx("sAck"), NameEx("sBit")), OperEx(TlaOper.eq, NameEx("rBit"), NameEx("sBit")),
-            OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet), OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet)))
+        OperEx(
+            TlaBoolOper.and,
+            OperEx(TlaOper.eq, NameEx("msgQ"), emptySeq),
+            OperEx(TlaOper.eq, NameEx("ackQ"), emptySeq),
+            OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet),
+            OperEx(TlaOper.eq, NameEx("sAck"), NameEx("sBit")),
+            OperEx(TlaOper.eq, NameEx("rBit"), NameEx("sBit")),
+            OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet),
+            OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet),
+        ))
 
     /**
      * ABTypeInv == /\ msgQ \in Seq( {0,1} \times Data ) /\ ackQ \in Seq( {0,1} ) /\ sBit \in {0,1} /\ sAck \in {0,1} /\
      * rBit \in {0,1} /\ sent \in Data /\ rcvd \in Data
      */
     new TlaOperDecl("ABTypeInv", List(),
-        OperEx(TlaBoolOper.and,
+        OperEx(
+            TlaBoolOper.and,
             OperEx(TlaSetOper.in, NameEx("msgQ"),
                 OperEx(TlaSetOper.seqSet, OperEx(TlaSetOper.times, ZeroOneSet, NameEx("Data")))),
             OperEx(TlaSetOper.in, NameEx("ackQ"), OperEx(TlaSetOper.seqSet, ZeroOneSet)),
-            OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet), OperEx(TlaSetOper.in, NameEx("sAck"), ZeroOneSet),
-            OperEx(TlaSetOper.in, NameEx("rBit"), ZeroOneSet), OperEx(TlaSetOper.in, NameEx("sent"), NameEx("Data")),
-            OperEx(TlaSetOper.in, NameEx("rcvd"), NameEx("Data"))))
+            OperEx(TlaSetOper.in, NameEx("sBit"), ZeroOneSet),
+            OperEx(TlaSetOper.in, NameEx("sAck"), ZeroOneSet),
+            OperEx(TlaSetOper.in, NameEx("rBit"), ZeroOneSet),
+            OperEx(TlaSetOper.in, NameEx("sent"), NameEx("Data")),
+            OperEx(TlaSetOper.in, NameEx("rcvd"), NameEx("Data")),
+        ))
 
     /**
      * ---------------------------------------------------------------------------------------------------------------
@@ -89,8 +99,15 @@ class TestModule extends AnyFunSuite {
             OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx("msgQ")),
                 OperEx(TlaSeqOper.append, NameEx("msgQ"), OperEx(TlaFunOper.tuple, NameEx("sBit"), NameEx("sent")))),
             OperEx(TlaActionOper.unchanged,
-                OperEx(TlaFunOper.tuple, NameEx("ackQ"), NameEx("sBit"), NameEx("sAck"), NameEx("rBit"), NameEx("sent"),
-                    NameEx("rcvd")))))
+                OperEx(
+                    TlaFunOper.tuple,
+                    NameEx("ackQ"),
+                    NameEx("sBit"),
+                    NameEx("sAck"),
+                    NameEx("rBit"),
+                    NameEx("sent"),
+                    NameEx("rcvd"),
+                ))))
 
     /**
      * RcvMsg == /\ msgQ # <<>> /\ msgQ' = Tail( msgQ ) /\ rBit' = Head( msgQ ) [ 1 ] /\ rcvd' = Head( msgQ ) [ 2 ] /\
@@ -117,20 +134,36 @@ class TestModule extends AnyFunSuite {
             OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx("ackQ")),
                 OperEx(TlaSeqOper.append, NameEx("ackQ"), NameEx("rBit"))),
             OperEx(TlaActionOper.unchanged,
-                OperEx(TlaFunOper.tuple, NameEx("msgQ"), NameEx("sBit"), NameEx("sAck"), NameEx("rBit"), NameEx("sent"),
-                    NameEx("rcvd")))))
+                OperEx(
+                    TlaFunOper.tuple,
+                    NameEx("msgQ"),
+                    NameEx("sBit"),
+                    NameEx("sAck"),
+                    NameEx("rBit"),
+                    NameEx("sent"),
+                    NameEx("rcvd"),
+                ))))
 
     /**
      * RcvAck == /\ ackQ # <<>> /\ ackQ' = Tail( ackQ ) /\ sAck' = Head( ackQ ) /\ UNCHANGED << msgQ, sBit, rBit, sent,
      * rcvd >>
      */
     new TlaOperDecl("RcvAck", List(),
-        OperEx(TlaBoolOper.and, OperEx(TlaOper.ne, NameEx("ackQ"), emptySeq),
+        OperEx(
+            TlaBoolOper.and,
+            OperEx(TlaOper.ne, NameEx("ackQ"), emptySeq),
             OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx("ackQ")), OperEx(TlaSeqOper.tail, NameEx("ackQ"))),
             OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx("sAck")), OperEx(TlaSeqOper.head, NameEx("ackQ"))),
             OperEx(TlaActionOper.unchanged,
-                OperEx(TlaFunOper.tuple, NameEx("msgQ"), NameEx("sBit"), NameEx("rBit"), NameEx("sent"),
-                    NameEx("rcvd")))))
+                OperEx(
+                    TlaFunOper.tuple,
+                    NameEx("msgQ"),
+                    NameEx("sBit"),
+                    NameEx("rBit"),
+                    NameEx("sent"),
+                    NameEx("rcvd"),
+                )),
+        ))
 
     /**
      * Lose( q ) == /\ q # <<>> /\ \exists i \in 1 .. Len( q ) : q' = [ j \in 1 .. ( Len( q ) - 1 ) |-> IF j < i THEN q[
@@ -166,10 +199,17 @@ class TestModule extends AnyFunSuite {
      * ABNext == \/ \exists d \in Data : SndNewValue(d) \/ ReSndMsg \/ RcvMsg \/ SndAck \/ RcvAck \/ LoseMsg \/ LoseAck
      */
     new TlaOperDecl("ABNext", List(),
-        OperEx(TlaBoolOper.or,
+        OperEx(
+            TlaBoolOper.or,
             OperEx(TlaBoolOper.exists, NameEx("d"), NameEx("Data"),
-                OperEx(TlaOper.apply, NameEx("SndNewValue"), NameEx("d"))), NameEx("ReSndMsg"), NameEx("RcvMsg"),
-            NameEx("SndAck"), NameEx("RcvAck"), NameEx("LoseMsg"), NameEx("LoseAck")))
+                OperEx(TlaOper.apply, NameEx("SndNewValue"), NameEx("d"))),
+            NameEx("ReSndMsg"),
+            NameEx("RcvMsg"),
+            NameEx("SndAck"),
+            NameEx("RcvAck"),
+            NameEx("LoseMsg"),
+            NameEx("LoseAck"),
+        ))
 
     /**
      * ---------------------------------------------------------------------------------------------------------------
@@ -180,17 +220,28 @@ class TestModule extends AnyFunSuite {
      */
     new TlaOperDecl("abvars", // NOTE: Is this really an operator? Seems contrived.
         List(),
-        OperEx(TlaFunOper.tuple, NameEx("msgQ"), NameEx("ackQ"), NameEx("sBit"), NameEx("sAck"), NameEx("rBit"),
-            NameEx("sent"), NameEx("rcvd")))
+        OperEx(
+            TlaFunOper.tuple,
+            NameEx("msgQ"),
+            NameEx("ackQ"),
+            NameEx("sBit"),
+            NameEx("sAck"),
+            NameEx("rBit"),
+            NameEx("sent"),
+            NameEx("rcvd"),
+        ))
 
     /**
      * ABFairness == /\ WF_abvars( ReSndMsg ) /\ WF_abvars( SndAck ) /\ SF_abvars( RcvMsg ) /\ SF_abvars( RcvAck )
      */
     new TlaOperDecl("AbFairness", List(),
-        OperEx(TlaBoolOper.and, OperEx(TlaTempOper.weakFairness, NameEx("abvars"), NameEx("ReSndMsg")),
+        OperEx(
+            TlaBoolOper.and,
+            OperEx(TlaTempOper.weakFairness, NameEx("abvars"), NameEx("ReSndMsg")),
             OperEx(TlaTempOper.weakFairness, NameEx("abvars"), NameEx("SndAck")),
             OperEx(TlaTempOper.strongFairness, NameEx("abvars"), NameEx("RcvMsg")),
-            OperEx(TlaTempOper.strongFairness, NameEx("abvars"), NameEx("RcvAck"))))
+            OperEx(TlaTempOper.strongFairness, NameEx("abvars"), NameEx("RcvAck")),
+        ))
 
     /**
      * ---------------------------------------------------------------------------------------------------------------

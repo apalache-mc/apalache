@@ -207,6 +207,13 @@ case class TlcConfig(
 
 object TlcConfig {
   val empty: TlcConfig =
-    TlcConfig(constAssignments = Map(), constReplacements = Map(), stateConstraints = List.empty,
-        actionConstraints = List.empty, invariants = List.empty, temporalProps = List.empty, behaviorSpec = NullSpec())
+    TlcConfig(
+        constAssignments = Map(),
+        constReplacements = Map(),
+        stateConstraints = List.empty,
+        actionConstraints = List.empty,
+        invariants = List.empty,
+        temporalProps = List.empty,
+        behaviorSpec = NullSpec(),
+    )
 }

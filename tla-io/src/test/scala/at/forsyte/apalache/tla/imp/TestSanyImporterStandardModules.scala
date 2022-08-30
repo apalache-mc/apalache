@@ -604,8 +604,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         OperEx(
             VariantOper.variant,
             ValEx(TlaStr("T1a")),
-            OperEx(TlaFunOper.rec, ValEx(TlaStr("val")), ValEx(TlaInt(3)), ValEx(TlaStr("found")),
-                ValEx(TlaBool(false))),
+            OperEx(
+                TlaFunOper.rec,
+                ValEx(TlaStr("val")),
+                ValEx(TlaInt(3)),
+                ValEx(TlaStr("found")),
+                ValEx(TlaBool(false)),
+            ),
         ),
     )
 
@@ -652,8 +657,13 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
             VariantOper.variantGetOrElse,
             ValEx(TlaStr("T1a")),
             NameEx("var"),
-            OperEx(TlaFunOper.rec, ValEx(TlaStr("val")), ValEx(TlaInt(0)), ValEx(TlaStr("found")),
-                ValEx(TlaBool(false))),
+            OperEx(
+                TlaFunOper.rec,
+                ValEx(TlaStr("val")),
+                ValEx(TlaInt(0)),
+                ValEx(TlaStr("found")),
+                ValEx(TlaBool(false)),
+            ),
         ),
         OperParam("var"),
     )

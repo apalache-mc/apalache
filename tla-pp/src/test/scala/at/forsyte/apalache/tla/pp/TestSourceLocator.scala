@@ -25,9 +25,17 @@ class TestSourceLocator extends AnyFunSuite {
   private val parser = DefaultType1Parser
 
   val types =
-    Map("i" -> parser("Int"), "b" -> parser("Bool"), "iiTOi" -> parser("(Int, Int) => Int"),
-        "iTOi" -> parser("Int => Int"), "X" -> parser("Int => Int"), "D2" -> parser("(Int => Int, Int) => Int"),
-        "TOi" -> parser("() => Int"), "rx" -> parser("[x: Int]"), "ii" -> parser("<<Int, Int>>"))
+    Map(
+        "i" -> parser("Int"),
+        "b" -> parser("Bool"),
+        "iiTOi" -> parser("(Int, Int) => Int"),
+        "iTOi" -> parser("Int => Int"),
+        "X" -> parser("Int => Int"),
+        "D2" -> parser("(Int => Int, Int) => Int"),
+        "TOi" -> parser("() => Int"),
+        "rx" -> parser("[x: Int]"),
+        "ii" -> parser("<<Int, Int>>"),
+    )
 
   // plus(a, b) == a + b
   val decl1: TlaOperDecl =

@@ -485,8 +485,14 @@ class SymbStateRewriterImpl(
    *   the snapshot
    */
   override def snapshot(): SymbStateRewriterSnapshot = {
-    new SymbStateRewriterSnapshot(intValueCache.snapshot(), intRangeCache.snapshot(), modelValueCache.snapshot(),
-        defaultValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
+    new SymbStateRewriterSnapshot(
+        intValueCache.snapshot(),
+        intRangeCache.snapshot(),
+        modelValueCache.snapshot(),
+        defaultValueCache.snapshot(),
+        recordDomainCache.snapshot(),
+        exprCache.snapshot(),
+    )
   }
 
   /**

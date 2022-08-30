@@ -12,8 +12,14 @@ import org.scalatest.funsuite.AnyFunSuite
 @RunWith(classOf[JUnitRunner])
 class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
   private var marker = new ExpansionMarker(TrackerWithListeners())
-  val types = Map("S" -> SetT1(IntT1), "PS" -> SetT1(SetT1(IntT1)), "i" -> IntT1, "b" -> BoolT1,
-      "f" -> FunT1(IntT1, IntT1), "FS" -> SetT1(FunT1(IntT1, IntT1)))
+  val types = Map(
+      "S" -> SetT1(IntT1),
+      "PS" -> SetT1(SetT1(IntT1)),
+      "i" -> IntT1,
+      "b" -> BoolT1,
+      "f" -> FunT1(IntT1, IntT1),
+      "FS" -> SetT1(FunT1(IntT1, IntT1)),
+  )
 
   override def beforeEach(): Unit = {
     marker = new ExpansionMarker(TrackerWithListeners())
