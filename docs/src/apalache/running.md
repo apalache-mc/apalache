@@ -38,7 +38,9 @@ The model checker can be run as follows:
 
 ```bash
 $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--temporal=TemporalProp] [--algo=(incremental|offline)] \
+    [--next=Next] [--inv=Inv1,...,Invn] [--length=10] \
+    [--temporal=TemporalProp1,...,TemporalPropn] \
+    [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-encoding=(oopsla19|arrays)] \
@@ -57,9 +59,10 @@ The arguments are as follows:
     - `--init` specifies the initialization predicate, *`Init` by default*
     - `--next` specifies the transition predicate, *`Next` by default*
     - `--cinit` specifies the constant initialization predicate, *optional*
-    - `--inv` specifies the invariant to check, *optional*
+    - `--inv` specifies the invariants to check, as a comma separated list, *optional*
     - `--length` specifies the maximal number of `Next` steps, *10 by default*
-    - `--temporal` specifies the temporal property to check, *optional*
+    - `--temporal` specifies the temporal properties to check, as a comma
+      separated list, *optional*
 
 * Advanced parameters:
     - `--algo` lets you to choose the search algorithm: `incremental` is using the incremental SMT solver, `offline` is
