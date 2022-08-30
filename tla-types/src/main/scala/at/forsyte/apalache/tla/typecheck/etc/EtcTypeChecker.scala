@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir
-import at.forsyte.apalache.tla.lir.{OperT1, SetT1, TlaType1, TlaType1Scheme, TypingException, VarT1}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 import scalaz.unused
@@ -73,21 +73,20 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
       case EtcTypeDecl(name: String, declaredType: TlaType1, scopedEx: EtcExpr) =>
         // An inline type annotation.
         // Just propagate the annotated name down the tree. It will be used in a let definition.
-        // All free type variables in the type are considered to be universally quantified,
+        // All free type variables in the type are considered to be universally quantified.
         val polyVars = declaredType.usedNames
         val extCtx = new TypeContext(ctx.types + (name -> TlaType1Scheme(declaredType, polyVars)))
         if (polyVars.isEmpty) {
-          // A non-generic type.
-          // For example, it can be a type of a constant, a state variable, or of a concrete operator.
-          // To register the type with the type listener, add the trivial constraint: a = declaredType.
-          // Importantly, we do not add the callback for parametric types, as their quantified variables may change
-          // in the course of type inference.
-          // This is sound, because parametric types are reported in the case of `EtcLet`.
-          // Yet, we have to report the concrete types here, as they may never appear again down the tree.
+          // For a non-polymorphic type, report it, as it may be the only place, where it is reported.
+          // This is relevant for VARIABLES and CONSTANTS.
+          // Add a trivial constraint: a = declaredType. We need it to place a callback.
           val fresh = varPool.fresh
-          val clause = EqClause(fresh, declaredType)
-            .setOnTypeFound(tt => onTypeFound(ex.sourceRef, tt))
-          solver.addConstraint(clause)
+          val watchClause =
+            EqClause(fresh, declaredType)
+              .setOnTypeFound { inferredType =>
+                onTypeFound(ex.sourceRef, inferredType)
+              }
+          solver.addConstraint(watchClause)
         }
 
         computeRec(extCtx, solver, scopedEx)
@@ -232,7 +231,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         solver.addConstraint(lambdaClause)
         operType
 
-      case EtcLet(name, defEx @ EtcAbs(defBody, binders @ _*), scopedEx) =>
+      case letEx @ EtcLet(name, defEx @ EtcAbs(defBody, binders @ _*), scopedEx) =>
         // Let-definitions that support polymorphism.
         // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
         // Before analyzing the operator definition, try to partially solve the equations in the current context.
@@ -316,6 +315,26 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           onTypeError(ex.sourceRef,
               s"Operator $name has a parameterized type, while polymorphism is disabled: " + principalDefType)
           throw new UnwindException
+        }
+
+        // If the operator is annotated, compare the annotation with the inferred type.
+        // If the type annotation is more general than the inferred principal type, report an error.
+        if (ctx.types.contains(name)) {
+          val inferredType = principalDefType
+          val userType = operScheme.principalType
+          new TypeUnifier(varPool).unify(Substitution(), inferredType, userType) match {
+            case None =>
+              val msg = s"Contradiction in the type solver: $inferredType and $userType should be unifiable"
+              throw new TypingException(msg, letEx.sourceRef.tlaId)
+
+            case Some((_, unifiedType)) =>
+              if (unifiedType.usedNames.size < operScheme.principalType.usedNames.size) {
+                // The number of free variables has decreased. The annotation by the user is to general.
+                val msg = s"$name's type annotation $userType is too general, inferred: $inferredType"
+                onTypeError(letEx.sourceRef, msg)
+                throw new UnwindException
+              }
+          }
         }
 
         // report the type of the definition

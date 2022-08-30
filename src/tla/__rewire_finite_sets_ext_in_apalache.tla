@@ -31,7 +31,7 @@ LOCAL INSTANCE Functions
  *)
 FoldSet(__op(_, _), __base, __set) ==
     \* ApalacheFoldSet accumulates the result in the left argument,
-    \* whereas FinitSetsExt!FoldSet accumulates the result
+    \* whereas FiniteSetsExt!FoldSet accumulates the result
     \* in the right argument.
     LET __OpSwap(__x, __y) == __op(__y, __x) IN
     __ApalacheFoldSet(__OpSwap, __base, __set)
@@ -65,7 +65,7 @@ ProductSet(__set) ==
  * @type: ((a, b) => b, Set(a), b) => b;
  *)
 ReduceSet(__op(_, _), __set, __acc) == 
-   FoldSet(__op, __set, __acc)
+   FoldSet(__op, __acc, __set)
 
 (**
  * Starting from base, apply op to f(x), for all x \in S, in an arbitrary

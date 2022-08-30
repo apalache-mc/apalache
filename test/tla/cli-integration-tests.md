@@ -3288,6 +3288,16 @@ $ apalache-mc typecheck TestGetXWithRows.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### typecheck PolyTooGeneral.tla
+
+```sh
+$ apalache-mc typecheck PolyTooGeneral.tla | sed 's/[IEW]@.*//'
+...
+[PolyTooGeneral.tla:6:1-6:10]: Id's type annotation ((c) => b) is too general, inferred: ((a) => a)
+...
+EXITCODE: ERROR (120)
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag
