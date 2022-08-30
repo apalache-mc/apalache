@@ -142,7 +142,10 @@ lazy val tlair = (project in file("tlair"))
 lazy val infra = (project in file("mod-infra"))
   .dependsOn(tlair)
   .settings(
-      testSettings
+      testSettings,
+      libraryDependencies ++= Seq(
+          Deps.commonsIo
+      ),
   )
 
 lazy val tla_io = (project in file("tla-io"))
