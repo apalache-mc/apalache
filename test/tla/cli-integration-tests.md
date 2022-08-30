@@ -3539,6 +3539,18 @@ Configuration error: at 'common.features.0'
 $ rm -rf ./.apalache.cfg
 ```
 
+### configuration management: unsupported keys produce an error on load
+
+```sh
+$ echo "invalid.key: foo" > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error:.*" -e ".apalache.cfg:.*" -e "EXITCODE:.*"
+...
+Configuration error: at 'invalid':
+.apalache.cfg: 1) Unknown key.
+EXITCODE: ERROR (255)
+$ rm -rf ./.apalache.cfg
+```
+
 ## module lookup
 
 ### module lookup: looks up dummy module from standard library
