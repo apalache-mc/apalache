@@ -207,7 +207,9 @@ It terminates successfully, if there are no invariant violations.</p>
 <h3><a class="header" href="#11-model-checker-command-line-parameters" id="11-model-checker-command-line-parameters">1.1. Model checker command-line parameters</a></h3>
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--temporal=TemporalProp] [--algo=(incremental|offline)] \
+    [--next=Next] [--inv=Inv1,...,Invn] [--length=10] \
+    [--temporal=TemporalProp1,...,TemporalPropn] \
+    [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-encoding=(oopsla19|arrays)] \
@@ -227,9 +229,10 @@ It terminates successfully, if there are no invariant violations.</p>
 <li><code>--init</code> specifies the initialization predicate, <em><code>Init</code> by default</em></li>
 <li><code>--next</code> specifies the transition predicate, <em><code>Next</code> by default</em></li>
 <li><code>--cinit</code> specifies the constant initialization predicate, <em>optional</em></li>
-<li><code>--inv</code> specifies the invariant to check, <em>optional</em></li>
+<li><code>--inv</code> specifies the invariants to check, as a comma separated list, <em>optional</em></li>
 <li><code>--length</code> specifies the maximal number of <code>Next</code> steps, <em>10 by default</em></li>
-<li><code>--temporal</code> specifies the temporal property to check, <em>optional</em></li>
+<li><code>--temporal</code> specifies the temporal properties to check, as a comma
+separated list, <em>optional</em></li>
 </ul>
 </li>
 <li>
