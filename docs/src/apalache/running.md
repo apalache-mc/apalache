@@ -56,14 +56,13 @@ The arguments are as follows:
 
 * General parameters:
     - `--config` specifies the [TLC configuration file](./tlc-config.md)
-    - `--init` specifies the initialization predicates, as a comma separated
-      list, *`Init` by default*
+    - `--init` specifies the initialization predicate, *`Init` by default*
     - `--next` specifies the transition predicate, *`Next` by default*
     - `--cinit` specifies the constant initialization predicate, *optional*
-    - `--inv` specifies the invariant to check, *optional*
+    - `--inv` specifies the invariants to check, as a comma separated list, *optional*
     - `--length` specifies the maximal number of `Next` steps, *10 by default*
     - `--temporal` specifies the temporal properties to check, as a comma
-      separated list, *optional* and empty by default
+      separated list, *optional*
 
 * Advanced parameters:
     - `--algo` lets you to choose the search algorithm: `incremental` is using the incremental SMT solver, `offline` is
