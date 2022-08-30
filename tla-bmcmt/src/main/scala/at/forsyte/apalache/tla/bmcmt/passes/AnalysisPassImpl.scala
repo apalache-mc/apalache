@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
@@ -16,7 +15,6 @@ import com.typesafe.scalalogging.LazyLogging
  * Find free-standing existential quantifiers, grade expressions, and produce hints about some formulas.
  */
 class AnalysisPassImpl @Inject() (
-    val options: PassOptions,
     exprGradeStoreImpl: ExprGradeStoreImpl,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.pp.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -13,8 +12,6 @@ import com.typesafe.scalalogging.LazyLogging
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
  *
- * @param options
- *   pass options
  * @param gen
  *   name generator
  * @param tracker
@@ -23,7 +20,6 @@ import com.typesafe.scalalogging.LazyLogging
  *   next pass to call
  */
 class OptPassImpl @Inject() (
-    val options: PassOptions,
     gen: UniqueNameGenerator,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)

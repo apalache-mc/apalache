@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
@@ -18,7 +17,6 @@ import com.typesafe.scalalogging.LazyLogging
  *   Jure Kukovec
  */
 class ReTLAToVMTTranspilePassImpl @Inject() (
-    val options: PassOptions,
     pred: LanguagePred,
     gen: UniqueNameGenerator,
     tracker: TransformationTracker)

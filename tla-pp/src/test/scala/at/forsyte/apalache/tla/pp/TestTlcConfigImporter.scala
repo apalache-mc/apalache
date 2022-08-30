@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
+import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.Untyped

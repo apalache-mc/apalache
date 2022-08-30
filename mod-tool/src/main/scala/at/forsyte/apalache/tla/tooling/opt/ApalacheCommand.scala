@@ -8,6 +8,10 @@ import org.backuity.clist._
 import org.backuity.clist.util.Read
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.io.ConfigManager
+import com.typesafe.scalalogging.LazyLogging
+import scala.util.Try
+import scala.util.Failure
+import at.forsyte.apalache.io.ConfigurationError
 
 /**
  * The base class used by all Apalache CLI subcommands.
@@ -17,7 +21,8 @@ import at.forsyte.apalache.io.ConfigManager
  * @author
  *   Igor Konnov, Shon Feder
  */
-abstract class ApalacheCommand(name: String, description: String) extends Command(name: String, description: String) {
+abstract class ApalacheCommand(name: String, description: String)
+    extends Command(name: String, description: String) with LazyLogging {
   // TODO Fix excessively long strings
   var configFile = opt[Option[File]](description =
         "configuration to read from (JSON and HOCON formats supported). Overrides any local .aplache.cfg files. (overrides envvar CONFIG_FILE)",
@@ -50,6 +55,7 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
    * instance should be communicated through the derived `ApalacheConfig`.
    */
   def toConfig(): Config.ApalacheConfig = {
+    logger.info("Loading configuration")
 
     // We start with an *empty* base config, so that any values which are *not*
     // set by the CLI will be `None`.  This is required to allow the configs
@@ -75,6 +81,27 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
    *
    * All execution logic specific to the subcommand should be triggered encapsulated in the [[run]] method.
    *
+   * Most subclasses use an `Executor` to sequence a chain of passes. Executors are created by providing a `ToolModule`
+   * and an `OptionGroup`. E.g.,
+   *
+   * {{{
+   * import at.forsyte.apalache.infra.Executor
+   * import at.forsyte.apalache.infra.passes.options.OptionGroup
+   *
+   * val options = OptionGroup.WithOutput(configuration)
+   * val executor = Executor(new TypeCheckerModule, options)
+   * }}}
+   *
+   * The [[run]] methods of a subcommand implementing this trait will generally end with an invocation of
+   * `executor.run`, such as
+   *
+   * {{{
+   * executor.run() match {
+   *   case Right(module) => Right("Success msg")
+   *   case Left(errCode) => Left(errorCode, "Failure msg")
+   * }
+   * }}}
+   *
    * @return
    *   `Right(msg)` on a successful execution or `Left((errCode, msg))` if the process fails, where `errCode` is the
    *   return code with the which the program will be terminated. In either case `msg` is the final message reported to
@@ -84,7 +111,8 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
 
   private var _invocation = ""
   private var _env = ""
-  private var _configure: Either[String, Config.ApalacheConfig] = Left("UNCONFIGURED")
+  private var _configure: Try[Config.ApalacheConfig] =
+    Failure(new ConfigurationError("ApalacheCommand was never configured"))
 
   // A comma separated name of supported features
   private val featureList = Feature.all.map(_.name).mkString(", ")
@@ -117,6 +145,10 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
       case "false" | "no" | "0"      => Some(false)
     }
 
+  implicit def listStringRead: Read[List[String]] =
+    Read.reads[List[String]](expecting = "A comma separated list of strings, such as 'foo,bar,baz'")(
+        _.split(",").toList)
+
   private def getOptionEnvVar(option: CliOption[_]): Option[String] = {
     val envVar = option.name.replace("-", "_").toUpperCase()
     sys.env.get(envVar).map(value => s"${envVar}=${value}")
@@ -132,10 +164,8 @@ abstract class ApalacheCommand(name: String, description: String) extends Comman
    * The application configuration, derived by loading all configuration sources, concluding with the CLI options
    *
    * See [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] for details.
-   *
-   * TODO: Ultimately, we would like all application configuration to be derived from this value
    */
-  def configuration = _configure
+  def configuration: Try[Config.ApalacheConfig] = _configure
 
   override def read(args: List[String]) = {
     _env = super.options
