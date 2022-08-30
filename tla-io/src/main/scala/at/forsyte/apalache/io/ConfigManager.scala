@@ -2,6 +2,7 @@ package at.forsyte.apalache.io
 
 import pureconfig._
 import pureconfig.generic.auto._
+import pureconfig.generic.ProductHint
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import at.forsyte.apalache.tla.lir.Feature
@@ -27,6 +28,9 @@ private object Converters {
   implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
   implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
 
+  // Do not allow unknown keys
+  // See https://pureconfig.github.io/docs/overriding-behavior-for-case-classes.html#unknown-keys
+  implicit val hint = ProductHint[ApalacheConfig](allowUnknownKeys = false)
 }
 
 /**
