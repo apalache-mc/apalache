@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * This command initiates the 'test' command line.
@@ -39,9 +40,7 @@ class TestCmd
     val seed = Math.abs(System.currentTimeMillis().toInt)
 
     cfg.copy(
-        common = cfg.common.copy(
-            inputfile = Some(file)
-        ),
+        input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
         checker = cfg.checker.copy(
             tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
             init = Some(before),

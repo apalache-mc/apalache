@@ -6,15 +6,16 @@ import at.forsyte.apalache.infra.tlc.config.BehaviorSpec
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.infra.tlc.config.TlcConfig
 import at.forsyte.apalache.tla.lir.Feature
+import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
 
+import com.typesafe.scalalogging.LazyLogging
 import java.io.File
 import java.io.FileReader
+import java.io.IOException
+import org.apache.commons.io.FilenameUtils
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import com.typesafe.scalalogging.LazyLogging
-import java.io.IOException
-import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -108,7 +109,6 @@ object Config {
    */
   case class Common(
       command: Option[String] = None,
-      inputfile: Option[File] = None, // TODO Move "inputfile" into an "Input" configuration group
       outDir: Option[File] = Some(new File(System.getProperty("user.dir"), "_apalache-out")),
       runDir: Option[File] = None,
       debug: Option[Boolean] = Some(false),
@@ -120,6 +120,17 @@ object Config {
       extends Config[Common] {
 
     def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
+  }
+
+  /**
+   * Configuration of program input
+   *
+   * @param source
+   *   SourceOption from which input data can be read
+   */
+  case class Input(source: Option[SourceOption] = None) extends Config[Input] {
+
+    def empty: Input = Generic[Input].from(Generic[Input].to(this).map(emptyPoly))
   }
 
   /**
@@ -219,6 +230,7 @@ object Config {
    */
   case class ApalacheConfig(
       common: Common = Common(),
+      input: Input = Input(),
       output: Output = Output(),
       checker: Checker = Checker(),
       typechecker: Typechecker = Typechecker())
@@ -230,14 +242,54 @@ object Config {
 
 /** Defines the data sources supported */
 sealed abstract class SourceOption {
+
   def isFile: Boolean
+
+  def exists: Boolean
+
+  def format: SourceOption.Format
+
+  def toString: String
+
+  /**
+   * Derive a source, and possibly a sequence of auxiliary sources, from the content of the `SourceOption`
+   *
+   * The pair returned is essentially just a lightweight representation of a non-empty sequence
+   */
+  def toSources: (scala.io.Source, Seq[scala.io.Source])
+
 }
 
 object SourceOption {
+  import scala.io.Source
+
+  /** The format used to represent the source's content */
+  sealed abstract class Format {}
+  object Format {
+    case object Tla extends Format
+    case object Json extends Format
+  }
 
   /** Data to be loaded from a file */
-  final case class FileSource(file: java.io.File) extends SourceOption {
+  final case class FileSource(file: java.io.File, format: Format) extends SourceOption {
     def isFile = true
+    def exists = file.exists()
+    def toSources = (Source.fromFile(file), Seq())
+
+    override def toString = file.toString()
+  }
+
+  object FileSource {
+
+    /** Create a FileSource from a file, deriving the format from the file's extension */
+    def apply(file: java.io.File): FileSource = {
+      val format = FilenameUtils.getExtension(file.getName()) match {
+        case "json"  => Format.Json
+        case "tla"   => Format.Tla
+        case unknown => throw new PassOptionException(s"Unsupported file format ${unknown}")
+      }
+      new FileSource(file, format)
+    }
   }
 
   /**
@@ -248,8 +300,13 @@ object SourceOption {
    * @param aux
    *   auxiliary data sources
    */
-  final case class StringSource(content: String, aux: Seq[String] = Seq()) extends SourceOption {
+  final case class StringSource(content: String, aux: Seq[String] = Seq(), format: Format = Format.Tla)
+      extends SourceOption {
     def isFile = false
+    def exists = true
+    def toSources = (Source.fromString(content), aux.map(Source.fromString(_)))
+
+    override def toString = s"StringSource(${format})"
   }
 }
 
@@ -362,10 +419,10 @@ object OptionGroup extends LazyLogging {
   /** Options used to configure program input */
   case class Input(source: SourceOption) extends OptionGroup
 
-  object Input extends Configurable[Config.Common, Input] {
-    def apply(common: Config.Common): Try[Input] = for {
-      file <- common.inputfile.toTry("input.source")
-    } yield Input(SourceOption.FileSource(file.getAbsoluteFile))
+  object Input extends Configurable[Config.Input, Input] {
+    def apply(input: Config.Input): Try[Input] = for {
+      source <- input.source.toTry("input.source")
+    } yield Input(source)
   }
 
   /** Options used to configure program output */
@@ -607,7 +664,7 @@ object OptionGroup extends LazyLogging {
   object WithInput extends Configurable[Config.ApalacheConfig, WithInput] {
     def apply(cfg: Config.ApalacheConfig): Try[WithInput] = for {
       common <- Common(cfg.common)
-      input <- Input(cfg.common)
+      input <- Input(cfg.input)
     } yield WithInput(common, input)
   }
 

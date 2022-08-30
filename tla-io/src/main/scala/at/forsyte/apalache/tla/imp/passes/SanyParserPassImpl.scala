@@ -32,20 +32,27 @@ class SanyParserPassImpl @Inject() (
 
   override def name: String = "SanyParser"
 
-  private def loadFromJsonFile(file: File): PassResult = {
+  private def loadFromJsonSource(source: SourceOption): PassResult = {
+    import SourceOption._
+    val readable: ujson.Readable = source match {
+      case FileSource(f, Format.Json)      => f
+      case StringSource(s, _, Format.Json) => s
+      case _ => throw new IllegalArgumentException("loadFromJsonSource called with non Json SourceOption")
+    }
+
     try {
-      val moduleJson = UJsonRep(ujson.read(file))
+      val moduleJson = UJsonRep(ujson.read(readable))
       val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
       modules match {
         case rMod +: Nil => Right(rMod)
         case _ => {
-          logger.error(s"  > Error parsing file ${file}")
+          logger.error(s"  > Error parsing file ${source}")
           Left(ExitCodes.ERROR_SPEC_PARSE)
         }
       }
     } catch {
       case e: Exception =>
-        logger.error(s"  > Error parsing file ${file}")
+        logger.error(s"  > Error parsing file ${source}")
         logger.error("  > " + e.getMessage)
         Left(ExitCodes.ERROR_SPEC_PARSE)
     }
@@ -84,18 +91,17 @@ class SanyParserPassImpl @Inject() (
   }
 
   override def execute(module: TlaModule): PassResult = {
+    import SourceOption._
+    val src = options.input.source
     for {
-      rootModule <-
-        options.input.source match {
-          case SourceOption.StringSource(content, aux) =>
-            loadFromTlaString(content, aux)
-          case SourceOption.FileSource(file) =>
-            if (file.getName().endsWith(".json")) {
-              loadFromJsonFile(file)
-            } else {
-              loadFromTlaFile(file)
-            }
-        }
+      rootModule <- src.format match {
+        case Format.Json => loadFromJsonSource(src)
+        case Format.Tla =>
+          src match {
+            case StringSource(content, aux, _) => loadFromTlaString(content, aux)
+            case FileSource(file, _)           => loadFromTlaFile(file)
+          }
+      }
       sortedModule <- sortDeclarations(rootModule)
       _ <- saveLoadedModule(sortedModule)
     } yield sortedModule

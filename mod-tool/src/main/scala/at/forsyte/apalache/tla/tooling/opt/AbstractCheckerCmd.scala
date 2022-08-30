@@ -5,6 +5,7 @@ import org.backuity.clist.{arg, opt}
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
@@ -32,7 +33,7 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
     cfg.copy(
-        common = cfg.common.copy(inputfile = Some(file)),
+        input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
         checker = cfg.checker.copy(
             config = config,
             cinit = cinit,
