@@ -315,7 +315,12 @@ lazy val root = (project in file("."))
         // Workaround for conflict with grpc-netty manifest files
         // See https://github.com/sbt/sbt-assembly/issues/362
         case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
-        case x                                                    => (assembly / assemblyMergeStrategy).value(x)
+        // Workaround for conflict between gson and slf4j manifest files:
+        // [error] (assembly) deduplicate: different file contents found in the following:
+        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
+        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
+        case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.first
+        case x                                                          => (assembly / assemblyMergeStrategy).value(x)
       },
       // Package the distribution files
       Universal / mappings ++= Seq(
