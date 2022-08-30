@@ -120,8 +120,15 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
   }
 
   test("""[a: A, b: B] ~~> {[a |-> t_1, b |-> t_2]: t_1 \in A, t_2 \in B}""") {
-    val types = Map("a" -> BoolT1, "b" -> StrT1, "A" -> SetT1(BoolT1), "B" -> SetT1(StrT1), "s" -> StrT1,
-        "r" -> RecT1("a" -> BoolT1, "b" -> StrT1), "R" -> SetT1(RecT1("a" -> BoolT1, "b" -> StrT1)))
+    val types = Map(
+        "a" -> BoolT1,
+        "b" -> StrT1,
+        "A" -> SetT1(BoolT1),
+        "B" -> SetT1(StrT1),
+        "s" -> StrT1,
+        "r" -> RecT1("a" -> BoolT1, "b" -> StrT1),
+        "R" -> SetT1(RecT1("a" -> BoolT1, "b" -> StrT1)),
+    )
     val input =
       tla
         .recSet(tla.name("a") ? "s", tla.name("A") ? "A", tla.name("b") ? "s", tla.name("B") ? "B")
@@ -130,14 +137,26 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
     val rec = tla.enumFun(tla.name("a") ? "s", tla.name("t_1") ? "a", tla.name("b") ? "s", tla.name("t_2") ? "b")
     val expected =
       tla
-        .map(rec ? "r", tla.name("t_1") ? "a", tla.name("A") ? "A", tla.name("t_2") ? "b", tla.name("B") ? "B")
+        .map(
+            rec ? "r",
+            tla.name("t_1") ? "a",
+            tla.name("A") ? "A",
+            tla.name("t_2") ? "b",
+            tla.name("B") ? "B",
+        )
         .typed(types, "R")
     assert(expected == output)
   }
 
   test("""A \X B ~~> {<<t_1, t_2>>: t_1 \in A, t_2 \in B}""") {
-    val types = Map("a" -> BoolT1, "b" -> StrT1, "A" -> SetT1(BoolT1), "B" -> SetT1(StrT1),
-        "t" -> SetT1(TupT1(BoolT1, StrT1)), "T" -> SetT1(TupT1(BoolT1, StrT1)))
+    val types = Map(
+        "a" -> BoolT1,
+        "b" -> StrT1,
+        "A" -> SetT1(BoolT1),
+        "B" -> SetT1(StrT1),
+        "t" -> SetT1(TupT1(BoolT1, StrT1)),
+        "T" -> SetT1(TupT1(BoolT1, StrT1)),
+    )
     val input =
       tla
         .times(tla.name("A") ? "A", tla.name("B") ? "B")
@@ -146,7 +165,13 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
     val tup = tla.tuple(tla.name("t_1") ? "a", tla.name("t_2") ? "b")
     val expected =
       tla
-        .map(tup ? "t", tla.name("t_1") ? "a", tla.name("A") ? "A", tla.name("t_2") ? "b", tla.name("B") ? "B")
+        .map(
+            tup ? "t",
+            tla.name("t_1") ? "a",
+            tla.name("A") ? "A",
+            tla.name("t_2") ? "b",
+            tla.name("B") ? "B",
+        )
         .typed(types, "T")
     assert(expected == output)
   }
@@ -159,8 +184,13 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         OTHER  -> e_def
      */
     val input = tla
-      .caseOther(tla.name("e_def") ? "i", tla.name("p_1") ? "b", tla.name("e_1") ? "i", tla.name("p_2") ? "b",
-          tla.name("e_2") ? "i")
+      .caseOther(
+          tla.name("e_def") ? "i",
+          tla.name("p_1") ? "b",
+          tla.name("e_1") ? "i",
+          tla.name("p_2") ? "b",
+          tla.name("e_2") ? "i",
+      )
       .typed(types, "i")
     val output = keramelizer.apply(input)
 
@@ -207,8 +237,13 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
         OTHER  -> e_def
      */
     val input = tla
-      .caseOther(tla.name("e_def") ? "b", tla.name("p_1") ? "b", tla.name("e_1") ? "b", tla.name("p_2") ? "b",
-          tla.name("e_2") ? "b")
+      .caseOther(
+          tla.name("e_def") ? "b",
+          tla.name("p_1") ? "b",
+          tla.name("e_1") ? "b",
+          tla.name("p_2") ? "b",
+          tla.name("e_2") ? "b",
+      )
       .typed(types, "b")
     val output = keramelizer.apply(input)
     /*
@@ -284,8 +319,13 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
   }
 
   test("""x' \in [S -> T] ~~> \E t_1 \in [S -> T]: x' = t_1""") {
-    val types = Map("b" -> BoolT1, "S" -> SetT1(IntT1), "T" -> SetT1(StrT1), "f" -> FunT1(IntT1, StrT1),
-        "Sf" -> SetT1(FunT1(IntT1, StrT1)))
+    val types = Map(
+        "b" -> BoolT1,
+        "S" -> SetT1(IntT1),
+        "T" -> SetT1(StrT1),
+        "f" -> FunT1(IntT1, StrT1),
+        "Sf" -> SetT1(FunT1(IntT1, StrT1)),
+    )
     val funSet = tla.funSet(tla.name("S") ? "S", tla.name("T") ? "T") ? "Sf"
     val input = tla
       .in(tla.prime(tla.name("x") ? "f") ? "f", funSet)
@@ -320,8 +360,13 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
   }
 
   test("""A \subseteq POWSET POWSET B ~~> \A S \in A: \A T \in S: \A t \in T: t \in B""") {
-    val types = Map("BOOL" -> BoolT1, "POWPOWSET" -> SetT1(SetT1(SetT1(IntT1))), "POWSET" -> SetT1(SetT1(IntT1)),
-        "SET" -> SetT1(IntT1), "INT" -> IntT1)
+    val types = Map(
+        "BOOL" -> BoolT1,
+        "POWPOWSET" -> SetT1(SetT1(SetT1(IntT1))),
+        "POWSET" -> SetT1(SetT1(IntT1)),
+        "SET" -> SetT1(IntT1),
+        "INT" -> IntT1,
+    )
     def A = tla.name("A") ? "POWPOWSET"
     def B = tla.name("B") ? "SET"
     def powB = tla.powSet(B) ? "POWSET"
@@ -389,8 +434,13 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
 
   test("""rewrite f \in [S -> SUBSET T]  ~~>  DOMAIN f = S /\ \A x \in S: \A y \in f[x]: y \in T""".stripMargin) {
     val types =
-      Map("b" -> BoolT1, "s" -> SetT1(IntT1), "p" -> SetT1(SetT1(IntT1)), "f" -> FunT1(IntT1, SetT1(IntT1)),
-          "fs" -> SetT1(FunT1(IntT1, SetT1(IntT1))))
+      Map(
+          "b" -> BoolT1,
+          "s" -> SetT1(IntT1),
+          "p" -> SetT1(SetT1(IntT1)),
+          "f" -> FunT1(IntT1, SetT1(IntT1)),
+          "fs" -> SetT1(FunT1(IntT1, SetT1(IntT1))),
+      )
     val input =
       tla
         .in(tla.name("f") ? "f", tla.funSet(tla.name("S") ? "s", tla.powSet(tla.name("T") ? "s") ? "p") ? "fs")

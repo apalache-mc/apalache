@@ -102,7 +102,13 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       sized { size =>
         if (size <= 1) genPrimitive
         else
-          oneOf(genPrimitive, genSet, genSeq, genFun, /*genOper,*/ genTup, genRec /*, genRowRec, genVariant, genRow*/ )
+          oneOf(
+              genPrimitive,
+              genSet,
+              genSeq,
+              genFun, /*genOper,*/ genTup,
+              genRec, /*, genRowRec, genVariant, genRow*/
+          )
       }
     }
 

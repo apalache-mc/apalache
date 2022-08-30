@@ -152,9 +152,14 @@ class ConfigurationPassImpl @Inject() (
       case NullSpec() => ("Init", "Next")
     }
 
-    derivedPreds.configure(init = init, next = next, invariants = options.predicates.invariants,
-        temporalProps = options.predicates.temporalProps, view = options.predicates.view,
-        cinit = options.predicates.cinit)
+    derivedPreds.configure(
+        init = init,
+        next = next,
+        invariants = options.predicates.invariants,
+        temporalProps = options.predicates.temporalProps,
+        view = options.predicates.view,
+        cinit = options.predicates.cinit,
+    )
 
     if (derivedPreds.invariants.nonEmpty) {
       logger.info(s"""  > $basename: found INVARIANTS: ${derivedPreds.invariants.mkString(", ")}""")

@@ -34,8 +34,15 @@ object NormalizedNames {
    */
   def isVC(decl: TlaDecl): Boolean = {
     decl.isInstanceOf[TlaOperDecl] &&
-    List(VC_INV_PREFIX, VC_NOT_INV_PREFIX, VC_ACTION_INV_PREFIX, VC_NOT_ACTION_INV_PREFIX, VC_TRACE_INV_PREFIX,
-        VC_NOT_TRACE_INV_PREFIX, VC_VIEW).exists(decl.name.startsWith)
+    List(
+        VC_INV_PREFIX,
+        VC_NOT_INV_PREFIX,
+        VC_ACTION_INV_PREFIX,
+        VC_NOT_ACTION_INV_PREFIX,
+        VC_TRACE_INV_PREFIX,
+        VC_NOT_TRACE_INV_PREFIX,
+        VC_VIEW,
+    ).exists(decl.name.startsWith)
   }
 
   /**

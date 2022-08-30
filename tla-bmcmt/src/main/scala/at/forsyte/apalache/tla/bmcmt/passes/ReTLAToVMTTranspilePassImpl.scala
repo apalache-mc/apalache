@@ -50,8 +50,14 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
 
     val vmtWriter = new TlaExToVMTWriter(gen)
 
-    vmtWriter.annotateAndWrite(module.varDeclarations, module.constDeclarations, cinitP, initTrans, nextTrans,
-        vcInvs ++ vcActionInvs)
+    vmtWriter.annotateAndWrite(
+        module.varDeclarations,
+        module.constDeclarations,
+        cinitP,
+        initTrans,
+        nextTrans,
+        vcInvs ++ vcActionInvs,
+    )
 
     Right(module)
   }

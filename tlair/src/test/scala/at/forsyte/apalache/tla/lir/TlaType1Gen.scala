@@ -133,7 +133,18 @@ trait TlaType1Gen {
       } else {
         // We may produce deeper trees.
         // NOTE: we do not generate sparse tuples, as they cannot appear in user's annotations.
-        oneOf(genPrimitive, genSet, genSeq, genFun, genOper, genTup, genRec, genRowRec, genVariant, genRow)
+        oneOf(
+            genPrimitive,
+            genSet,
+            genSeq,
+            genFun,
+            genOper,
+            genTup,
+            genRec,
+            genRowRec,
+            genVariant,
+            genRow,
+        )
       }
     }
   }

@@ -26,7 +26,14 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    * Partial transformers, applied left-to-right.
    */
   override val partialTransformers =
-    List(transformAssignments, transformLogic, transformSets, transformTuples, transformRecords, transformControl)
+    List(
+        transformAssignments,
+        transformLogic,
+        transformSets,
+        transformTuples,
+        transformRecords,
+        transformControl,
+    )
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)

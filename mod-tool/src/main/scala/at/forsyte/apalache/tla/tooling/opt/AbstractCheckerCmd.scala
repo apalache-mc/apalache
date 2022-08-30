@@ -33,8 +33,15 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
     val cfg = super.toConfig()
     cfg.copy(
         common = cfg.common.copy(inputfile = Some(file)),
-        checker = cfg.checker.copy(config = config, cinit = cinit, init = init, next = next, inv = inv,
-            temporalProps = temporal, length = length),
+        checker = cfg.checker.copy(
+            config = config,
+            cinit = cinit,
+            init = init,
+            next = next,
+            inv = inv,
+            temporalProps = temporal,
+            length = length,
+        ),
     )
   }
 }

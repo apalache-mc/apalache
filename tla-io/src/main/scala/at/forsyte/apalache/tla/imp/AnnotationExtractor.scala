@@ -30,7 +30,14 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
         // that look like malformed annotations, e.g., CONSTANT definitions @modelParameterConstants:0Foo
         val loc = node.getLocation
         val msg = "[%s:%d:%d-%d:%d]: Syntax error in annotation -- %s"
-          .format(loc.source(), loc.beginLine(), loc.beginColumn(), loc.endLine(), loc.endColumn(), message)
+          .format(
+              loc.source(),
+              loc.beginLine(),
+              loc.beginColumn(),
+              loc.endLine(),
+              loc.endColumn(),
+              message,
+          )
         logger.warn(msg)
         None
     }

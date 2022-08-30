@@ -19,9 +19,15 @@ class TestTypeSubstitutor extends AnyFunSuite with BeforeAndAfterEach {
   private val parser = DefaultType1Parser
 
   private val types =
-    Map("b" -> parser("Bool"), "F" -> parser("a => <<a, a>>"), "a" -> parser("a"), "ii" -> parser("Int -> Int"),
-        "Fii" -> parser("(Int -> Int) => <<Int -> Int, Int -> Int>>"), "aa" -> parser("<<a, a>>"),
-        "ii2" -> parser("<<Int -> Int, Int -> Int>>"))
+    Map(
+        "b" -> parser("Bool"),
+        "F" -> parser("a => <<a, a>>"),
+        "a" -> parser("a"),
+        "ii" -> parser("Int -> Int"),
+        "Fii" -> parser("(Int -> Int) => <<Int -> Int, Int -> Int>>"),
+        "aa" -> parser("<<a, a>>"),
+        "ii2" -> parser("<<Int -> Int, Int -> Int>>"),
+    )
 
   override def beforeEach(): Unit = {}
 

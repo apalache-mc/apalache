@@ -190,8 +190,34 @@ case class VarT1(no: Int) extends TlaType1 {
 
 object VarT1 {
   // human-friendly names of the first 26 variables
-  protected val QNAMES: Vector[String] = Vector("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-      "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+  protected val QNAMES: Vector[String] = Vector(
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+  )
 
   /**
    * Construct a variable from the human-readable form like `b` or `a100`. We use this method to write human-readable

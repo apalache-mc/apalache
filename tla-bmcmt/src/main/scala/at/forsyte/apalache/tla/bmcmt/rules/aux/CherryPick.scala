@@ -313,8 +313,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(commonRecordT))
     val newRecord = newState.arena.topCell
     // pick the domain using the oracle.
-    newState = pickRecordDomain(commonRecordT, CellTFrom(SetT1(StrT1)), newState, oracle,
-        records.map(r => newState.arena.getDom(r)))
+    newState = pickRecordDomain(
+        commonRecordT,
+        CellTFrom(SetT1(StrT1)),
+        newState,
+        oracle,
+        records.map(r => newState.arena.getDom(r)),
+    )
     val newDom = newState.asCell
     // pick the fields using the oracle
     val fieldCells = commonRecordT.fieldTypes.keySet.toSeq.map(pickAtPos)
@@ -824,7 +829,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
         // Propagate the picked function's relation, by relying on the same oracle used to pick the function
         val relationT = SetT1(TupT1(funType.arg, funType.res))
-        nextState = pickSet(relationT, nextState, oracle, funs.map(nextState.arena.getCdm), elseAssert, noSmt = true)
+        nextState = pickSet(
+            relationT,
+            nextState,
+            oracle,
+            funs.map(nextState.arena.getCdm),
+            elseAssert,
+            noSmt = true,
+        )
         val pickedRelation = nextState.asCell
         nextState = nextState.updateArena(_.setCdm(funCell, pickedRelation))
         // For the decoder to work, the relation's arguments may need to be equated to the domain elements

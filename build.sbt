@@ -197,10 +197,16 @@ lazy val tla_assignments = (project in file("tla-assignments"))
   )
 
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
-  .dependsOn(tlair,
+  .dependsOn(
+      tlair,
       // property based tests depend on IR generators defined in the tlair tests
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
-      tlair % "test->test", infra, tla_io, tla_pp, tla_assignments)
+      tlair % "test->test",
+      infra,
+      tla_io,
+      tla_pp,
+      tla_assignments,
+  )
   .settings(
       testSettings,
       testSanyBugSettings,

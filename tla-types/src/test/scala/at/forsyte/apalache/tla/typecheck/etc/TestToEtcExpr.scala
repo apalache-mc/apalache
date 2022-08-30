@@ -539,7 +539,13 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
   test("function update [ f EXCEPT ![e1] = e2, ![e3] = e4 ]") {
     // a function or a sequence
     val ex =
-      tla.except(tla.name("f"), tla.tuple(tla.name("e1")), tla.name("e2"), tla.tuple(tla.name("e3")), tla.name("e4"))
+      tla.except(
+          tla.name("f"),
+          tla.tuple(tla.name("e1")),
+          tla.name("e2"),
+          tla.tuple(tla.name("e3")),
+          tla.name("e4"),
+      )
 
     val types1 = Seq(parser("(a, b) => (a -> b)"), parser("(Int, a) => Seq(a)"))
     val types2 = Seq(parser("(c, d) => (c -> d)"), parser("(Int, c) => Seq(c)"))
@@ -584,7 +590,13 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
 
   test("tuple update [ f EXCEPT ![3] = e2, ![5] = e4]") {
     // a function or a record
-    val ex = tla.except(tla.name("f"), tla.tuple(tla.int(3)), tla.name("e2"), tla.tuple(tla.int(5)), tla.name("e4"))
+    val ex = tla.except(
+        tla.name("f"),
+        tla.tuple(tla.int(3)),
+        tla.name("e2"),
+        tla.tuple(tla.int(5)),
+        tla.name("e4"),
+    )
 
     val types1 = Seq(parser("(Int, a) => (Int -> a)"), parser("(Int, a) => Seq(a)"), parser("(Int, a) => <| 3: a |>"))
     val tower1 = mkUniqApp(types1, mkUniqConst(IntT1), mkUniqName("e2"))
@@ -791,7 +803,13 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
   test("Labels") {
     val typ = parser("(Str, Str, Str, a) => a")
     val expected =
-      mkUniqApp(Seq(typ), mkUniqConst(StrT1), mkUniqConst(StrT1), mkUniqConst(StrT1), mkUniqName("x"))
+      mkUniqApp(
+          Seq(typ),
+          mkUniqConst(StrT1),
+          mkUniqConst(StrT1),
+          mkUniqConst(StrT1),
+          mkUniqName("x"),
+      )
     val ex = tla.label(tla.name("x"), "lab", "a", "b")
     assert(expected == mkToEtcExpr()(ex))
   }
