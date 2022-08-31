@@ -53,13 +53,7 @@ object Tool extends LazyLogging {
     cfg <- cmd.configuration
     _ <- Try(OutputManager.configure(cfg))
   } yield {
-    cfg.common.inputfile.foreach { file =>
-      // The sourceLines file is only relevant if we are loading a TLA file
-      if (file.getName.endsWith(".tla") && file.exists()) {
-        OutputManager.initSourceLines(file)
-      }
-    }
-
+    cfg.input.source.foreach(OutputManager.initSourceLines(_))
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")

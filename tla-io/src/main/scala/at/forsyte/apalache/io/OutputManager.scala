@@ -1,13 +1,17 @@
 package at.forsyte.apalache.io
 
+import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
+import at.forsyte.apalache.infra.passes.options.SourceOption
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.{File, FileWriter, PrintWriter}
-import java.nio.file.{Files, Path, Paths}
+import java.io.File
+import java.io.FileWriter
+import java.io.PrintWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
-
 import scala.io.Source
 
 /**
@@ -37,10 +41,13 @@ object OutputManager extends LazyLogging {
   // lines in the original input. This variable stores them.
   private var sourceLinesOpt: Option[IndexedSeq[String]] = None
 
-  // Should be called only if input is a .tla file
-  def initSourceLines(file: File): Unit =
-    if (sourceLinesOpt.isEmpty) {
-      val src = Source.fromFile(file)
+  // Takes effect only when called on a source that is an existing .tla file or
+  // a string representing a .tla spec
+  def initSourceLines(source: SourceOption): Unit =
+    if (sourceLinesOpt.isEmpty && source.exists) {
+      // We currently just ignore possible auxiliary sources for  the source lines,
+      // which is why the second value of the uple is ignored here:
+      val (src, _) = source.toSources
       try sourceLinesOpt = Some(src.getLines().toIndexedSeq)
       finally src.close()
     }
@@ -121,8 +128,11 @@ object OutputManager extends LazyLogging {
     config = cfg
 
     val fileName =
-      config.common.inputfile
-        .map(_.getName) // Either the name of the file
+      config.input.source
+        .flatMap { // Either the name of the file
+          case SourceOption.FileSource(f, _)      => Some(f.getName())
+          case SourceOption.StringSource(_, _, _) => None
+        }
         .orElse(config.common.command) // Or the name of the command running
         .get // One of those two will always be available
 

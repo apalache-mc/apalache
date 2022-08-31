@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 /**
  * This command initiates the 'typecheck' command line.
@@ -27,7 +28,7 @@ class TypeCheckCmd
   override def toConfig(): Config.ApalacheConfig = {
     val cfg = super.toConfig()
     cfg.copy(
-        common = cfg.common.copy(inputfile = Some(file)),
+        input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
         output = cfg.output.copy(output = output),
         typechecker = cfg.typechecker.copy(inferpoly = inferPoly),
     )
