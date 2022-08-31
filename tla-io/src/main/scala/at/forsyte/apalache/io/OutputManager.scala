@@ -45,7 +45,8 @@ object OutputManager extends LazyLogging {
   // a string representing a .tla spec
   def initSourceLines(source: SourceOption): Unit =
     if (sourceLinesOpt.isEmpty && source.exists) {
-      // We currently just ignore possible auxiliary sources
+      // We currently just ignore possible auxiliary sources for  the source lines,
+      // which is why the second value of the uple is ignored here:
       val (src, _) = source.toSources
       try sourceLinesOpt = Some(src.getLines().toIndexedSeq)
       finally src.close()
