@@ -3551,6 +3551,69 @@ EXITCODE: ERROR (255)
 $ rm -rf ./.apalache.cfg
 ```
 
+### configuration management: derived configuration can be dumped to a file
+
+First, set some custom config options, to ensure they'll be merged into the derived config:
+
+```sh
+$ printf "checker={length=0,inv=[Inv]}, common.out-dir=./cfg-out" > demo-config.cfg
+```
+
+Then, run a trivial checking command, dumping the derived config to a file:
+
+```sh
+$ apalache-mc check --config-file=demo-config.cfg --dump-config=configdump.cfg --features=rows Counter.tla
+...
+```
+
+Finally, confirm that the dumped config looks as expected, and clean up:
+
+```sh
+$ cat ./configdump.cfg
+checker {
+    algo=incremental
+    discard-disabled=true
+    inv=[
+        Inv
+    ]
+    length=0
+    max-error=1
+    no-deadlocks=false
+    nworkers=1
+    smt-encoding {
+        type=oopsla-19
+    }
+    tuning {
+        "search.outputTraces"="false"
+    }
+}
+common {
+    command=check
+    config-file="demo-config.cfg"
+    debug=false
+    dump-config="configdump.cfg"
+    features=[
+        rows
+    ]
+    out-dir="./cfg-out"
+    profiling=false
+    smtprof=false
+    write-intermediate=false
+}
+input {
+    source {
+        file="Counter.tla"
+        format=tla
+        type=file
+    }
+}
+output {}
+typechecker {
+    inferpoly=true
+}
+$ rm -rf ./configdump.cfg ./demo-config.cfg ./cfg-out
+```
+
 ## module lookup
 
 ### module lookup: looks up dummy module from standard library

@@ -106,6 +106,8 @@ object Config {
    *   Whether or not to write general profiling data into the `runDir`
    * @param features
    *   Control experimental features
+   * @param dumpConfig
+   *   A file into which the loaded configuration can be written
    */
   case class Common(
       command: Option[String] = None,
@@ -116,7 +118,8 @@ object Config {
       configFile: Option[File] = None,
       writeIntermediate: Option[Boolean] = Some(false),
       profiling: Option[Boolean] = Some(false),
-      features: Option[Seq[Feature]] = Some(Seq()))
+      features: Option[Seq[Feature]] = Some(Seq()),
+      dumpConfig: Option[File] = None)
       extends Config[Common] {
 
     def empty: Common = Generic[Common].from(Generic[Common].to(this).map(emptyPoly))
