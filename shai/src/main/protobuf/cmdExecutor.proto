@@ -10,4 +10,24 @@ option objc_class_prefix = "TEP";
 package shai;
 
 service CmdExecutor {
+  rpc run(CmdRequest) returns (CmdResponse);
+}
+
+message CmdRequest {
+  Cmd cmd = 1;
+
+  string config = 2;
+}
+
+enum Cmd {
+  PARSE = 0;
+}
+
+message CmdResponse {
+  oneof result {
+    // A JSON encoded string with data useful on success
+    string success = 1;
+    // A JSON encded string with data useful on error
+    string failure = 2;
+  }
 }
