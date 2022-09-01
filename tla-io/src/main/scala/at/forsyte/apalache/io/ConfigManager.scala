@@ -2,13 +2,18 @@ package at.forsyte.apalache.io
 
 import pureconfig._
 import pureconfig.generic.auto._
+import pureconfig.generic.semiauto._
 import pureconfig.generic.ProductHint
+import pureconfig.generic.FieldCoproductHint
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import at.forsyte.apalache.tla.lir.Feature
 import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
 import com.typesafe.config.{Config, ConfigObject}
 import scala.util.Try
+import java.io.PrintWriter
+import com.typesafe.config.ConfigRenderOptions
+import at.forsyte.apalache.infra.passes.options.SourceOption
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -28,9 +33,30 @@ private object Converters {
   implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
   implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
 
+  // Derive a reader and writer for SourceOption.Format based on the case object family
+  // See https://pureconfig.github.io/docs/overriding-behavior-for-sealed-families.html#sealed-families
+  implicit val sourceOptionFormatReader: ConfigReader[SourceOption.Format] =
+    deriveEnumerationReader[SourceOption.Format]
+  implicit val sourceOptionFormatWriter: ConfigWriter[SourceOption.Format] =
+    deriveEnumerationWriter[SourceOption.Format]
+
   // Do not allow unknown keys
   // See https://pureconfig.github.io/docs/overriding-behavior-for-case-classes.html#unknown-keys
   implicit val hint = ProductHint[ApalacheConfig](allowUnknownKeys = false)
+
+  // Enables encoding and decoding `SourceOption`s on the base the value of a `type` field
+  // See https://pureconfig.github.io/docs/overriding-behavior-for-sealed-families.html#sealed-families
+  implicit val sourceOptionHint = new FieldCoproductHint[SourceOption]("type") {
+    // Truncates the required value of value of `type` so that only `file` or `string` is needed.
+    // E.g.:
+    //
+    //   source {
+    //       file="test/tla/Counter.tla"
+    //       format=tla
+    //       type=file
+    //   }
+    override def fieldValue(name: String) = name.dropRight("Source".length).toLowerCase()
+  }
 }
 
 /**
@@ -105,8 +131,27 @@ class ConfigManager() {
 
 object ConfigManager {
 
+  import Converters._
+
   /** Load the application configuration, converting any configuration error into a pretty printed message */
   def apply(cfg: ApalacheConfig): Try[ApalacheConfig] =
     new ConfigManager().load(cfg).left.map(err => new ConfigurationError(err.prettyPrint())).toTry
 
+  /** Save the given `cfg` into the `dst` `PrintWriter` */
+  def save(cfg: ApalacheConfig)(dst: PrintWriter): Unit = {
+    val cfgString = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].render(renderOptions)
+    dst.print(cfgString)
+  }
+
+  // Configure the rendering options for dumping the configuration
+  private val renderOptions: ConfigRenderOptions = {
+    ConfigRenderOptions
+      .concise()
+      // Preserve comments from loaded configurations (tho not generally possible for our current system)
+      .setComments(true)
+      // Format the output
+      .setFormatted(true)
+      // Use the cleaner HOCON syntax instead of JSON
+      .setJson(false)
+  }
 }

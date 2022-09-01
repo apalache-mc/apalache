@@ -17,6 +17,7 @@ import scala.util.Random
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import at.forsyte.apalache.io.ConfigManager
 
 /**
  * Command line access to the APALACHE tools.
@@ -58,6 +59,12 @@ object Tool extends LazyLogging {
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
+
+    // Write the application configuration, if debug is enabled
+    if (cfg.common.debug.getOrElse(false)) {
+      OutputManager.withWriterInRunDir("application-configs.cfg")(ConfigManager.save(cfg))
+    }
+
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
