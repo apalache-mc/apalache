@@ -1,7 +1,7 @@
 ------------------- MODULE OptionTests -----------------------
 EXTENDS Naturals, Apalache, Option
 
-\* @type: Set(a) => $option;
+\* @type: Set(Int) => Some(Int) | None(UNIT);
 MaxSet(s) ==
   LET max(oa, b) ==
     IF OptionGetOrElse(oa, b) > b
@@ -51,20 +51,31 @@ TestOptionToSet ==
     /\ OptionToSet(None) = empty
     /\ OptionToSet(Some(1)) = {1}
 
-TestFlatMap ==
-    LET q == FlatMap(LAMBDA x: Some(x + 1), Some(1)) IN
-    LET r == FlatMap(LAMBDA x: Some(x + 1), q) IN
-    LET s == FlatMap(LAMBDA x: None, r) IN
+TestOptionFlatMap ==
+    LET q == OptionFlatMap(LAMBDA x: Some(x + 1), Some(1)) IN
+    LET r == OptionFlatMap(LAMBDA x: Some(x + 1), q) IN
+    LET s == OptionFlatMap(LAMBDA x: None, r) IN
     /\ r = Some(3)
     /\ s = None
+
+TestOptionChoose ==
+    LET
+      \* @type: Set(Int);
+      empty == {}
+    IN
+    /\ OptionChoose(empty) = None
+    /\ LET choices == {1,2,3,4} IN
+      LET choice == OptionChoose(choices) IN
+      VariantGetUnsafe("Some", choice) \in choices
 
 Next == TRUE
 Init ==
     /\ TestMap
     /\ TestMaxSet
     /\ TestOptionCase
+    /\ TestOptionFlatMap
     /\ TestOptionToSeq
     /\ TestOptionToSet
-    /\ TestFlatMap
+    /\ TestOptionChoose
 
 ============================================================

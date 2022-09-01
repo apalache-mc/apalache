@@ -13,24 +13,13 @@ IsSome(o) == VariantTag(o) = "Some"
 \* @type: $option => Bool;
 IsNone(o) == VariantTag(o) = "None"
 
-
-\* This should be LOCAL, but can't be until
-\* https://github.com/informalsystems/apalache/issues/2111 is fixed
-\* @type: $option => a;
-OptionGetUnsafe(o) == VariantGetUnsafe("Some", o)
-
-\* OptionGetOr(o, default) ==
-\*   IF IsSome(o)
-\*   THEN OptionGetUnsafe(o)
-\*   ELSE default
-
 \* @type: (Some(a) | None(UNIT), a => b, UNIT => b) => b;
 OptionCase(o, f(_), g(_)) ==
   IF IsSome(o)
-  THEN f(OptionGetUnsafe(o))
+  THEN f(VariantGetUnsafe("Some", o))
   ELSE g(UNIT)
 
-\* @type: (a => b, $option) => $option;
+\* @type: (a => b, Some(a) | None(UNIT)) => Some(b) | None(UNIT);
 OptionMap(f(_), o) ==
   LET
     caseSome(x) == Some(f(x))
@@ -42,7 +31,7 @@ OptionMap(f(_), o) ==
   OptionCase(o, caseSome, caseNone)
 
 \* @type: (a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT);
-FlatMap(f(_), o) ==
+OptionFlatMap(f(_), o) ==
   LET
     caseSome(x) == f(x)
   IN
@@ -77,5 +66,10 @@ OptionToSet(o) ==
     caseNone(u) == {}
   IN
   OptionCase(o, caseSome, caseNone)
+
+\* @type: Set(a) => Some(a) | None(UNIT);
+OptionChoose(s) ==
+  LET getter(oa, b) == IF IsSome(oa) THEN oa ELSE Some(b) IN
+  ApaFoldSet(getter, None, s)
 
 ============================================================
