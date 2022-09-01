@@ -137,6 +137,17 @@ object ConfigManager {
   def apply(cfg: ApalacheConfig): Try[ApalacheConfig] =
     new ConfigManager().load(cfg).left.map(err => new ConfigurationError(err.prettyPrint())).toTry
 
+  /** Load a config from a string encoding */
+  def apply(string: String): Try[ApalacheConfig] = {
+    ConfigSource
+      .string(string)
+      .load[ApalacheConfig]
+      .left
+      .map(err => new ConfigurationError(err.prettyPrint()))
+      .toTry
+      .flatMap(apply(_))
+  }
+
   /** Save the given `cfg` into the `dst` `PrintWriter` */
   def save(cfg: ApalacheConfig)(dst: PrintWriter): Unit = {
     val cfgString = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].render(renderOptions)
