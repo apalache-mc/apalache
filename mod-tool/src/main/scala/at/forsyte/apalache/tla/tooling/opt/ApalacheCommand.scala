@@ -46,9 +46,6 @@ abstract class ApalacheCommand(name: String, description: String)
         val featureDescriptions: Seq[String] = Feature.all.map(f => s"  * ${f.name}: ${f.description}")
         ("a comma-separated list of experimental features:" +: featureDescriptions).mkString("\n")
       })
-  var dumpConfig = opt[Option[File]](default = None,
-      description = """|dump the application configuration to the given file, default: none
-                       |(the application configuration is derived by parsing the CLI and reading any configuration files)""".stripMargin)
 
   /**
    * Derives an instance of [[at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig ApalacheConfig]] from the
@@ -76,7 +73,6 @@ abstract class ApalacheCommand(name: String, description: String)
         runDir = runDir,
         writeIntermediate = writeIntermediate,
         features = features,
-        dumpConfig = dumpConfig,
     ))
   }
 

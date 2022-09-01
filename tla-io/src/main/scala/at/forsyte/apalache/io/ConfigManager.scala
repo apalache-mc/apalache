@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.lir.Feature
 import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
 import com.typesafe.config.{Config, ConfigObject}
 import scala.util.Try
-import scala.util.Using
 import java.io.PrintWriter
 import com.typesafe.config.ConfigRenderOptions
 import at.forsyte.apalache.infra.passes.options.SourceOption
@@ -127,12 +126,21 @@ class ConfigManager() {
       .withFallback(globalConfig.optional) // "optional" entails this will be empty if the file is absent
       .withFallback(ConfigSource.fromConfig(defaults))
       .load[ApalacheConfig]
-      .map { cfg =>
-        // Dump the derived configuration into a file, if `dumpConfig` was set
-        cfg.common.dumpConfig.foreach(save(_, cfg))
-        // But return the config, as that's what we're are loading
-        cfg
-      }
+  }
+}
+
+object ConfigManager {
+
+  import Converters._
+
+  /** Load the application configuration, converting any configuration error into a pretty printed message */
+  def apply(cfg: ApalacheConfig): Try[ApalacheConfig] =
+    new ConfigManager().load(cfg).left.map(err => new ConfigurationError(err.prettyPrint())).toTry
+
+  /** Save the given `cfg` into the `dst` `PrintWriter` */
+  def save(cfg: ApalacheConfig)(dst: PrintWriter): Unit = {
+    val cfgString = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].render(renderOptions)
+    dst.print(cfgString)
   }
 
   // Configure the rendering options for dumping the configuration
@@ -146,18 +154,4 @@ class ConfigManager() {
       // Use the cleaner HOCON syntax instead of JSON
       .setJson(false)
   }
-
-  // Save the given `cfg` into the `dst` file
-  private def save(dst: File, cfg: ApalacheConfig): Unit = {
-    val cfgString = ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].render(renderOptions)
-    Using(new PrintWriter(dst))(_.print(cfgString))
-  }
-}
-
-object ConfigManager {
-
-  /** Load the application configuration, converting any configuration error into a pretty printed message */
-  def apply(cfg: ApalacheConfig): Try[ApalacheConfig] =
-    new ConfigManager().load(cfg).left.map(err => new ConfigurationError(err.prettyPrint())).toTry
-
 }

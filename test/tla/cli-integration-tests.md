@@ -3556,20 +3556,21 @@ $ rm -rf ./.apalache.cfg
 First, set some custom config options, to ensure they'll be merged into the derived config:
 
 ```sh
-$ printf "checker={length=0,inv=[Inv]}, common.out-dir=./cfg-out" > demo-config.cfg
+$ printf "checker={length=0,inv=[Inv]}, common{out-dir=./cfg-out, features=[rows]}" > demo-config.cfg
 ```
 
-Then, run a trivial checking command, dumping the derived config to a file:
+Then, run a trivial checking command with `--debug` so the derived config will
+be saved into to the `--run-dir`:
 
 ```sh
-$ apalache-mc check --config-file=demo-config.cfg --dump-config=configdump.cfg --features=rows Counter.tla
+$ apalache-mc check --config-file=demo-config.cfg --run-dir=configdump-dir --debug Counter.tla
 ...
 ```
 
 Finally, confirm that the dumped config looks as expected, and clean up:
 
 ```sh
-$ cat ./configdump.cfg
+$ cat ./configdump-dir/application-configs.cfg
 checker {
     algo=incremental
     discard-disabled=true
@@ -3590,13 +3591,13 @@ checker {
 common {
     command=check
     config-file="demo-config.cfg"
-    debug=false
-    dump-config="configdump.cfg"
+    debug=true
     features=[
         rows
     ]
     out-dir="./cfg-out"
     profiling=false
+    run-dir=configdump-dir
     smtprof=false
     write-intermediate=false
 }
@@ -3611,7 +3612,7 @@ output {}
 typechecker {
     inferpoly=true
 }
-$ rm -rf ./configdump.cfg ./demo-config.cfg ./cfg-out
+$ rm -rf ./configdump-dir ./demo-config.cfg ./cfg-out
 ```
 
 ## module lookup
