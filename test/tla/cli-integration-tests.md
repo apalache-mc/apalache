@@ -2068,6 +2068,16 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### check View2.tla without --view
+
+```sh
+$ apalache-mc check --inv=Inv --max-error=10 View2.tla | sed 's/[IEW]@.*//'
+...
+Option maxError = 10 requires a view. None specified.
+...
+EXITCODE: ERROR (255)
+```
+
 ### check bug #874
 
 Unhandled `IllegalArgumentException` when accessing a non-existent field on a

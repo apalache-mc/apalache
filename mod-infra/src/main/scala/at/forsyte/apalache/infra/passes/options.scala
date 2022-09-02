@@ -2,20 +2,13 @@ package at.forsyte.apalache.infra.passes.options
 
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
-import at.forsyte.apalache.infra.tlc.config.BehaviorSpec
-import at.forsyte.apalache.infra.tlc.config.InitNextSpec
-import at.forsyte.apalache.infra.tlc.config.TlcConfig
+import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.tla.lir.Feature
-import at.forsyte.apalache.infra.tlc.config.TlcConfigParseError
-
 import com.typesafe.scalalogging.LazyLogging
-import java.io.File
-import java.io.FileReader
-import java.io.IOException
 import org.apache.commons.io.FilenameUtils
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+
+import java.io.{File, FileReader, IOException}
+import scala.util.{Failure, Success, Try}
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -580,25 +573,36 @@ object OptionGroup extends LazyLogging {
       extends OptionGroup
 
   object Checker extends Configurable[Config.Checker, Checker] with LazyLogging {
-    def apply(checker: Config.Checker): Try[Checker] = for {
-      algo <- checker.algo.toTry("checker.algo")
-      discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
-      length <- checker.length.toTry("checker.length")
-      maxError <- checker.maxError.toTry("checker.maxError")
-      noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
-      nworkers <- checker.nworkers.toTry("checker.nworkers")
-      smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
-      tuning <- checker.tuning.toTry("checker.tuning")
-    } yield Checker(
-        algo = algo,
-        discardDisabled = discardDisabled,
-        length = length,
-        maxError = maxError,
-        noDeadlocks = noDeadlocks,
-        nworkers = nworkers,
-        smtEncoding = smtEncoding,
-        tuning = tuning,
-    )
+    def apply(checker: Config.Checker): Try[Checker] = {
+
+      def validateMaxError(n: Int) =
+        if (n > 1 && checker.view.isEmpty) {
+          val msg = s"Option maxError = ${n} requires a view. None specified."
+          Failure(new PassOptionException(msg))
+        } else {
+          Success(n)
+        }
+
+      for {
+        algo <- checker.algo.toTry("checker.algo")
+        discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
+        length <- checker.length.toTry("checker.length")
+        noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
+        nworkers <- checker.nworkers.toTry("checker.nworkers")
+        smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
+        tuning <- checker.tuning.toTry("checker.tuning")
+        maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
+      } yield Checker(
+          algo = algo,
+          discardDisabled = discardDisabled,
+          length = length,
+          maxError = maxError,
+          noDeadlocks = noDeadlocks,
+          nworkers = nworkers,
+          smtEncoding = smtEncoding,
+          tuning = tuning,
+      )
+    }
   }
 
   ////////////////
