@@ -18,12 +18,15 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
  * Example: OperEx( TlaArithOper.plus, ValEx( TlaInt(1) ), ValEx(TlaInt(2) ) ) ~~~~~> { "type": "(Int, Int) => Int",
  * "kind": "OperEx", "oper": "+" "args": [ { "type": "Int", "kind": "ValEx", "value": { "kind": TlaInt, "value": 1 } },
  * { "type": "Int", "kind": "ValEx", "value": { "kind": TlaInt, "value": 2 } } ] }
+ *
+ * @tparam R
+ *   The class of the value which the JsonRepresentation uses to reprsent JSON
  */
-class TlaToJson[T <: JsonRepresentation](
-    factory: JsonFactory[T],
+class TlaToJson[R, T <: JsonRepresentation[R]](
+    factory: JsonFactory[R, T],
     locatorOpt: Option[SourceLocator] = None,
   )(implicit typeTagPrinter: TypeTagPrinter)
-    extends JsonEncoder[T] {
+    extends JsonEncoder[R, T] {
   import TlaToJson._
 
   implicit def liftString: String => T = factory.fromStr

@@ -11,13 +11,15 @@ import at.forsyte.apalache.io.lir.TypeTagReader
 /**
  * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFactory
  * implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
+ *
+ * @tparam R
+ *   The class of the value which the JsonRepresentation uses to reprsent JSON
  */
-
-class JsonToTla[T <: JsonRepresentation](
-    scalaFactory: ScalaFactory[T],
+class JsonToTla[R, T <: JsonRepresentation[R]](
+    scalaFactory: ScalaFactory[R, T],
     sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
-    extends JsonDecoder[T] {
+    extends JsonDecoder[R, T] {
 
   private def missingField(fieldName: String): JsonDeserializationError =
     new JsonDeserializationError(s"JSON has no field named [$fieldName].")
