@@ -154,6 +154,11 @@ object ConfigManager {
     dst.print(cfgString)
   }
 
+  /** Render the given `cfg` as a JSON string */
+  def serialize(cfg: ApalacheConfig): String = {
+    ConfigWriter[ApalacheConfig].to(cfg).asInstanceOf[ConfigObject].render(ConfigRenderOptions.concise())
+  }
+
   // Configure the rendering options for dumping the configuration
   private val renderOptions: ConfigRenderOptions = {
     ConfigRenderOptions
