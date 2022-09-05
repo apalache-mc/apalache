@@ -124,7 +124,7 @@ trait TransitionExecutor[ExecutorContextT] extends Recoverable[ExecutionSnapshot
    *   Some(true), if the context is satisfiable; Some(false), if the context is unsatisfiable; None, if the solver
    *   timed out or reported *unknown*.
    */
-  def sat(timeoutSec: Long): Option[Boolean]
+  def sat(timeoutSec: Int): Option[Boolean]
 
   /**
    * Decode the current symbolic execution from the SMT model (if the constraints are satisfiable)

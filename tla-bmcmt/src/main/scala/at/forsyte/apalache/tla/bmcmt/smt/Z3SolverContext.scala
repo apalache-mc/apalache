@@ -481,13 +481,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     status == Status.SATISFIABLE
   }
 
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = {
     if (timeoutSec <= 0) {
       Some(sat())
     } else {
-      def setTimeout(tm: Long): Unit = {
+      def setTimeout(tm: Int): Unit = {
         val params = z3context.mkParams()
-        params.add("timeout", BigInt(tm).toInt)
+        params.add("timeout", tm)
         z3solver.setParameters(params)
       }
       // Z3 expects `timeout` to be in milliseconds passed as unsigned int, i.e., with a maximum value of 2^32 - 1.
