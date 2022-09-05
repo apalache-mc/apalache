@@ -37,13 +37,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    */
   private val logWriter: PrintWriter = initLog()
 
-  // dump the configuration parameters in the log
-  // set the global configuration parameters for z3 modules
+  // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
     logWriter.println(";; %s = %s".format(p, config.randomSeed))
-  //    the following fails with an exception: java.lang.NoSuchFieldError: value
-  //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+  // FIXME(#2140): the following throws `java.lang.NoSuchFieldError: com.microsoft.z3.Native$StringPtr.value`
+  // logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
   private def encoding: SMTEncoding = config.smtEncoding
