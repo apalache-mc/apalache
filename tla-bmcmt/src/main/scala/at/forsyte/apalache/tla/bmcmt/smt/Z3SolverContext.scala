@@ -470,7 +470,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   override def sat(): Boolean = {
     log("(check-sat)")
     val status = z3solver.check()
-    log(s";; sat = ${status == Status.SATISFIABLE}")
+    log(s";; sat = ${status.name()}")
     logWriter.flush() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
@@ -493,6 +493,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       setTimeout(timeoutSec * 1000)
       log("(check-sat)")
       val status = z3solver.check()
+      log(s";; sat = ${status.name()}")
       // set it to the maximum: Z3 is using 2^32 - 1, which is hard to pass in Java, so we can only set it to 2^31-1
       setTimeout(Int.MaxValue)
       logWriter.flush() // good time to flush
