@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.output.NullOutputStream
 
 import java.io.PrintWriter
@@ -29,8 +30,10 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Igor Konnov, Rodrigo Otoni
  */
-class Z3SolverContext(val config: SolverConfig) extends SolverContext {
+class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
   private val id: Long = Z3SolverContext.createId()
+
+  logger.debug(s"Creating Z3 solver context ${id}")
 
   /**
    * A log writer, for debugging purposes.
@@ -119,6 +122,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Dispose whatever has to be disposed in the end.
    */
   override def dispose(): Unit = {
+    logger.debug(s"Disposing Z3 solver context ${id}")
     z3context.close()
     logWriter.close()
     cellCache.clear()
