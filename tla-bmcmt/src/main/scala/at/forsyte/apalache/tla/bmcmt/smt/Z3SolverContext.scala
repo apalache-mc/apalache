@@ -1002,5 +1002,11 @@ object Z3SolverContext {
    * The names of all parameters that are used to set the random seeds in z3.
    */
   val RANDOM_SEED_PARAMS: List[String] =
-    List("sat.random_seed", "smt.random_seed", "fp.spacer.random_seed", "sls.random_seed")
+    List(
+        "fp.spacer.random_seed",
+        "nlsat.seed",
+        "sat.random_seed",
+        "sls.random_seed",
+        "smt.random_seed",
+    )
 }
