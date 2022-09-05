@@ -493,7 +493,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       Some(sat())
     } else {
       def setTimeout(tm: Long): Unit = {
-        val params = z3context.mkParams()
         params.add("timeout", BigInt(tm).toInt)
         z3solver.setParameters(params)
         logWriter.println(s";; ${params}")
