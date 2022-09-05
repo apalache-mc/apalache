@@ -58,11 +58,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private var smtListener: SmtListener = new IdleSmtListener()
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
-  // The parSet set is used to pass parameters to Z3
-  // The list of parameters can be seen by passing the -p flag to Z3
-  val parSet = z3context.mkParams()
-  // parSet.add("array.extensional", false) // disables extensionality for the theory of arrays
-  z3solver.setParameters(parSet)
+  // Set up parameters to Z3; the list of parameters can be seen by passing the -p flag to Z3
+  val params = z3context.mkParams()
+  // Set random seed. We are also setting it via global parameters above, but `Global.setParameter()` says:
+  // "When a Z3 module is initialized it will use the value of these parameters when Z3_params objects are not provided."
+  params.add("seed", config.randomSeed)
+  params.add("random_seed", config.randomSeed)
+  // params.add("array.extensional", false) // disables extensionality for the theory of arrays
+  z3solver.setParameters(params)
+  logWriter.println(s";; ${params}")
 
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
