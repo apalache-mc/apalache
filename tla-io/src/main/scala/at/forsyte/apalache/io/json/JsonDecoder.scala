@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
  * @tparam T
  *   Any class extending JsonRepresentation
  */
-trait JsonDecoder[R, T <: JsonRepresentation[R]] {
+trait JsonDecoder[T <: JsonRepresentation] {
   def asTlaModule(moduleJson: T): TlaModule
   def asTlaDecl(declJson: T): TlaDecl
   def asTlaEx(exJson: T): TlaEx

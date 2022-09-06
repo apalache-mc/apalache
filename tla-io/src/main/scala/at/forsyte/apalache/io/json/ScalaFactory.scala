@@ -9,7 +9,7 @@ package at.forsyte.apalache.io.json
  * @tparam T
  *   Any class extending JsonRepresentation
  */
-trait ScalaFactory[R, T <: JsonRepresentation[R]] {
+trait ScalaFactory[T <: JsonRepresentation] {
   def asInt(json: T): Int
   def asStr(json: T): String
   def asBool(json: T): Boolean

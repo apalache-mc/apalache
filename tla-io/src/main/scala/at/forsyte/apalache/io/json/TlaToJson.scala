@@ -22,11 +22,11 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
  * @tparam R
  *   The class of the value which the JsonRepresentation uses to reprsent JSON
  */
-class TlaToJson[R, T <: JsonRepresentation[R]](
-    factory: JsonFactory[R, T],
+class TlaToJson[T <: JsonRepresentation](
+    factory: JsonFactory[T],
     locatorOpt: Option[SourceLocator] = None,
   )(implicit typeTagPrinter: TypeTagPrinter)
-    extends JsonEncoder[R, T] {
+    extends JsonEncoder[T] {
   import TlaToJson._
 
   implicit def liftString: String => T = factory.fromStr

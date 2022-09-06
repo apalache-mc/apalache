@@ -15,11 +15,11 @@ import at.forsyte.apalache.io.lir.TypeTagReader
  * @tparam R
  *   The class of the value which the JsonRepresentation uses to reprsent JSON
  */
-class JsonToTla[R, T <: JsonRepresentation[R]](
-    scalaFactory: ScalaFactory[R, T],
+class JsonToTla[T <: JsonRepresentation](
+    scalaFactory: ScalaFactory[T],
     sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
-    extends JsonDecoder[R, T] {
+    extends JsonDecoder[T] {
 
   private def missingField(fieldName: String): JsonDeserializationError =
     new JsonDeserializationError(s"JSON has no field named [$fieldName].")

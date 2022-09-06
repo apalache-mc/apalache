@@ -10,4 +10,4 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
 class TlaToUJson(
     locatorOpt: Option[SourceLocator] = None
   )(implicit typeTagPrinter: TypeTagPrinter)
-    extends TlaToJson[ujson.Value, UJsonRep](UJsonFactory, locatorOpt)(typeTagPrinter)
+    extends TlaToJson[UJsonRep](UJsonFactory, locatorOpt)(typeTagPrinter)

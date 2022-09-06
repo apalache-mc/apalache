@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.json.{JsonDeserializationError, ScalaFactory}
 /**
  * ScalaFactory for the UJsonRep variant of JsonRepresentation
  */
-object UJsonScalaFactory extends ScalaFactory[ujson.Value, UJsonRep] {
+object UJsonScalaFactory extends ScalaFactory[UJsonRep] {
   override def asInt(json: UJsonRep): Int =
     json.value.numOpt.map { _.toInt }.getOrElse {
       throw new JsonDeserializationError("Not an integer.")

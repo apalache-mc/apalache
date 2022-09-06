@@ -5,7 +5,9 @@ import at.forsyte.apalache.io.json.JsonRepresentation
 /**
  * A JsonRepresentation, using the ujson library. Wraps a ujson.Value
  */
-sealed case class UJsonRep(val value: ujson.Value) extends JsonRepresentation[ujson.Value] {
+sealed case class UJsonRep(val value: ujson.Value) extends JsonRepresentation {
+  type Value = ujson.Value
+
   override def toString: String = ujson.write(value, indent = 2, escapeUnicode = false)
 
   /**
