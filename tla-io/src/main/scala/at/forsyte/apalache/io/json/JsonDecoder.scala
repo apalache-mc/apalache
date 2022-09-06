@@ -5,9 +5,6 @@ import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 /**
  * A JsonDecoder defines a conversion from a json (as represented by T) to a TLA+ expression/declaration/module
  *
- * @tparam R
- *   The class of the value which the JsonRepresentation uses to reprsent JSON
- *
  * @tparam T
  *   Any class extending JsonRepresentation
  */

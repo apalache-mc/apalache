@@ -8,6 +8,8 @@ package at.forsyte.apalache.io.json
  *   The class of the value which the JsonRepresentation uses to reprsent JSON
  */
 trait JsonRepresentation {
+
+  /** The type of tused to represent JSON */
   type Value
 
   def toString: String
