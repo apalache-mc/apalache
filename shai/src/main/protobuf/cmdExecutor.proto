@@ -27,7 +27,7 @@ message CmdResponse {
   oneof result {
     // A JSON encoded string with data useful on success
     string success = 1;
-    // A JSON encded string with data useful on error
+    // A JSON encoded string with data useful on error
     string failure = 2;
   }
 }
