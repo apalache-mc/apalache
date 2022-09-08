@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.2.11"
+    lazy val logbackVersion = "1.4.0"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -31,7 +31,7 @@ object Dependencies {
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.2"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
-    val slf4j = "org.slf4j" % "slf4j-api" % "1.7.36"
+    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.0"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.9"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
