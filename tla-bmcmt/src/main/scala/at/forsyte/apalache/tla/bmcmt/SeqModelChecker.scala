@@ -225,10 +225,10 @@ class SeqModelChecker[ExecutorContextT](
 
         if (params.discardDisabled) {
           // check, whether the transition is enabled in SMT
+          logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
           val assumeSnapshot = trex.snapshot()
           // assume that the transition is fired and check, whether the constraints are satisfiable
           trex.assumeTransition(no)
-          logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
               logger.debug(s"Step ${trex.stepNo}: Transition #$no is enabled")
@@ -363,13 +363,13 @@ class SeqModelChecker[ExecutorContextT](
             case Some(true) =>
               searchState.onResult(Error(1))
               notifyOnError(checkerInput.rootModule, trex.decodedExecution(), notInv, searchState.nFoundErrors)
-              val msg = "State %d: %s invariant %s violated.".format(stateNo, kind, invNo)
-              logger.error(msg)
+              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} violated.")
               excludePathView()
 
             case Some(false) =>
               // no counterexample found, so the invariant holds true
               invariantHolds = true
+              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} holds.")
 
             case None =>
               // UNKNOWN or timeout
