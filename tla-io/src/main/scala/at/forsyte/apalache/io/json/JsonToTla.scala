@@ -11,8 +11,10 @@ import at.forsyte.apalache.io.lir.TypeTagReader
 /**
  * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFactory
  * implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
+ *
+ * @tparam T
+ *   Any class extending JsonRepresentation
  */
-
 class JsonToTla[T <: JsonRepresentation](
     scalaFactory: ScalaFactory[T],
     sourceStoreOpt: Option[SourceStore] = None,
