@@ -81,22 +81,16 @@ abstract class ApalacheCommand(name: String, description: String)
    *
    * All execution logic specific to the subcommand should be triggered encapsulated in the [[run]] method.
    *
-   * Most subclasses use an `Executor` to sequence a chain of passes. Executors are created by providing a `ToolModule`
-   * and an `OptionGroup`. E.g.,
+   * Most subclasses use the `PassChainExecutor` to sequence a chain of passes. `PassChainExecutor`s are created by
+   * providing a `ToolModule`. E.g.,
    *
    * {{{
-   * import at.forsyte.apalache.infra.Executor
+   * import at.forsyte.apalache.infra.passes.PassChainExecutor
    * import at.forsyte.apalache.infra.passes.options.OptionGroup
    *
    * val options = OptionGroup.WithOutput(configuration)
-   * val executor = Executor(new TypeCheckerModule, options)
-   * }}}
    *
-   * The [[run]] methods of a subcommand implementing this trait will generally end with an invocation of
-   * `executor.run`, such as
-   *
-   * {{{
-   * executor.run() match {
+   * PassChainExecutor.run(new TypeCheckerModule(options)) match {
    *   case Right(module) => Right("Success msg")
    *   case Left(errCode) => Left(errorCode, "Failure msg")
    * }
