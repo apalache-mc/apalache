@@ -276,11 +276,9 @@ class SeqModelChecker[ExecutorContextT](
           // recover from the snapshot
           trex.recover(snapshot.get)
         } else {
-          // when --all-enabled is on, the transition has not been assumed
+          // Special case: when --discard-disabled=false, the transition has not been assumed
           if (params.invariantMode == InvariantMode.BeforeJoin) {
-            if (isNext) {
-              checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
-            }
+            checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
             if (!searchState.canContinue) {
               return (Set.empty, Set.empty)
             }
@@ -312,7 +310,7 @@ class SeqModelChecker[ExecutorContextT](
     }
   }
 
-  // This is a special case of --all-enabled and search.invariant.mode=before.
+  // This is a special case of --discard-disabled=false and search.invariant.mode=before.
   // A transition has been prepared but not assumed.
   private def checkInvariantsForPreparedTransition(
       isNext: Boolean,
