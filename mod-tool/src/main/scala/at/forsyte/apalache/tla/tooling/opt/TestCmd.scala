@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.tooling.opt
 import org.backuity.clist._
 
 import java.io.File
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
  * This command initiates the 'test' command line.
@@ -62,7 +62,6 @@ class TestCmd
   def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithCheckerPreds(cfg).get
-    val executor = Executor(new CheckerModule(options))
 
     // This is a special version of the `check` command that is tuned towards testing scenarios
     logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
@@ -72,7 +71,7 @@ class TestCmd
     // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.run() match {
+    PassChainExecutor.run(new CheckerModule(options)) match {
       case Right(_)   => Right("No example found")
       case Left(code) => Left(code, "Found a violation of the postcondition. Check violation.tla.")
     }

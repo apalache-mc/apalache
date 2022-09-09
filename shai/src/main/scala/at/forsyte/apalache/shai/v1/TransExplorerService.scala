@@ -15,7 +15,6 @@ package at.forsyte.apalache.shai.v1
 import at.forsyte.apalache.shai.v1.transExplorer.{
   ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, ZioTransExplorer,
 }
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
@@ -26,6 +25,7 @@ import java.util.UUID
 import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -175,8 +175,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
             output = Output(Some(new java.io.File("."))),
         )
       }
-      val parser = Executor(new ParserModule(options))
-      parser.run().left.map(code => s"Parsing failed with error code: ${code}")
+      PassChainExecutor.run(new ParserModule(options)).left.map(code => s"Parsing failed with error code: ${code}")
     } catch {
       case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
     }

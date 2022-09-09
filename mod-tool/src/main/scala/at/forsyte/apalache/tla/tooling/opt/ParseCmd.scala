@@ -4,10 +4,10 @@ import java.io.File
 
 import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
  * This command initiates the 'parse' command line.
@@ -31,11 +31,10 @@ class ParseCmd
   def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithIO(cfg).get
-    val executor = Executor(new ParserModule(options))
 
     logger.info("Parse " + file)
 
-    executor.run() match {
+    PassChainExecutor.run(new ParserModule(options)) match {
       case Right(m) => Right(s"Parsed successfully\nRoot module: ${m.name} with ${m.declarations.length} declarations.")
       case Left(code) => Left(code, "Parser has failed")
     }
