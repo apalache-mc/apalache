@@ -7,7 +7,6 @@ import scala.util.Success
 import zio.ZIO
 import zio.ZEnv
 
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.passes.ToolModule
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.ConfigManager
@@ -18,6 +17,7 @@ import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.infra.passes.options.Config
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -40,18 +40,22 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
   def run(req: CmdRequest): Result[CmdResponse] = for {
     cmd <- validateCmd(req.cmd)
-    resp <-
-      parseConfig(req.config).flatMap(parserModuleOfCmd(cmd)) match {
-        case Right(parserModule) => runExecutor(parserModule)
-        case Left(err)           => ZIO.succeed(CmdResponse.Result.Failure(err))
-      }
+    result <- for {
+      cfg <- parseConfig(req.config)
+      toolModule <- parserModuleOfCmd(cmd)(cfg)
+      tlaModule <- PassChainExecutor.run(toolModule)
+      m = jsonOfModule(tlaModule)
+    } yield CmdResponse.Result.Success(s"Command succeeded ${m}")
+    resp <- result match {
+      case Right(resp) => ZIO.succeed(resp)
+      case Left(err)   => ZIO.succeed(CmdResponse.Result.Failure(err))
+    }
   } yield CmdResponse(resp)
 
   // TODO Structure responses
-  private def runExecutor[O <: OptionGroup](module: ToolModule[O]) = ZIO.effectTotal {
+  private def runExecutor[O <: OptionGroup](toolModule: ToolModule[O]) = ZIO.effectTotal {
     try {
-      val executor = Executor[O](module)
-      executor.run() match {
+      PassChainExecutor.run[O](toolModule) match {
         case Right(module) =>
           // TODO gather data for response and incorporate into JSON response
           val m = jsonOfModule(module)
@@ -70,7 +74,9 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     case cmd => ZIO.succeed(cmd)
   }
 
-  private def parserModuleOfCmd(cmd: Cmd)(cfg: Config.ApalacheConfig): Either[String, ParserModule] = {
+  private def parserModuleOfCmd[O <: OptionGroup](
+      cmd: Cmd
+    )(cfg: Config.ApalacheConfig): Either[String, ToolModule[O]] = {
     val (tryOptions, toolModule) =
       cmd match {
         case Cmd.PARSE => (OptionGroup.WithIO(cfg), new ParserModule(_))
