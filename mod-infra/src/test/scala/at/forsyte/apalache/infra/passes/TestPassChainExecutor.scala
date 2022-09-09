@@ -28,8 +28,7 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set(ModuleProperty.Inlined))
     val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
-    val executor = new PassChainExecutor(Seq(pass1, pass2))
-    val result = executor.run()
+    val result = PassChainExecutor.runOnPasses(Seq(pass1, pass2))
     assert(result.isRight)
   }
 
@@ -38,12 +37,12 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set())
     val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
-    val executor = new PassChainExecutor(Seq(pass1, pass2))
     val thrown = intercept[Exception] {
-      executor.run()
+      PassChainExecutor.runOnPasses(Seq(pass1, pass2))
     }
 
     assert(thrown.getMessage === "TestPass cannot run for a module without the properties: Inlined")
+
   }
 
   test("""Returns empty result when an execution is faulty""") {
@@ -51,9 +50,7 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set())
     val pass2 = new ParametrizedPass(false, Set(), Set())
 
-    val executor = new PassChainExecutor(Seq(pass1, pass2))
-
-    val result = executor.run()
+    val result = PassChainExecutor.runOnPasses(Seq(pass1, pass2))
     assert(result.isLeft)
   }
 }
