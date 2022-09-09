@@ -1,7 +1,7 @@
 package at.forsyte.apalache.shai.v1
 
 import at.forsyte.apalache.shai.v1.cmdExecutor.ZioCmdExecutor
-import zio.{Semaphore, ZEnv}
+import zio.ZEnv
 import com.typesafe.scalalogging.Logger
 
 /**
@@ -16,8 +16,8 @@ import com.typesafe.scalalogging.Logger
  * [[CmdExecutorService]] is meant to be registered with the [[RpcServer]], and should not need to be used directly.
  */
 
-class CmdExecutorService(parserSemaphore: Semaphore, logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEnv, Any] {
+class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEnv, Any] {
 
   // TODO These will be used when we start adding the RPC calls
-  val _todo = (parserSemaphore, logger)
+  val _todo = logger
 }

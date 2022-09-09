@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
@@ -14,6 +13,7 @@ import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import org.apache.commons.io.FilenameUtils
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
  * This command initiates the 'check' command line.
@@ -111,13 +111,12 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithCheckerPreds(cfg).get
-    val executor = Executor(new CheckerModule(options))
 
     val tuning = options.checker.tuning
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.run() match {
+    PassChainExecutor.run(new CheckerModule(options)) match {
       case Right(_)   => Right(s"Checker reports no error up to computation length ${options.checker.length}")
       case Left(code) => Left(code, "Checker has found an error")
     }

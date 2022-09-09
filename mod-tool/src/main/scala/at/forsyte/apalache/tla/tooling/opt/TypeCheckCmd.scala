@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.tooling.opt
 import java.io.File
 
 import org.backuity.clist._
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
  * This command initiates the 'typecheck' command line.
@@ -36,11 +36,10 @@ class TypeCheckCmd
   override def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithTypechecker(cfg).get
-    val executor = Executor(new TypeCheckerModule(options))
 
     logger.info("Type checking " + file)
 
-    executor.run() match {
+    PassChainExecutor.run(new TypeCheckerModule(options)) match {
       case Right(_)   => Right("Type checker [OK]")
       case Left(code) => Left(code, "Type checker [FAILED]")
     }

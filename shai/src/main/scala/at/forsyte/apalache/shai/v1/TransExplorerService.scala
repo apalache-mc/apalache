@@ -15,7 +15,6 @@ package at.forsyte.apalache.shai.v1
 import at.forsyte.apalache.shai.v1.transExplorer.{
   ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, ZioTransExplorer,
 }
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
@@ -23,10 +22,10 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
 import java.util.UUID
-import zio.{Ref, Semaphore, ZEnv, ZIO}
-import zio.duration._
+import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -79,15 +78,10 @@ private case class Conn(
  * @param connections
  *   A thread-safe, mutable reference holding a map registering connections by their unique ID
  *
- * @param parserSemaphore
- *   A semaphore used to ensure atomic access to the SANY parser. This is necessitated by the statefull design of the
- *   SANY parser, which makes it impossible to run two instance of the parser concurrently in the same runtime. See
- *   https://github.com/informalsystems/apalache/issues/1114#issuecomment-1180534894 for details.
- *
  * @param logger
  *   The logger used by the service
  */
-class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: Semaphore, logger: Logger)
+class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
     extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
 
   /** Concurrent tasks performed by the service that produce values of type `T` */
@@ -161,39 +155,31 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], parserSemaphore: S
     }
   } yield LoadModelResponse(result)
 
-  private val parserTimeoutDuration: Duration = 2.minute
-
-  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[String, TlaModule]] = for {
-    // Obtain permit on the semaphore protecting access to the parser, ensuring the parser is not
-    // run by more than one thread at a time.
-    result <- parserSemaphore
-      .withPermit(ZIO.effectTotal(try {
-        // TODO: replace hard-coded options with options derived from CLI params
-        val options = {
-          import OptionGroup._
-          WithIO(
-              common = Common(
-                  command = "server",
-                  outDir = new java.io.File("."),
-                  runDir = None,
-                  debug = false,
-                  smtprof = false,
-                  writeIntermediate = false,
-                  profiling = false,
-                  features = Seq(),
-              ),
-              input = Input(SourceOption.StringSource(spec, aux)),
-              output = Output(Some(new java.io.File("."))),
-          )
-        }
-        val parser = Executor(new ParserModule(options))
-        parser.run().left.map(code => s"Parsing failed with error code: ${code}")
-      } catch {
-        case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
-      }))
-      .disconnect
-      .timeout(parserTimeoutDuration)
-  } yield result.getOrElse(Left(s"Parsing failed with timeout: exceeded ${parserTimeoutDuration}"))
+  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[String, TlaModule]] = ZIO.effectTotal {
+    try {
+      // TODO: replace hard-coded options with options derived from CLI params
+      val options = {
+        import OptionGroup._
+        WithIO(
+            common = Common(
+                command = "server",
+                outDir = new java.io.File("."),
+                runDir = None,
+                debug = true,
+                smtprof = false,
+                writeIntermediate = false,
+                profiling = false,
+                features = Seq(),
+            ),
+            input = Input(SourceOption.StringSource(spec, aux)),
+            output = Output(Some(new java.io.File("."))),
+        )
+      }
+      PassChainExecutor.run(new ParserModule(options)).left.map(code => s"Parsing failed with error code: ${code}")
+    } catch {
+      case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
+    }
+  }
 
   private def jsonOfModule(module: TlaModule): String = {
     new TlaToUJson(None).makeRoot(Seq(module)).toString
