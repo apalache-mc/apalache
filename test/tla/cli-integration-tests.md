@@ -1648,6 +1648,16 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
+### check TrivialFail fails with --discard-disabled=false
+
+Regression test for https://github.com/informalsystems/apalache/issues/2158
+
+```sh
+$ apalache-mc check --inv=Inv --discard-disabled=false TrivialFail.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh
