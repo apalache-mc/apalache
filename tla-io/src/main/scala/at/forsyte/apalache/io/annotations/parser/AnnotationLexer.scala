@@ -15,7 +15,9 @@ import at.forsyte.apalache.io.annotations.AnnotationParserError
 object AnnotationLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = """([ \t\r\f\n]+)""".r
+  // We cannot throw away new lines, or else we lose the ability to parse out one line comments in annotations
+  // See https://github.com/informalsystems/apalache/issues/2162
+  override val whiteSpace: Regex = """([ \t\f]+)""".r
 
   /**
    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is not
@@ -44,12 +46,20 @@ object AnnotationLexer extends RegexParsers {
 
   def token: Parser[AnnotationToken] =
     positioned(
-        leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char
+        leftParen
+          | rightParen
+          | comma
+          | dot
+          | boolean
+          | atIdentifier
+          | identifier
+          | number
+          | string
+          | inline_string
+          | unexpected_char
     ) ///
 
   def skip: Parser[Unit] = rep(whiteSpace) ^^^ ()
-
-  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }

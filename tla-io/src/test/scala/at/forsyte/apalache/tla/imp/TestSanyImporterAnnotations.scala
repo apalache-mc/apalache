@@ -321,4 +321,49 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         fail("Expected an operator")
     }
   }
+
+  test("line breaks are preserved inside type annotations") {
+    // Required to allow identifying and parsing out one-line comments inside of type annotations
+    // See https://github.com/informalsystems/apalache/issues/2162
+    val text =
+      """----- MODULE OneLineComments -----
+        |
+        | CONSTANT
+        | \* @type: {
+        | \*   //  comment in single-line annotation
+        | \*   f : Int
+        | \* };
+        |   singleLine,
+        | (* @type: {
+        |      //  comment in multi-line annotation
+        |      g : Int
+        |   }; *)
+        |   multiLine
+        |=====
+      """.stripMargin
+    val module = loadModule(text)
+
+    val expectedSingleLine =
+      """ {
+        | // comment in single-line annotation
+        | f : Int
+        | }""".stripMargin
+    val expectedMultiLine =
+      """ {
+        | // comment in multi-line annotation
+        | g : Int
+        | }""".stripMargin
+    module.declarations.filter(_.name.endsWith("Line")).map {
+      case d @ TlaConstDecl(_) =>
+        val annotation :: _ = annotationStore(d.ID)
+        if (d.name == "singleLine") {
+          assert(Annotation("type", mkStr(expectedSingleLine)) == annotation)
+        } else {
+          assert(Annotation("type", mkStr(expectedMultiLine)) == annotation)
+        }
+
+      case _ =>
+        fail("Expected a constant")
+    }
+  }
 }
