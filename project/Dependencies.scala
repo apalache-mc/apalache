@@ -32,7 +32,7 @@ object Dependencies {
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.2"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "2.0.0"
-    val shapeless = "com.chuusai" %% "shapeless" % "2.3.9"
+    val shapeless = "com.chuusai" %% "shapeless" % "2.3.10"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.11.2"
