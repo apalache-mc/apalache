@@ -70,7 +70,7 @@ class TestAnnotationLexer extends AnyFunSuite {
 
   test("inline string argument") {
     val text = """@baz: one;"""
-    val expected = List(AT_IDENT("baz"), INLINE_STRING(" one"))
+    val expected = List(AT_IDENT("baz"), INLINE_STRING("one"))
     expectOk(expected, text)
   }
 
@@ -99,9 +99,8 @@ class TestAnnotationLexer extends AnyFunSuite {
 
   test("annotation with ASCII codes") {
     // a sequence of control characters is replaced with a single space
-    val text =
-      " @type: Int \t\f\r\n => Int;".stripMargin
-    val expected = List(AT_IDENT("type"), INLINE_STRING(" Int => Int"))
+    val text = "@type: Int \t\f\t\f => Int;"
+    val expected = List(AT_IDENT("type"), INLINE_STRING("Int => Int"))
     expectOk(expected, text)
   }
 }

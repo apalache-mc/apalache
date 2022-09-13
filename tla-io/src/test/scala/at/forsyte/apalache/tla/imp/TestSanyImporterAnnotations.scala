@@ -344,12 +344,12 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
     val module = loadModule(text)
 
     val expectedSingleLine =
-      """ {
+      """{
         | // comment in single-line annotation
         | f : Int
         | }""".stripMargin
     val expectedMultiLine =
-      """ {
+      """{
         | // comment in multi-line annotation
         | g : Int
         | }""".stripMargin

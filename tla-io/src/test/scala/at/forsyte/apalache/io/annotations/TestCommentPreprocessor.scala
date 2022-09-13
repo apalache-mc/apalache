@@ -51,7 +51,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
         | (* \* uuuuvvv*)abc
         |(*
         |  aaaa (* bbbb *) cccc
-        | *)
+        |*)
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
@@ -61,7 +61,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
         |  abc
         |
         |  aaaa  cccc
-        | 
+        |
         |""".stripMargin
     assert(output == expected)
     assert(potentialAnnotations.isEmpty)
@@ -85,22 +85,22 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
         | ddd
         | zzz@bbb(1)
         |""".stripMargin
-    assert(potentialAnnotations == List("@annotation(\"a\", 1)", "@semi: foo ;", "@multi: aaa bbb ccc;"))
+    assert(potentialAnnotations == List("@annotation(\"a\", 1)", "@semi: foo ;", "@multi: aaa\n bbb\n ccc;"))
     assert(output == expected)
   }
 
   test("unclosed annotations") {
     val input =
       """\* xx @annotation("a",
-        |(* aaa @semi: bar *)
+        |(* aaa @semi: bar*)
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
     val expected =
-      """ xx : bar 
+      """ xx : bar
         |""".stripMargin
     assert(output == expected)
     // The extracted annotation is ill-formed. This will be detected by the annotation parser.
-    assert(potentialAnnotations == List("@annotation(\"a\", aaa @semi"))
+    assert(potentialAnnotations == List("@annotation(\"a\",\n aaa @semi"))
   }
 
   test("annotations in strings") {
@@ -113,18 +113,13 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
         |\* ;
         |""".stripMargin
     val (output, potentialAnnotations) = CommentPreprocessor()(input)
-    val expected =
-      """  (aaa)
-        | 
-        | type annotation 
-        | 
-        |""".stripMargin
-    assert(output == expected)
+    val expected = "(aaa)\n \n type annotation"
+    assert(output.trim == expected.trim)
     assert(potentialAnnotations.size == 4)
     assert(potentialAnnotations.head == "@adventurous(\"@IgnoreMe(false, 42)\", 1)")
     assert(potentialAnnotations(1) == "@beware: of :) ;")
     assert(potentialAnnotations(2) == "@type: Set(Set(a)) ;")
-    assert(potentialAnnotations(3) == "@type: a          => Int ;")
+    assert(potentialAnnotations(3) == "@type: a\n          => Int\n ;")
   }
 
   test("annotation starting with @") {
@@ -163,7 +158,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
     val input = s"(*\n  $extractedText\n *)"
     val (_, potentialAnnotations) = CommentPreprocessor()(input)
     potentialAnnotations should equal(
-        List("""@typeAlias: MESSAGE = { tag: "req", ask: Int } | { tag: "ack", success: Bool };"""))
+        List("@typeAlias: MESSAGE = { tag: \"req\", ask: Int }\n | { tag: \"ack\", success: Bool };"))
   }
 
   test("no failure on random inputs") {

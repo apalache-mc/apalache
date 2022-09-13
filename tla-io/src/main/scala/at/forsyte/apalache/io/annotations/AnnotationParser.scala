@@ -34,7 +34,7 @@ class AnnotationParser extends Parsers {
       Annotation(name, args: _*)
   }
 
-  def argsInParentheses: Parser[List[AnnotationArg]] = LPAREN() ~ repsep(arg, COMMA()) ~ RPAREN() ^^ {
+  def argsInParentheses: Parser[List[AnnotationArg]] = LPAREN() ~ repsep(arg, argSep) ~ RPAREN() ^^ {
     case _ ~ args ~ _ =>
       args
   }
@@ -45,11 +45,10 @@ class AnnotationParser extends Parsers {
 
   def arg: Parser[AnnotationArg] = stringArg | intArg | boolArg | identArg
 
-  def stringArg: Parser[AnnotationStr] = string ^^ { str =>
-    AnnotationStr(str)
-  }
+  // SEparate arguments
+  private def argSep: Parser[Unit] = (newlines ~ COMMA() ~ newlines) ^^^ ()
 
-  def inlineStringArg: Parser[AnnotationStr] = inlineString ^^ { str =>
+  def stringArg: Parser[AnnotationStr] = string ^^ { str =>
     AnnotationStr(str)
   }
 
@@ -88,6 +87,10 @@ class AnnotationParser extends Parsers {
   private def boolean: Parser[Boolean] = {
     accept("boolean", { case BOOLEAN(b) => b })
   }
+
+  // Zero or more new line tokens
+  private def newlines: Parser[Unit] = opt(rep(NL())) ^^^ ()
+
 }
 
 object AnnotationParser {
