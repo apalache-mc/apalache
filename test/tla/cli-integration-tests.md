@@ -3318,6 +3318,16 @@ $ apalache-mc typecheck PolyTooGeneral.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (120)
 ```
 
+### typecheck annotation with comments
+
+Regression test for https://github.com/informalsystems/apalache/issues/2163
+
+```sh
+$ apalache-mc typecheck CommentedTypeAnnotation.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag
