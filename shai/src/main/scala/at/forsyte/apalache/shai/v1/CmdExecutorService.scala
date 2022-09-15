@@ -16,7 +16,6 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
 import at.forsyte.apalache.io.json.impl.TlaToUJson
-import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
@@ -38,34 +37,30 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   /** Concurrent tasks performed by the service that produce values of type `T` */
   type Result[T] = ZIO[ZEnv, Status, T]
 
+  type O <: OptionGroup
+  type T <: ToolModule[O]
+
   def run(req: CmdRequest): Result[CmdResponse] = for {
     cmd <- validateCmd(req.cmd)
-    result <- for {
-      cfg <- parseConfig(req.config)
-      toolModule <- parserModuleOfCmd(cmd)(cfg)
-      tlaModule <- PassChainExecutor.run(toolModule)
-      m = jsonOfModule(tlaModule)
-    } yield CmdResponse.Result.Success(s"Command succeeded ${m}")
-    resp <- result match {
-      case Right(resp) => ZIO.succeed(resp)
-      case Left(err)   => ZIO.succeed(CmdResponse.Result.Failure(err))
+    resp <- executeCmd(cmd, req.config) match {
+      case Right(r)  => ZIO.succeed(CmdResponse.Result.Success(r))
+      case Left(err) => ZIO.succeed(CmdResponse.Result.Failure(err))
     }
   } yield CmdResponse(resp)
 
-  // TODO Structure responses
-  private def runExecutor[O <: OptionGroup](toolModule: ToolModule[O]) = ZIO.effectTotal {
-    try {
-      PassChainExecutor.run[O](toolModule) match {
-        case Right(module) =>
-          // TODO gather data for response and incorporate into JSON response
-          val m = jsonOfModule(module)
-          CmdResponse.Result.Success(s"Command succeeded ${m}")
-        case Left(code) => CmdResponse.Result.Failure(s"Command failed with error code: ${code}")
-      }
-    } catch {
-      case e: Throwable => CmdResponse.Result.Failure(s"Command failed with exception: ${e.getMessage()}")
+  private def executeCmd(cmd: Cmd, cfgStr: String): Either[String, String] = for {
+    cfg <- parseConfig(cfgStr)
+    toolModule <- cmd match {
+      case Cmd.PARSE => OptionGroup.WithIO(cfg).toEither.left.map(e => e.getMessage()).map(o => new ParserModule(o))
+      case _         => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
     }
-  }
+    tlaModule <-
+      try { PassChainExecutor.run(toolModule).left.map(errCode => s"Command failed with error code: ${errCode}") }
+      catch {
+        case e: Throwable => Left(s"Command failed with exception: ${e.getMessage()}")
+      }
+    json = jsonOfModule(tlaModule)
+  } yield s"Command succeeded ${json}"
 
   private def validateCmd(cmd: Cmd): Result[Cmd] = cmd match {
     case Cmd.Unrecognized(_) =>
@@ -74,29 +69,12 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     case cmd => ZIO.succeed(cmd)
   }
 
-  private def parserModuleOfCmd[O <: OptionGroup](
-      cmd: Cmd
-    )(cfg: Config.ApalacheConfig): Either[String, ToolModule[O]] = {
-    val (tryOptions, toolModule) =
-      cmd match {
-        case Cmd.PARSE => (OptionGroup.WithIO(cfg), new ParserModule(_))
-        case _         => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
-      }
-    tryOptions.toEither.left
-      .map(err => s"Configuration given to command does not satisfy requirements: ${err.getMessage()}")
-      .map(toolModule)
-  }
-
   private def parseConfig(data: String) = {
     ConfigManager(data) match {
       case Success(cfg) => Right(cfg.copy(common = cfg.common.copy(command = Some("server"))))
       case Failure(err) => Left(s"Invalid configuration data given to command: ${err.getMessage()}")
     }
   }
-
-  // private def loadOptions[O <: OptionGroup](attempt: Try[O]) = attempt.toEither.left.map { err =>
-  //   s"Configuration given to command does not satisfy requirements: ${err.getMessage()}"
-  // }
 
   private def jsonOfModule(module: TlaModule): String = {
     new TlaToUJson(None).makeRoot(Seq(module)).toString
