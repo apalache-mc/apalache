@@ -10,7 +10,7 @@ import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.ConfigManager
 
 // Defines the test cases used to test the CmdExecutor service
-object CmdExecutorTestCases {
+object TestCmdExecutorService extends DefaultRunnableSpec {
   private val trivialSpec =
     """|---- MODULE M ----
        |Foo == TRUE
@@ -32,7 +32,7 @@ object CmdExecutorTestCases {
     CmdRequest(cmd = Cmd.PARSE, config = config)
   }
 
-  val tests = Seq(
+  val spec = suite("CmdExecutorServiceSpec")(
       testM("can load module using the parse cmd") {
         for {
           s <- ZIO.service[CmdExecutorService]
@@ -52,5 +52,5 @@ object CmdExecutorTestCases {
           resp <- s.run(CmdRequest(cmd = Cmd.PARSE, config = config))
         } yield assert(resp.result.failure.get)(containsString("Missing value for required option input.source"))
       },
-  )
+  ).provideSomeLayerShared[ZEnv](RpcServer.createCmdExecutorService.toLayer)
 }

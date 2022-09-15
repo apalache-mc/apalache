@@ -5,10 +5,9 @@ import zio.test._
 import zio.test.Assertion._
 import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, LoadModelRequest}
 
-// Defines the test cases used to test the TransExplorere service
-object TransExplorerTestCases {
+object TransExplorerServiceSpec extends DefaultRunnableSpec {
 
-  def tests = Seq(
+  def spec = suite("TransExplorerServiceSpec")(
       testM("can obtain two different connections to server") {
         for {
           s <- ZIO.service[TransExplorerService]
@@ -107,4 +106,9 @@ object TransExplorerTestCases {
         } yield assert(respA.result.isSpec && respB.result.isSpec)(isTrue)
       },
   )
+    // Create the single shared service for use in our tests, allowing us to run
+    // all tests as if they were against the same service this accurately
+    // reflects our usage, since only one server instance will ever be running
+    // in an Apalache process at a time
+    .provideSomeLayerShared[ZEnv](RpcServer.createTransExplorerService.toLayer)
 }
