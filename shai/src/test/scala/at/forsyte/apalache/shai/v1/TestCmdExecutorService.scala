@@ -52,5 +52,10 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
           resp <- s.run(CmdRequest(cmd = Cmd.PARSE, config = config))
         } yield assert(resp.result.failure.get)(containsString("Missing value for required option input.source"))
       },
-  ).provideSomeLayerShared[ZEnv](RpcServer.createCmdExecutorService.toLayer)
+  )
+    // Create the single shared service for use in our tests, allowing us to run
+    // all tests as if they were against the same service this accurately
+    // reflects our usage, since only one server instance will ever be running
+    // in an Apalache process at a time
+    .provideSomeLayerShared[ZEnv](RpcServer.createCmdExecutorService.toLayer)
 }
