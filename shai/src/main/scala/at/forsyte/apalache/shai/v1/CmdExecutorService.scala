@@ -7,12 +7,12 @@ import scala.util.Success
 import zio.ZIO
 import zio.ZEnv
 
-import at.forsyte.apalache.infra.passes.ToolModule
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.shai.v1.cmdExecutor.Cmd
 import at.forsyte.apalache.shai.v1.cmdExecutor.{CmdRequest, CmdResponse, ZioCmdExecutor}
 import at.forsyte.apalache.tla.imp.passes.ParserModule
+import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
 import at.forsyte.apalache.io.json.impl.TlaToUJson
@@ -37,9 +37,6 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   /** Concurrent tasks performed by the service that produce values of type `T` */
   type Result[T] = ZIO[ZEnv, Status, T]
 
-  type O <: OptionGroup
-  type T <: ToolModule[O]
-
   def run(req: CmdRequest): Result[CmdResponse] = for {
     cmd <- validateCmd(req.cmd)
     resp <- executeCmd(cmd, req.config) match {
@@ -52,7 +49,9 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     cfg <- parseConfig(cfgStr)
     toolModule <- cmd match {
       case Cmd.PARSE => OptionGroup.WithIO(cfg).toEither.left.map(e => e.getMessage()).map(o => new ParserModule(o))
-      case _         => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
+      case Cmd.TYPECHECK =>
+        OptionGroup.WithTypechecker(cfg).toEither.left.map(e => e.getMessage()).map(o => new TypeCheckerModule(o))
+      case Cmd.Unrecognized(_) => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
     }
     tlaModule <-
       try { PassChainExecutor.run(toolModule).left.map(errCode => s"Command failed with error code: ${errCode}") }

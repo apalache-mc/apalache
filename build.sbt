@@ -205,7 +205,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   )
 
 lazy val shai = (project in file("shai"))
-  .dependsOn(tlair, infra, tla_io)
+  .dependsOn(tlair, infra, tla_io, tla_types)
   .settings(
       // See https://zio.dev/version-1.x/usecases/usecases_testing/
       testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),

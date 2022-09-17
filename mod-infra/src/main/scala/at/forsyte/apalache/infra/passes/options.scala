@@ -350,7 +350,7 @@ object OptionGroup extends LazyLogging {
    * @param cfg
    *   An instance of [[Config config group]].
    */
-  sealed trait Configurable[C <: Config[C], O] {
+  sealed trait Configurable[C <: Config[C], +O] {
     //  TODO could manual apply methods be replaced with pureconfig merging?
     def apply(cfg: C): Try[O]
   }
