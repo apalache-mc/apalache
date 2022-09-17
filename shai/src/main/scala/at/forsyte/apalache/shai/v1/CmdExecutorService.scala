@@ -7,16 +7,18 @@ import scala.util.Success
 import zio.ZIO
 import zio.ZEnv
 
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.io.json.impl.TlaToUJson
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
 import at.forsyte.apalache.shai.v1.cmdExecutor.Cmd
 import at.forsyte.apalache.shai.v1.cmdExecutor.{CmdRequest, CmdResponse, ZioCmdExecutor}
+import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
-import at.forsyte.apalache.io.json.impl.TlaToUJson
-import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
+import scala.util.Try
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -45,21 +47,31 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     }
   } yield CmdResponse(resp)
 
-  private def executeCmd(cmd: Cmd, cfgStr: String): Either[String, String] = for {
-    cfg <- parseConfig(cfgStr)
-    toolModule <- cmd match {
-      case Cmd.PARSE => OptionGroup.WithIO(cfg).toEither.left.map(e => e.getMessage()).map(o => new ParserModule(o))
-      case Cmd.TYPECHECK =>
-        OptionGroup.WithTypechecker(cfg).toEither.left.map(e => e.getMessage()).map(o => new TypeCheckerModule(o))
-      case Cmd.Unrecognized(_) => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
-    }
-    tlaModule <-
-      try { PassChainExecutor.run(toolModule).left.map(errCode => s"Command failed with error code: ${errCode}") }
-      catch {
-        case e: Throwable => Left(s"Command failed with exception: ${e.getMessage()}")
+  private def executeCmd(cmd: Cmd, cfgStr: String): Either[String, String] = {
+    def convErr[O](v: Try[O]) = v.toEither.left.map(e => e.getMessage())
+
+    for {
+      cfg <- parseConfig(cfgStr)
+
+      toolModule <- {
+        import OptionGroup._
+        cmd match {
+          case Cmd.PARSE           => convErr(WithIO(cfg)).map(o => new ParserModule(o))
+          case Cmd.CHECK           => convErr(WithCheckerPreds(cfg)).map(o => new CheckerModule(o))
+          case Cmd.TYPECHECK       => convErr(WithTypechecker(cfg)).map(o => new TypeCheckerModule(o))
+          case Cmd.Unrecognized(_) => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
+        }
       }
-    json = jsonOfModule(tlaModule)
-  } yield s"Command succeeded ${json}"
+
+      tlaModule <-
+        try { PassChainExecutor.run(toolModule).left.map(errCode => s"Command failed with error code: ${errCode}") }
+        catch {
+          case e: Throwable => Left(s"Command failed with exception: ${e.getMessage()}")
+        }
+
+      json = jsonOfModule(tlaModule)
+    } yield s"Command succeeded ${json}"
+  }
 
   private def validateCmd(cmd: Cmd): Result[Cmd] = cmd match {
     case Cmd.Unrecognized(_) =>

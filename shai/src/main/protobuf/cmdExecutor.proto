@@ -21,7 +21,8 @@ message CmdRequest {
 
 enum Cmd {
   PARSE = 0;
-  TYPECHECK = 1;
+  CHECK = 1;
+  TYPECHECK = 3;
 }
 
 message CmdResponse {
