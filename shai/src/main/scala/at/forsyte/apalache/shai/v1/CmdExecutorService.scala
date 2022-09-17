@@ -19,6 +19,7 @@ import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import scala.util.Try
+import at.forsyte.apalache.infra.passes.options.Config
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -48,6 +49,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   } yield CmdResponse(resp)
 
   private def executeCmd(cmd: Cmd, cfgStr: String): Either[String, String] = {
+    // Convert a Try into an `Either` with `Left` the message from a possible `Failure`.
     def convErr[O](v: Try[O]) = v.toEither.left.map(e => e.getMessage())
 
     for {
@@ -56,9 +58,9 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       toolModule <- {
         import OptionGroup._
         cmd match {
-          case Cmd.PARSE           => convErr(WithIO(cfg)).map(o => new ParserModule(o))
-          case Cmd.CHECK           => convErr(WithCheckerPreds(cfg)).map(o => new CheckerModule(o))
-          case Cmd.TYPECHECK       => convErr(WithTypechecker(cfg)).map(o => new TypeCheckerModule(o))
+          case Cmd.PARSE           => convErr(WithIO(cfg)).map(new ParserModule(_))
+          case Cmd.CHECK           => convErr(WithCheckerPreds(cfg)).map(new CheckerModule(_))
+          case Cmd.TYPECHECK       => convErr(WithTypechecker(cfg)).map(new TypeCheckerModule(_))
           case Cmd.Unrecognized(_) => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
         }
       }
@@ -73,6 +75,8 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     } yield s"Command succeeded ${json}"
   }
 
+  // Allows us to handle invalid protobuf messages on the ZIO level, before
+  // passing the `cmd` to a sequence in the `Either` monad.
   private def validateCmd(cmd: Cmd): Result[Cmd] = cmd match {
     case Cmd.Unrecognized(_) =>
       val msg = s"Invalid protobuf value for Cmd enum: ${cmd}"
@@ -80,7 +84,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     case cmd => ZIO.succeed(cmd)
   }
 
-  private def parseConfig(data: String) = {
+  private def parseConfig(data: String): Either[String, Config.ApalacheConfig] = {
     ConfigManager(data) match {
       case Success(cfg) => Right(cfg.copy(common = cfg.common.copy(command = Some("server"))))
       case Failure(err) => Left(s"Invalid configuration data given to command: ${err.getMessage()}")
