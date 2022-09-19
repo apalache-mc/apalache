@@ -273,7 +273,7 @@ because TLA+ Toolbox generates comments that look like malformed annotations.
 ```sh
 $ apalache-mc parse Test1275.tla | sed 's/W@.*//'
 ...
-[Test1275:5:1-5:12]: Syntax error in annotation -- Unexpected character. Missing ')' or ';'?
+[Test1275:5:1-5:12]: Syntax error in annotation -- ';' expected but end of source found
 ...
 EXITCODE: OK
 ...
@@ -3016,7 +3016,7 @@ See https://github.com/informalsystems/apalache/issues/860
 ```sh
 $ apalache-mc typecheck Bug860.tla | sed 's/[IEW]@.*//'
 ...
-Parsing error in the type annotation:  (Int, Int) -> Bool
+Parsing error in the type annotation: (Int, Int) -> Bool
 Typing input error: Parser error in type annotation of Op: '=>' expected but -> found
 ...
 EXITCODE: ERROR (255)
@@ -3032,7 +3032,7 @@ See https://github.com/informalsystems/apalache/issues/832
 ```sh
 $ apalache-mc typecheck Bug832.tla | sed 's/[IEW]@.*//'
 ...
-Parsing error in the type annotation:  () => (Bool, Bool)
+Parsing error in the type annotation: () => (Bool, Bool)
 Typing input error: Parser error in type annotation of Example: '->' expected but ) found
 ...
 EXITCODE: ERROR (255)
@@ -3316,6 +3316,16 @@ $ apalache-mc typecheck PolyTooGeneral.tla | sed 's/[IEW]@.*//'
 [PolyTooGeneral.tla:6:1-6:10]: Id's type annotation ((c) => b) is too general, inferred: ((a) => a)
 ...
 EXITCODE: ERROR (120)
+```
+
+### typecheck annotation with comments
+
+Regression test for https://github.com/informalsystems/apalache/issues/2163
+
+```sh
+$ apalache-mc typecheck CommentedTypeAnnotation.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ## configuring the output manager
