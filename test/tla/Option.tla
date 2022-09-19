@@ -1,75 +1,144 @@
 ------------------- MODULE Option -----------------------
+(**
+ * Operators leveraging Apalache Variants to implement option types.
+ *
+ * Option types are a common algebraic data type used to represent values of a
+ * partial computation. See https://en.wikipedia.org/wiki/Option_type
+ *
+ * Igor Konnov, Informal Systems, 2021-2022
+ *)
+
 EXTENDS Apalache, Variants
 
-\* @typeAlias: option = Some(a) | None(UNIT);
+(* @typeAlias: option = Some(a) | None(UNIT); *)
 
-\* @type: a => $option;
-Some(x) == Variant("Some", x)
-\* @type: () => $option;
+(**
+ * Lift a value of type `a` into an option.
+ *
+ * @param x a value
+ * @return the variant representing a value in the domain
+ *
+ * @type: a => $option; *)
+Some(__x) == Variant("Some", __x)
+
+(**
+ * The empty value.
+ *
+ * @return the variant representing an empty value, not in the domain
+ *
+ * @type: () => $option; *)
 None == Variant("None", UNIT)
 
-\* @type: $option => Bool;
-IsSome(o) == VariantTag(o) = "Some"
-\* @type: $option => Bool;
-IsNone(o) == VariantTag(o) = "None"
+(**
+ * `IsSome(o)` is `TRUE` iff `o = Some(v)` for a wrapped value `v`.
+ *
+ * @type: $option => Bool; *)
+IsSome(__o) == VariantTag(__o) = "Some"
 
-\* @type: (Some(a) | None(UNIT), a => b, UNIT => b) => b;
-OptionCase(o, f(_), g(_)) ==
-  IF IsSome(o)
-  THEN f(VariantGetUnsafe("Some", o))
-  ELSE g(UNIT)
+(**
+ * `IsNone` is `TRUE` iff `o = None`.
+ *
+ * @type: $option => Bool; *)
+IsNone(__o) == VariantTag(__o) = "None"
 
-\* @type: (a => b, Some(a) | None(UNIT)) => Some(b) | None(UNIT);
-OptionMap(f(_), o) ==
+(**
+ * `OptionCase(o, __caseSome(_), __caseNone(_))` is `__caseSome(v)` if `o = Some(v)`
+ * or `__caseNone(UNIT)` if `o = None`.
+ *
+ * This eliminates an option type by case analysis on the two possible
+ * alternatives of the variant.
+ *
+ * @type: (Some(a) | None(UNIT), a => b, UNIT => b) => b; *)
+OptionCase(__o, __caseSome(_), __caseNone(_)) ==
+  IF IsSome(__o)
+  THEN __caseSome(VariantGetUnsafe("Some", __o))
+  ELSE __caseNone(UNIT)
+
+(**
+ * `OptionMap(f, o)` is `Some(f(v))` if `o = Some(v)`, or else `None`.
+ *
+ * @type: (a => b, Some(a) | None(UNIT)) => Some(b) | None(UNIT); *)
+OptionMap(__f(_), __o) ==
   LET
-    caseSome(x) == Some(f(x))
+    __caseSome(__x) == Some(__f(__x))
   IN
   \* Annotation required to appease monomorphism watchdog
   LET \* @type: UNIT => $option;
-    caseNone(u) == None
+    __caseNone(__u) == None
   IN
-  OptionCase(o, caseSome, caseNone)
+  OptionCase(__o, __caseSome, __caseNone)
 
-\* @type: (a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT);
-OptionFlatMap(f(_), o) ==
+(**
+ * `OptionFlatMap(f, o)` is `f(v)` if `o = Some(v)` or else `None`.
+ *
+ * This operator can be used to sequence the application of partial functions.
+ *
+ * E.g.,
+ *
+ * ```
+ * LET incr(n) == Some(n + 1) IN
+ * LET fail(n) == None IN
+ * LET q == OptionFlatMap(incr, Some(1)) IN
+ * LET r == OptionFlatMap(incr, q) IN
+ * LET s == OptionFlatMap(fail, r) IN
+ * /\ r = Some(3)
+ * /\ s = None
+ * ```
+ *
+ * @type: (a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT); *)
+OptionFlatMap(__f(_), __o) ==
   LET
-    caseSome(x) == f(x)
+    __caseSome(__x) == __f(__x)
   IN
   \* Annotation required to appease monomorphism watchdog
   LET \* @type: UNIT => Some(b) | None(UNIT);
-    caseNone(u) == None
+    __caseNone(__u) == None
   IN
-  OptionCase(o, caseSome, caseNone)
+  OptionCase(__o, __caseSome, __caseNone)
 
-\* @type: ($option, a) => a;
-OptionGetOrElse(o, default) ==
-  LET caseSome(x) == x IN
-  LET caseNone(u) == default IN
-  OptionCase(o, caseSome, caseNone)
+(**
+ * `OptionGetOrElse(o, default)` is `v` if `o = Some(v)` or else `default`.
+ *
+ * @type: ($option, a) => a; *)
+OptionGetOrElse(__o, __default) ==
+  LET __caseSome(__x) == __x IN
+  LET __caseNone(__u) == __default IN
+  OptionCase(__o, __caseSome, __caseNone)
 
-\* @type: (Some(a) | None(UNIT)) => Seq(a);
-OptionToSeq(o) ==
+(**
+ * `OptionToSeq(o)` is `<<v>>` is `o = Some(v)`, or else `<<>>`.
+ *
+ * @type: (Some(a) | None(UNIT)) => Seq(a); *)
+OptionToSeq(__o) ==
   LET \* @type: a => Seq(a);
-    caseSome(x) == <<x>>
+    __caseSome(__x) == <<__x>>
   IN
   LET \* @type: UNIT => Seq(a);
-    caseNone(u) == <<>>
+    __caseNone(__u) == <<>>
   IN
-  OptionCase(o, caseSome, caseNone)
+  OptionCase(__o, __caseSome, __caseNone)
 
-\* @type: (Some(a) | None(UNIT)) => Set(a);
-OptionToSet(o) ==
+(**
+ * `OptionToSet(o)` is like `OptionToSeq`, but producing a set
+ *
+ * @type: (Some(a) | None(UNIT)) => Set(a); *)
+OptionToSet(__o) ==
   LET \* @type: a => Set(a);
-    caseSome(x) == {x}
+    __caseSome(__x) == {__x}
   IN
   LET \* @type: UNIT => Set(a);
-    caseNone(u) == {}
+    __caseNone(__u) == {}
   IN
-  OptionCase(o, caseSome, caseNone)
+  OptionCase(__o, __caseSome, __caseNone)
 
-\* @type: Set(a) => Some(a) | None(UNIT);
-OptionChoose(s) ==
-  LET getter(oa, b) == IF IsSome(oa) THEN oa ELSE Some(b) IN
-  ApaFoldSet(getter, None, s)
+(**
+ * `OptionGuess(s)` is `None` if `s = {}`, otherwise it is `Some(x)`, where `x \in s`
+ *
+ * `x` is selected from `s` non-deterministically.
+ *
+ * @type: Set(a) => Some(a) | None(UNIT); *)
+OptionGuess(__s) ==
+  LET __getter(__oa, __b) == IF IsSome(__oa) THEN __oa ELSE Some(__b) IN
+  ApaFoldSet(__getter, None, __s)
 
 ============================================================

@@ -52,20 +52,22 @@ TestOptionToSet ==
     /\ OptionToSet(Some(1)) = {1}
 
 TestOptionFlatMap ==
-    LET q == OptionFlatMap(LAMBDA x: Some(x + 1), Some(1)) IN
-    LET r == OptionFlatMap(LAMBDA x: Some(x + 1), q) IN
-    LET s == OptionFlatMap(LAMBDA x: None, r) IN
+    LET incr(n) == Some(n + 1) IN
+    LET fail(n) == None IN
+    LET q == OptionFlatMap(incr, Some(1)) IN
+    LET r == OptionFlatMap(incr, q) IN
+    LET s == OptionFlatMap(fail, r) IN
     /\ r = Some(3)
     /\ s = None
 
-TestOptionChoose ==
+TestOptionGuess ==
     LET
       \* @type: Set(Int);
       empty == {}
     IN
-    /\ OptionChoose(empty) = None
+    /\ OptionGuess(empty) = None
     /\ LET choices == {1,2,3,4} IN
-      LET choice == OptionChoose(choices) IN
+      LET choice == OptionGuess(choices) IN
       VariantGetUnsafe("Some", choice) \in choices
 
 Next == TRUE
@@ -76,6 +78,6 @@ Init ==
     /\ TestOptionFlatMap
     /\ TestOptionToSeq
     /\ TestOptionToSet
-    /\ TestOptionChoose
+    /\ TestOptionGuess
 
 ============================================================
