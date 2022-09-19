@@ -110,7 +110,7 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
 
   override def assertState(assertion: TlaEx): Unit = trex.assertState(assertion)
 
-  override def sat(timeoutSec: Long): Option[Boolean] = trex.sat(timeoutSec)
+  override def sat(timeoutSec: Int): Option[Boolean] = trex.sat(timeoutSec)
 
   override def decodedExecution(): DecodedExecution = trex.decodedExecution()
 

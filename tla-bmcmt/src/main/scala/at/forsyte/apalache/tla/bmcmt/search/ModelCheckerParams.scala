@@ -96,8 +96,8 @@ class ModelCheckerParams(
    */
   def idleTimeoutMs: Long = idleTimeoutSec * 1000
 
-  val smtTimeoutSec: Long =
-    BigInt(tuningOptions.getOrElse("search.smt.timeout", "0")).toLong
+  val smtTimeoutSec: Int =
+    tuningOptions.getOrElse("search.smt.timeout", "0").toInt
 
   /**
    * The SMT encoding to be used.
