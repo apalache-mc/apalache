@@ -1,19 +1,20 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.infra.Executor
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import java.io.{File, FileNotFoundException}
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
 import org.backuity.clist._
 import org.backuity.clist.util.Read
+
+import java.io.{File, FileNotFoundException}
 import scala.jdk.CollectionConverters._
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import org.apache.commons.io.FilenameUtils
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 /**
  * This command initiates the 'check' command line.
@@ -52,12 +53,12 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   var maxError: Option[Int] =
     opt[Option[Int]](name = "max-error",
         description =
-          "do not stop on first error, but produce up to a given number of counterexamples (fine tune with --view), default: 1",
+          "do not stop on first error, but produce at most the given number of errors (requires --view when greater than 1), default: 1",
         default = None)
 
   var view: Option[String] =
-    opt[Option[String]](name = "view",
-        description = "the state view to use with --max-error=n, default: transition index", default = None)
+    opt[Option[String]](name = "view", description = "the state view to use with --max-error=n, default: none",
+        default = None)
 
   var saveRuns: Boolean =
     opt[Boolean](name = "output-traces", description = "save an example trace for each symbolic run, default: false",
@@ -111,13 +112,12 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithCheckerPreds(cfg).get
-    val executor = Executor(new CheckerModule(options))
 
     val tuning = options.checker.tuning
 
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    executor.run() match {
+    PassChainExecutor.run(new CheckerModule(options)) match {
       case Right(_)   => Right(s"Checker reports no error up to computation length ${options.checker.length}")
       case Left(code) => Left(code, "Checker has found an error")
     }

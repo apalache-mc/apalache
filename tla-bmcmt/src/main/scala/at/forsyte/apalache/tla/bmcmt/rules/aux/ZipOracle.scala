@@ -15,9 +15,11 @@ import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
  * @param backOracle
  *   the background oracle whose values are grouped together
  * @param groups
- *   a list of groups over the indices of the background oracle
+ *   A list of groups over the indices of the background oracle. Indices within each group must be sorted, as the
+ *   sorting determines the order of generated SMT constraints; see
+ *   https://github.com/informalsystems/apalache/issues/2120.
  */
-class ZipOracle(backOracle: Oracle, groups: List[Set[Int]]) extends Oracle {
+class ZipOracle(backOracle: Oracle, groups: Seq[Seq[Int]]) extends Oracle {
   override def size: Int = groups.size
 
   override def whenEqualTo(state: SymbState, index: Int): TlaEx = {

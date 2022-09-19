@@ -1648,6 +1648,16 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
+### check TrivialFail fails with --discard-disabled=false
+
+Regression test for https://github.com/informalsystems/apalache/issues/2158
+
+```sh
+$ apalache-mc check --inv=Inv --discard-disabled=false TrivialFail.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh
@@ -2066,6 +2076,16 @@ Found 20 error(s)
 The outcome is: Error
 ...
 EXITCODE: ERROR (12)
+```
+
+### check View2.tla without --view
+
+```sh
+$ apalache-mc check --inv=Inv --max-error=10 View2.tla | sed 's/[IEW]@.*//'
+...
+Option maxError = 10 requires a view. None specified.
+...
+EXITCODE: ERROR (255)
 ```
 
 ### check bug #874

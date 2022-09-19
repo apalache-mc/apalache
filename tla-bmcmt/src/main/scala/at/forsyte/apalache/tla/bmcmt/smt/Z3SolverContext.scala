@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.output.NullOutputStream
 
 import java.io.PrintWriter
@@ -29,21 +30,22 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Igor Konnov, Rodrigo Otoni
  */
-class Z3SolverContext(val config: SolverConfig) extends SolverContext {
+class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
   private val id: Long = Z3SolverContext.createId()
+
+  logger.debug(s"Creating Z3 solver context ${id}")
 
   /**
    * A log writer, for debugging purposes.
    */
   private val logWriter: PrintWriter = initLog()
 
-  // dump the configuration parameters in the log
-  // set the global configuration parameters for z3 modules
+  // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
     logWriter.println(";; %s = %s".format(p, config.randomSeed))
-  //    the following fails with an exception: java.lang.NoSuchFieldError: value
-  //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+  // FIXME(#2140): the following throws `java.lang.NoSuchFieldError: com.microsoft.z3.Native$StringPtr.value`
+  // logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
   private def encoding: SMTEncoding = config.smtEncoding
@@ -56,11 +58,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private var smtListener: SmtListener = new IdleSmtListener()
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
-  // The parSet set is used to pass parameters to Z3
-  // The list of parameters can be seen by passing the -p flag to Z3
-  val parSet = z3context.mkParams()
-  // parSet.add("array.extensional", false) // disables extensionality for the theory of arrays
-  z3solver.setParameters(parSet)
+  // Set up parameters to Z3; the list of parameters can be seen by passing the -p flag to Z3
+  val params = z3context.mkParams()
+  // Set random seed. We are also setting it via global parameters above, but `Global.setParameter()` says:
+  // "When a Z3 module is initialized it will use the value of these parameters when Z3_params objects are not provided."
+  params.add("seed", config.randomSeed)
+  params.add("random_seed", config.randomSeed)
+  // params.add("array.extensional", false) // disables extensionality for the theory of arrays
+  z3solver.setParameters(params)
+  logWriter.println(s";; ${params}")
 
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
@@ -120,6 +126,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Dispose whatever has to be disposed in the end.
    */
   override def dispose(): Unit = {
+    logger.debug(s"Disposing Z3 solver context ${id}")
     z3context.close()
     logWriter.close()
     cellCache.clear()
@@ -471,7 +478,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   override def sat(): Boolean = {
     log("(check-sat)")
     val status = z3solver.check()
-    log(s";; sat = ${status == Status.SATISFIABLE}")
+    log(s";; sat = ${status.name()}")
     logWriter.flush() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
@@ -489,6 +496,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val params = z3context.mkParams()
         params.add("timeout", tm)
         z3solver.setParameters(params)
+        logWriter.println(s";; ${params}")
       }
       // Z3 expects `timeout` to be in milliseconds passed as unsigned int, i.e., with a maximum value of 2^32 - 1.
       // The Z3 Java API only allows passing it as signed int, i.e., the maximum allowed millisecond value is 2^31 - 1 (`Int.MaxValue`).
@@ -498,6 +506,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       setTimeout(timeoutSec * 1000)
       log("(check-sat)")
       val status = z3solver.check()
+      log(s";; sat = ${status.name()}")
       // return timeout to maximum
       setTimeout(Int.MaxValue)
       logWriter.flush() // good time to flush
@@ -1006,5 +1015,11 @@ object Z3SolverContext {
    * The names of all parameters that are used to set the random seeds in z3.
    */
   val RANDOM_SEED_PARAMS: List[String] =
-    List("sat.random_seed", "smt.random_seed", "fp.spacer.random_seed", "sls.random_seed")
+    List(
+        "fp.spacer.random_seed",
+        "nlsat.seed",
+        "sat.random_seed",
+        "sls.random_seed",
+        "smt.random_seed",
+    )
 }

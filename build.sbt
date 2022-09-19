@@ -99,14 +99,6 @@ lazy val testSettings = Seq(
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
-lazy val testSanyBugSettings = Seq(
-    // FIXME: https://github.com/informalsystems/apalache/issues/1577
-    // SANY contains a race condition that unpacks temporary module files into
-    // the same directory: https://github.com/tlaplus/tlaplus/issues/688
-    // Tests calling SanyImporter must execute sequentially until fixed.
-    Test / parallelExecution := false
-)
-
 ///////////////////////
 // API Documentation //
 ///////////////////////
@@ -158,7 +150,6 @@ lazy val tla_io = (project in file("tla-io"))
   )
   .settings(
       testSettings,
-      testSanyBugSettings,
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.pureConfig,
@@ -172,7 +163,6 @@ lazy val tla_types = (project in file("tla-types"))
       tlair % "test->test", tla_io)
   .settings(
       testSettings,
-      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -188,7 +178,6 @@ lazy val tla_pp = (project in file("tla-pp"))
   )
   .settings(
       testSettings,
-      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -212,7 +201,6 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   )
   .settings(
       testSettings,
-      testSanyBugSettings,
       libraryDependencies += Deps.scalaCollectionContrib,
   )
 
@@ -324,7 +312,14 @@ lazy val root = (project in file("."))
         // Workaround for conflict with grpc-netty manifest files
         // See https://github.com/sbt/sbt-assembly/issues/362
         case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
-        case x                                                    => (assembly / assemblyMergeStrategy).value(x)
+        // Workaround for conflict between gson and slf4j manifest files:
+        // [error] (assembly) deduplicate: different file contents found in the following:
+        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
+        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
+        // See https://stackoverflow.com/a/67937671/1187277
+        case PathList("module-info.class")         => MergeStrategy.discard
+        case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+        case x                                     => (assembly / assemblyMergeStrategy).value(x)
       },
       // Package the distribution files
       Universal / mappings ++= Seq(

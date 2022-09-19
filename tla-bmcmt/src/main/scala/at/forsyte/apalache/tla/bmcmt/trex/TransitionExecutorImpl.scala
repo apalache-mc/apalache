@@ -99,7 +99,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     logger.debug(s"Step #${stepNo}, transition #${transitionNo}")
     ctx.rewriter.solverContext.log("; ------- STEP: %d, SMT LEVEL: %d TRANSITION: %d {"
           .format(stepNo, ctx.rewriter.contextLevel, transitionNo))
-    logger.debug("Translating to SMT...")
+    logger.debug("Translating to SMT")
     val erased = lastState.setBinding(lastState.binding.forgetPrimed) // forget the previous assignments
     ctx.rewriter.exprCache.disposeActionLevel() // forget the previous action caches
     // translate the transition to SMT

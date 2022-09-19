@@ -13,6 +13,29 @@ import java.nio.file.Files
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
+// The SANY parser is not thread safe. This singleton object is used to create a
+// mutex around its execution.
+//
+// We use the `synchronized` method of `AnyRef` to manage our mutex. See
+//
+//  - https://twitter.github.io/scala_school/concurrency.html#danger
+//  - https://www.scala-lang.org/api/current/scala/AnyRef.html#synchronized[T0](x$1:=%3ET0):T0
+//
+// For more context on the SANY concurrency issues see https://github.com/informalsystems/apalache/issues/1963
+//
+// All invocation of SANY should go through a synchronized method in this object.
+object SANYSyncWrapper {
+  def loadSpecObject(specObj: SpecObj, file: File, errBuf: Writer): Int = {
+    this.synchronized {
+      SANY.frontEndMain(
+          specObj,
+          file.getAbsolutePath,
+          new PrintStream(new WriterOutputStream(errBuf, "UTF8")),
+      )
+    }
+  }
+}
+
 /**
  * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
  *
@@ -74,12 +97,8 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
 
     // call SANY
     val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
+    SANYSyncWrapper.loadSpecObject(specObj, file, errBuf)
 
-    SANY.frontEndMain(
-        specObj,
-        file.getAbsolutePath,
-        new PrintStream(new WriterOutputStream(errBuf, "UTF8")),
-    )
     // abort on errors
     throwOnError(specObj)
     // do the translation

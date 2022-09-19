@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 
 /**
  * A JsonEncoder defines a conversion from a TLA+ expression to a json (as represented by T)
+ *
  * @tparam T
  *   Any class extending JsonRepresentation
  */
