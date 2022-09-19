@@ -61,7 +61,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
           case Cmd.PARSE           => convErr(WithIO(cfg)).map(new ParserModule(_))
           case Cmd.CHECK           => convErr(WithCheckerPreds(cfg)).map(new CheckerModule(_))
           case Cmd.TYPECHECK       => convErr(WithTypechecker(cfg)).map(new TypeCheckerModule(_))
-          case Cmd.Unrecognized(_) => throw new Exception("invalid: toolModuleOfCmd applied before validateCmd")
+          case Cmd.Unrecognized(_) => throw new Exception("programmer error: executeCmd applied before validateCmd")
         }
       }
 
