@@ -87,7 +87,7 @@ trait SolverContext extends StackableContext {
    * @return
    *   Some(result), if no timeout happened; otherwise, None
    */
-  def satOrTimeout(timeoutSec: Long): Option[Boolean]
+  def satOrTimeout(timeoutSec: Int): Option[Boolean]
 
   /**
    * Register an SMT listener

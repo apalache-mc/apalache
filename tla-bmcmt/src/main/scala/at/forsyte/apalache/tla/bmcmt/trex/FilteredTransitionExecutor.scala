@@ -164,7 +164,7 @@ class FilteredTransitionExecutor[SnapshotT](stepFilter: String, invFilter: Strin
    *   Some(true), if the context is satisfiable; Some(false), if the context is unsatisfiable; None, if the solver
    *   timed out or reported *unknown*.
    */
-  override def sat(timeoutSec: Long): Option[Boolean] = trex.sat(timeoutSec)
+  override def sat(timeoutSec: Int): Option[Boolean] = trex.sat(timeoutSec)
 
   /**
    * Take a snapshot and return it

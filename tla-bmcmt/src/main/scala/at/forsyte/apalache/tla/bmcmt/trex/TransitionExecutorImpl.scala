@@ -316,7 +316,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    *   Some(true), if the context is satisfiable; Some(false), if the context is unsatisfiable; None, if the solver
    *   timed out or reported *unknown*.
    */
-  override def sat(timeoutSec: Long): Option[Boolean] = {
+  override def sat(timeoutSec: Int): Option[Boolean] = {
     ctx.rewriter.solverContext.satOrTimeout(timeoutSec)
   }
 

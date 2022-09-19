@@ -200,7 +200,7 @@ class RecordingSolverContext private (
    * @return
    *   Some(result), if no timeout happened; otherwise, None
    */
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = {
     solverImpl.satOrTimeout(timeoutSec)
   }
 

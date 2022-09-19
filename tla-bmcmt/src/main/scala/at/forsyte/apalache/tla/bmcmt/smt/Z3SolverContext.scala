@@ -488,21 +488,26 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     status == Status.SATISFIABLE
   }
 
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = {
     if (timeoutSec <= 0) {
       Some(sat())
     } else {
-      def setTimeout(tm: Long): Unit = {
-        params.add("timeout", BigInt(tm).toInt)
+      def setTimeout(tm: Int): Unit = {
+        val params = z3context.mkParams()
+        params.add("timeout", tm)
         z3solver.setParameters(params)
         logWriter.println(s";; ${params}")
       }
+      // Z3 expects `timeout` to be in milliseconds passed as unsigned int, i.e., with a maximum value of 2^32 - 1.
+      // The Z3 Java API only allows passing it as signed int, i.e., the maximum allowed millisecond value is 2^31 - 1 (`Int.MaxValue`).
+      // Check that `timeoutSec` converted to milliseconds fits without truncation.
+      require(timeoutSec < Int.MaxValue / 1000, s"Expected a timeout of <=${Int.MaxValue / 1000} seconds.")
       // temporarily, change the timeout
       setTimeout(timeoutSec * 1000)
       log("(check-sat)")
       val status = z3solver.check()
       log(s";; sat = ${status.name()}")
-      // set it to the maximum: Z3 is using 2^32 - 1, which is hard to pass in Java, so we can only set it to 2^31-1
+      // return timeout to maximum
       setTimeout(Int.MaxValue)
       logWriter.flush() // good time to flush
       status match {

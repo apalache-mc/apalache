@@ -210,7 +210,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
    * @return
    *   Some(result), if no timeout happened; otherwise, None
    */
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = context.satOrTimeout(timeoutSec)
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = context.satOrTimeout(timeoutSec)
 
   /**
    * Register an SMT listener
