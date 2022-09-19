@@ -9,5 +9,30 @@ option objc_class_prefix = "TEP";
 
 package shai;
 
+// A stateless serivce exposing Apalache's CLI via RPC calls
 service CmdExecutor {
+  rpc run(CmdRequest) returns (CmdResponse);
+}
+
+message CmdRequest {
+  Cmd cmd = 1;
+
+  // A JSON encoded string with the application configuration
+  string config = 2;
+}
+
+// The supported apalache subcommands
+enum Cmd {
+  PARSE = 0;
+  CHECK = 1;
+  TYPECHECK = 3;
+}
+
+message CmdResponse {
+  oneof result {
+    // A JSON encoded string with data useful on success
+    string success = 1;
+    // A JSON encoded string with data useful on error
+    string failure = 2;
+  }
 }
