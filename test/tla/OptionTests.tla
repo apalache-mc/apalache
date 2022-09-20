@@ -70,6 +70,19 @@ TestOptionGuess ==
       LET choice == OptionGuess(choices) IN
       VariantGetUnsafe("Some", choice) \in choices
 
+TestOptionFunApp ==
+    LET f == [x \in 1..3 |-> x + 1] IN
+    /\ OptionFunApp(f, Some(1)) = Some(2)
+    /\ OptionFunApp(f, None) = None
+
+TestOptionPartialFun ==
+    LET def == 1..3 IN
+    LET undef == 4..10 IN
+    LET f == [x \in def |-> x + 1] IN
+    LET pf == OptionPartialFun(f, undef) IN
+    /\ \A n \in def: pf[n] = Some(n + 1)
+    /\ \A n \in undef: pf[n] = None
+
 Next == TRUE
 Init ==
     /\ TestMap
@@ -79,5 +92,7 @@ Init ==
     /\ TestOptionToSeq
     /\ TestOptionToSet
     /\ TestOptionGuess
+    /\ TestOptionFunApp
+    /\ TestOptionPartialFun
 
 ============================================================

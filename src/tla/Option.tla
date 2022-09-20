@@ -141,4 +141,23 @@ OptionGuess(__s) ==
   LET __getter(__oa, __b) == IF IsSome(__oa) THEN __oa ELSE Some(__b) IN
   ApaFoldSet(__getter, None, __s)
 
+(**
+ * `OptionFunApp(f, o)` is `Some(f[v])` if `o = Some(v)` or else `None`.
+ *
+ * @type: (a -> b, Some(a) | None(UNIT)) => Some(b) | None(UNIT); *)
+OptionFunApp(__f, __o) ==
+  LET __app(__x) == __f[__x] IN
+  OptionMap(__app, __o)
+
+(**
+ * `OptionPartialFun(f, undef)` is a function mapping each value in `undef` to `None`,
+ * and each value `x \in (DOMAIN f \ undef)` to `Some(f[x])`.
+ *
+ * This can be used to define a function expected to be total over its domain to
+ * a partial function whose domain is expanded to include the vaules in 'undef'.
+ *
+ * @type: (a -> b, Set(a)) => (a -> Some(b) | None(UNIT)); *)
+OptionPartialFun(__f, __undefined) ==
+  [__x \in DOMAIN __f \union __undefined |-> IF __x \in __undefined THEN None ELSE Some(__f[__x]) ]
+
 ============================================================
