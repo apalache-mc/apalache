@@ -382,3 +382,5 @@ LET pf == OptionPartialFun(f, undef) IN
 /\ \A n \in def: pf[n] = Some(n + 1)
 /\ \A n \in undef: pf[n] = None
 ```
+
+[Option.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla
