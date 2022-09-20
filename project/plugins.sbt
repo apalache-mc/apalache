@@ -33,3 +33,9 @@ lazy val root = (project in file("."))
 
 lazy val changelingPlugin =
   ProjectRef(file("sbt-changeling"), "sbt_changeling")
+
+// Required due to dependency conflict in SBT
+// See https://github.com/sbt/sbt/issues/6997
+ThisBuild / libraryDependencySchemes ++= Seq(
+    "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+)
