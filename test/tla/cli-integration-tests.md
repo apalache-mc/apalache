@@ -2276,6 +2276,16 @@ $ apalache-mc check --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's
 EXITCODE: OK
 ```
 
+### check OptionTests.tla succeeds
+
+These tests check that the operators defined in `Option.tla` work as expected.
+
+```sh
+$ apalache-mc check --length=0 OptionTests.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check PolyFold.tla reports no error: regression for #1085
 
 ```sh
