@@ -11,4 +11,4 @@ Currently supported modules:
 
  - [Apalache module](./apalache-operators.md)
  - [Variants](./variants.md)
-
+ - [Option Types](./option-types.md)

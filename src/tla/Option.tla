@@ -106,7 +106,7 @@ OptionGetOrElse(__o, __default) ==
   OptionCase(__o, __caseSome, __caseNone)
 
 (**
- * `OptionToSeq(o)` is `<<v>>` is `o = Some(v)`, or else `<<>>`.
+ * `OptionToSeq(o)` is `<<v>>` iff `o = Some(v)`, or else `<<>>`.
  *
  * @type: (Some(a) | None(UNIT)) => Seq(a); *)
 OptionToSeq(__o) ==
@@ -153,8 +153,8 @@ OptionFunApp(__f, __o) ==
  * `OptionPartialFun(f, undef)` is a function mapping each value in `undef` to `None`,
  * and each value `x \in (DOMAIN f \ undef)` to `Some(f[x])`.
  *
- * This can be used to define a function expected to be total over its domain to
- * a partial function whose domain is expanded to include the vaules in 'undef'.
+ * This can be used to extend a total function a "partial function" whose domain is expanded
+ * to include the vaules in 'undef'.
  *
  * @type: (a -> b, Set(a)) => (a -> Some(b) | None(UNIT)); *)
 OptionPartialFun(__f, __undefined) ==
