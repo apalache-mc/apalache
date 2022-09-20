@@ -10,7 +10,7 @@ The basic idea is as follows: given a partial function `f : A -> B`, we form the
 type `Option(B)` by extending `B` with an element representing a missing value,
 `None`, and lift each value `b` in `B` to `Some(b)`, allowing us to represent
 the partial function `pf : A -> Option(B)`, such that, for each `a` in `A`,
-`pf(a) = Some(f(a))` if `f(a)` is defined, and `None` otherwise.
+`pf(a) = Some(f(a))` iff `f(a)` is defined, and `None` otherwise.
 
 
 Apalache leverages its support for [variants](./variants.md) to define a
@@ -25,20 +25,20 @@ The module defines a type alias `$option` as
 
 However, due to the current lack of support for polymorphic aliases, this alias
 has limited utility, and  parametric option types can only be properly expressed
-with the variant type `Some(a) | None(UNIT)`. None the less, in this manual
+with the variant type `Some(a) | None(UNIT)`. Nonetheless, in this manual
 page, we will sometimes write `$option(a)` as a shorthand for the type `Some(a)
 | None(UNIT)`.
 
 In the context of TLA+, our encoding of option types is generalized over
-"partial operators", meanings operators of type `a => $option(a)`. Support for
-partial functions is supplied by two operators,
+"partial operators", meanings operator which return a value of type
+`$option(a)`. Support for partial functions is supplied by two operators,
 [OptionPartialFun](#OptionPartialFun) and [OptionFunApp](#OptionFunApp).
 
 ## Operators
 
 ----------------------------------------------------------------------------
 
-### Constructing present values of type `$option(a)`
+### Constructing present optional values
 
 **Notation:** `Some(v)`
 
@@ -62,7 +62,7 @@ option.
 SomeInt == Some(42)
 ```
 
-### Constructing absent values of type `$option(a)`
+### Constructing absent optional values
 
 **Notation:** `None`
 
