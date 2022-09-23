@@ -18,7 +18,8 @@ EXTENDS Apalache, Variants
  * @param x a value
  * @return the variant representing a value in the domain
  *
- * @type: a => $option; *)
+ * @type: a => $option;
+ *)
 Some(__x) == Variant("Some", __x)
 
 (**
@@ -26,19 +27,22 @@ Some(__x) == Variant("Some", __x)
  *
  * @return the variant representing an empty value, not in the domain
  *
- * @type: () => $option; *)
+ * @type: () => $option;
+ *)
 None == Variant("None", UNIT)
 
 (**
  * `IsSome(o)` is `TRUE` iff `o = Some(v)` for a wrapped value `v`.
  *
- * @type: $option => Bool; *)
+ * @type: $option => Bool;
+ *)
 IsSome(__o) == VariantTag(__o) = "Some"
 
 (**
  * `IsNone` is `TRUE` iff `o = None`.
  *
- * @type: $option => Bool; *)
+ * @type: $option => Bool;
+ *)
 IsNone(__o) == VariantTag(__o) = "None"
 
 (**
@@ -48,7 +52,8 @@ IsNone(__o) == VariantTag(__o) = "None"
  * This eliminates an option type by case analysis on the two possible
  * alternatives of the variant.
  *
- * @type: (Some(a) | None(UNIT), a => b, UNIT => b) => b; *)
+ * @type: (Some(a) | None(UNIT), a => b, UNIT => b) => b;
+ *)
 OptionCase(__o, __caseSome(_), __caseNone(_)) ==
   IF IsSome(__o)
   THEN __caseSome(VariantGetUnsafe("Some", __o))
@@ -57,7 +62,8 @@ OptionCase(__o, __caseSome(_), __caseNone(_)) ==
 (**
  * `OptionMap(f, o)` is `Some(f(v))` if `o = Some(v)`, or else `None`.
  *
- * @type: (a => b, Some(a) | None(UNIT)) => Some(b) | None(UNIT); *)
+ * @type: (a => b, Some(a) | None(UNIT)) => Some(b) | None(UNIT);
+ *)
 OptionMap(__f(_), __o) ==
   LET
     __caseSome(__x) == Some(__f(__x))
@@ -85,7 +91,8 @@ OptionMap(__f(_), __o) ==
  * /\ s = None
  * ```
  *
- * @type: (a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT); *)
+ * @type: (a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT);
+ *)
 OptionFlatMap(__f(_), __o) ==
   LET
     __caseSome(__x) == __f(__x)
@@ -99,7 +106,8 @@ OptionFlatMap(__f(_), __o) ==
 (**
  * `OptionGetOrElse(o, default)` is `v` if `o = Some(v)` or else `default`.
  *
- * @type: ($option, a) => a; *)
+ * @type: ($option, a) => a;
+ *)
 OptionGetOrElse(__o, __default) ==
   LET __caseSome(__x) == __x IN
   LET __caseNone(__u) == __default IN
@@ -108,7 +116,8 @@ OptionGetOrElse(__o, __default) ==
 (**
  * `OptionToSeq(o)` is `<<v>>` iff `o = Some(v)`, or else `<<>>`.
  *
- * @type: (Some(a) | None(UNIT)) => Seq(a); *)
+ * @type: (Some(a) | None(UNIT)) => Seq(a);
+ *)
 OptionToSeq(__o) ==
   LET \* @type: a => Seq(a);
     __caseSome(__x) == <<__x>>
@@ -121,7 +130,8 @@ OptionToSeq(__o) ==
 (**
  * `OptionToSet(o)` is `{v}` iff `o = Some(v)`, or else `{}`.
  *
- * @type: (Some(a) | None(UNIT)) => Set(a); *)
+ * @type: (Some(a) | None(UNIT)) => Set(a);
+ *)
 OptionToSet(__o) ==
   LET \* @type: a => Set(a);
     __caseSome(__x) == {__x}
@@ -136,7 +146,8 @@ OptionToSet(__o) ==
  *
  * `x` is selected from `s` non-deterministically.
  *
- * @type: Set(a) => Some(a) | None(UNIT); *)
+ * @type: Set(a) => Some(a) | None(UNIT);
+ *)
 OptionGuess(__s) ==
   LET __getter(__oa, __b) == IF IsSome(__oa) THEN __oa ELSE Some(__b) IN
   ApaFoldSet(__getter, None, __s)
@@ -144,7 +155,8 @@ OptionGuess(__s) ==
 (**
  * `OptionFunApp(f, o)` is `Some(f[v])` if `o = Some(v)` or else `None`.
  *
- * @type: (a -> b, Some(a) | None(UNIT)) => Some(b) | None(UNIT); *)
+ * @type: (a -> b, Some(a) | None(UNIT)) => Some(b) | None(UNIT);
+ *)
 OptionFunApp(__f, __o) ==
   LET __app(__x) == __f[__x] IN
   OptionMap(__app, __o)
@@ -156,7 +168,8 @@ OptionFunApp(__f, __o) ==
  * This can be used to extend a total function a "partial function" whose domain is expanded
  * to include the vaules in 'undef'.
  *
- * @type: (a -> b, Set(a)) => (a -> Some(b) | None(UNIT)); *)
+ * @type: (a -> b, Set(a)) => (a -> Some(b) | None(UNIT));
+ *)
 OptionPartialFun(__f, __undefined) ==
   [__x \in DOMAIN __f \union __undefined |-> IF __x \in __undefined THEN None ELSE Some(__f[__x]) ]
 
