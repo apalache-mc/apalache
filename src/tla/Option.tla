@@ -119,7 +119,7 @@ OptionToSeq(__o) ==
   OptionCase(__o, __caseSome, __caseNone)
 
 (**
- * `OptionToSet(o)` is like `OptionToSeq`, but producing a set
+ * `OptionToSet(o)` is `{v}` iff `o = Some(v)`, or else `{}`.
  *
  * @type: (Some(a) | None(UNIT)) => Set(a); *)
 OptionToSet(__o) ==
