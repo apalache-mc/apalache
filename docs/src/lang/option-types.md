@@ -363,8 +363,8 @@ LET f == [x \in 1..3 |-> x + 1] IN
 
 **Effect:** `OptionPartialFun(f, undef)` is a function mapping each value in
 `undef` to `None`, and each value `x \in (DOMAIN f \ undef)` to `Some(f[x])`.
-This can be used to extend a total function a "partial function" whose domain is
-expanded to include the vaules in 'undef'.
+This can be used to extend a total function into a "partial function" whose domain is
+extended to include the values in 'undef'.
 
 **Determinism:** Deterministic.
 
