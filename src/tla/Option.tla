@@ -5,7 +5,7 @@
  * Option types are a common algebraic data type used to represent values of a
  * partial computation. See https://en.wikipedia.org/wiki/Option_type
  *
- * Igor Konnov, Informal Systems, 2021-2022
+ * Shon Feder, Informal Systems, 2022
  *)
 
 EXTENDS Apalache, Variants
