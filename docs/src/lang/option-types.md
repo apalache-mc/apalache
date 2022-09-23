@@ -24,8 +24,8 @@ The module defines a type alias `$option` as
 ```
 
 However, due to the current lack of support for polymorphic aliases, this alias
-has limited utility, and  parametric option types can only be properly expressed
-with the variant type `Some(a) | None(UNIT)`. Nonetheless, in this manual
+has limited utility, and parametric option types can only be properly expressed
+by writing out the full variant type `Some(a) | None(UNIT)`. Nonetheless, in this manual
 page, we will sometimes write `$option(a)` as a shorthand for the type `Some(a)
 | None(UNIT)`.
 
