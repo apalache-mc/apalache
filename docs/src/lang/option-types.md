@@ -104,7 +104,7 @@ optional value is present or absent, in the expected way.
 **Example in TLA+:**
 
 ```tla
-TRUE = IsSome(Some(Int)) /\ IsNone(None)
+TRUE = IsSome(Some(5)) /\ IsNone(None)
 ```
 
 ----------------------------------------------------------------------------
