@@ -12,6 +12,16 @@
  *)
 
 (**
+ * A representation of the unit type.
+ *
+ * Useful for defining variants that don't need to wrap any values. E.g., to
+ * define a type of primary colors `Red(UNIT) | Blue(UNIT) | Green(UNIT)`
+ *
+ * @type: UNIT;
+ *)
+UNIT == "U_OF_UNIT"
+
+(**
  * Wrap a value with a variant.
  *
  * @param rec a value

@@ -69,6 +69,7 @@
 - [Apalache extensions](./lang/apalache-extensions.md)
   - [Apalache module](./lang/apalache-operators.md)
   - [Variants](./lang/variants.md)
+  - [Option types](./lang/option-types.md)
 - [User-defined operators](./lang/user-operators.md)
     - [Top-level operator definitions](./lang/user/top-level-operators.md)
     - [LET-IN definitions](./lang/user/let-in.md)
