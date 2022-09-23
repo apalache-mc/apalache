@@ -36,8 +36,6 @@ In the context of TLA+, our encoding of option types is generalized over
 
 ## Operators
 
-----------------------------------------------------------------------------
-
 ### Constructing present optional values
 
 **Notation:** `Some(v)`
