@@ -30,7 +30,7 @@ page, we will sometimes write `$option(a)` as a shorthand for the type `Some(a)
 | None(UNIT)`.
 
 In the context of TLA+, our encoding of option types is generalized over
-"partial operators", meanings operator which return a value of type
+"partial operators", meaning operators which return a value of type
 `$option(a)`. Support for partial functions is supplied by two operators,
 [OptionPartialFun](#OptionPartialFun) and [OptionFunApp](#OptionFunApp).
 
