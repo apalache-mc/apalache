@@ -110,6 +110,33 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     }
   }
 
+  // See https://github.com/informalsystems/apalache/issues/2179
+  test("""[x \in Nat |-> 1 ][1] = 1""") { rewriterType: SMTEncoding =>
+    val set = natSet()
+      .typed(types, "I")
+    val fun = funDef(int(1), name("x"), set)
+      .typed(types, "i_to_i")
+    val eq = eql(appFun(fun, int(1)) ? "i", int(1) ? "i")
+      .typed(types, "b")
+
+    val state = new SymbState(eq, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    nextState.ex match {
+      case result @ NameEx(_) =>
+        solverContext.push()
+        solverContext.assertGroundExpr(result)
+        assert(solverContext.sat())
+        solverContext.pop()
+        solverContext.push()
+        solverContext.assertGroundExpr(not(result ? "b").typed(types, "b"))
+        assert(!solverContext.sat())
+
+      case _ =>
+        fail("Unexpected rewriting result")
+    }
+  }
+
   test("""[x \in {1,2} |-> IF x = 1 THEN {2} ELSE {1} ][1]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
