@@ -1,8 +1,10 @@
 package at.forsyte.apalache.tla.typecheck.integration
 
+import at.forsyte.apalache.tla.lir.storage.ChangeListener
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaType1, UID}
 import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
-import at.forsyte.apalache.tla.typecheck.TypeCheckerListener
+import at.forsyte.apalache.tla.typecheck.SourceAwareTypeCheckerListener
 
 import scala.collection.mutable
 
@@ -13,12 +15,17 @@ import scala.collection.mutable
  * @author
  *   Igor Konnov
  */
-class RecordingTypeCheckerListener extends TypeCheckerListener {
+class RecordingTypeCheckerListener(sourceStore: SourceStore, changeListener: ChangeListener)
+    extends SourceAwareTypeCheckerListener(sourceStore, changeListener) {
   private val uidToType: mutable.Map[UID, TlaType1] = mutable.Map[UID, TlaType1]()
 
   def toMap: Map[UID, TlaType1] = {
     uidToType.toMap
   }
+
+  private def errors: mutable.Queue[(String, String)] = mutable.Queue()
+
+  def getErrors(): List[(String, String)] = errors.toList
 
   override def onTypeFound(sourceRef: ExactRef, monotype: TlaType1): Unit = {
     uidToType += sourceRef.tlaId -> monotype
@@ -33,6 +40,6 @@ class RecordingTypeCheckerListener extends TypeCheckerListener {
    *   the error description
    */
   override def onTypeError(sourceRef: EtcRef, message: String): Unit = {
-    // ignore
+    errors.addOne((findLoc(sourceRef.tlaId), message))
   }
 }

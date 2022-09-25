@@ -72,5 +72,6 @@ trait Pass {
 }
 
 object Pass {
-  type PassResult = Either[TExitCode, TlaModule]
+  type PassFailure = (Throwable, TExitCode)
+  type PassResult = Either[PassFailure, TlaModule]
 }

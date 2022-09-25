@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
+import scala.util.Try
 
 /**
  * A JsonDecoder defines a conversion from a json (as represented by T) to a TLA+ expression/declaration/module
@@ -12,5 +13,5 @@ trait JsonDecoder[T <: JsonRepresentation] {
   def asTlaModule(moduleJson: T): TlaModule
   def asTlaDecl(declJson: T): TlaDecl
   def asTlaEx(exJson: T): TlaEx
-  def fromRoot(rootJson: T): Iterable[TlaModule]
+  def fromRoot(rootJson: T): Try[TlaModule]
 }

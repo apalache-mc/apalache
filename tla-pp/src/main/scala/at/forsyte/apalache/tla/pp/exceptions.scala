@@ -42,6 +42,10 @@ class IrrecoverablePreprocessingError(message: String) extends Exception(message
  */
 class TlaInputError(message: String, val sourceId: Option[UID] = None) extends Exception(message)
 
+// TODO Docs and formatting of error message
+class UnsupportedExpressionErrors(failIds: Seq[(UID, String)])
+    extends Exception(s"Unsopported expressions found $failIds")
+
 /**
  * An exception that should be thrown when a TLC configuration is wrong/not-found
  * @param message

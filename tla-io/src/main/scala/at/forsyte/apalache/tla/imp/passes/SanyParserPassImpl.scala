@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExitCodes
-import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.infra.passes.Pass.{PassFailure, PassResult}
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -16,6 +16,9 @@ import java.io.File
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import scala.io.Source
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import scala.util.Try
+import scala.util.Failure
+import scala.util.Success
 
 /**
  * Parsing TLA+ code with SANY.
@@ -40,21 +43,17 @@ class SanyParserPassImpl @Inject() (
       case _ => throw new IllegalArgumentException("loadFromJsonSource called with non Json SourceOption")
     }
 
-    try {
-      val moduleJson = UJsonRep(ujson.read(readable))
-      val modules = new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
-      modules match {
-        case rMod +: Nil => Right(rMod)
-        case _ => {
-          logger.error(s"  > Error parsing file ${source}")
-          Left(ExitCodes.ERROR_SPEC_PARSE)
-        }
-      }
-    } catch {
-      case e: Exception =>
+    val result = for {
+      moduleJson <- Try(UJsonRep(ujson.read(readable)))
+      module <- new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
+    } yield module
+
+    result match {
+      case Success(mod) => Right(mod)
+      case Failure(err) =>
         logger.error(s"  > Error parsing file ${source}")
-        logger.error("  > " + e.getMessage)
-        Left(ExitCodes.ERROR_SPEC_PARSE)
+        logger.error("  > " + err.getMessage)
+        Left((err, ExitCodes.ERROR_SPEC_PARSE))
     }
   }
 
@@ -72,7 +71,7 @@ class SanyParserPassImpl @Inject() (
     Right(modules.get(rootName).get)
   }
 
-  private def saveLoadedModule(module: TlaModule): Either[ExitCodes.TExitCode, Unit] = {
+  private def saveLoadedModule(module: TlaModule): Either[PassFailure, Unit] = {
     // save the output
     writeOut(writerFactory, module)
     // write parser output to specified destination, if requested
