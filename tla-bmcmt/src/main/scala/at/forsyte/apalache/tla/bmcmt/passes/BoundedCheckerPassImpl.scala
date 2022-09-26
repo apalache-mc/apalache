@@ -20,7 +20,7 @@ import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.options.{Algorithm, OptionGroup}
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -85,9 +85,8 @@ class BoundedCheckerPassImpl @Inject() (
         TODO: uncomment when the parallel checker is transferred from ik/multicore
       case "parallel" => runParallelChecker(params, input, tuning, nworkers)
        */
-      case "incremental" => runIncrementalChecker(params, input, tuning, solverConfig)
-      case "offline"     => runOfflineChecker(params, input, tuning, solverConfig)
-      case algo          => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
+      case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
+      case Algorithm.Offline     => runOfflineChecker(params, input, tuning, solverConfig)
     }
 
     if (result) Right(module) else Left(ExitCodes.ERROR_COUNTEREXAMPLE)

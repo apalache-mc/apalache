@@ -9,6 +9,7 @@ import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.infra.passes.options.Algorithm
 
 /**
  * This command initiates the 'test' command line.
@@ -51,7 +52,7 @@ class TestCmd
             length = Some(1),
             discardDisabled = Some(false),
             noDeadlocks = Some(false),
-            algo = Some("offline"),
+            algo = Some(Algorithm.Offline),
         ),
         typechecker = cfg.typechecker.copy(
             inferpoly = Some(true)
