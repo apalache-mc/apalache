@@ -14,6 +14,7 @@ import scala.util.Try
 import java.io.PrintWriter
 import com.typesafe.config.ConfigRenderOptions
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.passes.options.Algorithm
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -32,6 +33,11 @@ private object Converters {
   // PureConfig's optF will convert None values to appropriate configuration errors
   implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
   implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
+
+  // Converstion for options.Algorithm, manual conversion here allows
+  // configuration as `algo = incremental` instead of `algo = type.incremental`
+  implicit val algorithmReader = ConfigReader.fromString[Algorithm](catchReadError(Algorithm.ofString))
+  implicit val algorithmWriter = ConfigWriter.toString[Algorithm](_.toString)
 
   // Derive a reader and writer for SourceOption.Format based on the case object family
   // See https://pureconfig.github.io/docs/overriding-behavior-for-sealed-families.html#sealed-families

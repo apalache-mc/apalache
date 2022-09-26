@@ -173,7 +173,7 @@ object Config {
    */
   case class Checker(
       tuning: Option[Map[String, String]] = Some(Map()),
-      algo: Option[String] = Some("incremental"), // TODO: convert to case class
+      algo: Option[Algorithm] = Some(Algorithm.Incremental),
       config: Option[File] = None,
       discardDisabled: Option[Boolean] = Some(true),
       cinit: Option[String] = None,
@@ -324,6 +324,25 @@ object SMTEncoding {
     case "funArrays"     => FunArrays
     case "oopsla19"      => OOPSLA19
     case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
+  }
+}
+
+/** Defines the bmcmt model options supported */
+sealed abstract class Algorithm
+
+object Algorithm {
+  final case object Incremental extends Algorithm {
+    override def toString = "incremental"
+  }
+
+  final case object Offline extends Algorithm {
+    override def toString = "offline"
+  }
+
+  val ofString: String => Algorithm = {
+    case "incremental" => Incremental
+    case "offline"     => Offline
+    case invalid       => throw new IllegalArgumentException(s"Unexpected checker algorithm type $invalid")
   }
 }
 
@@ -562,7 +581,7 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to configure model checking */
   case class Checker(
-      algo: String,
+      algo: Algorithm,
       discardDisabled: Boolean,
       length: Int,
       maxError: Int,

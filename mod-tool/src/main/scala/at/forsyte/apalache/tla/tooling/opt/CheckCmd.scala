@@ -15,6 +15,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
 import org.apache.commons.io.FilenameUtils
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.infra.passes.options.Algorithm
 
 /**
  * This command initiates the 'check' command line.
@@ -29,9 +30,14 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   implicit val smtEncodingRead: Read[SMTEncoding] =
     Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays")(SMTEncoding.ofString)
 
+  // Parses the algo option
+  implicit val algoRead: Read[Algorithm] =
+    Read.reads[Algorithm](s"a checking algorithm, either ${Algorithm.Incremental} or ${Algorithm.Offline}")(
+        Algorithm.ofString)
+
   var nworkers: Option[Int] = opt[Option[Int]](name = "nworkers", default = None,
       description = "the number of workers for the parallel checker (soon), default: 1")
-  var algo: Option[String] = opt[Option[String]](name = "algo", default = None,
+  var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
       description =
