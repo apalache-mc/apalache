@@ -19,7 +19,7 @@ object Checker {
     override val isOk: Boolean = true
   }
 
-  case class Error(nerrors: Int) extends CheckerResult {
+  case class Error(nerrors: Int, counterexamples: Seq[CounterExample]) extends CheckerResult {
     override def toString: String = s"Error"
 
     override val isOk: Boolean = false
