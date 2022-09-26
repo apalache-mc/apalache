@@ -1,6 +1,16 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.29.2 - 2022-09-26
+
+### Features
+
+- Add [Option.tla](https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla) module providing support for option types (see #2097).
+
+### Bug fixes
+
+- Fix missing support for single-line comments inside of type annotations (see https://github.com/informalsystems/apalache/issues/2162)
+
 ## 0.29.1 - 2022-09-12
 
 ### Bug fixes
