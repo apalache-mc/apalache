@@ -6,7 +6,7 @@ package at.forsyte.apalache.io.json
  */
 trait JsonRepresentation {
 
-  /** The type of tused to represent JSON */
+  /** The type used to represent JSON */
   type Value
 
   def toString: String
