@@ -3,6 +3,7 @@ package at.forsyte.apalache.infra.passes
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import upickle.default.{writeJs, Writer}
 
 /**
  * <p>An analysis or transformation pass. Instead of explicitly setting a pass' input and output, we interconnect passes
@@ -69,9 +70,22 @@ trait Pass {
    */
   def transformations: Set[ModuleProperty.Value]
 
+  def passFailure[E](errorData: E, exitCode: TExitCode)(implicit f: Writer[E]): PassResult =
+    Left(Pass.PassFailure(name, writeJs(errorData), exitCode))
 }
 
 object Pass {
-  type PassFailure = (Throwable, TExitCode)
+  trait ErrorData {}
+
+  case class PassFailure(
+      passName: String,
+      errorData: ujson.Value,
+      exitCode: TExitCode) {
+    def toUJson: ujson.Value = {
+      ujson.Obj("error_data" -> errorData, "pass" -> passName, "exit_code" -> exitCode)
+    }
+
+  }
+
   type PassResult = Either[PassFailure, TlaModule]
 }

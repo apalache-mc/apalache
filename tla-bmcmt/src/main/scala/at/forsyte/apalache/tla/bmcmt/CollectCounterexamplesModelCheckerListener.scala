@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.trex.DecodedExecution
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
+import at.forsyte.apalache.tla.lir.TlaModule
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.mutable.ListBuffer
@@ -12,18 +12,16 @@ import scala.collection.mutable.ListBuffer
 class CollectCounterexamplesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
   override def onCounterexample(
-      rootModule: TlaModule,
-      trace: DecodedExecution,
-      invViolated: TlaEx,
+      counterexample: Counterexample,
       errorIndex: Int): Unit = {
-    _counterExamples += trace
+    _counterExamples += counterexample
   }
 
   override def onExample(rootModule: TlaModule, trace: DecodedExecution, exampleIndex: Int): Unit = {
     // ignore the examples
   }
 
-  private val _counterExamples = ListBuffer.empty[DecodedExecution]
+  private val _counterExamples = ListBuffer.empty[Counterexample]
 
-  def counterExamples: Seq[DecodedExecution] = _counterExamples.toSeq
+  def counterExamples: Seq[Counterexample] = _counterExamples.toSeq
 }

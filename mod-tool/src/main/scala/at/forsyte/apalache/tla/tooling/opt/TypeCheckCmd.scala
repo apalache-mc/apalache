@@ -40,8 +40,8 @@ class TypeCheckCmd
     logger.info("Type checking " + file)
 
     PassChainExecutor.run(new TypeCheckerModule(options)) match {
-      case Right(_)   => Right("Type checker [OK]")
-      case Left(code) => Left(code, "Type checker [FAILED]")
+      case Right(_)      => Right("Type checker [OK]")
+      case Left(failure) => Left(failure.exitCode, "Type checker [FAILED]")
     }
   }
 }

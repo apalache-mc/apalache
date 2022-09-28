@@ -64,8 +64,7 @@ class EtcTypeCheckerPassImpl @Inject() (
       Right(newModule)
     } else {
       logger.info(" > Snowcat asks you to fix the types. Meow.")
-      val errs = recordingListener.getErrors()
-      Left((new TypeErrors(errs), ExitCodes.ERROR_TYPECHECK))
+      passFailure(recordingListener.getErrors(), ExitCodes.ERROR_TYPECHECK)
     }
   }
 

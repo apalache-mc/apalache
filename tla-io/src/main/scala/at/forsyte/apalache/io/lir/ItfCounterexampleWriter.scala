@@ -19,6 +19,12 @@ import scala.collection.mutable
  *   Igor Konnov
  */
 class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+    writer.write(ujson.write(ItfCounterexampleWriter.mkJson(rootModule, states), indent = 2))
+  }
+}
+
+object ItfCounterexampleWriter {
 
   /**
    * The minimal value that can be reliably represented with Double in JavaScript.
@@ -73,10 +79,6 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     rootMap.put("vars", varsToJson(rootModule))
     rootMap.put("states", ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
     ujson.Obj(rootMap)
-  }
-
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-    writer.write(ujson.write(mkJson(rootModule, states), indent = 2))
   }
 
   private def varsToJson(root: TlaModule): ujson.Value = {

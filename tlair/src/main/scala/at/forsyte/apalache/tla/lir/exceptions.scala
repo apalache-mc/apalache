@@ -78,12 +78,6 @@ class CyclicDependencyError(message: String) extends LirError(message)
 class TypingException(message: String, val causeExprId: UID) extends Exception(message)
 
 /**
- * This exception is used to report all recoverable type checking error encountered
- */
-// TODO format message
-class TypeErrors(errors: List[(String, String)]) extends Exception(s"Type checking errors: ${errors}")
-
-/**
  * This exception is thrown when an outdated type annotation (pre 0.12.0) is met.
  *
  * @param message

@@ -124,8 +124,8 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     PassChainExecutor.run(new CheckerModule(options)) match {
-      case Right(_)   => Right(s"Checker reports no error up to computation length ${options.checker.length}")
-      case Left(code) => Left(code, "Checker has found an error")
+      case Right(_)      => Right(s"Checker reports no error up to computation length ${options.checker.length}")
+      case Left(failure) => Left(failure.exitCode, "Checker has found an error")
     }
   }
 

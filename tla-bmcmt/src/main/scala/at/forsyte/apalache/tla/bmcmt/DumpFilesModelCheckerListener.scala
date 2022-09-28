@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.lir.CounterexampleWriter
 import at.forsyte.apalache.tla.bmcmt.trex.DecodedExecution
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx, TlaModule}
+import at.forsyte.apalache.tla.lir.{BoolT1, TlaModule}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -20,28 +20,29 @@ import com.typesafe.scalalogging.LazyLogging
  */
 object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
-  override def onCounterexample(
-      rootModule: TlaModule,
-      trace: DecodedExecution,
-      invViolated: TlaEx,
-      errorIndex: Int): Unit = {
-    dump(rootModule, trace, invViolated, errorIndex, "violation")
+  override def onCounterexample(counterexample: Counterexample, errorIndex: Int): Unit = {
+    dump(counterexample, errorIndex, "violation")
   }
 
   override def onExample(rootModule: TlaModule, trace: DecodedExecution, exampleIndex: Int): Unit = {
-    dump(rootModule, trace, tla.bool(true).as(BoolT1), exampleIndex, "example")
+    val counterexample = Counterexample(rootModule, trace, tla.bool(true).as(BoolT1))
+    dump(counterexample, exampleIndex, "example")
   }
 
   private def dump(
-      rootModule: TlaModule,
-      trace: DecodedExecution,
-      invViolated: TlaEx,
+      counterexample: Counterexample,
       index: Int,
       prefix: String): Unit = {
-    val states = trace.path.map(p => (p._2.toString, p._1))
-
     def dump(suffix: String): List[String] = {
-      CounterexampleWriter.writeAllFormats(prefix, suffix, rootModule, invViolated, states)
+      // TODO Should this take a Counterexample?
+      // Would require fixing package dependencies.
+      CounterexampleWriter.writeAllFormats(
+          prefix,
+          suffix,
+          counterexample.module,
+          counterexample.invViolated,
+          counterexample.states,
+      )
     }
 
     // for a human user, write the latest (counter)example into ${prefix}.{tla,json,...}

@@ -53,7 +53,7 @@ class SanyParserPassImpl @Inject() (
       case Failure(err) =>
         logger.error(s"  > Error parsing file ${source}")
         logger.error("  > " + err.getMessage)
-        Left((err, ExitCodes.ERROR_SPEC_PARSE))
+        passFailure(err.getMessage(), ExitCodes.ERROR_SPEC_PARSE)
     }
   }
 

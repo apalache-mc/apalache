@@ -15,7 +15,6 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.OptionGroup
-import at.forsyte.apalache.tla.pp.UnsupportedExpressionErrors
 
 abstract class PreproPassPartial(
     val options: OptionGroup.HasChecker,
@@ -72,8 +71,8 @@ abstract class PreproPassPartial(
           val message = "%s: unsupported expression: %s".format(findLoc(id), errorMessage)
           logger.error(message)
         }
-        val errs = new UnsupportedExpressionErrors(failedIds)
-        Left((errs, ExitCodes.FAILURE_SPEC_EVAL))
+        val errData = failedIds.map { case (uid, s) => (uid.toString(), s) }
+        passFailure(errData, ExitCodes.FAILURE_SPEC_EVAL)
     }
 
   protected def executeWithParams(

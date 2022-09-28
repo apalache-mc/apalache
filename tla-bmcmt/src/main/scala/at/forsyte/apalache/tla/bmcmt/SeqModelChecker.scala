@@ -3,9 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
-import at.forsyte.apalache.tla.bmcmt.trex.{
-  ConstrainedTransitionExecutor, DecodedExecution, ExecutionSnapshot, TransitionExecutor,
-}
+import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -108,24 +106,15 @@ class SeqModelChecker[ExecutorContextT](
   /**
    * Notify all listeners that a counterexample has been found.
    *
-   * @param rootModule
-   *   The checked TLA+ module.
-   * @param trace
-   *   The counterexample trace.
-   * @param invViolated
-   *   The invariant violation to record in the counterexample. Pass
-   *   - for invariant violations: the negated invariant,
-   *   - for deadlocks: `ValEx(TlaBool(true))`,
-   *   - for trace invariants: the applied, negated trace invariant (see [[SeqModelChecker.applyTraceInv]]).
+   * @param counterexample
+   *   The counterexample to record
    * @param errorIndex
    *   Number of found error (likely [[SearchState.nFoundErrors]]).
    */
   private def notifyOnError(
-      rootModule: TlaModule,
-      trace: DecodedExecution,
-      invViolated: TlaEx,
+      counterexample: Counterexample,
       errorIndex: Int): Unit = {
-    listeners.foreach(_.onCounterexample(rootModule, trace, invViolated, errorIndex))
+    listeners.foreach(_.onCounterexample(counterexample, errorIndex))
   }
 
   private def makeStep(isNext: Boolean, transitions: Seq[TlaEx]): Unit = {
@@ -143,14 +132,16 @@ class SeqModelChecker[ExecutorContextT](
         case Some(true) => () // OK
 
         case Some(false) =>
-          if (trex.sat(0).contains(true)) {
-            notifyOnError(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
-                searchState.nFoundErrors)
+          val counterexample = if (trex.sat(0).contains(true)) {
+            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)))
+            notifyOnError(cx, searchState.nFoundErrors)
             logger.error("Found a deadlock.")
+            Some(cx)
           } else {
             logger.error(s"Found a deadlock. No SMT model.")
+            None
           }
-          searchState.onResult(Deadlock())
+          searchState.onResult(Deadlock(counterexample))
 
         case None =>
           searchState.onResult(RuntimeError())
@@ -289,14 +280,16 @@ class SeqModelChecker[ExecutorContextT](
 
     if (trex.preparedTransitionNumbers.isEmpty) {
       if (params.checkForDeadlocks) {
-        if (trex.sat(0).contains(true)) {
-          notifyOnError(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
-              searchState.nFoundErrors)
+        val counterexample = if (trex.sat(0).contains(true)) {
+          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)))
+          notifyOnError(cx, searchState.nFoundErrors)
           logger.error("Found a deadlock.")
+          Some(cx)
         } else {
           logger.error(s"Found a deadlock. No SMT model.")
+          None
         }
-        searchState.onResult(Deadlock())
+        searchState.onResult(Deadlock(counterexample))
       } else {
         val msg = "All executions are shorter than the provided bound."
         logger.warn(msg)
@@ -359,8 +352,9 @@ class SeqModelChecker[ExecutorContextT](
 
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
-              searchState.onResult(Error(1))
-              notifyOnError(checkerInput.rootModule, trex.decodedExecution(), notInv, searchState.nFoundErrors)
+              val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), notInv)
+              searchState.onResult(Error(1, Seq(counterexample)))
+              notifyOnError(counterexample, searchState.nFoundErrors)
               logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} violated.")
               excludePathView()
 
@@ -404,8 +398,9 @@ class SeqModelChecker[ExecutorContextT](
 
         trex.sat(params.smtTimeoutSec) match {
           case Some(true) =>
-            searchState.onResult(Error(1))
-            notifyOnError(checkerInput.rootModule, trex.decodedExecution(), traceInvApp, searchState.nFoundErrors)
+            val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
+            searchState.onResult(Error(1, Seq(counterexample)))
+            notifyOnError(counterexample, searchState.nFoundErrors)
             val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)
             logger.error(msg)
             excludePathView()
