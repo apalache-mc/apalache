@@ -17,7 +17,7 @@ class TestPassChainExecutor extends AnyFunSuite {
       if (result) {
         Right(TlaModule("TestModule", Seq()))
       } else {
-        Left(ExitCodes.ERROR)
+        passFailure(None, ExitCodes.ERROR)
       }
     }
     override def dependencies = deps

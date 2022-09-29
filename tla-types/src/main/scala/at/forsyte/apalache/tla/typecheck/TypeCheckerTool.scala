@@ -7,6 +7,9 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.typecheck.integration.RecordingTypeCheckerListener
+import at.forsyte.apalache.tla.typecheck.integration.TypeRewriter
+import at.forsyte.apalache.tla.imp.src.SourceStore
 
 /**
  * The API to the type checker. It first translates a TLA+ module into EtcExpr and then does the type checking.
@@ -54,6 +57,39 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     // run the type checker
     val result = typeChecker.compute(listener, TypeContext.empty, rootExpr)
     result.isDefined
+  }
+
+  /**
+   * Check the types in a module and, if the module is well-typed, produce a new module that attaches a type tag to
+   * every expression and declaration in the module.
+   *
+   * Only used in tests.
+   *
+   * @param tracker
+   *   a transformation tracker that is applied when expressions and declarations are tagged
+   * @param listener
+   *   a listener to type checking events
+   * @param defaultTag
+   *   a function that returns a default type for UID, when type is missing
+   * @param module
+   *   a module to type check
+   * @return
+   *   Some(newModule) if module is well-typed; None, otherwise
+   */
+  def checkAndTag(
+      tracker: lir.transformations.TransformationTracker,
+      listener: TypeCheckerListener,
+      defaultTag: UID => TypeTag,
+      module: TlaModule): Option[TlaModule] = {
+    // The source stores and ChangeListeners for this aren't needed, since it's only run in tests
+    val recorder = new RecordingTypeCheckerListener(new SourceStore(), new lir.storage.ChangeListener())
+    if (!check(new MultiTypeCheckerListener(listener, recorder), module)) {
+      None
+    } else {
+      val transformer = new TypeRewriter(tracker, defaultTag)(recorder.toMap)
+      val taggedDecls = module.declarations.map(transformer(_))
+      Some(TlaModule(module.name, taggedDecls))
+    }
   }
 
   // Parse type aliases from the annotations.
