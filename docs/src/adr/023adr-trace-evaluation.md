@@ -28,7 +28,7 @@ accepting the development costs.\
      This is the story explaining the problem we are looking to resolve.
 -->
 As explained in [#1845](https://github.com/informalsystems/apalache/issues/1845), one often runs into the problem of unreadable counterexamples; 
-for complex specifications, it is often the case that either the sate contains many variables, or the invariant contains many conjunctive components (or both).
+for complex specifications, it is often the case that either the state contains many variables, or the invariant contains many conjunctive components (or both).
 In that case, trying to determine exactly why e.g. `A1 /\ ... /\ An` was violated basically boils down to manually evaluating each formula `Ai` with whatever variables are present in the state.
 This is laborious and error-prone, and should be automated.
 
