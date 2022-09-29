@@ -63,7 +63,8 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
       assert(dec.asTlaModule(enc(m)) == m)
     }
 
-    assert(dec.fromRoot(enc.makeRoot(modules)) == modules)
+    // TODO Should a "root" be able to be a list of modules?
+    assert(dec.fromRoot(enc.makeRoot(modules)).isFailure)
   }
 
   test("Predef sets (see #1281)") {
