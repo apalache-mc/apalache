@@ -34,8 +34,9 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
       index: Int,
       prefix: String): Unit = {
     def dump(suffix: String): List[String] = {
-      // TODO Should this take a Counterexample?
-      // Would require fixing package dependencies.
+      // TODO(shonfeder): Should the CounterexampleWriter take a Counterexample?
+      // Would require fixing inter-package dependencies, since it would require
+      // exposing the Counterexample class to the tla-io project.
       CounterexampleWriter.writeAllFormats(
           prefix,
           suffix,

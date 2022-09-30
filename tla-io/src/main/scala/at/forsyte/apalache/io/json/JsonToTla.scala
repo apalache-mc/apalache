@@ -7,7 +7,9 @@ import at.forsyte.apalache.tla.lir.values._
 import convenience.tla
 import UntypedPredefs._
 import at.forsyte.apalache.io.lir.TypeTagReader
-import scala.util.{Failure, Try}
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 /**
  * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFactory
@@ -203,18 +205,23 @@ class JsonToTla[T <: JsonRepresentation](
     ex
   }
 
-  override def fromRoot(rootJson: T): Try[TlaModule] = {
+  override def fromRoot(rootJson: T): Seq[TlaModule] = {
     val versionField = getOrThrow(rootJson, TlaToJson.versionFieldName)
     val version = scalaFactory.asStr(versionField)
     val current = JsonVersion.current
     if (version != current) {
-      Failure(new JsonDeserializationError(s"JSON version is $version, expected $current."))
+      throw new JsonDeserializationError(s"JSON version is $version, expected $current.")
     } else {
       val modulesField = getOrThrow(rootJson, "modules")
-      scalaFactory.asSeq(modulesField) match {
-        case root +: Nil => Try(asTlaModule(root))
-        case _           => Failure(new JsonDeserializationError(s"JSON did not provide single root module"))
-      }
+      scalaFactory.asSeq(modulesField).map(asTlaModule)
     }
   }
+
+  override def fromSingleModule(json: T): Try[TlaModule] = for {
+    modules <- Try(fromRoot(json))
+    module <- modules match {
+      case m +: Nil => Success(m)
+      case _        => Failure(new JsonDeserializationError(s"JSON inlucded more than one module"))
+    }
+  } yield module
 }

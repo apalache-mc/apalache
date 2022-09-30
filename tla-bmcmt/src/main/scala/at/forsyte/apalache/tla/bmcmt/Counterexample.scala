@@ -37,9 +37,9 @@ object Counterexample {
   implicit val upickleWriter: Writer[Counterexample] =
     writer[ujson.Value].comap(ujsonView)
 
-  /** Produce a `Counterexample` from a `trace` (rather than `states`) */
+  /** Produce a `Counterexample` from a `trace` (rather than from `states`) */
   def apply(module: TlaModule, trace: DecodedExecution, invViolated: TlaEx): Counterexample = {
-    // TODO(shonfeder): This conversion seems kind of sensless: we just swap the tuple and convert the transition index to
+    // TODO(shonfeder): This conversion seems kind of senseless: we just swap the tuple and convert the transition index to
     // a string. Lots depends on this particular format, but it seems like a pretty pointless intermediary structure?
     val states = trace.path.map(p => (p._2.toString, p._1))
     Counterexample(module, states, invViolated)

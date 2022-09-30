@@ -45,7 +45,7 @@ class SanyParserPassImpl @Inject() (
 
     val result = for {
       moduleJson <- Try(UJsonRep(ujson.read(readable)))
-      module <- new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromRoot(moduleJson)
+      module <- new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromSingleModule(moduleJson)
     } yield module
 
     result match {
