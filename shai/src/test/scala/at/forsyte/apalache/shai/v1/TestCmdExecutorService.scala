@@ -89,8 +89,8 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
         } yield {
           assert(json("error_type").str)(equalTo("pass_failure"))
           assert(json("data")("pass_name").str)(equalTo("BoundedChecker"))
-          assert(json("data")("data")("checking_result").str)(equalTo("violation"))
-          assert(json("data")("data")("data")("counterexamples").arr)(isNonEmpty)
+          assert(json("data")("error_data")("checking_result").str)(equalTo("violation"))
+          assert(json("data")("error_data")("counterexamples").arr)(isNonEmpty)
         }
       },
       testM("typechecking well-typed spec succeeds") {
@@ -107,7 +107,7 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
         } yield {
           assert(json("error_type").str)(equalTo("pass_failure"))
           assert(json("data")("pass_name").str)(equalTo("TypeCheckerSnowcat"))
-          assert(json("data")("data").arr)(isNonEmpty)
+          assert(json("data")("error_data").arr)(isNonEmpty)
         }
       },
   )

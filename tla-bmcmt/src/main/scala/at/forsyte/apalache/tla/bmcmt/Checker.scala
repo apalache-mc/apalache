@@ -18,16 +18,13 @@ object Checker {
     import upickle.default.{writer, Writer}
     import ujson._
 
-    implicit val ujsonView: CheckerResult => ujson.Value = { result =>
-      val (passResultKind, errData) = result match {
-        case Error(nerrors, counterexamples) =>
-          ("Error", Obj("counterexamples" -> counterexamples, "nerrors" -> nerrors))
-        case Deadlock(counterexample) =>
-          ("Deadlock", Obj("counterexample" -> counterexample))
-        case other => (other.toString(), Obj())
-      }
-      Obj("checking_result" -> passResultKind, "data" -> errData)
-
+    implicit val ujsonView: CheckerResult => ujson.Value = {
+      case Error(nerrors, counterexamples) =>
+        Obj("checking_result" -> "Error", "counterexamples" -> counterexamples, "nerrors" -> nerrors)
+      case Deadlock(counterexample) =>
+        Obj("checking_result" -> "Deadlock", "counterexample" -> counterexample)
+      case other =>
+        Obj("checking_result" -> other.toString())
     }
 
     implicit val upickleWriter: Writer[CheckerResult] = writer[ujson.Value].comap(ujsonView)

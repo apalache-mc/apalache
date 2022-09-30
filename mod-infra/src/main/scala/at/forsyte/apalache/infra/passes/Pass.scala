@@ -19,6 +19,8 @@ import upickle.default.writeJs
  *
  * @author
  *   Igor Konnov
+ * @author
+ *   Shon Feder
  */
 trait Pass {
 
@@ -72,28 +74,50 @@ trait Pass {
    */
   def transformations: Set[ModuleProperty.Value]
 
+  /**
+   * Construct a failing pass result
+   *
+   * To be called to construct a failing [[PassResult]] in the event that a pass fails.
+   *
+   * @param errorData
+   *   Data providing insights into the reasons for the failure.
+   * @param exitCode
+   *   The exit code to be used when terminating the program.
+   * @param f
+   *   An implicit upickle writer than can convert the `errorData` into json. You can import `upickle.default._` to get
+   *   implicits for common datatypes. For an example of defining a custom writer, see
+   *   `at.forsyte.apalache.tla.bmcmt.Counterexample`.
+   */
   def passFailure[E](errorData: E, exitCode: TExitCode)(implicit f: Writer[E]): PassResult =
     Left(Pass.PassFailure(name, writeJs(errorData), exitCode))
 }
 
 object Pass {
-  trait ErrorData {}
-  import upickle.default.{macroRW, writeJs, ReadWriter}
+
   import upickle.implicits.key
 
+  /**
+   * Represents a failing pass
+   *
+   * @param passName
+   *   The name of the pass which has failed.
+   * @param errorData
+   *   Data providing insights into the reasons for the failure.
+   * @param exitCode
+   *   The exit code to be used when terminating the program.
+   */
   case class PassFailure(
       @key("pass_name") passName: String,
-      @key("data") errorData: ujson.Value,
-      @key("exit_code") exitCode: TExitCode) {
+      @key("error_data") errorData: ujson.Value,
+      @key("exit_code") exitCode: TExitCode) {}
 
-    def toUJson(): ujson.Value = writeJs(this)
-  }
-
+  /** Implicit conversions for [[PassFailure]] */
   object PassFailure {
+    import upickle.default.{macroRW, writeJs, ReadWriter}
 
     implicit val upickleReadWriter: ReadWriter[PassFailure] = macroRW
 
-    implicit val ujsonView: PassFailure => ujson.Value = _.toUJson()
+    implicit val ujsonView: PassFailure => ujson.Value = writeJs
   }
 
   type PassResult = Either[PassFailure, TlaModule]
