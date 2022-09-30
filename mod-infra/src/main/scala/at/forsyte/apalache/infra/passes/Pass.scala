@@ -77,7 +77,7 @@ trait Pass {
   /**
    * Construct a failing pass result
    *
-   * To be called to construct a failing [[PassResult]] in the event that a pass fails.
+   * To be called to construct a failing `PassResult` in the event that a pass fails.
    *
    * @param errorData
    *   Data providing insights into the reasons for the failure.
