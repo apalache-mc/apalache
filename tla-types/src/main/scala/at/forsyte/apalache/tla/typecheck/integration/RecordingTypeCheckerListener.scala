@@ -23,9 +23,9 @@ class RecordingTypeCheckerListener(sourceStore: SourceStore, changeListener: Cha
     uidToType.toMap
   }
 
-  private def errors: mutable.Queue[(String, String)] = mutable.Queue()
+  private val _errors: mutable.ListBuffer[(String, String)] = mutable.ListBuffer.empty
 
-  def getErrors(): List[(String, String)] = errors.toList
+  def getErrors(): List[(String, String)] = _errors.toList
 
   override def onTypeFound(sourceRef: ExactRef, monotype: TlaType1): Unit = {
     uidToType += sourceRef.tlaId -> monotype
@@ -40,6 +40,6 @@ class RecordingTypeCheckerListener(sourceStore: SourceStore, changeListener: Cha
    *   the error description
    */
   override def onTypeError(sourceRef: EtcRef, message: String): Unit = {
-    errors.addOne((findLoc(sourceRef.tlaId), message))
+    _errors += (findLoc(sourceRef.tlaId) -> message)
   }
 }

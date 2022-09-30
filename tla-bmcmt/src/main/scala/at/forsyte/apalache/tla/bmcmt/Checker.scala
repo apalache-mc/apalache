@@ -19,14 +19,15 @@ object Checker {
     import ujson._
 
     implicit val ujsonView: CheckerResult => ujson.Value = { result =>
-      val (errType, errData) = result match {
+      val (passResultKind, errData) = result match {
         case Error(nerrors, counterexamples) =>
-          ("violation", Obj("counterexamples" -> counterexamples, "nerrors" -> nerrors))
+          ("Error", Obj("counterexamples" -> counterexamples, "nerrors" -> nerrors))
         case Deadlock(counterexample) =>
-          ("deadlock", Obj("counterexample" -> counterexample))
+          ("Deadlock", Obj("counterexample" -> counterexample))
         case other => (other.toString(), Obj())
       }
-      Obj("error_type" -> errType, "error_data" -> errData)
+      Obj("checking_result" -> passResultKind, "data" -> errData)
+
     }
 
     implicit val upickleWriter: Writer[CheckerResult] = writer[ujson.Value].comap(ujsonView)

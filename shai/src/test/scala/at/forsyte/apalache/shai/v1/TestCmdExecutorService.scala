@@ -80,27 +80,35 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
           resp <- s.run(runCmd(Cmd.CHECK, checkableSpec))
         } yield assert(resp.result.isSuccess)(isTrue)
       },
-      testM("running check on spec with vioalted invariant fails") {
+      testM("running check on spec with violated invariant fails") {
         for {
           s <- ZIO.service[CmdExecutorService]
           config = Config.ApalacheConfig(checker = Config.Checker(inv = Some(List("Inv"))))
           resp <- s.run(runCmd(Cmd.CHECK, checkableSpec, cfg = config))
-          // error code 12 indicates counterexamples found
-        } yield assert(resp.result.failure.get)(containsString("Command failed with error code: 12"))
+          json = ujson.read(resp.result.failure.get)
+        } yield {
+          assert(json("error_type").str)(equalTo("pass_failure"))
+          assert(json("data")("pass_name").str)(equalTo("BoundedChecker"))
+          assert(json("data")("data")("checking_result").str)(equalTo("violation"))
+          assert(json("data")("data")("data")("counterexamples").arr)(isNonEmpty)
+        }
       },
       testM("typechecking well-typed spec succeeds") {
         for {
           s <- ZIO.service[CmdExecutorService]
           resp <- s.run(runCmd(Cmd.TYPECHECK, trivialSpec))
-          // error code 12 indicates counterexamples found
         } yield assert(resp.result.isSuccess)(isTrue)
       },
       testM("typechecking ill-typed spec returns an error") {
         for {
           s <- ZIO.service[CmdExecutorService]
           resp <- s.run(runCmd(Cmd.TYPECHECK, illTypedSpec))
-          // error code 120 indicates a typechecking error
-        } yield assert(resp.result.failure.get)(containsString("Command failed with error code: 120"))
+          json = ujson.read(resp.result.failure.get)
+        } yield {
+          assert(json("error_type").str)(equalTo("pass_failure"))
+          assert(json("data")("pass_name").str)(equalTo("TypeCheckerSnowcat"))
+          assert(json("data")("data").arr)(isNonEmpty)
+        }
       },
   )
     // Create the single shared service for use in our tests, allowing us to run

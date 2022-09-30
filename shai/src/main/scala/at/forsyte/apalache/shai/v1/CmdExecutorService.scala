@@ -2,8 +2,6 @@ package at.forsyte.apalache.shai.v1
 
 import com.typesafe.scalalogging.Logger
 import io.grpc.Status
-import scala.util.Failure
-import scala.util.Success
 import zio.ZIO
 import zio.ZEnv
 
@@ -18,8 +16,8 @@ import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
+import at.forsyte.apalache.infra.passes.Pass
 import scala.util.Try
-import at.forsyte.apalache.infra.passes.options.Config
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -43,17 +41,27 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   def run(req: CmdRequest): Result[CmdResponse] = for {
     cmd <- validateCmd(req.cmd)
     resp <- executeCmd(cmd, req.config) match {
-      case Right(r)  => ZIO.succeed(CmdResponse.Result.Success(r))
-      case Left(err) => ZIO.succeed(CmdResponse.Result.Failure(err))
+      case Right(r)  => ZIO.succeed(CmdResponse.Result.Success(r.toString()))
+      case Left(err) => ZIO.succeed(CmdResponse.Result.Failure(err.toString()))
     }
   } yield CmdResponse(resp)
 
-  private def executeCmd(cmd: Cmd, cfgStr: String): Either[String, String] = {
+  private def executeCmd(cmd: Cmd, cfgStr: String): Either[ujson.Value, ujson.Value] = {
     // Convert a Try into an `Either` with `Left` the message from a possible `Failure`.
-    def convErr[O](v: Try[O]) = v.toEither.left.map(e => e.getMessage())
+    import ujson._
+
+    def throwableErr(err: Throwable): ujson.Value =
+      Obj("error_type" -> "unexpected",
+          "data" -> Obj("msg" -> err.getMessage(), "stack_trace" -> err.getStackTrace().map(_.toString()).toList))
+
+    def passErr(err: Pass.PassFailure): ujson.Value = {
+      Obj("error_type" -> "pass_failure", "data" -> err)
+    }
+
+    def convErr[O](v: Try[O]): Either[ujson.Value, O] = v.toEither.left.map(throwableErr)
 
     for {
-      cfg <- parseConfig(cfgStr)
+      cfg <- convErr(ConfigManager(cfgStr)).map(cfg => cfg.copy(common = cfg.common.copy(command = Some("server"))))
 
       toolModule <- {
         import OptionGroup._
@@ -67,13 +75,11 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       }
 
       tlaModule <-
-        try { PassChainExecutor.run(toolModule).left.map(errCode => s"Command failed with error code: ${errCode}") }
+        try { PassChainExecutor.run(toolModule).left.map(passErr) }
         catch {
-          case e: Throwable => Left(s"Command failed with exception: ${e.getMessage()}")
+          case err: Throwable => Left(throwableErr(err))
         }
-
-      json = jsonOfModule(tlaModule)
-    } yield s"Command succeeded ${json}"
+    } yield jsonOfModule(tlaModule)
   }
 
   // Allows us to handle invalid protobuf messages on the ZIO level, before
@@ -85,14 +91,14 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     case cmd => ZIO.succeed(cmd)
   }
 
-  private def parseConfig(data: String): Either[String, Config.ApalacheConfig] = {
-    ConfigManager(data) match {
-      case Success(cfg) => Right(cfg.copy(common = cfg.common.copy(command = Some("server"))))
-      case Failure(err) => Left(s"Invalid configuration data given to command: ${err.getMessage()}")
-    }
-  }
+  // private def parseConfig(data: String): Either[String, Config.ApalacheConfig] = {
+  //   ConfigManager(data) match {
+  //     case Success(cfg) => Right(cfg.copy(common = cfg.common.copy(command = Some("server"))))
+  //     case Failure(err) => Left(s"Invalid configuration data given to command: ${err.getMessage()}")
+  //   }
+  // }
 
-  private def jsonOfModule(module: TlaModule): String = {
-    new TlaToUJson(None).makeRoot(Seq(module)).toString
+  private def jsonOfModule(module: TlaModule): ujson.Value = {
+    new TlaToUJson(None).makeRoot(Seq(module)).value
   }
 }

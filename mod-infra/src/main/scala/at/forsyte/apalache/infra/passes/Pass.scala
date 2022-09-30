@@ -2,8 +2,10 @@ package at.forsyte.apalache.infra.passes
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import upickle.default.{writeJs, Writer}
+import at.forsyte.apalache.tla.lir.ModuleProperty
+import at.forsyte.apalache.tla.lir.TlaModule
+import upickle.default.Writer
+import upickle.default.writeJs
 
 /**
  * <p>An analysis or transformation pass. Instead of explicitly setting a pass' input and output, we interconnect passes
@@ -76,15 +78,22 @@ trait Pass {
 
 object Pass {
   trait ErrorData {}
+  import upickle.default.{macroRW, writeJs, ReadWriter}
+  import upickle.implicits.key
 
   case class PassFailure(
-      passName: String,
-      errorData: ujson.Value,
-      exitCode: TExitCode) {
-    def toUJson: ujson.Value = {
-      ujson.Obj("error_data" -> errorData, "pass" -> passName, "exit_code" -> exitCode)
-    }
+      @key("pass_name") passName: String,
+      @key("data") errorData: ujson.Value,
+      @key("exit_code") exitCode: TExitCode) {
 
+    def toUJson(): ujson.Value = writeJs(this)
+  }
+
+  object PassFailure {
+
+    implicit val upickleReadWriter: ReadWriter[PassFailure] = macroRW
+
+    implicit val ujsonView: PassFailure => ujson.Value = _.toUJson()
   }
 
   type PassResult = Either[PassFailure, TlaModule]
