@@ -221,7 +221,7 @@ class JsonToTla[T <: JsonRepresentation](
     modules <- Try(fromRoot(json))
     module <- modules match {
       case m +: Nil => Success(m)
-      case _        => Failure(new JsonDeserializationError(s"JSON inlucded more than one module"))
+      case _        => Failure(new JsonDeserializationError(s"JSON included more than one module"))
     }
   } yield module
 }
