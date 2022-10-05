@@ -1,5 +1,5 @@
 // Protobuf specification for messages shared between services
-//
+
 syntax = "proto3";
 
 package shai;
