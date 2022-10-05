@@ -1,6 +1,5 @@
 package at.forsyte.apalache.infra.passes
 
-import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties}
@@ -22,7 +21,7 @@ import at.forsyte.apalache.infra.AdaptedException
  */
 object PassChainExecutor extends LazyLogging {
 
-  type PassResultModule = Either[TExitCode, TlaModule with TlaModuleProperties]
+  type PassResultModule = Either[Pass.PassFailure, TlaModule with TlaModuleProperties]
 
   def run[O <: OptionGroup](toolModule: ToolModule[O]): PassResult = {
 

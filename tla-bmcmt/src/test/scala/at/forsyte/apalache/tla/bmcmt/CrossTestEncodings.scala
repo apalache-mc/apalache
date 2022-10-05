@@ -198,15 +198,15 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val checker = new SeqModelChecker(checkerParams, checkerInput, trex, Seq(listener))
 
     // check the outcome
-    val outcome = checker.run()
-    if (outcome != Error(1)) {
-      Left(outcome)
-    } else {
-      // extract witness expression from the counterexample
-      assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
-      val cex = listener.counterExamples.head.path
-      val (binding, _) = cex.last // initial state binding
-      Right(binding)
+    checker.run() match {
+      case Error(1, _) =>
+        // extract witness expression from the counterexample
+        assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
+        val cex = listener.counterExamples.head.states
+        val (_, binding) = cex.last // initial state binding
+        Right(binding)
+
+      case outcome => Left(outcome)
     }
   }
 

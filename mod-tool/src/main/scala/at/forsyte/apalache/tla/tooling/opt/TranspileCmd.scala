@@ -26,8 +26,8 @@ class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = 
       .getOrElse(TlaExToVMTWriter.outFileName)
 
     PassChainExecutor.run(new ReTLAToVMTModule(options)) match {
-      case Right(_)   => Right(s"VMT constraints successfully generated at\n$outFilePath")
-      case Left(code) => Left(code, "Failed to generate constraints")
+      case Right(_)      => Right(s"VMT constraints successfully generated at\n$outFilePath")
+      case Left(failure) => Left(failure.exitCode, "Failed to generate constraints")
     }
   }
 }

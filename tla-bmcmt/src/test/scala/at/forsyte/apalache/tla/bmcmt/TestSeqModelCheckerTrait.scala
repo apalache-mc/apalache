@@ -34,6 +34,11 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     TlaModule("root", List(TlaVarDecl("x")(intTag), TlaVarDecl("y")(intTag)))
   }
 
+  private def assertResultHasNErrors(n: Int, result: Checker.CheckerResult) = assert(result match {
+    case Error(m, _) if m == n => true
+    case _                     => false
+  })
+
   test("Init + Inv => OK") { rewriter: SymbStateRewriter =>
     // x' <- 2
     val initTrans = List(mkAssign("x", 2))
@@ -65,7 +70,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("ConstInit + Init => OK") { rewriter: SymbStateRewriter =>
@@ -105,7 +110,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assert(outcome match { case Error(1, _) => true; case _ => false })
   }
 
   test("Init, deadlock") { rewriter: SymbStateRewriter =>
@@ -119,7 +124,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Deadlock() == outcome)
+    assert(outcome match { case Deadlock(_) => true; case _ => false })
   }
 
   test("Init, 2 options, OK") { rewriter: SymbStateRewriter =>
@@ -170,7 +175,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + Inv (before + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -192,7 +197,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -220,7 +225,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => OK") { rewriter: SymbStateRewriter =>
@@ -270,7 +275,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + Inv (after + no-all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -292,7 +297,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -320,7 +325,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => OK") { rewriter: SymbStateRewriter =>
@@ -376,7 +381,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before) => OK") { rewriter: SymbStateRewriter =>
@@ -432,7 +437,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after) => OK") { rewriter: SymbStateRewriter =>
@@ -522,7 +527,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 2 (LET-IN) + Inv => ERR") { rewriter: SymbStateRewriter =>
@@ -549,7 +554,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("determinstic Init + 2 steps (regression)") { rewriter: SymbStateRewriter =>
@@ -591,7 +596,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Deadlock() == outcome)
+    assert(outcome match { case Deadlock(_) => true; case _ => false })
   }
 
   test("Init + Next, 10 steps, OK") { rewriter: SymbStateRewriter =>
@@ -623,7 +628,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Deadlock() == outcome)
+    assert(outcome match { case Deadlock(_) => true; case _ => false })
   }
 
   test("Init + Next + Inv x 10 => OK") { rewriter: SymbStateRewriter =>
@@ -667,7 +672,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next + Inv x 2 => OK, edge case") { rewriter: SymbStateRewriter =>
@@ -755,7 +760,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("cInit + Init + Next, 10 steps") { rewriter: SymbStateRewriter =>
@@ -789,7 +794,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next, 10 steps and filter") { rewriter: SymbStateRewriter =>
@@ -850,13 +855,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    outcome match {
-      case Error(nerrors) =>
-        assert(4 == nerrors)
-
-      case _ =>
-        fail("Expected 4 errors")
-    }
+    assertResultHasNErrors(4, outcome)
   }
 
   private def mkAssign(varName: String, value: Int): TlaEx = {

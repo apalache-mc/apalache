@@ -89,14 +89,18 @@ class BoundedCheckerPassImpl @Inject() (
       case Algorithm.Offline     => runOfflineChecker(params, input, tuning, solverConfig)
     }
 
-    if (result) Right(module) else Left(ExitCodes.ERROR_COUNTEREXAMPLE)
+    if (result.isOk) {
+      Right(module)
+    } else {
+      passFailure(result, ExitCodes.ERROR_COUNTEREXAMPLE)
+    }
   }
 
   private def runIncrementalChecker(
       params: ModelCheckerParams,
       input: CheckerInput,
       tuning: Map[String, String],
-      solverConfig: SolverConfig): Boolean = {
+      solverConfig: SolverConfig): Checker.CheckerResult = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
     val metricProfilerListener =
@@ -131,14 +135,14 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome.isOk
+    outcome
   }
 
   private def runOfflineChecker(
       params: ModelCheckerParams,
       input: CheckerInput,
       tuning: Map[String, String],
-      solverConfig: SolverConfig): Boolean = {
+      solverConfig: SolverConfig): Checker.CheckerResult = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
     if (solverConfig.profile) {
@@ -166,7 +170,7 @@ class BoundedCheckerPassImpl @Inject() (
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome.isOk
+    outcome
   }
 
   /*

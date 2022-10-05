@@ -13,6 +13,9 @@ import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.tla.typecheck.integration.RecordingTypeCheckerListener
+import at.forsyte.apalache.tla.typecheck.MultiTypeCheckerListener
+import at.forsyte.apalache.tla.typecheck.integration.TypeRewriter
 
 class EtcTypeCheckerPassImpl @Inject() (
     val options: OptionGroup.HasTypechecker,
@@ -47,21 +50,21 @@ class EtcTypeCheckerPassImpl @Inject() (
       Untyped
     }
 
-    val listener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
-    val taggedModule = tool.checkAndTag(tracker, listener, defaultTag, tlaModule)
-
-    taggedModule match {
-      case Some(newModule) =>
-        logger.info(" > Your types are purrfect!")
-        logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
-        writeOut(writerFactory, newModule)
-
-        utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
-
-        Right(newModule)
-      case None =>
-        logger.info(" > Snowcat asks you to fix the types. Meow.")
-        Left(ExitCodes.ERROR_TYPECHECK)
+    val loggingListener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
+    val recordingListener = new RecordingTypeCheckerListener(sourceStore, changeListener)
+    val listener = new MultiTypeCheckerListener(loggingListener, recordingListener)
+    if (tool.check(listener, tlaModule)) {
+      val transformer = new TypeRewriter(tracker, defaultTag)(recordingListener.toMap)
+      val taggedDecls = tlaModule.declarations.map(transformer(_))
+      val newModule = TlaModule(tlaModule.name, taggedDecls)
+      logger.info(" > Your types are purrfect!")
+      logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
+      writeOut(writerFactory, newModule)
+      utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
+      Right(newModule)
+    } else {
+      logger.info(" > Snowcat asks you to fix the types. Meow.")
+      passFailure(recordingListener.getErrors(), ExitCodes.ERROR_TYPECHECK)
     }
   }
 

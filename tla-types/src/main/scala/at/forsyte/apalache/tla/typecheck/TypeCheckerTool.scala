@@ -5,10 +5,11 @@ import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAn
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.typecheck.etc._
-import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.tla.typecheck.integration.RecordingTypeCheckerListener
+import at.forsyte.apalache.tla.typecheck.integration.TypeRewriter
+import at.forsyte.apalache.tla.imp.src.SourceStore
 
 /**
  * The API to the type checker. It first translates a TLA+ module into EtcExpr and then does the type checking.
@@ -62,6 +63,8 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
    * Check the types in a module and, if the module is well-typed, produce a new module that attaches a type tag to
    * every expression and declaration in the module.
    *
+   * Only used in tests.
+   *
    * @param tracker
    *   a transformation tracker that is applied when expressions and declarations are tagged
    * @param listener
@@ -74,11 +77,12 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
    *   Some(newModule) if module is well-typed; None, otherwise
    */
   def checkAndTag(
-      tracker: TransformationTracker,
+      tracker: lir.transformations.TransformationTracker,
       listener: TypeCheckerListener,
       defaultTag: UID => TypeTag,
       module: TlaModule): Option[TlaModule] = {
-    val recorder = new RecordingTypeCheckerListener()
+    // The source stores and ChangeListeners for this aren't needed, since it's only run in tests
+    val recorder = new RecordingTypeCheckerListener(new SourceStore(), new lir.storage.ChangeListener())
     if (!check(new MultiTypeCheckerListener(listener, recorder), module)) {
       None
     } else {

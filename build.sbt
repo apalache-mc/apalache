@@ -136,7 +136,9 @@ lazy val infra = (project in file("mod-infra"))
   .settings(
       testSettings,
       libraryDependencies ++= Seq(
-          Deps.commonsIo
+          Deps.commonsIo,
+          Deps.ujson,
+          Deps.upickle,
       ),
   )
 

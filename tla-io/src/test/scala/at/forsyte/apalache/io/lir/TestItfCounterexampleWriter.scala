@@ -8,7 +8,6 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
-import java.io.{PrintWriter, StringWriter}
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
@@ -25,8 +24,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
    *   the expected output as a string
    */
   def compareJson(rootModule: TlaModule, states: List[NextState], expected: String): Unit = {
-    val writer = new ItfCounterexampleWriter(new PrintWriter(new StringWriter()))
-    val actualJson = writer.mkJson(rootModule, states)
+    val actualJson = ItfCounterexampleWriter.mkJson(rootModule, states)
     // erase the date from the description as it is time dependent
     actualJson("#meta")("description") = "Created by Apalache"
     val expectedJson = ujson.read(expected)

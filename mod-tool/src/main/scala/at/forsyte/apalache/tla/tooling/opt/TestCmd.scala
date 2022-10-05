@@ -73,8 +73,8 @@ class TestCmd
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
     PassChainExecutor.run(new CheckerModule(options)) match {
-      case Right(_)   => Right("No example found")
-      case Left(code) => Left(code, "Found a violation of the postcondition. Check violation.tla.")
+      case Right(_)      => Right("No example found")
+      case Left(failure) => Left(failure.exitCode, "Found a violation of the postcondition. Check violation.tla.")
     }
 
   }

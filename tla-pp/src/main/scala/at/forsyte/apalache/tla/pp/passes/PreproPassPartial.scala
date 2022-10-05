@@ -71,7 +71,8 @@ abstract class PreproPassPartial(
           val message = "%s: unsupported expression: %s".format(findLoc(id), errorMessage)
           logger.error(message)
         }
-        Left(ExitCodes.FAILURE_SPEC_EVAL)
+        val errData = failedIds.map { case (uid, s) => (uid.toString(), s) }
+        passFailure(errData, ExitCodes.FAILURE_SPEC_EVAL)
     }
 
   protected def executeWithParams(

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.tla.bmcmt.Checker
+import at.forsyte.apalache.tla.bmcmt.{Checker, Counterexample}
+import scala.collection.mutable.ListBuffer
 
 /**
  * The search state machine that is implemented by SeqModelChecker. This machine is simple when the model checker fails
@@ -17,6 +18,7 @@ class SearchState(params: ModelCheckerParams) {
 
   private var _result: CheckerResult = NoError()
   private var _nFoundErrors: Int = 0
+  private val _counterexamples: ListBuffer[Counterexample] = ListBuffer.empty
   private var _nRunsLeft: Int =
     if (params.isRandomSimulation) params.nSimulationRuns else 1
 
@@ -46,7 +48,7 @@ class SearchState(params: ModelCheckerParams) {
     _result match {
       case NoError() =>
         if (_nFoundErrors > 0) {
-          Error(_nFoundErrors)
+          Error(_nFoundErrors, _counterexamples.toList)
         } else {
           NoError()
         }
@@ -77,22 +79,23 @@ class SearchState(params: ModelCheckerParams) {
    */
   def onResult(result: CheckerResult): Unit = {
     result match {
-      case Error(_) =>
+      case Error(_, counterexamples) =>
         _nFoundErrors += 1
+        _counterexamples.appendAll(counterexamples)
         if (_nFoundErrors >= params.nMaxErrors) {
           // go to an error state, as the maximum number of errors has been reached
-          _result = Error(_nFoundErrors)
+          _result = Error(_nFoundErrors, _counterexamples.toList)
         } else {
           // the search may continue, to discover more errors
           _result = NoError()
         }
 
-      case Deadlock() =>
+      case Deadlock(counterexample) =>
         if (_nFoundErrors > 0) {
           // this deadlock is probably caused by exclusion of previous counterexamples, so it may be a false positive
-          _result = Error(_nFoundErrors)
+          _result = Error(_nFoundErrors, _counterexamples.toList)
         } else {
-          _result = Deadlock()
+          _result = Deadlock(counterexample)
         }
 
       case _ =>
