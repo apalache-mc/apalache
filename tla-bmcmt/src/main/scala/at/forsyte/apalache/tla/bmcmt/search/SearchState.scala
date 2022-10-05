@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.tla.bmcmt.{Checker, Counterexample}
+import at.forsyte.apalache.io.lir.Counterexample
+import at.forsyte.apalache.tla.bmcmt.Checker
 import scala.collection.mutable.ListBuffer
 
 /**

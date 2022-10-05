@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.lir.CounterexampleWriter
+import at.forsyte.apalache.io.lir.{Counterexample, CounterexampleWriter}
 import at.forsyte.apalache.tla.bmcmt.trex.DecodedExecution
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -25,7 +25,7 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
   }
 
   override def onExample(rootModule: TlaModule, trace: DecodedExecution, exampleIndex: Int): Unit = {
-    val counterexample = Counterexample(rootModule, trace, tla.bool(true).as(BoolT1))
+    val counterexample = Counterexample(rootModule, trace.path, tla.bool(true).as(BoolT1))
     dump(counterexample, exampleIndex, "example")
   }
 
@@ -37,13 +37,7 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
       // TODO(shonfeder): Should the CounterexampleWriter take a Counterexample?
       // Would require fixing inter-package dependencies, since it would require
       // exposing the Counterexample class to the tla-io project.
-      CounterexampleWriter.writeAllFormats(
-          prefix,
-          suffix,
-          counterexample.module,
-          counterexample.invViolated,
-          counterexample.states,
-      )
+      CounterexampleWriter.writeAllFormats(prefix, suffix, counterexample)
     }
 
     // for a human user, write the latest (counter)example into ${prefix}.{tla,json,...}

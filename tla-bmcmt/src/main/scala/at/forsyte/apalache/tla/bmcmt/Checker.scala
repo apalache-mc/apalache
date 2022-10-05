@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.lir.Counterexample
+
 object Checker {
 
   /**

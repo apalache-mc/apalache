@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.lir.Counterexample
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
@@ -133,7 +134,7 @@ class SeqModelChecker[ExecutorContextT](
 
         case Some(false) =>
           val counterexample = if (trex.sat(0).contains(true)) {
-            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)))
+            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution().path, ValEx(TlaBool(true)))
             notifyOnError(cx, searchState.nFoundErrors)
             logger.error("Found a deadlock.")
             Some(cx)
@@ -281,7 +282,7 @@ class SeqModelChecker[ExecutorContextT](
     if (trex.preparedTransitionNumbers.isEmpty) {
       if (params.checkForDeadlocks) {
         val counterexample = if (trex.sat(0).contains(true)) {
-          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)))
+          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution().path, ValEx(TlaBool(true)))
           notifyOnError(cx, searchState.nFoundErrors)
           logger.error("Found a deadlock.")
           Some(cx)
@@ -352,7 +353,7 @@ class SeqModelChecker[ExecutorContextT](
 
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
-              val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), notInv)
+              val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution().path, notInv)
               searchState.onResult(Error(1, Seq(counterexample)))
               notifyOnError(counterexample, searchState.nFoundErrors)
               logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} violated.")
@@ -398,7 +399,7 @@ class SeqModelChecker[ExecutorContextT](
 
         trex.sat(params.smtTimeoutSec) match {
           case Some(true) =>
-            val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
+            val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution().path, traceInvApp)
             searchState.onResult(Error(1, Seq(counterexample)))
             notifyOnError(counterexample, searchState.nFoundErrors)
             val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)

@@ -19,7 +19,7 @@ import java.util.Calendar
  */
 trait CounterexampleWriter {
   // Print out invariant violation
-  def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit
+  def write(cx: Counterexample): Unit
 }
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
@@ -38,15 +38,15 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       }
     }
 
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+  override def write(cx: Counterexample): Unit = {
     val pretty = new PrettyWriter(writer)
 
-    pretty.writeHeader("counterexample", List(rootModule.name))
+    pretty.writeHeader("counterexample", List(cx.module.name))
 
-    states.zipWithIndex.foreach {
+    cx.states.zipWithIndex.foreach {
       case (state, 0) =>
         pretty.writeComment("Constant initialization state")
-        val decl = tla.declOp("ConstInit", stateToEx(state._2))
+        val decl = tla.declOp("ConstInit", stateToEx(state._1))
         pretty.write(decl)
       case (state, j) =>
         // Index 0 is reserved for ConstInit, but users expect State0 to
@@ -55,13 +55,13 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         if (i == 0) {
           pretty.writeComment("Initial state")
         } else {
-          pretty.writeComment(s"Transition ${state._1} to State$i")
+          pretty.writeComment(s"Transition ${state._2} to State$i")
         }
-        val decl = tla.declOp(s"State$i", stateToEx(state._2))
+        val decl = tla.declOp(s"State$i", stateToEx(state._1))
         pretty.writeWithNameReplacementComment(decl)
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
-    pretty.writeWithNameReplacementComment(TlaOperDecl("InvariantViolation", List(), notInvariant))
+    pretty.writeWithNameReplacementComment(TlaOperDecl("InvariantViolation", List(), cx.invViolated))
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
@@ -71,10 +71,10 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 }
 
 class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+  override def write(cx: Counterexample): Unit = {
     // `states` must always contain at least 1 state: the constant initialization
     // This makes `states.tail` safe, since we have a nonempty sequence
-    assert(states.nonEmpty)
+    assert(cx.states.nonEmpty)
 
     val pretty = new PrettyWriter(writer)
 
@@ -89,13 +89,13 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
                     |@!@!@ENDMSG 2121 @!@!@
                     |""".stripMargin)
 
-    states.zipWithIndex.tail.foreach { case (state, i) =>
+    cx.states.zipWithIndex.tail.foreach { case (state, i) =>
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
       writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
                         |$prefix""".stripMargin)
       // We still need to call PrettyWriter, since PrintWriter doesn't know how to output TlaEx
-      printStateFormula(pretty, state._2)
+      printStateFormula(pretty, state._1)
       writer.println("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
     }
@@ -107,18 +107,18 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
 
   import CounterexampleWriter.stateToEx
 
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+  override def write(cx: Counterexample): Unit = {
 
-    val tlaStates = states.zipWithIndex.collect { case (state, i) =>
+    val tlaStates = cx.states.zipWithIndex.collect { case (state, i) =>
       val name = i match {
         case 0 => "ConstInit"
         case _ => s"State${i - 1}"
       }
-      tla.declOp(name, stateToEx(state._2)).withTag(Untyped)
+      tla.declOp(name, stateToEx(state._1)).withTag(Untyped)
     }
 
     val mod =
-      new TlaModule("counterexample", tlaStates ++ List(TlaOperDecl(s"InvariantViolation", List(), notInvariant)))
+      new TlaModule("counterexample", tlaStates ++ List(TlaOperDecl(s"InvariantViolation", List(), cx.invViolated)))
 
     // No SourceLocator, since CEs aren't part of the spec
     val jsonText = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer).makeRoot(Seq(mod)).toString
@@ -151,14 +151,9 @@ object CounterexampleWriter extends LazyLogging {
    * @param states
    *   sequence of states that represent the counterexample
    */
-  def writeAllFormats(
-      prefix: String,
-      suffix: String,
-      rootModule: TlaModule,
-      notInvariant: NotInvariant,
-      states: List[NextState]): List[String] = {
+  def writeAllFormats(prefix: String, suffix: String, cx: Counterexample): List[String] = {
     val writerHelper: String => PrintWriter => Unit =
-      kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
+      kind => writer => apply(kind, writer).write(cx)
 
     val fileNames = List(
         ("tla", s"$prefix$suffix.tla"),

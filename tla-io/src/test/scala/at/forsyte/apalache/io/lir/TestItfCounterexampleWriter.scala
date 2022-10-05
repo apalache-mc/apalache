@@ -23,8 +23,11 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
    * @param expected
    *   the expected output as a string
    */
-  def compareJson(rootModule: TlaModule, states: List[NextState], expected: String): Unit = {
-    val actualJson = ItfCounterexampleWriter.mkJson(rootModule, states)
+  def compareJson(rootModule: TlaModule, states: Counterexample.States, expected: String): Unit = {
+    // We need some expression here, tho ITF ignores them currently
+    val ignoredInvariant = int(0).as(IntT1)
+    val cx = Counterexample(rootModule, states, ignoredInvariant)
+    val actualJson = ItfCounterexampleWriter.mkJson(cx)
     // erase the date from the description as it is time dependent
     actualJson("#meta")("description") = "Created by Apalache"
     val expectedJson = ujson.read(expected)
@@ -36,7 +39,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
     compareJson(
         TlaModule("test", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag))),
         List(
-            ("0", SortedMap("N" -> ValEx(TlaInt(4))(intTag)))
+            (SortedMap("N" -> ValEx(TlaInt(4))(intTag)), 0)
         ),
         """{
           |  "#meta": {
@@ -88,9 +91,8 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
     compareJson(
         TlaModule("test", decls),
         List(
-            ("A", SortedMap()),
-            ("B",
-                SortedMap(
+            (SortedMap(), 0),
+            (SortedMap(
                     // 2
                     "a" -> int(2).as(IntT1),
                     // "hello"
@@ -124,7 +126,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
                     "n" -> fooBarEx.as(fooBarRow),
                     // Variant("Baz", [ foo |-> 3, bar |-> TRUE ])
                     "o" -> variant("Baz", fooBarEx.as(fooBarRow)).as(variantT),
-                )),
+                ), 1),
         ),
         """{
         |  "#meta": {

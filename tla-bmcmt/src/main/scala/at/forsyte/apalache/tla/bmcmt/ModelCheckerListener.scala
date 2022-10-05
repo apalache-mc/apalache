@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.lir.Counterexample
 import at.forsyte.apalache.tla.bmcmt.trex.DecodedExecution
 import at.forsyte.apalache.tla.lir.TlaModule
 

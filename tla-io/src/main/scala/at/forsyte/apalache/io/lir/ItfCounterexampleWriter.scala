@@ -19,8 +19,8 @@ import scala.collection.mutable
  *   Igor Konnov
  */
 class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-    writer.write(ujson.write(ItfCounterexampleWriter.mkJson(rootModule, states), indent = 2))
+  override def write(cx: Counterexample): Unit = {
+    writer.write(ujson.write(ItfCounterexampleWriter.mkJson(cx), indent = 2))
   }
 }
 
@@ -46,15 +46,15 @@ object ItfCounterexampleWriter {
    * @return
    *   the JSON representation of the counterexample in the ITF format
    */
-  def mkJson(rootModule: TlaModule, states: List[NextState]): ujson.Value = {
-    // merge constant initialization and variable initialization into a single state
-    val state0 = states match {
-      case constInit :: Nil            => constInit._2
-      case constInit :: initState :: _ => constInit._2 ++ initState._2
-      case Nil                         => throw new IllegalArgumentException("Expected at least one state, found none")
+  def mkJson(cx: Counterexample): ujson.Value = {
+    // merge constant initialization and variable initialization into a single state, and
+    // take just the state maps, dropping the indexes, from the remaining states
+    val states = cx.states match {
+      case (constInit, _) :: Nil                    => List(constInit)
+      case (constInit, _) :: (initState, _) :: rest => (constInit ++ initState :: rest.map(_._1))
+      case Nil => throw new IllegalArgumentException("Expected at least one state, found none")
     }
-    val mappedStates = state0 :: states.drop(2).map(_._2)
-    // construct the root JSON object
+
     val rootMap: mutable.LinkedHashMap[String, ujson.Value] = mutable.LinkedHashMap()
 
     val metaInformation: Map[String, ujson.Value] = {
@@ -75,9 +75,9 @@ object ItfCounterexampleWriter {
             "format" -> "ITF",
             metaInformation.toSeq: _*
         ))
-    paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
-    rootMap.put("vars", varsToJson(rootModule))
-    rootMap.put("states", ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
+    paramsToJson(cx.module).foreach(params => rootMap.put("params", params))
+    rootMap.put("vars", varsToJson(cx.module))
+    rootMap.put("states", ujson.Arr(states.zipWithIndex.map((stateToJson _).tupled): _*))
     ujson.Obj(rootMap)
   }
 

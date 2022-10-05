@@ -24,13 +24,14 @@ trait TestCounterexampleWriterBase {
       kind: String,
       rootModule: TlaModule,
       notInvariant: NotInvariant,
-      states: List[NextState],
+      states: Counterexample.States,
       expected: String): Unit = {
 
+    val cx = Counterexample(rootModule, states, notInvariant)
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
     val writer = CounterexampleWriter(kind, printWriter)
-    writer.write(rootModule, notInvariant, states)
+    writer.write(cx)
     printWriter.flush()
     val dateErasure = stringWriter.toString.replaceFirst(
         "Created by Apalache on [A-Za-z 0-9:]*( \\*\\))?([\n\"])",

@@ -15,8 +15,8 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         gt(name("x"), int(1)),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(2))),
+            (Map(), 0),
+            (Map("x" -> int(2)), 1),
         ),
         """---------------------------- MODULE counterexample ----------------------------
         |
@@ -44,10 +44,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         gt(name("x"), int(1)),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(0))),
-            ("Trans1", Map("x" -> int(1))),
-            ("Trans2", Map("x" -> int(2))),
+            (Map(), 0),
+            (Map("x" -> int(0)), 1), // Trans1
+            (Map("x" -> int(1)), 2), // Trans2
+            (Map("x" -> int(2)), 3),
         ),
         """---------------------------- MODULE counterexample ----------------------------
           |
@@ -81,10 +81,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         and(gt(name("x"), int(1)), eql(name("y"), int(10))),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(0), "y" -> int(8))),
-            ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
+            (Map(), 0), //
+            (Map("x" -> int(0), "y" -> int(8)), 1), //
+            (Map("x" -> int(1), "y" -> int(9)), 2), // Trans1
+            (Map("x" -> int(2), "y" -> int(10)), 3), // Trans2
         ),
         """---------------------------- MODULE counterexample ----------------------------
         |
@@ -118,8 +118,8 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         gt(name("x"), int(1)),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(2))),
+            (Map(), 0),
+            (Map("x" -> int(2)), 1),
         ),
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -145,10 +145,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         gt(name("x"), int(1)),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(0))),
-            ("Next", Map("x" -> int(1))),
-            ("Next", Map("x" -> int(2))),
+            (Map(), 0),
+            (Map("x" -> int(0)), 1),
+            (Map("x" -> int(1)), 2), // Next
+            (Map("x" -> int(2)), 3), // Next
         ),
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -184,10 +184,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         and(gt(name("x"), int(1)), eql(name("y"), int(10))),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(0), "y" -> int(8))),
-            ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
+            (Map(), 0),
+            (Map("x" -> int(0), "y" -> int(8)), 1),
+            (Map("x" -> int(1), "y" -> int(9)), 2), // Trans1
+            (Map("x" -> int(2), "y" -> int(10)), 3), // Trans2
         ),
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
@@ -226,8 +226,8 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         gt(name("x"), int(1)),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(2))),
+            (Map(), 0),
+            (Map("x" -> int(2)), 1),
         ),
         """{
           |  "name": "ApalacheIR",
@@ -243,7 +243,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |          "kind": "TlaOperDecl",
           |          "name": "ConstInit",
           |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -260,7 +260,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -296,7 +296,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -333,10 +333,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         gt(name("x"), int(1)),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(0))),
-            ("Trans1", Map("x" -> int(1))),
-            ("Trans2", Map("x" -> int(2))),
+            (Map(), 0),
+            (Map("x" -> int(0)), 1),
+            (Map("x" -> int(1)), 2), // Trans1
+            (Map("x" -> int(2)), 3), // Trans2
         ),
         """{
         |  "name": "ApalacheIR",
@@ -352,7 +352,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "ConstInit",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -369,7 +369,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -405,7 +405,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State1",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -441,7 +441,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State2",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -477,7 +477,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -514,10 +514,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         new TlaModule("test", List()),
         and(gt(name("x"), int(1)), eql(name("y"), int(10))),
         List(
-            ("", Map()),
-            ("", Map("x" -> int(0), "y" -> int(8))),
-            ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
+            (Map(), 0),
+            (Map("x" -> int(0), "y" -> int(8)), 1),
+            (Map("x" -> int(1), "y" -> int(9)), 2), // Trans1
+            (Map("x" -> int(2), "y" -> int(10)), 3), // Trans2
         ),
         """{
         |  "name": "ApalacheIR",
@@ -533,7 +533,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "ConstInit",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -550,7 +550,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -606,7 +606,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State1",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -662,7 +662,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "State2",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
@@ -718,7 +718,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
         |          "formalParams": [
-        |            
+        |
         |          ],
         |          "isRecursive": false,
         |          "body": {
