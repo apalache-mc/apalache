@@ -1,9 +1,7 @@
 // Protobuf specification for the Apalache command executor service
 
 syntax = "proto3";
-package shai;
-
-import "common.proto";
+package shai.cmdExecutor;
 
 option java_multiple_files = true;
 option java_package = "at.forsyte.apalache.shai.v1";
@@ -14,8 +12,15 @@ option objc_class_prefix = "TEP";
 service CmdExecutor {
   rpc run(CmdRequest) returns (CmdResponse);
 
-  rpc ping(shai.PingRequest) returns (shai.PongResponse);
+  // No-op to check service health
+  rpc ping(PingRequest) returns (PongResponse);
 }
+
+message PingRequest {
+};
+
+message PongResponse {
+};
 
 message CmdRequest {
   Cmd cmd = 1;

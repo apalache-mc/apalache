@@ -3,9 +3,7 @@ package at.forsyte.apalache.shai.v1
 import zio._
 import zio.test._
 import zio.test.Assertion._
-import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, LoadModelRequest}
-import at.forsyte.apalache.shai.v1.common.PingRequest
-import at.forsyte.apalache.shai.v1.common.PongResponse
+import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, LoadModelRequest, PingRequest, PongResponse}
 
 object TransExplorerServiceSpec extends DefaultRunnableSpec {
 

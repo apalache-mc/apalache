@@ -13,7 +13,7 @@ package at.forsyte.apalache.shai.v1
  */
 
 import at.forsyte.apalache.shai.v1.transExplorer.{
-  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, ZioTransExplorer,
+  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, ZioTransExplorer,
 }
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
@@ -26,8 +26,6 @@ import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.shai.v1.common.PingRequest
-import at.forsyte.apalache.shai.v1.common.PongResponse
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server

@@ -4,12 +4,10 @@ import zio._
 import zio.test._
 import zio.test.Assertion._
 
-import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest}
+import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, PingRequest, PongResponse}
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.shai.v1.common.PingRequest
-import at.forsyte.apalache.shai.v1.common.PongResponse
 
 // Defines the test cases used to test the CmdExecutor service
 object TestCmdExecutorService extends DefaultRunnableSpec {
