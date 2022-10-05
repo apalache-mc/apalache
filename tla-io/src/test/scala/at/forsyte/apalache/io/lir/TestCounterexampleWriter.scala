@@ -4,11 +4,11 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import org.junit.runner.RunWith
-import org.scalatest.funsuite.AnyFunSuite
+// import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriterBase {
+class TestCounterexampleWriter extends TestCounterexampleWriterBase {
   test("single state") {
     compare(
         "tla",
@@ -59,10 +59,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |(* Initial state *)
           |State0 == x = 0
           |
-          |(* Transition Trans1 to State1 *)
+          |(* Transition 0 to State1 *)
           |State1 == x = 1
           |
-          |(* Transition Trans2 to State2 *)
+          |(* Transition 1 to State2 *)
           |State2 == x = 2
           |
           |(* The following formula holds true in the last state and violates the invariant *)
@@ -96,10 +96,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |(* Initial state *)
         |State0 == x = 0 /\ y = 8
         |
-        |(* Transition Trans1 to State1 *)
+        |(* Transition 0 to State1 *)
         |State1 == x = 1 /\ y = 9
         |
-        |(* Transition Trans2 to State2 *)
+        |(* Transition 1 to State2 *)
         |State2 == x = 2 /\ y = 10
         |
         |(* The following formula holds true in the last state and violates the invariant *)
@@ -229,7 +229,8 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
             (Map(), 0),
             (Map("x" -> int(2)), 1),
         ),
-        """{
+        ujson
+          .read("""{
           |  "name": "ApalacheIR",
           |  "version": "1.0",
           |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
@@ -323,7 +324,8 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |      ]
         |    }
         |  ]
-        |}""".stripMargin,
+        |}""".stripMargin)
+          .toString(),
     )
   }
 

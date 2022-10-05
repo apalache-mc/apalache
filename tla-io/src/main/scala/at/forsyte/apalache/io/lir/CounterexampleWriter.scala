@@ -55,7 +55,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         if (i == 0) {
           pretty.writeComment("Initial state")
         } else {
-          pretty.writeComment(s"Transition ${state._2} to State$i")
+          pretty.writeComment(s"Transition ${i - 1} to State$i")
         }
         val decl = tla.declOp(s"State$i", stateToEx(state._1))
         pretty.writeWithNameReplacementComment(decl)

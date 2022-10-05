@@ -1,10 +1,11 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TlaModule
+import org.scalatest.funsuite.AnyFunSuite
 
 import java.io.{PrintWriter, StringWriter}
 
-trait TestCounterexampleWriterBase {
+trait TestCounterexampleWriterBase extends AnyFunSuite {
 
   /**
    * Write a counterexample and compare the output to the expected result.
