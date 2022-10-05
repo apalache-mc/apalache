@@ -1,18 +1,21 @@
 // Protobuf specification for the Apalache TransitionExplorer
 
 syntax = "proto3";
+package shai;
+
+import "common.proto";
 
 option java_multiple_files = true;
 option java_package = "at.forsyte.apalache.shai.v1";
 option java_outer_classname = "TransExplorerProto";
 option objc_class_prefix = "TEP";
 
-package shai;
-
 service TransExplorer {
   rpc OpenConnection (ConnectRequest) returns (Connection);
   // TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
   rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
+
+  rpc ping(shai.PingRequest) returns (shai.PongResponse);
 }
 
 message ConnectRequest {

@@ -15,6 +15,8 @@ import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, CmdResponse, Zi
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
+import at.forsyte.apalache.shai.v1.common.PingRequest
+import at.forsyte.apalache.shai.v1.common.PongResponse
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -57,6 +59,9 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
     def convErr[O](v: Try[O]): Either[ujson.Value, O] = v.toEither.left.map(throwableErr)
   }
+
+  /** No-op RPC used to check the connection */
+  def ping(req: PingRequest): Result[PongResponse] = ZIO.succeed(PongResponse())
 
   import Converters._
   private def executeCmd(cmd: Cmd, cfgStr: String): Either[ujson.Value, ujson.Value] = {

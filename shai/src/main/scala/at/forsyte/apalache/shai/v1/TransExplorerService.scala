@@ -26,6 +26,8 @@ import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.shai.v1.common.PingRequest
+import at.forsyte.apalache.shai.v1.common.PongResponse
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -109,6 +111,9 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
     def warn(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.warn(shaiMsg(conn, msg)))
     def error(conn: RequestConn, msg: String): Result[Unit] = ZIO.effectTotal(logger.error(shaiMsg(conn, msg)))
   }
+
+  /** No-op RPC used to check the connection */
+  def ping(req: PingRequest): Result[PongResponse] = ZIO.succeed(PongResponse())
 
   /**
    * Creates and registers a new connection
