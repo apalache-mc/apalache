@@ -3,11 +3,17 @@ package at.forsyte.apalache.shai.v1
 import zio._
 import zio.test._
 import zio.test.Assertion._
-import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, LoadModelRequest}
+import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, LoadModelRequest, PingRequest, PongResponse}
 
 object TransExplorerServiceSpec extends DefaultRunnableSpec {
 
   def spec = suite("TransExplorerServiceSpec")(
+      testM("can ping service") {
+        for {
+          s <- ZIO.service[TransExplorerService]
+          resp <- s.ping(PingRequest())
+        } yield assert(resp.isInstanceOf[PongResponse])(isTrue)
+      },
       testM("can obtain two different connections to server") {
         for {
           s <- ZIO.service[TransExplorerService]

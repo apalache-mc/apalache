@@ -4,7 +4,7 @@ import zio._
 import zio.test._
 import zio.test.Assertion._
 
-import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest}
+import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, PingRequest, PongResponse}
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.ConfigManager
@@ -49,6 +49,12 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
   }
 
   val spec = suite("CmdExecutorServiceSpec")(
+      testM("can ping service") {
+        for {
+          s <- ZIO.service[CmdExecutorService]
+          resp <- s.ping(PingRequest())
+        } yield assert(resp.isInstanceOf[PongResponse])(isTrue)
+      },
       testM("can load module using the parse cmd") {
         for {
           s <- ZIO.service[CmdExecutorService]

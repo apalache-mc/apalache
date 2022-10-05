@@ -11,7 +11,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
-import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, CmdResponse, ZioCmdExecutor}
+import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
@@ -57,6 +57,9 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
     def convErr[O](v: Try[O]): Either[ujson.Value, O] = v.toEither.left.map(throwableErr)
   }
+
+  /** No-op RPC used to check the connection */
+  def ping(req: PingRequest): Result[PongResponse] = ZIO.succeed(PongResponse())
 
   import Converters._
   private def executeCmd(cmd: Cmd, cfgStr: String): Either[ujson.Value, ujson.Value] = {
