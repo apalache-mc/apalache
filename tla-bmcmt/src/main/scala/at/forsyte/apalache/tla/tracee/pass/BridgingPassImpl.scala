@@ -19,5 +19,6 @@ class BridgingPassImpl @Inject() extends BridgingPass with LazyLogging {
 
   override def dependencies = Set()
 
+  // Required by BMC, set by a pass that isn't needed in TraceE mode.
   override def transformations = Set(ModuleProperty.Analyzed)
 }

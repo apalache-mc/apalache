@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.types.tla._
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
-import at.forsyte.apalache.tla.pp.Inliner
 
 /**
  * @author
@@ -22,26 +21,14 @@ class DrivenTransitionConstructor(
    *
    * Concretely, assuming all x1,...,xn are free in Ei, this transition is
    * {{{
-   * LET
-   *  x1 == s.x1
-   *  ...
-   *  xn == s.xn
-   * IN
-   *  /\ v1' = E1
+   *  /\ v1' = E1[...]
    *  /\ ...
-   *  /\ vm' = Em
+   *  /\ vm' = Em[...]
    * }}}
    */
   def txToState(state: State): TlaEx = {
 
-//    val decls = state.toSeq.map { case (originalStateVar, valueInOriginalTraceState) =>
-//      // Turns a state variable v into a nullary operator declaration: v == si.v
-//      decl(
-//          originalStateVar,
-//          unchecked(valueInOriginalTraceState),
-//      )
-//    }
-
+    // Set up the expressions vi' = Ei (without substitution)
     val args = exs.toSeq.map { case (varname, ex) =>
       assign(
           prime(
@@ -51,16 +38,10 @@ class DrivenTransitionConstructor(
       )
     }
 
-    val rFixed = new ReplaceFixed(tracker)
-    val subst = rFixed.withFun {
+    // Apply the derived substitution to the and-conjoined arguments
+    new ReplaceFixed(tracker).withFun {
       case NameEx(name) if state.contains(name) => state(name)
-    }
-
-    subst(and(args: _*))
-
-//    val letEx = letIn(and(args: _*), decls: _*)
-//
-//    letEx
+    }(and(args: _*))
   }
 
 }

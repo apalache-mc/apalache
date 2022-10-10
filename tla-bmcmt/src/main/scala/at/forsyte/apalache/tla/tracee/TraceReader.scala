@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.types._
  */
 class TraceReader {
 
-  // TODO
+  // TODO: Until #2201 is implemented, we don't actually read the trace, we just fix one.
   def get(): Trace = (1 to (5)).map { i =>
     Map("x" -> tla.int(i))
   }
