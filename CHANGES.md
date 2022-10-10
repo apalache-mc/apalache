@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.29.3 - 2022-10-10
+
+### Features
+
+- Return JSON with success or failure data from RPC calls to the CmdExecutor service (see #2186).
+
 ## 0.29.2 - 2022-09-26
 
 ### Features
