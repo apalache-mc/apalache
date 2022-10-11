@@ -61,8 +61,8 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = persistentLen))
     PassChainExecutor.run(new TraceeModule(lenAdjustedOpt)) match {
       // TODO: update this for traces
-      case Right(_)   => Right(s"Checker reports no error up to computation length ${options.checker.length}")
-      case Left(code) => Left(code, "Checker has found an error")
+      case Right(_)      => Right(s"Checker reports no error up to computation length ${options.checker.length}")
+      case Left(failure) => Left(failure.exitCode, "Checker has found an error")
     }
   }
 

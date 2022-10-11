@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.tracee
 
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.types._
 
 /**
  * @author

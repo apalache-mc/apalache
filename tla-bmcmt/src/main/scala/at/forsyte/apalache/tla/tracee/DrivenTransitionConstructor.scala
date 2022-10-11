@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.tracee
 
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
-import at.forsyte.apalache.tla.types._
 import at.forsyte.apalache.tla.types.tla._
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
