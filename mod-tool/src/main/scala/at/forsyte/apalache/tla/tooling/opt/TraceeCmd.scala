@@ -1,18 +1,11 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.infra.passes.options._
-import at.forsyte.apalache.io.json.impl.UJsonRep
-import at.forsyte.apalache.tla.bmcmt.config.{CheckerModule, TraceeModule}
-import org.apache.commons.configuration2.builder.fluent.Configurations
-import org.apache.commons.configuration2.ex.ConfigurationException
-import org.apache.commons.io.FilenameUtils
+import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
 import org.backuity.clist._
-import org.backuity.clist.util.Read
 
-import java.io.{File, FileNotFoundException}
-import scala.jdk.CollectionConverters._
+import java.io.File
 
 /**
  * This command initiates the 'tracee' command line.
