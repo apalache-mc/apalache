@@ -149,7 +149,7 @@ class ScopedBuilder
    * inverse, `unchecked`, needs to be explicit, to stress the fact that it should be used rarely, typically at most
    * once per transformation on the initial input.
    */
-  def unchecked(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
+  def unchecked[T](ex: T): TBuilderInternalState[T] = ex.point[TBuilderInternalState]
 
   /** Allows the use of type strings in the builder, to simplify writing complex types. */
   def parseType(typeAsString: String): TlaType1 = parser.parseType(typeAsString)
