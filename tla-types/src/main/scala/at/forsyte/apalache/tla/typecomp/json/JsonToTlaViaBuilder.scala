@@ -4,11 +4,14 @@ import at.forsyte.apalache.io.json._
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecomp.{
+  TBuilderContext, TBuilderInstruction, TBuilderInternalState, TBuilderScopeException, TBuilderTypeException,
+}
 
+import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -25,28 +28,29 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
     sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
-  private def missingField(fieldName: String): JsonDeserializationError =
-    new JsonDeserializationError(s"JSON has no field named [$fieldName].")
-
   private def getOrThrow(json: T, fieldName: String): T =
-    json.getFieldOpt(fieldName).getOrElse { throw missingField(fieldName) }
+    json.getFieldOpt(fieldName).getOrElse {
+      throw new JsonDeserializationError(s"JSON has no field named [$fieldName].")
+    }
 
-  private def rethrowAsJsonDeserializationException[T](method: => T): T =
+  // TBuilderInstruction only throws exceptions when build is called on it. To narrow the try-catch cope, if we want to
+  // rethrow builder exceptions as JsonDeserializationError, we need to do it wit a custom build.
+  implicit private def buildWithRethrow[TT](builderState: TBuilderInternalState[TT]): TT =
     try {
-      method
+      builderState.run(TBuilderContext.empty)._2
     } catch {
       // rethrow as deserialization error
       case e: TBuilderTypeException =>
-        throw new JsonDeserializationError(s"JSON contains ill-typed expressions: ${e.getMessage}")
+        throw new JsonDeserializationError(s"JSON contains ill-typed expressions: ${e.getMessage}", e)
       case e: TBuilderScopeException =>
-        throw new JsonDeserializationError(s"JSON contains ill-scoped expressions: ${e.getMessage}")
+        throw new JsonDeserializationError(s"JSON contains ill-scoped expressions: ${e.getMessage}", e)
     }
 
-  private def validateTag[T](tagged: TypeTagged[T], tag: TypeTag): Unit =
+  private def validateTag[TT](tagged: TypeTagged[TT], tag: TypeTag): Unit =
     if (tagged.typeTag != tag)
       throw new JsonDeserializationError(s"$tagged is tagged with $tag, but should have ${tagged.typeTag}.")
 
-  private def asFParam(json: T): OperParam = {
+  private def asParam(json: T): OperParam = {
     val kindField = getOrThrow(json, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
 
@@ -119,7 +123,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
       }
     }
 
-  override def asTlaModule(moduleJson: T): TlaModule = rethrowAsJsonDeserializationException {
+  override def asTlaModule(moduleJson: T): TlaModule = {
     val kindField = getOrThrow(moduleJson, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
     if (kind != "TlaModule")
@@ -134,7 +138,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
     TlaModule(name, decls)
   }
 
-  override def asTlaDecl(declJson: T): TlaDecl = rethrowAsJsonDeserializationException {
+  override def asTlaDecl(declJson: T): TlaDecl = {
     val typeField = getOrThrow(declJson, TlaToJson.typeFieldName)
     val tag = scalaFactory.asStr(typeField)
     val typeTag = typeTagReader(tag)
@@ -145,7 +149,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
         val nameField = getOrThrow(declJson, "name")
         val name = scalaFactory.asStr(nameField)
         val bodyField = getOrThrow(declJson, "body")
-        val body: TlaEx = asTlaExInternal(bodyField)
+        val body: TlaEx = asTBuilderInstruction(bodyField)
         validateTag(body, typeTag)
         TlaTheoremDecl(name, body)(typeTag)
       case "TlaVarDecl" =>
@@ -162,10 +166,10 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
         val recField = getOrThrow(declJson, "isRecursive")
         val isRecursive = scalaFactory.asBool(recField)
         val bodyField = getOrThrow(declJson, "body")
-        val body = asTlaExInternal(bodyField)
+        val body = asTBuilderInstruction(bodyField)
         val paramsField = getOrThrow(declJson, "formalParams")
         val paramsObjList = scalaFactory.asSeq(paramsField).toList
-        val fParams = paramsObjList.map(asFParam)
+        val fParams = paramsObjList.map(asParam)
         val paramTypes = typeTag match {
           case Typed(OperT1(args, _)) =>
             val l1 = args.length
@@ -185,7 +189,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
 
       case "TlaAssumeDecl" =>
         val bodyField = getOrThrow(declJson, "body")
-        val body = asTlaExInternal(bodyField)
+        val body = asTBuilderInstruction(bodyField)
         TlaAssumeDecl(body)(typeTag)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaDecl kind")
     }
@@ -193,12 +197,10 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
     decl
   }
 
-  override def asTlaEx(exJson: T): TBuilderResult = rethrowAsJsonDeserializationException {
-    asTlaExInternal(exJson)
-  }
+  override def asTlaEx(exJson: T): TlaEx = asTBuilderInstruction(exJson)
 
   // It's more efficient to operate over TBuilderInstruction for as long as possible, and only build in the end step
-  private def asTlaExInternal(exJson: T): TBuilderInstruction = {
+  private def asTBuilderInstruction(exJson: T): TBuilderInstruction = {
     val kindField = getOrThrow(exJson, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
     if (kind == "NullEx")
@@ -225,18 +227,18 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
         val operString = scalaFactory.asStr(operField)
         val argsField = getOrThrow(exJson, "args")
         val argsObjSeq = scalaFactory.asSeq(argsField)
-        val args = argsObjSeq.map(asTlaExInternal)
+        val args = argsObjSeq.map(asTBuilderInstruction)
         BuilderCallByName(operString, typeTag.asTlaType1(), args)
 
       case "LetInEx" =>
         val bodyField = getOrThrow(exJson, "body")
-        val body = asTlaExInternal(bodyField)
+        val body = asTBuilderInstruction(bodyField)
         val declsField = getOrThrow(exJson, "decls")
         val declsObjSeq = scalaFactory.asSeq(declsField)
         val decls = declsObjSeq.map(asTlaDecl)
         assert(decls.forall { _.isInstanceOf[TlaOperDecl] })
-        // narrowing cast + unchecked lift to satisfy the TBIS[TlaOperDecl] signature
-        val operDecls: Seq[TBuilderOperDeclInstruction] =
+        // narrownig cast + unchecked lift to satisfy the TBuilderInternalState[TlaOperDecl] signature
+        val operDecls =
           decls.map { d => tla.uncheckedDecl(d.asInstanceOf[TlaOperDecl]) }
         tla.letIn(body, operDecls: _*)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaEx kind")
@@ -250,7 +252,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
 
   }
 
-  override def fromRoot(rootJson: T): Seq[TlaModule] = rethrowAsJsonDeserializationException {
+  override def fromRoot(rootJson: T): Seq[TlaModule] = {
     val versionField = getOrThrow(rootJson, TlaToJson.versionFieldName)
     val version = scalaFactory.asStr(versionField)
     val current = JsonVersion.current
@@ -262,7 +264,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
     }
   }
 
-  override def fromSingleModule(json: T): Try[TlaModule] = rethrowAsJsonDeserializationException {
+  override def fromSingleModule(json: T): Try[TlaModule] = {
     for {
       modules <- Try(fromRoot(json))
       module <- modules match {
