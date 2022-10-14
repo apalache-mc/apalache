@@ -82,14 +82,12 @@ class TestUJsonToTlaViaBuilder extends AnyFunSuite with Checkers {
   }
 
   test("Predef sets (see #1281)") {
-    val sets: Seq[ValEx] = Seq(
-        TlaIntSet,
-        TlaNatSet,
-        TlaBoolSet,
-        TlaStrSet,
-    ).map { v =>
-      ValEx(v).withTag(Untyped)
-    }
+    val sets: Seq[TlaEx] = Seq(
+        tla.intSet(),
+        tla.natSet(),
+        tla.booleanSet(),
+        tla.stringSet(),
+    )
 
     sets.foreach { s =>
       assert(dec.asTlaEx(enc(s)) == s)

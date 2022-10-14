@@ -8,6 +8,8 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
 /**
+ * Invokes the `ScopedBuilder` from an operator application by-name (as is read from JSON files)
+ *
  * @author
  *   Jure Kukovec
  */
