@@ -3488,6 +3488,7 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 12_OutAnalysisPass.json
 12_OutAnalysisPass.tla
 detailed.log
+log0.smt
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
@@ -3500,6 +3501,7 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 -
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
 detailed.log
+log0.smt
 MCviolation1.out
 MCviolation.out
 run.txt
@@ -3523,6 +3525,7 @@ $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 $ ls ./configured-run-dir | ./sort.sh
 detailed.log
+log0.smt
 run.txt
 $ rm -rf ./configured-run-dir ./.apalache.cfg
 ```
