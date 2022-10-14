@@ -7,7 +7,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.types._
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecomp.json.UJsonToTlaViaBuilder
 import org.junit.runner.RunWith

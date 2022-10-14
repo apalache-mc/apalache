@@ -237,7 +237,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
         assert(decls.forall { _.isInstanceOf[TlaOperDecl] })
         // narrowng cast + unchecked lift to satisfy the TBIS[TlaOperDecl] signature
         val operDecls: Seq[TBuilderOperDeclInstruction] =
-          decls.map { d => tla.unchecked(d.asInstanceOf[TlaOperDecl]) }
+          decls.map { d => tla.uncheckedDecl(d.asInstanceOf[TlaOperDecl]) }
         tla.letIn(body, operDecls: _*)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaEx kind")
     }
