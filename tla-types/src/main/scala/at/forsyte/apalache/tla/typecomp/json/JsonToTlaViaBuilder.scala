@@ -235,7 +235,7 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
         val declsObjSeq = scalaFactory.asSeq(declsField)
         val decls = declsObjSeq.map(asTlaDecl)
         assert(decls.forall { _.isInstanceOf[TlaOperDecl] })
-        // narrowng cast + unchecked lift to satisfy the TBIS[TlaOperDecl] signature
+        // narrowing cast + unchecked lift to satisfy the TBIS[TlaOperDecl] signature
         val operDecls: Seq[TBuilderOperDeclInstruction] =
           decls.map { d => tla.uncheckedDecl(d.asInstanceOf[TlaOperDecl]) }
         tla.letIn(body, operDecls: _*)
