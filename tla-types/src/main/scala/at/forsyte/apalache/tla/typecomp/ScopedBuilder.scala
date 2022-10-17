@@ -151,6 +151,12 @@ class ScopedBuilder
    */
   def unchecked(ex: TlaEx): TBuilderInstruction = ex.point[TBuilderInternalState]
 
+  /**
+   * @see
+   *   [[unchecked]]
+   */
+  def uncheckedDecl(decl: TlaOperDecl): TBuilderOperDeclInstruction = decl.point[TBuilderInternalState]
+
   /** Allows the use of type strings in the builder, to simplify writing complex types. */
   def parseType(typeAsString: String): TlaType1 = parser.parseType(typeAsString)
 
