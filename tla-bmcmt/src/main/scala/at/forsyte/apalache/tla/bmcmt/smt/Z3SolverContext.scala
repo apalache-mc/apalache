@@ -37,7 +37,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   /**
    * A log writer, for debugging purposes.
    */
-  private val logWriters: Seq[PrintWriter] = initLogs()
+  private val logWriters: Iterable[PrintWriter] = initLogs()
 
   // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
@@ -368,10 +368,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   /**
    * Initialize up to two log writers, one in the run directory and one in the custom run directory, if those are set.
    */
-  private def initLogs(): Seq[PrintWriter] = {
+  private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers = Seq(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).flatten.map(
-        OutputManager.printWriter(_, filePart))
+    val writers =
+      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
 
     if (!config.debug) {
       writers.foreach { writer =>
