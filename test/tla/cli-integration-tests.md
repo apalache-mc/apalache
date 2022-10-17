@@ -3667,6 +3667,7 @@ input {
     }
 }
 output {}
+tracee {}
 typechecker {
     inferpoly=true
 }
