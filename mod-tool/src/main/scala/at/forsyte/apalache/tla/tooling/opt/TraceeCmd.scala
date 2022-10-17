@@ -25,7 +25,9 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     arg[List[String]](name = "expressions",
         description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
 
-  private var persistentLen: Int = 0 // hack to make
+  // If we set the --length inside collectTuningOptions it gets overwritten later.
+  // therefore, we store it locally, and only update the options right before calling run()
+  private var persistentLen: Int = 0
 
   def getLenFromFile(file: File): Int = Try(UJsonRep(ujson.read(file))) match {
     case Success(json) =>
@@ -72,7 +74,6 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
 
     val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = persistentLen))
     PassChainExecutor.run(new TraceeModule(lenAdjustedOpt)) match {
-      // TODO: update this for traces
       case Right(_)      => Right(s"Trace successfully generated.")
       case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
     }
