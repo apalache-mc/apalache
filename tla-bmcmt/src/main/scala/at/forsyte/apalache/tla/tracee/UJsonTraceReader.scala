@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.typecomp.json.UJsonToTlaViaBuilder
 
+import scala.annotation.unused
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -36,7 +37,7 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
   }
 
   // TODO
-  private def convertITF(json: UJsonRep): Trace = IndexedSeq.empty
+  private def convertITF(@unused json: UJsonRep): Trace = IndexedSeq.empty
 
   private def kvFromAsgn(ex: TlaEx): (String, TlaEx) = ex match {
     case OperEx(TlaOper.eq, NameEx(name), rhs) => name -> rhs
