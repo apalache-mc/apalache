@@ -2,10 +2,13 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.infra.passes.options._
+import at.forsyte.apalache.io.json.JsonDeserializationError
+import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory}
 import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
 import org.backuity.clist._
 
 import java.io.File
+import scala.util.{Failure, Success, Try}
 
 /**
  * This command initiates the 'tracee' command line.
@@ -22,12 +25,28 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     arg[List[String]](name = "expressions",
         description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
 
-  private var persistentLen: Int = 0 // hack
+  private var persistentLen: Int = 0 // hack to make
 
-  // TODO: Guards and checks
-  def getLenFromFile(file: File): Int = {
-    val json = ujson.read(file)
-    json("states").arr.length
+  def getLenFromFile(file: File): Int = Try(UJsonRep(ujson.read(file))) match {
+    case Success(json) =>
+      // ITF case
+      val statesOpt = json.getFieldOpt("states").map(UJsonScalaFactory.asSeq)
+      statesOpt match {
+        case Some(seq) => seq.length
+        case None      =>
+          // generic case
+          val declOpt = for {
+            modules <- json.getFieldOpt("modules")
+            decls <- UJsonScalaFactory.asSeq(modules).head.getFieldOpt("declarations")
+          } yield UJsonScalaFactory.asSeq(decls)
+
+          // we need len-2 for CInit (head) and Inv (last)
+          declOpt.map(_.length - 2).getOrElse {
+            throw new JsonDeserializationError(s"${file.getCanonicalPath} is malformed.")
+          }
+      }
+    case Failure(exception) =>
+      throw new JsonDeserializationError(s"Could not read ${file.getCanonicalPath}.", exception)
   }
 
   // Can't pass tuning via flags
@@ -54,8 +73,8 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = persistentLen))
     PassChainExecutor.run(new TraceeModule(lenAdjustedOpt)) match {
       // TODO: update this for traces
-      case Right(_)      => Right(s"Checker reports no error up to computation length ${options.checker.length}")
-      case Left(failure) => Left(failure.exitCode, "Checker has found an error")
+      case Right(_)      => Right(s"Trace successfully generated.")
+      case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
     }
   }
 

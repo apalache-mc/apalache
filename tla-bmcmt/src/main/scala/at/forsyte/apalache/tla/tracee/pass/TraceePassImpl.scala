@@ -3,11 +3,13 @@ package at.forsyte.apalache.tla.tracee.pass
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.tla.tracee._
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.options.{OptionGroup, SourceOption}
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.io.json.impl.DefaultTagReader
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.assignments.{AssignmentOperatorIntroduction, ModuleAdapter}
 import at.forsyte.apalache.tla.imp.findBodyOf
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.{ModuleProperty, NullEx, TlaModule, TlaVarDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
@@ -24,16 +26,21 @@ class TraceePassImpl @Inject() (
     derivedPreds: DerivedPredicates.Configurable,
     options: OptionGroup.HasTracee,
     tracker: TransformationTracker,
-    writerFactory: TlaWriterFactory)
+    writerFactory: TlaWriterFactory,
+    sourceStore: SourceStore)
     extends TraceePass with LazyLogging {
 
   override def name: String = "TraceePass"
 
-  // TODO: turn asserts into proper error handling
+  // TODO: turn requires into proper error handling?
   override def execute(module: TlaModule): PassResult = {
-    // TODO: get trace from options
-    val trace: Trace = new TraceReader().get()
-    assert(trace.nonEmpty)
+
+    val traceJsonFile = options.tracee.trace
+    val traceSource = SourceOption.FileSource(traceJsonFile)
+    val traceReader = new UJsonTraceReader(Some(sourceStore), DefaultTagReader)
+
+    val trace = traceReader.convert(traceReader.read(traceSource))
+    require(trace.nonEmpty)
 
     // TODO: make findBodyOf return Option? (unrelated to MVP)
     val expressions = options.tracee.expressions.map { exName =>
@@ -42,7 +49,7 @@ class TraceePassImpl @Inject() (
         case ex     => exName -> ex
       }
     }.toMap
-    assert(expressions.nonEmpty)
+    require(expressions.nonEmpty)
 
     /*
     In this mode, we will inject our own

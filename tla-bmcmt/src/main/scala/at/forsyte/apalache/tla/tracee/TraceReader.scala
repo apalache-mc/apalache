@@ -1,16 +1,16 @@
 package at.forsyte.apalache.tla.tracee
 
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.io.json.JsonRepresentation
 
 /**
+ * Abstract TraceReader, which can read a trace in some JSON representation, from a source.
+ *
  * @author
  *   Jure Kukovec
  */
-class TraceReader {
+trait TraceReader[T <: JsonRepresentation] {
+  def read(source: SourceOption): T
 
-  // TODO: Until #2201 is implemented, we don't actually read the trace, we just fix one.
-  def get(): Trace = (1 to (5)).map { i =>
-    Map("x" -> tla.int(i))
-  }
-
+  def convert(json: T): Trace
 }
