@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.config
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.annotations.AnnotationParserError
+import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.imp.SanyException
@@ -72,6 +73,10 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     case err: TypingException =>
       // this is a failure message, as we know that something type-related in apalache is broken
       FailureMessage("%s: internal error in type checking: %s".format(findLoc(err.causeExprId), err.getMessage))
+
+    case err: JsonDeserializationError =>
+      // this is a normal message, as we know that the json error is due to the user
+      NormalErrorMessage(s"Error in JSON deserialization. Perhaps the file is malformed?: ${err.getMessage}.")
 
     // tool failures
     case err: IrrecoverablePreprocessingError =>
