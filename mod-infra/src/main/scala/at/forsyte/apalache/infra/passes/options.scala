@@ -261,6 +261,7 @@ object SourceOption {
   object Format {
     case object Tla extends Format
     case object Json extends Format
+    case object Itf extends Format
   }
 
   /** Data to be loaded from a file */
@@ -274,12 +275,17 @@ object SourceOption {
 
   object FileSource {
 
+    private def hasItfSubExtension(fname: String): Boolean =
+      FilenameUtils.isExtension(FilenameUtils.removeExtension(fname), "itf")
+
     /** Create a FileSource from a file, deriving the format from the file's extension */
     def apply(file: java.io.File): FileSource = {
-      val format = FilenameUtils.getExtension(file.getName()) match {
-        case "json"  => Format.Json
-        case "tla"   => Format.Tla
-        case unknown => throw new PassOptionException(s"Unsupported file format ${unknown}")
+      val fname = file.getName()
+      val format = FilenameUtils.getExtension(fname) match {
+        case "tla"                               => Format.Tla
+        case "json" if hasItfSubExtension(fname) => Format.Itf
+        case "json"                              => Format.Json
+        case unknown                             => throw new PassOptionException(s"Unsupported file format ${unknown}")
       }
       new FileSource(file, format)
     }
