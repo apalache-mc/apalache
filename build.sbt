@@ -190,12 +190,9 @@ lazy val tla_assignments = (project in file("tla-assignments"))
       libraryDependencies += Deps.commonsIo,
   )
 
-lazy val tla_bmcmt = (project in file("tla-bmcmt"))
+lazy val passes = (project in file("passes"))
   .dependsOn(
       tlair,
-      // property based tests depend on IR generators defined in the tlair tests
-      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
-      tlair % "test->test",
       infra,
       tla_io,
       tla_pp,
@@ -206,8 +203,25 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       libraryDependencies += Deps.scalaCollectionContrib,
   )
 
+lazy val tla_bmcmt = (project in file("tla-bmcmt"))
+  .dependsOn(
+      tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test",
+      infra,
+      tla_io,
+      tla_pp,
+      tla_assignments,
+      passes,
+  )
+  .settings(
+      testSettings,
+      libraryDependencies += Deps.scalaCollectionContrib,
+  )
+
 lazy val shai = (project in file("shai"))
-  .dependsOn(tlair, infra, tla_io, tla_types, tla_bmcmt)
+  .dependsOn(tlair, infra, tla_io, tla_types, tla_bmcmt, passes)
   .settings(
       // See https://zio.dev/version-1.x/usecases/usecases_testing/
       testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -228,7 +242,7 @@ lazy val shai = (project in file("shai"))
   )
 
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, shai)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, shai, passes)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -254,7 +268,7 @@ lazy val tool = (project in file("mod-tool"))
   )
 
 lazy val distribution = (project in file("mod-distribution"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, passes, tool)
   .settings(
       testSettings
   )
@@ -278,6 +292,7 @@ lazy val root = (project in file("."))
       tla_pp,
       tla_assignments,
       tla_bmcmt,
+      passes,
       shai,
       tool,
       distribution,
