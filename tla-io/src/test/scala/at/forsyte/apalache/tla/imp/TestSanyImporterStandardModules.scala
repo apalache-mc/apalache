@@ -32,6 +32,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -67,6 +68,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -164,6 +166,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(3 == modules.size) // Integers extends Naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -248,6 +251,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
     // the definitions of the standard operators are filtered out
@@ -332,6 +336,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
     val root = modules(rootName)
@@ -377,6 +382,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(5 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -423,6 +429,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     // the root module and integers
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -471,7 +478,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    val (_, modules) = sanyImporter.loadFromSource(Source.fromString(text))
+    val (_, modules) = sanyImporter.loadFromSource(Source.fromString(text)).get
     assert(6 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
@@ -502,6 +509,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (_, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(7 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
     val root = modules("root")
@@ -590,6 +598,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
 
     val (_, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
 
     val root = modules("root")
     expectSourceInfoInDefs(root)

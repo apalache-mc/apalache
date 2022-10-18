@@ -45,6 +45,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(2 == modules.size) // inst + Naturals
     // the root module and A
     val root = modules(rootName)
@@ -125,6 +126,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -159,6 +161,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     expectSourceInfoInDefs(modules(rootName))
   }
@@ -177,6 +180,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -222,6 +226,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -257,6 +262,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -295,6 +301,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     val root = modules(rootName)
     val base = root.declarations
@@ -328,6 +335,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -365,6 +373,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -391,6 +400,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     // the root module and naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -418,6 +428,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     // the root module and naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -445,6 +456,7 @@ class TestSanyImporterInstances extends SanyImporterTestBase {
 
     val (rootName, modules) = sanyImporter
       .loadFromSource(Source.fromString(text))
+      .get
     // the root module and naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)

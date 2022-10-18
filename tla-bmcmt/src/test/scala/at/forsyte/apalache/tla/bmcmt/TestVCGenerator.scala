@@ -125,7 +125,7 @@ class TestVCGenerator extends AnyFunSuite {
   private def loadFromText(moduleName: String, text: String): TlaModule = {
     val locationStore = new SourceStore
     val (_, modules) =
-      new SanyImporter(locationStore, createAnnotationStore()).loadFromSource(Source.fromString(text))
+      new SanyImporter(locationStore, createAnnotationStore()).loadFromSource(Source.fromString(text)).get
     modules(moduleName)
   }
 }

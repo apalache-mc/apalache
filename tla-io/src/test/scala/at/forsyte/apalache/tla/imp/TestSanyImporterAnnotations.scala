@@ -33,7 +33,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
 
   private def loadModule(text: String): TlaModule = {
     val (rootName, modules) =
-      sanyImporter.loadFromSource(Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text)).get
     modules(rootName)
   }
 

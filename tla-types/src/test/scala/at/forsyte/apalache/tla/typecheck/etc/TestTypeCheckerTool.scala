@@ -60,7 +60,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   test("the tool runs and reports no type errors") {
     val (rootName, modules) =
-      sanyImporter.loadFromSource(loadSpecFromResource(megaSpec))
+      sanyImporter.loadFromSource(loadSpecFromResource(megaSpec)).get
 
     val mod = modules(rootName)
 
@@ -82,7 +82,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   test("the tool runs and tags all expressions") {
     val (rootName, modules) =
-      sanyImporter.loadFromSource(loadSpecFromResource(megaSpec))
+      sanyImporter.loadFromSource(loadSpecFromResource(megaSpec)).get
 
     val mod = modules(rootName)
 
@@ -128,7 +128,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   private def typecheckSpecAndEncoding(specName: String): Unit = {
     val (rootName, modules) =
-      sanyImporter.loadFromSource(loadSpecFromResource(specName))
+      sanyImporter.loadFromSource(loadSpecFromResource(specName)).get
 
     val mod = modules(rootName)
 
@@ -167,7 +167,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   private def typecheckSpec(specName: String): Unit = {
     val (rootName, modules) =
-      sanyImporter.loadFromSource(loadSpecFromResource(specName))
+      sanyImporter.loadFromSource(loadSpecFromResource(specName)).get
 
     val mod = modules(rootName)
 

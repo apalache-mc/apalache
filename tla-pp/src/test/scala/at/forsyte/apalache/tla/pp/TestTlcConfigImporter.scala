@@ -34,7 +34,7 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
   def configureAndCompare(tla: String, tlc: String, expected: String): Assertion = {
     val config = TlcConfigParserApalache(tlc)
     val (rootName, modules) =
-      sanyImporter.loadFromSource(Source.fromString(tla))
+      sanyImporter.loadFromSource(Source.fromString(tla)).get
 
     val mod = modules(rootName)
     // run the type checker

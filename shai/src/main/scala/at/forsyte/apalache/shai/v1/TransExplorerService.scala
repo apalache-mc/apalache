@@ -26,6 +26,7 @@ import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import ujson.Obj
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -178,7 +179,11 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
             output = Output(Some(new java.io.File("."))),
         )
       }
-      PassChainExecutor.run(new ParserModule(options)).left.map(code => s"Parsing failed with error code: ${code}")
+      PassChainExecutor
+        .run(new ParserModule(options))
+        .left
+        // TODO: Consolidate with pass error json formed in CmdExecutorService
+        .map(err => Obj("error_type" -> "pass_failure", "data" -> err).toString())
     } catch {
       case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
     }
