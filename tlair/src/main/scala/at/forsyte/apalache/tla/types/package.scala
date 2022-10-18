@@ -23,12 +23,13 @@ package at.forsyte.apalache.tla
  *
  * All [[tla]] ([[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]]) methods return
  * [[at.forsyte.apalache.tla.typecomp.TBuilderInstruction TBuilderInstruction]] or
- * [[at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction TBuilderOperDeclInstruction]] values, not [[TlaEx]] or
- * [[at.forsyte.apalache.tla.lir.TlaOperDecl TlaOperDecl]] values (see [[typecomp]] for a more elaborate explanation).
+ * [[at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction TBuilderOperDeclInstruction]] values, not
+ * [[at.forsyte.apalache.tla.lir TlaEx]] or [[at.forsyte.apalache.tla.lir.TlaOperDecl TlaOperDecl]] values (see
+ * [[typecomp]] for a more elaborate explanation).
  *
- * Given a value `v: TBuilderInternalState` (the case for [[TBuilderOperDeclInstruction]] is analogous), we have to
+ * Given a value `v: TBuilderInternalState` (the case for `TBuilderOperDeclInstruction` is analogous), we have to
  * convert it to the associated `TlaEx` in any of the equivalent ways listed below. One can think of `v` as a process to
- * obtain a [[TlaEx]] value, rather than the value itself.
+ * obtain a `TlaEx` value, rather than the value itself.
  * {{{
  *   val tlaEx: TlaEx = v
  *   val tlaEx = build(v)
@@ -91,8 +92,8 @@ package at.forsyte.apalache.tla
  * }}}
  * as `+` requires two arguments of type `Int`. </li>
  *
- * <li> [[IllegalArgumentException]]: This exception indicates that one or more arguments has an illegal shape, w.r.t.
- * the operator, or that the number of arguments is incorrect. Some operators require e.g. `ValEx(TlaStr(_))` values
+ * <li> `IllegalArgumentException`: This exception indicates that one or more arguments has an illegal shape, w.r.t. the
+ * operator, or that the number of arguments is incorrect. Some operators require e.g. `ValEx(TlaStr(_))` values
  * specifically, instead of just `Str`-typed values (for instance keys in
  * [[typecomp.ScopedBuilder.rec the record constructor]]). Other operators are variadic, but require the number of
  * arguments to be of a specific parity (e.g. [[typecomp.ScopedBuilder.funDefMixed funDefMixed]]), or require a positive
@@ -100,8 +101,8 @@ package at.forsyte.apalache.tla
  * {{{
  *   val ex: TlaEx = tla.enumSet() // throws IllegalArgumentException
  * }}}
- * would throw an [[IllegalArgumentException]], as [[typecomp.ScopedBuilder.enumSet enumSet]] requires a strictly
- * positive number of arguments ([[typecomp.ScopedBuilder.emptySet emptySet]] should have been used in this case). </li>
+ * would throw an `IllegalArgumentException`, as [[typecomp.ScopedBuilder.enumSet enumSet]] requires a strictly positive
+ * number of arguments ([[typecomp.ScopedBuilder.emptySet emptySet]] should have been used in this case). </li>
  *
  * <li> [[typecomp.TBuilderScopeException TBuilderScopeException]]: This exception indicates that a variable is used
  * with different types in the same scope, or that shadowing has occurred. Example:
