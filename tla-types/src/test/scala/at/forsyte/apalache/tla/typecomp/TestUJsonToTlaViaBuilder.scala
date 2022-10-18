@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson}
+import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.typecomp.json.UJsonToTlaViaBuilder
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner

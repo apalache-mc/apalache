@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.tla.lir.{ConstT1, StrT1}
+import at.forsyte.apalache.tla.types.ModelValueHandler
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner

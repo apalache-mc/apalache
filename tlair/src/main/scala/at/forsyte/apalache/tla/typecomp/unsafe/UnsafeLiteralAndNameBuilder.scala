@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
 import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
+import at.forsyte.apalache.tla.types.ModelValueHandler
 
 /**
  * Scope-unsafe builder for names and literals (IR tree leaves)

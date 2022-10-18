@@ -1,15 +1,14 @@
-package at.forsyte.apalache.tla.typecomp.json
+package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json._
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.typecomp.{
   TBuilderContext, TBuilderInstruction, TBuilderInternalState, TBuilderScopeException, TBuilderTypeException,
 }
+import at.forsyte.apalache.tla.types.tla
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}

@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.BuilderUtil.{getAllBound, getAllUsed, markAsBound}
@@ -136,8 +135,6 @@ class ScopedBuilder
     with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with ApalacheInternalBuilder
     with ApalacheBuilder with VariantBuilder with LiteralAndNameBuilder {
 
-  private val parser = DefaultType1Parser
-
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.
    *
@@ -156,9 +153,6 @@ class ScopedBuilder
    *   [[unchecked]]
    */
   def uncheckedDecl(decl: TlaOperDecl): TBuilderOperDeclInstruction = decl.point[TBuilderInternalState]
-
-  /** Allows the use of type strings in the builder, to simplify writing complex types. */
-  def parseType(typeAsString: String): TlaType1 = parser.parseType(typeAsString)
 
   ////////////////////
   // HYBRID METHODS //

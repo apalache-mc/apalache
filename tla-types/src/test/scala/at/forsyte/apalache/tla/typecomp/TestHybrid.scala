@@ -553,7 +553,7 @@ class TestHybrid extends BuilderTest {
     // throws on n = 0
     assertThrows[IllegalArgumentException] {
       build(
-          builder.exceptMany(builder.name("f", builder.parseType("Int -> Int")))
+          builder.exceptMany(builder.name("f", FunT1(IntT1, IntT1)))
       )
     }
   }
