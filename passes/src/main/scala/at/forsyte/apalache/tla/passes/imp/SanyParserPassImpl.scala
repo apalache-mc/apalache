@@ -94,6 +94,7 @@ class SanyParserPassImpl @Inject() (
     val src = options.input.source
     for {
       rootModule <- src.format match {
+        case Format.Itf  => throw new SanyImporterException("Parsing the ITF format is not supported")
         case Format.Json => loadFromJsonSource(src)
         case Format.Tla =>
           src match {
