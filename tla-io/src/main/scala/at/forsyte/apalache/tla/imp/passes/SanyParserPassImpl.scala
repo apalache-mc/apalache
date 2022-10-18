@@ -42,6 +42,14 @@ class SanyParserPassImpl @Inject() (
 
   override def name: String = "SanyParser"
 
+  // Enable implicit conversions of appropriate `Try` values into `PassResult`s
+  implicit val resultOfTry: Try[TlaModule] => PassResult = {
+    case Success(tlaModule) => Right(tlaModule)
+    // `SanyException`s are `NormalErrors`
+    case Failure(err: SanyException) => passFailure(List(err.getMessage()), ExitCodes.ERROR)
+    case Failure(err)                => throw err // For other exceptions, just throw them again
+  }
+
   private def loadFromJsonSource(source: SourceOption): PassResult = {
     import SourceOption._
     val readable: ujson.Readable = source match {
