@@ -79,12 +79,12 @@ class SanyParserPassImpl @Inject() (
     Right(modules.get(rootName).get)
   }
 
-  private def loadFromTlaString(content: String, aux: Seq[String]): PassResult = {
-    val (rootName, modules) =
+  private def loadFromTlaString(content: String, aux: Seq[String]): PassResult = for {
+    (rootName, modules) <-
       new SanyImporter(sourceStore, annotationStore)
         .loadFromSource(Source.fromString(content), aux.map(Source.fromString(_)))
-    Right(modules.get(rootName).get)
-  }
+
+  } yield modules.get(rootName).get
 
   private def saveLoadedModule(module: TlaModule): Either[PassFailure, Unit] = {
     // save the output

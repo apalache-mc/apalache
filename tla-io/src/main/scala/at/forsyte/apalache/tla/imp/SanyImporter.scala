@@ -122,7 +122,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
    * @return
    *   the pair (the root module name, a map of modules)
    */
-  def loadFromSource(source: Source, aux: Seq[Source] = Seq()): (String, Map[String, TlaModule]) = {
+  def loadFromSource(source: Source, aux: Seq[Source] = Seq()): Try[(String, Map[String, TlaModule])] = {
     val tempDir = sanyTempDir()
     val nameAndModule = for {
       (rootName, rootFile) <- saveTlaFile(tempDir, source)
@@ -133,7 +133,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     } yield result
     tempDir.delete()
     // Raise any errors previously captures in the `Try`
-    nameAndModule.get
+    nameAndModule
   }
 
   // Create a unique temp directory for use by the SANY importer
