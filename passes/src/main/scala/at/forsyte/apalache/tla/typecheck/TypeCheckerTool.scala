@@ -3,13 +3,12 @@ package at.forsyte.apalache.tla.typecheck
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
+import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.typecheck.integration.RecordingTypeCheckerListener
-import at.forsyte.apalache.tla.typecheck.integration.TypeRewriter
-import at.forsyte.apalache.tla.imp.src.SourceStore
 
 /**
  * The API to the type checker. It first translates a TLA+ module into EtcExpr and then does the type checking.
