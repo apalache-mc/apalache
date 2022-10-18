@@ -8,9 +8,9 @@ option java_package = "at.forsyte.apalache.shai.v1";
 option java_outer_classname = "TransExplorerProto";
 
 service TransExplorer {
-  rpc OpenConnection (ConnectRequest) returns (Connection);
+  rpc openConnection (ConnectRequest) returns (Connection);
   // TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
-  rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
+  rpc loadModel(LoadModelRequest) returns (LoadModelResponse);
 
   // No-op to check service health
   rpc ping(PingRequest) returns (PongResponse);
