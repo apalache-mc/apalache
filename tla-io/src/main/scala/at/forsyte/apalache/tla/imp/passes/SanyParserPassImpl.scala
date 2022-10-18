@@ -1,24 +1,31 @@
 package at.forsyte.apalache.tla.imp.passes
 
 import at.forsyte.apalache.infra.ExitCodes
-import at.forsyte.apalache.infra.passes.Pass.{PassFailure, PassResult}
+import at.forsyte.apalache.infra.passes.Pass.PassFailure
+import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{DefaultTagReader, UJsonRep, UJsonToTla}
-import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
-import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
+import at.forsyte.apalache.io.json.impl.DefaultTagReader
+import at.forsyte.apalache.io.json.impl.UJsonRep
+import at.forsyte.apalache.io.json.impl.UJsonToTla
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.imp.{utils, SanyImporter, SanyImporterException}
+import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.tla.imp.SanyImporterException
+import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.imp.utils
+import at.forsyte.apalache.tla.lir.CyclicDependencyError
+import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
-import at.forsyte.apalache.infra.passes.options.SourceOption
 import scala.io.Source
-import at.forsyte.apalache.infra.passes.options.OptionGroup
-import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import scala.util.Try
+import at.forsyte.apalache.tla.imp.SanyException
 
 /**
  * Parsing TLA+ code with SANY.
