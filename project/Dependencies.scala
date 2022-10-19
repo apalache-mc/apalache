@@ -8,11 +8,11 @@ import sbt._
 // See https://www.scala-sbt.org/1.x/docs/Organizing-Build.html#Tracking+dependencies+in+one+place
 object Dependencies {
 
-  lazy val zioVersion = "1.0.16"
+  lazy val zioVersion = "1.0.17"
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.4.0"
+    lazy val logbackVersion = "1.4.4"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -31,7 +31,7 @@ object Dependencies {
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.1.1"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.2.2"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
-    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.0"
+    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.3"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.10"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
@@ -40,7 +40,7 @@ object Dependencies {
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
-    val grpcNetty = "io.grpc" % "grpc-netty" % "1.49.0"
+    val grpcNetty = "io.grpc" % "grpc-netty" % "1.49.2"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)
@@ -53,7 +53,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.16.0" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.17.0" % Test
     val easymock = "org.easymock" % "easymock" % "4.3" % Test
 
     val scalaTestVersion = "3.2.11"
