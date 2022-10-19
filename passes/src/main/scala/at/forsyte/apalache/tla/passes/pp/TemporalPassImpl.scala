@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.pp.passes
+package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
