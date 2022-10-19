@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.assignments.passes
+package at.forsyte.apalache.tla.passes.assignments
 
 import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
 
