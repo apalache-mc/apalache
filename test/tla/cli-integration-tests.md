@@ -332,7 +332,7 @@ Check that we give an informative error if a user tries to invoke `parse` on a
 $ touch foo.itf.json
 $ apalache-mc parse foo.itf.json | sed -e 's/I@.*//' -e 's/E@.*//'
 ...
-Error by TLA+ parser: Parsing the ITF format is not supported
+Parsing error: Parsing the ITF format is not supported
 ...
 EXITCODE: ERROR (255)
 $ rm foo.itf.json

@@ -103,7 +103,10 @@ class SanyParserPassImpl @Inject() (
     try {
       parseSource(options.input.source)
     } catch {
-      case err: SanyException => passFailure(List(err.getMessage()), ExitCodes.ERROR)
+      case err: SanyException =>
+        val msg = err.getMessage()
+        logger.error(s"Parsing error: ${msg}")
+        passFailure(List(msg), ExitCodes.ERROR)
     }
   }
 
