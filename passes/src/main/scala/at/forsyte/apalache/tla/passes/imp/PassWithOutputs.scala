@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.imp.passes
+package at.forsyte.apalache.tla.passes.imp
 
 import at.forsyte.apalache.infra.passes.Pass
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}

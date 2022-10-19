@@ -5,15 +5,18 @@ import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.assignments.passes._
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
-import at.forsyte.apalache.tla.pp.passes._
 import com.google.inject.TypeLiteral
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.tla.passes.assignments.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
+import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
+import at.forsyte.apalache.tla.passes.pp.{
+  ConfigurationPass, ConfigurationPassImpl, DesugarerPass, DesugarerPassImpl, InlinePass, InlinePassImpl, OptPass,
+  OptPassImpl, PreproPass, PreproPassImpl, TemporalPass, TemporalPassImpl,
+}
 import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
 
 /**

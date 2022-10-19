@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.pp.passes
+package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.ConfigurationError

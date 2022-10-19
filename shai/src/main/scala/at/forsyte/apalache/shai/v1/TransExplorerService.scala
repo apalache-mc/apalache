@@ -17,15 +17,16 @@ import at.forsyte.apalache.shai.v1.transExplorer.{
 }
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
-import at.forsyte.apalache.tla.imp.passes.ParserModule
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
+
 import java.util.UUID
 import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.tla.passes.imp.ParserModule
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
