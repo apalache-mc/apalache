@@ -323,6 +323,21 @@ $ cat output.json | head
 $ rm output.json
 ```
 
+### parse on an ITF file fail with an error
+
+Check that we give an informative error if a user tries to invoke `parse` on a
+`itf.json` file.
+
+```sh
+$ touch foo.itf.json
+$ apalache-mc parse foo.itf.json | sed -e 's/I@.*//' -e 's/E@.*//'
+...
+Error by TLA+ parser: Parsing the ITF format is not supported
+...
+EXITCODE: ERROR (255)
+$ rm foo.itf.json
+```
+
 ### typecheck --output=output.tla Annotations succeeds
 
 Check that it actually parses into TLA (see #1284)
