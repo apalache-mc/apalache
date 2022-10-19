@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import java.io.File
-
 import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.imp.passes.ParserModule
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.tla.passes.imp.ParserModule
 
 /**
  * This command initiates the 'parse' command line.

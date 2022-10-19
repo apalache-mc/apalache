@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.imp.passes
+package at.forsyte.apalache.tla.passes.imp
 
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.{PassFailure, PassResult}

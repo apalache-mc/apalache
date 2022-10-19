@@ -11,7 +11,7 @@ import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.imp.passes.ParserModule
+import at.forsyte.apalache.tla.passes.imp.ParserModule
 import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 
 /**

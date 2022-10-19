@@ -7,12 +7,12 @@ import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriter
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, TransformationListener, TransformationTracker}
 import com.google.inject.TypeLiteral
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.tla.passes.assignments.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
+import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.passes.pp.{
   ConfigurationPass, ConfigurationPassImpl, InlinePass, InlinePassImpl, OptPass, OptPassImpl, PreproPass,
   ReTLAPreproPassImpl, WatchdogPassImpl,

@@ -6,10 +6,10 @@ import at.forsyte.apalache.infra.passes.{DerivedPredicates, Pass, ToolModule}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import com.google.inject.TypeLiteral
 
 class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(options) {
