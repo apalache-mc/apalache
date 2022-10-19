@@ -19,6 +19,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup
 import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
+import at.forsyte.apalache.tla.imp.SanyException
 
 /**
  * Parsing TLA+ code with SANY.
@@ -71,6 +72,11 @@ class SanyParserPassImpl @Inject() (
     Right(modules.get(rootName).get)
   }
 
+  private val loadFromTlaSource: SourceOption => PassResult = {
+    case SourceOption.StringSource(content, aux, _) => loadFromTlaString(content, aux)
+    case SourceOption.FileSource(file, _)           => loadFromTlaFile(file)
+  }
+
   private def saveLoadedModule(module: TlaModule): Either[PassFailure, Unit] = {
     // save the output
     writeOut(writerFactory, module)
@@ -89,25 +95,26 @@ class SanyParserPassImpl @Inject() (
     }
   }
 
-  override def execute(module: TlaModule): PassResult = {
-    import SourceOption._
-    val src = options.input.source
-    for {
-      rootModule <- src.format match {
-        case Format.Itf  => throw new SanyImporterException("Parsing the ITF format is not supported")
-        case Format.Json => loadFromJsonSource(src)
-        case Format.Tla =>
-          src match {
-            case StringSource(content, aux, _) => loadFromTlaString(content, aux)
-            case FileSource(file, _)           => loadFromTlaFile(file)
-          }
-      }
-      sortedModule <- sortDeclarations(rootModule)
-      _ <- saveLoadedModule(sortedModule)
-    } yield sortedModule
-  }
-
   override def dependencies = Set()
 
   override def transformations = Set()
+
+  override def execute(module: TlaModule): PassResult = {
+    try {
+      parseSource(options.input.source)
+    } catch {
+      case err: SanyException => passFailure(List(err.getMessage()), ExitCodes.ERROR)
+    }
+  }
+
+  private def parseSource(src: SourceOption): PassResult = for {
+    rootModule <- src.format match {
+      case SourceOption.Format.Itf  => throw new SanyImporterException("Parsing the ITF format is not supported")
+      case SourceOption.Format.Json => loadFromJsonSource(src)
+      case SourceOption.Format.Tla  => loadFromTlaSource(src)
+    }
+    sortedModule <- sortDeclarations(rootModule)
+    _ <- saveLoadedModule(sortedModule)
+  } yield sortedModule
+
 }
