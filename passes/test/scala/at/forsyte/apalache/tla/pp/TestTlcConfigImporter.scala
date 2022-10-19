@@ -1,17 +1,17 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
+import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.Untyped
-import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.typecheck.{MultiTypeCheckerListener, TypeCheckerTool}
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
-import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.{Assertion, BeforeAndAfterEach}
+import org.scalatestplus.junit.JUnitRunner
 
 import java.io.{PrintWriter, StringWriter}
 import scala.io.Source

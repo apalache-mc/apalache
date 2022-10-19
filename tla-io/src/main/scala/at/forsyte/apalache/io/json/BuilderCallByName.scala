@@ -1,9 +1,8 @@
-package at.forsyte.apalache.tla.typecomp.json
+package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaType1, ValEx, VariantT1}
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
+import at.forsyte.apalache.tla.lir.{TlaEx, TlaType1, ValEx, VariantT1}
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 

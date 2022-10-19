@@ -1,21 +1,19 @@
-package at.forsyte.apalache.tla.typecheck.passes
+package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.imp.utils
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.TypeCheckerTool
+import at.forsyte.apalache.tla.typecheck.{MultiTypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.OptionGroup
-import at.forsyte.apalache.tla.typecheck.integration.RecordingTypeCheckerListener
-import at.forsyte.apalache.tla.typecheck.MultiTypeCheckerListener
-import at.forsyte.apalache.tla.typecheck.integration.TypeRewriter
 
 class EtcTypeCheckerPassImpl @Inject() (
     val options: OptionGroup.HasTypechecker,

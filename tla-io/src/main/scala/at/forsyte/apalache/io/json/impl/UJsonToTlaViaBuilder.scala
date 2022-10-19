@@ -1,6 +1,6 @@
-package at.forsyte.apalache.tla.typecomp.json
+package at.forsyte.apalache.io.json.impl
 
-import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory}
+import at.forsyte.apalache.io.json.JsonToTlaViaBuilder
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.SourceStore
 

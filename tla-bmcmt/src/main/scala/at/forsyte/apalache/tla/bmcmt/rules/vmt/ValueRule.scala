@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.types.ModelValueHandler
 
 /**
  * ValueRule handles the conversion of literals and names

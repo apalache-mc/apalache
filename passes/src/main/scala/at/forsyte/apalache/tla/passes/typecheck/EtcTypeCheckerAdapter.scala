@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck.passes
+package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.io.annotations.AnnotationParserError

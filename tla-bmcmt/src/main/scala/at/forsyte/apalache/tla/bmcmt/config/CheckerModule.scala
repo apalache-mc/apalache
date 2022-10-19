@@ -12,9 +12,9 @@ import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.pp.passes._
-import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
 import com.google.inject.TypeLiteral
 import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
 
 /**
  * A configuration that binds all the passes from the parser to the checker. If you are not sure how the binding works,

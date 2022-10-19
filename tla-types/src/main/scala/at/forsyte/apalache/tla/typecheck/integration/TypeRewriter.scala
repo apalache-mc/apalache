@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import TypedPredefs._
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.types.ModelValueHandler
 
 /**
  * This class uses the map of types to set the types of TLA+ expressions and declarations.

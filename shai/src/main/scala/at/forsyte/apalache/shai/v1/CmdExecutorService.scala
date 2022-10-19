@@ -1,12 +1,10 @@
 package at.forsyte.apalache.shai.v1
 
 import scala.util.Try
-
 import com.typesafe.scalalogging.Logger
 import io.grpc.Status
 import zio.ZEnv
 import zio.ZIO
-
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
 import at.forsyte.apalache.io.ConfigManager
@@ -14,7 +12,7 @@ import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor}
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.imp.passes.ParserModule
-import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
+import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 
 /**
  * Provides the [[CmdExecutorService]]
