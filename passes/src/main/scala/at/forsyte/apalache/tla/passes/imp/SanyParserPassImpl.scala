@@ -20,6 +20,7 @@ import scala.util.Try
 import scala.util.Failure
 import scala.util.Success
 import at.forsyte.apalache.tla.imp.SanyException
+import at.forsyte.apalache.io.annotations.AnnotationParserError
 
 /**
  * Parsing TLA+ code with SANY.
@@ -103,11 +104,14 @@ class SanyParserPassImpl @Inject() (
     try {
       parseSource(options.input.source)
     } catch {
-      case err: SanyException =>
-        val msg = err.getMessage()
-        logger.error(s"Parsing error: ${msg}")
-        passFailure(List(msg), ExitCodes.ERROR)
+      case err: SanyException         => reportErr(err.getMessage)
+      case err: AnnotationParserError => reportErr(s"Syntax error in annotation: ${err.getMessage()}")
     }
+  }
+
+  private def reportErr(msg: String): PassResult = {
+    logger.error(s"Parsing error: ${msg}")
+    passFailure(List(msg), ExitCodes.ERROR)
   }
 
   private def parseSource(src: SourceOption): PassResult = for {
