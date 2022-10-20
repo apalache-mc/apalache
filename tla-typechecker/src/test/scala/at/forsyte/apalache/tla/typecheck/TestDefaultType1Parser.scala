@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.typecheck
 
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError, Type1Parser}
+import at.forsyte.apalache.io.typecheck.parser.Type1ParseError
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1ParseError, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalacheck.Gen.alphaStr
 import org.scalacheck.Prop

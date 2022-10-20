@@ -1,8 +1,7 @@
-package at.forsyte.apalache.tla.typecheck.etc
+package at.forsyte.apalache.tla.types
 
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -10,7 +9,7 @@ import org.scalatestplus.easymock.EasyMockSugar
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
+class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach {
   private val FIRST_VAR: Int = 100
   private val parser: Type1Parser = DefaultType1Parser
   private var unifier: TypeUnifier = _

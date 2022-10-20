@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.{OperParam, VarT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.typecheck.etc.EqClass
+import at.forsyte.apalache.tla.types._
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach

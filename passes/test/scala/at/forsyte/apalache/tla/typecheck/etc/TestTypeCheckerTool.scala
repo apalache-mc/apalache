@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
+import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
-import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import com.typesafe.scalalogging.LazyLogging
 import org.easymock.EasyMock
 import org.junit.runner.RunWith
