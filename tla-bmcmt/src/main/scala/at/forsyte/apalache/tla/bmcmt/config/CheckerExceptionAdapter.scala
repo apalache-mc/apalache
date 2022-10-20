@@ -2,11 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.io.ConfigurationError
-import at.forsyte.apalache.io.annotations.AnnotationParserError
 import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{
@@ -31,12 +29,6 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
   override def toMessage: PartialFunction[Throwable, ErrorMessage] = super.toMessage.orElse {
     // normal errors
-    case err: SanyException =>
-      NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
-
-    case err: AnnotationParserError =>
-      NormalErrorMessage("Syntax error in annotation: " + err.getMessage)
-
     case err: ConfigurationError =>
       NormalErrorMessage("Configuration error (see the manual): " + err.getMessage)
 
