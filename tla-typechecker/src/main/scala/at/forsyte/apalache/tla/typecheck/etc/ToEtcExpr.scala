@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.typecheck.etc
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.types.ModelValueHandler
+import at.forsyte.apalache.tla.typecheck.TypingInputException
+import at.forsyte.apalache.tla.types._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.nowarn

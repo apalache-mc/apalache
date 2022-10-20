@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1Parser}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, ApalacheOper, TlaFunOper, VariantOper}
 import at.forsyte.apalache.tla.lir.values.TlaReal
 import at.forsyte.apalache.tla.typecheck.TypingInputException
+import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite

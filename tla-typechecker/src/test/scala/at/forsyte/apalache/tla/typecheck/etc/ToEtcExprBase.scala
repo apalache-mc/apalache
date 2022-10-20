@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{OperT1, SetT1, TlaType1, TupT1, UID, VarT1}
+import at.forsyte.apalache.tla.types.TypeVarPool
 
 /**
  * The base class to be used by TestToEtcExprFoo classes.

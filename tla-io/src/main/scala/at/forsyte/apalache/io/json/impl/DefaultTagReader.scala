@@ -1,9 +1,9 @@
 package at.forsyte.apalache.io.json.impl
 
 import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.io.typecheck.parser.{DefaultType1Parser, Type1ParseError}
 import at.forsyte.apalache.tla.lir.{TypeTag, Typed, Untyped}
 import at.forsyte.apalache.io.lir.TypeTagReader
+import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1ParseError}
 
 object DefaultTagReader extends TypeTagReader {
   override def apply(tagStr: String): TypeTag = {

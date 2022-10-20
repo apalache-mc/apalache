@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.types.tla._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

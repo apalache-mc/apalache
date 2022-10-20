@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck.etc
+package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.VarT1
 

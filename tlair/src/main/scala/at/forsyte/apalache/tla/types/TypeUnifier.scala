@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck.etc
+package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir._
 
@@ -241,7 +241,6 @@ class TypeUnifier(varPool: TypeVarPool) {
       rvar: Option[VarT1]): Option[RowT1] = {
 
     // Allows ordering on Option types etc.
-    import scala.math.Ordering.Implicits._
     // Allows ordering on TlaType1, by converting them to strings
     implicit val tlaType1Ordering = Ordering.by[TlaType1, String](_.toString)
 

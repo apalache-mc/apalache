@@ -1,10 +1,9 @@
-package at.forsyte.apalache.tla.typecomp
+package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaArithOper
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
