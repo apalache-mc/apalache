@@ -13,7 +13,8 @@ package at.forsyte.apalache.shai.v1
  */
 
 import at.forsyte.apalache.shai.v1.transExplorer.{
-  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, ZioTransExplorer,
+  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, TransExplorerError,
+  TransExplorerErrorType, ZioTransExplorer,
 }
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
@@ -159,31 +160,40 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
     }
   } yield LoadModelResponse(result)
 
-  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[String, TlaModule]] = ZIO.effectTotal {
-    try {
-      // TODO: replace hard-coded options with options derived from CLI params
-      val options = {
-        import OptionGroup._
-        WithIO(
-            common = Common(
-                command = "server",
-                outDir = new java.io.File("."),
-                runDir = None,
-                debug = true,
-                smtprof = false,
-                writeIntermediate = false,
-                profiling = false,
-                features = Seq(),
-            ),
-            input = Input(SourceOption.StringSource(spec, aux)),
-            output = Output(Some(new java.io.File("."))),
-        )
+  private def parseSpec(spec: String, aux: Seq[String]): Result[Either[TransExplorerError, TlaModule]] =
+    ZIO.effectTotal {
+      try {
+        // TODO: replace hard-coded options with options derived from CLI params
+        val options = {
+          import OptionGroup._
+          WithIO(
+              common = Common(
+                  command = "server",
+                  outDir = new java.io.File("."),
+                  runDir = None,
+                  debug = true,
+                  smtprof = false,
+                  writeIntermediate = false,
+                  profiling = false,
+                  features = Seq(),
+              ),
+              input = Input(SourceOption.StringSource(spec, aux)),
+              output = Output(Some(new java.io.File("."))),
+          )
+        }
+        PassChainExecutor
+          .run(new ParserModule(options))
+          .left
+          .map { err =>
+            TransExplorerError(errorType = TransExplorerErrorType.PASS_FAILURE, data = ujson.write(err))
+          }
+      } catch {
+        case err: Throwable =>
+          val errData =
+            ujson.Obj("msg" -> err.getMessage(), "stack_trace" -> err.getStackTrace().map(_.toString()).toList)
+          Left(TransExplorerError(errorType = TransExplorerErrorType.UNEXPECTED, data = errData.toString()))
       }
-      PassChainExecutor.run(new ParserModule(options)).left.map(code => s"Parsing failed with error code: ${code}")
-    } catch {
-      case e: Throwable => Left(s"Parsing failed with exception: ${e.getMessage()}")
     }
-  }
 
   private def jsonOfModule(module: TlaModule): String = {
     new TlaToUJson(None).makeRoot(Seq(module)).toString

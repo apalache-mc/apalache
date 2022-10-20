@@ -31,8 +31,8 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
           s <- ZIO.service[TransExplorerService]
           conn <- s.openConnection(ConnectRequest())
           resp <- s.loadModel(LoadModelRequest(Some(conn), spec))
-          msg = resp.result.err.get
-        } yield assert(msg)(containsString("Parsing failed with exception: Error by TLA+ parser"))
+          msg = ujson.read(resp.result.err.get.data)("error_data")(0).str
+        } yield assert(msg)(containsString("No module name found in source"))
       },
       testM("loading a valid spec returns parsed model") {
         val spec =

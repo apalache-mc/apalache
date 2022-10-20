@@ -1,8 +1,6 @@
 package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
-import at.forsyte.apalache.io.annotations.AnnotationParserError
-import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{OutdatedAnnotationsError, TypingException, UID}
@@ -20,12 +18,6 @@ import com.typesafe.scalalogging.LazyLogging
 class EtcTypeCheckerAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)
     extends ExceptionAdapter with LazyLogging {
   override def toMessage: PartialFunction[Throwable, ErrorMessage] = super.toMessage.orElse {
-    case err: SanyException =>
-      NormalErrorMessage("Error by TLA+ parser: " + err.getMessage)
-
-    case err: AnnotationParserError =>
-      NormalErrorMessage("Syntax error in annotation: " + err.getMessage)
-
     case err: TypingInputException =>
       NormalErrorMessage("Typing input error: " + err.getMessage)
 
