@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
+import at.forsyte.apalache.tla.types._
 import scalaz.unused
 
 /**

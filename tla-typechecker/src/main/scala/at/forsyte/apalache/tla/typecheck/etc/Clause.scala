@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{TlaType1, VarT1}
+import at.forsyte.apalache.tla.types.Substitution
 
 /**
  * A unification constraint for the unification solver. Normally, unification solvers are conjunctive. But TLA+ requires

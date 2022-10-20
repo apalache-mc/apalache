@@ -8,6 +8,7 @@ import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
 import at.forsyte.apalache.tla.typecheck.integration.{RecordingTypeCheckerListener, TypeRewriter}
+import at.forsyte.apalache.tla.types.TypeVarPool
 import com.typesafe.scalalogging.LazyLogging
 
 /**
