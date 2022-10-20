@@ -1,4 +1,4 @@
-package at.forsyte.apalache.io.typecheck.parser
+package at.forsyte.apalache.tla.types.parser
 
 import scala.util.parsing.input.Position
 

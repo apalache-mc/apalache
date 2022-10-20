@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
-import at.forsyte.apalache.tla.typecheck.etc.{Substitution, TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * Given a module m, with global operators F1,...,Fn, Inliner performs the following transformation:

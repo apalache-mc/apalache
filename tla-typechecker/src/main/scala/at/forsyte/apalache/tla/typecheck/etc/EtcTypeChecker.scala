@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.types._
 import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker.UnwindException
 import scalaz.unused

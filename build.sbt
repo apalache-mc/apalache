@@ -176,7 +176,6 @@ lazy val tla_pp = (project in file("tla-pp"))
       tlair % "test->test",
       infra,
       tla_io,
-      tla_typechecker,
   )
   .settings(
       testSettings,
@@ -184,7 +183,7 @@ lazy val tla_pp = (project in file("tla-pp"))
   )
 
 lazy val tla_assignments = (project in file("tla-assignments"))
-  .dependsOn(tlair, infra, tla_io, tla_pp, tla_typechecker)
+  .dependsOn(tlair, infra, tla_io, tla_pp)
   .settings(
       testSettings,
       libraryDependencies += Deps.commonsIo,
@@ -197,6 +196,7 @@ lazy val passes = (project in file("passes"))
       tla_io,
       tla_pp,
       tla_assignments,
+      tla_typechecker,
   )
   .settings(
       testSettings,
@@ -242,7 +242,7 @@ lazy val shai = (project in file("shai"))
   )
 
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, shai, passes)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, passes)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,

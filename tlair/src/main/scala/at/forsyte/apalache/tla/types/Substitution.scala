@@ -1,10 +1,7 @@
-package at.forsyte.apalache.tla.typecheck.etc
+package at.forsyte.apalache.tla.types
 
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1,
-  TupT1, VarT1, VariantT1,
-}
-import at.forsyte.apalache.tla.typecheck.etc.Substitution.SUB_LIMIT
+import at.forsyte.apalache.tla.lir._
+
 import scala.collection.immutable.SortedMap
 
 /**
@@ -14,6 +11,7 @@ import scala.collection.immutable.SortedMap
  *   a mapping from variable names to types.
  */
 class Substitution(val mapping: Map[EqClass, TlaType1]) {
+  import Substitution.SUB_LIMIT
   // map every variable to its equivalence class (assuming that the classes are disjoint)
   private lazy val varToClass = mapping.keys.foldLeft(Map[Int, EqClass]()) { (map, cls) =>
     map ++ cls.typeVars.map(_ -> cls)

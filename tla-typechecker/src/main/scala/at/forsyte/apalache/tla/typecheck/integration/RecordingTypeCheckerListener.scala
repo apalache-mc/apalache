@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.typecheck.integration
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaType1, UID}
-import at.forsyte.apalache.tla.typecheck.etc.{EtcRef, ExactRef}
-import at.forsyte.apalache.tla.typecheck.SourceAwareTypeCheckerListener
+import at.forsyte.apalache.tla.typecheck._
+import at.forsyte.apalache.tla.typecheck.etc._
 
 import scala.collection.mutable
 

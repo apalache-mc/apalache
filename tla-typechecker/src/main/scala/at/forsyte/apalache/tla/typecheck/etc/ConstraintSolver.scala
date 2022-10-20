@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.TlaType1
+import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.

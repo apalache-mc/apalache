@@ -1,4 +1,4 @@
-package at.forsyte.apalache.io.typecheck.parser
+package at.forsyte.apalache.tla.types.parser
 
 import at.forsyte.apalache.tla.lir.TlaType1
 

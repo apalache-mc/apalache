@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.typecheck
+package at.forsyte.apalache.tla.types
 
 import at.forsyte.apalache.tla.lir.{ConstT1, StrT1}
 import at.forsyte.apalache.tla.types.ModelValueHandler
