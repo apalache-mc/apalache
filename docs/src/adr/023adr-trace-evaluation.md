@@ -20,7 +20,7 @@ In the context of improving usability\
 facing difficulties understanding counterexample traces\
 we decided to implement trace evaluation\
 to achieve a better user experience\
-accepting the development costs.\
+accepting the development costs.
 
 ## Context
 
@@ -85,9 +85,19 @@ The above command should produce an Apalache trace (in all available formats), w
   - If `--expressions=E_1,...,E_m` is used, the variables of the output trace are `E_1,...,E_m`.
   - For all `i,j`, the value of `E_i` in state `j` of the output trace is equal to the evaluation of `E_i`, as defined in `<source>`, using the values the variables of the input trace hold in state `j` of the input trace.
 
+Recall that the output trace will only display the expressions `E_1,...E_m` as the output state variables. Should you wish to view the original trace variables, you need to add an expression, like one of the ones below for example:
+```tla
+E_single == x_1
+E_state == [ x1 |-> x_1, ..., xk |-> x_k ]
+E_vars == <<x_1, ..., x_k>>
+```
+
+
 Optionally, we could investigate one of the following two alternatives to the output format:
   1. The output trace variables are `x_1,...,x_k,E_1,...,E_m` instead, where `x_1,...,x_k` are the variables of the original trace. The value of each variable from the input trace has the same value in every state of the output trace, as it does in the corresponding state of the input trace.
+  This is perhaps preferable to use with the [ITF trace viewer](https://github.com/informalsystems/vscode-itf-trace-viewer).
   2. The output contains _both_ the input trace and the output trace (as it would have been produced in the original suggestion) in the same file, but separately.
+
 
 ## Example
 
