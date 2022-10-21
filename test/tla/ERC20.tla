@@ -24,7 +24,11 @@ CONSTANTS
     \* Set of the amounts to use.
     \*
     \* @type: Set(Int);
-    AMOUNTS
+    AMOUNTS,
+    \* Initial token balance for every account.
+    \*
+    \* @type: ADDR -> Int;
+    INITIAL_BALANCES
 
 VARIABLES
     \* Token balance for every account. This is exactly as `balanceOf` in ERC20.
@@ -76,7 +80,7 @@ TransferFrom(fields) ==
 
 \* Initialize an ERC20 token.
 Init ==
-    /\ balanceOf = [a \in ADDR |-> 100]
+    /\ balanceOf = INITIAL_BALANCES
     \* no account is allowed to withdraw from another account
     /\ allowance = [ pair \in ADDR \X ADDR |-> 0 ]
     \* no pending transactions

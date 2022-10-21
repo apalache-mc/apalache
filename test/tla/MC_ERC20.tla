@@ -10,6 +10,8 @@ ADDR == { "Alice_OF_ADDR", "Bob_OF_ADDR", "Eve_OF_ADDR" }
 \* Apalache can draw constants from the set of all integers
 AMOUNTS == Int
 
+INITIAL_BALANCES == [a \in ADDR |-> 100]
+
 VARIABLES
     \* @type: ADDR -> Int;
     balanceOf,
