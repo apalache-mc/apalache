@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.passes.pp._
-import at.forsyte.apalache.tla.tracee.pass.{BridgingPass, BridgingPassImpl, TraceePass, TraceePassImpl}
+import at.forsyte.apalache.tla.tracee.pass.{TraceeBridgingPass, TraceeBridgingPassImpl, TraceePass, TraceePassImpl}
 import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
 import com.google.inject.TypeLiteral
 
@@ -77,7 +77,7 @@ class TraceeModule(options: OptionGroup.HasTracee) extends ToolModule(options) {
     bind(classOf[PreproPass]).to(classOf[PreproPassImpl])
     bind(classOf[OptPass]).to(classOf[OptPassImpl])
     bind(classOf[TraceePass]).to(classOf[TraceePassImpl])
-    bind(classOf[BridgingPass]).to(classOf[BridgingPassImpl])
+    bind(classOf[TraceeBridgingPass]).to(classOf[TraceeBridgingPassImpl])
     bind(classOf[BoundedCheckerPass]).to(classOf[BoundedCheckerPassImpl])
   }
 
@@ -95,7 +95,7 @@ class TraceeModule(options: OptionGroup.HasTracee) extends ToolModule(options) {
         classOf[InlinePass],
         classOf[PreproPass],
         classOf[OptPass],
-        classOf[BridgingPass],
+        classOf[TraceeBridgingPass],
         // BoundedCheckerPass is in the very end of the pipeline
         classOf[BoundedCheckerPass],
     )

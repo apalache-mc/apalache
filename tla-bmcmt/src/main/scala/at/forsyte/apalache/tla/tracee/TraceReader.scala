@@ -12,5 +12,7 @@ import at.forsyte.apalache.io.json.JsonRepresentation
 trait TraceReader[T <: JsonRepresentation] {
   def read(source: SourceOption): T
 
+  def getTraceLength(json: T): Int
+
   def convert(json: T): Trace
 }

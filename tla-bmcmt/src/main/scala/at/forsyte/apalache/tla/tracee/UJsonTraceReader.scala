@@ -23,8 +23,8 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
   private val builder = new UJsonToTlaViaBuilder(sourceStoreOpt)(tagReader)
   override def read(source: SourceOption): UJsonRep = {
     val readable: ujson.Readable = source match {
-      case FileSource(f, Format.Json) => f
-      case _                          => throw new IllegalArgumentException("File provided with --trace is not a JSON.")
+      case FileSource(f, Format.Json | Format.Itf) => f
+      case _ => throw new IllegalArgumentException("File provided with --trace is not a JSON.")
     }
 
     // Rethrow as JsonDeserializationError if unable to read
@@ -34,6 +34,34 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
         throw new JsonDeserializationError("Unable to read --trace as JSON.", exception)
     }
   }
+
+  // Assume here that the json is in ITF format
+  override def convert(json: UJsonRep): Trace = caseSplitOnJsonFormat(convertITF, convertGenericJSON)(json)
+
+  override def getTraceLength(json: UJsonRep): Int = caseSplitOnJsonFormat(getLengthITF, getLengthGeneric)(json)
+
+  // Performs one of the procedures, depending on whether the json is an itf.json or a generic json
+  private def caseSplitOnJsonFormat[T](ifITF: UJsonRep => T, ifGenericJSON: UJsonRep => T)(json: UJsonRep): T = {
+    val nameOpt = json.getFieldOpt("name").map(UJsonScalaFactory.asStr)
+    if (nameOpt.contains("ApalacheIR")) {
+      ifGenericJSON(json)
+    } else {
+      val formatOpt = for {
+        meta <- json.getFieldOpt("#meta")
+        format <- meta.getFieldOpt("format")
+      } yield UJsonScalaFactory.asStr(format)
+      if (formatOpt.contains("ITF")) {
+        ifITF(json)
+      } else {
+        throw new JsonDeserializationError("JSON structure unsupported. Must be ITF or TlaJSON.")
+      }
+    }
+  }
+
+  private def getLengthITF(json: UJsonRep): Int =
+    json.getFieldOpt("states").map(seqJSON => UJsonScalaFactory.asSeq(seqJSON).length).getOrElse {
+      throw new JsonDeserializationError(s"Provided JSON does not comply with the ITF format.")
+    }
 
   // TODO
   private def convertITF(@unused json: UJsonRep): Trace = IndexedSeq.empty
@@ -74,21 +102,14 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
       }
   }
 
-  // Assume here that the json is in ITF format
-  override def convert(json: UJsonRep): Trace = {
-    val nameOpt = json.getFieldOpt("name").map(UJsonScalaFactory.asStr)
-    if (nameOpt.contains("ApalacheIR")) {
-      convertGenericJSON(json)
-    } else {
-      val formatOpt = for {
-        meta <- json.getFieldOpt("#meta")
-        format <- meta.getFieldOpt("format")
-      } yield UJsonScalaFactory.asStr(format)
-      if (formatOpt.contains("ITF")) {
-        convertITF(json)
-      } else {
-        throw new JsonDeserializationError("JSON structure unsupported. Must be ITF or TlaJSON.")
-      }
+  private def getLengthGeneric(json: UJsonRep): Int = {
+    val lenOpt = for {
+      modules <- json.getFieldOpt("modules")
+      decls <- UJsonScalaFactory.asSeq(modules).head.getFieldOpt("declarations")
+    } yield UJsonScalaFactory.asSeq(decls).length - 2 // we need len-2 for CInit (head) and Inv (last)
+
+    lenOpt.getOrElse {
+      throw new JsonDeserializationError(s"Provided JSON does not comply with the Apalache JSON format.")
     }
   }
 }

@@ -7,12 +7,17 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 
 /**
+ * Given a `state`, constructs assignments, which define a transition into a state in which the variables are the keys
+ * of `expressions`, and their values are determined by evaluating their corresponding values in `expressions` in the
+ * context defined by the `state`` (recall that the expression values may have free variables, but those must all be
+ * among the variables defining the `state`).
+ *
  * @author
  *   Jure Kukovec
  */
 class DrivenTransitionConstructor(
     tracker: TransformationTracker,
-    exs: Map[String, TlaEx]) {
+    expressions: Map[String, TlaEx]) {
 
   /**
    * Given a state s as a map x1 -> s.x1, ..., xn -> s.xn, constructs the transition, which points to the state
@@ -28,7 +33,7 @@ class DrivenTransitionConstructor(
   def txToState(state: State): TlaEx = {
 
     // Set up the expressions vi' = Ei (without substitution)
-    val args = exs.toSeq.map { case (varname, ex) =>
+    val args = expressions.toSeq.map { case (varname, ex) =>
       assign(
           prime(
               name(varname, ex.typeTag.asTlaType1())

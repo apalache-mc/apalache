@@ -1,17 +1,19 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
 import at.forsyte.apalache.infra.passes.options._
-import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory}
+import at.forsyte.apalache.io.json.impl.DefaultTagReader
 import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
+import at.forsyte.apalache.tla.tracee.UJsonTraceReader
 import org.backuity.clist._
 
 import java.io.File
-import scala.util.{Failure, Success, Try}
 
 /**
  * This command initiates the 'tracee' command line.
+ *
+ * TODO: Instead of extending Check, make both Check and Tracee extend common trait (#2245)
  *
  * @author
  *   Jure Kukovec
@@ -25,42 +27,26 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     arg[List[String]](name = "expressions",
         description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
 
-  // If we set the --length inside collectTuningOptions it gets overwritten later.
-  // therefore, we store it locally, and only update the options right before calling run()
-  private var persistentLen: Int = 0
+  private val traceReader = new UJsonTraceReader(None, DefaultTagReader)
 
-  def getLenFromFile(file: File): Int = Try(UJsonRep(ujson.read(file))) match {
-    case Success(json) =>
-      // ITF case
-      val statesOpt = json.getFieldOpt("states").map(UJsonScalaFactory.asSeq)
-      statesOpt match {
-        case Some(seq) => seq.length
-        case None      =>
-          // generic case
-          val declOpt = for {
-            modules <- json.getFieldOpt("modules")
-            decls <- UJsonScalaFactory.asSeq(modules).head.getFieldOpt("declarations")
-          } yield UJsonScalaFactory.asSeq(decls)
-
-          // we need len-2 for CInit (head) and Inv (last)
-          declOpt.map(_.length - 2).getOrElse {
-            throw new JsonDeserializationError(s"${file.getCanonicalPath} is malformed.")
-          }
-      }
-    case Failure(exception) =>
-      throw new JsonDeserializationError(s"Could not read ${file.getCanonicalPath}.", exception)
+  private def getLenFromFile(file: File): Int = {
+    val fileSrc = FileSource(file)
+    val ujson = traceReader.read(fileSrc)
+    traceReader.getTraceLength(ujson)
   }
+
+  // Creates a tuning regex for search.transitionFilter
+  private def tuningRegexFromLength(len: Int): String =
+    ("0->0" +: (1 until len)
+      .map { i =>
+        // Because the 0th transition goes into the initial state, the
+        // i-th transition overall uses the next-transition labeled with i-1
+        s"$i->${i - 1}"
+      }).mkString("|")
 
   // Can't pass tuning via flags
   override def collectTuningOptions(): Map[String, String] = {
-
-    val len = getLenFromFile(trace)
-    persistentLen = len - 1 // 1st state is init, len-1 transitions
-
-    val txFilter = ("0->0" +: (1 until len)
-      .map { i =>
-        s"$i->${i - 1}" // -1, since the 1st state is init
-      }).mkString("|")
+    val txFilter = tuningRegexFromLength(getLenFromFile(trace))
 
     Map(
         "search.outputTraces" -> "true",
@@ -72,7 +58,14 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     val cfg = configuration.get
     val options = OptionGroup.WithTracee(cfg).get
 
-    val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = persistentLen))
+    // We cannot store the trace length persistently in `var length`, because it gets overwritten by options management
+    // defaults by the time run is called.
+    // Therefore, we just read it again. The execution length is 1 shorter than the trace length,
+    // because the trace contains the initial state.
+
+    val executionLength = getLenFromFile(trace) - 1
+
+    val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = executionLength))
     PassChainExecutor.run(new TraceeModule(lenAdjustedOpt)) match {
       case Right(_)      => Right(s"Trace successfully generated.")
       case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
