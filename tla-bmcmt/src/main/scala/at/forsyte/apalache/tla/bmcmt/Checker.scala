@@ -22,7 +22,7 @@ object Checker {
       case Error(nerrors, counterexamples) =>
         Obj("checking_result" -> "Error", "counterexamples" -> counterexamples, "nerrors" -> nerrors)
       case Deadlock(counterexample) =>
-        Obj("checking_result" -> "Deadlock", "counterexample" -> counterexample)
+        Obj("checking_result" -> "Deadlock", "counterexamples" -> counterexample.toList)
       case other =>
         Obj("checking_result" -> other.toString())
     }

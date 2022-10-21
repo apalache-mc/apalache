@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.lir.{StrT1, ValEx}
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.types.ModelValueHandler
 
 /**
  * Rewrites a string literal, e.g., "hello", which is translated as a constant of the uninterpreted sort Str, or a

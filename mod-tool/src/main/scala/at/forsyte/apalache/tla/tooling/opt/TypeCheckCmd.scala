@@ -1,14 +1,13 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import java.io.File
-
 import org.backuity.clist._
-import at.forsyte.apalache.tla.typecheck.passes.TypeCheckerModule
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 
 /**
  * This command initiates the 'typecheck' command line.

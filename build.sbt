@@ -158,7 +158,7 @@ lazy val tla_io = (project in file("tla-io"))
       ),
   )
 
-lazy val tla_types = (project in file("tla-types"))
+lazy val tla_typechecker = (project in file("tla-typechecker"))
   .dependsOn(tlair, infra,
       // property based tests depend on IR generators defined in the tlair tests
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
@@ -176,7 +176,6 @@ lazy val tla_pp = (project in file("tla-pp"))
       tlair % "test->test",
       infra,
       tla_io,
-      tla_types,
   )
   .settings(
       testSettings,
@@ -184,10 +183,24 @@ lazy val tla_pp = (project in file("tla-pp"))
   )
 
 lazy val tla_assignments = (project in file("tla-assignments"))
-  .dependsOn(tlair, infra, tla_io, tla_pp, tla_types)
+  .dependsOn(tlair, infra, tla_io, tla_pp)
   .settings(
       testSettings,
       libraryDependencies += Deps.commonsIo,
+  )
+
+lazy val passes = (project in file("passes"))
+  .dependsOn(
+      tlair,
+      infra,
+      tla_io,
+      tla_pp,
+      tla_assignments,
+      tla_typechecker,
+  )
+  .settings(
+      testSettings,
+      libraryDependencies += Deps.scalaCollectionContrib,
   )
 
 lazy val tla_bmcmt = (project in file("tla-bmcmt"))
@@ -200,6 +213,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       tla_io,
       tla_pp,
       tla_assignments,
+      passes,
   )
   .settings(
       testSettings,
@@ -207,7 +221,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
   )
 
 lazy val shai = (project in file("shai"))
-  .dependsOn(tlair, infra, tla_io, tla_types, tla_bmcmt)
+  .dependsOn(tlair, infra, tla_io, tla_typechecker, tla_bmcmt, passes)
   .settings(
       // See https://zio.dev/version-1.x/usecases/usecases_testing/
       testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
@@ -228,7 +242,7 @@ lazy val shai = (project in file("shai"))
   )
 
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, shai)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, passes)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -254,7 +268,7 @@ lazy val tool = (project in file("mod-tool"))
   )
 
 lazy val distribution = (project in file("mod-distribution"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, passes, tool)
   .settings(
       testSettings
   )
@@ -274,10 +288,11 @@ lazy val root = (project in file("."))
       tlair,
       infra,
       tla_io,
-      tla_types,
+      tla_typechecker,
       tla_pp,
       tla_assignments,
       tla_bmcmt,
+      passes,
       shai,
       tool,
       distribution,

@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla.{fromTlaEx, str}
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.typecheck.ModelValueHandler
+import at.forsyte.apalache.tla.types.ModelValueHandler
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap

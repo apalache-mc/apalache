@@ -112,3 +112,4 @@
 - [ADR-020: Improving membership in arenas](./adr/020adr-arenas.md)
 - [RFC-021: Prioritization of Work](./adr/021rfc-prioritization.md)
 - [ADR-022: Unify Configuration Management and "Pass Options"](./adr/022adr-unification-of-configs-and-options.md)
+- [ADR-023: Trace evaluation](./adr/023adr-trace-evaluation.md)

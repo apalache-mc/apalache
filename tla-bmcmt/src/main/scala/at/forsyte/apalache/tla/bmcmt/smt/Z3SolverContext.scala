@@ -14,7 +14,6 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.commons.io.output.NullOutputStream
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
@@ -38,12 +37,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   /**
    * A log writer, for debugging purposes.
    */
-  private val logWriter: PrintWriter = initLog()
+  private val logWriters: Iterable[PrintWriter] = initLogs()
 
   // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
-    logWriter.println(";; %s = %s".format(p, config.randomSeed))
+    log(";; %s = %s".format(p, config.randomSeed))
   // FIXME(#2140): the following throws `java.lang.NoSuchFieldError: com.microsoft.z3.Native$StringPtr.value`
   // logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
   }
@@ -66,7 +65,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   params.add("random_seed", config.randomSeed)
   // params.add("array.extensional", false) // disables extensionality for the theory of arrays
   z3solver.setParameters(params)
-  logWriter.println(s";; ${params}")
+  log(s";; ${params}")
 
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
@@ -128,7 +127,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def dispose(): Unit = {
     logger.debug(s"Disposing Z3 solver context ${id}")
     z3context.close()
-    logWriter.close()
+    closeLogs()
     cellCache.clear()
     inCache.clear()
     funDecls.clear()
@@ -225,7 +224,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         val setT = cellCache(setId).head._2
         val elemT = cellCache(elemId).head._2
         val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-        logWriter.flush() // flush the SMT log
+        flushLogs()
         throw new IllegalStateException(
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
@@ -281,7 +280,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       // If arrayId refers to an array with a single SSA representation there is nothing to be done
       z3context.mkTrue().asInstanceOf[ExprSort]
     } else {
-      logWriter.flush() // flush the SMT log
+      flushLogs()
       throw new IllegalStateException(
           s"SMT $id: Corrupted cellCache, $arrayId key is present, but it does not refer to any array.")
     }
@@ -366,30 +365,41 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     }
   }
 
-  private def initLog(): PrintWriter =
-    OutputManager.runDirPathOpt match {
-      case None => new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)
-      case Some(_) => {
-        val writer = OutputManager.printWriter(OutputManager.runDir, s"log$id.smt")
-        if (!config.debug) {
-          writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
-          writer.flush()
-        }
-        writer
+  /**
+   * Initialize up to two log writers, one in the run directory and one in the custom run directory, if those are set.
+   */
+  private def initLogs(): Iterable[PrintWriter] = {
+    val filePart = s"log$id.smt"
+    val writers =
+      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+
+    if (!config.debug) {
+      writers.foreach { writer =>
+        writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+        writer.flush()
       }
     }
 
+    writers
+  }
+
   /**
-   * Log message to the logging file. This is helpful to debug the SMT encoding.
+   * Log message to the logging file(s). This is helpful to debug the SMT encoding.
    *
    * @param message
    *   message text, called by name, so evaluated only when needed
    */
   def log(message: => String): Unit = {
     if (config.debug) {
-      logWriter.println(message)
+      logWriters.foreach(_.println(message))
     }
   }
+
+  /** Flush all log writers. */
+  private def flushLogs(): Unit = logWriters.foreach(_.flush())
+
+  /** Close all log writers. */
+  private def closeLogs(): Unit = logWriters.foreach(_.close())
 
   /**
    * Introduce an uninterpreted function associated with a cell.
@@ -430,7 +440,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    */
   override def push(): Unit = {
     log("(push) ;; becomes %d".format(level + 1))
-    logWriter.flush() // good time to flush
+    flushLogs() // good time to flush
     z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
@@ -442,7 +452,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def pop(): Unit = {
     if (level > 0) {
       log("(pop) ;; becomes %d".format(level - 1))
-      logWriter.flush() // good time to flush
+      flushLogs() // good time to flush
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
@@ -460,7 +470,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def pop(n: Int): Unit = {
     if (n > 0) {
       log("(pop %d) ;; becomes %d".format(n, level - n))
-      logWriter.flush() // good time to flush
+      flushLogs() // good time to flush
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
@@ -479,7 +489,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     log("(check-sat)")
     val status = z3solver.check()
     log(s";; sat = ${status.name()}")
-    logWriter.flush() // good time to flush
+    flushLogs() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
       val msg = s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
@@ -496,7 +506,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         val params = z3context.mkParams()
         params.add("timeout", tm)
         z3solver.setParameters(params)
-        logWriter.println(s";; ${params}")
+        log(s";; ${params}")
       }
       // Z3 expects `timeout` to be in milliseconds passed as unsigned int, i.e., with a maximum value of 2^32 - 1.
       // The Z3 Java API only allows passing it as signed int, i.e., the maximum allowed millisecond value is 2^31 - 1 (`Int.MaxValue`).
@@ -509,7 +519,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       log(s";; sat = ${status.name()}")
       // return timeout to maximum
       setTimeout(Int.MaxValue)
-      logWriter.flush() // good time to flush
+      flushLogs() // good time to flush
       status match {
         case Status.SATISFIABLE   => Some(true)
         case Status.UNSATISFIABLE => Some(false)
@@ -999,7 +1009,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    *   nothing, as an exception is unconditionally thrown
    */
   private def flushAndThrow(e: Exception): Nothing = {
-    logWriter.flush() // flush the SMT log
+    flushLogs()
     throw e
   }
 }
