@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.tracee.pass
 
-import at.forsyte.apalache.tla.imp.passes.PassWithOutputs
+import at.forsyte.apalache.tla.passes.imp.PassWithOutputs
 
 /**
  * TODO

@@ -2,14 +2,13 @@ package at.forsyte.apalache.tla.tracee
 
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
-import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory}
+import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.infra.passes.options.SourceOption._
 import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaOperDecl}
-import at.forsyte.apalache.tla.typecomp.json.UJsonToTlaViaBuilder
 
 import scala.annotation.unused
 import scala.util.{Failure, Success, Try}

@@ -8,12 +8,12 @@ import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriter
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.imp.passes.{SanyParserPass, SanyParserPassImpl}
+import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
-import at.forsyte.apalache.tla.pp.passes._
+import at.forsyte.apalache.tla.passes.pp._
 import at.forsyte.apalache.tla.tracee.pass.{BridgingPass, BridgingPassImpl, TraceePass, TraceePassImpl}
-import at.forsyte.apalache.tla.typecheck.passes.EtcTypeCheckerPassImpl
+import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
 import com.google.inject.TypeLiteral
 
 /**
