@@ -123,6 +123,7 @@ class ConfigurationPassImpl @Inject() (
         invariants = options.predicates.invariants,
         cinit = options.predicates.cinit,
         view = options.predicates.view,
+        persistent = List.empty,
     )
   }
 
@@ -159,6 +160,7 @@ class ConfigurationPassImpl @Inject() (
         temporalProps = options.predicates.temporalProps,
         view = options.predicates.view,
         cinit = options.predicates.cinit,
+        persistent = List.empty,
     )
 
     if (derivedPreds.invariants.nonEmpty) {
