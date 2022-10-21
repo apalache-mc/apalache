@@ -1,6 +1,7 @@
 package at.forsyte.apalache.infra.passes.options
 
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.tla.lir.Feature
@@ -212,7 +213,7 @@ object Config {
    *   a list of expressions, to be evaluated at every state in the trace
    */
   case class Tracee(
-      trace: Option[File] = None,
+      trace: Option[SourceOption] = None,
       expressions: Option[List[String]] = None)
       extends Config[Tracee] {
 
@@ -604,7 +605,7 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to configure trace evaluation. */
   case class Tracee(
-      trace: File,
+      trace: SourceOption,
       expressions: List[String])
       extends OptionGroup
 
@@ -615,8 +616,13 @@ object OptionGroup extends LazyLogging {
         if (lst.nonEmpty) Success(lst)
         else Failure(new PassOptionException("Trace evaluation requires a nonempty list of expressions."))
 
+      def validateSource(sourceOption: SourceOption): Try[SourceOption] = sourceOption match {
+        case FileSource(_, SourceOption.Format.Itf | SourceOption.Format.Json) => Success(sourceOption)
+        case _ => Failure(new PassOptionException("Trace evaluation requires an ITF or JSON trace."))
+      }
+
       for {
-        trace <- tracee.trace.toTry("trace.trace")
+        trace <- tracee.trace.toTry("trace.trace").flatMap(validateSource)
         expressions <- tracee.expressions.toTry("trace.expressions").flatMap(validateExprs)
       } yield Tracee(
           trace = trace,

@@ -76,7 +76,7 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     val cfg = super.toConfig()
     cfg.copy(
         tracee = cfg.tracee.copy(
-            trace = Some(trace),
+            trace = Some(FileSource(trace)),
             expressions = Some(expressions),
         )
     )

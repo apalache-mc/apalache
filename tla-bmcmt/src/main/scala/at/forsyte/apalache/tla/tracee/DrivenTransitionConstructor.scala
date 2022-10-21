@@ -10,8 +10,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
  * Given a `state`, constructs assignments, which define a transition into a state in which the variables are the keys
  * of `expressions`, and their values are determined by evaluating their corresponding values in `expressions` in the
  * context defined by the `state`` (recall that the expression values may have free variables, but those must all be
- * among the variables defining the `state`).
- *
+ * among the variables defining the `state`). \
  * @author
  *   Jure Kukovec
  */
@@ -30,7 +29,7 @@ class DrivenTransitionConstructor(
    *  /\ vm' = Em[...]
    * }}}
    */
-  def txToState(state: State): TlaEx = {
+  def makeTransition(state: State): TlaEx = {
 
     // Set up the expressions vi' = Ei (without substitution)
     val args = expressions.toSeq.map { case (varname, ex) =>

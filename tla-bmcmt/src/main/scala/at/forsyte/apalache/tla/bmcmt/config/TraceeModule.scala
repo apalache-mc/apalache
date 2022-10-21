@@ -34,8 +34,8 @@ class TraceeModule(options: OptionGroup.HasTracee) extends ToolModule(options) {
     bind(classOf[OptionGroup.HasIO]).toInstance(options)
     bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
     bind(classOf[OptionGroup.HasChecker]).toInstance(options)
-    bind(classOf[OptionGroup.HasTracee]).toInstance(options)
     bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
+    bind(classOf[OptionGroup.HasTracee]).toInstance(options)
 
     // The `DerivedPredicate` instance used to communicate specification predicates between passes
     val derivedPreds = DerivedPredicates.Impl()
