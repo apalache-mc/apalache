@@ -9,7 +9,7 @@
   @typeAlias: transferFrom = { id: Int, fail: Bool, sender: ADDR, fromAddr: ADDR, toAddr: ADDR, value: Int };
 
   A transaction is a discriminated union:
-  @typeAlias: TX = None({ id: Int, fail: Bool }) | Transfer($transfer) | Approve($approve) | TransferFrom($transferFrom) ;
+  @typeAlias: TX = None(UNIT) | Transfer($transfer) | Approve($approve) | TransferFrom($transferFrom) ;
 
   A state of the state machine:
   @typeAlias: STATE = {

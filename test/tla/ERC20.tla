@@ -60,7 +60,7 @@ VARIABLES
 
 \* @type: TX;
 None ==
-    Variant("None", [ id |-> 0, fail |-> FALSE ])
+    Variant("None", UNIT)
 
 \* @type: $transfer => TX;
 Transfer(fields) ==
