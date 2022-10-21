@@ -2657,6 +2657,16 @@ $ apalache-mc check --inv=Sanity FunExcept3.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check ERC20.tla
+
+```sh
+$ apalache-mc check --length=5 --inv=NoNegativeBalances MC_ERC20.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
