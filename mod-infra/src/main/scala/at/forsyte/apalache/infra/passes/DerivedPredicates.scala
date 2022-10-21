@@ -93,6 +93,9 @@ trait DerivedPredicates {
   /** The name of an operator that produces a state view (works with max-error)  (optional) */
   def view: Option[String]
 
+  /** The names of any operators added programmatically, that should not be removed after inlining (may be empty) */
+  def persistent: List[String]
+
   /**
    * List all operator names for the derived predicates
    */
@@ -102,7 +105,8 @@ trait DerivedPredicates {
       cinit.toList ++
       view.toList ++
       invariants ++
-      temporalProps
+      temporalProps ++
+      persistent
   }
 }
 
@@ -128,13 +132,17 @@ object DerivedPredicates {
         cinit: Option[String],
         view: Option[String],
         invariants: List[String],
-        temporalProps: List[String]): Unit
+        temporalProps: List[String],
+        persistent: List[String]): Unit
 
     /** The optional cinit predicate currently requires possible override at a later stage of derivation */
     def setCinit(cinit: String): Unit
 
     /** The invariant predicates are extended in subsequent passes */
     def addInvariants(invs: List[String]): Unit
+
+    /** The persistent operators are extended in subsequent passes */
+    def addPersistent(names: String*): Unit
   }
 
   /**
@@ -149,6 +157,7 @@ object DerivedPredicates {
     var init: String = ""
     var cinit: Option[String] = None
     var view: Option[String] = None
+    var persistent: List[String] = List.empty
 
     def configure(
         init: String,
@@ -156,18 +165,22 @@ object DerivedPredicates {
         cinit: Option[String],
         view: Option[String],
         invariants: List[String],
-        temporalProps: List[String]): Unit = {
+        temporalProps: List[String],
+        persistent: List[String]): Unit = {
       this.init = init
       this.next = next
       this.invariants = invariants
       this.temporalProps = temporalProps
       this.view = view
       this.cinit = cinit
+      this.persistent = persistent
     }
 
     def setCinit(cinit: String): Unit = this.cinit = Some(cinit)
 
     def addInvariants(invs: List[String]): Unit = this.invariants = this.invariants ++ invs
+
+    def addPersistent(names: String*): Unit = this.persistent ++= names
   }
 
   object Impl {
