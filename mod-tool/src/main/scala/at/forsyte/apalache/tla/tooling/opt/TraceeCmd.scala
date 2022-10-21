@@ -58,11 +58,8 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     val cfg = configuration.get
     val options = OptionGroup.WithTracee(cfg).get
 
-    // We cannot store the trace length persistently in `var length`, because it gets overwritten by options management
-    // defaults by the time run is called.
-    // Therefore, we just read it again. The execution length is 1 shorter than the trace length,
+    // The execution length is read from the input and is 1 shorter than the trace length,
     // because the trace contains the initial state.
-
     val executionLength = getLenFromFile(trace) - 1
 
     val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = executionLength))
