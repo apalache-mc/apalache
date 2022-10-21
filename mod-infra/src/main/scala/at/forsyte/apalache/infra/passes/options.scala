@@ -1,7 +1,6 @@
 package at.forsyte.apalache.infra.passes.options
 
 import at.forsyte.apalache.infra.PassOptionException
-import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.tla.lir.Feature
@@ -616,8 +615,8 @@ object OptionGroup extends LazyLogging {
         if (lst.nonEmpty) Success(lst)
         else Failure(new PassOptionException("Trace evaluation requires a nonempty list of expressions."))
 
-      def validateSource(sourceOption: SourceOption): Try[SourceOption] = sourceOption match {
-        case FileSource(_, SourceOption.Format.Itf | SourceOption.Format.Json) => Success(sourceOption)
+      def validateSource(sourceOption: SourceOption): Try[SourceOption] = sourceOption.format match {
+        case SourceOption.Format.Itf | SourceOption.Format.Json => Success(sourceOption)
         case _ => Failure(new PassOptionException("Trace evaluation requires an ITF or JSON trace."))
       }
 

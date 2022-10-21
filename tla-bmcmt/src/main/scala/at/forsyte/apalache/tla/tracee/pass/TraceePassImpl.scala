@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.tracee.pass
 
+import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.tla.tracee._
 import at.forsyte.apalache.infra.passes.Pass.PassResult
@@ -39,9 +40,8 @@ class TraceePassImpl @Inject() (
     val traceReader = new UJsonTraceReader(Some(sourceStore), DefaultTagReader)
 
     val trace = traceReader.convert(traceReader.read(traceSource))
-    require(trace.nonEmpty)
     if (trace.isEmpty) {
-      passFailure("The provided trace is empty.", EXITCODE_ON_EXCEPTION)
+      passFailure("The provided trace is empty.", ExitCodes.ERROR)
     } else {
 
       // TODO: make findBodyOf return Option? (unrelated to MVP)
@@ -52,7 +52,7 @@ class TraceePassImpl @Inject() (
         }
       }.toMap
       if (expressions.isEmpty)
-        passFailure("The provided list of expressions is empty.", EXITCODE_ON_EXCEPTION)
+        passFailure("The provided list of expressions is empty.", ExitCodes.ERROR)
       else {
 
         /*

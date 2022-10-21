@@ -11,7 +11,6 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.tracee.TraceReader.{ApalacheJson, ITFJson, TraceJson}
 
-import java.io.File
 import scala.annotation.unused
 import scala.util.{Failure, Success, Try}
 
@@ -33,15 +32,17 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
   type TraceUJson = TraceJson[UJsonRep]
 
   // Rethrow as JsonDeserializationError if unable to read
-  private def tryRead(file: File): UJsonRep = Try(ujson.read(file)) match {
+  private def tryRead(readable: ujson.Readable): UJsonRep = Try(ujson.read(readable)) match {
     case Success(ujsonVal) => UJsonRep(ujsonVal)
     case Failure(exception) =>
-      throw new JsonDeserializationError(s"Unable to read $file as JSON.", exception)
+      throw new JsonDeserializationError(s"Unable to read $readable as JSON.", exception)
   }
 
   override def read(source: SourceOption): TraceUJson = source match {
-    case FileSource(f, Format.Json) => ApalacheJson(tryRead(f))
-    case FileSource(f, Format.Itf)  => ITFJson(tryRead(f))
+    case FileSource(f, Format.Json)      => ApalacheJson(tryRead(f))
+    case FileSource(f, Format.Itf)       => ITFJson(tryRead(f))
+    case StringSource(s, _, Format.Json) => ApalacheJson(tryRead(s))
+    case StringSource(s, _, Format.Itf)  => ITFJson(tryRead(s))
     case src => throw new IllegalArgumentException(s"Tried to load state from an invalid source: $src.")
   }
 
