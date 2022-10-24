@@ -48,7 +48,7 @@ Variant(__tagName, __value) ==
  *)
 VariantFilter(__tagName, __S) ==
     \* default untyped implementation
-    { __d \in { __e \in __S: __e.tag = __tagName }: __d.value }
+    { __d.value : __d \in { __e \in __S: __e.tag = __tagName } }
 
 (**
  * Get the tag name that is associated with a variant.
