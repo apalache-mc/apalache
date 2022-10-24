@@ -323,7 +323,7 @@ $ cat output.json | head
 $ rm output.json
 ```
 
-### parse on an ITF file fail with an error
+### parse on an ITF file fails with an error
 
 Check that we give an informative error if a user tries to invoke `parse` on a
 `itf.json` file.
@@ -336,6 +336,22 @@ Parsing error: Parsing the ITF format is not supported
 ...
 EXITCODE: ERROR (255)
 $ rm foo.itf.json
+```
+
+### parsing and emitting JSON IR
+
+#### can check the spec from JSON produced by parsing the MegaSpec1.tla to JSON
+
+A round-trip test for our JSON serialization and deserialization.
+
+```sh
+$ apalache-mc typecheck --output=megaspec1.json MegaSpec1.tla
+...
+EXITCODE: OK
+$ apalache-mc check --length=0 --cinit=CInit megaspec1.json
+...
+EXITCODE: OK
+$ rm megaspec1.json
 ```
 
 ### typecheck --output=output.tla Annotations succeeds
