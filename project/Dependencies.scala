@@ -60,7 +60,7 @@ object Dependencies {
     val scalatest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
     val scalatestplusEasymock = "org.scalatestplus" %% "easymock-4-3" % s"${scalaTestVersion}.0" % Test
     val scalatestplusJunit = "org.scalatestplus" %% "junit-4-13" % s"${scalaTestVersion}.0" % Test
-    val scalatestplusScalacheck = "org.scalatestplus" %% "scalacheck-1-15" % s"${scalaTestVersion}.0" % Test
+    val scalatestplusScalacheck = "org.scalatestplus" %% "scalacheck-1-17" % s"${scalaTestVersion}.0" % Test
 
     val zioTest = "dev.zio" %% "zio-test" % zioVersion % Test
     val zioTestSbt = "dev.zio" %% "zio-test-sbt" % zioVersion % Test
