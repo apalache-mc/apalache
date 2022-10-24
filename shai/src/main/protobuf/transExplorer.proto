@@ -8,9 +8,9 @@ option java_package = "at.forsyte.apalache.shai.v1";
 option java_outer_classname = "TransExplorerProto";
 
 service TransExplorer {
-  rpc OpenConnection (ConnectRequest) returns (Connection);
+  rpc openConnection (ConnectRequest) returns (Connection);
   // TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
-  rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
+  rpc loadModel(LoadModelRequest) returns (LoadModelResponse);
 
   // No-op to check service health
   rpc ping(PingRequest) returns (PongResponse);
@@ -39,11 +39,21 @@ message LoadModelRequest {
   repeated string aux = 3;
 }
 
+enum TransExplorerErrorType {
+  PASS_FAILURE = 0;
+  UNEXPECTED = 1;
+}
+
+message TransExplorerError {
+  TransExplorerErrorType errorType = 1;
+  string data = 2;
+}
+
 message LoadModelResponse {
   oneof result {
     // A JSON encoded string with the Apalache IR representation of the loaded spec
     string spec = 1;
     // A string describing the error, if parsing fails
-    string err = 2;
+    TransExplorerError err = 2;
   }
 }

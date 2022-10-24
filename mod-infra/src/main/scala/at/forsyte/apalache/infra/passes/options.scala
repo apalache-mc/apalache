@@ -204,6 +204,22 @@ object Config {
   }
 
   /**
+   * Configuration of trace evaluation
+   *
+   * @param trace
+   *   an ITF trace file
+   * @param expressions
+   *   a list of expressions, to be evaluated at every state in the trace
+   */
+  case class Tracee(
+      trace: Option[SourceOption] = None,
+      expressions: Option[List[String]] = None)
+      extends Config[Tracee] {
+
+    def empty: Tracee = Generic[Tracee].from(Generic[Tracee].to(this).map(emptyPoly))
+  }
+
+  /**
    * Configuration of type checking
    *
    * @param inferpoly
@@ -226,7 +242,8 @@ object Config {
       input: Input = Input(),
       output: Output = Output(),
       checker: Checker = Checker(),
-      typechecker: Typechecker = Typechecker())
+      typechecker: Typechecker = Typechecker(),
+      tracee: Tracee = Tracee())
       extends Config[ApalacheConfig] {
 
     def empty: ApalacheConfig = Generic[ApalacheConfig].from(Generic[ApalacheConfig].to(this).map(emptyPoly))
@@ -261,6 +278,7 @@ object SourceOption {
   object Format {
     case object Tla extends Format
     case object Json extends Format
+    case object Itf extends Format
   }
 
   /** Data to be loaded from a file */
@@ -274,12 +292,17 @@ object SourceOption {
 
   object FileSource {
 
+    private def hasItfSubExtension(fname: String): Boolean =
+      FilenameUtils.isExtension(FilenameUtils.removeExtension(fname), "itf")
+
     /** Create a FileSource from a file, deriving the format from the file's extension */
     def apply(file: java.io.File): FileSource = {
-      val format = FilenameUtils.getExtension(file.getName()) match {
-        case "json"  => Format.Json
-        case "tla"   => Format.Tla
-        case unknown => throw new PassOptionException(s"Unsupported file format ${unknown}")
+      val fname = file.getName()
+      val format = FilenameUtils.getExtension(fname) match {
+        case "tla"                               => Format.Tla
+        case "json" if hasItfSubExtension(fname) => Format.Itf
+        case "json"                              => Format.Json
+        case unknown                             => throw new PassOptionException(s"Unsupported file format ${unknown}")
       }
       new FileSource(file, format)
     }
@@ -579,6 +602,34 @@ object OptionGroup extends LazyLogging {
     }
   }
 
+  /** Options used to configure trace evaluation. */
+  case class Tracee(
+      trace: SourceOption,
+      expressions: List[String])
+      extends OptionGroup
+
+  object Tracee extends Configurable[Config.Tracee, Tracee] with LazyLogging {
+    def apply(tracee: Config.Tracee): Try[Tracee] = {
+
+      def validateExprs(lst: List[String]): Try[List[String]] =
+        if (lst.nonEmpty) Success(lst)
+        else Failure(new PassOptionException("Trace evaluation requires a nonempty list of expressions."))
+
+      def validateSource(sourceOption: SourceOption): Try[SourceOption] = sourceOption.format match {
+        case SourceOption.Format.Itf | SourceOption.Format.Json => Success(sourceOption)
+        case _ => Failure(new PassOptionException("Trace evaluation requires an ITF or JSON trace."))
+      }
+
+      for {
+        trace <- tracee.trace.toTry("trace.trace").flatMap(validateSource)
+        expressions <- tracee.expressions.toTry("trace.expressions").flatMap(validateExprs)
+      } yield Tracee(
+          trace = trace,
+          expressions = expressions,
+      )
+    }
+  }
+
   /** Options used to configure model checking */
   case class Checker(
       algo: Algorithm,
@@ -662,12 +713,16 @@ object OptionGroup extends LazyLogging {
     val predicates: Predicates
   }
 
+  trait HasTracee extends HasCheckerPreds {
+    val tracee: Tracee
+  }
+
   /**
    * The maximal set of option groups
    *
    * that should always be the greatest upper bound on all combinations of option groups
    */
-  trait HasAll extends HasCheckerPreds
+  trait HasAll extends HasTracee
 
   //////////////////
   // Constructors //
@@ -745,6 +800,31 @@ object OptionGroup extends LazyLogging {
     } yield WithChecker(opts.common, opts.input, opts.output, opts.typechecker, checker)
   }
 
+  case class WithTracee(
+      common: Common,
+      input: Input,
+      output: Output,
+      typechecker: Typechecker,
+      checker: Checker,
+      predicates: Predicates,
+      tracee: Tracee)
+      extends HasTracee
+
+  object WithTracee extends Configurable[Config.ApalacheConfig, WithTracee] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithTracee] = for {
+      opts <- WithCheckerPreds(cfg)
+      tracee <- Tracee(cfg.tracee)
+    } yield WithTracee(
+        opts.common,
+        opts.input,
+        opts.output,
+        opts.typechecker,
+        opts.checker,
+        opts.predicates,
+        tracee,
+    )
+  }
+
   case class WithCheckerPreds(
       common: Common,
       input: Input,
@@ -758,6 +838,13 @@ object OptionGroup extends LazyLogging {
     def apply(cfg: Config.ApalacheConfig): Try[WithCheckerPreds] = for {
       opts <- WithChecker(cfg)
       predicates <- Predicates(cfg.checker)
-    } yield WithCheckerPreds(opts.common, opts.input, opts.output, opts.typechecker, opts.checker, predicates)
+    } yield WithCheckerPreds(
+        opts.common,
+        opts.input,
+        opts.output,
+        opts.typechecker,
+        opts.checker,
+        predicates,
+    )
   }
 }

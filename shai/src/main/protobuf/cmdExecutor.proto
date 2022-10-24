@@ -36,11 +36,22 @@ enum Cmd {
   TYPECHECK = 3;
 }
 
+enum CmdErrorType {
+  PASS_FAILURE = 0;
+  UNEXPECTED = 1;
+}
+
+message CmdError {
+  CmdErrorType errorType = 1;
+  // A JSON encoded string with data useful for understanding the error
+  string data = 2;
+}
+
 message CmdResponse {
   oneof result {
     // A JSON encoded string with data useful on success
     string success = 1;
-    // A JSON encoded string with data useful on error
-    string failure = 2;
+    // Data about the kind of application error resulting from the RPC
+    CmdError failure = 2;
   }
 }

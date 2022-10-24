@@ -96,6 +96,7 @@ object Tool extends LazyLogging {
           new ConfigCmd,
           new ServerCmd,
           new TranspileCmd,
+          new TraceeCmd,
       )
 
     cli match {

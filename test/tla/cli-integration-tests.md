@@ -323,6 +323,21 @@ $ cat output.json | head
 $ rm output.json
 ```
 
+### parse on an ITF file fail with an error
+
+Check that we give an informative error if a user tries to invoke `parse` on a
+`itf.json` file.
+
+```sh
+$ touch foo.itf.json
+$ apalache-mc parse foo.itf.json | sed -e 's/I@.*//' -e 's/E@.*//'
+...
+Parsing error: Parsing the ITF format is not supported
+...
+EXITCODE: ERROR (255)
+$ rm foo.itf.json
+```
+
 ### typecheck --output=output.tla Annotations succeeds
 
 Check that it actually parses into TLA (see #1284)
@@ -2642,6 +2657,16 @@ $ apalache-mc check --inv=Sanity FunExcept3.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check ERC20.tla
+
+```sh
+$ apalache-mc check --length=5 --inv=NoNegativeBalances MC_ERC20.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
@@ -3488,6 +3513,7 @@ $ find ./test-run-dir -type f -exec basename {} \; | ./sort.sh
 12_OutAnalysisPass.json
 12_OutAnalysisPass.tla
 detailed.log
+log0.smt
 run.txt
 $ rm -rf ./test-out-dir ./test-run-dir
 ```
@@ -3500,6 +3526,7 @@ $ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 -
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
 detailed.log
+log0.smt
 MCviolation1.out
 MCviolation.out
 run.txt
@@ -3523,6 +3550,7 @@ $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 $ ls ./configured-run-dir | ./sort.sh
 detailed.log
+log0.smt
 run.txt
 $ rm -rf ./configured-run-dir ./.apalache.cfg
 ```
@@ -3649,6 +3677,7 @@ input {
     }
 }
 output {}
+tracee {}
 typechecker {
     inferpoly=true
 }

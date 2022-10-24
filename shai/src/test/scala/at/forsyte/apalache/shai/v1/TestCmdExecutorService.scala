@@ -8,6 +8,7 @@ import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, PingRequest, Po
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.shai.v1.cmdExecutor.CmdErrorType
 
 // Defines the test cases used to test the CmdExecutor service
 object TestCmdExecutorService extends DefaultRunnableSpec {
@@ -65,20 +66,23 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
         for {
           s <- ZIO.service[CmdExecutorService]
           resp <- s.run(runCmd(Cmd.PARSE, "INVALID SPEC"))
-        } yield assert(resp.result.failure.get)(containsString("No module name found"))
+          msg = resp.result.failure.get.data
+        } yield assert(msg)(containsString("No module name found"))
       },
       testM("rpc with invalid config returns an error") {
         for {
           s <- ZIO.service[CmdExecutorService]
           config = ConfigManager.serialize(Config.ApalacheConfig())
           resp <- s.run(CmdRequest(cmd = Cmd.PARSE, config = config))
-        } yield assert(resp.result.failure.get)(containsString("Missing value for required option input.source"))
+          msg = resp.result.failure.get.data
+        } yield assert(msg)(containsString("Missing value for required option input.source"))
       },
       testM("running check an invalid spec returns an error") {
         for {
           s <- ZIO.service[CmdExecutorService]
           resp <- s.run(runCmd(Cmd.CHECK, trivialSpec))
-        } yield assert(resp.result.failure.get)(containsString("Operator Init not found"))
+          msg = resp.result.failure.get.data
+        } yield assert(msg)(containsString("Operator Init not found"))
       },
       testM("running check on valid spec succeeds") {
         for {
@@ -91,12 +95,13 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
           s <- ZIO.service[CmdExecutorService]
           config = Config.ApalacheConfig(checker = Config.Checker(inv = Some(List("Inv"))))
           resp <- s.run(runCmd(Cmd.CHECK, checkableSpec, cfg = config))
-          json = ujson.read(resp.result.failure.get)
+          err = resp.result.failure.get
+          data = ujson.read(err.data)
         } yield {
-          assert(json("error_type").str)(equalTo("pass_failure"))
-          assert(json("data")("pass_name").str)(equalTo("BoundedChecker"))
-          assert(json("data")("error_data")("checking_result").str)(equalTo("violation"))
-          assert(json("data")("error_data")("counterexamples").arr)(isNonEmpty)
+          assert(err.errorType)(equalTo(CmdErrorType.PASS_FAILURE))
+          assert(data("pass_name").str)(equalTo("BoundedChecker"))
+          assert(data("error_data")("checking_result").str)(equalTo("violation"))
+          assert(data("error_data")("counterexamples").arr)(isNonEmpty)
         }
       },
       testM("typechecking well-typed spec succeeds") {
@@ -109,11 +114,12 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
         for {
           s <- ZIO.service[CmdExecutorService]
           resp <- s.run(runCmd(Cmd.TYPECHECK, illTypedSpec))
-          json = ujson.read(resp.result.failure.get)
+          err = resp.result.failure.get
+          data = ujson.read(err.data)
         } yield {
-          assert(json("error_type").str)(equalTo("pass_failure"))
-          assert(json("data")("pass_name").str)(equalTo("TypeCheckerSnowcat"))
-          assert(json("data")("error_data").arr)(isNonEmpty)
+          assert(err.errorType)(equalTo(CmdErrorType.PASS_FAILURE))
+          assert(data("pass_name").str)(equalTo("TypeCheckerSnowcat"))
+          assert(data("error_data").arr)(isNonEmpty)
         }
       },
   )

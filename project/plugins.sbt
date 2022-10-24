@@ -5,13 +5,13 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
 // https://github.com/marcuslonnberg/sbt-docker
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.9.0")
 // https://github.com/scoverage/sbt-scoverage
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.2")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.6")
 // https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.11.0")
 // https://github.com/sbt/sbt-native-packager
 addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.11")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.2")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.10.4")
 // https://scalapb.github.io/zio-grpc/docs/installation
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 // https://github.com/sbt/sbt-unidoc
