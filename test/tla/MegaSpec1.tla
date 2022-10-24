@@ -6,8 +6,8 @@
 
 EXTENDS Integers, Sequences, FiniteSets, Reals, Apalache
 CONSTANTS
- \* @typeAlias: ELEM = Int;
- \* @type: ELEM;
+ \* @typeAlias: elem = Int;
+ \* @type: $elem;
  N
 
 ASSUME(N > 42)
