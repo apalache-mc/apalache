@@ -92,10 +92,6 @@ class TestUJsonToTlaViaBuilder extends AnyFunSuite with Checkers {
 
   }
 
-  test("Megaspec") {
-    val
-  }
-
   // TODO: Uncomment once generated IRs are well-typed
 //  test("Deserializing a serialized IR produces an equivalent IR") {
 //    val gens: IrGenerators = new IrGenerators {
