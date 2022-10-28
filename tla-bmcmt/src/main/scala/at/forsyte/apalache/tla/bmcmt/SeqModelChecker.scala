@@ -7,9 +7,10 @@ import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, Execut
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
@@ -425,29 +426,32 @@ class SeqModelChecker[ExecutorContextT](
     val stateType = RecT1(checkerInput.rootModule.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
 
     // convert a variable binding to a record
-    def mkRecord(b: Binding): TlaEx = {
-      val ctorArgs = b.toMap.flatMap { case (key, value) =>
-        List(tla.str(key).build, value.toNameEx)
+    def mkRecord(b: Binding): TBuilderInstruction = {
+      val ctorArgs = b.toMap.map { case (key, value) =>
+        (key, tla.name(value.toString, stateType.fieldTypes(key)))
       }
-      OperEx(TlaFunOper.rec, ctorArgs.toList: _*)(Typed(stateType))
+      tla.rec(ctorArgs.toSeq: _*)
     }
 
     // construct a history sequence
     val seqType = SeqT1(stateType)
-    val hist = OperEx(TlaFunOper.tuple, path.map(mkRecord): _*)(Typed(seqType))
+    val hist = tla.seq(path.map(mkRecord): _*)
     // assume that the trace invariant is applied to the history sequence
     notTraceInv match {
       case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
         // LET Call_$param == hist IN notTraceInv(param)
-        val operType = OperT1(Seq(seqType), BoolT1)
+        val operType = OperT1(Seq(), seqType)
         val callName = s"Call_$name"
         // replace param with $callName() in the body
-        val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
+        val app = tla.appOp(tla.name(callName, operType))
         val replacedBody =
           ReplaceFixed(new IdleTracker()).whenMatches({
-                _ == NameEx(name)(Typed(seqType))
+                _ == tla.name(name, seqType).build
               }, app)(body)
-        LetInEx(replacedBody, TlaOperDecl(callName, List(), hist)(Typed(operType)))
+        tla.letIn(
+            tla.unchecked(replacedBody),
+            tla.decl(callName, hist),
+        )
 
       case TlaOperDecl(name, _, _) =>
         throw new MalformedTlaError(s"Expected a one-argument trace invariant, found: $name", notTraceInv.body)
