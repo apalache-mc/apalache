@@ -10,7 +10,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
 import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
