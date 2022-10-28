@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
+import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
@@ -133,7 +134,7 @@ class SeqModelChecker[ExecutorContextT](
 
         case Some(false) =>
           val counterexample = if (trex.sat(0).contains(true)) {
-            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)))
+            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
             notifyOnError(cx, searchState.nFoundErrors)
             logger.error("Found a deadlock.")
             Some(cx)
@@ -281,7 +282,7 @@ class SeqModelChecker[ExecutorContextT](
     if (trex.preparedTransitionNumbers.isEmpty) {
       if (params.checkForDeadlocks) {
         val counterexample = if (trex.sat(0).contains(true)) {
-          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)))
+          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
           notifyOnError(cx, searchState.nFoundErrors)
           logger.error("Found a deadlock.")
           Some(cx)
@@ -427,7 +428,7 @@ class SeqModelChecker[ExecutorContextT](
     // convert a variable binding to a record
     def mkRecord(b: Binding): TlaEx = {
       val ctorArgs = b.toMap.flatMap { case (key, value) =>
-        List(ValEx(TlaStr(key)), value.toNameEx)
+        List(tla.str(key).build, value.toNameEx)
       }
       OperEx(TlaFunOper.rec, ctorArgs.toList: _*)(Typed(stateType))
     }
@@ -478,7 +479,7 @@ class SeqModelChecker[ExecutorContextT](
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1)) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
+      val pathConstraint = tla.bool(true).build :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
   }
