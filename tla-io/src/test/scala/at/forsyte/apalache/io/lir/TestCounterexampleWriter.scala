@@ -1,6 +1,5 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla._
 import org.junit.runner.RunWith
