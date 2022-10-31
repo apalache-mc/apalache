@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs.BuilderExAsUntyped
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla.{fromTlaEx, str}
+import at.forsyte.apalache.tla.types.{tla => typedBuilder}
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.types.ModelValueHandler
@@ -45,7 +46,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
         if (tt == CellTFrom(StrT1)) {
           tla.str(index).typed()
         } else {
-          tla.str(ModelValueHandler.construct(pa)).typed()
+          // Minimal interference change. TODO: Update entire class to typed builder usage.
+          typedBuilder.constParsed(ModelValueHandler.construct(pa)).build
         }
       } else {
         // if not in the cache, it might be the case that another cell, which has asserted equivalence

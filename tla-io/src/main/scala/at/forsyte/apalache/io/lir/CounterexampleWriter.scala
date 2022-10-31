@@ -2,10 +2,10 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.json.impl.TlaToUJson
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction}
+import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.values.TlaBool
+import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
@@ -28,7 +28,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
   def printStateFormula(pretty: PrettyWriter, state: State): Unit =
     if (state.isEmpty) {
-      pretty.write(ValEx(TlaBool(true)))
+      pretty.write(tla.bool(true))
     } else {
       val prefix = if (state.size == 1) "" else "/\\ "
       state.toList.sortBy(_._1).foreach { case (name, value) =>
@@ -46,7 +46,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     states.zipWithIndex.foreach {
       case (state, 0) =>
         pretty.writeComment("Constant initialization state")
-        val decl = tla.declOp("ConstInit", stateToEx(state._2))
+        val decl = tla.decl("ConstInit", stateToEx(state._2))
         pretty.write(decl)
       case (state, j) =>
         // Index 0 is reserved for ConstInit, but users expect State0 to
@@ -57,11 +57,11 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         } else {
           pretty.writeComment(s"Transition ${state._1} to State$i")
         }
-        val decl = tla.declOp(s"State$i", stateToEx(state._2))
+        val decl = tla.decl(s"State$i", stateToEx(state._2))
         pretty.writeWithNameReplacementComment(decl)
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
-    pretty.writeWithNameReplacementComment(TlaOperDecl("InvariantViolation", List(), notInvariant))
+    pretty.writeWithNameReplacementComment(tla.decl("InvariantViolation", tla.unchecked(notInvariant)))
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
@@ -114,11 +114,12 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
         case 0 => "ConstInit"
         case _ => s"State${i - 1}"
       }
-      tla.declOp(name, stateToEx(state._2)).withTag(Untyped)
+      tla.decl(name, stateToEx(state._2))
     }
 
-    val mod =
-      new TlaModule("counterexample", tlaStates ++ List(TlaOperDecl(s"InvariantViolation", List(), notInvariant)))
+    val operDecls = (tlaStates :+ tla.decl("InvariantViolation", tla.unchecked(notInvariant))).map(build)
+
+    val mod = TlaModule("counterexample", operDecls)
 
     // No SourceLocator, since CEs aren't part of the spec
     val jsonText = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer).makeRoot(Seq(mod)).toString
@@ -129,12 +130,12 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
 
 object CounterexampleWriter extends LazyLogging {
 
-  def stateToEx(state: State): TlaEx =
+  def stateToEx(state: State): TBuilderInstruction =
     if (state.isEmpty) {
-      ValEx(TlaBool(true))
+      tla.bool(true)
     } else {
       val namesAndVals = state.toSeq.sortBy(_._1).map { case (name, value) =>
-        tla.eql(tla.name(name), value)
+        tla.eql(tla.name(name, value.typeTag.asTlaType1()), tla.unchecked(value))
       }
       tla.and(namesAndVals: _*)
     }

@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRe
 import at.forsyte.apalache.tla.typecomp.{
   TBuilderContext, TBuilderInstruction, TBuilderInternalState, TBuilderScopeException, TBuilderTypeException,
 }
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
@@ -72,7 +72,10 @@ class JsonToTlaViaBuilder[T <: JsonRepresentation](
       case "TlaStr" =>
         val valField = getOrThrow(json, "value")
         val valStr = scalaFactory.asStr(valField)
-        tla.str(valStr)
+        ModelValueHandler.typeAndIndex(valStr) match {
+          case Some((t, i)) => tla.const(i, t)
+          case None         => tla.str(valStr)
+        }
       case "TlaDecimal" =>
         throw new JsonDeserializationError("TlaDecimal is not supported.")
       case "TlaInt" =>

@@ -1,8 +1,7 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.types.tla._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -13,7 +12,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "tla",
         new TlaModule("test", List()),
-        gt(name("x"), int(1)),
+        gt(name("x", IntT1), int(1)),
         List(
             ("", Map()),
             ("", Map("x" -> int(2))),
@@ -42,7 +41,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "tla",
         new TlaModule("test", List()),
-        gt(name("x"), int(1)),
+        gt(name("x", IntT1), int(1)),
         List(
             ("", Map()),
             ("", Map("x" -> int(0))),
@@ -79,7 +78,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "tla",
         new TlaModule("test", List()),
-        and(gt(name("x"), int(1)), eql(name("y"), int(10))),
+        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))),
         List(
             ("", Map()),
             ("", Map("x" -> int(0), "y" -> int(8))),
@@ -116,7 +115,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "tlc",
         new TlaModule("test", List()),
-        gt(name("x"), int(1)),
+        gt(name("x", IntT1), int(1)),
         List(
             ("", Map()),
             ("", Map("x" -> int(2))),
@@ -143,7 +142,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "tlc",
         new TlaModule("test", List()),
-        gt(name("x"), int(1)),
+        gt(name("x", IntT1), int(1)),
         List(
             ("", Map()),
             ("", Map("x" -> int(0))),
@@ -182,7 +181,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "tlc",
         new TlaModule("test", List()),
-        and(gt(name("x"), int(1)), eql(name("y"), int(10))),
+        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))),
         List(
             ("", Map()),
             ("", Map("x" -> int(0), "y" -> int(8))),
@@ -224,7 +223,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "json",
         new TlaModule("test", List()),
-        gt(name("x"), int(1)),
+        gt(name("x", IntT1), int(1)),
         List(
             ("", Map()),
             ("", Map("x" -> int(2))),
@@ -239,7 +238,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |      "name": "counterexample",
           |      "declarations": [
           |        {
-          |          "type": "Untyped",
+          |          "type": "(() => Bool)",
           |          "kind": "TlaOperDecl",
           |          "name": "ConstInit",
           |          "formalParams": [
@@ -247,7 +246,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "ValEx",
         |            "value": {
         |              "kind": "TlaBool",
@@ -256,7 +255,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
         |          "formalParams": [
@@ -264,22 +263,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -292,7 +291,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
         |          "formalParams": [
@@ -300,17 +299,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "GT",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Int",
         |                "kind": "NameEx",
         |                "name": "x"
         |              },
         |              {
-        |                "type": "Untyped",
+        |                "type": "Int",
         |                "kind": "ValEx",
         |                "value": {
         |                  "kind": "TlaInt",
@@ -331,7 +330,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "json",
         new TlaModule("test", List()),
-        gt(name("x"), int(1)),
+        gt(name("x", IntT1), int(1)),
         List(
             ("", Map()),
             ("", Map("x" -> int(0))),
@@ -348,7 +347,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |      "name": "counterexample",
         |      "declarations": [
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "ConstInit",
         |          "formalParams": [
@@ -356,7 +355,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "ValEx",
         |            "value": {
         |              "kind": "TlaBool",
@@ -365,7 +364,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
         |          "formalParams": [
@@ -373,22 +372,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -401,7 +400,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State1",
         |          "formalParams": [
@@ -409,22 +408,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -437,7 +436,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State2",
         |          "formalParams": [
@@ -445,22 +444,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -473,7 +472,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
         |          "formalParams": [
@@ -481,17 +480,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "GT",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Int",
         |                "kind": "NameEx",
         |                "name": "x"
         |              },
         |              {
-        |                "type": "Untyped",
+        |                "type": "Int",
         |                "kind": "ValEx",
         |                "value": {
         |                  "kind": "TlaInt",
@@ -512,7 +511,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
     compare(
         "json",
         new TlaModule("test", List()),
-        and(gt(name("x"), int(1)), eql(name("y"), int(10))),
+        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))),
         List(
             ("", Map()),
             ("", Map("x" -> int(0), "y" -> int(8))),
@@ -529,7 +528,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |      "name": "counterexample",
         |      "declarations": [
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "ConstInit",
         |          "formalParams": [
@@ -537,7 +536,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "ValEx",
         |            "value": {
         |              "kind": "TlaBool",
@@ -546,7 +545,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
         |          "formalParams": [
@@ -554,22 +553,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -579,17 +578,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |                ]
         |              },
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "y"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -602,7 +601,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State1",
         |          "formalParams": [
@@ -610,22 +609,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -635,17 +634,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |                ]
         |              },
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "y"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -658,7 +657,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State2",
         |          "formalParams": [
@@ -666,22 +665,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -691,17 +690,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |                ]
         |              },
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "y"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -714,7 +713,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          }
         |        },
         |        {
-        |          "type": "Untyped",
+        |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
         |          "formalParams": [
@@ -722,22 +721,22 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          ],
         |          "isRecursive": false,
         |          "body": {
-        |            "type": "Untyped",
+        |            "type": "Bool",
         |            "kind": "OperEx",
         |            "oper": "AND",
         |            "args": [
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "GT",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "x"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
@@ -747,17 +746,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |                ]
         |              },
         |              {
-        |                "type": "Untyped",
+        |                "type": "Bool",
         |                "kind": "OperEx",
         |                "oper": "EQ",
         |                "args": [
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "NameEx",
         |                    "name": "y"
         |                  },
         |                  {
-        |                    "type": "Untyped",
+        |                    "type": "Int",
         |                    "kind": "ValEx",
         |                    "value": {
         |                      "kind": "TlaInt",
