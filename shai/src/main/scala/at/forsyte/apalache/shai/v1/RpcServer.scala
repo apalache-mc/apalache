@@ -11,11 +11,9 @@ import com.typesafe.scalalogging.LazyLogging
  *
  * We extend LazyLogging to give the server process access to the same logger configured for the rest of Apalache.
  */
-object RpcServer extends ServerMain with LazyLogging {
-  override def port: Int = 8822
-
+class RpcServer(override val port: Int) extends ServerMain with LazyLogging {
   override def welcome: ZIO[ZEnv, Throwable, Unit] =
-    console.putStrLn("The Apalache server is running. Press Ctrl-C to stop.")
+    console.putStrLn(s"The Apalache server is running on port ${port}. Press Ctrl-C to stop.")
 
   val createTransExplorerService = for {
     // A thread safe mutable reference to the active connections
@@ -29,4 +27,10 @@ object RpcServer extends ServerMain with LazyLogging {
 
   def services: ServiceList[ZEnv] =
     ServiceList.addM(createTransExplorerService).addM(createCmdExecutorService)
+}
+
+object RpcServer {
+  val DEFAULT_PORT = 8822
+
+  def apply(port: Int = DEFAULT_PORT) = new RpcServer(port)
 }

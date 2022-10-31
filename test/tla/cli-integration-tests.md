@@ -3777,5 +3777,13 @@ up and output its welcome message, before killing it:
 ```sh
 $ apalache-mc server & pid=$! && sleep 3 && kill $pid
 ...
-The Apalache server is running. Press Ctrl-C to stop.
+The Apalache server is running on port 8822. Press Ctrl-C to stop.
+```
+
+### server mode: server can be started at different port
+
+```sh
+$ apalache-mc server --port=8888 & pid=$! && sleep 3 && kill $pid
+...
+The Apalache server is running on port 8888. Press Ctrl-C to stop.
 ```

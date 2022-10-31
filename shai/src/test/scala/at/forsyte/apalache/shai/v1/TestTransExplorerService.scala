@@ -116,5 +116,5 @@ object TransExplorerServiceSpec extends DefaultRunnableSpec {
     // all tests as if they were against the same service this accurately
     // reflects our usage, since only one server instance will ever be running
     // in an Apalache process at a time
-    .provideSomeLayerShared[ZEnv](RpcServer.createTransExplorerService.toLayer)
+    .provideSomeLayerShared[ZEnv](RpcServer().createTransExplorerService.toLayer)
 }
