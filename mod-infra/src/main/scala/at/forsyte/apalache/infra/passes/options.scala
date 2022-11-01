@@ -233,6 +233,19 @@ object Config {
   }
 
   /**
+   * Configuration of the server
+   *
+   * @param port
+   *   the port to serve requests from
+   */
+  case class Server(
+      port: Option[Int] = Some(8822))
+      extends Config[Server] {
+
+    def empty: Server = Generic[Server].from(Generic[Server].to(this).map(emptyPoly))
+  }
+
+  /**
    * The complete configuration
    *
    * Gathers all configuration groups
@@ -243,7 +256,8 @@ object Config {
       output: Output = Output(),
       checker: Checker = Checker(),
       typechecker: Typechecker = Typechecker(),
-      tracee: Tracee = Tracee())
+      tracee: Tracee = Tracee(),
+      server: Server = Server())
       extends Config[ApalacheConfig] {
 
     def empty: ApalacheConfig = Generic[ApalacheConfig].from(Generic[ApalacheConfig].to(this).map(emptyPoly))
@@ -675,6 +689,19 @@ object OptionGroup extends LazyLogging {
     }
   }
 
+  /** Options used to configure the server */
+  case class Server(
+      port: Int)
+      extends OptionGroup
+
+  object Server extends Configurable[Config.Server, Server] {
+    def apply(server: Config.Server): Try[Server] = for {
+      port <- server.port.toTry("server.port")
+    } yield Server(
+        port = port
+    )
+  }
+
   ////////////////
   // Interfaces //
   ////////////////
@@ -683,6 +710,10 @@ object OptionGroup extends LazyLogging {
 
   trait HasCommon extends OptionGroup {
     val common: Common
+  }
+
+  trait HasServer extends HasCommon {
+    val server: Server
   }
 
   trait HasInput extends HasCommon {
@@ -756,6 +787,18 @@ object OptionGroup extends LazyLogging {
       common <- Common(cfg.common)
       output <- Output(cfg.output)
     } yield WithOutput(common, output)
+  }
+
+  case class WithServer(
+      common: Common,
+      server: Server)
+      extends HasServer
+
+  object WithServer extends Configurable[Config.ApalacheConfig, WithServer] {
+    def apply(cfg: Config.ApalacheConfig): Try[WithServer] = for {
+      common <- Common(cfg.common)
+      server <- Server(cfg.server)
+    } yield WithServer(common, server)
   }
 
   case class WithIO(
