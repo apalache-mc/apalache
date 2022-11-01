@@ -3693,6 +3693,9 @@ input {
     }
 }
 output {}
+server {
+    port=8822
+}
 tracee {}
 typechecker {
     inferpoly=true
