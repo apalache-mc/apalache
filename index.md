@@ -2,21 +2,13 @@
 
 <!-- For refdef, see see https://stackoverflow.com/a/31712482/1187277 -->
 {:refdef: style="text-align: center;"}
-!["Apalache Logo"](./logo-apalache.png "Apalache Logo"){: height="100px"}
+!["CoFi Logo"](./logo-cofi.png "CoFi Logo"){: height="100px"}
 {:refdef}
 
 [Features][] • [Installation][] • [Manual][] • [Releases][] • [Chat][] • [Contribute][]
 {: style="font-size: 1.2em; text-align: center;"}
 
-Apalache translates [TLA+][] into the logic supported by SMT solvers such as
-[Microsoft Z3][]. Apalache can check [inductive invariants][] (for fixed or
-bounded parameters) and check safety of bounded executions ([bounded model
-checking][]). To see the list of supported TLA+ constructs, check the supported
-features. In general, Apalache runs under the same assumptions as [TLC][].
-
-To learn more about TLA+, visit [Leslie Lamport's page on TLA+][] and see his
-[video course][]. Also, check out [TLA+ language manual for
-engineers](https://apalache.informal.systems/docs/lang/index.html).
+CoFi is meant as common good intangible (software -> text) infrastructure which aims at becoming the go-to library which people and communities anywhere can access, edit and improve, remix, redistribute to design first, deploy and maintain/grow financial primitives for the benefit of their respective economic networks.
 
 ## Tutorials
 
