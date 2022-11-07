@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.30.1 - 2022-11-07
+
+### Features
+
+- Server port is now configurable via the `--port` CLI argument or `server.port` configuration key (see #2264).
+
 ## 0.30.0 - 2022-10-31
 
 ### Breaking changes
