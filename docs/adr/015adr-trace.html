@@ -172,7 +172,7 @@
                     <main>
                         <h1><a class="header" href="#adr-015-informal-trace-format-in-json" id="adr-015-informal-trace-format-in-json">ADR-015: Informal Trace Format in JSON</a></h1>
 <table><thead><tr><th>authors</th><th>proposed by</th><th align="right">last revised</th></tr></thead><tbody>
-<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2022-06-01</td></tr>
+<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2022-11-03</td></tr>
 </tbody></table>
 <p><strong>Table of Contents</strong></p>
 <ul>
@@ -480,11 +480,29 @@ should not occur in normal traces. Usually, it indicates some form of an
 error.</p>
 </li>
 </ol>
+<h3><a class="header" href="#itf-as-input-to-apalache" id="itf-as-input-to-apalache">ITF as input to Apalache</a></h3>
+<p>To be able to read ITF traces, Apalache demands the following:</p>
+<ul>
+<li>The <code>#meta</code> field must be present</li>
+<li>The <code>#meta</code> field must contain a field <code>varTypes</code>, which is an object, the keys of which are the variables declared in <code>vars</code>, and the values are string representations of their types (as defined in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR002</a>).</li>
+</ul>
+<p>For example:</p>
+<pre><code class="language-js">&quot;#meta&quot;: {
+  &quot;varTypes&quot;: { 
+    &quot;bank_of_boat&quot;: &quot;Str&quot;, 
+    &quot;who_is_on_bank&quot;: &quot;Str -&gt; Set(PERSON)&quot; 
+  }
+}
+</code></pre>
 <h3><a class="header" href="#example" id="example">Example</a></h3>
 <p>The counterexample to <code>NoSolution</code> may be written in the ITF format as follows:</p>
 <pre><code class="language-js">{
   &quot;#meta&quot;: {
-    &quot;source&quot;: &quot;MC_MissionariesAndCannibalsTyped.tla&quot;
+    &quot;source&quot;: &quot;MC_MissionariesAndCannibalsTyped.tla&quot;,
+    &quot;varTypes&quot;: { 
+      &quot;bank_of_boat&quot;: &quot;Str&quot;, 
+      &quot;who_is_on_bank&quot;: &quot;Str -&gt; Set(PERSON)&quot; 
+    }
   },
   &quot;vars&quot;: [ &quot;bank_of_boat&quot;, &quot;who_is_on_bank&quot; ],
   &quot;states&quot;: [
