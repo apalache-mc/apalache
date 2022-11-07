@@ -2,7 +2,7 @@
 
 | authors                                | proposed by                   | last revised    |
 | -------------------------------------- | ----------------------------  | --------------: |
-| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov | 2022-06-01      |
+| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov | 2022-11-03      |
 
 **Table of Contents**
 
@@ -306,6 +306,21 @@ representation>" }`. For instance, the set of all integers is represented with
 should not occur in normal traces. Usually, it indicates some form of an
 error.
 
+### ITF as input to Apalache
+To be able to read ITF traces, Apalache demands the following:
+  - The `#meta` field must be present
+  - The `#meta` field must contain a field `varTypes`, which is an object, the keys of which are the variables declared in `vars`, and the values are string representations of their types (as defined in [ADR002]).
+
+For example:
+```js
+"#meta": {
+  "varTypes": { 
+    "bank_of_boat": "Str", 
+    "who_is_on_bank": "Str -> Set(PERSON)" 
+  }
+}
+```
+
 ### Example
 
 The counterexample to `NoSolution` may be written in the ITF format as follows:
@@ -313,7 +328,11 @@ The counterexample to `NoSolution` may be written in the ITF format as follows:
 ```js
 {
   "#meta": {
-    "source": "MC_MissionariesAndCannibalsTyped.tla"
+    "source": "MC_MissionariesAndCannibalsTyped.tla",
+    "varTypes": { 
+      "bank_of_boat": "Str", 
+      "who_is_on_bank": "Str -> Set(PERSON)" 
+    }
   },
   "vars": [ "bank_of_boat", "who_is_on_bank" ],
   "states": [
@@ -440,6 +459,7 @@ Reserved for the future.
 
 
 [ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
+[ADR002]: https://apalache.informal.systems/docs/adr/002adr-types.html
 [MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [RFC7159]: https://datatracker.ietf.org/doc/html/rfc7159.html
