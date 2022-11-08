@@ -218,7 +218,7 @@ class ItfToTla[T <: JsonRepresentation](
       stateJson.allFieldsOpt match {
         case None => throw new JsonDeserializationError(s"Malformed JSON: Value at $STATES_FIELD is not an object.")
         case Some(varsInState) =>
-          val undeclared = varsInState -- varSet
+          val undeclared = (varsInState -- varSet) - META_FIELD // #meta is the only extra field allowed in states
           if (undeclared.nonEmpty)
             throw new JsonDeserializationError(
                 s"Undeclared variable(s) present in state: ${undeclared.mkString(", ")}.")

@@ -327,4 +327,121 @@ class TestItfToTla extends AnyFunSuite {
 
   }
 
+  test("getTrace") {
+    val noStates = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int")
+              ),
+            ItfToTla.VARS_FIELD -> Arr("x"),
+        )
+    )
+
+    assertThrows[JsonDeserializationError] {
+      itfToTla.getTrace(noStates)
+    }
+
+    val malformedStates = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int")
+              ),
+            ItfToTla.VARS_FIELD -> Arr("x"),
+            ItfToTla.STATES_FIELD -> 2,
+        )
+    )
+
+    assertThrows[JsonDeserializationError] {
+      itfToTla.getTrace(malformedStates)
+    }
+
+    val missingVar = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+              ),
+            ItfToTla.VARS_FIELD -> Arr("x", "y"),
+            ItfToTla.STATES_FIELD -> Arr(
+                Obj(
+                    "x" -> 1
+                )
+            ),
+        )
+    )
+
+    assertThrows[JsonDeserializationError] {
+      itfToTla.getTrace(missingVar)
+    }
+
+    val spuriousVar = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+              ),
+            ItfToTla.VARS_FIELD -> Arr("x", "y"),
+            ItfToTla.STATES_FIELD -> Arr(
+                Obj(
+                    "x" -> 1,
+                    "y" -> "a",
+                    "z" -> true,
+                )
+            ),
+        )
+    )
+
+    assertThrows[JsonDeserializationError] {
+      itfToTla.getTrace(spuriousVar)
+    }
+
+    val correctEmpty = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+              ),
+            ItfToTla.VARS_FIELD -> Arr("x", "y"),
+            ItfToTla.STATES_FIELD -> Arr(),
+        )
+    )
+
+    assert(itfToTla.getTrace(correctEmpty) == IndexedSeq.empty)
+
+    val correctLen2 = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+              ),
+            ItfToTla.VARS_FIELD -> Arr("x", "y"),
+            ItfToTla.STATES_FIELD -> Arr(
+                Obj(
+                    "x" -> 1,
+                    "y" -> "a",
+                ),
+                Obj(
+                    ItfToTla.META_FIELD -> Obj(), // not all states need meta, and any state may have meta
+                    "x" -> 2,
+                    "y" -> "b",
+                ),
+            ),
+        )
+    )
+
+    assert(itfToTla.getTrace(correctLen2) == IndexedSeq(
+        Map(
+            "x" -> tla.int(1).build,
+            "y" -> tla.str("a").build,
+        ),
+        Map(
+            "x" -> tla.int(2).build,
+            "y" -> tla.str("b").build,
+        ),
+    ))
+
+  }
+
 }
