@@ -19,4 +19,11 @@ sealed case class UJsonRep(val value: ujson.Value) extends JsonRepresentation {
     objAsMap <- value.objOpt
     fieldVal <- objAsMap.get(fieldName)
   } yield UJsonRep(fieldVal).asInstanceOf[UJsonRep.this.type]
+
+  override def allFieldsOpt: Option[Set[String]] =
+    value.objOpt.map {
+      // extra toSet because LinkedHashMap.keySet doesn't return the same set type as is required
+      _.keySet.toSet
+    }
+
 }

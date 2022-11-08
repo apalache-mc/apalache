@@ -6,5 +6,5 @@ package at.forsyte.apalache.tla
  */
 package object tracee {
   type State = at.forsyte.apalache.io.lir.State
-  type Trace = IndexedSeq[State]
+  type Trace = at.forsyte.apalache.io.lir.Trace
 }
