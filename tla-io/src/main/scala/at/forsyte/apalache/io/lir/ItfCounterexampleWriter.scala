@@ -71,8 +71,7 @@ object ItfCounterexampleWriter {
       )
 
       varTypes ++ descriptions ++
-        (if (NameReplacementMap.store.isEmpty) Map.empty
-         else Map("variables-to-expressions" -> NameReplacementMap.store))
+        Option.when(NameReplacementMap.store.isEmpty)("variables-to-expressions" -> NameReplacementMap.store)
     }
 
     rootMap.put("#meta",
