@@ -3,15 +3,12 @@ package at.forsyte.apalache.tla.tooling.opt
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt.config.ReTLAToVMTModule
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
-import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 
 class TranspileCmd extends AbstractCheckerCmd(name = "transpile", description = "Transpile and quit") {
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
-
+  override def toConfig() = super.toConfig().map { cfg =>
     cfg.copy(typechecker = cfg.typechecker.copy(inferpoly = Some(true)))
   }
 

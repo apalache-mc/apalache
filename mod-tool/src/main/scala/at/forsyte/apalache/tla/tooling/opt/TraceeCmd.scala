@@ -29,9 +29,8 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
 
   private val traceReader = new UJsonTraceReader(None, DefaultTagReader)
 
-  private def getLenFromFile(file: File): Int = {
-    val fileSrc = FileSource(file)
-    val ujson = traceReader.read(fileSrc)
+  private def getLenFromFile(src: SourceOption): Int = {
+    val ujson = traceReader.read(src)
     traceReader.getTraceLength(ujson)
   }
 
@@ -44,23 +43,13 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
         s"$i->${i - 1}"
       }).mkString("|")
 
-  // Can't pass tuning via flags
-  override def collectTuningOptions(): Map[String, String] = {
-    val txFilter = tuningRegexFromLength(getLenFromFile(trace))
-
-    Map(
-        "search.outputTraces" -> "true",
-        "search.transitionFilter" -> txFilter,
-    )
-  }
-
   override def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithTracee(cfg).get
 
     // The execution length is read from the input and is 1 shorter than the trace length,
     // because the trace contains the initial state.
-    val executionLength = getLenFromFile(trace) - 1
+    val executionLength = getLenFromFile(options.input.source) - 1
 
     val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = executionLength))
     PassChainExecutor.run(new TraceeModule(lenAdjustedOpt)) match {
@@ -69,14 +58,19 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     }
   }
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
-    cfg.copy(
-        tracee = cfg.tracee.copy(
-            trace = Some(FileSource(trace)),
-            expressions = Some(expressions),
-        )
-    )
-  }
+  override def toConfig() = for {
+    cfg <- super.toConfig()
+    src <- FileSource(trace)
+    tuning = Some(Map(
+            "search.outputTraces" -> "true",
+            "search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)),
+        ))
+  } yield cfg.copy(
+      checker = cfg.checker.copy(tuning = tuning),
+      tracee = cfg.tracee.copy(
+          trace = Some(src),
+          expressions = Some(expressions),
+      ),
+  )
 
 }

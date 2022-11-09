@@ -6,6 +6,7 @@ import java.io.File
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.SourceOption
+import scala.util.Try
 
 // Holds the minimal necessary info about a specification.
 abstract class AbstractCheckerCmd(val name: String, description: String)
@@ -30,19 +31,20 @@ abstract class AbstractCheckerCmd(val name: String, description: String)
   var length: Option[Int] =
     opt[Option[Int]](name = "length", default = None, description = "maximal number of Next steps, default: 10")
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
-    cfg.copy(
-        input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
-        checker = cfg.checker.copy(
-            config = config,
-            cinit = cinit,
-            init = init,
-            next = next,
-            inv = inv,
-            temporalProps = temporal,
-            length = length,
-        ),
-    )
-  }
+  override def toConfig(): Try[Config.ApalacheConfig] = for {
+    cfg <- super.toConfig()
+    fileSource <- SourceOption.FileSource(file)
+  } yield cfg.copy(
+      input = cfg.input.copy(source = Some(fileSource)),
+      checker = cfg.checker.copy(
+          config = config,
+          cinit = cinit,
+          init = init,
+          next = next,
+          inv = inv,
+          temporalProps = temporal,
+          length = length,
+      ),
+  )
+
 }

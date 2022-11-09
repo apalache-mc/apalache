@@ -5,7 +5,6 @@ import org.backuity.clist._
 import java.io.File
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
@@ -32,33 +31,32 @@ class TestCmd
       description = "the name of an operator that initializes CONSTANTS,\n" +
         "default: None")
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
+  override def toConfig() = for {
+    cfg <- super.toConfig()
+    input <- SourceOption.FileSource(file).map(src => cfg.input.copy(source = Some(src)))
 
     // Tune for testing:
     //   1. Check the invariant only after the action took place.
     //   2. Randomize
-    val seed = Math.abs(System.currentTimeMillis().toInt)
-
-    cfg.copy(
-        input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
-        checker = cfg.checker.copy(
-            tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
-            init = Some(before),
-            next = Some(action),
-            inv = Some(List(assertion)),
-            cinit = cinit,
-            nworkers = Some(1),
-            length = Some(1),
-            discardDisabled = Some(false),
-            noDeadlocks = Some(false),
-            algo = Some(Algorithm.Offline),
-        ),
-        typechecker = cfg.typechecker.copy(
-            inferpoly = Some(true)
-        ),
-    )
-  }
+    seed = Math.abs(System.currentTimeMillis().toInt)
+  } yield cfg.copy(
+      input = input,
+      checker = cfg.checker.copy(
+          tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
+          init = Some(before),
+          next = Some(action),
+          inv = Some(List(assertion)),
+          cinit = cinit,
+          nworkers = Some(1),
+          length = Some(1),
+          discardDisabled = Some(false),
+          noDeadlocks = Some(false),
+          algo = Some(Algorithm.Offline),
+      ),
+      typechecker = cfg.typechecker.copy(
+          inferpoly = Some(true)
+      ),
+  )
 
   def run() = {
     val cfg = configuration.get

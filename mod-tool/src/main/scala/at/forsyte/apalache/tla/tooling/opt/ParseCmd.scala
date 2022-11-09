@@ -21,11 +21,10 @@ class ParseCmd
   var output: Option[File] = opt[Option[File]](name = "output",
       description = "file to which the parsed source is written (.tla or .json), default: None")
 
-  override def toConfig() = {
-    val cfg = super.toConfig()
-    cfg.copy(input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
-        output = cfg.output.copy(output = output))
-  }
+  override def toConfig() = for {
+    cfg <- super.toConfig()
+    input <- SourceOption.FileSource(file).map(src => cfg.input.copy(source = Some(src)))
+  } yield cfg.copy(input = input, output = cfg.output.copy(output = output))
 
   def run() = {
     val cfg = configuration.get
