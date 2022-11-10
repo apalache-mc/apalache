@@ -21,7 +21,7 @@ addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 val zioGrpcVersion = "0.5.2"
 libraryDependencies ++= Seq(
     "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % zioGrpcVersion,
-    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.11",
+    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.12",
 )
 
 // Add the locally defined plugins
