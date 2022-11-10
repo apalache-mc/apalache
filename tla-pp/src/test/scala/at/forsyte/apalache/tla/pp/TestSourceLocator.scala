@@ -126,10 +126,12 @@ class TestSourceLocator extends AnyFunSuite {
   val sourceMap: SourceMap =
     ((exs.map(allUidsBelow) ++ decls.map(_.body).map(allUidsBelow))
           .foldLeft(Set.empty[UID]) {
-        _ ++ _
-      }.map { x =>
-      x -> generateLoc(x)
-    }).toMap
+            _ ++ _
+          }
+          .map { x =>
+            x -> generateLoc(x)
+          })
+      .toMap
 
   val exMap = new mutable.HashMap[UID, TlaEx]()
 
