@@ -534,8 +534,8 @@ class PrettyWriter(
   def toCommentDoc(decl: TlaDecl): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
-          NameReplacementMap.store.getOrElse(x, x)
-        }))
+              NameReplacementMap.store.getOrElse(x, x)
+            }))
   }
 
   def declToDoc(decl: TlaDecl, nameResolver: String => String = (x: String) => x): Doc = {
