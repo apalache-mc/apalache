@@ -58,16 +58,20 @@ object ItfCounterexampleWriter {
     val rootMap: mutable.LinkedHashMap[String, ujson.Value] = mutable.LinkedHashMap()
 
     val metaInformation: Map[String, ujson.Value] = {
+      val varTypes = Map[String, ujson.Value](
+          "varTypes" -> ujson.Obj.from(
+              rootModule.varDeclarations.map { varDecl =>
+                varDecl.name -> TlaType1.fromTypeTag(varDecl.typeTag).toString
+              }
+          )
+      )
       val descriptions = Map[String, ujson.Value](
           "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
           "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
       )
 
-      (if (NameReplacementMap.store.isEmpty)
-         descriptions
-       else
-         descriptions ++
-           Map("variables-to-expressions" -> NameReplacementMap.store))
+      varTypes ++ descriptions ++
+        Option.when(NameReplacementMap.store.nonEmpty)("variables-to-expressions" -> NameReplacementMap.store)
     }
 
     rootMap.put("#meta",
