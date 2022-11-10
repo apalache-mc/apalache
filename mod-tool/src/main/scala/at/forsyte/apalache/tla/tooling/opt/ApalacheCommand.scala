@@ -54,7 +54,7 @@ abstract class ApalacheCommand(name: String, description: String)
    * Any configuration values that determine program behavior outside of the class implementing the command line praser
    * instance should be communicated through the derived `ApalacheConfig`.
    */
-  def toConfig(): Config.ApalacheConfig = {
+  def toConfig(): Try[Config.ApalacheConfig] = {
     logger.info("Loading configuration")
 
     // We start with an *empty* base config, so that any values which are *not*
@@ -63,17 +63,17 @@ abstract class ApalacheCommand(name: String, description: String)
     // still letting other config values that are not overriden to propagate
     // through.
     val cfg = Config.ApalacheConfig().empty
-    cfg.copy(common = cfg.common.copy(
-        command = Some(name),
-        configFile = configFile,
-        debug = debug,
-        smtprof = smtprof,
-        profiling = profiling,
-        outDir = outDir,
-        runDir = runDir,
-        writeIntermediate = writeIntermediate,
-        features = features,
-    ))
+    Try(cfg.copy(common = cfg.common.copy(
+            command = Some(name),
+            configFile = configFile,
+            debug = debug,
+            smtprof = smtprof,
+            profiling = profiling,
+            outDir = outDir,
+            runDir = runDir,
+            writeIntermediate = writeIntermediate,
+            features = features,
+        )))
   }
 
   /**
@@ -173,6 +173,6 @@ abstract class ApalacheCommand(name: String, description: String)
 
     // Load configuration and merge in cli config
     // This must be invoked after we parse the CLI args
-    _configure = ConfigManager(this.toConfig())
+    _configure = this.toConfig().flatMap(ConfigManager(_))
   }
 }

@@ -16,6 +16,7 @@ import org.apache.commons.io.FilenameUtils
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.infra.passes.options.Algorithm
+import scala.util.Try
 
 /**
  * This command initiates the 'check' command line.
@@ -70,29 +71,35 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     opt[Boolean](name = "output-traces", description = "save an example trace for each symbolic run, default: false",
         default = false)
 
-  def collectTuningOptions(): Map[String, String] = {
-    val tuning = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
-    overrideProperties(tuning, tuningOptions.getOrElse("")) ++ Map("search.outputTraces" -> saveRuns.toString)
+  override def toConfig(): Try[Config.ApalacheConfig] = {
+    val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
+    val combinedTuningOptions = overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ Map(
+        "search.outputTraces" -> saveRuns.toString)
+
+    super.toConfig().map { cfg =>
+      val newCfg = cfg.copy(
+          checker = cfg.checker.copy(
+              nworkers = nworkers,
+              algo = algo,
+              smtEncoding = smtEncoding,
+              tuning = Some(combinedTuningOptions),
+              discardDisabled = discardDisabled,
+              noDeadlocks = noDeadlocks,
+              maxError = maxError,
+              view = view,
+          ),
+          typechecker = cfg.typechecker.copy(
+              inferpoly = Some(true)
+          ),
+      )
+
+      warnIfTLCConfigIsPresent(newCfg)
+
+      newCfg
+    }
   }
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
-    val newCfg = cfg.copy(
-        checker = cfg.checker.copy(
-            nworkers = nworkers,
-            algo = algo,
-            smtEncoding = smtEncoding,
-            tuning = Some(collectTuningOptions()),
-            discardDisabled = discardDisabled,
-            noDeadlocks = noDeadlocks,
-            maxError = maxError,
-            view = view,
-        ),
-        typechecker = cfg.typechecker.copy(
-            inferpoly = Some(true)
-        ),
-    )
-
+  private def warnIfTLCConfigIsPresent(cfg: Config.ApalacheConfig): Unit = {
     // The older versions of apalache were loading a TLC config file of
     // the same basename as the spec by default. We have flipped this
     // behavior in version 0.25.0. Hence, warn the user that their config
@@ -100,7 +107,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     cfg.input.source.foreach {
       // The check is only relevant for TLA files
       case SourceOption.FileSource(file, SourceOption.Format.Tla) =>
-        if (newCfg.checker.config.isEmpty) {
+        if (cfg.checker.config.isEmpty) {
           val stem = FilenameUtils.removeExtension(file.getName())
           val defaultConfig = new File(stem + ".cfg")
           if (defaultConfig.exists()) {
@@ -112,7 +119,6 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       case _ => ()
     }
 
-    newCfg
   }
 
   def run() = {

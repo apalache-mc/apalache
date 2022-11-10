@@ -177,6 +177,23 @@ Cannot find source file for module
 EXITCODE: ERROR (255)
 ```
 
+## error handling for invalid file formats
+
+Ensure we give a proper user error if invalid file format extension is given in
+input. See https://github.com/informalsystems/apalache/issues/2175 .
+
+```sh
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd f.badext 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "Configuration error: Unsupported file format badext"; done
+Configuration error: Unsupported file format badext
+EXITCODE: ERROR (255)
+Configuration error: Unsupported file format badext
+EXITCODE: ERROR (255)
+Configuration error: Unsupported file format badext
+EXITCODE: ERROR (255)
+Configuration error: Unsupported file format badext
+EXITCODE: ERROR (255)
+```
+
 ## running the parse command
 
 This command parses a TLA+ specification with the SANY parser.

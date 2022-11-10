@@ -310,15 +310,16 @@ object SourceOption {
       FilenameUtils.isExtension(FilenameUtils.removeExtension(fname), "itf")
 
     /** Create a FileSource from a file, deriving the format from the file's extension */
-    def apply(file: java.io.File): FileSource = {
+    def apply(file: java.io.File): Try[FileSource] = {
       val fname = file.getName()
-      val format = FilenameUtils.getExtension(fname) match {
-        case "tla"                               => Format.Tla
-        case "json" if hasItfSubExtension(fname) => Format.Itf
-        case "json"                              => Format.Json
-        case unknown                             => throw new PassOptionException(s"Unsupported file format ${unknown}")
-      }
-      new FileSource(file, format)
+      for {
+        format <- FilenameUtils.getExtension(fname) match {
+          case "tla"                               => Success(Format.Tla)
+          case "json" if hasItfSubExtension(fname) => Success(Format.Itf)
+          case "json"                              => Success(Format.Json)
+          case unknown => Failure(new PassOptionException(s"Unsupported file format ${unknown}"))
+        }
+      } yield new FileSource(file, format)
     }
   }
 
