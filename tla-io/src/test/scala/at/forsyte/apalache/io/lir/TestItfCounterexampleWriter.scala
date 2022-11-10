@@ -33,7 +33,6 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
 
   import scala.language.implicitConversions
 
-  implicit private def fromInt(i: Int): AbstractAccess = ArrayAccess(i)
   implicit private def fromStr(s: String): AbstractAccess = ObjectAccess(s)
 
   // Attempts to access a ujson Value, by means of either an array-index or object-key.
