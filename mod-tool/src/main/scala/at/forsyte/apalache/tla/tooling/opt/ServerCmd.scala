@@ -14,9 +14,10 @@ class ServerCmd
   var port = opt[Option[Int]](description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)",
       useEnv = true)
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
-    cfg.copy(server = Config.Server(port))
+  override def toConfig() = {
+    super.toConfig().map { cfg =>
+      cfg.copy(server = Config.Server(port))
+    }
   }
 
   def run() = {

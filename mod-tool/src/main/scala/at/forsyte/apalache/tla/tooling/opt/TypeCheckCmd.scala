@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.tooling.opt
 import java.io.File
 import org.backuity.clist._
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.PassChainExecutor
@@ -24,14 +23,15 @@ class TypeCheckCmd
   var output: Option[File] = opt[Option[File]](name = "output",
       description = "file to which the typechecked source is written (.tla or .json), default: None")
 
-  override def toConfig(): Config.ApalacheConfig = {
-    val cfg = super.toConfig()
-    cfg.copy(
-        input = cfg.input.copy(source = Some(SourceOption.FileSource(file))),
-        output = cfg.output.copy(output = output),
-        typechecker = cfg.typechecker.copy(inferpoly = inferPoly),
-    )
-  }
+  override def toConfig() = for {
+    cfg <- super.toConfig()
+    input <- SourceOption.FileSource(file).map(src => cfg.input.copy(source = Some(src)))
+  } yield cfg.copy(
+      input = input,
+      output = cfg.output.copy(output = output),
+      typechecker = cfg.typechecker.copy(inferpoly = inferPoly),
+  )
+
   override def run() = {
     val cfg = configuration.get
     val options = OptionGroup.WithTypechecker(cfg).get
