@@ -39,7 +39,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
   // Returns None when accessing a non-array by array index or a non-object by key, or if
   // the specified index/key does not exist.
   private def tryAccess(v: Value, access: AbstractAccess): Option[Value] = access match {
-    case ArrayAccess(i)  => v.arrOpt.flatMap(arr => Option.when(arr.isDefinedAt(i))(arr(i)))
+    case ArrayAccess(i)  => v.arrOpt.flatMap(arr => arr.lift(i))
     case ObjectAccess(s) => v.objOpt.flatMap(_.get(s))
   }
 
