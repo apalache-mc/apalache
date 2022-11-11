@@ -1,6 +1,5 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
@@ -18,13 +17,27 @@ class TestItfToTla extends AnyFunSuite {
   test("validateShapeAndGetTypes") {
 
     val empty = UJsonRep(Obj())
-    assertThrows[JsonDeserializationError] {
-      itfToTla.validateShapeAndGetTypes(empty)
+    assert {
+      itfToTla.validateShapeAndGetTypes(empty).isLeft
     }
 
     val metaEmpty = UJsonRep(Obj(ItfToTla.META_FIELD -> Obj()))
-    assertThrows[JsonDeserializationError] {
-      itfToTla.validateShapeAndGetTypes(metaEmpty)
+    assert {
+      itfToTla.validateShapeAndGetTypes(metaEmpty).isLeft
+    }
+
+    val typesNotObj = UJsonRep(
+        Obj(
+            ItfToTla.META_FIELD ->
+              Obj(
+                  ItfToTla.VAR_TYPES_FIELD -> 42
+              ),
+            ItfToTla.VARS_FIELD -> Arr(),
+        )
+    )
+
+    assert {
+      itfToTla.validateShapeAndGetTypes(typesNotObj).isLeft
     }
 
     val noVars = UJsonRep(
@@ -41,8 +54,8 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.validateShapeAndGetTypes(noVars)
+    assert {
+      itfToTla.validateShapeAndGetTypes(noVars).isLeft
     }
 
     val noTypes = UJsonRep(
@@ -55,8 +68,8 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.validateShapeAndGetTypes(noTypes)
+    assert {
+      itfToTla.validateShapeAndGetTypes(noTypes).isLeft
     }
 
     val correct = UJsonRep(
@@ -73,13 +86,16 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assert(
-        itfToTla.validateShapeAndGetTypes(correct) ==
-          Map(
-              "x" -> IntT1,
-              "y" -> FunT1(StrT1, BoolT1),
-          )
-    )
+    assert {
+      itfToTla
+        .validateShapeAndGetTypes(correct)
+        .contains(
+            Map(
+                "x" -> IntT1,
+                "y" -> FunT1(StrT1, BoolT1),
+            )
+        )
+    }
 
   }
 
@@ -97,20 +113,20 @@ class TestItfToTla extends AnyFunSuite {
 
     val bogusUS = singleUS("") // illegal identifier
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.attemptUnserializable(bogusUS)
+    assert {
+      itfToTla.attemptUnserializable(bogusUS).exists(_.isLeft)
     }
 
     val int = singleUS("Int")
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.attemptUnserializable(int)
+    assert {
+      itfToTla.attemptUnserializable(int).exists(_.isLeft)
     }
 
     val nat = singleUS("Nat")
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.attemptUnserializable(nat)
+    assert {
+      itfToTla.attemptUnserializable(nat).exists(_.isLeft)
     }
   }
 
@@ -120,96 +136,99 @@ class TestItfToTla extends AnyFunSuite {
 
     val tru = UJsonRep(Bool(true))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(tru, IntT1)
+    assert {
+      itfToTla.typeDrivenBuild(tru, IntT1).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(tru, BoolT1).build == tla.bool(true).build)
+    assert(itfToTla.typeDrivenBuild(tru, BoolT1).map(_.build).contains(tla.bool(true).build))
 
     // case StrT1 =>
 
     val cake = UJsonRep(Str("cake"))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(cake, IntT1)
+    assert {
+      itfToTla.typeDrivenBuild(cake, IntT1).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(cake, ConstT1("X"))
+    assert {
+      itfToTla.typeDrivenBuild(cake, ConstT1("X")).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(cake, StrT1).build == tla.str("cake").build)
+    assert(itfToTla.typeDrivenBuild(cake, StrT1).map(_.build).contains(tla.str("cake").build))
 
     // case ct: ConstT1 =>
 
     val oneOfA = UJsonRep(Str("1_OF_A"))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(oneOfA, StrT1)
+    assert {
+      itfToTla.typeDrivenBuild(oneOfA, StrT1).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(oneOfA, ConstT1("B"))
+    assert {
+      itfToTla.typeDrivenBuild(oneOfA, ConstT1("B")).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(oneOfA, ConstT1("A")).build == tla.const("1", ConstT1("A")).build)
+    assert(itfToTla.typeDrivenBuild(oneOfA, ConstT1("A")).map(_.build).contains(tla.const("1", ConstT1("A")).build))
 
     // case IntT1 =>
 
     val one = UJsonRep(Num(1))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(one, StrT1)
+    assert {
+      itfToTla.typeDrivenBuild(one, StrT1).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(one, IntT1).build == tla.int(1).build)
+    assert(itfToTla.typeDrivenBuild(one, IntT1).map(_.build).contains(tla.int(1).build))
 
     val bigOne = UJsonRep(Obj(ItfToTla.BIG_INT_FIELD -> "1"))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(bigOne, StrT1)
+    assert {
+      itfToTla.typeDrivenBuild(bigOne, StrT1).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(bigOne, IntT1).build == tla.int(1).build)
+    assert(itfToTla.typeDrivenBuild(bigOne, IntT1).map(_.build).contains(tla.int(1).build))
 
     // case SeqT1(elemT) =>
 
     val emptySeq = UJsonRep(Arr())
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(emptySeq, FunT1(IntT1, IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(emptySeq, FunT1(IntT1, IntT1)).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(emptySeq, SeqT1(IntT1)).build == tla.emptySeq(IntT1).build)
-    assert(itfToTla.typeDrivenBuild(emptySeq, SeqT1(StrT1)).build == tla.emptySeq(StrT1).build)
+    assert(itfToTla.typeDrivenBuild(emptySeq, SeqT1(IntT1)).map(_.build).contains(tla.emptySeq(IntT1).build))
+    assert(itfToTla.typeDrivenBuild(emptySeq, SeqT1(StrT1)).map(_.build).contains(tla.emptySeq(StrT1).build))
 
     val tt = FunT1(RecT1("x" -> SetT1(BoolT1)), SeqT1(TupT1(ConstT1("X"))))
-    assert(itfToTla.typeDrivenBuild(emptySeq, SeqT1(tt)).build == tla.emptySeq(tt).build)
+    assert(itfToTla.typeDrivenBuild(emptySeq, SeqT1(tt)).map(_.build).contains(tla.emptySeq(tt).build))
 
     val oneTwoThree = UJsonRep(Arr(1, 2, 3))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(oneTwoThree, FunT1(IntT1, IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(oneTwoThree, FunT1(IntT1, IntT1)).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(oneTwoThree, SeqT1(IntT1)).build == tla
-      .seq(Seq[BigInt](1, 2, 3).map(tla.int): _*)
-      .build)
+    assert(itfToTla
+          .typeDrivenBuild(oneTwoThree, SeqT1(IntT1))
+          .map(_.build)
+          .contains(tla
+                .seq(Seq[BigInt](1, 2, 3).map(tla.int): _*)
+                .build))
 
     // case RecT1(fieldTypes) =>
 
     val emptyRec = UJsonRep(Obj())
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(emptyRec, RecT1())
+    assert {
+      itfToTla.typeDrivenBuild(emptyRec, RecT1()).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(emptyRec, RecT1("x" -> IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(emptyRec, RecT1("x" -> IntT1)).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(emptyRec, SeqT1(IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(emptyRec, SeqT1(IntT1)).isLeft
     }
 
     val xyRec = UJsonRep(
@@ -220,24 +239,27 @@ class TestItfToTla extends AnyFunSuite {
     )
     val xyRecT = RecT1("x" -> IntT1, "y" -> StrT1)
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(xyRec, IntT1)
+    assert {
+      itfToTla.typeDrivenBuild(xyRec, IntT1).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(xyRec, RecT1())
+    assert {
+      itfToTla.typeDrivenBuild(xyRec, RecT1()).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(xyRec, RecT1("x" -> IntT1, "y" -> StrT1, "z" -> IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(xyRec, RecT1("x" -> IntT1, "y" -> StrT1, "z" -> IntT1)).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(xyRec, xyRecT).build == tla
-      .rec(
-          "x" -> tla.int(1),
-          "y" -> tla.str("abc"),
-      )
-      .build)
+    assert(itfToTla
+          .typeDrivenBuild(xyRec, xyRecT)
+          .map(_.build)
+          .contains(tla
+                .rec(
+                    "x" -> tla.int(1),
+                    "y" -> tla.str("abc"),
+                )
+                .build))
 
     // case TupT1(elems @ _*) =>
 
@@ -250,23 +272,23 @@ class TestItfToTla extends AnyFunSuite {
 
     val tupT = TupT1(IntT1, StrT1)
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(one, tupT)
+    assert {
+      itfToTla.typeDrivenBuild(one, tupT).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(tupOneA, SetT1(IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(tupOneA, SetT1(IntT1)).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(tupOneA, TupT1())
+    assert {
+      itfToTla.typeDrivenBuild(tupOneA, TupT1()).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(tupOneA, TupT1(IntT1, StrT1, BoolT1))
+    assert {
+      itfToTla.typeDrivenBuild(tupOneA, TupT1(IntT1, StrT1, BoolT1)).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(tupOneA, tupT).build == tla.tuple(tla.int(1), tla.str("A")).build)
+    assert(itfToTla.typeDrivenBuild(tupOneA, tupT).map(_.build).contains(tla.tuple(tla.int(1), tla.str("A")).build))
 
     // case SetT1(elemT) =>
 
@@ -274,23 +296,26 @@ class TestItfToTla extends AnyFunSuite {
 
     val setT = SetT1(BoolT1)
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(one, setT)
+    assert {
+      itfToTla.typeDrivenBuild(one, setT).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(emptySet, IntT1)
+    assert {
+      itfToTla.typeDrivenBuild(emptySet, IntT1).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(emptySet, setT).build == tla.emptySet(setT.elem).build)
+    assert(itfToTla.typeDrivenBuild(emptySet, setT).map(_.build).contains(tla.emptySet(setT.elem).build))
 
     val boolSet = UJsonRep(Obj(ItfToTla.SET_FIELD -> Arr(true, false)))
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(boolSet, SetT1(IntT1))
+    assert {
+      itfToTla.typeDrivenBuild(boolSet, SetT1(IntT1)).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(boolSet, setT).build == tla.enumSet(tla.bool(true), tla.bool(false)).build)
+    assert(itfToTla
+          .typeDrivenBuild(boolSet, setT)
+          .map(_.build)
+          .contains(tla.enumSet(tla.bool(true), tla.bool(false)).build))
 
     // case FunT1(argT, resT) =>
 
@@ -298,32 +323,38 @@ class TestItfToTla extends AnyFunSuite {
 
     val funT = FunT1(IntT1, IntT1)
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(one, funT)
+    assert {
+      itfToTla.typeDrivenBuild(one, funT).isLeft
     }
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(emptyFun, IntT1)
+    assert {
+      itfToTla.typeDrivenBuild(emptyFun, IntT1).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(emptyFun, funT).build == tla
-      .setAsFun(tla.emptySet(TupT1(funT.arg, funT.res)))
-      .build)
+    assert(itfToTla
+          .typeDrivenBuild(emptyFun, funT)
+          .map(_.build)
+          .contains(tla
+                .setAsFun(tla.emptySet(TupT1(funT.arg, funT.res)))
+                .build))
 
     val id12 = UJsonRep(
         Obj(ItfToTla.MAP_FIELD ->
           Arr(Arr(1, 1), Arr(2, 2)))
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.typeDrivenBuild(id12, FunT1(IntT1, StrT1))
+    assert {
+      itfToTla.typeDrivenBuild(id12, FunT1(IntT1, StrT1)).isLeft
     }
 
-    assert(itfToTla.typeDrivenBuild(id12, funT).build == tla
-      .setAsFun(tla.enumSet(
-              Seq(1, 2).map { i => tla.tuple(tla.int(i), tla.int(i)) }: _*
-          ))
-      .build)
+    assert(itfToTla
+          .typeDrivenBuild(id12, funT)
+          .map(_.build)
+          .contains(tla
+                .setAsFun(tla.enumSet(
+                        Seq(1, 2).map { i => tla.tuple(tla.int(i), tla.int(i)) }: _*
+                    ))
+                .build))
 
   }
 
@@ -338,8 +369,8 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.getTrace(noStates)
+    assert {
+      itfToTla.getTrace(noStates).isLeft
     }
 
     val malformedStates = UJsonRep(
@@ -353,8 +384,8 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.getTrace(malformedStates)
+    assert {
+      itfToTla.getTrace(malformedStates).isLeft
     }
 
     val missingVar = UJsonRep(
@@ -372,8 +403,8 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.getTrace(missingVar)
+    assert {
+      itfToTla.getTrace(missingVar).isLeft
     }
 
     val spuriousVar = UJsonRep(
@@ -393,8 +424,8 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assertThrows[JsonDeserializationError] {
-      itfToTla.getTrace(spuriousVar)
+    assert {
+      itfToTla.getTrace(spuriousVar).isLeft
     }
 
     val correctEmpty = UJsonRep(
@@ -408,7 +439,7 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assert(itfToTla.getTrace(correctEmpty) == IndexedSeq.empty)
+    assert(itfToTla.getTrace(correctEmpty).contains(IndexedSeq.empty))
 
     val correctLen2 = UJsonRep(
         Obj(
@@ -431,16 +462,18 @@ class TestItfToTla extends AnyFunSuite {
         )
     )
 
-    assert(itfToTla.getTrace(correctLen2) == IndexedSeq(
-        Map(
-            "x" -> tla.int(1).build,
-            "y" -> tla.str("a").build,
-        ),
-        Map(
-            "x" -> tla.int(2).build,
-            "y" -> tla.str("b").build,
-        ),
-    ))
+    assert(itfToTla
+          .getTrace(correctLen2)
+          .contains(IndexedSeq(
+                  Map(
+                      "x" -> tla.int(1).build,
+                      "y" -> tla.str("a").build,
+                  ),
+                  Map(
+                      "x" -> tla.int(2).build,
+                      "y" -> tla.str("b").build,
+                  ),
+              )))
 
   }
 

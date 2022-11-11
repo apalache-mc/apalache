@@ -1,17 +1,16 @@
 package at.forsyte.apalache.tla.tracee
 
 import at.forsyte.apalache.infra.passes.options.SourceOption
-import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
-import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.infra.passes.options.SourceOption._
+import at.forsyte.apalache.io.itf.ItfToTla
 import at.forsyte.apalache.io.json.JsonDeserializationError
+import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.tracee.TraceReader.{ApalacheJson, ITFJson, TraceJson}
 
-import scala.annotation.unused
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -28,6 +27,7 @@ import scala.util.{Failure, Success, Try}
  */
 class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagReader) extends TraceReader[UJsonRep] {
   private val builder = new UJsonToTlaViaBuilder(sourceStoreOpt)(tagReader)
+  private val itfToTla = new ItfToTla[UJsonRep](UJsonScalaFactory)
 
   type TraceUJson = TraceJson[UJsonRep]
 
@@ -61,9 +61,10 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
       throw new JsonDeserializationError(s"Provided JSON does not comply with the ITF format.")
     }
 
-  // TODO
-  private def convertITF(@unused json: UJsonRep): Trace =
-    throw new NotImplementedError("convertITF not implemented yet.")
+  private def convertITF(json: UJsonRep): Trace = itfToTla.getTrace(json) match {
+    case Right(trace) => trace
+    case Left(err)    => throw err
+  }
 
   private def kvFromAssignment(ex: TlaEx): (String, TlaEx) = ex match {
     case OperEx(TlaOper.eq, NameEx(name), rhs) => name -> rhs
