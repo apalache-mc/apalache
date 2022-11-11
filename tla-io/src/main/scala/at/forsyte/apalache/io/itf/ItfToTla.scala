@@ -274,29 +274,29 @@ class ItfToTla[T <: JsonRepresentation](
     states <- asSeq(statesJsonSeq)
     trace <- eitherSeq(states.map(stateJson =>
           for {
-        varsInState <- stateJson.allFieldsOpt.toRight(ItfFormatError(s"State must be an object."))
-        _ <- {
-          val undeclared = (varsInState -- varSet) - META_FIELD // #meta is the only extra field allowed in states
-          requirement(
-              undeclared.isEmpty,
-              ItfFormatError(s"Undeclared variable(s) present in state: ${undeclared.mkString(", ")}."),
-          )
-        }
-        _ <- {
-          val missing = varSet -- varsInState
-          requirement(
-              missing.isEmpty,
-              ItfFormatError(s"Variable(s) missing from state: ${missing.mkString(", ")}."),
-          )
-        }
-        mapSeq <- eitherSeq(
-            typesMap.toSeq.map { case (varName, varT) =>
-              typeDrivenBuild(stateJson.getFieldOpt(varName).get, varT).map { bi =>
-                varName -> bi.build
-              }
+            varsInState <- stateJson.allFieldsOpt.toRight(ItfFormatError(s"State must be an object."))
+            _ <- {
+              val undeclared = (varsInState -- varSet) - META_FIELD // #meta is the only extra field allowed in states
+              requirement(
+                  undeclared.isEmpty,
+                  ItfFormatError(s"Undeclared variable(s) present in state: ${undeclared.mkString(", ")}."),
+              )
             }
-        )
-      } yield mapSeq.toMap))
+            _ <- {
+              val missing = varSet -- varsInState
+              requirement(
+                  missing.isEmpty,
+                  ItfFormatError(s"Variable(s) missing from state: ${missing.mkString(", ")}."),
+              )
+            }
+            mapSeq <- eitherSeq(
+                typesMap.toSeq.map { case (varName, varT) =>
+                  typeDrivenBuild(stateJson.getFieldOpt(varName).get, varT).map { bi =>
+                    varName -> bi.build
+                  }
+                }
+            )
+          } yield mapSeq.toMap))
   } yield IndexedSeq.from(trace)
 }
 
