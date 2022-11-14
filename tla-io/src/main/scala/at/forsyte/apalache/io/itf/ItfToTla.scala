@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.types.{ModelValueHandler, tla}
+import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
 
 /**
  * Reads a sequence of States, i.e. mappings from variable names to TlaEx values, from an ITF json.
