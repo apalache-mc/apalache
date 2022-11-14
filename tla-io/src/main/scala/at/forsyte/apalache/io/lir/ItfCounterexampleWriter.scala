@@ -1,5 +1,6 @@
 package at.forsyte.apalache.io.lir
 
+import at.forsyte.apalache.io.itf._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper, VariantOper}
@@ -59,29 +60,29 @@ object ItfCounterexampleWriter {
 
     val metaInformation: Map[String, ujson.Value] = {
       val varTypes = Map[String, ujson.Value](
-          "varTypes" -> ujson.Obj.from(
+          VAR_TYPES_FIELD -> ujson.Obj.from(
               rootModule.varDeclarations.map { varDecl =>
                 varDecl.name -> TlaType1.fromTypeTag(varDecl.typeTag).toString
               }
           )
       )
       val descriptions = Map[String, ujson.Value](
-          "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-          "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+          FORMAT_DESCRIPTION_FIELD -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          DESCRIPTION_FIELD -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
       )
 
       varTypes ++ descriptions ++
-        Option.when(NameReplacementMap.store.nonEmpty)("variables-to-expressions" -> NameReplacementMap.store)
+        Option.when(NameReplacementMap.store.nonEmpty)(VARIABLES_TO_EXPRESSIONS_FIELD -> NameReplacementMap.store)
     }
 
-    rootMap.put("#meta",
+    rootMap.put(META_FIELD,
         ujson.Obj(
-            "format" -> "ITF",
+            FORMAT_FIELD -> "ITF",
             metaInformation.toSeq: _*
         ))
-    paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
-    rootMap.put("vars", varsToJson(rootModule))
-    rootMap.put("states", ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
+    paramsToJson(rootModule).foreach(params => rootMap.put(PARAMS_FIELD, params))
+    rootMap.put(VARS_FIELD, varsToJson(rootModule))
+    rootMap.put(STATES_FIELD, ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
     ujson.Obj(rootMap)
   }
 
@@ -100,9 +101,9 @@ object ItfCounterexampleWriter {
   }
 
   private def stateToJson(state: Map[String, TlaEx], index: Int): ujson.Value = {
-    val meta = ujson.Obj("index" -> ujson.Num(index))
+    val meta = ujson.Obj(INDEX_FIELD -> ujson.Num(index))
     val map = state.toList.sortBy(_._1).map(p => (p._1, exToJson(p._2)))
-    ujson.Obj("#meta" -> meta, map: _*)
+    ujson.Obj(META_FIELD -> meta, map: _*)
   }
 
   private def exToJson: TlaEx => ujson.Value = {
@@ -110,7 +111,7 @@ object ItfCounterexampleWriter {
       if (num >= MIN_JS_INT && num <= MAX_JS_INT) {
         ujson.Num(num.toDouble)
       } else {
-        ujson.Obj("#bigint" -> ujson.Str(num.toString(10)))
+        ujson.Obj(BIG_INT_FIELD -> ujson.Str(num.toString(10)))
       }
 
     case ValEx(TlaBool(b)) =>
@@ -125,11 +126,11 @@ object ItfCounterexampleWriter {
           ujson.Arr(args.map(exToJson): _*)
 
         case _ =>
-          ujson.Obj("#tup" -> ujson.Arr(args.map(exToJson): _*))
+          ujson.Obj(TUP_FIELD -> ujson.Arr(args.map(exToJson): _*))
       }
 
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
-      ujson.Obj("#set" -> ujson.Arr(args.map(exToJson): _*))
+      ujson.Obj(SET_FIELD -> ujson.Arr(args.map(exToJson): _*))
 
     case OperEx(TlaFunOper.rec, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
@@ -138,17 +139,17 @@ object ItfCounterexampleWriter {
       ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
 
     case OperEx(VariantOper.variant, ValEx(TlaStr(tagName)), valueEx) =>
-      ujson.Obj(mutable.LinkedHashMap("tag" -> ujson.Str(tagName), "value" -> exToJson(valueEx)))
+      ujson.Obj(mutable.LinkedHashMap(TAG_FIELD -> ujson.Str(tagName), VALUE_FIELD -> exToJson(valueEx)))
 
     case OperEx(ApalacheOper.setAsFun, OperEx(TlaSetOper.enumSet, args @ _*)) =>
       val keyValueArrays = args.collect { case OperEx(TlaFunOper.tuple, key, value) =>
         ujson.Arr(exToJson(key), exToJson(value))
       }
-      ujson.Obj("#map" -> ujson.Arr(keyValueArrays: _*))
+      ujson.Obj(MAP_FIELD -> ujson.Arr(keyValueArrays: _*))
 
     case e =>
       // We don't know how to serialize this TLA+ expression (e.g., Int, Nat, FunSet, PowSet).
       // Output it as a serialization error.
-      ujson.Obj("#unserializable" -> ujson.Str(e.toString))
+      ujson.Obj(UNSERIALIZABLE_FIELD -> ujson.Str(e.toString))
   }
 }

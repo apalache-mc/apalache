@@ -1,12 +1,11 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.itf.ItfToTla._
 import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFactory}
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
+import at.forsyte.apalache.tla.types.{ModelValueHandler, tla}
 
 /**
  * Reads a sequence of States, i.e. mappings from variable names to TlaEx values, from an ITF json.
@@ -298,18 +297,4 @@ class ItfToTla[T <: JsonRepresentation](
             )
           } yield mapSeq.toMap))
   } yield IndexedSeq.from(trace)
-}
-
-object ItfToTla {
-
-  val META_FIELD: String = "#meta"
-  val VAR_TYPES_FIELD: String = "varTypes"
-  val VARS_FIELD: String = "vars"
-  val STATES_FIELD: String = "states"
-
-  val BIG_INT_FIELD: String = "#bigint"
-  val TUP_FIELD: String = "#tup"
-  val SET_FIELD: String = "#set"
-  val MAP_FIELD: String = "#map"
-  val UNSERIALIZABLE_FIELD: String = "#unserializable"
 }

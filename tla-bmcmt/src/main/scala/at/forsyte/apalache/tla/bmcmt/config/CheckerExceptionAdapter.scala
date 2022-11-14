@@ -2,14 +2,13 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.io.itf.ItfError
 import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.lir.{
-  LanguagePredError, MalformedSepecificationError, MalformedTlaError, OutdatedAnnotationsError, TypingException, UID,
-}
+import at.forsyte.apalache.tla.lir.{LanguagePredError, MalformedSepecificationError, MalformedTlaError, OutdatedAnnotationsError, TypingException, UID}
 import at.forsyte.apalache.tla.pp.{IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError}
 import at.forsyte.apalache.tla.typecheck.TypingInputException
 import com.typesafe.scalalogging.LazyLogging
@@ -69,6 +68,10 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     case err: JsonDeserializationError =>
       // this is a normal message, as we know that the json error is due to the user
       NormalErrorMessage(s"Error in JSON deserialization. Perhaps the file is malformed?: ${err.getMessage}.")
+
+    case err: ItfError =>
+      // this is a normal message, as we know that the json error is due to the user
+      NormalErrorMessage(s"Error in ITF deserialization. Perhaps the file is malformed?: ${err.getMessage}.")
 
     // tool failures
     case err: IrrecoverablePreprocessingError =>
