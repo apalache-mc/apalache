@@ -130,9 +130,7 @@ class TestItfToTla extends AnyFunSuite {
     }
   }
 
-  test("typeDrivenBuild") {
-
-    // case BoolT1 =>
+  test("typeDrivenBuild - BoolT1") {
 
     val tru = UJsonRep(Bool(true))
 
@@ -142,8 +140,9 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(tru, BoolT1).map(_.build).contains(tla.bool(true).build))
 
-    // case StrT1 =>
+  }
 
+  test("typeDrivenBuild - StrT1") {
     val cake = UJsonRep(Str("cake"))
 
     assert {
@@ -156,7 +155,9 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(cake, StrT1).map(_.build).contains(tla.str("cake").build))
 
-    // case ct: ConstT1 =>
+  }
+
+  test("typeDrivenBuild - ConstT1") {
 
     val oneOfA = UJsonRep(Str("1_OF_A"))
 
@@ -170,10 +171,10 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(oneOfA, ConstT1("A")).map(_.build).contains(tla.const("1", ConstT1("A")).build))
 
-    // case IntT1 =>
+  }
 
-    val one = UJsonRep(Num(1))
-
+  private val one: UJsonRep = UJsonRep(Num(1))
+  test("typeDrivenBuild - intT1") {
     assert {
       itfToTla.typeDrivenBuild(one, StrT1).isLeft
     }
@@ -188,8 +189,9 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(bigOne, IntT1).map(_.build).contains(tla.int(1).build))
 
-    // case SeqT1(elemT) =>
+  }
 
+  test("typeDrivenBuild - SeqT1") {
     val emptySeq = UJsonRep(Arr())
 
     assert {
@@ -214,9 +216,9 @@ class TestItfToTla extends AnyFunSuite {
           .contains(tla
                 .seq(Seq[BigInt](1, 2, 3).map(tla.int): _*)
                 .build))
+  }
 
-    // case RecT1(fieldTypes) =>
-
+  test("typeDrivenBuild - RecT1") {
     val emptyRec = UJsonRep(Obj())
 
     assert {
@@ -261,8 +263,9 @@ class TestItfToTla extends AnyFunSuite {
                 )
                 .build))
 
-    // case TupT1(elems @ _*) =>
+  }
 
+  test("typeDrivenBuild - TupT1") {
     val tupOneA = UJsonRep(
         Obj(
             ItfToTla.TUP_FIELD ->
@@ -290,8 +293,9 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(tupOneA, tupT).map(_.build).contains(tla.tuple(tla.int(1), tla.str("A")).build))
 
-    // case SetT1(elemT) =>
+  }
 
+  test("typeDrivenBuild - SetT1") {
     val emptySet = UJsonRep(Obj(ItfToTla.SET_FIELD -> Arr()))
 
     val setT = SetT1(BoolT1)
@@ -317,8 +321,18 @@ class TestItfToTla extends AnyFunSuite {
           .map(_.build)
           .contains(tla.enumSet(tla.bool(true), tla.bool(false)).build))
 
-    // case FunT1(argT, resT) =>
+    val junkSet = UJsonRep(Obj(
+            ItfToTla.SET_FIELD -> Arr(true, false),
+            "foo" -> "bar",
+        ))
 
+    assert {
+      itfToTla.typeDrivenBuild(junkSet, setT).isLeft
+    }
+
+  }
+
+  test("typeDrivenBuild - FunT1") {
     val emptyFun = UJsonRep(Obj(ItfToTla.MAP_FIELD -> Arr()))
 
     val funT = FunT1(IntT1, IntT1)
