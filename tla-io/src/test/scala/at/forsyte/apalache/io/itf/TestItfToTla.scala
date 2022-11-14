@@ -21,18 +21,18 @@ class TestItfToTla extends AnyFunSuite {
       itfToTla.validateShapeAndGetTypes(empty).isLeft
     }
 
-    val metaEmpty = UJsonRep(Obj(ItfToTla.META_FIELD -> Obj()))
+    val metaEmpty = UJsonRep(Obj(META_FIELD -> Obj()))
     assert {
       itfToTla.validateShapeAndGetTypes(metaEmpty).isLeft
     }
 
     val typesNotObj = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> 42
+                  VAR_TYPES_FIELD -> 42
               ),
-            ItfToTla.VARS_FIELD -> Arr(),
+            VARS_FIELD -> Arr(),
         )
     )
 
@@ -42,14 +42,14 @@ class TestItfToTla extends AnyFunSuite {
 
     val noVars = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD ->
+                  VAR_TYPES_FIELD ->
                     Obj(
                         "x" -> "Int"
                     )
               ),
-            ItfToTla.VARS_FIELD ->
+            VARS_FIELD ->
               Arr(), // empty
         )
     )
@@ -60,11 +60,11 @@ class TestItfToTla extends AnyFunSuite {
 
     val noTypes = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj() // empty
+                  VAR_TYPES_FIELD -> Obj() // empty
               ),
-            ItfToTla.VARS_FIELD -> Arr("x"),
+            VARS_FIELD -> Arr("x"),
         )
     )
 
@@ -74,15 +74,15 @@ class TestItfToTla extends AnyFunSuite {
 
     val correct = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD ->
+                  VAR_TYPES_FIELD ->
                     Obj(
                         "x" -> "Int",
                         "y" -> "Str -> Bool",
                     )
               ),
-            ItfToTla.VARS_FIELD -> Arr("x", "y"),
+            VARS_FIELD -> Arr("x", "y"),
         )
     )
 
@@ -107,7 +107,7 @@ class TestItfToTla extends AnyFunSuite {
 
     def singleUS(v: String): UJsonRep = UJsonRep(
         Obj(
-            ItfToTla.UNSERIALIZABLE_FIELD -> v
+            UNSERIALIZABLE_FIELD -> v
         )
     )
 
@@ -181,7 +181,7 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(one, IntT1).map(_.build).contains(tla.int(1).build))
 
-    val bigOne = UJsonRep(Obj(ItfToTla.BIG_INT_FIELD -> "1"))
+    val bigOne = UJsonRep(Obj(BIG_INT_FIELD -> "1"))
 
     assert {
       itfToTla.typeDrivenBuild(bigOne, StrT1).isLeft
@@ -268,7 +268,7 @@ class TestItfToTla extends AnyFunSuite {
   test("typeDrivenBuild - TupT1") {
     val tupOneA = UJsonRep(
         Obj(
-            ItfToTla.TUP_FIELD ->
+            TUP_FIELD ->
               Arr(1, "A")
         )
     )
@@ -296,7 +296,7 @@ class TestItfToTla extends AnyFunSuite {
   }
 
   test("typeDrivenBuild - SetT1") {
-    val emptySet = UJsonRep(Obj(ItfToTla.SET_FIELD -> Arr()))
+    val emptySet = UJsonRep(Obj(SET_FIELD -> Arr()))
 
     val setT = SetT1(BoolT1)
 
@@ -310,7 +310,7 @@ class TestItfToTla extends AnyFunSuite {
 
     assert(itfToTla.typeDrivenBuild(emptySet, setT).map(_.build).contains(tla.emptySet(setT.elem).build))
 
-    val boolSet = UJsonRep(Obj(ItfToTla.SET_FIELD -> Arr(true, false)))
+    val boolSet = UJsonRep(Obj(SET_FIELD -> Arr(true, false)))
 
     assert {
       itfToTla.typeDrivenBuild(boolSet, SetT1(IntT1)).isLeft
@@ -322,7 +322,7 @@ class TestItfToTla extends AnyFunSuite {
           .contains(tla.enumSet(tla.bool(true), tla.bool(false)).build))
 
     val junkSet = UJsonRep(Obj(
-            ItfToTla.SET_FIELD -> Arr(true, false),
+            SET_FIELD -> Arr(true, false),
             "foo" -> "bar",
         ))
 
@@ -333,7 +333,7 @@ class TestItfToTla extends AnyFunSuite {
   }
 
   test("typeDrivenBuild - FunT1") {
-    val emptyFun = UJsonRep(Obj(ItfToTla.MAP_FIELD -> Arr()))
+    val emptyFun = UJsonRep(Obj(MAP_FIELD -> Arr()))
 
     val funT = FunT1(IntT1, IntT1)
 
@@ -353,7 +353,7 @@ class TestItfToTla extends AnyFunSuite {
                 .build))
 
     val id12 = UJsonRep(
-        Obj(ItfToTla.MAP_FIELD ->
+        Obj(MAP_FIELD ->
           Arr(Arr(1, 1), Arr(2, 2)))
     )
 
@@ -375,11 +375,11 @@ class TestItfToTla extends AnyFunSuite {
   test("getTrace") {
     val noStates = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int")
+                  VAR_TYPES_FIELD -> Obj("x" -> "Int")
               ),
-            ItfToTla.VARS_FIELD -> Arr("x"),
+            VARS_FIELD -> Arr("x"),
         )
     )
 
@@ -389,12 +389,12 @@ class TestItfToTla extends AnyFunSuite {
 
     val malformedStates = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int")
+                  VAR_TYPES_FIELD -> Obj("x" -> "Int")
               ),
-            ItfToTla.VARS_FIELD -> Arr("x"),
-            ItfToTla.STATES_FIELD -> 2,
+            VARS_FIELD -> Arr("x"),
+            STATES_FIELD -> 2,
         )
     )
 
@@ -404,12 +404,12 @@ class TestItfToTla extends AnyFunSuite {
 
     val missingVar = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+                  VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
               ),
-            ItfToTla.VARS_FIELD -> Arr("x", "y"),
-            ItfToTla.STATES_FIELD -> Arr(
+            VARS_FIELD -> Arr("x", "y"),
+            STATES_FIELD -> Arr(
                 Obj(
                     "x" -> 1
                 )
@@ -423,12 +423,12 @@ class TestItfToTla extends AnyFunSuite {
 
     val spuriousVar = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+                  VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
               ),
-            ItfToTla.VARS_FIELD -> Arr("x", "y"),
-            ItfToTla.STATES_FIELD -> Arr(
+            VARS_FIELD -> Arr("x", "y"),
+            STATES_FIELD -> Arr(
                 Obj(
                     "x" -> 1,
                     "y" -> "a",
@@ -444,12 +444,12 @@ class TestItfToTla extends AnyFunSuite {
 
     val correctEmpty = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+                  VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
               ),
-            ItfToTla.VARS_FIELD -> Arr("x", "y"),
-            ItfToTla.STATES_FIELD -> Arr(),
+            VARS_FIELD -> Arr("x", "y"),
+            STATES_FIELD -> Arr(),
         )
     )
 
@@ -457,18 +457,18 @@ class TestItfToTla extends AnyFunSuite {
 
     val correctLen2 = UJsonRep(
         Obj(
-            ItfToTla.META_FIELD ->
+            META_FIELD ->
               Obj(
-                  ItfToTla.VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
+                  VAR_TYPES_FIELD -> Obj("x" -> "Int", "y" -> "Str")
               ),
-            ItfToTla.VARS_FIELD -> Arr("x", "y"),
-            ItfToTla.STATES_FIELD -> Arr(
+            VARS_FIELD -> Arr("x", "y"),
+            STATES_FIELD -> Arr(
                 Obj(
                     "x" -> 1,
                     "y" -> "a",
                 ),
                 Obj(
-                    ItfToTla.META_FIELD -> Obj(), // not all states need meta, and any state may have meta
+                    META_FIELD -> Obj(), // not all states need meta, and any state may have meta
                     "x" -> 2,
                     "y" -> "b",
                 ),
