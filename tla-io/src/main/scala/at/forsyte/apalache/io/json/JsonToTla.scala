@@ -1,36 +1,56 @@
 package at.forsyte.apalache.io.json
 
+import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
-import at.forsyte.apalache.tla.lir.values._
-import convenience.tla
-import UntypedPredefs._
-import at.forsyte.apalache.io.lir.TypeTagReader
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
+import at.forsyte.apalache.tla.typecomp.{
+  TBuilderContext, TBuilderInstruction, TBuilderInternalState, TBuilderScopeException, TBuilderTypeException,
+}
+import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
+
+import scala.language.implicitConversions
+import scala.util.{Failure, Success, Try}
 
 /**
- * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFactory
- * implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
+ * A JsonDecoder, which uses the ScopedBuilder to construct TLA IR. It is independent of the concrete
+ * JsonRepresentation, resp. ScalaFactory implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a,
+ * where X = TlaEx/TlaDecl/TlaModule.
  *
  * @tparam T
  *   Any class extending JsonRepresentation
+ * @author
+ *   Jure Kukovec
  */
 class JsonToTla[T <: JsonRepresentation](
     scalaFactory: ScalaFactory[T],
     sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
-
-  private def missingField(fieldName: String): JsonDeserializationError =
-    new JsonDeserializationError(s"JSON has no field named [$fieldName].")
-
   private def getOrThrow(json: T, fieldName: String): T =
-    json.getFieldOpt(fieldName).getOrElse { throw missingField(fieldName) }
+    json.getFieldOpt(fieldName).getOrElse {
+      throw new JsonDeserializationError(s"JSON has no field named [$fieldName].")
+    }
 
-  private def asFParam(json: T): OperParam = {
+  // TBuilderInstruction only throws exceptions when build is called on it. To narrow the try-catch cope, if we want to
+  // rethrow builder exceptions as JsonDeserializationError, we need to do it wit a custom build.
+  implicit private def buildWithRethrow[TT](builderState: TBuilderInternalState[TT]): TT =
+    try {
+      builderState.run(TBuilderContext.empty)._2
+    } catch {
+      // rethrow as deserialization error
+      case e: TBuilderTypeException =>
+        throw new JsonDeserializationError(s"JSON contains ill-typed expressions: ${e.getMessage}", e)
+      case e: TBuilderScopeException =>
+        throw new JsonDeserializationError(s"JSON contains ill-scoped expressions: ${e.getMessage}", e)
+    }
+
+  private def validateTag[TT](tagged: TypeTagged[TT], tag: TypeTag): Unit =
+    if (tagged.typeTag != tag)
+      throw new JsonDeserializationError(s"$tagged is tagged with $tag, but should have ${tagged.typeTag}.")
+
+  private def asParam(json: T): OperParam = {
     val kindField = getOrThrow(json, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
 
@@ -45,7 +65,7 @@ class JsonToTla[T <: JsonRepresentation](
     }
   }
 
-  private def asTlaVal(json: T): TlaValue = {
+  private def asTlaValEx(json: T): TBuilderInstruction = {
     val kindField = getOrThrow(json, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
 
@@ -53,12 +73,12 @@ class JsonToTla[T <: JsonRepresentation](
       case "TlaStr" =>
         val valField = getOrThrow(json, "value")
         val valStr = scalaFactory.asStr(valField)
-        TlaStr(valStr)
+        ModelValueHandler.typeAndIndex(valStr) match {
+          case Some((t, i)) => tla.const(i, t)
+          case None         => tla.str(valStr)
+        }
       case "TlaDecimal" =>
-        val valField = getOrThrow(json, "value")
-        val valStr = scalaFactory.asStr(valField)
-        val dec = BigDecimal(valStr)
-        TlaDecimal(dec)
+        throw new JsonDeserializationError("TlaDecimal is not supported.")
       case "TlaInt" =>
         val valField = getOrThrow(json, "value")
         val bi = valField
@@ -69,20 +89,20 @@ class JsonToTla[T <: JsonRepresentation](
           .getOrElse {
             BigInt(scalaFactory.asInt(valField))
           }
-        TlaInt(bi)
+        tla.int(bi)
       case "TlaBool" =>
         val valField = getOrThrow(json, "value")
         val valBool = scalaFactory.asBool(valField)
-        TlaBool(valBool)
-      case "TlaBoolSet" => TlaBoolSet
-      case "TlaIntSet"  => TlaIntSet
-      case "TlaStrSet"  => TlaStrSet
-      case "TlaNatSet"  => TlaNatSet
+        tla.bool(valBool)
+      case "TlaBoolSet" => tla.booleanSet()
+      case "TlaIntSet"  => tla.intSet()
+      case "TlaStrSet"  => tla.stringSet()
+      case "TlaNatSet"  => tla.natSet()
       case _            => throw new JsonDeserializationError(s"$kind is not a valid TlaValue kind")
     }
   }
 
-  def getSourceLocationOpt(json: T): Option[SourceLocation] = for {
+  private def getSourceLocationOpt(json: T): Option[SourceLocation] = for {
     sourceObj <- json.getFieldOpt(TlaToJson.sourceFieldName)
     fileName <- sourceObj.getFieldOpt("filename").map(scalaFactory.asStr)
     fromObj <- sourceObj.getFieldOpt("from")
@@ -99,7 +119,7 @@ class JsonToTla[T <: JsonRepresentation](
       ),
   )
 
-  def setLoc(identifiable: Identifiable, locationOpt: Option[SourceLocation]): Unit =
+  private def setLoc(identifiable: Identifiable, locationOpt: Option[SourceLocation]): Unit =
     sourceStoreOpt.foreach { store =>
       locationOpt.foreach { loc =>
         store.add(identifiable.ID, loc)
@@ -118,7 +138,7 @@ class JsonToTla[T <: JsonRepresentation](
     val declObjSeq = scalaFactory.asSeq(declField)
     val decls = declObjSeq.map(asTlaDecl)
 
-    new TlaModule(name, decls)
+    TlaModule(name, decls)
   }
 
   override def asTlaDecl(declJson: T): TlaDecl = {
@@ -132,7 +152,8 @@ class JsonToTla[T <: JsonRepresentation](
         val nameField = getOrThrow(declJson, "name")
         val name = scalaFactory.asStr(nameField)
         val bodyField = getOrThrow(declJson, "body")
-        val body = asTlaEx(bodyField)
+        val body: TlaEx = asTBuilderInstruction(bodyField)
+        validateTag(body, typeTag)
         TlaTheoremDecl(name, body)(typeTag)
       case "TlaVarDecl" =>
         val nameField = getOrThrow(declJson, "name")
@@ -148,17 +169,30 @@ class JsonToTla[T <: JsonRepresentation](
         val recField = getOrThrow(declJson, "isRecursive")
         val isRecursive = scalaFactory.asBool(recField)
         val bodyField = getOrThrow(declJson, "body")
-        val body = asTlaEx(bodyField)
+        val body = asTBuilderInstruction(bodyField)
         val paramsField = getOrThrow(declJson, "formalParams")
         val paramsObjList = scalaFactory.asSeq(paramsField).toList
-        val fParams = paramsObjList.map(asFParam)
-        val opDecl = TlaOperDecl(name, fParams, body)(typeTag)
+        val fParams = paramsObjList.map(asParam)
+        val paramTypes = typeTag match {
+          case Typed(OperT1(args, _)) =>
+            val l1 = args.length
+            val l2 = fParams.length
+            if (l1 != l2)
+              throw new JsonDeserializationError(s"$nameField has arity $l1, but the type has arity $l2.")
+            args
+          case t => throw new JsonDeserializationError(s"$nameField should have an operator type, found $t.")
+        }
+
+        val opDecl: TlaOperDecl = tla.decl(name, body, fParams.zip(paramTypes): _*)
+
+        validateTag(opDecl, typeTag)
+
         opDecl.isRecursive = isRecursive
         opDecl
 
       case "TlaAssumeDecl" =>
         val bodyField = getOrThrow(declJson, "body")
-        val body = asTlaEx(bodyField)
+        val body = asTBuilderInstruction(bodyField)
         TlaAssumeDecl(body)(typeTag)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaDecl kind")
     }
@@ -166,43 +200,59 @@ class JsonToTla[T <: JsonRepresentation](
     decl
   }
 
-  override def asTlaEx(exJson: T): TlaEx = {
+  override def asTlaEx(exJson: T): TlaEx = asTBuilderInstruction(exJson)
+
+  // It's more efficient to operate over TBuilderInstruction for as long as possible, and only build in the end step
+  private def asTBuilderInstruction(exJson: T): TBuilderInstruction = {
     val kindField = getOrThrow(exJson, TlaToJson.kindFieldName)
     val kind = scalaFactory.asStr(kindField)
-    if (kind == "NullEx") NullEx // TODO: We really shouldn't support NullEx long-term
+    if (kind == "NullEx")
+      throw new JsonDeserializationError("NullEx is not supported.")
+
     val typeField = getOrThrow(exJson, TlaToJson.typeFieldName)
     val tag = scalaFactory.asStr(typeField)
     val typeTag = typeTagReader(tag)
-    val ex = kind match {
+    val exCmp = kind match {
       case "NameEx" =>
         val nameField = getOrThrow(exJson, "name")
         val name = scalaFactory.asStr(nameField)
-        NameEx(name)(typeTag)
+        val tt1 = typeTag match {
+          case Typed(tt: TlaType1) => tt
+          case t                   => throw new JsonDeserializationError(s"Expected TlaType1, found $t.")
+        }
+        tla.name(name, tt1)
       case "ValEx" =>
         val valueField = getOrThrow(exJson, "value")
-        val value = asTlaVal(valueField)
-        ValEx(value)(typeTag)
+        asTlaValEx(valueField)
+
       case "OperEx" =>
         val operField = getOrThrow(exJson, "oper")
         val operString = scalaFactory.asStr(operField)
         val argsField = getOrThrow(exJson, "args")
         val argsObjSeq = scalaFactory.asSeq(argsField)
-        // TODO: Implement a oper.name -> oper mapping and avoid Builder hackery
-        val args = argsObjSeq.map(asTlaEx).map { BuilderTlaExWrapper }
-        tla.byName(operString, args: _*).withTag(typeTag)
+        val args = argsObjSeq.map(asTBuilderInstruction)
+        BuilderCallByName(operString, typeTag.asTlaType1(), args)
+
       case "LetInEx" =>
         val bodyField = getOrThrow(exJson, "body")
-        val body = asTlaEx(bodyField)
+        val body = asTBuilderInstruction(bodyField)
         val declsField = getOrThrow(exJson, "decls")
         val declsObjSeq = scalaFactory.asSeq(declsField)
         val decls = declsObjSeq.map(asTlaDecl)
         assert(decls.forall { _.isInstanceOf[TlaOperDecl] })
-        val operDecls = decls.map { _.asInstanceOf[TlaOperDecl] }
-        LetInEx(body, operDecls: _*)(typeTag)
+        // narrownig cast + unchecked lift to satisfy the TBuilderInternalState[TlaOperDecl] signature
+        val operDecls =
+          decls.map { d => tla.uncheckedDecl(d.asInstanceOf[TlaOperDecl]) }
+        tla.letIn(body, operDecls: _*)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaEx kind")
     }
-    setLoc(ex, getSourceLocationOpt(exJson))
-    ex
+
+    exCmp.map { ex =>
+      validateTag(ex, typeTag)
+      setLoc(ex, getSourceLocationOpt(exJson))
+      ex
+    }
+
   }
 
   override def fromRoot(rootJson: T): Seq[TlaModule] = {
@@ -217,11 +267,13 @@ class JsonToTla[T <: JsonRepresentation](
     }
   }
 
-  override def fromSingleModule(json: T): Try[TlaModule] = for {
-    modules <- Try(fromRoot(json))
-    module <- modules match {
-      case m +: Nil => Success(m)
-      case _        => Failure(new JsonDeserializationError(s"JSON included more than one module"))
-    }
-  } yield module
+  override def fromSingleModule(json: T): Try[TlaModule] = {
+    for {
+      modules <- Try(fromRoot(json))
+      module <- modules match {
+        case m +: Nil => Success(m)
+        case _        => Failure(new JsonDeserializationError(s"JSON included more than one module"))
+      }
+    } yield module
+  }
 }
