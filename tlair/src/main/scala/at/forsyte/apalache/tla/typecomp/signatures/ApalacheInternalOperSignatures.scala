@@ -20,7 +20,8 @@ object ApalacheInternalOperSignatures {
     // (str) => t
 
     // (t,...,t) => Bool
-    val distinctSig = signatureMapEntry(distinct, { case h +: tail if tail.forall(_ == h) => BoolT1 })
+    val distinctSig = signatureMapEntry(distinct,
+        { case seq if seq.headOption.forall(h => seq.forall(_ == h)) => BoolT1 })
 
     // (Seq(t)) => Int
     val apalacheSeqCapacitySig = signatureMapEntry(apalacheSeqCapacity, { case Seq(_: SeqT1) => IntT1 })

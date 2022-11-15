@@ -26,13 +26,9 @@ class UnsafeApalacheInternalBuilder extends ProtoBuilder {
 
   /**
    * distinct
-   * @param args
-   *   must be nonempty
    */
-  def distinct(args: TlaEx*): TlaEx = {
-    require(args.nonEmpty, s"args must be nonempty.")
+  def distinct(args: TlaEx*): TlaEx =
     buildBySignatureLookup(ApalacheInternalOper.distinct, args: _*)
-  }
 
   /** {{{__ApalacheSeqCapacity(seq)}}} */
   def apalacheSeqCapacity(seq: TlaEx): TlaEx =

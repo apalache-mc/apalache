@@ -149,5 +149,5 @@ package object types {
    * @see
    *   [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]] for implementation details.
    */
-  val tla: ScopedBuilder = new ScopedBuilder()
+  val tla: ScopedBuilder = new ScopedBuilder(strict = true)
 }

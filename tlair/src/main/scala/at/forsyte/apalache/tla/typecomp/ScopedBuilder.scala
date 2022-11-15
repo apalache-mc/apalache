@@ -30,6 +30,11 @@ import scalaz.Scalaz._
  *
  * These guarantees are void if [[unchecked]] is used.
  *
+ * If `strict` mode is enabled, the builder rejects inputs for ApalacheOper methods, which do not adhere to the method
+ * requirements ("... must be ..."), even if their types are correct. If `strict` mode is disabled, the builder should
+ * allow for the construction of any expression, which may be present in a freshly parsed specification (i.e. before
+ * preprocessing).
+ *
  * =HOW TO WRITE A NEW METHOD=
  *
  * It is assumed that you are familiar with the package [[typecomp]]. If not, read the [[typecomp]] documentation first.
@@ -129,8 +134,10 @@ import scalaz.Scalaz._
  *
  * @author
  *   Jure Kukovec
+ * @param strict
+ *   If true, performs method requirement checks
  */
-class ScopedBuilder
+class ScopedBuilder(val strict: Boolean = true)
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with FiniteSetBuilder with SeqBuilder
     with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with ApalacheInternalBuilder
     with ApalacheBuilder with VariantBuilder with LiteralAndNameBuilder {
