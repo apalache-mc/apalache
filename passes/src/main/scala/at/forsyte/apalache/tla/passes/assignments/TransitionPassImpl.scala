@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.DerivedPredicates
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * This pass finds symbolic transitions in Init and Next.
@@ -29,15 +30,29 @@ class TransitionPassImpl @Inject() (
   override def name: String = "TransitionFinderPass"
 
   override def execute(tlaModule: TlaModule): PassResult = {
+
+    val vars = tlaModule.varDeclarations.map(_.name).toSet
+    val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
+    val operDecls = tlaModule.operDeclarations
+    val operMap = BodyMapFactory.makeFromDecls(operDecls)
+
+    def extractTransitions(varSet: Set[String], inOperName: String, outOperName: String): Seq[TlaOperDecl] = {
+      val primedName = findBodyOf(inOperName, operDecls: _*)
+      val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(varSet, primedName, operMap)
+      // sort the transitions by their identifiers, to make sure we have determinism
+      val sortedTransitions = transitionPairs.map(_._2).sortBy(_.ID.id)
+      ModuleAdapter.exprsToOperDefs(outOperName, sortedTransitions)
+    }
+
     // extract transitions from InitPrimed
     val initOperName = derivedPreds.init
     val initOperNamePrimed = initOperName + "Primed"
-    val initDeclarations = extractTransitions(tlaModule, initOperNamePrimed, NormalizedNames.INIT_PREFIX)
+    val initDeclarations = extractTransitions(vars, initOperNamePrimed, NormalizedNames.INIT_PREFIX)
     logger.info(s"  > Found ${initDeclarations.size} initializing transitions")
 
     // extract transitions from Next
     val nextOperName = derivedPreds.next
-    val nextDeclarations = extractTransitions(tlaModule, nextOperName, NormalizedNames.NEXT_PREFIX)
+    val nextDeclarations = extractTransitions(vars, nextOperName, NormalizedNames.NEXT_PREFIX)
     logger.info(s"  > Found ${nextDeclarations.size} transitions")
 
     val invDeclarations: Seq[TlaDecl] = derivedPreds.invariants.map { invariant =>
@@ -53,12 +68,14 @@ class TransitionPassImpl @Inject() (
 
         case Some(cinitName) =>
           logger.info(s"  > Found constant initializer $cinitName")
-          val cinitEx = findBodyOf(cinitName + "Primed", tlaModule.operDeclarations: _*)
-          // We don't perform the standard assignment-search on cinit,
-          // we just replace EVERY x' = e with x' <- e
-          val tr = AssignmentOperatorIntroduction({ _ => true }, tracker)
-          val newEx = tr(cinitEx)
-          Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, newEx))
+          val cinitTransitions =
+            extractTransitions(
+                tlaModule.constDeclarations.map { _.name }.toSet, // "vars" for cinit are constants
+                cinitName + "Primed",
+                "", // outName doesn't matter, we're merging them
+            )
+          val cinitMonolyth: TlaEx = tla.and(cinitTransitions.map { d => tla.unchecked(d.body) }: _*)
+          Seq(ModuleAdapter.exprToOperDef(NormalizedNames.CONST_INIT, cinitMonolyth))
       }
 
     // Add the constants, variables, and assumptions; then add CInit, Init*, Next*; then add verification conditions.
@@ -76,19 +93,6 @@ class TransitionPassImpl @Inject() (
     writeOut(writerFactory, outModule)
 
     Right(outModule)
-  }
-
-  private def extractTransitions(module: TlaModule, inOperName: String, outOperName: String): Seq[TlaOperDecl] = {
-    val primedName = findBodyOf(inOperName, module.declarations: _*)
-    val vars = module.varDeclarations.map(_.name)
-
-    val sourceLoc = SourceLocator(sourceStore.makeSourceMap, changeListener)
-
-    val operMap = BodyMapFactory.makeFromDecls(module.operDeclarations)
-    val transitionPairs = SmtFreeSymbolicTransitionExtractor(tracker, sourceLoc)(vars.toSet, primedName, operMap)
-    // sort the transitions by their identifiers, to make sure we have determinism
-    val sortedTransitions = transitionPairs.map(_._2).sortBy(_.ID.id)
-    ModuleAdapter.exprsToOperDefs(outOperName, sortedTransitions)
   }
 
   override def dependencies = Set(ModuleProperty.Primed, ModuleProperty.Preprocessed)
