@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * @author
  *   Jure Kukovec
  */
-class UnsafeApalacheBuilder extends ProtoBuilder {
+class UnsafeApalacheBuilder(private val strict: Boolean = true) extends ProtoBuilder {
 
   // We borrow the LiteralBuilder to make TLA integers from Scala ints
   private val intBuilder = new UnsafeLiteralAndNameBuilder
@@ -22,7 +22,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be a primed variable name.
    */
   def assign(lhs: TlaEx, rhs: TlaEx): TlaEx = {
-    require(lhs match {
+    if (strict) require(lhs match {
           case OperEx(TlaActionOper.prime, _: NameEx) => true
           case _                                      => false
         }, s"Expected lhs to be a primed variable name, found $lhs.")
@@ -39,7 +39,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be positive
    */
   def gen(n: BigInt, t: TlaType1): TlaEx = {
-    require(n > 0, s"Expected n to be positive, found $n.")
+    if (strict) require(n > 0, s"Expected n to be positive, found $n.")
     OperEx(ApalacheOper.gen, mkTlaInt(n))(Typed(t))
   }
 
@@ -49,7 +49,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{\E x \in S: P}}}
    */
   def skolem(ex: TlaEx): TlaEx = {
-    require(ex match {
+    if (strict) require(ex match {
           case OperEx(TlaBoolOper.exists, _, _, _) => true
           case _                                   => false
         }, s"Expected ex to be an existential quantification, found $ex.")
@@ -65,7 +65,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be either `SUBSET S` or `[A -> B]`
    */
   def expand(ex: TlaEx): TlaEx = {
-    require(ex match {
+    if (strict) require(ex match {
           case OperEx(TlaSetOper.powerset, _)  => true
           case OperEx(TlaSetOper.funSet, _, _) => true
           case _                               => false
@@ -79,7 +79,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{Cardinality(S) >= N}}}
    */
   def constCard(ex: TlaEx): TlaEx = {
-    require(ex match {
+    if (strict) require(ex match {
           case OperEx(TlaArithOper.ge, OperEx(TlaFiniteSetOper.cardinality, _), ValEx(_: TlaInt)) => true
           case _                                                                                  => false
         }, s"Expected ex to be a cardinality comparison, found $ex.")
@@ -99,8 +99,10 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
    */
   def mkSeq(n: BigInt, F: TlaEx): TlaEx = {
-    require(n >= 0, s"Expected n to be nonnegative, found $n.")
-    require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
+    if (strict) {
+      require(n >= 0, s"Expected n to be nonnegative, found $n.")
+      require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
+    }
     buildBySignatureLookup(ApalacheOper.mkSeq, mkTlaInt(n), F)
   }
 
@@ -110,7 +112,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}}
    */
   def foldSet(F: TlaEx, v: TlaEx, S: TlaEx): TlaEx = {
-    require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
+    if (strict) require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
     buildBySignatureLookup(ApalacheOper.foldSet, F, v, S)
   }
 
@@ -120,7 +122,7 @@ class UnsafeApalacheBuilder extends ProtoBuilder {
    *   must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}}
    */
   def foldSeq(F: TlaEx, v: TlaEx, seq: TlaEx): TlaEx = {
-    require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
+    if (strict) require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
     buildBySignatureLookup(ApalacheOper.foldSeq, F, v, seq)
   }
 
