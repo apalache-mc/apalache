@@ -59,7 +59,7 @@ class TestApalacheInternalBuilder extends BuilderTest {
     )
 
     def run(tparam: TlaType1) = {
-      (1 to 5).forall { n =>
+      (0 to 5).forall { n =>
         runVariadic(
             builder.distinct,
             mkWellTyped(n),
@@ -70,11 +70,6 @@ class TestApalacheInternalBuilder extends BuilderTest {
     }
 
     checkRun(Generators.singleTypeGen)(run)
-
-    // test fail on n = 0
-    assertThrows[IllegalArgumentException] {
-      build(builder.distinct())
-    }
   }
 
   test("apalacheSeqCapacity") {

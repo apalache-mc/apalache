@@ -14,7 +14,8 @@ import scalaz._
  *   Jure Kukovec
  */
 trait ApalacheBuilder {
-  private val unsafeBuilder = new UnsafeApalacheBuilder
+  val strict: Boolean
+  private val unsafeBuilder = new UnsafeApalacheBuilder(strict)
 
   /**
    * {{{lhs := rhs}}}
