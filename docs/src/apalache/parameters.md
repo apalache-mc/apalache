@@ -24,7 +24,7 @@ become unwieldy.
 Alternatively, you can extend the base module and use overrides:
 
 ```tla
-{{#include ../../../test/tla/y2k_override.tla::11}}
+{{#include ../../../test/tla/y2k_override.tla::15}}
 ```
 
 <a name="ConstInit"></a>
