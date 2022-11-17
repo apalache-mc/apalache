@@ -1,0 +1,1594 @@
+{
+  "status": "parsed",
+  "warnings": [],
+  "module": {
+    "id": 384,
+    "name": "tictactoe",
+    "defs": [
+      {
+        "kind": "var",
+        "name": "board",
+        "typeAnnotation": {
+          "id": 5,
+          "kind": "fun",
+          "arg": { "id": 1, "kind": "int" },
+          "res": {
+            "id": 4,
+            "kind": "fun",
+            "arg": { "id": 2, "kind": "int" },
+            "res": { "id": 3, "kind": "str" }
+          }
+        },
+        "id": 6
+      },
+      {
+        "kind": "var",
+        "name": "nextTurn",
+        "typeAnnotation": { "id": 7, "kind": "str" },
+        "id": 8
+      },
+      {
+        "id": 26,
+        "kind": "def",
+        "name": "Init",
+        "qualifier": "action",
+        "expr": {
+          "id": 25,
+          "kind": "app",
+          "opcode": "actionAll",
+          "args": [
+            {
+              "id": 11,
+              "kind": "app",
+              "opcode": "assign",
+              "args": [
+                { "id": 9, "kind": "name", "name": "nextTurn" },
+                { "id": 10, "kind": "str", "value": "X" }
+              ]
+            },
+            {
+              "id": 24,
+              "kind": "app",
+              "opcode": "assign",
+              "args": [
+                { "id": 12, "kind": "name", "name": "board" },
+                {
+                  "id": 23,
+                  "kind": "app",
+                  "opcode": "mapBy",
+                  "args": [
+                    {
+                      "id": 15,
+                      "kind": "app",
+                      "opcode": "to",
+                      "args": [
+                        { "id": 13, "kind": "int", "value": 1 },
+                        { "id": 14, "kind": "int", "value": 3 }
+                      ]
+                    },
+                    {
+                      "id": 22,
+                      "kind": "lambda",
+                      "params": ["_"],
+                      "qualifier": "def",
+                      "expr": {
+                        "id": 21,
+                        "kind": "app",
+                        "opcode": "mapBy",
+                        "args": [
+                          {
+                            "id": 18,
+                            "kind": "app",
+                            "opcode": "to",
+                            "args": [
+                              { "id": 16, "kind": "int", "value": 1 },
+                              { "id": 17, "kind": "int", "value": 3 }
+                            ]
+                          },
+                          {
+                            "id": 20,
+                            "kind": "lambda",
+                            "params": ["_2"],
+                            "qualifier": "def",
+                            "expr": { "id": 19, "kind": "str", "value": "_" }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 38,
+        "kind": "def",
+        "name": "BoardIs",
+        "qualifier": "def",
+        "expr": {
+          "id": 38,
+          "kind": "lambda",
+          "params": ["coordinate", "player"],
+          "qualifier": "def",
+          "expr": {
+            "id": 37,
+            "kind": "app",
+            "opcode": "eq",
+            "args": [
+              {
+                "id": 35,
+                "kind": "app",
+                "opcode": "get",
+                "args": [
+                  {
+                    "id": 31,
+                    "kind": "app",
+                    "opcode": "get",
+                    "args": [
+                      { "id": 27, "kind": "name", "name": "board" },
+                      {
+                        "id": 30,
+                        "kind": "app",
+                        "opcode": "item",
+                        "args": [
+                          { "id": 28, "kind": "name", "name": "coordinate" },
+                          { "id": 29, "kind": "int", "value": 1 }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": 34,
+                    "kind": "app",
+                    "opcode": "item",
+                    "args": [
+                      { "id": 32, "kind": "name", "name": "coordinate" },
+                      { "id": 33, "kind": "int", "value": 2 }
+                    ]
+                  }
+                ]
+              },
+              { "id": 36, "kind": "name", "name": "player" }
+            ]
+          }
+        }
+      },
+      {
+        "id": 60,
+        "kind": "def",
+        "name": "Move",
+        "qualifier": "action",
+        "expr": {
+          "id": 60,
+          "kind": "lambda",
+          "params": ["player", "coordinate"],
+          "qualifier": "action",
+          "expr": {
+            "id": 59,
+            "kind": "app",
+            "opcode": "actionAll",
+            "args": [
+              {
+                "id": 41,
+                "kind": "app",
+                "opcode": "BoardIs",
+                "args": [
+                  { "id": 39, "kind": "name", "name": "coordinate" },
+                  { "id": 40, "kind": "str", "value": "_" }
+                ]
+              },
+              {
+                "id": 58,
+                "kind": "app",
+                "opcode": "assign",
+                "args": [
+                  { "id": 42, "kind": "name", "name": "board" },
+                  {
+                    "id": 57,
+                    "kind": "app",
+                    "opcode": "update",
+                    "args": [
+                      { "id": 43, "kind": "name", "name": "board" },
+                      {
+                        "id": 46,
+                        "kind": "app",
+                        "opcode": "item",
+                        "args": [
+                          { "id": 44, "kind": "name", "name": "coordinate" },
+                          { "id": 45, "kind": "int", "value": 1 }
+                        ]
+                      },
+                      {
+                        "id": 56,
+                        "kind": "app",
+                        "opcode": "update",
+                        "args": [
+                          {
+                            "id": 51,
+                            "kind": "app",
+                            "opcode": "get",
+                            "args": [
+                              { "id": 47, "kind": "name", "name": "board" },
+                              {
+                                "id": 50,
+                                "kind": "app",
+                                "opcode": "item",
+                                "args": [
+                                  {
+                                    "id": 48,
+                                    "kind": "name",
+                                    "name": "coordinate"
+                                  },
+                                  { "id": 49, "kind": "int", "value": 1 }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": 54,
+                            "kind": "app",
+                            "opcode": "item",
+                            "args": [
+                              {
+                                "id": 52,
+                                "kind": "name",
+                                "name": "coordinate"
+                              },
+                              { "id": 53, "kind": "int", "value": 2 }
+                            ]
+                          },
+                          { "id": 55, "kind": "name", "name": "player" }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 73,
+        "kind": "def",
+        "name": "MoveToEmpty",
+        "qualifier": "action",
+        "expr": {
+          "id": 73,
+          "kind": "lambda",
+          "params": ["player"],
+          "qualifier": "action",
+          "expr": {
+            "id": 72,
+            "kind": "app",
+            "opcode": "guess",
+            "args": [
+              {
+                "id": 67,
+                "kind": "app",
+                "opcode": "tuples",
+                "args": [
+                  {
+                    "id": 63,
+                    "kind": "app",
+                    "opcode": "to",
+                    "args": [
+                      { "id": 61, "kind": "int", "value": 1 },
+                      { "id": 62, "kind": "int", "value": 3 }
+                    ]
+                  },
+                  {
+                    "id": 66,
+                    "kind": "app",
+                    "opcode": "to",
+                    "args": [
+                      { "id": 64, "kind": "int", "value": 1 },
+                      { "id": 65, "kind": "int", "value": 3 }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": 71,
+                "kind": "lambda",
+                "params": ["coordinates"],
+                "qualifier": "def",
+                "expr": {
+                  "id": 70,
+                  "kind": "app",
+                  "opcode": "Move",
+                  "args": [
+                    { "id": 68, "kind": "name", "name": "player" },
+                    { "id": 69, "kind": "name", "name": "coordinates" }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 155,
+        "kind": "def",
+        "name": "winningPatterns",
+        "qualifier": "val",
+        "expr": {
+          "id": 154,
+          "kind": "app",
+          "opcode": "set",
+          "args": [
+            {
+              "id": 83,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 76,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 74, "kind": "int", "value": 1 },
+                    { "id": 75, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 79,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 77, "kind": "int", "value": 1 },
+                    { "id": 78, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 82,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 80, "kind": "int", "value": 1 },
+                    { "id": 81, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 93,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 86,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 84, "kind": "int", "value": 2 },
+                    { "id": 85, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 89,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 87, "kind": "int", "value": 2 },
+                    { "id": 88, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 92,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 90, "kind": "int", "value": 2 },
+                    { "id": 91, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 103,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 96,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 94, "kind": "int", "value": 3 },
+                    { "id": 95, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 99,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 97, "kind": "int", "value": 3 },
+                    { "id": 98, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 102,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 100, "kind": "int", "value": 3 },
+                    { "id": 101, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 113,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 106,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 104, "kind": "int", "value": 1 },
+                    { "id": 105, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 109,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 107, "kind": "int", "value": 2 },
+                    { "id": 108, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 112,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 110, "kind": "int", "value": 3 },
+                    { "id": 111, "kind": "int", "value": 1 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 123,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 116,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 114, "kind": "int", "value": 1 },
+                    { "id": 115, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 119,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 117, "kind": "int", "value": 2 },
+                    { "id": 118, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 122,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 120, "kind": "int", "value": 3 },
+                    { "id": 121, "kind": "int", "value": 2 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 133,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 126,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 124, "kind": "int", "value": 1 },
+                    { "id": 125, "kind": "int", "value": 3 }
+                  ]
+                },
+                {
+                  "id": 129,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 127, "kind": "int", "value": 2 },
+                    { "id": 128, "kind": "int", "value": 3 }
+                  ]
+                },
+                {
+                  "id": 132,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 130, "kind": "int", "value": 3 },
+                    { "id": 131, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 143,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 136,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 134, "kind": "int", "value": 1 },
+                    { "id": 135, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 139,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 137, "kind": "int", "value": 2 },
+                    { "id": 138, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 142,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 140, "kind": "int", "value": 3 },
+                    { "id": 141, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 153,
+              "kind": "app",
+              "opcode": "set",
+              "args": [
+                {
+                  "id": 146,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 144, "kind": "int", "value": 3 },
+                    { "id": 145, "kind": "int", "value": 1 }
+                  ]
+                },
+                {
+                  "id": 149,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 147, "kind": "int", "value": 2 },
+                    { "id": 148, "kind": "int", "value": 2 }
+                  ]
+                },
+                {
+                  "id": 152,
+                  "kind": "app",
+                  "opcode": "tup",
+                  "args": [
+                    { "id": 150, "kind": "int", "value": 1 },
+                    { "id": 151, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 165,
+        "kind": "def",
+        "name": "Won",
+        "qualifier": "def",
+        "expr": {
+          "id": 165,
+          "kind": "lambda",
+          "params": ["player"],
+          "qualifier": "def",
+          "expr": {
+            "id": 164,
+            "kind": "app",
+            "opcode": "exists",
+            "args": [
+              { "id": 156, "kind": "name", "name": "winningPatterns" },
+              {
+                "id": 163,
+                "kind": "lambda",
+                "params": ["pattern"],
+                "qualifier": "def",
+                "expr": {
+                  "id": 162,
+                  "kind": "app",
+                  "opcode": "forall",
+                  "args": [
+                    { "id": 157, "kind": "name", "name": "pattern" },
+                    {
+                      "id": 161,
+                      "kind": "lambda",
+                      "params": ["coordinate"],
+                      "qualifier": "def",
+                      "expr": {
+                        "id": 160,
+                        "kind": "app",
+                        "opcode": "BoardIs",
+                        "args": [
+                          { "id": 158, "kind": "name", "name": "coordinate" },
+                          { "id": 159, "kind": "name", "name": "player" }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 178,
+        "kind": "def",
+        "name": "MoveO",
+        "qualifier": "action",
+        "expr": {
+          "id": 177,
+          "kind": "app",
+          "opcode": "actionAll",
+          "args": [
+            {
+              "id": 168,
+              "kind": "app",
+              "opcode": "eq",
+              "args": [
+                { "id": 166, "kind": "name", "name": "nextTurn" },
+                { "id": 167, "kind": "str", "value": "O" }
+              ]
+            },
+            {
+              "id": 171,
+              "kind": "app",
+              "opcode": "not",
+              "args": [
+                {
+                  "id": 170,
+                  "kind": "app",
+                  "opcode": "Won",
+                  "args": [{ "id": 169, "kind": "str", "value": "X" }]
+                }
+              ]
+            },
+            {
+              "id": 173,
+              "kind": "app",
+              "opcode": "MoveToEmpty",
+              "args": [{ "id": 172, "kind": "str", "value": "O" }]
+            },
+            {
+              "id": 176,
+              "kind": "app",
+              "opcode": "assign",
+              "args": [
+                { "id": 174, "kind": "name", "name": "nextTurn" },
+                { "id": 175, "kind": "str", "value": "X" }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 192,
+        "kind": "def",
+        "name": "corners",
+        "qualifier": "val",
+        "expr": {
+          "id": 191,
+          "kind": "app",
+          "opcode": "set",
+          "args": [
+            {
+              "id": 181,
+              "kind": "app",
+              "opcode": "tup",
+              "args": [
+                { "id": 179, "kind": "int", "value": 1 },
+                { "id": 180, "kind": "int", "value": 1 }
+              ]
+            },
+            {
+              "id": 184,
+              "kind": "app",
+              "opcode": "tup",
+              "args": [
+                { "id": 182, "kind": "int", "value": 3 },
+                { "id": 183, "kind": "int", "value": 1 }
+              ]
+            },
+            {
+              "id": 187,
+              "kind": "app",
+              "opcode": "tup",
+              "args": [
+                { "id": 185, "kind": "int", "value": 1 },
+                { "id": 186, "kind": "int", "value": 3 }
+              ]
+            },
+            {
+              "id": 190,
+              "kind": "app",
+              "opcode": "tup",
+              "args": [
+                { "id": 188, "kind": "int", "value": 3 },
+                { "id": 189, "kind": "int", "value": 3 }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 205,
+        "kind": "def",
+        "name": "BoardEmpty",
+        "qualifier": "val",
+        "expr": {
+          "id": 204,
+          "kind": "app",
+          "opcode": "forall",
+          "args": [
+            {
+              "id": 199,
+              "kind": "app",
+              "opcode": "tuples",
+              "args": [
+                {
+                  "id": 195,
+                  "kind": "app",
+                  "opcode": "to",
+                  "args": [
+                    { "id": 193, "kind": "int", "value": 1 },
+                    { "id": 194, "kind": "int", "value": 3 }
+                  ]
+                },
+                {
+                  "id": 198,
+                  "kind": "app",
+                  "opcode": "to",
+                  "args": [
+                    { "id": 196, "kind": "int", "value": 1 },
+                    { "id": 197, "kind": "int", "value": 3 }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 203,
+              "kind": "lambda",
+              "params": ["position"],
+              "qualifier": "def",
+              "expr": {
+                "id": 202,
+                "kind": "app",
+                "opcode": "BoardIs",
+                "args": [
+                  { "id": 200, "kind": "name", "name": "position" },
+                  { "id": 201, "kind": "str", "value": "_" }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 212,
+        "kind": "def",
+        "name": "StartInCorner",
+        "qualifier": "action",
+        "expr": {
+          "id": 211,
+          "kind": "app",
+          "opcode": "guess",
+          "args": [
+            { "id": 206, "kind": "name", "name": "corners" },
+            {
+              "id": 210,
+              "kind": "lambda",
+              "params": ["corner"],
+              "qualifier": "def",
+              "expr": {
+                "id": 209,
+                "kind": "app",
+                "opcode": "Move",
+                "args": [
+                  { "id": 207, "kind": "str", "value": "X" },
+                  { "id": 208, "kind": "name", "name": "corner" }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 232,
+        "kind": "def",
+        "name": "canWinWithPattern",
+        "qualifier": "def",
+        "expr": {
+          "id": 232,
+          "kind": "lambda",
+          "params": ["winningPattern"],
+          "qualifier": "def",
+          "expr": {
+            "id": 231,
+            "kind": "app",
+            "opcode": "and",
+            "args": [
+              {
+                "id": 221,
+                "kind": "app",
+                "opcode": "eq",
+                "args": [
+                  {
+                    "id": 219,
+                    "kind": "app",
+                    "opcode": "size",
+                    "args": [
+                      {
+                        "id": 218,
+                        "kind": "app",
+                        "opcode": "filter",
+                        "args": [
+                          {
+                            "id": 213,
+                            "kind": "name",
+                            "name": "winningPattern"
+                          },
+                          {
+                            "id": 217,
+                            "kind": "lambda",
+                            "params": ["p"],
+                            "qualifier": "def",
+                            "expr": {
+                              "id": 216,
+                              "kind": "app",
+                              "opcode": "BoardIs",
+                              "args": [
+                                { "id": 214, "kind": "name", "name": "p" },
+                                { "id": 215, "kind": "str", "value": "X" }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": 220, "kind": "int", "value": 2 }
+                ]
+              },
+              {
+                "id": 230,
+                "kind": "app",
+                "opcode": "eq",
+                "args": [
+                  {
+                    "id": 228,
+                    "kind": "app",
+                    "opcode": "size",
+                    "args": [
+                      {
+                        "id": 227,
+                        "kind": "app",
+                        "opcode": "filter",
+                        "args": [
+                          {
+                            "id": 222,
+                            "kind": "name",
+                            "name": "winningPattern"
+                          },
+                          {
+                            "id": 226,
+                            "kind": "lambda",
+                            "params": ["p"],
+                            "qualifier": "def",
+                            "expr": {
+                              "id": 225,
+                              "kind": "app",
+                              "opcode": "BoardIs",
+                              "args": [
+                                { "id": 223, "kind": "name", "name": "p" },
+                                { "id": 224, "kind": "str", "value": "_" }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": 229, "kind": "int", "value": 1 }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 252,
+        "kind": "def",
+        "name": "canBlockWithPattern",
+        "qualifier": "def",
+        "expr": {
+          "id": 252,
+          "kind": "lambda",
+          "params": ["winningPattern"],
+          "qualifier": "def",
+          "expr": {
+            "id": 251,
+            "kind": "app",
+            "opcode": "and",
+            "args": [
+              {
+                "id": 241,
+                "kind": "app",
+                "opcode": "eq",
+                "args": [
+                  {
+                    "id": 239,
+                    "kind": "app",
+                    "opcode": "size",
+                    "args": [
+                      {
+                        "id": 238,
+                        "kind": "app",
+                        "opcode": "filter",
+                        "args": [
+                          {
+                            "id": 233,
+                            "kind": "name",
+                            "name": "winningPattern"
+                          },
+                          {
+                            "id": 237,
+                            "kind": "lambda",
+                            "params": ["p"],
+                            "qualifier": "def",
+                            "expr": {
+                              "id": 236,
+                              "kind": "app",
+                              "opcode": "BoardIs",
+                              "args": [
+                                { "id": 234, "kind": "name", "name": "p" },
+                                { "id": 235, "kind": "str", "value": "O" }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": 240, "kind": "int", "value": 2 }
+                ]
+              },
+              {
+                "id": 250,
+                "kind": "app",
+                "opcode": "eq",
+                "args": [
+                  {
+                    "id": 248,
+                    "kind": "app",
+                    "opcode": "size",
+                    "args": [
+                      {
+                        "id": 247,
+                        "kind": "app",
+                        "opcode": "filter",
+                        "args": [
+                          {
+                            "id": 242,
+                            "kind": "name",
+                            "name": "winningPattern"
+                          },
+                          {
+                            "id": 246,
+                            "kind": "lambda",
+                            "params": ["p"],
+                            "qualifier": "def",
+                            "expr": {
+                              "id": 245,
+                              "kind": "app",
+                              "opcode": "BoardIs",
+                              "args": [
+                                { "id": 243, "kind": "name", "name": "p" },
+                                { "id": 244, "kind": "str", "value": "_" }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  { "id": 249, "kind": "int", "value": 1 }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 265,
+        "kind": "def",
+        "name": "Win",
+        "qualifier": "action",
+        "expr": {
+          "id": 264,
+          "kind": "app",
+          "opcode": "guess",
+          "args": [
+            { "id": 253, "kind": "name", "name": "winningPatterns" },
+            {
+              "id": 263,
+              "kind": "lambda",
+              "params": ["pattern"],
+              "qualifier": "def",
+              "expr": {
+                "id": 262,
+                "kind": "app",
+                "opcode": "actionAll",
+                "args": [
+                  {
+                    "id": 255,
+                    "kind": "app",
+                    "opcode": "canWinWithPattern",
+                    "args": [{ "id": 254, "kind": "name", "name": "pattern" }]
+                  },
+                  {
+                    "id": 261,
+                    "kind": "app",
+                    "opcode": "guess",
+                    "args": [
+                      { "id": 256, "kind": "name", "name": "pattern" },
+                      {
+                        "id": 260,
+                        "kind": "lambda",
+                        "params": ["p"],
+                        "qualifier": "def",
+                        "expr": {
+                          "id": 259,
+                          "kind": "app",
+                          "opcode": "Move",
+                          "args": [
+                            { "id": 257, "kind": "str", "value": "X" },
+                            { "id": 258, "kind": "name", "name": "p" }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 278,
+        "kind": "def",
+        "name": "Block",
+        "qualifier": "action",
+        "expr": {
+          "id": 277,
+          "kind": "app",
+          "opcode": "guess",
+          "args": [
+            { "id": 266, "kind": "name", "name": "winningPatterns" },
+            {
+              "id": 276,
+              "kind": "lambda",
+              "params": ["pattern"],
+              "qualifier": "def",
+              "expr": {
+                "id": 275,
+                "kind": "app",
+                "opcode": "actionAll",
+                "args": [
+                  {
+                    "id": 268,
+                    "kind": "app",
+                    "opcode": "canBlockWithPattern",
+                    "args": [{ "id": 267, "kind": "name", "name": "pattern" }]
+                  },
+                  {
+                    "id": 274,
+                    "kind": "app",
+                    "opcode": "guess",
+                    "args": [
+                      { "id": 269, "kind": "name", "name": "pattern" },
+                      {
+                        "id": 273,
+                        "kind": "lambda",
+                        "params": ["p"],
+                        "qualifier": "def",
+                        "expr": {
+                          "id": 272,
+                          "kind": "app",
+                          "opcode": "Move",
+                          "args": [
+                            { "id": 270, "kind": "str", "value": "X" },
+                            { "id": 271, "kind": "name", "name": "p" }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 284,
+        "kind": "def",
+        "name": "TakeCenter",
+        "qualifier": "action",
+        "expr": {
+          "id": 283,
+          "kind": "app",
+          "opcode": "Move",
+          "args": [
+            { "id": 279, "kind": "str", "value": "X" },
+            {
+              "id": 282,
+              "kind": "app",
+              "opcode": "tup",
+              "args": [
+                { "id": 280, "kind": "int", "value": 2 },
+                { "id": 281, "kind": "int", "value": 2 }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 313,
+        "kind": "def",
+        "name": "SetupWin",
+        "qualifier": "action",
+        "expr": {
+          "id": 312,
+          "kind": "app",
+          "opcode": "guess",
+          "args": [
+            { "id": 285, "kind": "name", "name": "winningPatterns" },
+            {
+              "id": 311,
+              "kind": "lambda",
+              "params": ["pattern"],
+              "qualifier": "def",
+              "expr": {
+                "id": 310,
+                "kind": "app",
+                "opcode": "actionAll",
+                "args": [
+                  {
+                    "id": 294,
+                    "kind": "app",
+                    "opcode": "eq",
+                    "args": [
+                      {
+                        "id": 292,
+                        "kind": "app",
+                        "opcode": "size",
+                        "args": [
+                          {
+                            "id": 291,
+                            "kind": "app",
+                            "opcode": "filter",
+                            "args": [
+                              { "id": 286, "kind": "name", "name": "pattern" },
+                              {
+                                "id": 290,
+                                "kind": "lambda",
+                                "params": ["p"],
+                                "qualifier": "def",
+                                "expr": {
+                                  "id": 289,
+                                  "kind": "app",
+                                  "opcode": "BoardIs",
+                                  "args": [
+                                    { "id": 287, "kind": "name", "name": "p" },
+                                    { "id": 288, "kind": "str", "value": "X" }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      { "id": 293, "kind": "int", "value": 1 }
+                    ]
+                  },
+                  {
+                    "id": 303,
+                    "kind": "app",
+                    "opcode": "eq",
+                    "args": [
+                      {
+                        "id": 301,
+                        "kind": "app",
+                        "opcode": "size",
+                        "args": [
+                          {
+                            "id": 300,
+                            "kind": "app",
+                            "opcode": "filter",
+                            "args": [
+                              { "id": 295, "kind": "name", "name": "pattern" },
+                              {
+                                "id": 299,
+                                "kind": "lambda",
+                                "params": ["p"],
+                                "qualifier": "def",
+                                "expr": {
+                                  "id": 298,
+                                  "kind": "app",
+                                  "opcode": "BoardIs",
+                                  "args": [
+                                    { "id": 296, "kind": "name", "name": "p" },
+                                    { "id": 297, "kind": "str", "value": "_" }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      { "id": 302, "kind": "int", "value": 2 }
+                    ]
+                  },
+                  {
+                    "id": 309,
+                    "kind": "app",
+                    "opcode": "guess",
+                    "args": [
+                      { "id": 304, "kind": "name", "name": "pattern" },
+                      {
+                        "id": 308,
+                        "kind": "lambda",
+                        "params": ["p"],
+                        "qualifier": "def",
+                        "expr": {
+                          "id": 307,
+                          "kind": "app",
+                          "opcode": "Move",
+                          "args": [
+                            { "id": 305, "kind": "str", "value": "X" },
+                            { "id": 306, "kind": "name", "name": "p" }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": 345,
+        "kind": "def",
+        "name": "MoveX",
+        "qualifier": "action",
+        "expr": {
+          "id": 344,
+          "kind": "app",
+          "opcode": "actionAll",
+          "args": [
+            {
+              "id": 316,
+              "kind": "app",
+              "opcode": "eq",
+              "args": [
+                { "id": 314, "kind": "name", "name": "nextTurn" },
+                { "id": 315, "kind": "str", "value": "X" }
+              ]
+            },
+            {
+              "id": 319,
+              "kind": "app",
+              "opcode": "not",
+              "args": [
+                {
+                  "id": 318,
+                  "kind": "app",
+                  "opcode": "Won",
+                  "args": [{ "id": 317, "kind": "str", "value": "O" }]
+                }
+              ]
+            },
+            {
+              "id": 340,
+              "kind": "app",
+              "opcode": "ite",
+              "args": [
+                { "id": 320, "kind": "name", "name": "BoardEmpty" },
+                { "id": 321, "kind": "name", "name": "StartInCorner" },
+                {
+                  "id": 339,
+                  "kind": "app",
+                  "opcode": "ite",
+                  "args": [
+                    {
+                      "id": 323,
+                      "kind": "app",
+                      "opcode": "enabled",
+                      "args": [{ "id": 322, "kind": "name", "name": "Win" }]
+                    },
+                    { "id": 324, "kind": "name", "name": "Win" },
+                    {
+                      "id": 338,
+                      "kind": "app",
+                      "opcode": "ite",
+                      "args": [
+                        {
+                          "id": 326,
+                          "kind": "app",
+                          "opcode": "enabled",
+                          "args": [
+                            { "id": 325, "kind": "name", "name": "Block" }
+                          ]
+                        },
+                        { "id": 327, "kind": "name", "name": "Block" },
+                        {
+                          "id": 337,
+                          "kind": "app",
+                          "opcode": "ite",
+                          "args": [
+                            {
+                              "id": 329,
+                              "kind": "app",
+                              "opcode": "enabled",
+                              "args": [
+                                {
+                                  "id": 328,
+                                  "kind": "name",
+                                  "name": "TakeCenter"
+                                }
+                              ]
+                            },
+                            { "id": 330, "kind": "name", "name": "TakeCenter" },
+                            {
+                              "id": 336,
+                              "kind": "app",
+                              "opcode": "ite",
+                              "args": [
+                                {
+                                  "id": 332,
+                                  "kind": "app",
+                                  "opcode": "enabled",
+                                  "args": [
+                                    {
+                                      "id": 331,
+                                      "kind": "name",
+                                      "name": "SetupWin"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": 333,
+                                  "kind": "name",
+                                  "name": "SetupWin"
+                                },
+                                {
+                                  "id": 335,
+                                  "kind": "app",
+                                  "opcode": "MoveToEmpty",
+                                  "args": [
+                                    { "id": 334, "kind": "str", "value": "X" }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": 343,
+              "kind": "app",
+              "opcode": "assign",
+              "args": [
+                { "id": 341, "kind": "name", "name": "nextTurn" },
+                { "id": 342, "kind": "str", "value": "O" }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 349,
+        "kind": "def",
+        "name": "Next",
+        "qualifier": "action",
+        "expr": {
+          "id": 348,
+          "kind": "app",
+          "opcode": "actionAny",
+          "args": [
+            { "id": 346, "kind": "name", "name": "MoveX" },
+            { "id": 347, "kind": "name", "name": "MoveO" }
+          ]
+        }
+      },
+      {
+        "id": 353,
+        "kind": "def",
+        "name": "XMustEventuallyWin",
+        "qualifier": "temporal",
+        "expr": {
+          "id": 352,
+          "kind": "app",
+          "opcode": "eventually",
+          "args": [
+            {
+              "id": 351,
+              "kind": "app",
+              "opcode": "Won",
+              "args": [{ "id": 350, "kind": "str", "value": "X" }]
+            }
+          ]
+        }
+      },
+      {
+        "id": 357,
+        "kind": "def",
+        "name": "XHasNotWon",
+        "qualifier": "val",
+        "expr": {
+          "id": 356,
+          "kind": "app",
+          "opcode": "not",
+          "args": [
+            {
+              "id": 355,
+              "kind": "app",
+              "opcode": "Won",
+              "args": [{ "id": 354, "kind": "str", "value": "X" }]
+            }
+          ]
+        }
+      },
+      {
+        "id": 361,
+        "kind": "def",
+        "name": "OHasNotWon",
+        "qualifier": "val",
+        "expr": {
+          "id": 360,
+          "kind": "app",
+          "opcode": "not",
+          "args": [
+            {
+              "id": 359,
+              "kind": "app",
+              "opcode": "Won",
+              "args": [{ "id": 358, "kind": "str", "value": "O" }]
+            }
+          ]
+        }
+      },
+      {
+        "id": 375,
+        "kind": "def",
+        "name": "BoardFilled",
+        "qualifier": "val",
+        "expr": {
+          "id": 374,
+          "kind": "app",
+          "opcode": "not",
+          "args": [
+            {
+              "id": 373,
+              "kind": "app",
+              "opcode": "exists",
+              "args": [
+                {
+                  "id": 368,
+                  "kind": "app",
+                  "opcode": "tuples",
+                  "args": [
+                    {
+                      "id": 364,
+                      "kind": "app",
+                      "opcode": "to",
+                      "args": [
+                        { "id": 362, "kind": "int", "value": 1 },
+                        { "id": 363, "kind": "int", "value": 3 }
+                      ]
+                    },
+                    {
+                      "id": 367,
+                      "kind": "app",
+                      "opcode": "to",
+                      "args": [
+                        { "id": 365, "kind": "int", "value": 1 },
+                        { "id": 366, "kind": "int", "value": 3 }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": 372,
+                  "kind": "lambda",
+                  "params": ["coordinate"],
+                  "qualifier": "def",
+                  "expr": {
+                    "id": 371,
+                    "kind": "app",
+                    "opcode": "BoardIs",
+                    "args": [
+                      { "id": 369, "kind": "name", "name": "coordinate" },
+                      { "id": 370, "kind": "str", "value": "_" }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 383,
+        "kind": "def",
+        "name": "NotStalemate",
+        "qualifier": "val",
+        "expr": {
+          "id": 382,
+          "kind": "app",
+          "opcode": "or",
+          "args": [
+            {
+              "id": 377,
+              "kind": "app",
+              "opcode": "Won",
+              "args": [{ "id": 376, "kind": "str", "value": "X" }]
+            },
+            {
+              "id": 379,
+              "kind": "app",
+              "opcode": "Won",
+              "args": [{ "id": 378, "kind": "str", "value": "O" }]
+            },
+            {
+              "id": 381,
+              "kind": "app",
+              "opcode": "not",
+              "args": [{ "id": 380, "kind": "name", "name": "BoardFilled" }]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
