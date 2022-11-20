@@ -12,7 +12,7 @@ expression of TLA+. For instance, below is the example
 which instantiates `y2k.tla`:
 
 ```tla
-{{#include ../../../test/tla/y2k_instance.tla::11}}
+{{#include ../../../test/tla/y2k_instance.tla::15}}
 ```
 
 The downside of this approach is that you have to declare the variables of the
