@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
-import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx, UID}
 
 /**
@@ -34,7 +33,7 @@ sealed trait ElemPtr {
  */
 case class FixedElemPtr(elem: ArenaCell, value: Boolean) extends ElemPtr {
   override def toSmt: TlaEx = {
-    tla.bool(value).as(BoolT1)
+    tla.bool(value)
   }
 }
 
@@ -59,7 +58,7 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
   val uniqueName = s"_bool_elem$id"
 
   override def toSmt: TlaEx = {
-    tla.name(uniqueName).as(BoolT1)
+    tla.name(uniqueName, BoolT1)
   }
 }
 
