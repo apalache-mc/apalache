@@ -20,7 +20,7 @@ class TestTntIR extends AnyFunSuite {
     TntcOutput.read("""{"foo": 1}""") match {
       case Success(_) => fail("should return a failure")
       case Failure(err) =>
-        assert(err.getMessage().contains("missing keys in dictionary: module"))
+        assert(err.getMessage().contains("missing keys in dictionary: status, module, types"))
     }
   }
 }
