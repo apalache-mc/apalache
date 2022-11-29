@@ -12,7 +12,7 @@ import upickle.implicits.key
 import scala.util.Try
 
 // We use a slightly customized deserializer
-object TntDeserializer extends upickle.AttributeTagged {
+private[tnt] object TntDeserializer extends upickle.AttributeTagged {
 
   // By default, upickle uses the key `"$type"` to differentiate cases of a case
   // class, but TNT uses the key `"kind"` to encode the variant tag. This
@@ -24,16 +24,17 @@ object TntDeserializer extends upickle.AttributeTagged {
 
 import TntDeserializer.{macroRW, ReadWriter => RW}
 
-class TntIRParseError(errMsg: String) extends Exception("Input was not a valid representation of the TntIR: " + errMsg)
+private[tnt] class TntIRParseError(errMsg: String)
+    extends Exception("Input was not a valid representation of the TntIR: " + errMsg)
 
 /** The JSON output produced by tntc parse */
-case class TntcOutput(
+private[tnt] case class TntcOutput(
     status: String,
     module: TntModule,
     // Maps source IDs to types, see the `WithId` trait
     types: Map[Int, TntTypeScheme])
 
-object TntcOutput {
+private[tnt] object TntcOutput {
   implicit val rw: RW[TntcOutput] = macroRW
 
   def read(s: ujson.Readable): Try[TntcOutput] =
@@ -42,48 +43,48 @@ object TntcOutput {
     }
 }
 
-case class TntModule(
+private[tnt] case class TntModule(
     id: Int,
     name: String,
     defs: List[TntDef])
-object TntModule {
+private[tnt] object TntModule {
   implicit val rw: RW[TntModule] = macroRW
 }
 
 /** The representation of types in the type map */
-case class TntTypeScheme(
+private[tnt] case class TntTypeScheme(
     @key("type") typ: TntType
     // TODO Will we need these for anything?
     // typeVariables: List[String],
     // rowVariables: List[String]
   )
-object TntTypeScheme {
+private[tnt] object TntTypeScheme {
   implicit val rw: RW[TntTypeScheme] = macroRW
 }
 
 /** Source IDs, used to associate expressions with their inferred types */
-trait WithID {
+private[tnt] trait WithID {
   val id: Int
 }
 
 /** The representation of TNT expressions */
-sealed trait TntEx extends WithID
+sealed private[tnt] trait TntEx extends WithID
 
-object TntEx {
+private[tnt] object TntEx {
 
   implicit val rw: RW[TntEx] =
-    RW.merge(Name.rw, Bool.rw, TntInt.rw, Str.rw, App.rw, Lambda.rw, Let.rw)
+    RW.merge(TntName.rw, TntBool.rw, TntInt.rw, TntStr.rw, TntApp.rw, TntLambda.rw, TntLet.rw)
 
   /** A name of: a variable, constant, parameter, user-defined operator */
-  @key("name") case class Name(id: Int, name: String) extends TntEx {}
-  object Name {
-    implicit val rw: RW[Name] = macroRW
+  @key("name") case class TntName(id: Int, name: String) extends TntEx {}
+  object TntName {
+    implicit val rw: RW[TntName] = macroRW
   }
 
   /** The boolean literal value */
-  @key("bool") case class Bool(id: Int, value: Boolean) extends TntEx {}
-  object Bool {
-    implicit val rw: RW[Bool] = macroRW
+  @key("bool") case class TntBool(id: Int, value: Boolean) extends TntEx {}
+  object TntBool {
+    implicit val rw: RW[TntBool] = macroRW
   }
 
   @key("int") case class TntInt(id: Int, value: Int) extends TntEx {}
@@ -91,23 +92,23 @@ object TntEx {
     implicit val rw: RW[TntInt] = macroRW
   }
 
-  @key("str") case class Str(id: Int, value: String) extends TntEx {}
-  object Str {
-    implicit val rw: RW[Str] = macroRW
+  @key("str") case class TntStr(id: Int, value: String) extends TntEx {}
+  object TntStr {
+    implicit val rw: RW[TntStr] = macroRW
   }
 
-  @key("app") case class App(
+  @key("app") case class TntApp(
       id: Int,
       /** The name of the operator being applied */
       opcode: String,
       /** A list of arguments to the operator */
       args: List[TntEx])
       extends TntEx {}
-  object App {
-    implicit val rw: RW[App] = macroRW
+  object TntApp {
+    implicit val rw: RW[TntApp] = macroRW
   }
 
-  @key("lambda") case class Lambda(
+  @key("lambda") case class TntLambda(
       id: Int,
       /** Identifiers for the formal parameters */
       params: List[String],
@@ -117,27 +118,27 @@ object TntEx {
       /** The definition body */
       expr: TntEx)
       extends TntEx {}
-  object Lambda {
-    implicit val rw: RW[Lambda] = macroRW
+  object TntLambda {
+    implicit val rw: RW[TntLambda] = macroRW
   }
 
-  @key("let") case class Let(
+  @key("let") case class TntLet(
       id: Int,
       /** The operator being defined for use in the body */
-      opdef: TntDef.Def,
+      opdef: TntDef.TntOpDef,
       /** The body */
       expr: TntEx)
       extends TntEx {}
-  object Let {
-    implicit val rw: RW[Let] = macroRW
+  object TntLet {
+    implicit val rw: RW[TntLet] = macroRW
   }
 }
 
 /** TNT Definitions (e.g., of types, operators, constants, etc.) */
-sealed trait TntDef extends WithID
+sealed private[tnt] trait TntDef extends WithID
 
-object TntDef {
-  implicit val rw: RW[TntDef] = RW.merge(Def.rw, Var.rw, Const.rw, Assume.rw, TypeDef.rw)
+private[tnt] object TntDef {
+  implicit val rw: RW[TntDef] = RW.merge(TntOpDef.rw, TntVar.rw, TntConst.rw, TntAssume.rw, TntTypeDef.rw)
 
   trait WithOptionalTypeAnnotation {
     val typeAnnotation: Option[TntType]
@@ -153,7 +154,7 @@ object TntDef {
    * Note that * TntOpDef does not have any formal parameters. If an operator definition has formal parameters, then
    * `expr` is a lambda expression over those parameters.
    */
-  @key("def") case class Def(
+  @key("def") case class TntOpDef(
       id: Int,
       /** definition name */
       name: String,
@@ -163,39 +164,39 @@ object TntDef {
       expr: TntEx,
       typeAnnotation: Option[TntType] = None)
       extends TntDef with WithOptionalTypeAnnotation {}
-  object Def {
-    implicit val rw: RW[Def] = macroRW
+  object TntOpDef {
+    implicit val rw: RW[TntOpDef] = macroRW
   }
 
-  @key("const") case class Const(
+  @key("const") case class TntConst(
       id: Int,
       /** name of the constant */
       name: String,
       typeAnnotation: TntType)
       extends TntDef with WithTypeAnnotation {}
-  object Const {
-    implicit val rw: RW[Const] = macroRW
+  object TntConst {
+    implicit val rw: RW[TntConst] = macroRW
   }
 
-  @key("var") case class Var(
+  @key("var") case class TntVar(
       id: Int,
       /** name of the variable */
       name: String,
       typeAnnotation: TntType)
       extends TntDef with WithTypeAnnotation {}
-  object Var {
-    implicit val rw: RW[Var] = macroRW
+  object TntVar {
+    implicit val rw: RW[TntVar] = macroRW
   }
 
-  @key("assume") case class Assume(
+  @key("assume") case class TntAssume(
       id: Int,
       /** name of the assumption, may be '_' */
       name: String,
       /** an expression to associate with the name */
       assumption: TntEx)
       extends TntDef {}
-  object Assume {
-    implicit val rw: RW[Assume] = macroRW
+  object TntAssume {
+    implicit val rw: RW[TntAssume] = macroRW
   }
 
   /**
@@ -204,7 +205,7 @@ object TntDef {
    *   - Abstract types do not have an associated `type`
    *   - Type aliases always have an associated `type`
    */
-  @key("typedef") case class TypeDef(
+  @key("typedef") case class TntTypeDef(
       id: Int,
       /** name of a type alias */
       name: String,
@@ -216,8 +217,8 @@ object TntDef {
       // TODO need special instruction for this conversion
       typ: Option[TntType])
       extends TntDef {}
-  object TypeDef {
-    implicit val rw: RW[TypeDef] = macroRW
+  object TntTypeDef {
+    implicit val rw: RW[TntTypeDef] = macroRW
   }
 }
 
@@ -227,23 +228,23 @@ object TntDef {
  * Note that TNT types have an optional associated source ID. We ignore that in our representation currently, as we have
  * no use for source IDs on types.
  */
-sealed trait TntType
+sealed private[tnt] trait TntType
 
-object TntType {
+private[tnt] object TntType {
 
   implicit val rw: RW[TntType] = RW.merge(
-      BoolT.rw,
-      IntT.rw,
-      StrT.rw,
-      ConstT.rw,
-      VarT.rw,
-      SetT.rw,
-      SeqT.rw,
-      FunT.rw,
-      OperT.rw,
-      TupleT.rw,
-      RecordT.rw,
-      UnionT.rw,
+      TntBoolT.rw,
+      TntIntT.rw,
+      TntStrT.rw,
+      TntConstT.rw,
+      TntVarT.rw,
+      TntSetT.rw,
+      TntSeqT.rw,
+      TntFunT.rw,
+      TntOperT.rw,
+      TntTupleT.rw,
+      TntRecordT.rw,
+      TntUnionT.rw,
   )
 
   // NOTE: Contrary to TNT values, for TNT types, source IDs are optional.
@@ -253,49 +254,49 @@ object TntType {
   // optional values stupidly and if we specify `id` as `Option[Int]` it will
   // require the value of the ID field to be a (possibly empty) singleton array.
 
-  @key("bool") case class BoolT() extends TntType {}
-  object BoolT {
-    implicit val rw: RW[BoolT] = macroRW
+  @key("bool") case class TntBoolT() extends TntType {}
+  object TntBoolT {
+    implicit val rw: RW[TntBoolT] = macroRW
   }
 
-  @key("int") case class IntT() extends TntType
-  object IntT {
-    implicit val rw: RW[IntT] = macroRW
+  @key("int") case class TntIntT() extends TntType
+  object TntIntT {
+    implicit val rw: RW[TntIntT] = macroRW
   }
 
-  @key("str") case class StrT() extends TntType
-  object StrT {
-    implicit val rw: RW[StrT] = macroRW
+  @key("str") case class TntStrT() extends TntType
+  object TntStrT {
+    implicit val rw: RW[TntStrT] = macroRW
   }
 
-  @key("const") case class ConstT(name: String) extends TntType
-  object ConstT {
-    implicit val rw: RW[ConstT] = macroRW
+  @key("const") case class TntConstT(name: String) extends TntType
+  object TntConstT {
+    implicit val rw: RW[TntConstT] = macroRW
   }
 
-  @key("var") case class VarT(name: String) extends TntType
-  object VarT {
-    implicit val rw: RW[VarT] = macroRW
+  @key("var") case class TntVarT(name: String) extends TntType
+  object TntVarT {
+    implicit val rw: RW[TntVarT] = macroRW
   }
 
-  @key("set") case class SetT(elem: TntType) extends TntType
-  object SetT {
-    implicit val rw: RW[SetT] = macroRW
+  @key("set") case class TntSetT(elem: TntType) extends TntType
+  object TntSetT {
+    implicit val rw: RW[TntSetT] = macroRW
   }
 
-  @key("list") case class SeqT(elem: TntType) extends TntType
-  object SeqT {
-    implicit val rw: RW[SeqT] = macroRW
+  @key("list") case class TntSeqT(elem: TntType) extends TntType
+  object TntSeqT {
+    implicit val rw: RW[TntSeqT] = macroRW
   }
 
-  @key("fun") case class FunT(arg: TntType, res: TntType) extends TntType
-  object FunT {
-    implicit val rw: RW[FunT] = macroRW
+  @key("fun") case class TntFunT(arg: TntType, res: TntType) extends TntType
+  object TntFunT {
+    implicit val rw: RW[TntFunT] = macroRW
   }
 
-  @key("oper") case class OperT(args: List[TntType], res: TntType) extends TntType
-  object OperT {
-    implicit val rw: RW[OperT] = macroRW
+  @key("oper") case class TntOperT(args: List[TntType], res: TntType) extends TntType
+  object TntOperT {
+    implicit val rw: RW[TntOperT] = macroRW
   }
 
   case class RecordField(fieldName: String, fieldType: TntType)
@@ -324,14 +325,14 @@ object TntType {
     }
   }
 
-  @key("tup") case class TupleT(fields: Row) extends TntType
-  object TupleT {
-    implicit val rw: RW[TupleT] = macroRW
+  @key("tup") case class TntTupleT(fields: Row) extends TntType
+  object TntTupleT {
+    implicit val rw: RW[TntTupleT] = macroRW
   }
 
-  @key("rec") case class RecordT(fields: Row) extends TntType
-  object RecordT {
-    implicit val rw: RW[RecordT] = macroRW
+  @key("rec") case class TntRecordT(fields: Row) extends TntType
+  object TntRecordT {
+    implicit val rw: RW[TntRecordT] = macroRW
   }
 
   case class UnionRecord(tagValue: String, fields: Row)
@@ -339,8 +340,8 @@ object TntType {
     implicit val rw: RW[UnionRecord] = macroRW
   }
 
-  @key("union") case class UnionT(tag: String, records: List[UnionRecord]) extends TntType
-  object UnionT {
-    implicit val rw: RW[UnionT] = macroRW
+  @key("union") case class TntUnionT(tag: String, records: List[UnionRecord]) extends TntType
+  object TntUnionT {
+    implicit val rw: RW[TntUnionT] = macroRW
   }
 }
