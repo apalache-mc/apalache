@@ -6,7 +6,7 @@ package at.forsyte.apalache.io.tnt
 // See https://com-lihaoyi.github.io/upickle/#Builtins for documentation on
 // upickle semi-automatic JSON serialization docs.
 
-// The `key` pacakge allows customizing the JSON key for a class tag or attribute
+// The `key` package allows customizing the JSON key for a class tag or attribute
 // See https://com-lihaoyi.github.io/upickle/#CustomKeys
 import upickle.implicits.key
 import scala.util.Try
@@ -148,16 +148,16 @@ object TntDef {
   }
 
   /**
-   * A user-defined operator that is defined via one of the qualifiers: val, def, pred, action, or temporal. Note that
-   * TntOpDef does not have any formal parameters. If an operator definition has formal parameters, then `expr` should
-   * be a lambda expression over those parameters.
+   * A user-defined operator
+   *
+   * Note that * TntOpDef does not have any formal parameters. If an operator definition has formal parameters, then
+   * `expr` is a lambda expression over those parameters.
    */
   @key("def") case class Def(
       id: Int,
       /** definition name */
       name: String,
-      /** definition qualifier: 'val', 'def', 'action', 'temporal' */
-      // Should it be a sum type?
+      /** qualifiers that identify definition kinds, like `def`, `val`, etc. */
       qualifier: String,
       /** expression to be associated with the definition */
       expr: TntEx,
