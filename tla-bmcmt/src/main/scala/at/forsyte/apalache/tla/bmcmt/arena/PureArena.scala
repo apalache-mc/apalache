@@ -26,8 +26,6 @@ case class PureArena(
    *   the name returned by ArenaCell.toString
    * @return
    *   the cell, if it exists
-   * @throws java.util.NoSuchElementException
-   *   when no cell is found
    */
   def findCellByName(name: String): ArenaCell = cellMap(name)
 
@@ -38,13 +36,8 @@ case class PureArena(
    *   a name expression that follows the cell naming convention.
    * @return
    *   the found cell
-   * @throws CheckerException
-   *   if the name does not follow the convention
-   * @throws java.util.NoSuchElementException
-   *   when no cell is found
    */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = nameEx match {
-    // is the _if_ necessary? If the name is invalid, we'll hit an "element not found" exception anyway
     case NameEx(name) if ArenaCell.isValidName(name) => findCellByName(name)
     case _ => throw new CheckerException("Expected NameEx with a cell name, found: %s".format(nameEx), nameEx)
   }
@@ -64,7 +57,7 @@ case class PureArena(
   }
 
   /**
-   * Alternative to [[appendCell]], where the appended cell is freshly created by [[nextCell]] and may be accessed by
+   * Alternative to `appendCell`, where the appended cell is freshly created by [[nextCell]] and may be accessed by
    * [[topCell]] afterwards.
    *
    * @param cellType
@@ -74,10 +67,6 @@ case class PureArena(
    */
   def appendCell(cellT: CellT): PureArena = appendCell(nextCell(cellT))
 
-  /**
-   * @see
-   *   [[appendCell]]
-   */
   def +(cell: ArenaCell): PureArena = appendCell(cell)
 
   /**
@@ -95,6 +84,16 @@ case class PureArena(
       arena.appendCell(cell)
     }
   }
+
+  /**
+   * Alternative to `appendCellSeq`, constructing new cells via [[nextCell]] at every step. Returns a new arena, as well
+   * as the collection of cells created this way.
+   */
+  def appendCellSeq(cellTs: CellT*): (PureArena, Seq[ArenaCell]) =
+    cellTs.foldLeft((this, Seq.empty[ArenaCell])) { case ((arena, seq), cellT) =>
+      val newCell = arena.nextCell(cellT)
+      (arena.appendCell(newCell), seq :+ newCell)
+    }
 
   /**
    * Append 'has' edges that connect the first cell to the other cells, in the given order. The previously added edges

@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.types.tla
  * @author
  *   Jure Kukovec
  */
-case class ArenaContextSync(arena: PureArena, context: SolverContext) {
+case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
 
   /**
    * A fixed cell that equals to false in the Boolean theory.
@@ -95,7 +95,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   new arena
    */
-  def appendCellOld(cellType: CellT, isUnconstrained: Boolean = false): ArenaContextSync = {
+  def appendCellOld(cellType: CellT, isUnconstrained: Boolean = false): PureArenaAdapter = {
     val newCell = arena.nextCell(cellType, isUnconstrained)
     context.declareCell(newCell)
     this.copy(arena = arena.appendCell(newCell))
@@ -112,7 +112,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   new arena
    */
-  def appendCell(cellType: TlaType1, isUnconstrained: Boolean = false): ArenaContextSync =
+  def appendCell(cellType: TlaType1, isUnconstrained: Boolean = false): PureArenaAdapter =
     appendCellOld(CellT.fromType1(cellType), isUnconstrained)
 
   /**
@@ -125,7 +125,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   a pair: the new arena and a sequence of new cells
    */
-  def appendCellSeq(types: CellT*): (ArenaContextSync, Seq[ArenaCell]) = {
+  def appendCellSeq(types: CellT*): (PureArenaAdapter, Seq[ArenaCell]) = {
     val (cells, newArena) = types.foldLeft((Seq.empty[ArenaCell], arena)) { case ((seq, a), cellT) =>
       val nextCell = a.nextCell(cellT)
       val nextArena = a.appendCell(nextCell)
@@ -145,7 +145,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   new arena
    */
-  def appendCellNoSmt(cellType: CellT, isUnconstrained: Boolean = false): ArenaContextSync = {
+  def appendCellNoSmt(cellType: CellT, isUnconstrained: Boolean = false): PureArenaAdapter = {
     val newCell = arena.nextCell(cellType, isUnconstrained)
     assert(!arena.cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
     this.copy(arena = arena.appendCell(newCell))
@@ -163,7 +163,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   the updated arena
    */
-  def appendHas(parentCell: ArenaCell, childrenCells: ElemPtr*): ArenaContextSync =
+  def appendHas(parentCell: ArenaCell, childrenCells: ElemPtr*): PureArenaAdapter =
     childrenCells.foldLeft(this) { (a, c) =>
       a.appendOneHasEdge(addInPred = true, parentCell, c)
     }
@@ -179,7 +179,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   the updated arena
    */
-  def appendHasNoSmt(parentCell: ArenaCell, childrenCells: ElemPtr*): ArenaContextSync =
+  def appendHasNoSmt(parentCell: ArenaCell, childrenCells: ElemPtr*): PureArenaAdapter =
     this.copy(arena = arena.appendHas(parentCell, childrenCells: _*))
 
   /**
@@ -197,7 +197,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
   private def appendOneHasEdge(
       addInPred: Boolean,
       setCell: ArenaCell,
-      elemCell: ElemPtr): ArenaContextSync = {
+      elemCell: ElemPtr): PureArenaAdapter = {
     if (addInPred) {
       context.declareInPredIfNeeded(setCell, elemCell.elem)
     }
@@ -225,7 +225,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   a new arena
    */
-  def setDom(funCell: ArenaCell, domCell: ArenaCell): ArenaContextSync = {
+  def setDom(funCell: ArenaCell, domCell: ArenaCell): PureArenaAdapter = {
     if (arena.hasDom(funCell))
       throw new IllegalStateException("Trying to set function domain, whereas one is already set")
 
@@ -242,7 +242,7 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
    * @return
    *   a new arena
    */
-  def setCdm(funCell: ArenaCell, cdmCell: ArenaCell): ArenaContextSync = {
+  def setCdm(funCell: ArenaCell, cdmCell: ArenaCell): PureArenaAdapter = {
     if (arena.hasCdm(funCell))
       throw new IllegalStateException("Trying to set function co-domain, whereas one is already set")
 
@@ -336,8 +336,8 @@ case class ArenaContextSync(arena: PureArena, context: SolverContext) {
 
 }
 
-object ArenaContextSync {
-  def create(solverContext: SolverContext): ArenaContextSync = {
+object PureArenaAdapter {
+  def create(solverContext: SolverContext): PureArenaAdapter = {
     val emptyArena = PureArena.empty
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
@@ -349,18 +349,11 @@ object ArenaContextSync {
         InfSetT(CellTFrom(IntT1)),
     )
 
-    val (initArena, cells) = appendSeq.foldLeft((emptyArena, Seq.empty[ArenaCell])) { case ((arena, seq), cellT) =>
-      val newCell = arena.nextCell(cellT)
-      (arena.appendCell(newCell), seq :+ newCell)
-    }
+    val (initArena, cells) = emptyArena.appendCellSeq(appendSeq: _*)
     // declare Boolean cells in SMT
-    val Seq(cellFalse, cellTrue, cellBoolean, cellNat, cellInt) = cells
+    val Seq(cellFalse, cellTrue, cellBoolean, _, _) = cells
+    cells.foreach(solverContext.declareCell)
 
-    solverContext.declareCell(cellFalse)
-    solverContext.declareCell(cellTrue)
-    solverContext.declareCell(cellBoolean)
-    solverContext.declareCell(cellNat)
-    solverContext.declareCell(cellInt)
     solverContext.assertGroundExpr(tla.not(cellFalse.toBuilder))
     solverContext.assertGroundExpr(cellTrue.toNameEx)
     // link c_BOOLEAN to c_FALSE and c_TRUE
@@ -368,6 +361,6 @@ object ArenaContextSync {
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
     solverContext.assertGroundExpr(tla.storeInSet(cellFalse.toBuilder, cellBoolean.toBuilder))
     solverContext.assertGroundExpr(tla.storeInSet(cellTrue.toBuilder, cellBoolean.toBuilder))
-    ArenaContextSync(finalArena, solverContext)
+    PureArenaAdapter(finalArena, solverContext)
   }
 }
