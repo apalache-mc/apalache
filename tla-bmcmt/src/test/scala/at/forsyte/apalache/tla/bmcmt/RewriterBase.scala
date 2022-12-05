@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -14,7 +15,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
   protected type FixtureParam = SMTEncoding
 
   protected var solverContext: SolverContext = _
-  protected var arena: Arena = _
+  protected var arena: PureArenaAdapter = _
 
   protected val renaming = new IncrementalRenaming(new IdleTracker)
 

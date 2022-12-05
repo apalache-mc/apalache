@@ -32,7 +32,7 @@ class SetOps(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state and the sequence of Boolean cells
    */
-  def dedup(state: SymbState, oldSet: ArenaCell): (SymbState, List[ArenaCell]) = {
+  def dedup(state: SymbState, oldSet: ArenaCell): (SymbState, Seq[ArenaCell]) = {
     val elems = state.arena.getHas(oldSet)
     var newArena = state.arena
     // introduce one predicate per element

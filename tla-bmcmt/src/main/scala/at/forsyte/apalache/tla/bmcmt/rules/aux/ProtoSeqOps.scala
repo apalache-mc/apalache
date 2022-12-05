@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.types.UnknownT
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.arena.{PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 
 import scala.collection.immutable.ArraySeq
 
@@ -58,7 +59,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
     val protoSeq = nextState.arena.topCell
 
     // attach the cells to the proto sequence, do not track this in SMT
-    nextState = nextState.updateArena(_.appendHasNoSmt(protoSeq, ArraySeq.unsafeWrapArray(cellsAsArray): _*))
+    nextState = nextState
+      .updateArena(_.appendHasNoSmt(protoSeq,
+              ArraySeq.unsafeWrapArray(cellsAsArray).map {
+                SmtConstElemPtr // @Igor: Should we use Expr pointers here?
+              }: _*))
     nextState.setRex(protoSeq.toNameEx)
   }
 
@@ -70,7 +75,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the new arena and the fresh cell that holds the proto sequence
    */
-  def makeEmptyProtoSeq(arena: Arena): (Arena, ArenaCell) = {
+  def makeEmptyProtoSeq(arena: PureArenaAdapter): (PureArenaAdapter, ArenaCell) = {
     val newArena = arena.appendCellNoSmt(UnknownT())
     (newArena, newArena.topCell)
   }
@@ -85,7 +90,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the number of cells that can fit into the sequence
    */
-  def capacity(arena: Arena, protoSeq: ArenaCell): Int = {
+  def capacity(arena: PureArenaAdapter, protoSeq: ArenaCell): Int = {
     arena.getHas(protoSeq).length
   }
 
@@ -100,9 +105,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the list of cells that are attached to the proto sequence
    */
-  def elems(arena: Arena, protoSeq: ArenaCell): List[ArenaCell] = {
+  def elems(arena: PureArenaAdapter, protoSeq: ArenaCell): Seq[ArenaCell] =
     arena.getHas(protoSeq)
-  }
 
   /**
    * Retrieve the ith element of the proto sequence. This operation does not produce any SMT constraints and it should
@@ -115,11 +119,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the cell that is attached to the index
    */
-  def at(arena: Arena, protoSeq: ArenaCell, indexBase1: Int): ArenaCell = {
+  def at(arena: PureArenaAdapter, protoSeq: ArenaCell, indexBase1: Int): ArenaCell = {
     val protoElems = elems(arena, protoSeq)
     if (indexBase1 < 1 || indexBase1 > protoElems.length) {
       throw new IllegalArgumentException(
-          s"Implementation bug: Accessing proto sequence of size ${protoElems.length} with index ${indexBase1}")
+          s"Implementation bug: Accessing proto sequence of size ${protoElems.length} with index $indexBase1")
     } else {
       protoElems(indexBase1 - 1)
     }
@@ -156,6 +160,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       // rewrite `indexBase1Ex` to a single cell
       var nextState = rewriter.rewriteUntilDone(state.setRex(indexBase1Ex))
       val indexCellBase1 = nextState.asCell
+      // Sanity check so we can safely .toBuilder later
+      assert(indexCellBase1.cellType == CellTFrom(IntT1), "Index cell must be integer-typed.")
 
       rewriter.intValueCache.findKey(indexCellBase1) match {
         case None =>
@@ -166,23 +172,20 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
           // pick an element to be the result
           nextState = picker.pickByOracle(oracleState, oracle, protoElems, nextState.arena.cellTrue().toNameEx)
           val pickedResult = nextState.asCell
-          val indexCellBase1asInt = indexCellBase1.toNameEx.as(IntT1)
+          val indexCellBase1asInt = indexCellBase1.toBuilder
           // If 0 < indexCell <= capacity, then require oracle = indexCell - 1.
           // Otherwise, we do not restrict the outcome. This is consistent with Specifying Systems.
           // We do not refer to the actual length of the sequence (which we don't know).
           // Instead, we use the capacity of the proto sequence.
           val inRange =
             tla
-              .and(tla.lt(tla.int(0), indexCellBase1asInt).as(BoolT1),
-                  tla.le(indexCellBase1asInt, tla.int(capacity)).as(BoolT1))
-              .as(BoolT1)
+              .and(tla.lt(tla.int(0), tla.unchecked(indexCellBase1asInt)),
+                  tla.le(indexCellBase1asInt, tla.int(capacity)))
           // (indexBase1 - 1 = oracle) <=> inRange
           val oracleEqArg =
             tla
-              .eql(tla.minus(indexCellBase1asInt, tla.int(1)).as(IntT1), oracle.intCell.toNameEx.as(IntT1))
-              .as(IntT1)
-              .as(BoolT1)
-          val iff = tla.eql(oracleEqArg, inRange).as(BoolT1)
+              .eql(tla.minus(indexCellBase1asInt, tla.int(1)), oracle.intCell.toBuilder)
+          val iff = tla.eql(oracleEqArg, inRange)
           rewriter.solverContext.assertGroundExpr(iff)
           nextState.setRex(pickedResult.toNameEx)
 
@@ -243,14 +246,14 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    *   the new symbolic state that contains the created sequence as the expression
    */
   def mkSeqCell(
-      arena: Arena,
+      arena: PureArenaAdapter,
       seqT: TlaType1,
       protoSeq: ArenaCell,
-      len: ArenaCell): (Arena, ArenaCell) = {
+      len: ArenaCell): (PureArenaAdapter, ArenaCell) = {
     var newArena = arena.appendCell(seqT)
     val seq = newArena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length
-    newArena = newArena.appendHasNoSmt(seq, len, protoSeq)
+    newArena = newArena.appendHasNoSmt(seq, SmtConstElemPtr(len), SmtConstElemPtr(protoSeq))
     (newArena, seq)
   }
 
@@ -264,9 +267,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the cell of the proto sequence
    */
-  def fromSeq(arena: Arena, seq: ArenaCell): ArenaCell = {
+  def fromSeq(arena: PureArenaAdapter, seq: ArenaCell): ArenaCell =
     getLenAndProto(arena, seq)._2
-  }
 
   /**
    * Retrieve the length of the sequence.
@@ -278,9 +280,8 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   the cell of the length
    */
-  def seqLen(arena: Arena, seq: ArenaCell): ArenaCell = {
+  def seqLen(arena: PureArenaAdapter, seq: ArenaCell): ArenaCell =
     getLenAndProto(arena, seq)._1
-  }
 
   /**
    * Unpack a sequence into a commonly required triple: the proto sequence, the length cell, and capacity.
@@ -292,7 +293,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
    * @return
    *   (protoSequenceAsCell, lengthAsCell, capacity)
    */
-  def unpackSeq(arena: Arena, seq: ArenaCell): (ArenaCell, ArenaCell, Int) = {
+  def unpackSeq(arena: PureArenaAdapter, seq: ArenaCell): (ArenaCell, ArenaCell, Int) = {
     val (len, protoSeq) = getLenAndProto(arena, seq)
     (protoSeq, len, capacity(arena, protoSeq))
   }
@@ -321,6 +322,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       protoSeq: ArenaCell,
       len: ArenaCell,
       binOp: (SymbState, ArenaCell) => SymbState): SymbState = {
+    require(len.cellType == CellTFrom(IntT1), "Length must be integer-typed.")
     // propagate the result only if the element is below the length
     def applyOne(state: SymbState, elem: ArenaCell, indexBase1: Int) = {
       // apply the operator, whether we have reached the length or not (we don't know statically)
@@ -331,9 +333,9 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       nextState = picker
         .pickByOracle(oracleState, oracle, Seq(state.asCell, newResult), nextState.arena.cellTrue().toNameEx)
       val picked = nextState.ex
-      val inRange = tla.le(tla.int(indexBase1), len.toNameEx.as(IntT1)).as(BoolT1)
-      val pickNew = oracle.whenEqualTo(nextState, 1).as(BoolT1)
-      val eql = tla.eql(inRange, pickNew).as(BoolT1)
+      val inRange = tla.le(tla.int(indexBase1), len.toBuilder)
+      val pickNew = tla.unchecked(oracle.whenEqualTo(nextState, 1).as(BoolT1))
+      val eql = tla.eql(inRange, pickNew)
       rewriter.solverContext.assertGroundExpr(eql)
 
       nextState.setRex(picked)
@@ -346,12 +348,9 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
     }
   }
 
-  private def getLenAndProto(arena: Arena, seq: ArenaCell): (ArenaCell, ArenaCell) = {
-    val cells = arena.getHas(seq)
-    if (cells.length != 2) {
-      throw new IllegalStateException(s"Corrupt sequence in the cell ${seq.id} of type ${seq.cellType}")
-    } else {
-      (cells.head, cells.tail.head)
+  private def getLenAndProto(arena: PureArenaAdapter, seq: ArenaCell): (ArenaCell, ArenaCell) =
+    arena.getHas(seq) match {
+      case Seq(len, proto) => (len, proto)
+      case _ => throw new IllegalStateException(s"Corrupt sequence in the cell ${seq.id} of type ${seq.cellType}")
     }
-  }
 }

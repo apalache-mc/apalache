@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.smt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types._
@@ -304,7 +305,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    * @param arena
    *   an arena
    */
-  override def checkConsistency(arena: Arena): Unit = {
+  override def checkConsistency(arena: PureArenaAdapter): Unit = {
     val topId = arena.topCell.id
     if (maxCellIdPerContext.head > topId) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,

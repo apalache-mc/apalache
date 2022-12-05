@@ -222,7 +222,10 @@ case class PureArena(
 
 object PureArena {
 
-  import at.forsyte.apalache.tla.bmcmt.Arena.namePrefix
+  /**
+   * The prefix of all cells.
+   */
+  val namePrefix = "$C$"
 
   val falseName: String = namePrefix + "0"
   val trueName: String = namePrefix + "1"

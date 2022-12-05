@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PureArenaAdapter}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.{SetT1, StrT1}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 
 import scala.collection.immutable.SortedSet
 
@@ -15,7 +15,7 @@ import scala.collection.immutable.SortedSet
  *   Igor Konnov
  */
 class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueCache)
-    extends AbstractCache[Arena, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
+    extends AbstractCache[PureArenaAdapter, (SortedSet[String], SortedSet[String]), ArenaCell] with Serializable {
 
   /**
    * Create a set for a sorted set of record keys.
@@ -27,16 +27,18 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
    * @return
    *   a target value that is going to be cached and the new context
    */
-  override def create(context: Arena, usedAndUnusedKeys: (SortedSet[String], SortedSet[String])): (Arena, ArenaCell) = {
+  override def create(
+      context: PureArenaAdapter,
+      usedAndUnusedKeys: (SortedSet[String], SortedSet[String])): (PureArenaAdapter, ArenaCell) = {
     val usedKeys = usedAndUnusedKeys._1
     val unusedKeys = usedAndUnusedKeys._2
     val allKeys: SortedSet[String] = usedKeys.union(unusedKeys)
     var arena = context
 
-    def strToCell(str: String): ArenaCell = {
+    def strToCell(str: String): ElemPtr = {
       val (newArena, cell) = strValueCache.getOrCreate(arena, (StrT1.toString, str))
       arena = newArena
-      cell
+      FixedElemPtr(cell, true) // @Igor: Is it always the case that record domains are fixed? I think so.
     }
 
     val allCells = allKeys.toList.map(strToCell)
@@ -48,9 +50,9 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
     for ((cell, key) <- allCells.zip(allKeys)) {
       val cond =
         if (usedKeys.contains(key)) {
-          tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx)
+          tla.storeInSet(cell.elem.toBuilder, set.toBuilder)
         } else {
-          tla.not(tla.apalacheSelectInSet(cell.toNameEx, set.toNameEx))
+          tla.not(tla.storeInSet(cell.elem.toBuilder, set.toBuilder))
         }
 
       solverContext.assertGroundExpr(cond)

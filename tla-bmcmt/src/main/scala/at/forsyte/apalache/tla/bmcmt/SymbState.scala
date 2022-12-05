@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -10,13 +11,13 @@ import at.forsyte.apalache.tla.lir.TlaEx
  * @author
  *   Igor Konnov
  */
-class SymbState(val ex: TlaEx, val arena: Arena, val binding: Binding) extends Serializable {
+class SymbState(val ex: TlaEx, val arena: PureArenaAdapter, val binding: Binding) extends Serializable {
 
   def setRex(nex: TlaEx): SymbState = {
     new SymbState(nex, arena, binding)
   }
 
-  def setArena(newArena: Arena): SymbState = {
+  def setArena(newArena: PureArenaAdapter): SymbState = {
     new SymbState(ex, newArena, binding)
   }
 
@@ -40,7 +41,7 @@ class SymbState(val ex: TlaEx, val arena: Arena, val binding: Binding) extends S
    * @return
    *   the new symbolic state
    */
-  def updateArena(f: Arena => Arena): SymbState = {
+  def updateArena(f: PureArenaAdapter => PureArenaAdapter): SymbState = {
     setArena(f(arena))
   }
 

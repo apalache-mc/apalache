@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.{IntT1, OperEx, ValEx}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * A cache for integer constants that maps an integer to an integer constant in SMT.
@@ -13,13 +12,14 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  * @author
  *   Igor Konnov
  */
-class IntValueCache(solverContext: SolverContext) extends AbstractCache[Arena, BigInt, ArenaCell] with Serializable {
+class IntValueCache(solverContext: SolverContext)
+    extends AbstractCache[PureArenaAdapter, BigInt, ArenaCell] with Serializable {
 
-  def create(arena: Arena, intValue: BigInt): (Arena, ArenaCell) = {
+  def create(arena: PureArenaAdapter, intValue: BigInt): (PureArenaAdapter, ArenaCell) = {
     // introduce a new constant
     val newArena = arena.appendCell(IntT1)
     val intCell = newArena.topCell
-    solverContext.assertGroundExpr(OperEx(TlaOper.eq, intCell.toNameEx, ValEx(TlaInt(intValue))))
+    solverContext.assertGroundExpr(tla.eql(intCell.toBuilder, tla.int(intValue)))
     (newArena, intCell)
   }
 }

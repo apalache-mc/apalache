@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -27,7 +28,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val filtered = elems.zipWithIndex.filter(p => isIn(p._2)).map(_._1)
       arena = arena.appendCellOld(set.cellType)
       val subsetCell = arena.topCell
-      arena = arena.appendHas(subsetCell, filtered: _*)
+      arena = arena.appendHas(subsetCell, filtered.map { SmtConstElemPtr }: _*)
       for (e <- filtered) {
         val inSubset = tla.apalacheStoreInSet(e.toNameEx, subsetCell.toNameEx)
         val notInSubset =
@@ -55,7 +56,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     // create a cell for the powerset, yeah, it is crazy, but hopefully these subsets are small
     arena = arena.appendCell(SetT1(set.cellType.toTlaType1))
     val powsetCell = arena.topCell
-    arena = arena.appendHas(powsetCell, subsets: _*)
+    arena = arena.appendHas(powsetCell, subsets.map(SmtConstElemPtr): _*)
     for (subset <- subsets) {
       rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx))
     }

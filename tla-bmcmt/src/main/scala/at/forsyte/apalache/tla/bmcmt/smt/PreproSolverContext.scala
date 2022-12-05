@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
@@ -184,7 +185,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
    * @param arena
    *   an arena
    */
-  override def checkConsistency(arena: Arena): Unit = context.checkConsistency(arena)
+  override def checkConsistency(arena: PureArenaAdapter): Unit = context.checkConsistency(arena)
 
   /**
    * Write a message to the log file. This is helpful to debug the SMT encoding.

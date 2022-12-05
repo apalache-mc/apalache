@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle, SparseOracle}
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -28,7 +29,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   // the control state of the executor
   private var controlState: ExecutorControlState = Preparing()
 
-  private val initialArena = Arena.create(ctx.rewriter.solverContext)
+  private val initialArena = PureArenaAdapter.create(ctx.rewriter.solverContext)
   // the latest symbolic state that is produced by the rewriter
   var lastState = new SymbState(initialArena.cellTrue().toNameEx, initialArena, Binding())
   // the stack of the variable bindings, one per state, in reverse order, excluding the binding in topState

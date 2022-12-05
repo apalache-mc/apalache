@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 
 import scala.collection.immutable.SortedMap
 
@@ -46,7 +46,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val recordCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- fields.valuesIterator) {
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, fieldCell))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, FixedElemPtr(fieldCell, true)))
     }
 
     // In contrast to the old records, we do not associate the record domain with a record.
@@ -144,7 +144,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
    * @return
    *   a cell that contains the extracted field
    */
-  def getField(arena: Arena, recordCell: ArenaCell, fieldName: String): ArenaCell = {
+  def getField(arena: PureArenaAdapter, recordCell: ArenaCell, fieldName: String): ArenaCell = {
     val fieldTypes = getFieldTypes(recordCell)
     expectFieldName(recordCell, fieldTypes, fieldName)
 
@@ -167,7 +167,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
    * @return
    *   a cell that contains the extracted field
    */
-  def getUnsafeVariantValue(arena: Arena, variantCell: ArenaCell, tagName: String): ArenaCell = {
+  def getUnsafeVariantValue(arena: PureArenaAdapter, variantCell: ArenaCell, tagName: String): ArenaCell = {
     val options = getVariantOptions(variantCell)
     expectVariantTag(variantCell, options, tagName)
 
@@ -199,11 +199,10 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val tagCell = getVariantTag(state.arena, variantCell)
     val unsafeValueCell = getUnsafeVariantValue(state.arena, variantCell, tagName)
     // IF variant.__tag = tagName THEN variant.__value ELSE defaultValue
-    val tagNameOfSort = tla.str(tagName).as(StrT1)
+    val tagNameOfSort = tla.str(tagName)
     val ite =
       tla
-        .ite(tla.eql(tagCell.toNameEx, tagNameOfSort).as(BoolT1), unsafeValueCell.toNameEx, defaultValue.toNameEx)
-        .as(defaultValue.cellType.toTlaType1)
+        .ite(tla.eql(tagCell.toBuilder, tagNameOfSort), unsafeValueCell.toBuilder, defaultValue.toBuilder)
     rewriter.rewriteUntilDone(state.setRex(ite))
   }
 
@@ -217,7 +216,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
    * @return
    *   the cell that contains the tag value
    */
-  def getVariantTag(arena: Arena, variantCell: ArenaCell): ArenaCell = {
+  def getVariantTag(arena: PureArenaAdapter, variantCell: ArenaCell): ArenaCell = {
     val options = getVariantOptions(variantCell)
 
     val index =
@@ -252,19 +251,19 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
         val variants = nextState.arena.getHas(setCell)
         // get the values unsafely and leave only those values that are produced from the variants tagged with tagName
         val values = variants.map(v => getUnsafeVariantValue(nextState.arena, v, tagName))
-        nextState = nextState.updateArena(_.appendHas(filteredSetCell, values: _*))
+        nextState = nextState.updateArena(_.appendHas(filteredSetCell, values.map { SmtConstElemPtr }: _*))
         variants.zip(values).foreach { case (variant, value) =>
-          val inFiltered = tla.apalacheStoreInSet(value.toNameEx, filteredSetCell.toNameEx).as(BoolT1)
-          val notInFiltered = tla.apalacheStoreNotInSet(value.toNameEx, filteredSetCell.toNameEx).as(BoolT1)
-          val inOriginal = tla.apalacheSelectInSet(variant.toNameEx, setCell.toNameEx).as(BoolT1)
+          val inFiltered = tla.storeInSet(value.toBuilder, filteredSetCell.toBuilder)
+          val notInFiltered = tla.storeNotInSet(value.toBuilder, filteredSetCell.toBuilder)
+          val inOriginal = tla.selectInSet(variant.toBuilder, setCell.toBuilder)
           val variantTag = getVariantTag(nextState.arena, variant)
           nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, goalTagAsCell, variantTag)
           val tagsEq = rewriter.lazyEq.safeEq(goalTagAsCell, variantTag)
-          val storeIf = tla.ite(tla.and(tagsEq, inOriginal).as(BoolT1), inFiltered, notInFiltered).as(BoolT1)
+          val storeIf = tla.ite(tla.and(tagsEq, inOriginal), inFiltered, notInFiltered)
           rewriter.solverContext.assertGroundExpr(storeIf)
         }
 
-        nextState.setRex(filteredSetCell.toNameEx)
+        nextState.setRex(filteredSetCell.toBuilder)
 
       case _ =>
         throw new TypingException(s"Expected a set of variants, one of them being $tagName()", state.ex.ID)
@@ -301,10 +300,10 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     // add the fields in the order of their names, update by name
     for ((name, oldCell) <- fieldTypes.keySet.zip(elems)) {
       val updatedCell = if (name == fieldName) newCell else oldCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, updatedCell))
+      nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, FixedElemPtr(updatedCell, true)))
     }
 
-    nextState.setRex(newRecord.toNameEx)
+    nextState.setRex(newRecord.toBuilder)
   }
 
   private def expectFieldName(
@@ -314,7 +313,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     if (!fieldTypes.contains(fieldName)) {
       val recordT = RecRowT1(RowT1(fieldTypes, None))
       val msg = s"Accessing a non-existing field $fieldName of record of type $recordT"
-      throw new RewriterException(msg, recordCell.toNameEx)
+      throw new RewriterException(msg, recordCell.toBuilder)
     }
   }
 
@@ -325,7 +324,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     if (!options.contains(tagName)) {
       val variantT = VariantT1(RowT1(options, None))
       val msg = s"Accessing a non-existing variant option via tag $tagName of variant of type $variantT"
-      throw new RewriterException(msg, variantCell.toNameEx)
+      throw new RewriterException(msg, variantCell.toBuilder)
     }
   }
 
@@ -334,7 +333,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
       case CellTFrom(RecRowT1(RowT1(ft, None))) => ft
 
       case tt =>
-        throw new RewriterException(s"Unexpected record type $tt of cell ${cell.id}", cell.toNameEx)
+        throw new RewriterException(s"Unexpected record type $tt of cell ${cell.id}", cell.toBuilder)
     }
   }
 
@@ -343,7 +342,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
       case CellTFrom(VariantT1(RowT1(opts, None))) => opts
 
       case tt =>
-        throw new RewriterException(s"Unexpected variant type $tt of cell ${cell.id}", cell.toNameEx)
+        throw new RewriterException(s"Unexpected variant type $tt of cell ${cell.id}", cell.toBuilder)
     }
   }
 }

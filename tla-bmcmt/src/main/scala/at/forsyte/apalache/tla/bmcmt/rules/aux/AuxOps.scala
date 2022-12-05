@@ -3,11 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{BuilderEx, OperEx, TlaEx, ValEx}
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Auxiliary methods for handling rewriting rules.
@@ -49,28 +46,29 @@ object AuxOps {
         val domainElems = nextState.arena.getHas(domain)
         val relationElems = nextState.arena.getHas(relation)
 
-        def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell): BuilderEx = {
-          val eq = rewriter.lazyEq.safeEq(domainElem, checkedElem)
-          val selectInSet = tla.apalacheSelectInSet(domainElem.toNameEx, domain.toNameEx)
+        def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell): TBuilderInstruction = {
+          val eq = tla.unchecked(rewriter.lazyEq.safeEq(domainElem, checkedElem))
+          val selectInSet = tla.selectInSet(domainElem.toBuilder, domain.toBuilder)
           tla.and(eq, selectInSet)
         }
 
-        def isInDomain(elem: ArenaCell): TlaEx = {
+        def isInDomain(elem: ArenaCell): TBuilderInstruction = {
           if (domainElems.isEmpty) {
-            ValEx(TlaBool(false))
+            tla.bool(false)
           } else {
             // We check if elem is in the domain
-            val elemInDomain = domainElems.zipAll(List(), elem, elem).map(zip => eqAndInDomain(zip._1, zip._2))
+            val elemInDomain =
+              domainElems.zipAll(List.empty[ArenaCell], elem, elem).map(zip => eqAndInDomain(zip._1, zip._2))
             tla.or(elemInDomain: _*)
           }
         }
 
         for (tuple <- relationElems) {
           val funArg = nextState.arena.getHas(tuple).head
-          val argInDomain = tla.apalacheSelectInSet(funArg.toNameEx, domain.toNameEx)
+          val argInDomain = tla.selectInSet(funArg.toBuilder, domain.toBuilder)
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domainElems.map((_, funArg)))
           rewriter.solverContext.declareInPredIfNeeded(domain, funArg) // inPreds might not be declared
-          rewriter.solverContext.assertGroundExpr(OperEx(TlaBoolOper.equiv, argInDomain, isInDomain(funArg)))
+          rewriter.solverContext.assertGroundExpr(tla.equiv(argInDomain, isInDomain(funArg)))
         }
 
         nextState
@@ -101,19 +99,19 @@ object AuxOps {
       checkedElem: ArenaCell,
       setElem: ArenaCell,
       setCell: ArenaCell,
-      lazyEq: Boolean): TlaEx = {
+      lazyEq: Boolean): TBuilderInstruction = {
 
     val conjunction = if (lazyEq) {
       tla.and(
-          tla.apalacheSelectInSet(checkedElem.toNameEx, setCell.toNameEx),
-          rewriter.lazyEq.cachedEq(checkedElem, setElem),
+          tla.selectInSet(checkedElem.toBuilder, setCell.toBuilder),
+          tla.unchecked(rewriter.lazyEq.cachedEq(checkedElem, setElem)),
       )
     } else {
       tla.and(
-          tla.apalacheSelectInSet(checkedElem.toNameEx, setCell.toNameEx),
-          tla.eql(checkedElem.toNameEx, setElem.toNameEx),
+          tla.selectInSet(checkedElem.toBuilder, setCell.toBuilder),
+          tla.eql(checkedElem.toBuilder, setElem.toBuilder),
       )
     }
-    simplifier.simplifyShallow(conjunction)
+    conjunction.map(simplifier.simplifyShallow)
   }
 }

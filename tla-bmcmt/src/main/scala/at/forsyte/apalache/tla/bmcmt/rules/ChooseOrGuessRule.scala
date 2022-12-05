@@ -81,7 +81,7 @@ class ChooseOrGuessRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
       // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
-      nextState.setRex(pickedCell.toNameEx)
+      nextState.setRex(pickedCell.toBuilder)
     }
   }
 }

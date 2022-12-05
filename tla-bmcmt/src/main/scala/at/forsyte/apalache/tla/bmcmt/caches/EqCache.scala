@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.caches.EqCache._
 import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, StackableContext}
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 
 import scala.collection.mutable
 
@@ -70,7 +69,7 @@ class EqCache() extends StackableContext with Serializable with Recoverable[EqCa
         tla.bool(true)
 
       case EqEntry() =>
-        tla.eql(left.toNameEx, right.toNameEx)
+        tla.eql(left.toBuilder, right.toBuilder)
 
       case ExprEntry(ex) =>
         ex

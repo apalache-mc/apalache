@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
-import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, TlaEx, TupT1}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.FunT1
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -33,9 +33,8 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     nextState = nextState.updateArena(_.setDom(resultFunCell, domainCell))
 
     // Make pair <arg,res> to propagate metadata
-    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TlaEx = {
-      tla.tuple(indexCell.toNameEx, resCell.toNameEx).typed(TupT1(funT.arg, funT.res))
-    }
+    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TBuilderInstruction =
+      tla.tuple(indexCell.toBuilder, resCell.toBuilder)
 
     nextState = rewriter.rewriteUntilDone(nextState.setRex(mkPair(indexCell, valueCell)))
     val newPairCell = nextState.asCell
@@ -47,16 +46,13 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     val resultRelation = nextState.arena.topCell
 
     def eachRelationPair(pair: ArenaCell): Unit = {
-      val tupT = TupT1(funT.arg, funT.res)
       val pairIndex = nextState.arena.getHas(pair).head
       val ite = tla
-        .ite(tla.eql(pairIndex.toNameEx.as(tupT), indexCell.toNameEx.as(funT.arg)).as(BoolT1),
-            newPairCell.toNameEx.as(tupT), pair.toNameEx.as(tupT))
-        .as(tupT)
+        .ite(tla.eql(pairIndex.toBuilder, indexCell.toBuilder), newPairCell.toBuilder, pair.toBuilder)
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(resultRelation, updatedCell))
+      nextState = nextState.updateArena(_.appendHasNoSmt(resultRelation, SmtConstElemPtr(updatedCell)))
     }
 
     // Add the appropriate pairs <arg,res> to resultRelation
@@ -66,7 +62,7 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     nextState = constrainRelationArgs(nextState, rewriter, domainCell, resultRelation)
 
     // Add a constraint equating resultFunCell to funCell, since resultFunCell is initially unconstrained
-    val eql = tla.eql(resultFunCell.toNameEx, funCell.toNameEx)
+    val eql = tla.eql(resultFunCell.toBuilder, funCell.toBuilder)
     rewriter.solverContext.assertGroundExpr(eql)
 
     // We need to constrain resultRelationElems w.r.t relationCells and newPairCell
@@ -75,9 +71,9 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.map((_, newPairCell)))
 
     // There is no need to constrain updates, only accesses
-    val updateFun = tla.apalacheStoreInFun(valueCell.toNameEx, resultFunCell.toNameEx, indexCell.toNameEx)
+    val updateFun = tla.storeInSet(valueCell.toBuilder, resultFunCell.toBuilder, indexCell.toBuilder)
     rewriter.solverContext.assertGroundExpr(updateFun)
 
-    nextState.setRex(resultFunCell.toNameEx)
+    nextState.setRex(resultFunCell.toBuilder)
   }
 }

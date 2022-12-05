@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.OperEx
-import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.bmcmt.arena.ElemPtr
+import at.forsyte.apalache.tla.lir.{OperEx, TlaType1}
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 
 /**
@@ -32,8 +31,8 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val leftSetCell = nextState.asCell
         nextState = rewriter.rewriteUntilDone(nextState.setRex(rightSet))
         val rightSetCell = nextState.asCell
-        val leftElems = nextState.arena.getHas(leftSetCell)
-        val rightElems = nextState.arena.getHas(rightSetCell)
+        val leftElems = nextState.arena.getHasPtr(leftSetCell)
+        val rightElems = nextState.arena.getHasPtr(rightSetCell)
 
         val common = Set(leftElems: _*).intersect(Set(rightElems: _*))
         val onlyLeft = Set(leftElems: _*).diff(common)
@@ -43,41 +42,43 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.solverContext.config.smtEncoding match {
           case SMTEncoding.Arrays =>
             // introduce a new set, encoded as a unconstrained array
-            val newType = state.ex.typeTag.asTlaType1()
+            val newType = TlaType1.fromTypeTag(state.ex.typeTag)
             nextState = nextState.updateArena(_.appendCell(newType, isUnconstrained = true))
             val newSetCell = nextState.arena.topCell
             nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
 
             // since newSet is initially unconstrained, we equate it to leftSet to add leftSet's elements to newSet
-            rewriter.solverContext.assertGroundExpr(tla.eql(newSetCell.toNameEx, leftSetCell.toNameEx))
+            rewriter.solverContext.assertGroundExpr(tla.eql(newSetCell.toBuilder, leftSetCell.toBuilder))
             // having added the elements of leftSet to newSet, we use SMT map to add rightSet's elements to newSet
             // we ensure that \forall e \in dom(newSet) : e \in newSet \iff e \in leftSet \lor e \in rightSet
-            val smtMap = tla.apalacheSmtMap(TlaBoolOper.or, rightSetCell.toNameEx, newSetCell.toNameEx)
+            val smtMap = tla.smtMap(TlaBoolOper.or, rightSetCell.toBuilder, newSetCell.toBuilder)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
             // that's it
-            nextState.setRex(newSetCell.toNameEx)
+            nextState.setRex(newSetCell.toBuilder)
 
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
             // introduce a new set
-            val newType = state.ex.typeTag.asTlaType1()
+            val newType = TlaType1.fromTypeTag(state.ex.typeTag)
             nextState = nextState.updateArena(_.appendCell(newType))
             val newSetCell = nextState.arena.topCell
             nextState = nextState.updateArena(_.appendHas(newSetCell, allDistinct: _*))
 
             // require each cell to be in in the union iff it is exactly in its origin set
-            def addOnlyCellCons(thisSet: ArenaCell, thisElem: ArenaCell): Unit = {
-              val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, thisSet.toNameEx)
-              val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-              val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
+            def addOnlyCellCons(thisSet: ArenaCell, thisElemPtr: ElemPtr): Unit = {
+              val thisElem = thisElemPtr.elem
+              val inThis = tla.selectInSet(thisElem.toBuilder, thisSet.toBuilder)
+              val inCup = tla.storeInSet(thisElem.toBuilder, newSetCell.toBuilder)
+              val notInCup = tla.storeNotInSet(thisElem.toBuilder, newSetCell.toBuilder)
               rewriter.solverContext.assertGroundExpr(tla.ite(inThis, inCup, notInCup))
             }
 
-            def addEitherCellCons(thisElem: ArenaCell): Unit = {
-              val inThis = tla.apalacheSelectInSet(thisElem.toNameEx, leftSetCell.toNameEx)
-              val inOther = tla.apalacheSelectInSet(thisElem.toNameEx, rightSetCell.toNameEx)
-              val inCup = tla.apalacheStoreInSet(thisElem.toNameEx, newSetCell.toNameEx)
-              val notInCup = tla.apalacheStoreNotInSet(thisElem.toNameEx, newSetCell.toNameEx)
+            def addEitherCellCons(thisElemPtr: ElemPtr): Unit = {
+              val thisElem = thisElemPtr.elem
+              val inThis = tla.selectInSet(thisElem.toBuilder, leftSetCell.toBuilder)
+              val inOther = tla.selectInSet(thisElem.toBuilder, rightSetCell.toBuilder)
+              val inCup = tla.storeInSet(thisElem.toBuilder, newSetCell.toBuilder)
+              val notInCup = tla.storeNotInSet(thisElem.toBuilder, newSetCell.toBuilder)
               rewriter.solverContext.assertGroundExpr(tla.ite(tla.or(inThis, inOther), inCup, notInCup))
             }
 
@@ -94,7 +95,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
             common.foreach(addEitherCellCons)
 
             // that's it
-            nextState.setRex(newSetCell.toNameEx)
+            nextState.setRex(newSetCell.toBuilder)
 
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
