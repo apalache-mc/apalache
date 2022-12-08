@@ -34,7 +34,7 @@ class TestTnt extends AnyFunSuite {
     assert(Tnt.typeToTlaType(tuple) == TupT1(IntT1, StrT1))
   }
 
-  test("Open TNT record types are converted into open TlType1 records") {
+  test("Open TNT record types are converted into open TlaType1 records") {
     val record =
       // i.e.: {f1: int, f2: string | r)
       TntRecordT(Row.Cell(List(RecordField("f1", TntIntT()), RecordField("f2", TntStrT())), Row.Var("r")))
