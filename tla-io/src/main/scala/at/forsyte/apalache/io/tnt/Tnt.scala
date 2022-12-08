@@ -111,7 +111,7 @@ object Tnt {
     // @typeAlias: u = Foo({a: Int, b: Str}) | Bar(Int);
     // ```
     //
-    // As a result, our conversion fron TNT has to take a list of records of TNT
+    // As a result, our conversion from TNT has to take a list of records of TNT
     // rows convert them into a single TlaType1 record, for which all the values
     // are themselves records, and the keys are given by the values of the `taga
     // field from TNT rows.
