@@ -48,7 +48,7 @@ class TestTnt extends AnyFunSuite {
     assert(Tnt.typeToTlaType(record) == RecRowT1(RowT1(("f1" -> IntT1), ("f2" -> StrT1))))
   }
 
-  test("TNT unions are converted int TlaType1 variants") {
+  test("TNT unions are converted into TlaType1 variants") {
     val opt1 =
       // i.e.: {tag: "t1", f1: int}
       UnionRecord("t1", Row.Cell(List(RecordField("f1", TntIntT())), Row.Nil()))
