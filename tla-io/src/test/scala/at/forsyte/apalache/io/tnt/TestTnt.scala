@@ -41,7 +41,7 @@ class TestTnt extends AnyFunSuite {
     assert(Tnt.typeToTlaType(record) == RecRowT1(RowT1(VarT1(0), ("f1" -> IntT1), ("f2" -> StrT1))))
   }
 
-  test("Closed TNT record types are converted into closed TlType1 records") {
+  test("Closed TNT record types are converted into closed TlaType1 records") {
     val record =
       // i.e.: { f1: int, f2: string }
       TntRecordT(Row.Cell(List(RecordField("f1", TntIntT()), RecordField("f2", TntStrT())), Row.Nil()))
