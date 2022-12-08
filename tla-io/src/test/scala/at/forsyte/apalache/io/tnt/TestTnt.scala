@@ -36,7 +36,7 @@ class TestTnt extends AnyFunSuite {
 
   test("Open TNT record types are converted into open TlaType1 records") {
     val record =
-      // i.e.: {f1: int, f2: string | r)
+      // i.e.: { f1: int, f2: string | r }
       TntRecordT(Row.Cell(List(RecordField("f1", TntIntT()), RecordField("f2", TntStrT())), Row.Var("r")))
     assert(Tnt.typeToTlaType(record) == RecRowT1(RowT1(VarT1(0), ("f1" -> IntT1), ("f2" -> StrT1))))
   }
