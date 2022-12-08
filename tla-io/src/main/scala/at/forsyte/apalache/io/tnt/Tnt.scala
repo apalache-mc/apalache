@@ -66,7 +66,7 @@ object Tnt {
       // where `fields` is the list of field names and their types, and
       // `other` is either `Some(var)` for an open row or `None` for a closed row.
       //
-      // `acc` is used to accumulator to enable rail recursion
+      // `acc` is used as an accumulator to enable tail recursion
       def aux(r: Row, acc0: List[(String, TlaType1)]): (List[(String, TlaType1)], Option[VarT1]) = r match {
         case Row.Nil()  => (acc0, None)
         case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
