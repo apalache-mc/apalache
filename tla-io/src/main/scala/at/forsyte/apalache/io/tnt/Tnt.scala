@@ -26,7 +26,7 @@ object Tnt {
     // This little bundle of state lets us track the conversion of TNT var names to
     // TlaType1 var numbers.
     //
-    // Since the scope of type variables in TNT is always limited to single type-level type expressions,
+    // Since the scope of type variables in TNT is always limited to single top-level type expressions,
     // and since the converter class is constructed fresh for each (top-level) type conversion,
     // we don't need to worry about variable name collisions.
     var varNo = 0
