@@ -50,7 +50,7 @@ object BuilderUtil {
     boundAfterVar <- getAllBound
   } yield {
     val ret = unsafeMethod(varEx, setEx, exprEx)
-    if (boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
+    if (boundAfterVar.nonEmpty && boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
       val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
       throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
     } else ret
@@ -73,7 +73,7 @@ object BuilderUtil {
     boundAfterVar <- getAllBound
   } yield {
     val ret = unsafeMethod(varEx, exprEx)
-    if (boundAfterVar.subsetOf(boundAfterExpr)) {
+    if (boundAfterVar.nonEmpty && boundAfterVar.subsetOf(boundAfterExpr)) {
       val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
       throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
     } else ret

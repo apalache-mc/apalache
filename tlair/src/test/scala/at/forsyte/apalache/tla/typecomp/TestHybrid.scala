@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.types.tla.TypedParam
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
@@ -560,4 +560,54 @@ class TestHybrid extends BuilderTest {
 
   // TODO: test multi-depth except if we choose to keep the methods after the builder transition.
 
+  test("unchecked shadowing") {
+    type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
+
+    def mkWellTyped(tt: TlaType1): T =
+      (
+          builder.unchecked(NameEx("x")(Typed(tt))),
+          builder.name("S", SetT1(tt)),
+          builder.name("p", BoolT1),
+      )
+
+    def mkIllTyped(tt: TlaType1): Seq[T] =
+      Seq(
+          (
+              builder.unchecked(NameEx("x")(Typed(InvalidTypeMethods.differentFrom(tt)))),
+              builder.name("S", SetT1(tt)),
+              builder.name("p", BoolT1),
+          ),
+          (
+              builder.unchecked(NameEx("x")(Typed(tt))),
+              builder.name("S", SetT1(InvalidTypeMethods.differentFrom(tt))),
+              builder.name("p", BoolT1),
+          ),
+          (
+              builder.unchecked(NameEx("x")(Typed(tt))),
+              builder.name("S", InvalidTypeMethods.notSet),
+              builder.name("p", BoolT1),
+          ),
+          (
+              builder.unchecked(NameEx("x")(Typed(tt))),
+              builder.name("S", SetT1(tt)),
+              builder.name("p", InvalidTypeMethods.notBool),
+          ),
+      )
+
+    def resultIsExpected: TlaType1 => TBuilderResult => Boolean = expectEqTyped[TlaType1, T](
+        TlaBoolOper.exists,
+        mkWellTyped,
+        ToSeq.ternary,
+        _ => BoolT1,
+    )
+
+    checkRun(Generators.singleTypeGen)(
+        runTernary(
+            builder.exists,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+  }
 }
