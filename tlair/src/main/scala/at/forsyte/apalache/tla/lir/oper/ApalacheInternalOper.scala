@@ -95,8 +95,8 @@ object ApalacheInternalOper {
   }
 
   /**
-   * The storeNotInFun operator is a variant of storeNotInSet. It signals that a function is undefined for a given
-   * argument.
+   * The storeNotInFun operator is a variant of storeNotInSet. It signals that a function, which is undefined for a
+   * given argument, remains undefined for that argument.
    */
   object storeNotInFun extends ApalacheInternalOper {
     override def name: String = "Apalache!storeNotInFun"
