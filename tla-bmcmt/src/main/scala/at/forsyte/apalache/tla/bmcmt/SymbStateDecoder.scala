@@ -61,7 +61,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case UnknownT() =>
       throw new IllegalStateException(s"Found cell $cell of cell type Unknown")
 
-    case CellTFrom(SetT1(_)) =>
+    case CellTFrom(SetT1(elemT)) =>
       def inSet(e: ArenaCell) = {
         val mem = tla.selectInSet(e.toBuilder, cell.toBuilder)
         solverContext.evalGroundExpr(mem) == tla.bool(true).build
@@ -71,7 +71,8 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val decodedElems = elems.map(decodeCellToTlaEx(arena, _).build)
       // try to normalize the set for better user experience
       val niceElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr).map(tla.unchecked)
-      tla.enumSet(niceElems: _*)
+      if (niceElems.isEmpty) tla.emptySet(elemT)
+      else tla.enumSet(niceElems: _*)
 
     case FinFunSetT(_, _) =>
       val fromSet = decodeCellToTlaEx(arena, arena.getDom(cell))
@@ -230,7 +231,16 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       .toSeq
       .map { case (k, v) => tla.tuple(tla.unchecked(k), tla.unchecked(v)) }
 
-    tla.setAsFun(tla.enumSet(pairs: _*))
+    val set =
+      if (pairs.isEmpty) {
+        val pairType = relation.cellType match {
+          case CellTFrom(SetT1(elemT)) => elemT
+          case t =>
+            throw new CheckerException(s"Codomain cell type should be a set of pairs, found: $t.", relation.toBuilder)
+        }
+        tla.emptySet(pairType)
+      } else tla.enumSet(pairs: _*)
+    tla.setAsFun(set)
   }
 
   private def decodeSet(arena: PureArenaAdapter, set: ArenaCell): Seq[TlaEx] = {

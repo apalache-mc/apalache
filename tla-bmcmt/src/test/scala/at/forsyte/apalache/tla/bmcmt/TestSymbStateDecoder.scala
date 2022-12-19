@@ -10,9 +10,6 @@ trait TestSymbStateDecoder extends RewriterBase {
   private val parser = DefaultType1Parser
   private val int2 = parser("<<Int, Int>>")
 
-  private def assertBuildEqual(a: TBuilderInstruction, b: TBuilderInstruction): Unit =
-    assert(a.build == b.build)
-
   private def pair(i: Int, j: Int): TBuilderInstruction = tuple(int(i), int(j))
 
   test("decode bool") { rewriterType: SMTEncoding =>
@@ -164,7 +161,7 @@ trait TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode statically empty fun") { rewriterType: SMTEncoding =>
-    val domEx = enumSet()
+    val domEx = emptySet(IntT1)
     val funEx = funDef(plus(name("x", IntT1), int(1)), (name("x", IntT1), domEx))
     val state = new SymbState(funEx, arena, Binding())
     val rewriter = create(rewriterType)
@@ -255,7 +252,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    assert(recEx == decodedEx)
+    assertBuildEqual(recEx, decodedEx)
   }
 
   test("decode variant") { rewriterType: SMTEncoding =>
@@ -268,6 +265,6 @@ trait TestSymbStateDecoder extends RewriterBase {
     val cell = nextState.asCell
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
-    assert(vrt1 == decodedEx)
+    assertBuildEqual(vrt1, decodedEx)
   }
 }

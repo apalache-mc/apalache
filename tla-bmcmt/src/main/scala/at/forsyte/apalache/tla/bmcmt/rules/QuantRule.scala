@@ -271,7 +271,7 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     // \E x \in S: p holds iff predWitness /\ S /= {}
     nextState = nextState.updateArena(_.appendCell(BoolT1))
     val exPred = nextState.arena.topCell
-    val setNonEmpty = tla.not(tla.unchecked(oracle.whenEqualTo(nextState, setCells.size)))
+    val setNonEmpty = tla.not(oracle.whenEqualTo(nextState, setCells.size))
     val iff = tla.equiv(exPred.toBuilder, tla.and(setNonEmpty, predWitness))
     rewriter.solverContext.assertGroundExpr(iff)
 

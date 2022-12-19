@@ -28,6 +28,7 @@ class ExprCache(val store: ExprGradeStore) extends SimpleCache[TlaEx, (TlaEx, Ex
   override def put(key: TlaEx, valueAndGrade: (TlaEx, ExprGrade.Value)): Unit = {
     valueAndGrade._2 match {
       case ExprGrade.Constant | ExprGrade.StateFree | ExprGrade.ActionFree =>
+        // TODO: Temp. disabled, re-enable once caching is tested
         super.put(key, valueAndGrade)
 
       case _ =>

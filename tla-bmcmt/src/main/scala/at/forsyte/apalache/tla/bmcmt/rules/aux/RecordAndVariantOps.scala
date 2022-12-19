@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
@@ -46,7 +46,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val recordCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- fields.valuesIterator) {
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, FixedElemPtr(fieldCell, true)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, SmtConstElemPtr(fieldCell)))
     }
 
     // In contrast to the old records, we do not associate the record domain with a record.
@@ -300,7 +300,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     // add the fields in the order of their names, update by name
     for ((name, oldCell) <- fieldTypes.keySet.zip(elems)) {
       val updatedCell = if (name == fieldName) newCell else oldCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, FixedElemPtr(updatedCell, true)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, SmtConstElemPtr(updatedCell)))
     }
 
     nextState.setRex(newRecord.toBuilder)

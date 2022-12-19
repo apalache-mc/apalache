@@ -3,29 +3,29 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
+import at.forsyte.apalache.tla.lir.BoolT1
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle {
 
   override def size: Int = nvalues
 
-  override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
-    def mkLits(n: Int, cells: Seq[ArenaCell]): Seq[TlaEx] = {
+  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction = {
+    def mkLits(n: Int, cells: Seq[ArenaCell]): Seq[TBuilderInstruction] = {
       cells match {
         case Nil => Nil
 
         case hd +: tl =>
           // the least significant bit comes first
           val lit =
-            if ((n & 1) == 1) hd.toNameEx else tla.not(hd.toNameEx).untyped()
+            if ((n & 1) == 1) hd.toBuilder else tla.not(hd.toBuilder)
           lit +: mkLits(n >> 1, tl)
       }
     }
 
     bitCells.size match {
-      case 0 => state.arena.cellTrue().toNameEx
+      case 0 => state.arena.cellTrue().toBuilder
 
       case 1 => mkLits(position, bitCells).head
 
@@ -33,7 +33,10 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
     }
   }
 
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+  override def caseAssertions(
+      state: SymbState,
+      assertions: Seq[TBuilderInstruction],
+      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
     if (elseAssertions.nonEmpty & assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }
@@ -48,7 +51,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
 
         case lsbCell :: otherBitCells =>
           // find the value of the bit, which is the least significant
-          val isOn = solverContext.evalGroundExpr(lsbCell.toNameEx) == tla.bool(true).untyped()
+          val isOn = solverContext.evalGroundExpr(lsbCell.toBuilder) == tla.bool(true).build
           val lsb = if (isOn) 1 else 0
           // find the unsigned integer value
           lsb + 2 * cellsToInt(otherBitCells) // the bits to the right are more significant

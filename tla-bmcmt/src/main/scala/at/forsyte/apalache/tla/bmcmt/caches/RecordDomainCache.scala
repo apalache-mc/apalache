@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PureArenaAdapter}
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.{SetT1, StrT1}
 import at.forsyte.apalache.tla.types.tla
@@ -38,7 +38,7 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
     def strToCell(str: String): ElemPtr = {
       val (newArena, cell) = strValueCache.getOrCreate(arena, (StrT1.toString, str))
       arena = newArena
-      FixedElemPtr(cell, true) // @Igor: Is it always the case that record domains are fixed? I think so.
+      SmtConstElemPtr(cell)
     }
 
     val allCells = allKeys.toList.map(strToCell)
@@ -52,7 +52,7 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
         if (usedKeys.contains(key)) {
           tla.storeInSet(cell.elem.toBuilder, set.toBuilder)
         } else {
-          tla.not(tla.storeInSet(cell.elem.toBuilder, set.toBuilder))
+          tla.not(tla.selectInSet(cell.elem.toBuilder, set.toBuilder))
         }
 
       solverContext.assertGroundExpr(cond)

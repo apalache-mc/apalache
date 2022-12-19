@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.typecomp.signatures
 
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, SeqT1, SetT1, TupT1}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{AnyPositiveArity, TlaSetOper}
-import at.forsyte.apalache.tla.typecomp.BuilderUtil
-import at.forsyte.apalache.tla.typecomp.{PartialSignature, SignatureMap}
+import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature, SignatureMap}
 
 /**
  * Produces a SignatureMap for all set operators
@@ -12,8 +11,9 @@ import at.forsyte.apalache.tla.typecomp.{PartialSignature, SignatureMap}
  *   Jure Kukovec
  */
 object SetOperSignatures {
-  import TlaSetOper._
   import BuilderUtil._
+  import FlexibleEquality._
+  import TlaSetOper._
 
   /**
    * Returns a map that assigns a signature generator to each TlaSetOper. Because most operators are polymorphic, their
@@ -27,18 +27,21 @@ object SetOperSignatures {
         cup,
         cap,
         setminus,
-    ).map { signatureMapEntry(_, { case Seq(st @ SetT1(t), SetT1(tt)) if t == tt => st }) }.toMap
+    ).map {
+      signatureMapEntry(_,
+          { case Seq(SetT1(t), SetT1(tt)) if compatible(t, tt) => commonSupertype(t, tt).map(SetT1).get })
+    }.toMap
 
     // \in, \notin are similar, but asymm w.r.t arg types
     // (t, Set(t)) => Bool
     val binaryAsymm: SignatureMap = Seq(
         in,
         notin,
-    ).map { signatureMapEntry(_, { case Seq(t, SetT1(tt)) if t == tt => BoolT1 }) }.toMap
+    ).map { signatureMapEntry(_, { case Seq(t, SetT1(tt)) if compatible(t, tt) => BoolT1 }) }.toMap
 
     val mapPartial: PartialSignature = {
       case t +: pairs if pairs.nonEmpty && pairs.size % 2 == 0 && pairs.grouped(2).forall {
-            case Seq(tt, SetT1(tt2)) => tt == tt2
+            case Seq(tt, SetT1(tt2)) => compatible(tt, tt2)
             case _                   => false
           } =>
         SetT1(t)
@@ -50,7 +53,8 @@ object SetOperSignatures {
 
     // { x \in S: p } is polymorphic
     // (t, Set(t), Bool) => Set(t)
-    val filterSig = signatureMapEntry(filter, { case Seq(t, st @ SetT1(tt), BoolT1) if t == tt => st })
+    val filterSig = signatureMapEntry(filter,
+        { case Seq(t, SetT1(tt), BoolT1) if compatible(t, tt) => commonSupertype(t, tt).map(SetT1).get })
 
     // recSet does NOT have a signature (the return type depends on the field value)
 
@@ -90,11 +94,11 @@ object SetOperSignatures {
     // sanity checking here helps with bugfixing.
     val enumSig =
       enumSet -> checkForArityException(enumSet.name, AnyPositiveArity(),
-          { case t +: ts if ts.forall(_ == t) => SetT1(t) })
+          { case seq if commonSeqSupertype(seq).nonEmpty => commonSeqSupertype(seq).map(SetT1).get })
 
     // \subseteq is polymorphic
     // (Set(t), Set(t)) => Bool
-    val subseteqSig = signatureMapEntry(subseteq, { case Seq(SetT1(t), SetT1(tt)) if t == tt => BoolT1 })
+    val subseteqSig = signatureMapEntry(subseteq, { case Seq(SetT1(t), SetT1(tt)) if compatible(t, tt) => BoolT1 })
 
     val rest: SignatureMap = Seq(
         mapSig,

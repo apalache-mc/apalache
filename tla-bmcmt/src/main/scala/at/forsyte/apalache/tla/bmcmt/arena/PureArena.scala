@@ -106,8 +106,10 @@ case class PureArena(
    * @return
    *   the updated arena
    */
-  def appendHas(parent: ArenaCell, childrenPtrs: ElemPtr*): PureArena =
-    this.copy(hasEdges = hasEdges + (parent -> childrenPtrs))
+  def appendHas(parent: ArenaCell, childrenPtrs: ElemPtr*): PureArena = {
+    val newAtParent = hasEdges.getOrElse(parent, Seq.empty) ++ childrenPtrs
+    this.copy(hasEdges = hasEdges + (parent -> newAtParent))
+  }
 
   /**
    * Get all the edges that are labelled with 'has'.
@@ -194,7 +196,7 @@ case class PureArena(
    *   a new arena
    */
   def setCdm(funCell: ArenaCell, cdmCell: ArenaCell): PureArena =
-    this.copy(domEdges = domEdges + (funCell -> cdmCell))
+    this.copy(cdmEdges = cdmEdges + (funCell -> cdmCell))
 
   /**
    * Get the co-domain cell associated with a function.

@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
@@ -347,19 +347,19 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     if (z3expr.isBool) {
       z3expr.getBoolValue match {
         case Z3_lbool.Z3_L_TRUE =>
-          ValEx(TlaBool(true))
+          tla.bool(true)
         case Z3_lbool.Z3_L_FALSE =>
-          ValEx(TlaBool(false))
+          tla.bool(false)
         case _ =>
           // If we cannot get a result from evaluating the model, we query the solver
           z3solver.add(z3expr.asInstanceOf[BoolExpr])
-          ValEx(TlaBool(sat()))
+          tla.bool(sat())
       }
     } else if (z3expr.isIntNum) {
-      ValEx(TlaInt(z3expr.asInstanceOf[IntNum].getBigInteger))
+      tla.int(z3expr.asInstanceOf[IntNum].getBigInteger)
     } else {
       if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
-        NameEx(z3expr.toString)
+        tla.name(z3expr.toString, TlaType1.fromTypeTag(ex.typeTag))
       } else {
         flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
       }
@@ -705,7 +705,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         (eq.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaOper.ne, lhs, rhs) =>
-        val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
+        val (eq, n) = toExpr(tla.eql(tla.unchecked(lhs), tla.unchecked(rhs)))
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
@@ -757,7 +757,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         (not.asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(TlaSetOper.notin, elem, set) =>
-        val (e, n) = toExpr(OperEx(TlaSetOper.in, elem, set))
+        val (e, n) = toExpr(tla.in(tla.unchecked(elem), tla.unchecked(set)))
         val not = z3context.mkNot(e.asInstanceOf[BoolExpr])
         (not.asInstanceOf[ExprSort], 1 + n)
 
@@ -766,26 +766,27 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         val elemId = ArenaCell.idFromName(elemName)
         (getInPred(setId, elemId), 1)
 
-      case OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.selectInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+            toExpr(tla.in(tla.unchecked(elemNameEx),
+                    tla.unchecked(setNameEx))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.selectInFun, NameEx(elemName), NameEx(funName)) =>
+      case OperEx(ApalacheInternalOper.selectInFun, elemNameEx @ NameEx(elemName), funNameEx @ NameEx(funName)) =>
         encoding match {
           case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
             val funId = ArenaCell.idFromName(funName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(funId, elemId), 1)
           case SMTEncoding.OOPSLA19 =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(funName)))
+            toExpr(tla.in(tla.unchecked(elemNameEx), tla.unchecked(funNameEx)))
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
@@ -804,14 +805,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1) // elem is the arg of the SMT store here, since the range is fixed for sets
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+            toExpr(tla.in(tla.unchecked(elemNameEx),
+                    tla.unchecked(setNameEx))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
@@ -829,7 +831,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeNotInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
@@ -837,12 +839,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
             (mkUnchangedArray(setId), 1)
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
-            toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
+            toExpr(tla.not(tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx))))
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInFun, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeNotInFun, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
@@ -850,7 +852,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
             (mkUnchangedArray(setId), 1)
           case SMTEncoding.OOPSLA19 =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
-            toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
+            toExpr(tla.not((tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx)))))
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
@@ -878,7 +880,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       case OperEx(ApalacheInternalOper.unconstrainArray, NameEx(arrayElemName)) =>
         val arrayElemId = ArenaCell.idFromName(arrayElemName)
         updateArrayConst(arrayElemId) // A new array is declared and left unconstrained
-        toExpr(ValEx(TlaBool(true))) // Nothing to assert
+        toExpr(tla.bool(true)) // Nothing to assert
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>

@@ -177,9 +177,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // cache the equality between the picked argument and the supplied argument, O(1) constraints
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
         val argEqWhenNonEmpty =
-          tla.impl(tla.not(
-                  tla.unchecked(oracle.whenEqualTo(nextState, nelems))
-              ), tla.eql(pickedArg.toBuilder, argCell.toBuilder))
+          tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toBuilder, argCell.toBuilder))
         // if oracle < N, then pickedArg = argCell
         solverAssert(argEqWhenNonEmpty)
         // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
@@ -188,13 +186,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
           val inRel = tla.selectInSet(elem.toBuilder, relationCell.toBuilder)
           val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
-          val found = tla.not(
-              tla.unchecked(oracle.whenEqualTo(nextState, nelems))
-          )
+          val found = tla.not(oracle.whenEqualTo(nextState, nelems))
           // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found
           solverAssert(tla.or(tla.not(inRel), neqArg, found))
           // oracle = i => inRel. The equality pickedArg = argCell is enforced by argEqWhenNonEmpty
-          solverAssert(tla.or(tla.not(tla.unchecked(oracle.whenEqualTo(nextState, no))), inRel))
+          solverAssert(tla.or(tla.not(oracle.whenEqualTo(nextState, no)), inRel))
         }
 
         // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,

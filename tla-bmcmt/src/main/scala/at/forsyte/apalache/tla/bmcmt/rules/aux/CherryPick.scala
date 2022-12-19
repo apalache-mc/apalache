@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types._
 
 import scala.collection.immutable.SortedMap
@@ -38,7 +39,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
    */
-  def pick(set: ArenaCell, state: SymbState, elseAssert: TlaEx): SymbState = {
+  def pick(set: ArenaCell, state: SymbState, elseAssert: TBuilderInstruction): SymbState = {
     set.cellType match {
       // all kinds of sets that should be kept unexpanded
       case PowSetT(t @ SetT1(_)) =>
@@ -83,7 +84,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val (nextState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
 
         // pick only the elements that belong to the set
-        val elemsIn = elems.map { c => tla.selectInSet(c.toBuilder, set.toBuilder).build }
+        val elemsIn = elems.map { c => tla.selectInSet(c.toBuilder, set.toBuilder) }
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, elemsIn :+ elseAssert))
 
         pickByOracle(nextState, oracle, elems, elseAssert)
@@ -109,7 +110,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       elems: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     assert(elems.nonEmpty) // this is an advanced operator -- you should know what you are doing
     val targetType = elems.head.cellType
 
@@ -180,14 +181,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       elems: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, elems.map(_.toString).mkString(", ")))
     val arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
     // compare the set contents with the result
     val eqState = rewriter.lazyEq.cacheEqConstraints(state, elems.map(e => (e, resultCell)))
     // the new element equals to an existing element in the set
-    val asserts = elems.map { el => rewriter.lazyEq.safeEq(resultCell, el).build }
+    val asserts = elems.map { el => rewriter.lazyEq.safeEq(resultCell, el) }
     rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(eqState, asserts :+ elseAssert))
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$cellType")
@@ -213,7 +214,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       tuples: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, tuples.map(_.toString).mkString(", ")))
     var newState = state
 
@@ -261,7 +262,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     // the records do not always have the same type, but they do have compatible types
     val commonRecordT = findCommonRecordType(records)
     rewriter.solverContext
@@ -352,7 +353,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     // new row records always have the same type
     val (fieldTypes, recordT) = records.head.cellType match {
       case CellTFrom(rt @ RecRowT1(RowT1(fieldTypes, None))) => (fieldTypes, rt)
@@ -399,7 +400,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       variants: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     // variants should always have the same type
     val (optionTypes, variantT) = variants.head.cellType match {
       case CellTFrom(rt @ VariantT1(RowT1(opts, None))) => (opts, rt)
@@ -501,7 +502,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             rewriter.solverContext
               .assertGroundExpr(
                   tla.ite(
-                      tla.unchecked(oracle.whenEqualTo(nextState, no)),
+                      oracle.whenEqualTo(nextState, no),
                       ite,
                       unchangedSet,
                   )
@@ -511,7 +512,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
             val notInDom = tla.not(tla.selectInSet(keyCell.toBuilder, newDom.toBuilder))
             rewriter.solverContext.assertGroundExpr(
                 tla.impl(
-                    tla.unchecked(oracle.whenEqualTo(nextState, no)),
+                    oracle.whenEqualTo(nextState, no),
                     notInDom,
                 )
             )
@@ -576,7 +577,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSets: Seq[ArenaCell],
-      elseAssert: TlaEx,
+      elseAssert: TBuilderInstruction,
       noSmt: Boolean = false): SymbState = {
     if (memberSets.isEmpty) {
       throw new RuntimeException("Picking from a statically empty set")
@@ -599,7 +600,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSets: Seq[ArenaCell],
-      elseAssert: TlaEx,
+      elseAssert: TBuilderInstruction,
       noSMT: Boolean): SymbState = {
     def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
 
@@ -650,7 +651,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // The awesome property of the oracle is that we do not have to compare the sets directly!
       // Instead, we compare the oracle values.
       // (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
-      def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (TlaEx, TlaEx) = {
+      def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (TBuilderInstruction, TBuilderInstruction) = {
         if (elemsOfMemberSets(no).nonEmpty) {
           val inSet = tla.ite(tla.selectInSet(elemAndSet._1.toBuilder, elemAndSet._2.toBuilder),
               tla.storeInSet(picked.toBuilder, resultCell.toBuilder),
@@ -679,7 +680,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val membershipAssertions = assertions._1
         val nonMembershipAssertions = assertions._2
         solverAssert(oracle.caseAssertions(nextState, membershipAssertions :+ elseAssert,
-                nonMembershipAssertions :+ tla.bool(true).build))
+                nonMembershipAssertions :+ tla.bool(true)))
       }
     }
 
@@ -708,7 +709,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSeqs: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     if (memberSeqs.isEmpty) {
       throw new RuntimeException("Picking a sequence from a statically empty set")
     } else if (memberSeqs.length == 1) {
@@ -731,7 +732,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSeqs: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     rewriter.solverContext
       .log("; CHERRY-PICK %s FROM [%s] {".format(seqType, memberSeqs.map(_.toString).mkString(", ")))
 
@@ -822,7 +823,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       funs: Seq[ArenaCell],
-      elseAssert: TlaEx): SymbState = {
+      elseAssert: TBuilderInstruction): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {
@@ -832,7 +833,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
         val funCell = nextState.arena.topCell
 
         // Pick a function in funs and generate a SMT equality between it and funCell
-        val asserts = funs.map { el => tla.eql(funCell.toBuilder, el.toBuilder).build }
+        val asserts = funs.map { el => tla.eql(funCell.toBuilder, el.toBuilder) }
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, asserts :+ elseAssert))
 
         // Propagate the picked function's domain, by relying on the same oracle used to pick the function

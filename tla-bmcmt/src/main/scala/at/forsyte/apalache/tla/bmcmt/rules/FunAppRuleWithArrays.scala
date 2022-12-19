@@ -60,7 +60,7 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
         // Cache the equality between the picked argument and the supplied argument, O(1) constraints
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
         // If oracle < N, then pickedArg = argCell
-        val pickedElemInDom = tla.not(tla.unchecked(oracle.whenEqualTo(nextState, nElems)))
+        val pickedElemInDom = tla.not(oracle.whenEqualTo(nextState, nElems))
         val argEq = tla.eql(pickedArg.toBuilder, argCell.toBuilder)
         val argEqWhenNonEmpty = tla.impl(pickedElemInDom, argEq)
         rewriter.solverContext.assertGroundExpr(argEqWhenNonEmpty)
@@ -81,12 +81,12 @@ class FunAppRuleWithArrays(rewriter: SymbStateRewriter) extends FunAppRule(rewri
           rewriter.solverContext.assertGroundExpr(tla.eql(inDom, tla.or(elemsInAndEq: _*)))
 
           val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
-          val found = tla.not(tla.unchecked(oracle.whenEqualTo(nextState, nElems)))
+          val found = tla.not(oracle.whenEqualTo(nextState, nElems))
           // ~inDom \/ neqArg \/ found, or equivalently, (inDom /\ elemArg = argCell) => found
           rewriter.solverContext.assertGroundExpr(tla.or(tla.not(inDom), neqArg, found))
           // oracle = i => inDom. The equality pickedArg = argCell is enforced by argEqWhenNonEmpty
           rewriter.solverContext
-            .assertGroundExpr(tla.or(tla.not(tla.unchecked(oracle.whenEqualTo(nextState, no))), inDom))
+            .assertGroundExpr(tla.or(tla.not(oracle.whenEqualTo(nextState, no)), inDom))
         }
 
         // We simply apply the picked arg to the SMT array encoding the function, O(1) constraints

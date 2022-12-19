@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt.arena.{PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 
@@ -64,7 +63,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
               ArraySeq.unsafeWrapArray(cellsAsArray).map {
                 SmtConstElemPtr // @Igor: Should we use Expr pointers here?
               }: _*))
-    nextState.setRex(protoSeq.toNameEx)
+    nextState.setRex(protoSeq.toBuilder)
   }
 
   /**
@@ -155,7 +154,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
     if (capacity == 0) {
       // The sequence is statically empty. Return the default value.
       // Most likely, this expression will be never used as a result.
-      state.setRex(defaultValue.toNameEx)
+      state.setRex(defaultValue.toBuilder)
     } else {
       // rewrite `indexBase1Ex` to a single cell
       var nextState = rewriter.rewriteUntilDone(state.setRex(indexBase1Ex))
@@ -170,7 +169,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
           // This introduces O(capacity) constraints.
           val (oracleState, oracle) = picker.oracleFactory.newIntOracle(nextState, capacity)
           // pick an element to be the result
-          nextState = picker.pickByOracle(oracleState, oracle, protoElems, nextState.arena.cellTrue().toNameEx)
+          nextState = picker.pickByOracle(oracleState, oracle, protoElems, nextState.arena.cellTrue().toBuilder)
           val pickedResult = nextState.asCell
           val indexCellBase1asInt = indexCellBase1.toBuilder
           // If 0 < indexCell <= capacity, then require oracle = indexCell - 1.
@@ -187,7 +186,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
               .eql(tla.minus(indexCellBase1asInt, tla.int(1)), oracle.intCell.toBuilder)
           val iff = tla.eql(oracleEqArg, inRange)
           rewriter.solverContext.assertGroundExpr(iff)
-          nextState.setRex(pickedResult.toNameEx)
+          nextState.setRex(pickedResult.toBuilder)
 
         case Some(cachedBigInt) =>
           // Special case: the integer is found in the value cache.
@@ -196,11 +195,11 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
           // In this case, we do not have to introduce any constraints!
           if (cachedBigInt < 1 || cachedBigInt > capacity) {
             // Return the default value. We cannot throw an exception, as it may break a valid TLA+ spec.
-            nextState.setRex(defaultValue.toNameEx)
+            nextState.setRex(defaultValue.toBuilder)
           } else {
             // Retrieve the element by its index.
             val elem = elems(state.arena, protoSeq)(cachedBigInt.toInt - 1)
-            nextState.setRex(elem.toNameEx)
+            nextState.setRex(elem.toBuilder)
           }
       }
     }
@@ -331,10 +330,10 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       // choose between the old result (if above the length) and the new result (if not above the length)
       val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, 2)
       nextState = picker
-        .pickByOracle(oracleState, oracle, Seq(state.asCell, newResult), nextState.arena.cellTrue().toNameEx)
+        .pickByOracle(oracleState, oracle, Seq(state.asCell, newResult), nextState.arena.cellTrue().toBuilder)
       val picked = nextState.ex
       val inRange = tla.le(tla.int(indexBase1), len.toBuilder)
-      val pickNew = tla.unchecked(oracle.whenEqualTo(nextState, 1).as(BoolT1))
+      val pickNew = oracle.whenEqualTo(nextState, 1)
       val eql = tla.eql(inRange, pickNew)
       rewriter.solverContext.assertGroundExpr(eql)
 

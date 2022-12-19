@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PureArenaAdapter}
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.{IntT1, SetT1}
 import at.forsyte.apalache.tla.types.tla
@@ -30,7 +30,7 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     def intToCell(i: Int): ElemPtr = {
       val (newArena, cell) = intValueCache.getOrCreate(arena, i)
       arena = newArena
-      FixedElemPtr(cell, true)
+      SmtConstElemPtr(cell)
     }
 
     val cells = range._1.to(range._2).map(intToCell)
