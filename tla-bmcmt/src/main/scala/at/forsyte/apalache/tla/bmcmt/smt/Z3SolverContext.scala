@@ -67,6 +67,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   z3solver.setParameters(params)
   log(s";; ${params}")
 
+  var assumptionCounter: Int = 0
+  def getCurrentAssumption(): Expr[BoolSort] = z3context.mkBoolConst("$A$" + assumptionCounter)
+
+  private val assumptions: mutable.Stack[Seq[Expr[BoolSort]]] =
+    new mutable.Stack[Seq[Expr[BoolSort]]]()
+  log(s"(declare-const ${getCurrentAssumption()} Bool)")
+  assumptions.push(Seq(getCurrentAssumption()))
+
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
    */
@@ -326,8 +334,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     val (z3expr, size) = toExpr(ex)
     _metrics = _metrics.addNSmtExprs(size)
     smtListener.onSmtAssert(ex, size)
-    log(s"(assert ${z3expr.toString})")
-    z3solver.add(z3expr.asInstanceOf[BoolExpr])
+    val assumption = getCurrentAssumption()
+    log(s"(assert (=> ${assumption} ${z3expr}))")
+    val assumedZ3Expr = z3context.mkImplies(assumption, z3expr.asInstanceOf[BoolExpr])
+    z3solver.add(assumedZ3Expr)
   }
 
   /**
@@ -444,6 +454,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
+    assumptionCounter += 1
+    log(s"(declare-const ${getCurrentAssumption()} Bool)")
+    assumptions.push(assumptions.top :+ getCurrentAssumption())
+    log(s";; assumptions: ${assumptions.top}")
   }
 
   /**
@@ -456,6 +470,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
+      assumptionCounter -= 1
+      assumptions.pop()
+      log(s";; assumptions: ${assumptions.top}")
       // clean the caches
       cellSorts.filterInPlace((_, value) => value._2 <= level)
       funDecls.filterInPlace((_, value) => value._2 <= level)
@@ -474,6 +491,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
+      assumptionCounter -= n
+      assumptions.dropInPlace(n)
+      log(s";; assumptions: ${assumptions.top}")
       // clean the caches
       cellSorts.filterInPlace((_, value) => value._2 <= level)
       funDecls.filterInPlace((_, value) => value._2 <= level)
@@ -486,8 +506,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   }
 
   override def sat(): Boolean = {
-    log("(check-sat)")
-    val status = z3solver.check()
+    log(s"(check-sat ${assumptions.top.mkString(" ")})")
+    val status = z3solver.check(assumptions.top: _*)
     log(s";; sat = ${status.name()}")
     flushLogs() // good time to flush
     if (status == Status.UNKNOWN) {
@@ -514,8 +534,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       require(timeoutSec < Int.MaxValue / 1000, s"Expected a timeout of <=${Int.MaxValue / 1000} seconds.")
       // temporarily, change the timeout
       setTimeout(timeoutSec * 1000)
-      log("(check-sat)")
-      val status = z3solver.check()
+      log(s"(check-sat ${assumptions.top.mkString(" ")})")
+      val status = z3solver.check(assumptions.top: _*)
       log(s";; sat = ${status.name()}")
       // return timeout to maximum
       setTimeout(Int.MaxValue)
