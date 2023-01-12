@@ -161,7 +161,8 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
           throw new IllegalStateException(s"Expected a function, found: $funT")
       }
     } else {
-      val foundPair = relationElems.find(pair => nextState.arena.getHas(pair).head == argCell)
+      // TODO: Disabled because of #2338. Once pointers are introduced, we can potentially recover the optimization
+      val foundPair = None // relationElems.find(pair => nextState.arena.getHas(pair).head == argCell)
       if (foundPair.isDefined) {
         // Feeling lucky. The cell argCell belongs to the relation. Return the result.
         val result = nextState.arena.getHas(foundPair.get)(1)
