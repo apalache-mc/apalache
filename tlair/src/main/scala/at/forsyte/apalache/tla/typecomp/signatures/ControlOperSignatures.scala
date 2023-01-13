@@ -29,7 +29,6 @@ object ControlOperSignatures {
           case ((lPartial, rPartial), Seq(cond, body)) =>
             (lPartial :+ cond, rPartial :+ body)
         }
-        val t = bodies.head // n >= 2 => bodies.nonEmpty
         if (cases.forall(_ == BoolT1) && commonSeqSupertype(bodies).nonEmpty)
           commonSeqSupertype(bodies).map { Right(_) }
         else None

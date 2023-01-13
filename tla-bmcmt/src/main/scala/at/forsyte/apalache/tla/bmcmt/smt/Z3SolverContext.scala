@@ -831,7 +831,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeNotInSet, elemNameEx @ NameEx(_), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
@@ -844,7 +844,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInFun, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeNotInFun, elemNameEx @ NameEx(_), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly

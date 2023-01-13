@@ -58,7 +58,6 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
           throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.", setEx.ID)
       }
       val opT = OperT1(Seq(a, b), a)
-      val bool = BoolT1
       // sanity check
       TlaType1.fromTypeTag(opDecl.typeTag) match {
         case `opT` => // all good

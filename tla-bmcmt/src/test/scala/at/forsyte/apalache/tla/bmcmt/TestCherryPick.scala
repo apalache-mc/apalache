@@ -11,10 +11,6 @@ import at.forsyte.apalache.tla.types.tla
 trait TestCherryPick extends RewriterBase {
   private val parser = DefaultType1Parser
 
-  private val ri = RecT1("a" -> IntT1)
-  private val rii = RecT1("a" -> IntT1, "b" -> IntT1)
-  private val riis = RecT1("a" -> IntT1, "b" -> IntT1, "c" -> StrT1)
-
   private def assertEqWhenChosen(
       rewriter: SymbStateRewriter,
       state: SymbState,
