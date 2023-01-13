@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
-import at.forsyte.apalache.tla.lir.FunT1
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
@@ -20,7 +19,6 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
   override def rewriteFun(
       state: SymbState,
       funCell: ArenaCell,
-      funT: FunT1,
       indexCell: ArenaCell,
       valueCell: ArenaCell): SymbState = {
 

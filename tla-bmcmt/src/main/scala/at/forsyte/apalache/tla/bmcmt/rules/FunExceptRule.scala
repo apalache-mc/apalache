@@ -46,7 +46,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val funT = TlaType1.fromTypeTag(ex.typeTag)
         // delegate to the code that knows how to deal with the specific type
         funT match {
-          case ft @ FunT1(_, _)  => rewriteFun(nextState, funCell, ft, indexCell, valueCell)
+          case FunT1(_, _)       => rewriteFun(nextState, funCell, indexCell, valueCell)
           case rt @ RecT1(_)     => rewriteRec(nextState, funCell, rt, indexEx, valueCell)
           case RecRowT1(_)       => rewriteRowRec(nextState, funCell, indexEx, valueCell)
           case tt @ TupT1(_ @_*) => rewriteTuple(nextState, funCell, tt, indexEx, valueCell)
@@ -63,7 +63,6 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
   def rewriteFun(
       state: SymbState,
       funCell: ArenaCell,
-      funT: FunT1,
       indexCell: ArenaCell,
       valueCell: ArenaCell): SymbState = {
     // rewrite tuples <<j_i, e_i>> to cells
