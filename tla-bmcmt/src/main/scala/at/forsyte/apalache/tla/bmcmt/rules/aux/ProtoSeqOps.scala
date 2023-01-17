@@ -159,7 +159,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       // rewrite `indexBase1Ex` to a single cell
       var nextState = rewriter.rewriteUntilDone(state.setRex(indexBase1Ex))
       val indexCellBase1 = nextState.asCell
-      // Sanity check so we can safely .toBuilder later
+      // Sanity check so we can safely call .toBuilder later
       assert(indexCellBase1.cellType == CellTFrom(IntT1), "Index cell must be integer-typed.")
 
       rewriter.intValueCache.findKey(indexCellBase1) match {
