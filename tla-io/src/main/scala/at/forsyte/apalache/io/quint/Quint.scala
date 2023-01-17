@@ -1,4 +1,4 @@
-package at.forsyte.apalache.io.tnt
+package at.forsyte.apalache.io.quint
 
 import scala.util.Try
 import scala.collection.mutable
@@ -9,24 +9,24 @@ import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, OperT1, RecRowT1, RowT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1, VarT1, VariantT1,
 }
 
-object Tnt {
+object Quint {
 
-  private[tnt] def exToTla(d: TntEx): Try[TlaEx] = null
+  private[quint] def exToTla(d: QuintEx): Try[TlaEx] = null
 
-  // Convert a TntType into a TlaType1
+  // Convert a QuintType into a TlaType1
   //
   // We implement a small family of mutually recursive conversion functions using this
   // class in order to:
   //
   // - Encapsulate and store benign state used to track variable numbers (see below)
   // - Support and encapsulate the mutual recursion needed in the methods
-  private[tnt] class typeToTlaType() extends LazyLogging {
+  private[quint] class typeToTlaType() extends LazyLogging {
 
-    // TNT type variables are represented with strings, but in TlaType1 they are integers.
-    // This little bundle of state lets us track the conversion of TNT var names to
+    // quint type variables are represented with strings, but in TlaType1 they are integers.
+    // This little bundle of state lets us track the conversion of quint var names to
     // TlaType1 var numbers.
     //
-    // Since the scope of type variables in TNT is always limited to single top-level type expressions,
+    // Since the scope of type variables in quint is always limited to single top-level type expressions,
     // and since the converter class is constructed fresh for each (top-level) type conversion,
     // we don't need to worry about variable name collisions.
     var varNo = 0
@@ -38,7 +38,7 @@ object Tnt {
       }
     }
 
-    import TntType._
+    import QuintType._
 
     def rowToTupleElems(row: Row): List[TlaType1] = {
       // Since we have to concat lists here, which can be expensive, we use an
@@ -49,7 +49,7 @@ object Tnt {
         // over generalization, and that we can safely treat the tuple as a closed tuple type.
         case Row.Var(_) =>
           logger.debug(
-              s"Found open row variable in TNT tuple with fields $row. Polymorphic tuples are not supported, but we will proceed assuming the tuple can be treated as a closed type.")
+              s"Found open row variable in quint tuple with fields $row. Polymorphic tuples are not supported, but we will proceed assuming the tuple can be treated as a closed type.")
           acc0
         case Row.Nil() => acc0
         case Row.Cell(fields, other) =>
@@ -81,13 +81,13 @@ object Tnt {
       }
     }
 
-    // Convert a TNT union to a TlaType1 row (which is used to represent variants)
+    // Convert a quint union to a TlaType1 row (which is used to represent variants)
     //
-    // NOTE: Union types in TNT aren't fully implemented and supported, so this
+    // NOTE: Union types in quint aren't fully implemented and supported, so this
     // corner of the transformation is likely to require update soon.
-    // See https://github.com/informalsystems/tnt/issues/244
+    // See https://github.com/informalsystems/quint/issues/244
     //
-    // In TNT, unions are currently represented by a list of tagged rows.
+    // In quint, unions are currently represented by a list of tagged rows.
     // E.g., (abstracting rom the concrete type representation):
     //
     // ```
@@ -111,10 +111,10 @@ object Tnt {
     // @typeAlias: u = Foo({a: Int, b: Str}) | Bar(Int);
     // ```
     //
-    // As a result, our conversion from TNT has to take a list of records of TNT
+    // As a result, our conversion from quint has to take a list of records of quint
     // rows and convert them into a single TlaType1 record, for which all the values
     // are themselves records, and the keys are given by the values of the `tag`
-    // field from TNT rows.
+    // field from quint rows.
     def unionToRowT1(variants: List[UnionRecord]): RowT1 = {
       val fieldTypes = variants.map {
         case UnionRecord(tag, row) => {
@@ -124,26 +124,26 @@ object Tnt {
       RowT1(fieldTypes: _*)
     }
 
-    val convert: TntType => TlaType1 = {
-      case TntBoolT()             => BoolT1
-      case TntIntT()              => IntT1
-      case TntStrT()              => StrT1
-      case TntConstT(name)        => ConstT1(name)
-      case TntVarT(name)          => VarT1(getVarNo(name))
-      case TntSetT(elem)          => SetT1(convert(elem))
-      case TntSeqT(elem)          => SeqT1(convert(elem))
-      case TntFunT(arg, res)      => FunT1(convert(arg), convert(res))
-      case TntOperT(args, res)    => OperT1(args.map(convert), convert(res))
-      case TntTupleT(row)         => TupT1(rowToTupleElems(row): _*)
-      case TntRecordT(row)        => RecRowT1(rowToRowT1(row))
-      case TntUnionT(_, variants) => VariantT1(unionToRowT1(variants))
+    val convert: QuintType => TlaType1 = {
+      case QuintBoolT()             => BoolT1
+      case QuintIntT()              => IntT1
+      case QuintStrT()              => StrT1
+      case QuintConstT(name)        => ConstT1(name)
+      case QuintVarT(name)          => VarT1(getVarNo(name))
+      case QuintSetT(elem)          => SetT1(convert(elem))
+      case QuintSeqT(elem)          => SeqT1(convert(elem))
+      case QuintFunT(arg, res)      => FunT1(convert(arg), convert(res))
+      case QuintOperT(args, res)    => OperT1(args.map(convert), convert(res))
+      case QuintTupleT(row)         => TupT1(rowToTupleElems(row): _*)
+      case QuintRecordT(row)        => RecRowT1(rowToRowT1(row))
+      case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
     }
   }
 
   /**
-   * Convert a [[TntType]] to a [[TlaType1]]
+   * Convert a [[QuintType]] to a [[TlaType1]]
    */
-  private[tnt] object typeToTlaType {
-    def apply(tntType: TntType): TlaType1 = new typeToTlaType().convert(tntType)
+  private[quint] object typeToTlaType {
+    def apply(quintType: QuintType): TlaType1 = new typeToTlaType().convert(quintType)
   }
 }
