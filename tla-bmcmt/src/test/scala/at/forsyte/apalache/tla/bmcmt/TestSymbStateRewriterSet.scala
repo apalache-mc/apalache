@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -785,7 +786,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
       // reset the solver and arena
       solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
                   smtEncoding = rewriterType)))
-      arena = Arena.create(solverContext)
+      arena = PureArenaAdapter.create(solverContext)
       val rewriter2 = create(rewriterType)
       val state2 = new SymbState(existsForm2, arena, Binding())
       assumeTlaEx(rewriter2, state2)

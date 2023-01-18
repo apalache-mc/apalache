@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
 
@@ -43,9 +43,8 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val valueCells = newValues.map(newState.arena.findCellByNameEx)
 
         // the record type may contain more fields than passed in the arguments
-        ex.typeTag.asTlaType1() match {
-          case RecT1(_) =>
-            val recordT = ex.typeTag.asTlaType1().asInstanceOf[RecT1]
+        TlaType1.fromTypeTag(ex.typeTag) match {
+          case recordT @ RecT1(_) =>
             makeOldRecord(newState, recordT, ctorKeys, valueCells)
 
           case RecRowT1(RowT1(_, _)) =>
@@ -97,7 +96,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           defaultValue
         }
       // link this cell to the record
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, valueCell))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, SmtConstElemPtr(valueCell)))
     }
 
     for ((key, tp) <- recordT.fieldTypes) {
@@ -111,11 +110,11 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // importantly, the record keys that are outside of ctorKeys should not belong to the domain!
     if (extraKeyMap.nonEmpty) {
       val extraOutsideOfDomain =
-        extraKeyMap.values.map(f => tla.not(tla.apalacheSelectInSet(f.toNameEx, domain.toNameEx).as(BoolT1)).as(BoolT1))
-      rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*).as(BoolT1))
+        extraKeyMap.values.map(f => tla.not(tla.selectInSet(f.toBuilder, domain.toBuilder)))
+      rewriter.solverContext.assertGroundExpr(tla.and(extraOutsideOfDomain.toSeq: _*))
     }
 
-    nextState.setRex(recordCell.toNameEx)
+    nextState.setRex(recordCell.toBuilder)
   }
 
   private def keysToStr(ex: TlaEx, keys: List[TlaEx]): List[String] = {

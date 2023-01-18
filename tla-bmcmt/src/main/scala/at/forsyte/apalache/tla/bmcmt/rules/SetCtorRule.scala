@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TlaEx, TypingException}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Rewrites the set constructor {e_1, ..., e_k}.
@@ -39,14 +39,14 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
         nextState = nextState.updateArena(_.appendCell(SetT1(elemType)))
         val newSetCell = nextState.arena.topCell
-        nextState = nextState.updateArena(_.appendHas(newSetCell, cells: _*))
+        nextState = nextState.updateArena(_.appendHas(newSetCell, cells.map(SmtConstElemPtr): _*))
 
         for (c <- cells) {
-          val inExpr = tla.apalacheStoreInSet(c.toNameEx, newSetCell.toNameEx)
+          val inExpr = tla.storeInSet(c.toBuilder, newSetCell.toBuilder)
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
 
-        nextState.setRex(newSetCell.toNameEx)
+        nextState.setRex(newSetCell.toBuilder)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

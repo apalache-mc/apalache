@@ -1,13 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.TypedPredefs.{tlaExToBuilderExAsTyped, BuilderExAsTyped}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 
 /**
@@ -66,19 +65,19 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
   }
 
   protected def mkSeqDomain(state: SymbState, seqCell: ArenaCell): SymbState = {
-    val (protoSeq @ _, len, capacity) = proto.unpackSeq(state.arena, seqCell)
+    val (_, len, capacity) = proto.unpackSeq(state.arena, seqCell)
     // We do not know the domain precisely, as it depends on the length of the sequence.
     // Hence, we create the set `1..capacity` and include only those elements that are not greater than `len`.
     val (newArena, staticDom) = intRangeCache.create(state.arena, (1, capacity))
     // we cannot use staticDom directly, as its in-relation is restricted, create a copy
     var arena = newArena.appendCellOld(staticDom.cellType)
     val dom = arena.topCell
-    arena = arena.appendHas(dom, arena.getHas(staticDom): _*)
+    arena = arena.appendHas(dom, arena.getHasPtr(staticDom): _*)
     for ((domElem, indexBase0) <- arena.getHas(staticDom).zipWithIndex) {
-      val inDom = tla.apalacheStoreInSet(domElem.toNameEx, dom.toNameEx)
-      val notInDom = tla.apalacheStoreNotInSet(domElem.toNameEx, dom.toNameEx)
+      val inDom = tla.storeInSet(domElem.toBuilder, dom.toBuilder)
+      val notInDom = tla.storeNotInSet(domElem.toBuilder, dom.toBuilder)
       // the element is in range, if indexBase0 < len
-      val inRange = tla.lt(tla.int(indexBase0), len.toNameEx.as(IntT1)).as(BoolT1)
+      val inRange = tla.lt(tla.int(indexBase0), len.toBuilder)
       rewriter.solverContext.assertGroundExpr(tla.ite(inRange, inDom, notInDom))
     }
 
@@ -99,8 +98,13 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head
 
     val pairs = nextState.arena.getHas(relation)
-    // importantly, add `domCells` to a set, to avoid duplicate cells (different cells still may be equal)
-    val domCells = pairs.map(getArg).toSet.toSeq
+    // importantly, call distinct, to avoid duplicate cells (different cells still may be equal)
+    val domCells = pairs
+      .map(getArg)
+      .distinct
+      .map(
+          SmtConstElemPtr // @Igor: which ptr?
+      )
     // construct a map from cell ids to lists of pairs
     type KeyToPairs = Map[Int, Set[ArenaCell]]
 
@@ -120,14 +124,14 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
       val isMem =
         if (pairsForKey.size == 1) {
           // 1. The trivial case: The cell appears only once.
-          tla.apalacheSelectInSet(head.toNameEx, relation.toNameEx)
+          tla.selectInSet(head.toBuilder, relation.toBuilder)
         } else {
           // 2. The hard case: The cell appears in multiple pairs, some of them may be ghost cells.
-          tla.or(pairsForKey.toSeq.map(p => tla.apalacheSelectInSet(p.toNameEx, relation.toNameEx).untyped()): _*)
+          tla.or(pairsForKey.toSeq.map(p => tla.selectInSet(p.toBuilder, relation.toBuilder)): _*)
         }
 
-      val ite = tla.ite(isMem, tla.apalacheStoreInSet(keyCell.toNameEx, domCell.toNameEx),
-          tla.apalacheStoreNotInSet(keyCell.toNameEx, domCell.toNameEx))
+      val ite = tla.ite(isMem, tla.storeInSet(keyCell.toBuilder, domCell.toBuilder),
+          tla.storeNotInSet(keyCell.toBuilder, domCell.toBuilder))
       rewriter.solverContext.assertGroundExpr(ite)
     }
 

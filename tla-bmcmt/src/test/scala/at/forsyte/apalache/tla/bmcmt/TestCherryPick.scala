@@ -2,29 +2,14 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleFactory}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
+import at.forsyte.apalache.tla.types.tla
 
-trait TestCherryPick extends RewriterBase with TestingPredefs {
+trait TestCherryPick extends RewriterBase {
   private val parser = DefaultType1Parser
-  private val intSeqT = SeqT1(IntT1)
-
-  private val types = Map(
-      "b" -> BoolT1,
-      "i" -> IntT1,
-      "i_to_i" -> FunT1(IntT1, IntT1),
-      "I" -> SetT1(IntT1),
-      "II" -> SetT1(SetT1(IntT1)),
-      "Qi" -> SeqT1(IntT1),
-      "ii" -> TupT1(IntT1, IntT1),
-      "ri" -> RecT1("a" -> IntT1),
-      "rii" -> RecT1("a" -> IntT1, "b" -> IntT1),
-      "riis" -> RecT1("a" -> IntT1, "b" -> IntT1, "c" -> StrT1),
-      "Riis" -> SetT1(RecT1("a" -> IntT1, "b" -> IntT1, "c" -> StrT1)),
-      "i_ii" -> TupT1(IntT1, TupT1(IntT1, IntT1)),
-  )
 
   private def assertEqWhenChosen(
       rewriter: SymbStateRewriter,
@@ -34,7 +19,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
       expected: TlaEx): SymbState = {
     rewriter.push()
     solverContext.assertGroundExpr(oracle.whenEqualTo(state, position))
-    val eq = eql(state.ex, expected).typed(BoolT1)
+    val eq = eql(unchecked(state.ex), unchecked(expected))
     assertTlaExAndRestore(rewriter, state.setRex(eq))
 
     rewriter.pop()
@@ -43,7 +28,7 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
 
   test("""CHERRY-PICK {1, 2, 2}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(BoolT1), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 3)
     state = oracleState
@@ -52,161 +37,162 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
       // introduce integer cells directly
       arena = state.arena.appendCell(IntT1)
       val cell = arena.topCell
-      solverContext.assertGroundExpr(eql(cell.toNameEx ? "i", int(i)).typed(types, "b"))
+      solverContext.assertGroundExpr(eql(cell.toBuilder, int(i)))
       state = state.setArena(arena)
       cell
     }
 
     val intCells = Seq(1, 2, 2).map(mkIntCell)
     val pickedState = new CherryPick(rewriter)
-      .pickBasic(IntT1, state, oracle, intCells, state.arena.cellFalse().toNameEx)
+      .pickBasic(IntT1, state, oracle, intCells, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, pickedState, oracle, 0, int(1).typed())
-    assertEqWhenChosen(rewriter, pickedState, oracle, 1, int(2).typed())
-    assertEqWhenChosen(rewriter, pickedState, oracle, 2, int(2).typed())
+    assertEqWhenChosen(rewriter, pickedState, oracle, 0, int(1))
+    assertEqWhenChosen(rewriter, pickedState, oracle, 1, int(2))
+    assertEqWhenChosen(rewriter, pickedState, oracle, 2, int(2))
   }
 
   test("""CHERRY-PICK {<<1, 2>>, <<3, 4>>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkTuple(i: Int, j: Int): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tuple(int(i), int(j)).typed(types, "ii")))
+      state = rewriter.rewriteUntilDone(state.setRex(tuple(int(i), int(j))))
       state.asCell
     }
 
-    val tuples = Seq(mkTuple(1, 2), mkTuple(3, 4))
+    val tuples @ Seq(a, b) = Seq(mkTuple(1, 2), mkTuple(3, 4))
     state = new CherryPick(rewriter)
-      .pickTuple(TupT1(IntT1, IntT1), state, oracle, tuples, state.arena.cellFalse().toNameEx)
+      .pickTuple(TupT1(IntT1, IntT1), state, oracle, tuples, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkTuple(i: Int, j: Int, k: Int): ArenaCell = {
-      state = rewriter.rewriteUntilDone(state.setRex(tuple(int(i), tuple(int(j), int(k)) ? "ii").typed(types, "i_ii")))
+      state = rewriter.rewriteUntilDone(state.setRex(tuple(int(i), tuple(int(j), int(k)))))
       state.asCell
     }
 
-    val tuples = Seq(mkTuple(1, 2, 3), mkTuple(3, 4, 5))
+    val tuples @ Seq(a, b) = Seq(mkTuple(1, 2, 3), mkTuple(3, 4, 5))
     val tupleT = TupT1(IntT1, TupT1(IntT1, IntT1))
-    state = new CherryPick(rewriter).pickTuple(tupleT, state, oracle, tuples, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickTuple(tupleT, state, oracle, tuples, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, tuples(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, tuples(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4>>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(BoolT1), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    def mkSeq(args: Int*): ArenaCell = {
-      val tup = tuple(args.map(int): _*).as(intSeqT)
+    def mkSeq(args: BigInt*): ArenaCell = {
+      val tup =
+        if (args.isEmpty) emptySeq(IntT1)
+        else tla.seq(args.map(int): _*)
       state = rewriter.rewriteUntilDone(state.setRex(tup))
       state.asCell
     }
 
-    val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4))
-    state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1), state, oracle, seqs, state.arena.cellFalse().toNameEx)
+    val seqs @ Seq(a, b) = Seq(mkSeq(1, 2), mkSeq(3, 4))
+    state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1), state, oracle, seqs, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4, 5>>, <<>>}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(BoolT1), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 3)
     state = oracleState
 
-    def mkSeq(args: Int*): ArenaCell = {
-      val tup = tuple(args.map(int): _*).as(intSeqT)
+    def mkSeq(args: BigInt*): ArenaCell = {
+      val tup =
+        if (args.isEmpty) emptySeq(IntT1)
+        else tla.seq(args.map(int): _*)
       state = rewriter.rewriteUntilDone(state.setRex(tup))
       state.asCell
     }
 
-    val seqs = Seq(mkSeq(1, 2), mkSeq(3, 4, 5), mkSeq())
-    state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1), state, oracle, seqs, state.arena.cellFalse().toNameEx)
+    val seqs @ Seq(a, b, c) = Seq(mkSeq(1, 2), mkSeq(3, 4, 5), mkSeq())
+    state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1), state, oracle, seqs, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, seqs(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, seqs(1).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 2, seqs(2).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 2, c.toBuilder)
   }
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]}""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkRecord(i: Int, j: Int): ArenaCell = {
-      val rec = enumFun(str("a"), int(i), str("b"), int(j))
-        .typed(types, "rii")
+      val rec = tla.rec("a" -> int(i), "b" -> int(j))
       state = rewriter.rewriteUntilDone(state.setRex(rec))
       state.asCell
     }
 
-    val records = Seq(mkRecord(1, 2), mkRecord(3, 4))
-    state = new CherryPick(rewriter).pickOldRecord(state, oracle, records, state.arena.cellFalse().toNameEx)
+    val records @ Seq(a, b) = Seq(mkRecord(1, 2), mkRecord(3, 4))
+    state = new CherryPick(rewriter).pickOldRecord(state, oracle, records, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, records(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, records(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { [a |-> 1, b |-> 2], [a |-> 3, b |-> 4]} with rows""") { rewriterType: SMTEncoding =>
     val recordT = parser("{ a: Int, b: Int }")
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
     def mkRecord(i: Int, j: Int): ArenaCell = {
-      val rec = enumFun(str("a"), int(i), str("b"), int(j)).as(recordT)
+      val rec = tla.rec("a" -> int(i), "b" -> int(j)).map(_.withTag(Typed(recordT)))
       state = rewriter.rewriteUntilDone(state.setRex(rec))
       state.asCell
     }
 
-    val records = Seq(mkRecord(1, 2), mkRecord(3, 4))
-    state = new CherryPick(rewriter).pickRecord(state, oracle, records, state.arena.cellFalse().toNameEx)
+    val records @ Seq(a, b) = Seq(mkRecord(1, 2), mkRecord(3, 4))
+    state = new CherryPick(rewriter).pickRecord(state, oracle, records, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, records(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, records(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK [a |-> 1, b |-> 2] or [a |-> 3]""") { rewriterType: SMTEncoding =>
     // After switching to Snowcat, we allow sets to mix records of compatible types.
     // The old encoding was always introducing spurious fields for all records, as it was extending the records.
-    val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
-      .typed(types, "rii")
-    val rec2 = enumFun(str("a"), int(3))
-      .typed(types, "ri")
+    val rec1 = rec("a" -> int(1), "b" -> int(2))
+    val rec2 = rec("a" -> int(3))
 
     // introduce an oracle that tells us which element to pick
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
     state = rewriter.rewriteUntilDone(state.setRex(rec1))
@@ -215,90 +201,88 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
     val rec2Cell = state.asCell
 
     state = new CherryPick(rewriter).pickOldRecord(state, oracle, Seq(rec1Cell, rec2Cell),
-        state.arena.cellFalse().toNameEx)
+        state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, rec1Cell.toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, rec2Cell.toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, rec1Cell.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, rec2Cell.toBuilder)
   }
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3]}""") { rewriterType: SMTEncoding =>
     // After switching to Snowcat, we allow sets to mix records of compatible types.
     // The old encoding was always introducing spurious fields for all records, as it was extending the records.
-    val rec1 = enumFun(str("a"), int(1), str("b"), int(2))
-      .typed(types, "ri")
-    val rec2 = enumFun(str("a"), int(3))
-      .typed(types, "rii")
+    val rec1 = rec("a" -> int(1), "b" -> int(2))
+    val rec2 = rec("a" -> int(3))
 
     // introduce an oracle that tells us which element to pick
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     state = rewriter.rewriteUntilDone(state.setRex(rec1))
     val rec1Cell = state.asCell
     state = rewriter.rewriteUntilDone(state.setRex(rec2))
     val rec2Cell = state.asCell
-    val set = enumSet(rec1Cell.toNameEx ? "riis", rec2Cell.toNameEx ? "riis")
-      .typed(types, "Riis")
+    val set = enumSet(
+        rec1Cell.toBuilder,
+        rec2Cell.toBuilder,
+    )
     state = rewriter.rewriteUntilDone(state.setRex(set))
     val setCell = state.asCell
 
-    state = new CherryPick(rewriter).pick(setCell, state, bool(false).typed())
+    state = new CherryPick(rewriter).pick(setCell, state, bool(false))
     assert(solverContext.sat())
     val result = state.asCell
     // check that the result is equal to one of the records and nothing else
-    val eq1 = eql(result.toNameEx ? "riis", rec1Cell.toNameEx ? "riis") ? "b"
-    val eq2 = eql(result.toNameEx ? "riis", rec2Cell.toNameEx ? "riis") ? "b"
+    val eq1 = eql(result.toBuilder, rec1Cell.toBuilder)
+    val eq2 = eql(result.toBuilder, rec2Cell.toBuilder)
     val eq1or2 = or(eq1, eq2)
-      .typed(types, "b")
     assertTlaExAndRestore(rewriter, state.setRex(eq1or2))
   }
 
   test("""CHERRY-PICK { Variant("A", 2), Variant("B", FALSE) }""") { rewriterType: SMTEncoding =>
-    val variantT = parser("A(Int) | B(Bool)")
+    val variantT = parser("A(Int) | B(Bool)").asInstanceOf[VariantT1]
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    state = rewriter.rewriteUntilDone(state.setRex(variant("A", int(33)).as(variantT)))
+    state = rewriter.rewriteUntilDone(state.setRex(variant("A", int(33), variantT)))
     val vrtA = state.asCell
-    state = rewriter.rewriteUntilDone(state.setRex(variant("B", bool(false)).as(variantT)))
+    state = rewriter.rewriteUntilDone(state.setRex(variant("B", bool(false), variantT)))
     val vrtB = state.asCell
 
-    val variants = Seq(vrtA, vrtB)
-    state = new CherryPick(rewriter).pickVariant(state, oracle, variants, state.arena.cellFalse().toNameEx)
+    val variants @ Seq(a, b) = Seq(vrtA, vrtB)
+    state = new CherryPick(rewriter).pickVariant(state, oracle, variants, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, variants(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, variants(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { {1, 2}, {3, 4} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    def mkSet(i: Int, j: Int): ArenaCell = {
+    def mkSet(i: BigInt, j: BigInt): ArenaCell = {
       val set = enumSet(int(i), int(j))
-        .typed(types, "I")
       state = rewriter.rewriteUntilDone(state.setRex(set))
       state.asCell
     }
 
-    val sets = Seq(mkSet(1, 2), mkSet(3, 4))
-    state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    val sets @ Seq(a, b) = Seq(mkSet(1, 2), mkSet(3, 4))
+    state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { {1, 2}, {} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -308,17 +292,17 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val sets = Seq(mkSet(enumSet(int(1), int(2)).typed(types, "I")), mkSet(enumSet().typed(types, "I")))
-    state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    val sets @ Seq(a, b) = Seq(mkSet(enumSet(int(1), int(2))), mkSet(emptySet(IntT1)))
+    state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { {} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -328,16 +312,16 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val sets = Seq(mkSet(enumSet().typed(types, "I")))
-    state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    val sets @ Seq(a) = Seq(mkSet(emptySet(IntT1)))
+    state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
   }
 
   test("""CHERRY-PICK { {{1, 2}, {3, 4}}, {{5, 6}} }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
@@ -347,42 +331,42 @@ trait TestCherryPick extends RewriterBase with TestingPredefs {
       state.asCell
     }
 
-    val set12 = enumSet(int(1), int(2)) ? "I"
-    val set34 = enumSet(int(3), int(4)) ? "I"
-    val set56 = enumSet(int(5), int(6)) ? "I"
-    val sets =
-      Seq(rewriteEx(enumSet(set12, set34).typed(types, "II")), rewriteEx(enumSet(set56).typed(types, "II")))
-    state = new CherryPick(rewriter).pickSet(SetT1(SetT1(IntT1)), state, oracle, sets, state.arena.cellFalse().toNameEx)
+    val set12 = enumSet(int(1), int(2))
+    val set34 = enumSet(int(3), int(4))
+    val set56 = enumSet(int(5), int(6))
+    val sets @ Seq(a, b) =
+      Seq(rewriteEx(enumSet(set12, set34)), rewriteEx(enumSet(set56)))
+    state = new CherryPick(rewriter).pickSet(SetT1(SetT1(IntT1)), state, oracle, sets,
+        state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, sets(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, sets(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] }""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
-    var state = new SymbState(bool(true).typed(), arena, Binding())
+    var state = new SymbState(bool(true), arena, Binding())
     // introduce an oracle that tells us which element to pick
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    def mkFun(dom: BuilderEx, map: BuilderEx): ArenaCell = {
-      val fun = funDef(map, name("x") ? "i", dom)
-        .typed(types, "i_to_i")
+    def mkFun(dom: TBuilderInstruction, map: TBuilderInstruction): ArenaCell = {
+      val fun = funDef(map, name("x", IntT1) -> dom)
       state = rewriter.rewriteUntilDone(state.setRex(fun))
       state.asCell
     }
 
-    val set12 = enumSet(int(1), int(2)) ? "I"
-    val set23 = enumSet(int(2), int(3)) ? "I"
-    val fun1 = mkFun(set12, plus(int(2), name("x") ? "i") ? "i")
-    val fun2 = mkFun(set23, mult(int(2), name("x") ? "i") ? "i")
+    val set12 = enumSet(int(1), int(2))
+    val set23 = enumSet(int(2), int(3))
+    val fun1 = mkFun(set12, plus(int(2), name("x", IntT1)))
+    val fun2 = mkFun(set23, mult(int(2), name("x", IntT1)))
     val funs = Seq(fun1, fun2)
     val funT = FunT1(IntT1, IntT1)
-    state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse().toNameEx)
+    state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, funs(0).toNameEx)
-    assertEqWhenChosen(rewriter, state, oracle, 1, funs(1).toNameEx)
+    assertEqWhenChosen(rewriter, state, oracle, 0, fun1.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, fun2.toBuilder)
   }
 }

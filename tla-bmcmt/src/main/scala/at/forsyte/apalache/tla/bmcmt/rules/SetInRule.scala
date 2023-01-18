@@ -3,11 +3,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
-import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, NameEx, OperEx, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -96,9 +95,9 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       throw new RewriterException(msg, state.ex)
     }
 
-    val domType = funCell.cellType match {
-      case CellTFrom(FunT1(domT, _)) => domT // OK
-      case _                         => flagTypeError()
+    funCell.cellType match {
+      case CellTFrom(FunT1(_, _)) => () // OK
+      case _                      => flagTypeError()
     }
     funsetCell.cellType match {
       case FinFunSetT(PowSetT(_), _) | FinFunSetT(FinFunSetT(_, _), _) =>
@@ -115,32 +114,31 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
     // Check that \A t \in f: t[1] \in S /\ t[2] \in T, and
     // `DOMAIN f = S`, since the above only implies `DOMAIN f \subseteq S`
-    def onPair(pair: ArenaCell): TlaEx = {
+    def onPair(pair: ArenaCell): TBuilderInstruction = {
       val tupleElems = nextState.arena.getHas(pair)
       val (arg, res) = (tupleElems.head, tupleElems.tail.head)
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.apalacheSelectInSet(arg.toNameEx, funsetDom.toNameEx)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.selectInSet(arg.toBuilder, funsetDom.toBuilder)))
       val inDom = nextState.asCell
-      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.apalacheSelectInSet(res.toNameEx, funsetCdm.toNameEx)))
+      nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.selectInSet(res.toBuilder, funsetCdm.toBuilder)))
       val inCdm = nextState.asCell
       // BUGFIX: check only those pairs that actually belong to the relation
       tla
-        .or(tla.not(tla.apalacheSelectInSet(pair.toNameEx, relation.toNameEx)), tla.and(inDom.toNameEx, inCdm.toNameEx))
+        .or(tla.not(tla.selectInSet(pair.toBuilder, relation.toBuilder)), tla.and(inDom.toBuilder, inCdm.toBuilder))
     }
     val relElems = nextState.arena.getHas(relation)
-    rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.and(relElems.map(onPair): _*)))
+    rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toBuilder, tla.and(relElems.map(onPair): _*)))
 
     // S = DOMAIN f
     val domainEx =
       tla
         .eql(
-            funsetDom.toNameEx,
-            tla.dom(funCell.toNameEx).as(domType),
+            funsetDom.toBuilder,
+            tla.dom(funCell.toBuilder),
         )
-        .as(BoolT1)
 
     rewriter.rewriteUntilDone(
         nextState.setRex(
-            tla.and(pred.toNameEx, domainEx)
+            tla.and(pred.toBuilder, domainEx)
         )
     )
   }
@@ -152,15 +150,15 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
       elemType: types.CellT): SymbState = {
     if (setCell == state.arena.cellIntSet()) {
       // Do nothing, it is just true. The type checker should have taken care of that.
-      state.setRex(state.arena.cellTrue().toNameEx)
+      state.setRex(state.arena.cellTrue().toBuilder)
     } else {
       // i \in Nat <=> i >= 0
       assert(setCell == state.arena.cellNatSet())
       assert(elemType == CellTFrom(IntT1))
       val nextState = state.updateArena(_.appendCell(BoolT1))
       val pred = nextState.arena.topCell
-      rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toNameEx, tla.ge(elemCell.toNameEx, tla.int(0))))
-      nextState.setRex(pred.toNameEx)
+      rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toBuilder, tla.ge(elemCell.toBuilder, tla.int(0))))
+      nextState.setRex(pred.toBuilder)
     }
   }
 
@@ -173,10 +171,10 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // For instance, [a |-> 1] \in { [a |-> 2], [a |-> 3, b -> "foo"] }
     if (potentialElems.isEmpty) {
       // the set cell points to no other cell => return false
-      state.setRex(state.arena.cellFalse().toNameEx)
+      state.setRex(state.arena.cellFalse().toBuilder)
     } else {
       val nextState = state.updateArena(_.appendCell(BoolT1))
-      val pred = nextState.arena.topCell.toNameEx
+      val pred = nextState.arena.topCell.toBuilder
 
       // cache equality constraints first
       val eqState = rewriter.lazyEq.cacheEqConstraints(nextState, potentialElems.map((_, elemCell)))

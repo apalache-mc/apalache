@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, MockOracle, Oracle, SparseOracle}
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -28,9 +29,9 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   // the control state of the executor
   private var controlState: ExecutorControlState = Preparing()
 
-  private val initialArena = Arena.create(ctx.rewriter.solverContext)
+  private val initialArena = PureArenaAdapter.create(ctx.rewriter.solverContext)
   // the latest symbolic state that is produced by the rewriter
-  var lastState = new SymbState(initialArena.cellTrue().toNameEx, initialArena, Binding())
+  var lastState = new SymbState(initialArena.cellTrue().toBuilder, initialArena, Binding())
   // the stack of the variable bindings, one per state, in reverse order, excluding the binding in topState
   private var revStack: List[(Binding, Oracle)] = List((Binding(), new MockOracle(0)))
 
@@ -148,7 +149,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       throw new IllegalStateException(s"Use prepareTransition before calling assumeTransition for $transitionNo")
     } else {
       val transition = preparedTransitions(transitionNo)
-      ctx.rewriter.solverContext.assertGroundExpr(transition.trigger.toNameEx)
+      ctx.rewriter.solverContext.assertGroundExpr(transition.trigger.toBuilder)
       lastState = lastState.setBinding(transition.binding)
       // add the binding and the oracle on the stack
       pushLastState(new MockOracle(transitionNo))
@@ -236,7 +237,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     if (sortedTransitions.isEmpty) {
       throw new IllegalArgumentException("unable to pick transitions from empty set")
     } else if (sortedTransitions.lengthCompare(1) == 0) {
-      ctx.solver.assertGroundExpr(sortedTransitions.head._2.trigger.toNameEx)
+      ctx.solver.assertGroundExpr(sortedTransitions.head._2.trigger.toBuilder)
       lastState = oracleState.setBinding(sortedTransitions.head._2.binding)
       val transitionNo = sortedTransitions.head._1
       // use a fixed transition
@@ -244,7 +245,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       pushLastState(mockOracle)
     } else {
       // if oracle = i, then the ith transition is enabled
-      ctx.solver.assertGroundExpr(oracle.caseAssertions(oracleState, sortedTransitions.map(_._2.trigger.toNameEx)))
+      ctx.solver.assertGroundExpr(oracle.caseAssertions(oracleState, sortedTransitions.map(_._2.trigger.toBuilder)))
 
       // glue the computed states S_0, ..., S_k together:
       // for every variable x', pick c_x from { S_1[x'], ..., S_k[x'] }
@@ -255,7 +256,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
       def pickVar(x: String): ArenaCell = {
         val toPickFrom = sortedTransitions.map(p => p._2.binding(x))
         nextState = picker
-          .pickByOracle(nextState, oracle, toPickFrom, nextState.arena.cellFalse().toNameEx) // no else case
+          .pickByOracle(nextState, oracle, toPickFrom, nextState.arena.cellFalse().toBuilder) // no else case
         nextState.asCell
       }
 
@@ -296,7 +297,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     // finally, shift the primed variables to non-primed, forget the expression
     lastState = lastState
       .setBinding(lastState.binding.shiftBinding(consts))
-      .setRex(lastState.arena.cellTrue().toNameEx)
+      .setRex(lastState.arena.cellTrue().toBuilder)
     // that is the result of this step
     // importantly, clean the action-level caches, so the new variables are not mapped to the old variables
     ctx.rewriter.exprCache.disposeActionLevel()
@@ -354,7 +355,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     ctx.recover(snapshot.contextSnapshot)
     val rs = snapshot.execution.path.reverse
     val arena = snapshot.execution.arena.setSolver(ctx.solver)
-    lastState = new SymbState(arena.cellTrue().toNameEx, arena, rs.head._1)
+    lastState = new SymbState(arena.cellTrue().toBuilder, arena, rs.head._1)
     revStack = rs.tail
     preparedTransitions = snapshot.preparedTransitions
     controlState = snapshot.controlState

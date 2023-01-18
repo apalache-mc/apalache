@@ -18,6 +18,12 @@ import at.forsyte.apalache.tla.types.tla
  */
 case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
 
+  def cellCount: Int = arena.cellCount
+
+  def topCell: ArenaCell = arena.topCell
+
+  def setSolver(newSolverContext: SolverContext): PureArenaAdapter = this.copy(context = newSolverContext)
+
   /**
    * A fixed cell that equals to false in the Boolean theory.
    *
@@ -96,9 +102,10 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
    *   new arena
    */
   def appendCellOld(cellType: CellT, isUnconstrained: Boolean = false): PureArenaAdapter = {
-    val newCell = arena.nextCell(cellType, isUnconstrained)
+    val newArena = appendCellNoSmt(cellType, isUnconstrained)
+    val newCell = newArena.topCell
     context.declareCell(newCell)
-    this.copy(arena = arena.appendCell(newCell))
+    newArena
   }
 
   /**
@@ -125,14 +132,12 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
    * @return
    *   a pair: the new arena and a sequence of new cells
    */
-  def appendCellSeq(types: CellT*): (PureArenaAdapter, Seq[ArenaCell]) = {
-    val (cells, newArena) = types.foldLeft((Seq.empty[ArenaCell], arena)) { case ((seq, a), cellT) =>
-      val nextCell = a.nextCell(cellT)
-      val nextArena = a.appendCell(nextCell)
-      (seq :+ nextCell, nextArena)
+  def appendCellSeq(types: CellT*): (PureArenaAdapter, Seq[ArenaCell]) =
+    types.foldRight((this, Seq.empty[ArenaCell])) { case (cellT, (a, seq)) =>
+      val nextArena = a.appendCellOld(cellT)
+      val nextCell = nextArena.topCell
+      (nextArena, nextCell +: seq)
     }
-    (this.copy(arena = newArena), cells)
-  }
 
   /**
    * Append a new cell to arena. This method returns a new arena, not the new cell. The new cell can be accessed with
@@ -201,7 +206,7 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
     if (addInPred) {
       context.declareInPredIfNeeded(setCell, elemCell.elem)
     }
-    this.copy(arena = arena.appendHas(setCell, elemCell))
+    appendHasNoSmt(setCell, elemCell)
   }
 
   /**
@@ -212,8 +217,11 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
    * @return
    *   all element cells that were added with appendHas, or an empty list, if none were added
    */
-  def getHas(setCell: ArenaCell): Seq[ElemPtr] =
-    arena.getHas(setCell)
+  def getHas(setCell: ArenaCell): Seq[ArenaCell] =
+    // TODO: temporarily return cells not pointers, while we implement pointer support. Use getHasPtr for chaining.
+    arena.getHas(setCell).map(_.elem)
+
+  def getHasPtr(setCell: ArenaCell): Seq[ElemPtr] = arena.getHas(setCell)
 
   /**
    * Set a function domain.
@@ -325,7 +333,7 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
       if (cells.nonEmpty) {
         builder.append("has:(")
         for (c <- cells)
-          print(c.elem)
+          print(c)
         builder.append(")")
       }
     }
@@ -355,12 +363,13 @@ object PureArenaAdapter {
     cells.foreach(solverContext.declareCell)
 
     solverContext.assertGroundExpr(tla.not(cellFalse.toBuilder))
-    solverContext.assertGroundExpr(cellTrue.toNameEx)
+    solverContext.assertGroundExpr(cellTrue.toBuilder)
     // link c_BOOLEAN to c_FALSE and c_TRUE
-    val finalArena = initArena.appendHas(cellBoolean, Seq(cellFalse, cellTrue).map(FixedElemPtr(_, true)): _*)
+    val ret = PureArenaAdapter(initArena, solverContext)
+      .appendHas(cellBoolean, Seq(cellFalse, cellTrue).map(SmtConstElemPtr): _*)
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
-    solverContext.assertGroundExpr(tla.storeInSet(cellFalse.toBuilder, cellBoolean.toBuilder))
-    solverContext.assertGroundExpr(tla.storeInSet(cellTrue.toBuilder, cellBoolean.toBuilder))
-    PureArenaAdapter(finalArena, solverContext)
+    ret.context.assertGroundExpr(tla.storeInSet(cellFalse.toBuilder, cellBoolean.toBuilder))
+    ret.context.assertGroundExpr(tla.storeInSet(cellTrue.toBuilder, cellBoolean.toBuilder))
+    ret
   }
 }

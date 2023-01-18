@@ -1,10 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.Arena.namePrefix
+import at.forsyte.apalache.tla.bmcmt.arena.PureArena
+import at.forsyte.apalache.tla.bmcmt.arena.PureArena.namePrefix
 import at.forsyte.apalache.tla.bmcmt.types.CellT
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.types.tla
 
@@ -36,13 +35,9 @@ object ArenaCell {
  */
 class ArenaCell(val id: Int, val cellType: CellT, val isUnconstrained: Boolean = false)
     extends Comparable[ArenaCell] with Serializable {
-  override def toString: String = {
-    Arena.namePrefix + id
-  }
+  override def toString: String = PureArena.namePrefix + id
 
-  def toNameEx: NameEx = {
-    NameEx(toString)
-  }
+  def toNameEx: NameEx = toBuilder.build.asInstanceOf[NameEx]
 
   /**
    * Convert the cell to a builder instruction, so it can be used to build larger IR expressions.
@@ -50,17 +45,11 @@ class ArenaCell(val id: Int, val cellType: CellT, val isUnconstrained: Boolean =
    * @return
    *   a builder instruction that can be used with the typed builder
    */
-  def toBuilder: typecomp.TBuilderInstruction = {
-    tla.name(toString, cellType.toTlaType1)
-  }
+  def toBuilder: typecomp.TBuilderInstruction = tla.name(toString, cellType.toTlaType1)
 
-  def mkTlaEq(rhs: ArenaCell): TlaEx = {
-    OperEx(TlaOper.eq, this.toNameEx, rhs.toNameEx)
-  }
+  def mkTlaEq(rhs: ArenaCell): TlaEx = tla.eql(this.toBuilder, rhs.toBuilder)
 
-  override def compareTo(t: ArenaCell): Int = {
-    id.compareTo(t.id)
-  }
+  override def compareTo(t: ArenaCell): Int = id.compareTo(t.id)
 
   override def hashCode(): Int = id.hashCode()
 

@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
@@ -51,7 +52,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           nextState.setRex(newSetCell.toNameEx)
         } else {
           // add all the elements to the arena
-          nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
+          nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq.map(SmtConstElemPtr): _*))
 
           // Require each cell to be in one of the sets, e.g., consider UNION { {1} \ {1}, {1} }
           // Importantly, when elemCell is pointed by several sets S_1, .., S_k, we require:

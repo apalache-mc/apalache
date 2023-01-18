@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TlaType1}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 
 /**
@@ -38,15 +37,14 @@ class ChooseOrGuessRule(rewriter: SymbStateRewriter) extends RewritingRule {
         // This is a general encoding, handling both happy and unhappy scenarios,
         // that is, when CHOOSE is defined on its arguments and not, respectively.
         // Compute set comprehension and then pick an element from it.
-        val setT = set.typeTag.asTlaType1()
-        val filterEx = tla
-          .filter(varName, set, pred)
-          .typed(setT)
+        val setT = TlaType1.fromTypeTag(set.typeTag)
+        val Seq(varNameU, setU, predU) = Seq(varName, set, pred).map(tla.unchecked)
+        val filterEx = tla.filter(varNameU, setU, predU)
         val nextState = rewriter.rewriteUntilDone(state.setRex(filterEx))
         guess(setT, nextState)
 
       case OperEx(ApalacheOper.guess, setEx) =>
-        val setT = setEx.typeTag.asTlaType1()
+        val setT = TlaType1.fromTypeTag(setEx.typeTag)
         val nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
         guess(setT, nextState)
 
@@ -62,7 +60,7 @@ class ChooseOrGuessRule(rewriter: SymbStateRewriter) extends RewritingRule {
       setT match {
         case SetT1(elemT) =>
           val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, elemT)
-          state.setArena(newArena).setRex(defaultValue.toNameEx)
+          state.setArena(newArena).setRex(defaultValue.toBuilder)
 
         case _ =>
           throw new IllegalStateException(s"Expected a set, found: $setT")
@@ -74,14 +72,14 @@ class ChooseOrGuessRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val (oracleState, oracle) = pickRule.oracleFactory.newDefaultOracle(state, elems.size + 1)
 
       // pick a cell
-      val nextState = pickRule.pickByOracle(oracleState, oracle, elems, oracleState.arena.cellTrue().toNameEx)
+      val nextState = pickRule.pickByOracle(oracleState, oracle, elems, oracleState.arena.cellTrue().toBuilder)
       val pickedCell = nextState.asCell
       // require the oracle to produce only the values for the set elements (or no elements, when it is empty)
       OracleHelper.assertOraclePicksSetMembers(rewriter, nextState, oracle, setCell, elems)
 
       // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
       // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
-      nextState.setRex(pickedCell.toNameEx)
+      nextState.setRex(pickedCell.toBuilder)
     }
   }
 }

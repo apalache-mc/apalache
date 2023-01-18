@@ -12,11 +12,13 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap, TypeComputat
 object ControlOperSignatures {
   import at.forsyte.apalache.tla.lir.oper.TlaControlOper._
   import BuilderUtil._
+  import FlexibleEquality._
 
   def getMap: SignatureMap = {
 
     // (Bool, t, t) => t
-    val iteSig = signatureMapEntry(ifThenElse, { case Seq(BoolT1, t, tt) if t == tt => t })
+    val iteSig = signatureMapEntry(ifThenElse,
+        { case Seq(BoolT1, t, tt) if compatible(t, tt) => commonSupertype(t, tt).get })
 
     def caseBodyT(seq: Seq[TlaType1]): Option[TypeComputationResult] = {
       val n = seq.size
@@ -27,9 +29,8 @@ object ControlOperSignatures {
           case ((lPartial, rPartial), Seq(cond, body)) =>
             (lPartial :+ cond, rPartial :+ body)
         }
-        val t = bodies.head // n >= 2 => bodies.nonEmpty
-        if (cases.forall(_ == BoolT1) && bodies.forall(_ == t))
-          Some(t)
+        if (cases.forall(_ == BoolT1) && commonSeqSupertype(bodies).nonEmpty)
+          commonSeqSupertype(bodies).map { Right(_) }
         else None
       }
     }

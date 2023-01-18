@@ -2,19 +2,21 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{ConstT1, TlaEx}
+import at.forsyte.apalache.tla.lir.ConstT1
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
 
   override def size: Int = nvalues
 
-  override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
-    tla.eql(oracleCell.toNameEx, valueCells(position).toNameEx)
-  }
+  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction =
+    tla.eql(oracleCell.toBuilder, valueCells(position).toBuilder)
 
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+  override def caseAssertions(
+      state: SymbState,
+      assertions: Seq[TBuilderInstruction],
+      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
     if (elseAssertions.nonEmpty && assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }
@@ -24,8 +26,8 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     def isEqual(valueCell: ArenaCell): Boolean = {
-      val eq = tla.eql(valueCell.toNameEx, oracleCell.toNameEx).untyped()
-      solverContext.evalGroundExpr(eq) == tla.bool(true).untyped()
+      val eq = tla.eql(valueCell.toBuilder, oracleCell.toBuilder)
+      solverContext.evalGroundExpr(eq) == tla.bool(true).build
     }
 
     valueCells.indexWhere(isEqual) // the oracle must be equal to one of the cached values

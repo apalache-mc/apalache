@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
 object SeqOperSignatures {
   import TlaSeqOper._
   import BuilderUtil._
+  import FlexibleEquality._
 
   /** Returns a map that assigns a signature generator to each TLaArithOper. */
   def getMap: SignatureMap = {
@@ -24,10 +25,12 @@ object SeqOperSignatures {
     val tailSig = signatureMapEntry(tail, { case Seq(st: SeqT1) => st })
 
     // (Seq(t), t) => Seq(t)
-    val appendSig = signatureMapEntry(append, { case Seq(st @ SeqT1(t), tt) if t == tt => st })
+    val appendSig = signatureMapEntry(append,
+        { case Seq(SeqT1(t), tt) if compatible(t, tt) => commonSupertype(t, tt).map(SeqT1).get })
 
     // (Seq(t), Seq(t)) => Seq(t)
-    val concatSig = signatureMapEntry(concat, { case Seq(st @ SeqT1(t), SeqT1(tt)) if t == tt => st })
+    val concatSig = signatureMapEntry(concat,
+        { case Seq(SeqT1(t), SeqT1(tt)) if compatible(t, tt) => commonSupertype(t, tt).map(SeqT1).get })
 
     // (Seq(t)) => Int
     val lenSig = signatureMapEntry(len, { case Seq(_: SeqT1) => IntT1 })

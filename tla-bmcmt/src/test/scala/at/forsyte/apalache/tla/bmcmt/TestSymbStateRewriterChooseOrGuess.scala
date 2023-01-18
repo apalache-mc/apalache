@@ -1,26 +1,21 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1, TestingPredefs}
+import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.types.tla._
 
-trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredefs {
-  private val boolT = BoolT1
-  private val intT = IntT1
-  private val intSetT = SetT1(IntT1)
-
+trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   test("""CHOOSE x \in { 1, 2, 3 }: x > 1""") { rewriterType: SMTEncoding =>
-    val cond = gt(name("x").as(intT), int(1)).as(boolT)
+    val cond = gt(name("x", IntT1), int(1))
     val ex =
-      choose(name("x").as(intT), enumSet(int(1), int(2), int(3)).as(intSetT), cond).as(intT)
+      choose(name("x", IntT1), enumSet(int(1), int(2), int(3)), cond)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(nextState.ex.as(intT), int(i)).as(boolT)))
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(unchecked(nextState.ex), int(i))))
       solverContext.assertGroundExpr(ns.ex)
     }
 
@@ -44,14 +39,14 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
   }
 
   test("""Guess({ 2, 3 })""") { rewriterType: SMTEncoding =>
-    val ex = guess(enumSet(int(2), int(3)).as(intSetT)).as(intT)
+    val ex = guess(enumSet(int(2), int(3)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(nextState.ex.as(intT), int(i)).as(boolT)))
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(unchecked(nextState.ex), int(i))))
       solverContext.assertGroundExpr(ns.ex)
     }
 
@@ -66,8 +61,8 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
   }
 
   test("""CHOOSE x \in { 1 }: x > 1""") { rewriterType: SMTEncoding =>
-    val cond = gt(name("x").as(intT), int(1)).as(boolT)
-    val ex = choose(name("x").as(intT), enumSet(int(1)).as(intSetT), cond).as(intT)
+    val cond = gt(name("x", IntT1), int(1))
+    val ex = choose(name("x", IntT1), enumSet(int(1)), cond)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state)
@@ -79,8 +74,8 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
   }
 
   test("""CHOOSE x \in {}: x > 1""") { rewriterType: SMTEncoding =>
-    val cond = gt(name("x").as(intT), int(1)).as(boolT)
-    val ex = choose(name("x").as(intT), enumSet().as(intSetT), cond).as(boolT)
+    val cond = gt(name("x", IntT1), int(1))
+    val ex = choose(name("x", IntT1), emptySet(IntT1), cond)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -88,7 +83,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val eq = eql(nextState.ex.as(intT), int(i)).as(boolT)
+      val eq = eql(unchecked(nextState.ex), int(i))
       val ns = rewriter.rewriteUntilDone(nextState.setRex(eq))
       solverContext.assertGroundExpr(ns.ex)
     }
@@ -105,7 +100,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
   }
 
   test("""Guess({})""") { rewriterType: SMTEncoding =>
-    val ex = guess(enumSet().as(intSetT)).as(intT)
+    val ex = guess(emptySet(IntT1))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -113,7 +108,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase with TestingPredef
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val eq = eql(nextState.ex.as(intT), int(i)).as(boolT)
+      val eq = eql(unchecked(nextState.ex), int(i))
       val ns = rewriter.rewriteUntilDone(nextState.setRex(eq))
       solverContext.assertGroundExpr(ns.ex)
     }

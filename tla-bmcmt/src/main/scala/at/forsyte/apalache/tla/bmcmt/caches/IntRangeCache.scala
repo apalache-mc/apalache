@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
+import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.{IntT1, SetT1}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Cache tuple domains as well as ranges a..b.
@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
  *   Igor Konnov
  */
 class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
-    extends AbstractCache[Arena, (Int, Int), ArenaCell] with Serializable {
+    extends AbstractCache[PureArenaAdapter, (Int, Int), ArenaCell] with Serializable {
 
   /**
    * Create a set a..b.
@@ -25,12 +25,12 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
    * @return
    *   a target value that is going to be cached and the new context
    */
-  override def create(context: Arena, range: (Int, Int)): (Arena, ArenaCell) = {
+  override def create(context: PureArenaAdapter, range: (Int, Int)): (PureArenaAdapter, ArenaCell) = {
     var arena = context
-    def intToCell(i: Int): ArenaCell = {
+    def intToCell(i: Int): ElemPtr = {
       val (newArena, cell) = intValueCache.getOrCreate(arena, i)
       arena = newArena
-      cell
+      SmtConstElemPtr(cell)
     }
 
     val cells = range._1.to(range._2).map(intToCell)
@@ -39,7 +39,8 @@ class IntRangeCache(solverContext: SolverContext, intValueCache: IntValueCache)
     val set = arena.topCell
     arena = arena.appendHas(set, cells: _*)
     // force that every element is in the set
-    for (cell <- cells) solverContext.assertGroundExpr(tla.apalacheStoreInSet(cell.toNameEx, set.toNameEx))
+    // TODO: Use fixed pointers in lieu of storeInSet.
+    for (cell <- cells) solverContext.assertGroundExpr(tla.storeInSet(cell.elem.toBuilder, set.toBuilder))
     (arena, set)
   }
 }

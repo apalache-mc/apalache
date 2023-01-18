@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
+import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.oper.ApalacheInternalOper
-import at.forsyte.apalache.tla.lir.{ConstT1, OperEx, StrT1}
+import at.forsyte.apalache.tla.lir.{ConstT1, StrT1}
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * A cache for model values that are translated as uninterpreted constants, with a unique sort per uniterpreted type.
@@ -16,8 +16,10 @@ import at.forsyte.apalache.tla.lir.{ConstT1, OperEx, StrT1}
  *   Jure Kukovec
  */
 class ModelValueCache(solverContext: SolverContext)
-    extends AbstractCache[Arena, (String, String), ArenaCell] with Serializable {
-  override protected def create(arena: Arena, typeAndIndex: (String, String)): (Arena, ArenaCell) = {
+    extends AbstractCache[PureArenaAdapter, (String, String), ArenaCell] with Serializable {
+  override protected def create(
+      arena: PureArenaAdapter,
+      typeAndIndex: (String, String)): (PureArenaAdapter, ArenaCell) = {
     // introduce a new cell
     val (utype, _) = typeAndIndex
     val cellType = if (utype == StrT1.toString) StrT1 else ConstT1(utype)
@@ -25,8 +27,8 @@ class ModelValueCache(solverContext: SolverContext)
     val newCell = newArena.topCell
     // The fresh cell should differ from the previously created cells.
     // We use the SMT constraint (distinct ...).
-    val others = values().filter(_.cellType == CellTFrom(cellType)).map(_.toNameEx).toSeq
-    solverContext.assertGroundExpr(OperEx(ApalacheInternalOper.distinct, newCell.toNameEx +: others: _*))
+    val others = values().withFilter(_.cellType == CellTFrom(cellType)).map(_.toBuilder).toSeq
+    solverContext.assertGroundExpr(tla.distinct(newCell.toBuilder +: others: _*))
     solverContext.log("; cached \"%s\" to %s".format(typeAndIndex, newCell))
     (newArena, newCell)
   }
@@ -45,10 +47,13 @@ class ModelValueCache(solverContext: SolverContext)
    * @return
    *   the new arena and the sequence of cells that represent the cached values
    */
-  def createAndCacheMany(arena: Arena, utype: String, newValues: Iterable[String]): (Arena, Seq[ArenaCell]) = {
+  def createAndCacheMany(
+      arena: PureArenaAdapter,
+      utype: String,
+      newValues: Iterable[String]): (PureArenaAdapter, Seq[ArenaCell]) = {
     var nextArena = arena
     // the cells that exist in the cache
-    val oldCells = values().filter(_.cellType == CellTFrom(ConstT1(utype))).map(_.toNameEx).toSeq
+    val oldCells = values().withFilter(_.cellType == CellTFrom(ConstT1(utype))).map(_.toBuilder).toSeq
     // the cells that are already cached go to the left, the new cells go to the right
     val foundOrNewCells = newValues.map { value =>
       get((utype, value)).map(Left(_)).getOrElse {
@@ -60,7 +65,7 @@ class ModelValueCache(solverContext: SolverContext)
     val newCells = foundOrNewCells.collect { case Right(c) => c }
     // require that all new cells and old cells are distinct
     if (newCells.nonEmpty) {
-      solverContext.assertGroundExpr(OperEx(ApalacheInternalOper.distinct, oldCells ++ newCells.map(_.toNameEx): _*))
+      solverContext.assertGroundExpr(tla.distinct(oldCells ++ newCells.map(_.toBuilder): _*))
     }
     (nextArena, foundOrNewCells.map(_.fold(c => c, c => c)).toSeq)
   }

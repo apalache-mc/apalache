@@ -2,10 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
-import at.forsyte.apalache.tla.lir.oper.TlaControlOper
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * An abstract version of an oracle that is used e.g. in CherryPick.
@@ -32,7 +30,7 @@ trait Oracle extends Serializable {
    * @param position
    *   a position the oracle should be equal to
    */
-  def whenEqualTo(state: SymbState, position: Int): TlaEx
+  def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction
 
   /**
    * Produce a ground expression that contains assertions for the possible oracle values.
@@ -46,9 +44,12 @@ trait Oracle extends Serializable {
    * @return
    *   an expression ite(oracle = 0, ite(oracle = 1, ...))
    */
-  def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+  def caseAssertions(
+      state: SymbState,
+      assertions: Seq[TBuilderInstruction],
+      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
     size match {
-      case 0 => state.arena.cellTrue().toNameEx
+      case 0 => state.arena.cellTrue().toBuilder
 
       case 1 => assertions.head
 
@@ -56,13 +57,12 @@ trait Oracle extends Serializable {
         // iteCases is a sequence of tuples, with the 1st and 2nd elements of each tuple being the "if" and "else" cases of an ite.
         // If elseAssertions is not empty, each tuple has its 1st element from assertions and its 2nd form elseAssertions.
         // If elseAssertions is empty, each tuple has its 1st element from assertions and its 2nd defaults to "ValEx(TlaBool(true))".
-        val iteCases = assertions.zipAll(elseAssertions, tla.bool(true).typed(), tla.bool(true).typed())
+        val iteCases = assertions.zipAll(elseAssertions, tla.bool(true), tla.bool(true))
         val es =
           iteCases.slice(0, size).zipWithIndex.map { case (e, i) =>
-            val ex = OperEx(TlaControlOper.ifThenElse, whenEqualTo(state, i), e._1, e._2)(e._1.typeTag)
-            tla.fromTlaEx(ex)
+            tla.ite(whenEqualTo(state, i), e._1, e._2)
           }
-        tla.and(es: _*).as(BoolT1)
+        tla.and(es: _*)
     }
   }
 
