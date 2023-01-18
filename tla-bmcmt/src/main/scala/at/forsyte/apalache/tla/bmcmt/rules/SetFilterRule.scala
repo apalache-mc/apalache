@@ -2,12 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.ElemPtr
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, SetT1, TlaEx, TlaType1}
 
 /**
  * Rewrites a set comprehension { x \in S: P }.
@@ -36,12 +35,12 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val setCell = newState.asCell
 
         // unfold the set and produce boolean constants for every potential element
-        val potentialCells = newState.arena.getHas(setCell)
+        val potentialCells = newState.arena.getHasPtr(setCell)
         // similar to SymbStateRewriter.rewriteSeqUntilDone, but also handling exceptions
 
-        def eachElem(potentialCell: ArenaCell): TlaEx = {
+        def eachElem(potentialCell: ElemPtr): TlaEx = {
           // add [cell/x]
-          val newBinding = Binding(newState.binding.toMap + (varName -> potentialCell))
+          val newBinding = Binding(newState.binding.toMap + (varName -> potentialCell.elem))
           val cellState = new SymbState(predEx, newState.arena, newBinding)
           val ns = rewriter.rewriteUntilDone(cellState)
           newState = ns.setBinding(Binding(ns.binding.toMap - varName)) // reset binding
@@ -53,7 +52,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val filteredCellsAndPreds = (potentialCells.zip(computedPreds)).filter(_._2 != NullEx)
 
         // get the result type from the type finder
-        val resultType = ex.typeTag.asTlaType1()
+        val resultType = TlaType1.fromTypeTag(ex.typeTag)
         assert(resultType.isInstanceOf[SetT1])
 
         // introduce a new set
@@ -62,21 +61,23 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val newArena = arena.appendHas(newSetCell, filteredCellsAndPreds.map(_._1): _*)
 
         // require each cell to satisfy the predicate
-        def addCellCons(cell: ArenaCell, pred: TlaEx): Unit = {
-          val inNewSet = tla.apalacheStoreInSet(cell.toNameEx, newSetCell.toNameEx)
-          val notInNewSet = tla.apalacheStoreNotInSet(cell.toNameEx, newSetCell.toNameEx) // cell is not in newSetCell
-          val inOldSet = tla.apalacheSelectInSet(cell.toNameEx, setCell.toNameEx)
-          val inOldSetAndPred = tla.and(pred, inOldSet)
+        def addCellCons(cellPtr: ElemPtr, pred: TlaEx): Unit = {
+          val cell = cellPtr.elem
+          val inNewSet = tla.storeInSet(cell.toBuilder, newSetCell.toBuilder)
+          val notInNewSet = tla.storeNotInSet(cell.toBuilder, newSetCell.toBuilder) // cell is not in newSetCell
+          val inOldSet = tla.selectInSet(cell.toBuilder, setCell.toBuilder)
+          val inOldSetAndPred = tla.and(tla.unchecked(pred), inOldSet)
           val ite = tla.ite(inOldSetAndPred, inNewSet, notInNewSet)
           rewriter.solverContext.assertGroundExpr(ite)
         }
 
         // variant of addCellCons for use with SMT maps, which unconstrained newSetCell
-        def addCellConsForUnconstrainedNewSetCell(cell: ArenaCell, pred: TlaEx): Unit = {
+        def addCellConsForUnconstrainedNewSetCell(cellPtr: ElemPtr, pred: TlaEx): Unit = {
+          val cell = cellPtr.elem
           // since newSetCell is assumed to be unconstrained we simple use SMT select here
-          val inNewSet = tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx)
-          val notInNewSet = tla.not(tla.apalacheSelectInSet(cell.toNameEx, newSetCell.toNameEx))
-          val ite = tla.ite(pred, inNewSet, notInNewSet)
+          val inNewSet = tla.selectInSet(cell.toBuilder, newSetCell.toBuilder)
+          val notInNewSet = tla.not(tla.selectInSet(cell.toBuilder, newSetCell.toBuilder))
+          val ite = tla.ite(tla.unchecked(pred), inNewSet, notInNewSet)
           rewriter.solverContext.assertGroundExpr(ite)
         }
 
@@ -84,12 +85,12 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         rewriter.solverContext.config.smtEncoding match {
           case SMTEncoding.Arrays =>
             // we make an unconstrained array, constrain its needed entries, and intersect it with setCell using smtMap
-            rewriter.solverContext.assertGroundExpr(tla.apalacheUnconstrainArray(newSetCell.toNameEx))
+            rewriter.solverContext.assertGroundExpr(tla.unconstrainArray(newSetCell.toBuilder))
             for ((cell, pred) <- filteredCellsAndPreds)
               addCellConsForUnconstrainedNewSetCell(cell, pred)
             // using SMT map with conjunction ensures that elements of newSetCell are added only if they are present in
             // setCell, so we don't need membership constraints in addCellConsForUnconstrainedNewSetCell
-            val smtMap = tla.apalacheSmtMap(TlaBoolOper.and, setCell.toNameEx, newSetCell.toNameEx)
+            val smtMap = tla.smtMap(TlaBoolOper.and, setCell.toBuilder, newSetCell.toBuilder)
             rewriter.solverContext.assertGroundExpr(smtMap)
 
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
@@ -100,7 +101,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-        newState.setArena(newArena).setRex(newSetCell.toNameEx)
+        newState.setArena(newArena).setRex(newSetCell.toBuilder)
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)

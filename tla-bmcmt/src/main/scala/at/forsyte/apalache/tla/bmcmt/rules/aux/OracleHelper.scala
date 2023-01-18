@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * A helper class to create oracle values and compare them. In two previous solutions, we were using integers, then
@@ -37,8 +36,9 @@ object OracleHelper {
       set: ArenaCell,
       setElems: Seq[ArenaCell]): Unit = {
 
-    val elemsIn = setElems.map { e => tla.apalacheSelectInSet(e.toNameEx, set.toNameEx).untyped() }
-    val allNotIn = tla.and(setElems.map(e => tla.not(tla.apalacheSelectInSet(e.toNameEx, set.toNameEx))): _*).untyped()
+    val elemsIn = setElems.map { e => tla.selectInSet(e.toBuilder, set.toBuilder) }
+    val allNotIn =
+      tla.and(setElems.map(e => tla.not(tla.selectInSet(e.toBuilder, set.toBuilder))): _*)
     rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(state, elemsIn :+ allNotIn))
   }
 

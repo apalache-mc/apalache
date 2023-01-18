@@ -13,11 +13,12 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
 object ApalacheOperSignatures {
   import ApalacheOper._
   import BuilderUtil._
+  import FlexibleEquality._
 
   def getMap: SignatureMap = {
 
     // (t,t) => Bool
-    val assignSig = signatureMapEntry(assign, { case Seq(t, tt) if t == tt => BoolT1 })
+    val assignSig = signatureMapEntry(assign, { case Seq(t, tt) if compatible(t, tt) => BoolT1 })
 
     // gen has no signature, because we can't encode
     // (Int) => t
@@ -48,13 +49,17 @@ object ApalacheOperSignatures {
     // ((a,b) => a, a, Set(b)) => a
     val foldSetSig = signatureMapEntry(foldSet,
         {
-          case Seq(OperT1(Seq(a, b), a1), a2, SetT1(b1)) if a == a1 && a1 == a2 && b == b1 => a
+          case Seq(OperT1(Seq(a, b), a1), a2, SetT1(b1))
+              if commonSeqSupertype(Seq(a, a1, a2)).nonEmpty && compatible(b, b1) =>
+            commonSeqSupertype(Seq(a, a1, a2)).get
         })
 
     // ((a,b) => a, a, Seq(b)) => a
     val foldSeqSig = signatureMapEntry(foldSeq,
         {
-          case Seq(OperT1(Seq(a, b), a1), a2, SeqT1(b1)) if a == a1 && a1 == a2 && b == b1 => a
+          case Seq(OperT1(Seq(a, b), a1), a2, SeqT1(b1))
+              if commonSeqSupertype(Seq(a, a1, a2)).nonEmpty && compatible(b, b1) =>
+            commonSeqSupertype(Seq(a, a1, a2)).get
         })
 
     // (Set(<<a,b>>)) => a -> b

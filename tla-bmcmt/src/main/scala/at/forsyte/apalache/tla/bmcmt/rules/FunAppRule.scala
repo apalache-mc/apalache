@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir._
@@ -47,7 +46,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
           case CellTFrom(RecRowT1(_)) =>
             val fieldValue = recordOps.getField(funState.arena, funCell, getFieldName(argEx))
-            funState.setRex(fieldValue.toNameEx)
+            funState.setRex(fieldValue.toBuilder)
 
           case CellTFrom(SeqT1(elemT)) =>
             // cheap or expensive, depending on `argEx`
@@ -77,11 +76,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // This is the rare case when the spec author has made a typo, e.g., f[0].
           // We cannot throw an error even in this case, as it would report an error in a legal specification, e.g.,
           // 0 \in DOMAIN f \/ f[0] /= 1
-          nextState.setRex(defaultValue.toNameEx)
+          nextState.setRex(defaultValue.toBuilder)
         } else {
           // accessing via the integer literal is cheap
           val elem = proto.at(nextState.arena, protoSeq, indexBase1.toInt)
-          nextState.setRex(elem.toNameEx)
+          nextState.setRex(elem.toBuilder)
         }
 
       case _ =>
@@ -111,11 +110,11 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val index = fields.keySet.toList.indexOf(key)
     val elems = state.arena.getHas(recordCell)
     if (index >= 0 && index < elems.length) {
-      state.setRex(elems(index).toNameEx)
+      state.setRex(elems(index).toBuilder)
     } else {
       // The key does not belong to the record. This can happen as records of different domains can be unified
       val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, resultT.toTlaType1)
-      state.setArena(newArena).setRex(defaultValue.toNameEx)
+      state.setArena(newArena).setRex(defaultValue.toBuilder)
     }
   }
 
@@ -137,7 +136,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
     }
 
     val tupleElem = elems(index)
-    state.setRex(tupleElem.toNameEx)
+    state.setRex(tupleElem.toBuilder)
   }
 
   protected def applyFun(state: SymbState, funCell: ArenaCell, argEx: TlaEx): SymbState = {
@@ -155,7 +154,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       funT match {
         case FunT1(_, resultT) =>
           val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(nextState.arena, resultT)
-          nextState.setArena(newArena).setRex(defaultValue.toNameEx)
+          nextState.setArena(newArena).setRex(defaultValue.toBuilder)
 
         case _ =>
           throw new IllegalStateException(s"Expected a function, found: $funT")
@@ -166,26 +165,26 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
       if (foundPair.isDefined) {
         // Feeling lucky. The cell argCell belongs to the relation. Return the result.
         val result = nextState.arena.getHas(foundPair.get)(1)
-        nextState.setRex(result.toNameEx)
+        nextState.setRex(result.toBuilder)
       } else {
         // The general case. Another cell in the relation may be equal to argCell. However, only SMT can figure that out.
         val (oracleState, oracle) = picker.oracleFactory.newDefaultOracle(nextState, relationElems.size + 1)
         nextState = oracleState
-        nextState = picker.pickByOracle(nextState, oracle, relationElems, nextState.arena.cellTrue().toNameEx)
+        nextState = picker.pickByOracle(nextState, oracle, relationElems, nextState.arena.cellTrue().toBuilder)
         val pickedPair = nextState.asCell
         val pickedArg = nextState.arena.getHas(pickedPair).head
         val pickedRes = nextState.arena.getHas(pickedPair).tail.head
         // cache the equality between the picked argument and the supplied argument, O(1) constraints
         nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((pickedArg, argCell)))
         val argEqWhenNonEmpty =
-          tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toNameEx, argCell.toNameEx))
+          tla.impl(tla.not(oracle.whenEqualTo(nextState, nelems)), tla.eql(pickedArg.toBuilder, argCell.toBuilder))
         // if oracle < N, then pickedArg = argCell
         solverAssert(argEqWhenNonEmpty)
         // importantly, we require oracle = N iff there is no element equal to argCell, O(N) constraints
         for ((elem, no) <- relationElems.zipWithIndex) {
           val elemArg = nextState.arena.getHas(elem).head
           nextState = rewriter.lazyEq.cacheEqConstraints(nextState, Seq((argCell, elemArg)))
-          val inRel = tla.apalacheSelectInSet(elem.toNameEx, relationCell.toNameEx)
+          val inRel = tla.selectInSet(elem.toBuilder, relationCell.toBuilder)
           val neqArg = tla.not(rewriter.lazyEq.safeEq(elemArg, argCell))
           val found = tla.not(oracle.whenEqualTo(nextState, nelems))
           // ~inRel \/ neqArg \/ found, or equivalently, (inRel /\ elemArg = argCell) => found
@@ -196,7 +195,7 @@ class FunAppRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // If oracle = N, the picked cell is not constrained. In the past, we used a default value here,
         // but it sometimes produced conflicts (e.g., a picked record domain had to coincide with a default domain)
-        nextState.setRex(pickedRes.toNameEx)
+        nextState.setRex(pickedRes.toBuilder)
       }
     }
   }

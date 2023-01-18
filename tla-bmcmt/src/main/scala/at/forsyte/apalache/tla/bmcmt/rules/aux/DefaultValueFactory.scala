@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.arena.{PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedSet
@@ -24,7 +25,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state that contains the new value as the expression
    */
-  def makeUpValue(arena: Arena, valueType: TlaType1): (Arena, ArenaCell) = {
+  def makeUpValue(arena: PureArenaAdapter, valueType: TlaType1): (PureArenaAdapter, ArenaCell) = {
     valueType match {
       case IntT1 =>
         rewriter.intValueCache.getOrCreate(arena, 0)
@@ -43,7 +44,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val tuple = newArena.topCell
         newArena = argTypes.foldLeft(newArena) { (arena, argT) =>
           val (nextArena, valueCell) = makeUpValue(arena, argT)
-          nextArena.appendHasNoSmt(tuple, valueCell)
+          nextArena.appendHasNoSmt(tuple, SmtConstElemPtr(valueCell)) // made-up cell = ConstElemPtr
         }
         (newArena, tuple)
 
@@ -52,7 +53,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val recCell = newArena.topCell
         newArena = recT.fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
-          nextArena.appendHasNoSmt(recCell, valueCell)
+          nextArena.appendHasNoSmt(recCell, SmtConstElemPtr(valueCell)) // made-up cell = ConstElemPtr
         }
         // create the domain and attach it to the record
         val pairOfSets = (recT.fieldTypes.keySet, SortedSet[String]())
@@ -66,7 +67,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val recCell = newArena.topCell
         newArena = fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
-          nextArena.appendHasNoSmt(recCell, valueCell)
+          nextArena.appendHasNoSmt(recCell, SmtConstElemPtr(valueCell)) // made-up cell = ConstElemPtr
         }
         (newArena, recCell)
 
@@ -103,7 +104,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         nextArena = nextArena.appendCell(variantT)
         val variantCell = nextArena.topCell
         for (fieldCell <- (variantValues + (RecordAndVariantOps.variantTagField -> tagAsCell)).valuesIterator) {
-          nextArena = nextArena.appendHasNoSmt(variantCell, fieldCell)
+          nextArena = nextArena.appendHasNoSmt(variantCell, SmtConstElemPtr(fieldCell)) // made-up cell = ConstElemPtr
         }
 
         (nextArena, variantCell)

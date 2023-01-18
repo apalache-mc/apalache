@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
+import at.forsyte.apalache.tla.typecomp.signatures.FlexibleEquality.compatible
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature}
 
 /**
@@ -29,8 +30,8 @@ class UnsafeVariantBuilder extends ProtoBuilder {
     val argT = targetVariantType.row.fieldTypes(tagName)
 
     // Knowing the tag name, we can write a custom signature:
-    val partialSig: PartialSignature = { case Seq(StrT1, `argT`) =>
-      targetVariantType
+    val partialSig: PartialSignature = {
+      case Seq(StrT1, t) if compatible(t, argT) => targetVariantType
     }
     val sig = completePartial(VariantOper.variant.name, partialSig)
 

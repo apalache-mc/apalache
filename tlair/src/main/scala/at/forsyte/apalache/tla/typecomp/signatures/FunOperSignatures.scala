@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecomp.signatures
 
-import at.forsyte.apalache.tla.lir.{FunT1, SetT1, TupT1}
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.{FunT1, SetT1, TupT1}
 import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature, SignatureMap}
 
 /**
@@ -12,8 +12,9 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature, Signatur
  */
 object FunOperSignatures {
 
-  import TlaFunOper._
   import BuilderUtil._
+  import FlexibleEquality._
+  import TlaFunOper._
 
   def getMap: SignatureMap = {
 
@@ -23,7 +24,7 @@ object FunOperSignatures {
 
     val funDefPartial: PartialSignature = {
       case t +: pairs if pairs.nonEmpty && pairs.size % 2 == 0 && pairs.grouped(2).forall {
-            case Seq(tt, SetT1(tt2)) => tt == tt2
+            case Seq(tt, SetT1(tt2)) => compatible(tt, tt2)
             case _                   => false
           } =>
         val ts = pairs.grouped(2).toSeq.map { case Seq(tt, _) => tt }

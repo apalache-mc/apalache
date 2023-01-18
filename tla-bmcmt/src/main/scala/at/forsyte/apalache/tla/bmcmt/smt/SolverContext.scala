@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, StackableContext}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, StackableContext}
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
@@ -42,7 +43,7 @@ trait SolverContext extends StackableContext {
    * @param arena
    *   an arena
    */
-  def checkConsistency(arena: Arena): Unit
+  def checkConsistency(arena: PureArenaAdapter): Unit
 
   /**
    * Assert that a Boolean TLA+ expression holds true.

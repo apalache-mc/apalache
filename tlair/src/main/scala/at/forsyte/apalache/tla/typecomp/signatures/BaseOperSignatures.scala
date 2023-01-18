@@ -11,8 +11,9 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, SignatureMap}
  *   Jure Kukovec
  */
 object BaseOperSignatures {
-  import TlaOper._
   import BuilderUtil._
+  import FlexibleEquality._
+  import TlaOper._
 
   def getMap: SignatureMap = {
 
@@ -20,13 +21,19 @@ object BaseOperSignatures {
     val cmpSigs: SignatureMap = Seq(
         TlaOper.eq,
         TlaOper.ne,
-    ).map { signatureMapEntry(_, { case Seq(t, tt) if t == tt => BoolT1 }) }.toMap
+    ).map { signatureMapEntry(_, { case Seq(t, tt) if compatible(t, tt) => BoolT1 }) }.toMap
 
     //  ( (t1, ..., tn) => t, t1, ..., tn ) => t
-    val applySig = signatureMapEntry(TlaOper.apply, { case OperT1(ts, t) +: tts if ts == tts => t })
+    val applySig = signatureMapEntry(TlaOper.apply,
+        {
+          case OperT1(ts, t) +: tts
+              if ts.length == tts.length && ts.zip(tts).forall { case (a, b) => compatible(a, b) } =>
+            t
+        })
 
     // (t, Set(t), Bool) => t
-    val chooseBoundedSig = signatureMapEntry(chooseBounded, { case Seq(t, SetT1(tt), BoolT1) if t == tt => t })
+    val chooseBoundedSig = signatureMapEntry(chooseBounded,
+        { case Seq(t, SetT1(tt), BoolT1) if compatible(t, tt) => commonSupertype(t, tt).get })
 
     // (t, Bool) => t
     val chooseUnboundedSig = signatureMapEntry(chooseUnbounded, { case Seq(t, BoolT1) => t })

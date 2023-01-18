@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 
 /**
  * The oracle for sparse values, that is, a set S of naturals. This oracle is mapped on a smaller contiguous range
@@ -23,14 +23,16 @@ class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
 
   override def size: Int = values.size
 
-  override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
+  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction = {
     assert(indexMap.contains(position))
     oracle.whenEqualTo(state, indexMap(position))
   }
 
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+  override def caseAssertions(
+      state: SymbState,
+      assertions: Seq[TBuilderInstruction],
+      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction =
     oracle.caseAssertions(state, assertions, elseAssertions)
-  }
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     val rawPos = oracle.evalPosition(solverContext, state)

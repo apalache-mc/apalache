@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import scala.collection.mutable
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
@@ -146,7 +147,7 @@ class MapBase(rewriter: SymbStateRewriter) {
       }
     }
     // add the edge to the resulting set
-    nextState = nextState.updateArena(_.appendHas(targetSetCell, mapResultCell))
+    nextState = nextState.updateArena(_.appendHas(targetSetCell, SmtConstElemPtr(mapResultCell)))
 
     // reset the binding and return the resulting cell and the source membership expression
     (nextState.setBinding(state.binding), mapResultCell, argsInSourceSets)

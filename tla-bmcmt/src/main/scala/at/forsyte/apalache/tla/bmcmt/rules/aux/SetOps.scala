@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.BoolT1
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * <p>A small collection of operations on sets that can be reused by rewriting rules.</p>
@@ -32,7 +32,8 @@ class SetOps(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state and the sequence of Boolean cells
    */
-  def dedup(state: SymbState, oldSet: ArenaCell): (SymbState, List[ArenaCell]) = {
+  def dedup(state: SymbState, oldSet: ArenaCell): (SymbState, Seq[ArenaCell]) = {
+    rewriter.solverContext.log(s";DEDUP $oldSet {")
     val elems = state.arena.getHas(oldSet)
     var newArena = state.arena
     // introduce one predicate per element
@@ -56,14 +57,15 @@ class SetOps(rewriter: SymbStateRewriter) {
       //   /\ c[i] \in S
       //   /\ \A j \in 0..(i - 1):
       //      ~b[j] \/ c[j] /= c[i]
-      def notSeen(j: Int): TlaEx = {
-        tla.or(tla.not(predicates(j).toNameEx), tla.not(tla.eql(c_i.toNameEx, elems(j).toNameEx)))
+      def notSeen(j: Int): TBuilderInstruction = {
+        tla.or(tla.not(predicates(j).toBuilder), tla.not(tla.eql(c_i.toBuilder, elems(j).toBuilder)))
       }
 
-      val rhs = tla.and(tla.apalacheSelectInSet(c_i.toNameEx, oldSet.toNameEx), tla.and(0.until(i).map(notSeen): _*))
-      rewriter.solverContext.assertGroundExpr(tla.eql(b_i.toNameEx, rhs))
+      val rhs = tla.and(tla.selectInSet(c_i.toBuilder, oldSet.toBuilder), tla.and(0.until(i).map(notSeen): _*))
+      rewriter.solverContext.assertGroundExpr(tla.eql(b_i.toBuilder, rhs))
     }
 
+    rewriter.solverContext.log(";} DEDUP ")
     (nextState, predicates)
   }
 }

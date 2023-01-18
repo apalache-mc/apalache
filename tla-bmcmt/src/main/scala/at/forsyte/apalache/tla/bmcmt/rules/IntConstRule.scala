@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.ValEx
 import at.forsyte.apalache.tla.lir.values.TlaInt
 
@@ -22,7 +23,7 @@ class IntConstRule(rewriter: SymbStateRewriter) extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case ValEx(TlaInt(n)) =>
-        val (newArena: Arena, intCell: ArenaCell) = rewriter.intValueCache.getOrCreate(state.arena, n)
+        val (newArena: PureArenaAdapter, intCell: ArenaCell) = rewriter.intValueCache.getOrCreate(state.arena, n)
         state
           .setArena(newArena)
           .setRex(intCell.toNameEx)
