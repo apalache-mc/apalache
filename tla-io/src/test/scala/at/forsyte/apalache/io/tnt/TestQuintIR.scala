@@ -11,9 +11,9 @@ class TestQuintIR extends AnyFunSuite {
 
   // tictactoe.json is located in tla-io/src/test/resources/tictactoe.json
   test("Can load tictactoe.json") {
-    val tictactoeTntJson = scala.io.Source.fromResource("tictactoe.json").mkString
-    val tntIR = QuintOutput.read(tictactoeTntJson).get
-    assert(tntIR.module.name == "tictactoe")
+    val tictactoeQuintJson = scala.io.Source.fromResource("tictactoe.json").mkString
+    val quintIR = QuintOutput.read(tictactoeQuintJson).get
+    assert(quintIR.module.name == "tictactoe")
   }
 
   test("Invalid JSON returns sensible error") {
