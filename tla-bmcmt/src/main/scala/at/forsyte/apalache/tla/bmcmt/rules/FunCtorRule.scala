@@ -97,7 +97,9 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       state: SymbState,
       mapEx: TlaEx,
       varName: String,
-      oldCells: Seq[ArenaCell]): (SymbState, Seq[ArenaCell]) = {
+      oldCells: Seq[ArenaCell]): (
+      SymbState,
+      Seq[ArenaCell]) = {
     var nextState = state
 
     def mapOne(cell: ArenaCell): ArenaCell = {

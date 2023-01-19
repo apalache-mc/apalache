@@ -396,16 +396,15 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       op: TlaOper,
       mkWellTyped: TypeParameterization => T,
       toSeq: T => Seq[TBuilderResult],
-      resType: TypeParameterization => TlaType1): TypeParameterization => TBuilderResult => Boolean = {
-    tparam =>
-      { resEx =>
-        resEx.eqTyped(
-            OperEx(
-                op,
-                toSeq(mkWellTyped(tparam)): _*
-            )(Typed(resType(tparam)))
-        )
-      }
+      resType: TypeParameterization => TlaType1): TypeParameterization => TBuilderResult => Boolean = { tparam =>
+    { resEx =>
+      resEx.eqTyped(
+          OperEx(
+              op,
+              toSeq(mkWellTyped(tparam)): _*
+          )(Typed(resType(tparam)))
+      )
+    }
   }
 
   /**
