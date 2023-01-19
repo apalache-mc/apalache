@@ -9,6 +9,79 @@ import at.forsyte.apalache.tla.lir.{
   BoolT1, ConstT1, FunT1, IntT1, OperT1, RecRowT1, RowT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1, VarT1, VariantT1,
 }
 
+import at.forsyte.apalache.tla.typecomp.ScopedBuilder
+import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction, TBuilderOperDeclInstruction}
+import at.forsyte.apalache.tla.lir.OperParam
+
+class Quint(moduleData: QuintOutput) {
+  val module = moduleData.module
+  val types = moduleData.types
+
+  var uniqueLambdaNo = 0
+  def uniqueLambdaName(): String = {
+    val n = uniqueLambdaNo
+    uniqueLambdaNo += 1
+    s"__TNT_LAMBDA${n}"
+  }
+
+  private[quint] class toTla {
+    import QuintEx._
+    import QuintType._
+    // import QuintDef._
+
+    // Construct Apalache IR expressions
+    val exp = new ScopedBuilder()
+    // Construct Apalache IR types
+    // val typ = new TypeComputationFactory()
+
+    val defConverter: QuintDef => TBuilderOperDeclInstruction = null
+    // { case QuintOpDef(id, name, _, expr, _) =>
+    //   val operType = types(id).typ
+    //   exp.decl()
+
+    // }
+
+    val lambda: QuintLambda => TBuilderInstruction = { case ex @ QuintLambda(id, paramNames, _, body) =>
+      val quintParamTypes = types(id).typ match {
+        case QuintOperT(types, _) => types
+        case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
+      }
+      val operParams = paramNames.zip(quintParamTypes).map(operParam)
+      val paramTypes = quintParamTypes.map(Quint.typeToTlaType(_))
+      val typedParams = operParams.zip(paramTypes)
+      exp.lambda(uniqueLambdaName(), expConverter(body), typedParams: _*)
+    }
+
+    // Derive a [[at.forsyte.apalache.tla.lir.OperParam]] from a paramter
+    // name and it's type
+    val operParam: ((String, QuintType)) => OperParam = {
+      case (name, QuintOperT(args, _)) => OperParam(name, args.length)
+      case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
+    }
+
+    // TODO Will need to find a way to provide context of defs
+    val expConverter: QuintEx => TBuilderInstruction = {
+      case QuintName(_, n)          => exp.nameWithInferredType(n)
+      case QuintBool(_, b)          => exp.bool(b)
+      case QuintInt(_, n)           => exp.int(n)
+      case QuintStr(_, s)           => exp.str(s)
+      case QuintLet(_, opdef, expr) => exp.letIn(expConverter(expr), defConverter(opdef))
+      case lam: QuintLambda         => lambda(lam)
+      case QuintApp(id, op, quintArgs) =>
+        val operType = Quint.typeToTlaType(types(id).typ)
+        val oper = exp.name(op, operType)
+        val args = quintArgs.map(expConverter)
+        exp.appOp(oper, args: _*)
+    }
+
+    val convert: QuintEx => Try[TlaEx] = exp => Try(build(expConverter(exp)))
+  }
+
+  private[quint] object toTla {
+    def apply(quintExp: QuintEx): Try[TlaEx] = (new toTla()).convert(quintExp)
+  }
+}
+
 object Quint {
 
   private[quint] def exToTla(d: QuintEx): Try[TlaEx] = null

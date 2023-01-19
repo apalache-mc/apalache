@@ -257,7 +257,7 @@ class ScopedBuilder(val strict: Boolean = true)
   def declWithInferredParameterTypes(
       opName: String,
       body: TBuilderInstruction,
-      untypedParams: OperParam*): TBuilderInternalState[TlaOperDecl] = for {
+      untypedParams: OperParam*): TBuilderOperDeclInstruction = for {
     bodyEx <- body
     paramTs <- untypedParams.foldLeft(Seq.empty[TlaType1].point[TBuilderInternalState]) {
       case (cmp, OperParam(pName, _)) =>
@@ -274,6 +274,29 @@ class ScopedBuilder(val strict: Boolean = true)
             OperT1(paramTs, bodyEx.typeTag.asTlaType1())
         )
     )
+  }
+
+  /**
+   * Creates an expression of the form
+   *
+   * {{{
+   * LET uniqueName(p1,...,pn) == body IN uniqueName
+   * }}}
+   *
+   * Matching the representation of LAMBDAs produced by SANY.
+   *
+   * NOTE: It is left up to the caller to ensure `uniqueName` is unique.
+   *
+   * Failure to ensure uniqueness of names can lead to name collisions in case lambdas are nested.
+   */
+  def lambda(uniqueName: String, body: TBuilderInstruction, params: TypedParam*): TBuilderInstruction = {
+    params.foreach(validateParamType)
+    for {
+      bodyEx <- body
+      paramTypes = params.map(_._2)
+      operType = OperT1(paramTypes, bodyEx.typeTag.asTlaType1())
+      ex <- letIn(name(uniqueName, operType), decl(uniqueName, body, params: _*))
+    } yield ex
   }
 
   /** {{{LET decl(...) = ... IN body}}} */
