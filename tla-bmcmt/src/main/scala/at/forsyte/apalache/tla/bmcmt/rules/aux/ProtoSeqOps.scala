@@ -248,7 +248,9 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
       arena: PureArenaAdapter,
       seqT: TlaType1,
       protoSeq: ArenaCell,
-      len: ArenaCell): (PureArenaAdapter, ArenaCell) = {
+      len: ArenaCell): (
+      PureArenaAdapter,
+      ArenaCell) = {
     var newArena = arena.appendCell(seqT)
     val seq = newArena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length

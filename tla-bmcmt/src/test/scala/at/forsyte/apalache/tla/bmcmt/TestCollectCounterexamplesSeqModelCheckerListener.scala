@@ -30,7 +30,9 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
       initTrans: List[TlaEx],
       nextTrans: List[TlaEx],
       inv: TlaEx,
-      maxErrors: Int): (CollectCounterexamplesModelCheckerListener, SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
+      maxErrors: Int): (
+      CollectCounterexamplesModelCheckerListener,
+      SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
     // construct checker input + parameters
     val notInv = not(inv).typed(types, "b")
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
