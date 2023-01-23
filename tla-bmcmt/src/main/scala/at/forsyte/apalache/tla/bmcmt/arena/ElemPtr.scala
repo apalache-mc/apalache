@@ -20,21 +20,23 @@ sealed trait ElemPtr {
    * Translate the membership test into an expression that can be understood by Z3SolverContext.
    */
   def toSmt: TlaEx
+
+  /**
+   * After certain set operations, every pointer must become a SmtExprElemPtr, because the operation invalidates the
+   * guarantees of e.g. FixedElemPtr.
+   */
+  def generalize: SmtExprElemPtr = SmtExprElemPtr(elem, toSmt)
 }
 
 /**
- * An element pointer that always evaluates to a fixed Boolean value. This pointer is used to encode that the element
- * unconditionally belongs to a set. For example, when constructing the set `{ 1, 2, 3 }`.
+ * An element pointer that always evaluates to true. This pointer is used to encode that the element unconditionally
+ * belongs to a set. For example, when constructing the set `{ 1, 2, 3 }`.
  *
  * @param elem
  *   the element this pointer is pointing to.
- * @param value
- *   the value (false or true).
  */
-case class FixedElemPtr(elem: ArenaCell, value: Boolean) extends ElemPtr {
-  override def toSmt: TlaEx = {
-    tla.bool(value)
-  }
+case class FixedElemPtr(elem: ArenaCell) extends ElemPtr {
+  override def toSmt: TlaEx = tla.bool(true)
 }
 
 /**
@@ -57,9 +59,8 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
    */
   val uniqueName = s"_bool_elem$id"
 
-  override def toSmt: TlaEx = {
-    tla.name(uniqueName, BoolT1)
-  }
+  override def toSmt: TlaEx = tla.name(uniqueName, BoolT1)
+
 }
 
 /**
