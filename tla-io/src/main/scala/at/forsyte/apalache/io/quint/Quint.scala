@@ -44,7 +44,7 @@ class Quint(moduleData: QuintOutput) {
   // - Encapsulate and store benign state used by the ScopedBuilder (see below)
   // - Support and encapsulate the mutual recursion needed in the methods
   //
-  // Since we need access to the statefull uniqeLambdaName state, this class must be
+  // Since we need access to the statefull uniqeLambdaName, this class must be
   // defined in the Quint class rather than in its companion object (like the toTlaType class)
   private[quint] class exToTla {
     import QuintEx._
@@ -53,9 +53,19 @@ class Quint(moduleData: QuintOutput) {
     // Construct Apalache IR expressions
     val exp = new ScopedBuilder()
 
+    // Derive a OperParam from a paramter name and it's type.
+    //
+    // OperParams are required by the ScopedBuilder for building
+    // operators and consist of a the params name and its arity,
+    // which we here derive from the QuintType.
+    private val operParam: ((String, QuintType)) => OperParam = {
+      case (name, QuintOperT(args, _)) => OperParam(name, args.length)
+      case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
+    }
+
     // QuintLambda is used both for anonymous operators and for defined
     // operators that take parameters, but these require different constructs
-    // in Apalache's IR. Thus, we need to decompose the parts of a QuintLamba
+    // in Apalache's IR. Thus, we need to decompose the parts of a QuintLambda
     // for two different purposes.
     private val lambdaBodyAndParams: QuintLambda => (TBuilderInstruction, List[(OperParam, TlaType1)]) = {
       case ex @ QuintLambda(id, paramNames, _, body) =>
@@ -87,13 +97,6 @@ class Quint(moduleData: QuintOutput) {
         case QuintAssume(_, _, _)  => null
         case QuintTypeDef(_, _, _) => null
       }
-    }
-
-    // Derive a OperParam from a paramter
-    // name and it's type
-    private val operParam: ((String, QuintType)) => OperParam = {
-      case (name, QuintOperT(args, _)) => OperParam(name, args.length)
-      case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
     }
 
     private val expConverter: QuintEx => TBuilderInstruction = {
