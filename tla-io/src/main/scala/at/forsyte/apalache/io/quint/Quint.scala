@@ -21,7 +21,7 @@ class Quint(moduleData: QuintOutput) {
   def uniqueLambdaName(): String = {
     val n = uniqueLambdaNo
     uniqueLambdaNo += 1
-    s"__TNT_LAMBDA${n}"
+    s"__QUINT_LAMBDA${n}"
   }
 
   private[quint] class toTla {
@@ -34,22 +34,37 @@ class Quint(moduleData: QuintOutput) {
     // Construct Apalache IR types
     // val typ = new TypeComputationFactory()
 
-    val defConverter: QuintDef => TBuilderOperDeclInstruction = null
-    // { case QuintOpDef(id, name, _, expr, _) =>
-    //   val operType = types(id).typ
-    //   exp.decl()
+    // TODO document reason for this sub param
+    val lambdaBodyAndParams: QuintLambda => (TBuilderInstruction, List[(OperParam, TlaType1)]) = {
+      case ex @ QuintLambda(id, paramNames, _, body) =>
+        val quintParamTypes = types(id).typ match {
+          case QuintOperT(types, _) => types
+          case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
+        }
+        val operParams = paramNames.zip(quintParamTypes).map(operParam)
+        val paramTypes = quintParamTypes.map(Quint.typeToTlaType(_))
+        val typedParams = operParams.zip(paramTypes)
+        (expConverter(body), typedParams)
+    }
 
-    // }
+    val defConverter: QuintDef => TBuilderOperDeclInstruction = {
+      import QuintDef._
 
-    val lambda: QuintLambda => TBuilderInstruction = { case ex @ QuintLambda(id, paramNames, _, body) =>
-      val quintParamTypes = types(id).typ match {
-        case QuintOperT(types, _) => types
-        case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
+      {
+        case QuintOpDef(_, name, _, expr, _) =>
+          val (body, typedParams) = expr match {
+            // Parameterized operators are defined in Quint using Lambdas
+            case lam: QuintLambda => lambdaBodyAndParams(lam)
+            // Otherwise it's an operator with no params
+            case other => (expConverter(other), List())
+          }
+          exp.decl(name, body, typedParams: _*)
+        // TODO
+        case QuintConst(_, _, _)   => null
+        case QuintVar(_, _, _)     => null
+        case QuintAssume(_, _, _)  => null
+        case QuintTypeDef(_, _, _) => null
       }
-      val operParams = paramNames.zip(quintParamTypes).map(operParam)
-      val paramTypes = quintParamTypes.map(Quint.typeToTlaType(_))
-      val typedParams = operParams.zip(paramTypes)
-      exp.lambda(uniqueLambdaName(), expConverter(body), typedParams: _*)
     }
 
     // Derive a [[at.forsyte.apalache.tla.lir.OperParam]] from a paramter
@@ -59,14 +74,15 @@ class Quint(moduleData: QuintOutput) {
       case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
     }
 
-    // TODO Will need to find a way to provide context of defs
     val expConverter: QuintEx => TBuilderInstruction = {
       case QuintName(_, n)          => exp.nameWithInferredType(n)
       case QuintBool(_, b)          => exp.bool(b)
-      case QuintInt(_, n)           => exp.int(n)
+      case QuintInt(_, i)           => exp.int(i)
       case QuintStr(_, s)           => exp.str(s)
       case QuintLet(_, opdef, expr) => exp.letIn(expConverter(expr), defConverter(opdef))
-      case lam: QuintLambda         => lambda(lam)
+      case lam: QuintLambda =>
+        val (body, typedParams) = lambdaBodyAndParams(lam)
+        exp.lambda(uniqueLambdaName(), body, typedParams: _*)
       case QuintApp(id, op, quintArgs) =>
         val operType = Quint.typeToTlaType(types(id).typ)
         val oper = exp.name(op, operType)
