@@ -41,11 +41,12 @@ class Quint(moduleData: QuintOutput) {
   // We implement a small family of mutually recursive conversion functions using this
   // class in order to:
   //
-  // - Encapsulate and store benign state used to track variable numbers (see below)
+  // - Encapsulate and store benign state used by the ScopedBuilder (see below)
   // - Support and encapsulate the mutual recursion needed in the methods
   //
-  // Since we need access to the statefull uniqeLambdaName state, ,
-  private[quint] class toTla {
+  // Since we need access to the statefull uniqeLambdaName state, this class must be
+  // defined in the Quint class rather than in its companion object (like the toTlaType class)
+  private[quint] class exToTla {
     import QuintEx._
     import QuintType._
 
@@ -117,14 +118,12 @@ class Quint(moduleData: QuintOutput) {
   /**
    * Convert a [[QuintEx]] to a [[TlaEx]]
    */
-  private[quint] object toTla {
-    def apply(quintExp: QuintEx): Try[TlaEx] = (new toTla()).convert(quintExp)
+  private[quint] object exToTla {
+    def apply(quintExp: QuintEx): Try[TlaEx] = (new exToTla()).convert(quintExp)
   }
 }
 
 object Quint {
-
-  private[quint] def exToTla(d: QuintEx): Try[TlaEx] = null
 
   // Convert a QuintType into a TlaType1
   //
