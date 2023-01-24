@@ -109,7 +109,10 @@ class Quint(moduleData: QuintOutput) {
         val (body, typedParams) = lambdaBodyAndParams(lam)
         exp.lambda(uniqueLambdaName(), body, typedParams: _*)
       case QuintApp(id, op, quintArgs) =>
-        val operType = Quint.typeToTlaType(types(id).typ)
+        // TODO Intercept and translate builtin operators
+        val paramTypes = quintArgs.map(arg => Quint.typeToTlaType(types(arg.id).typ))
+        val returnType = Quint.typeToTlaType(types(id).typ)
+        val operType = OperT1(paramTypes, returnType)
         val oper = exp.name(op, operType)
         val args = quintArgs.map(expConverter)
         exp.appOp(oper, args: _*)
