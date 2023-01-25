@@ -22,10 +22,10 @@ class TestJudgement extends AnyFunSuite {
   )
 
   val allowed: Seq[TlaEx] = (Seq(
-          tla.intSet(),
-          tla.natSet(),
-          tla.booleanSet(),
-      ).map { _.untyped() }) ++ (constantMap.keys.toSeq.map { tla.name(_).untyped() })
+      tla.intSet(),
+      tla.natSet(),
+      tla.booleanSet(),
+  ).map { _.untyped() }) ++ (constantMap.keys.toSeq.map { tla.name(_).untyped() })
 
   val disallowed: Seq[TlaEx] = Seq(
       ValEx(TlaRealSet),

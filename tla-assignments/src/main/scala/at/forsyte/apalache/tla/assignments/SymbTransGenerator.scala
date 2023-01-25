@@ -66,7 +66,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
       case OperEx(TlaBoolOper.and, args @ _*) =>
         /** Unify all child maps, keysets are disjoint by construction */
         val unifiedMap = (args
-              .map {
+          .map {
             allSelections(_, letInMap)
           })
           .fold(Map.empty[UID, AssignmentSelections]) {
@@ -85,7 +85,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
        */
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val unifiedMap = (args
-              .map {
+          .map {
             allSelections(_, letInMap)
           })
           .fold(Map.empty[UID, AssignmentSelections]) {
@@ -113,7 +113,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
        */
       case OperEx(TlaControlOper.ifThenElse, _, thenAndElse @ _*) =>
         val unifiedMap = (thenAndElse
-              .map {
+          .map {
             allSelections(_, letInMap)
           })
           .fold(Map.empty[UID, AssignmentSelections]) {

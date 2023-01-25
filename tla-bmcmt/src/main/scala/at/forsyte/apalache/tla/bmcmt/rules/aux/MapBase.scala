@@ -82,7 +82,9 @@ class MapBase(rewriter: SymbStateRewriter) {
       mapEx: TlaEx,
       varNames: Seq[String],
       setsAsCells: Seq[ArenaCell],
-      cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Iterable[ArenaCell]) = {
+      cellsIter: Iterator[Seq[ArenaCell]]): (
+      SymbState,
+      Iterable[ArenaCell]) = {
     // we could have done it with foldLeft, but that would be even less readable
     var newState = state
 
@@ -124,7 +126,10 @@ class MapBase(rewriter: SymbStateRewriter) {
       mapEx: TlaEx,
       varNames: Seq[String],
       setsAsCells: Seq[ArenaCell],
-      valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell, TlaEx) = {
+      valuesAsCells: Seq[ArenaCell]): (
+      SymbState,
+      ArenaCell,
+      TlaEx) = {
     // bind the variables to the corresponding cells
     val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => Binding(m.toMap + p))
     val mapState = state.setBinding(newBinding).setRex(mapEx)

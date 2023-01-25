@@ -31,18 +31,17 @@ class TestHybrid extends BuilderTest {
           ),
       )
 
-    def resultIsExpected: TlaType1 => TBuilderResult => Boolean = {
-      tt =>
-        { resEx =>
-          val (x, y) = mkWellTyped(tt)
-          resEx.eqTyped(
-              OperEx(
-                  TlaOper.eq,
-                  OperEx(TlaActionOper.prime, x)(Typed(tt)),
-                  y,
-              )(Typed(BoolT1))
-          )
-        }
+    def resultIsExpected: TlaType1 => TBuilderResult => Boolean = { tt =>
+      { resEx =>
+        val (x, y) = mkWellTyped(tt)
+        resEx.eqTyped(
+            OperEx(
+                TlaOper.eq,
+                OperEx(TlaActionOper.prime, x)(Typed(tt)),
+                y,
+            )(Typed(BoolT1))
+        )
+      }
     }
 
     checkRun(Generators.singleTypeGen)(
@@ -116,18 +115,17 @@ class TestHybrid extends BuilderTest {
     def expectEqTypedDecl[T](
         mkWellTyped: TParam => (String, TBuilderInstruction, T),
         exParams: TParam => List[OperParam],
-        exType: TParam => TlaType1): TParam => TlaOperDecl => Boolean = {
-      tparam =>
-        { resDecl =>
-          val (name, body, _) = mkWellTyped(tparam)
-          resDecl.eqTyped(
-              TlaOperDecl(
-                  name,
-                  exParams(tparam),
-                  body,
-              )(Typed(exType(tparam)))
-          )
-        }
+        exType: TParam => TlaType1): TParam => TlaOperDecl => Boolean = { tparam =>
+      { resDecl =>
+        val (name, body, _) = mkWellTyped(tparam)
+        resDecl.eqTyped(
+            TlaOperDecl(
+                name,
+                exParams(tparam),
+                body,
+            )(Typed(exType(tparam)))
+        )
+      }
     }
 
     def paramArity(tt: TlaType1): Int = tt match {
