@@ -56,7 +56,7 @@ class Quint(moduleData: QuintOutput) {
     // Derive a OperParam from a paramter name and it's type.
     //
     // OperParams are required by the ScopedBuilder for building
-    // operators and consist of a the params name and its arity,
+    // operators and consist of the param's name and its arity,
     // which we here derive from the QuintType.
     private val operParam: ((String, QuintType)) => OperParam = {
       case (name, QuintOperT(args, _)) => OperParam(name, args.length)
