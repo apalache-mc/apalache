@@ -83,7 +83,8 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
               val inL = tla.in(elem.toBuilder, leftSetCell.toBuilder)
               val inR = tla.in(elem.toBuilder, rightSetCell.toBuilder)
 
-              // TODO: replace ITE condition with ptr.toSmt ?
+              // TODO: drop assertGroundExpr: #2384
+
               val cond = {
                 if (common.contains(elem)) tla.or(inL, inR)
                 else if (leftElems.contains(elem)) inL
