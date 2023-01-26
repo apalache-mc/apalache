@@ -2,10 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PtrUtil}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaType1}
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 
 /**
  * Rewrites X \cup Y, that is, a union of two sets (not UNION). In the first encoding, we used a linear number of `in`
@@ -38,6 +38,8 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val rightElems = rightPtrs.map(_.elem).toSet
         val common = leftElems.intersect(rightElems)
 
+        // We map each cell, which appears in either the left or the right set, to all (1 or 2) of the pointers
+        // pointing to it.
         val cellMap = (leftPtrs ++ rightPtrs).foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]]) { case (m, ptr) =>
           val elem = ptr.elem
           m + (elem -> (m.getOrElse(elem, Seq.empty) :+ ptr))
@@ -45,12 +47,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // Fixed pointers dominate, if no pointer is fixed we take the disjunction of the smt constraints
         val unionElemPtrs: Seq[ElemPtr] = cellMap.toSeq.map { case (cell, ptrs) =>
-          ptrs match {
-            case Seq(single) => single
-            case _ =>
-              if (ptrs.exists { _.isInstanceOf[FixedElemPtr] }) FixedElemPtr(cell)
-              else SmtExprElemPtr(cell, tla.or(ptrs.map(_.toSmt): _*))
-          }
+          PtrUtil.mergePtrs(cell, ptrs)
         }
 
         rewriter.solverContext.config.smtEncoding match {
