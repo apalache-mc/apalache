@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.lir.{BoolT1, UID}
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx, UID}
 
 /**
  * An abstract membership pointer.
@@ -19,7 +20,7 @@ sealed trait ElemPtr {
   /**
    * Translate the membership test into an expression that can be understood by Z3SolverContext.
    */
-  def toSmt: TlaEx
+  def toSmt: TBuilderInstruction
 
   /**
    * After certain set operations, every pointer must become a SmtExprElemPtr, because the operation invalidates the
@@ -36,7 +37,7 @@ sealed trait ElemPtr {
  *   the element this pointer is pointing to.
  */
 case class FixedElemPtr(elem: ArenaCell) extends ElemPtr {
-  override def toSmt: TlaEx = tla.bool(true)
+  override def toSmt: TBuilderInstruction = tla.bool(true)
 }
 
 /**
@@ -59,7 +60,7 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
    */
   val uniqueName = s"_bool_elem$id"
 
-  override def toSmt: TlaEx = tla.name(uniqueName, BoolT1)
+  override def toSmt: TBuilderInstruction = tla.name(uniqueName, BoolT1)
 
 }
 
@@ -72,6 +73,6 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
  * @param smtEx
  *   the corresponding SMT expression.
  */
-case class SmtExprElemPtr(elem: ArenaCell, smtEx: TlaEx) extends ElemPtr {
-  override def toSmt: TlaEx = smtEx
+case class SmtExprElemPtr(elem: ArenaCell, smtEx: TBuilderInstruction) extends ElemPtr {
+  override def toSmt: TBuilderInstruction = smtEx
 }
