@@ -1,17 +1,135 @@
 package at.forsyte.apalache.io.quint
 
-import scala.util.Try
-import scala.collection.mutable
-
+import at.forsyte.apalache.tla.lir.BoolT1
+import at.forsyte.apalache.tla.lir.ConstT1
+import at.forsyte.apalache.tla.lir.FunT1
+import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.lir.OperParam
+import at.forsyte.apalache.tla.lir.OperT1
+import at.forsyte.apalache.tla.lir.RecRowT1
+import at.forsyte.apalache.tla.lir.RowT1
+import at.forsyte.apalache.tla.lir.SeqT1
+import at.forsyte.apalache.tla.lir.SetT1
+import at.forsyte.apalache.tla.lir.StrT1
+import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.TlaType1
+import at.forsyte.apalache.tla.lir.TupT1
+import at.forsyte.apalache.tla.lir.VarT1
+import at.forsyte.apalache.tla.lir.VariantT1
+import at.forsyte.apalache.tla.typecomp.ScopedBuilder
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction
+import at.forsyte.apalache.tla.typecomp.build
 import com.typesafe.scalalogging.LazyLogging
 
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, OperT1, RecRowT1, RowT1, SeqT1, SetT1, StrT1, TlaEx, TlaType1, TupT1, VarT1, VariantT1,
+import scala.collection.mutable
+import scala.util.Try
+
+class Quint(moduleData: QuintOutput) {
+  private val types = moduleData.types
+
+  // benign state to generate unique names for lambdas
+  private var uniqueLambdaNo = 0
+  private def uniqueLambdaName(): String = {
+    val n = uniqueLambdaNo
+    uniqueLambdaNo += 1
+    s"__QUINT_LAMBDA${n}"
+  }
+
+  // Convert a QuintEx into a TlaEx
+  //
+  // We implement a small family of mutually recursive conversion functions using this
+  // class in order to:
+  //
+  // - Encapsulate and store benign state used by the ScopedBuilder (see below)
+  // - Support and encapsulate the mutual recursion needed in the methods
+  //
+  // Since we need access to the statefull uniqeLambdaName, this class must be
+  // defined in the Quint class rather than in its companion object (like the toTlaType class)
+  private[quint] class exToTla {
+    import QuintEx._
+    import QuintType._
+
+    // Construct Apalache IR expressions
+    val exp = new ScopedBuilder()
+
+    // Derive a OperParam from a paramter name and it's type.
+    //
+    // OperParams are required by the ScopedBuilder for building
+    // operators and consist of the param's name and its arity,
+    // which we here derive from the QuintType.
+    private val operParam: ((String, QuintType)) => OperParam = {
+      case (name, QuintOperT(args, _)) => OperParam(name, args.length)
+      case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
+    }
+
+    // QuintLambda is used both for anonymous operators and for defined
+    // operators that take parameters, but these require different constructs
+    // in Apalache's IR. Thus, we need to decompose the parts of a QuintLambda
+    // for two different purposes.
+    private val lambdaBodyAndParams: QuintLambda => (TBuilderInstruction, List[(OperParam, TlaType1)]) = {
+      case ex @ QuintLambda(id, paramNames, _, body) =>
+        val quintParamTypes = types(id).typ match {
+          case QuintOperT(types, _) => types
+          case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
+        }
+        val operParams = paramNames.zip(quintParamTypes).map(operParam)
+        val paramTypes = quintParamTypes.map(Quint.typeToTlaType(_))
+        val typedParams = operParams.zip(paramTypes)
+        (expConverter(body), typedParams)
+    }
+
+    private val defConverter: QuintDef => TBuilderOperDeclInstruction = {
+      import QuintDef._
+
+      {
+        case QuintOpDef(_, name, _, expr, _) =>
+          val (body, typedParams) = expr match {
+            // Parameterized operators are defined in Quint using Lambdas
+            case lam: QuintLambda => lambdaBodyAndParams(lam)
+            // Otherwise it's an operator with no params
+            case other => (expConverter(other), List())
+          }
+          exp.decl(name, body, typedParams: _*)
+        // TODO
+        case QuintConst(_, _, _)   => null
+        case QuintVar(_, _, _)     => null
+        case QuintAssume(_, _, _)  => null
+        case QuintTypeDef(_, _, _) => null
+      }
+    }
+
+    private val expConverter: QuintEx => TBuilderInstruction = {
+      case QuintBool(_, b)          => exp.bool(b)
+      case QuintInt(_, i)           => exp.int(i)
+      case QuintStr(_, s)           => exp.str(s)
+      case QuintName(id, n)         => exp.name(n, Quint.typeToTlaType(types(id).typ))
+      case QuintLet(_, opdef, expr) => exp.letIn(expConverter(expr), defConverter(opdef))
+      case lam: QuintLambda =>
+        val (body, typedParams) = lambdaBodyAndParams(lam)
+        exp.lambda(uniqueLambdaName(), body, typedParams: _*)
+      case QuintApp(id, op, quintArgs) =>
+        // TODO Intercept and translate builtin operators
+        val paramTypes = quintArgs.map(arg => Quint.typeToTlaType(types(arg.id).typ))
+        val returnType = Quint.typeToTlaType(types(id).typ)
+        val operType = OperT1(paramTypes, returnType)
+        val oper = exp.name(op, operType)
+        val args = quintArgs.map(expConverter)
+        exp.appOp(oper, args: _*)
+    }
+
+    val convert: QuintEx => Try[TlaEx] = exp => Try(build(expConverter(exp)))
+  }
+
+  /**
+   * Convert a [[QuintEx]] to a [[TlaEx]]
+   */
+  private[quint] object exToTla {
+    def apply(quintExp: QuintEx): Try[TlaEx] = (new exToTla()).convert(quintExp)
+  }
 }
 
 object Quint {
-
-  private[quint] def exToTla(d: QuintEx): Try[TlaEx] = null
 
   // Convert a QuintType into a TlaType1
   //

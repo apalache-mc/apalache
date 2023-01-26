@@ -7,8 +7,11 @@ import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.io.quint.QuintType._
 import at.forsyte.apalache.tla.lir.{FunT1, IntT1, RecRowT1, RowT1, StrT1, TupT1, VarT1, VariantT1}
 
+/**
+ * Tests the conversion of quint types, represented as QuintTypes, into TlaType1
+ */
 @RunWith(classOf[JUnitRunner])
-class TestQuint extends AnyFunSuite {
+class TestQuintTypes extends AnyFunSuite {
 
   test("Quint's named type variables are converted into numbered TlaType1 variables") {
     val typeVar = QuintVarT("foo")
