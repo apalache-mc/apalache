@@ -159,7 +159,7 @@ private[quint] object QuintDef {
   /**
    * A user-defined operator
    *
-   * Note that * QuintOpDef does not have any formal parameters. If an operator definition has formal parameters, then
+   * Note that QuintOpDef does not have any formal parameters. If an operator definition has formal parameters, then
    * `expr` is a lambda expression over those parameters.
    */
   @key("def") case class QuintOpDef(
