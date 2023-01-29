@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 // Prevent shadowing our Context trait
 import tla2sany.semantic.{Context => _, _}
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * Translate operator applications. As many TLA+ expressions are defined via operators, this class is quite complex.
@@ -20,7 +21,8 @@ class OpApplTranslator(
     sourceStore: SourceStore,
     annotationStore: AnnotationStore,
     val context: Context,
-    val recStatus: RecursionStatus) {
+    val recStatus: RecursionStatus)
+    extends LazyLogging {
 
   // we use the following case classes to represent the bound variables with a range in many quantified expressions
   sealed abstract private class BExp
@@ -37,7 +39,9 @@ class OpApplTranslator(
   private case class UTuple(params: List[FormalParamNode]) extends UExp
 
   def translate(node: OpApplNode): TlaEx = {
-    if (node.getArgs.length == 0) {
+    logger.debug(
+        s"OpApplTranslator.translate(kind: ${node.getOperator.getKind}, node: $node, operator: ${node.getOperator})")
+    val translated = if (node.getArgs.length == 0) {
       if (node.getOperator.getKind == ASTConstants.BuiltInKind) {
         // that must be a built-in constant operator
         translateBuiltinConst(node)
@@ -61,12 +65,17 @@ class OpApplTranslator(
         case ASTConstants.UserDefinedOpKind =>
           translateUserOperator(node)
 
+        case ASTConstants.ConstantDeclKind =>
+          translateNonLocalUserOperator(node)
+
         case _ =>
           throw new SanyImporterException(
-              "Unsupported operator type: " + node.getOperator
+              "Unsupported operator type: " + oper + ", kind: " + oper.getKind
           )
       }
     }
+    logger.debug(s"translated: ${translated.getClass.getSimpleName}: $translated")
+    translated
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,6 +188,13 @@ class OpApplTranslator(
     def translateNonRec(): TlaEx = {
       context.lookup(opcode) match {
         case DeclUnit(decl: TlaOperDecl) =>
+          // call the user-defined operator
+          val args = node.getArgs.toList.map { p =>
+            exTran.translate(p)
+          }
+          OperEx(TlaOper.apply, NameEx(decl.name) +: args: _*)
+
+        case DeclUnit(decl: TlaConstDecl) =>
           // call the user-defined operator
           val args = node.getArgs.toList.map { p =>
             exTran.translate(p)

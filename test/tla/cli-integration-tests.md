@@ -3428,6 +3428,22 @@ $ apalache-mc typecheck CommentedTypeAnnotation.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### typecheck ConstantOperator.tla
+
+```sh
+$ apalache-mc typecheck ConstantOperator.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### typecheck ConstantOperatorImpl.tla
+
+```sh
+$ apalache-mc typecheck ConstantOperatorImpl.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ## configuring the output manager
 
 ### output manager: set out-dir by CLI flag
