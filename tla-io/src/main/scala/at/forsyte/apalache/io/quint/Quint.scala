@@ -24,6 +24,12 @@ import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.mutable
 import scala.util.Try
+import at.forsyte.apalache.tla.lir.TlaDecl
+import at.forsyte.apalache.tla.lir.TlaConstDecl
+import at.forsyte.apalache.tla.lir.Typed
+import at.forsyte.apalache.tla.lir.TlaVarDecl
+import at.forsyte.apalache.tla.lir.TypeTag
+import at.forsyte.apalache.tla.lir.TlaAssumeDecl
 
 class Quint(moduleData: QuintOutput) {
   private val types = moduleData.types
@@ -79,23 +85,36 @@ class Quint(moduleData: QuintOutput) {
         (expConverter(body), typedParams)
     }
 
-    private val defConverter: QuintDef => TBuilderOperDeclInstruction = {
-      import QuintDef._
+    private val opDefConverter: QuintDef.QuintOpDef => TBuilderOperDeclInstruction = {
+      case QuintDef.QuintOpDef(_, name, _, expr, _) =>
+        val (body, typedParams) = expr match {
+          // Parameterized operators are defined in Quint using Lambdas
+          case lam: QuintLambda => lambdaBodyAndParams(lam)
+          // Otherwise it's an operator with no params
+          case other => (expConverter(other), List())
+        }
+        exp.decl(name, body, typedParams: _*)
+    }
 
+    private def typeTagOfId(id: Int): TypeTag = {
+      Typed(Quint.typeToTlaType(types(id).typ))
+    }
+
+    private[quint] val defConverter: QuintDef => Try[Option[TlaDecl]] = {
+      import QuintDef._
       {
-        case QuintOpDef(_, name, _, expr, _) =>
-          val (body, typedParams) = expr match {
-            // Parameterized operators are defined in Quint using Lambdas
-            case lam: QuintLambda => lambdaBodyAndParams(lam)
-            // Otherwise it's an operator with no params
-            case other => (expConverter(other), List())
-          }
-          exp.decl(name, body, typedParams: _*)
-        // TODO
-        case QuintConst(_, _, _)   => null
-        case QuintVar(_, _, _)     => null
-        case QuintAssume(_, _, _)  => null
-        case QuintTypeDef(_, _, _) => null
+        // We don't currently support type definitions in the Apalache IR:
+        // all compound types are expected to be inlined.
+        case QuintTypeDef(_, _, _) => Try(None)
+        // Constant and var declarations are trivial to construct, and
+        // no methods for them are provided by the ScopedBuilder.
+        case QuintConst(id, name, _) => Try(Some(TlaConstDecl(name)(typeTagOfId(id))))
+        case QuintVar(id, name, _)   => Try(Some(TlaVarDecl(name)(typeTagOfId(id))))
+        case op: QuintOpDef          => Try(Some(build(opDefConverter(op))))
+        case QuintAssume(id, _, qex) =>
+          for {
+            ex <- Try(build(expConverter(qex)))
+          } yield Some(TlaAssumeDecl(ex)(typeTagOfId(id)))
       }
     }
 
@@ -104,7 +123,7 @@ class Quint(moduleData: QuintOutput) {
       case QuintInt(_, i)           => exp.int(i)
       case QuintStr(_, s)           => exp.str(s)
       case QuintName(id, n)         => exp.name(n, Quint.typeToTlaType(types(id).typ))
-      case QuintLet(_, opdef, expr) => exp.letIn(expConverter(expr), defConverter(opdef))
+      case QuintLet(_, opDef, expr) => exp.letIn(expConverter(expr), opDefConverter(opDef))
       case lam: QuintLambda =>
         val (body, typedParams) = lambdaBodyAndParams(lam)
         exp.lambda(uniqueLambdaName(), body, typedParams: _*)
