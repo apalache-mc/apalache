@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecomp.signatures
 
-import at.forsyte.apalache.tla.lir.{RecRowT1, RecT1, RowT1, TlaType1}
+import at.forsyte.apalache.tla.lir.{FunT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, TlaType1, TupT1}
 
 import scala.collection.immutable.SortedMap
 
@@ -15,7 +15,18 @@ object FlexibleEquality {
 
   // None if no common supertype, Some(e) if compatible, and common supertype is e.
   def commonSupertype(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = (lhs, rhs) match {
-    case (a, b) if a == b => Some(a)
+    case (a, b) if a == b     => Some(a)
+    case (SeqT1(l), SeqT1(r)) => commonSupertype(l, r).map(SeqT1)
+    case (SetT1(l), SetT1(r)) => commonSupertype(l, r).map(SetT1)
+    case (FunT1(lD, lC), FunT1(rD, rC)) =>
+      for {
+        domT <- commonSupertype(lD, rD)
+        cdmT <- commonSupertype(lC, rC)
+      } yield FunT1(domT, cdmT)
+    case (TupT1(lElems @ _*), TupT1(rElems @ _*)) if lElems.size == rElems.size =>
+      val commonTup = lElems.zip(rElems).flatMap { case (l, r) => commonSupertype(l, r) }
+      if (commonTup.size == lElems.size) Some(TupT1(commonTup: _*))
+      else None
     case (RecT1(lFields), RecT1(rFields)) =>
       val intersect = lFields.keySet.intersect(rFields.keySet)
       val intersectMapOpt = intersect.foldLeft(Option(SortedMap.empty[String, TlaType1])) { case (mapOpt, e) =>
