@@ -366,7 +366,7 @@ object PureArenaAdapter {
     solverContext.assertGroundExpr(cellTrue.toBuilder)
     // link c_BOOLEAN to c_FALSE and c_TRUE
     val ret = PureArenaAdapter(initArena, solverContext)
-      .appendHas(cellBoolean, Seq(cellFalse, cellTrue).map(SmtConstElemPtr): _*)
+      .appendHas(cellBoolean, Seq(cellFalse, cellTrue).map(FixedElemPtr): _*)
     // assert in(c_FALSE, c_BOOLEAN) and in(c_TRUE, c_BOOLEAN)
     ret.context.assertGroundExpr(tla.storeInSet(cellFalse.toBuilder, cellBoolean.toBuilder))
     ret.context.assertGroundExpr(tla.storeInSet(cellTrue.toBuilder, cellBoolean.toBuilder))

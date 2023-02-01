@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TlaEx, TypingException}
@@ -39,7 +39,7 @@ class SetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         }
         nextState = nextState.updateArena(_.appendCell(SetT1(elemType)))
         val newSetCell = nextState.arena.topCell
-        nextState = nextState.updateArena(_.appendHas(newSetCell, cells.map(SmtConstElemPtr): _*))
+        nextState = nextState.updateArena(_.appendHas(newSetCell, cells.map(FixedElemPtr): _*))
 
         for (c <- cells) {
           val inExpr = tla.storeInSet(c.toBuilder, newSetCell.toBuilder)
