@@ -25,4 +25,18 @@ object PtrUtil {
     }
   }
 
+  // When looking at cartesian product sets (e.g. for Map), the following holds true:
+  // If c_S represents S, c_a represents a, c_T represents T, c_b represents b, c_ST represents S x T
+  // and c_tup represents <<a,b>>, then
+  // c_ST has a fixed pointer to c_tup <=> c_S has a fixed pointer to c_a, and c_T has a fixed pointer to c_b
+  // In all other cases, c_ST has a SmtExprElemPtr(expr) to c_tup, where expr is the conjunction of the expressions held
+  // by the pointer of c_S to c_a and the pointer of c_T to c_b.
+  def tuplePtr(setElemPtrs: Seq[ElemPtr]): ArenaCell => ElemPtr = {
+    require(setElemPtrs.nonEmpty)
+    if (setElemPtrs.forall(_.isInstanceOf[FixedElemPtr]))
+      FixedElemPtr
+    else
+      SmtExprElemPtr(_, tla.and(setElemPtrs.map(_.toSmt): _*))
+  }
+
 }
