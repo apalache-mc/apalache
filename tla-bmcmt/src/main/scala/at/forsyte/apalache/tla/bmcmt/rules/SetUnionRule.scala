@@ -49,11 +49,11 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
               setElemPtrs.foldLeft((partialCellMap, partialPointingSet)) {
                 case ((innerPartialCellMap, innerPartialPointingSet), ptr) =>
                   val elem = ptr.elem
-                  (
-                      innerPartialCellMap + (elem -> (innerPartialCellMap.getOrElse(elem, Seq.empty) :+ ptr)),
-                      innerPartialPointingSet + (elem -> (innerPartialPointingSet.getOrElse(elem,
-                          Set.empty) + setCell)),
-                  )
+                  // ptr is one of the pointers pointing at elem
+                  val newCellMapAtElem = elem -> (innerPartialCellMap.getOrElse(elem, Seq.empty) :+ ptr)
+                  // setCell is one of the cells for which one of its has-edges (i.e. ptr) points at elem
+                  val newPointingSetAtElem = elem -> (innerPartialPointingSet.getOrElse(elem, Set.empty) + setCell)
+                  (innerPartialCellMap + newCellMapAtElem, innerPartialPointingSet + newPointingSetAtElem)
               }
           }
 
