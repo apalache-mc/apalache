@@ -2,11 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.ElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.{NameEx, NullEx, OperEx, SetT1, TlaEx, TlaType1}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Rewrites a set comprehension { x \in S: P }.
@@ -49,7 +49,10 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // compute predicates for all the cells, some may statically result in NullEx
         val computedPreds: Seq[TlaEx] = potentialCells.map(eachElem)
-        val filteredCellsAndPreds = (potentialCells.zip(computedPreds)).filter(_._2 != NullEx)
+        // At this point, we force all pointers to SmtExprElemPtr
+        val filteredCellsAndPreds = potentialCells.zip(computedPreds).map { case (ptr, pred) =>
+          (ptr.generalize.restrict(tla.unchecked(pred)), pred)
+        }
 
         // get the result type from the type finder
         val resultType = TlaType1.fromTypeTag(ex.typeTag)

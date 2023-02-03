@@ -75,4 +75,5 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
  */
 case class SmtExprElemPtr(elem: ArenaCell, smtEx: TBuilderInstruction) extends ElemPtr {
   override def toSmt: TBuilderInstruction = smtEx
+  def restrict(cond: TBuilderInstruction): SmtExprElemPtr = this.copy(smtEx = tla.and(smtEx, cond))
 }
