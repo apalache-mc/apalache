@@ -43,19 +43,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // We map each cell, which appears in some set, to all of the pointers pointing to it, and
         // all the sets containing it
-        val (cellMap, pointingSetMap) =
-          elemsOfSets.foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]], Map.empty[ArenaCell, Set[ArenaCell]]) {
-            case ((partialCellMap, partialPointingSet), (setCell, setElemPtrs)) =>
-              setElemPtrs.foldLeft((partialCellMap, partialPointingSet)) {
-                case ((innerPartialCellMap, innerPartialPointingSet), ptr) =>
-                  val elem = ptr.elem
-                  // ptr is one of the pointers pointing at elem
-                  val newCellMapAtElem = elem -> (innerPartialCellMap.getOrElse(elem, Seq.empty) :+ ptr)
-                  // setCell is one of the cells for which one of its has-edges (i.e. ptr) points at elem
-                  val newPointingSetAtElem = elem -> (innerPartialPointingSet.getOrElse(elem, Set.empty) + setCell)
-                  (innerPartialCellMap + newCellMapAtElem, innerPartialPointingSet + newPointingSetAtElem)
-              }
-          }
+        val (cellMap, pointingSetMap) = PtrUtil.getCellAndPointingSetMaps(elemsOfSets)
 
         // Fixed pointers dominate, if no pointer is fixed we take the disjunction of the smt constraints
         val unionElemPtrs: Seq[ElemPtr] = cellMap.toSeq.map { case (cell, ptrs) =>
