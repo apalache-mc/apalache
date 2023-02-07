@@ -11,6 +11,23 @@ import at.forsyte.apalache.tla.types.tla
  */
 object PtrUtil {
 
+  // Maps each cell, which appears in some set, to all of the pointers pointing to it, and
+  // all the sets containing it
+  def getCellAndPointingSetMaps(
+      elemsOfSets: Seq[(ArenaCell, Seq[ElemPtr])]): (Map[ArenaCell, Seq[ElemPtr]], Map[ArenaCell, Set[ArenaCell]]) =
+    elemsOfSets.foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]], Map.empty[ArenaCell, Set[ArenaCell]]) {
+      case ((partialCellMap, partialPointingSetMap), (setCell, setElemPtrs)) =>
+        setElemPtrs.foldLeft((partialCellMap, partialPointingSetMap)) {
+          case ((innerPartialCellMap, innerPartialPointingSet), ptr) =>
+            val elem = ptr.elem
+            // ptr is one of the pointers pointing at elem
+            val newCellMapAtElem = elem -> (innerPartialCellMap.getOrElse(elem, Seq.empty) :+ ptr)
+            // setCell is one of the cells for which one of its has-edges (i.e. ptr) points at elem
+            val newPointingSetAtElem = elem -> (innerPartialPointingSet.getOrElse(elem, Set.empty) + setCell)
+            (innerPartialCellMap + newCellMapAtElem, innerPartialPointingSet + newPointingSetAtElem)
+        }
+    }
+
   // If a set cell points to an element cell via multiple pointers, and at least one of them is fixed,
   // the representation can be simplified such that only the fixed pointer edge remains.
   // Otherwise, instead of pointers p1,...,pn has-conditions c1,...,cn, we can use a single pointer with a
