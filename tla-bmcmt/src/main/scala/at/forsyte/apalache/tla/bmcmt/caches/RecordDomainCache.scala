@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PureArenaAdapter, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.{SetT1, StrT1}
 import at.forsyte.apalache.tla.types.tla
@@ -35,24 +35,25 @@ class RecordDomainCache(solverContext: SolverContext, strValueCache: ModelValueC
     val allKeys: SortedSet[String] = usedKeys.union(unusedKeys)
     var arena = context
 
-    def strToCell(str: String): ElemPtr = {
+    def strToPtr(str: String): ElemPtr = {
       val (newArena, cell) = strValueCache.getOrCreate(arena, (StrT1.toString, str))
       arena = newArena
-      SmtConstElemPtr(cell)
+      SmtExprElemPtr(cell, tla.bool(usedKeys.contains(str)))
     }
 
-    val allCells = allKeys.toList.map(strToCell)
+    val allCellPtrs = allKeys.toList.map(strToPtr)
     // create the domain cell
     arena = arena.appendCell(SetT1(StrT1))
     val set = arena.topCell
-    arena = arena.appendHas(set, allCells: _*)
+    arena = arena.appendHas(set, allCellPtrs: _*)
     // force that every key in the usedKeys is in the set, whereas every key in the unusedKeys is outside of the set
-    for ((cell, key) <- allCells.zip(allKeys)) {
+    for ((ptr, key) <- allCellPtrs.zip(allKeys)) {
+      val cell = ptr.elem
       val cond =
         if (usedKeys.contains(key)) {
-          tla.storeInSet(cell.elem.toBuilder, set.toBuilder)
+          tla.storeInSet(cell.toBuilder, set.toBuilder)
         } else {
-          tla.not(tla.selectInSet(cell.elem.toBuilder, set.toBuilder))
+          tla.not(tla.selectInSet(cell.toBuilder, set.toBuilder))
         }
 
       solverContext.assertGroundExpr(cond)

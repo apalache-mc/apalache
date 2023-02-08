@@ -676,13 +676,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
           (n.asInstanceOf[ExprSort], 1)
         }
 
-      case OperEx(_: TlaArithOper, _, _) =>
+      case arithEx @ OperEx(_: TlaArithOper, _, _) =>
         // convert to an arithmetic expression
-        toArithExpr(ex)
+        toArithExpr(arithEx)
 
-      case OperEx(_: TlaArithOper, _) =>
+      case arithEx @ OperEx(_: TlaArithOper, _) =>
         // convert to an arithmetic expression
-        toArithExpr(ex)
+        toArithExpr(arithEx)
 
       case OperEx(TlaOper.eq, lhs @ NameEx(lname), rhs @ NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {

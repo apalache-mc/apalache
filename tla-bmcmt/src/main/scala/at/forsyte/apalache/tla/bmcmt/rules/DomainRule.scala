@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PtrUtil, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Rewriting DOMAIN f, that is, translating the domain of a function, record, tuple, or sequence.
@@ -72,12 +72,18 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     // we cannot use staticDom directly, as its in-relation is restricted, create a copy
     var arena = newArena.appendCellOld(staticDom.cellType)
     val dom = arena.topCell
-    arena = arena.appendHas(dom, arena.getHasPtr(staticDom): _*)
-    for ((domElem, indexBase0) <- arena.getHas(staticDom).zipWithIndex) {
+    val staticPtrs = arena.getHasPtr(staticDom)
+    // the element is in range, if indexBase0 < len
+    val actualPtrs = staticPtrs.zipWithIndex.map { case (p, indexBase0) =>
+      p.generalize.restrict(tla.lt(tla.int(indexBase0), len.toBuilder))
+    }
+
+    arena = arena.appendHas(dom, actualPtrs: _*)
+    for (domElemPtr <- actualPtrs) {
+      val domElem = domElemPtr.elem
       val inDom = tla.storeInSet(domElem.toBuilder, dom.toBuilder)
       val notInDom = tla.storeNotInSet(domElem.toBuilder, dom.toBuilder)
-      // the element is in range, if indexBase0 < len
-      val inRange = tla.lt(tla.int(indexBase0), len.toBuilder)
+      val inRange = domElemPtr.smtEx
       rewriter.solverContext.assertGroundExpr(tla.ite(inRange, inDom, notInDom))
     }
 
@@ -97,14 +103,31 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
 
     def getArg(c: ArenaCell): ArenaCell = nextState.arena.getHas(c).head
 
-    val pairs = nextState.arena.getHas(relation)
+    val pairs = nextState.arena.getHasPtr(relation)
     // importantly, call distinct, to avoid duplicate cells (different cells still may be equal)
-    val domCells = pairs
-      .map(getArg)
-      .distinct
-      .map(
-          SmtConstElemPtr // @Igor: which ptr?
-      )
+    val domCellPtrs: Seq[ElemPtr] = pairs.map { ptr =>
+      // Each pair is a 2-tuple
+      val argCell = getArg(ptr.elem)
+      // Inherit FixedPtr status from pair
+      ptr match {
+        case _: FixedElemPtr =>
+          FixedElemPtr(argCell)
+        case _ =>
+          SmtExprElemPtr(argCell, ptr.toSmt)
+      }
+    }
+
+    // We merge multiple pointers to the same cell into a single pointer per cell
+    val mergedCellPtrs = domCellPtrs
+      .foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]]) { case (partialCellMap, ptr) =>
+        val elem = ptr.elem
+        partialCellMap + (elem -> (partialCellMap.getOrElse(elem, Seq.empty) :+ ptr))
+      }
+      .toSeq
+      .map { case (cell, ptrs) =>
+        PtrUtil.mergePtrs(cell, ptrs)
+      }
+
     // construct a map from cell ids to lists of pairs
     type KeyToPairs = Map[Int, Set[ArenaCell]]
 
@@ -114,10 +137,10 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
       map + (key.id -> pairsForKey)
     }
 
-    val keysToPairs = pairs.foldLeft(Map[Int, Set[ArenaCell]]())(addPair)
+    val keysToPairs = pairs.map(_.elem).foldLeft(Map[Int, Set[ArenaCell]]())(addPair)
 
     // add the cells, some of which may be ghost cells
-    nextState = nextState.updateArena(_.appendHas(domCell, domCells: _*))
+    nextState = nextState.updateArena(_.appendHas(domCell, mergedCellPtrs: _*))
     for (pairsForKey <- keysToPairs.values) {
       val head = pairsForKey.head
       val keyCell = getArg(head)
