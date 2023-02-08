@@ -57,7 +57,7 @@ class Quint(moduleData: QuintOutput) {
     import QuintType._
 
     // Construct Apalache IR expressions
-    val exp = new ScopedBuilder()
+    val tla = new ScopedBuilder()
 
     // Derive a OperParam from a paramter name and it's type.
     //
@@ -82,7 +82,7 @@ class Quint(moduleData: QuintOutput) {
         val operParams = paramNames.zip(quintParamTypes).map(operParam)
         val paramTypes = quintParamTypes.map(Quint.typeToTlaType(_))
         val typedParams = operParams.zip(paramTypes)
-        (expConverter(body), typedParams)
+        (tlaExpression(body), typedParams)
     }
 
     private val opDefConverter: QuintDef.QuintOpDef => TBuilderOperDeclInstruction = {
@@ -91,53 +91,54 @@ class Quint(moduleData: QuintOutput) {
           // Parameterized operators are defined in Quint using Lambdas
           case lam: QuintLambda => lambdaBodyAndParams(lam)
           // Otherwise it's an operator with no params
-          case other => (expConverter(other), List())
+          case other => (tlaExpression(other), List())
         }
-        exp.decl(name, body, typedParams: _*)
+        tla.decl(name, body, typedParams: _*)
     }
 
     private def typeTagOfId(id: Int): TypeTag = {
       Typed(Quint.typeToTlaType(types(id).typ))
     }
 
-    private[quint] val defConverter: QuintDef => Try[Option[TlaDecl]] = {
+    private[quint] val tlaDef: QuintDef => Option[TlaDecl] = {
       import QuintDef._
       {
         // We don't currently support type definitions in the Apalache IR:
         // all compound types are expected to be inlined.
-        case QuintTypeDef(_, _, _) => Try(None)
+        case QuintTypeDef(_, _, _) => None
         // Constant and var declarations are trivial to construct, and
         // no methods for them are provided by the ScopedBuilder.
-        case QuintConst(id, name, _) => Try(Some(TlaConstDecl(name)(typeTagOfId(id))))
-        case QuintVar(id, name, _)   => Try(Some(TlaVarDecl(name)(typeTagOfId(id))))
-        case op: QuintOpDef          => Try(Some(build(opDefConverter(op))))
-        case QuintAssume(id, _, qex) =>
-          for {
-            ex <- Try(build(expConverter(qex)))
-          } yield Some(TlaAssumeDecl(ex)(typeTagOfId(id)))
+        case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
+        case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
+        case op: QuintOpDef          => Some(build(opDefConverter(op)))
+        case QuintAssume(id, _, quintEx) =>
+          val tlaEx = build(tlaExpression(quintEx))
+          Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
       }
     }
 
-    private val expConverter: QuintEx => TBuilderInstruction = {
-      case QuintBool(_, b)          => exp.bool(b)
-      case QuintInt(_, i)           => exp.int(i)
-      case QuintStr(_, s)           => exp.str(s)
-      case QuintName(id, n)         => exp.name(n, Quint.typeToTlaType(types(id).typ))
-      case QuintLet(_, opDef, expr) => exp.letIn(expConverter(expr), opDefConverter(opDef))
-      case lam: QuintLambda =>
-        val (body, typedParams) = lambdaBodyAndParams(lam)
-        exp.lambda(uniqueLambdaName(), body, typedParams: _*)
-      case QuintApp(id, op, quintArgs) =>
-        // TODO Intercept and translate builtin operators
-        val paramTypes = quintArgs.map(arg => Quint.typeToTlaType(types(arg.id).typ))
-        val returnType = Quint.typeToTlaType(types(id).typ)
-        val operType = OperT1(paramTypes, returnType)
-        val oper = exp.name(op, operType)
-        val args = quintArgs.map(expConverter)
-        exp.appOp(oper, args: _*)
+    private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
+      val paramTypes = quintArgs.map(arg => Quint.typeToTlaType(types(arg.id).typ))
+      val returnType = Quint.typeToTlaType(types(id).typ)
+      val operType = OperT1(paramTypes, returnType)
+      val oper = tla.name(opName, operType)
+      val args = quintArgs.map(tlaExpression)
+      tla.appOp(oper, args: _*)
     }
 
-    val convert: QuintEx => Try[TlaEx] = exp => Try(build(expConverter(exp)))
+    private val tlaExpression: QuintEx => TBuilderInstruction = {
+      case QuintBool(_, b)          => tla.bool(b)
+      case QuintInt(_, i)           => tla.int(i)
+      case QuintStr(_, s)           => tla.str(s)
+      case QuintName(id, n)         => tla.name(n, Quint.typeToTlaType(types(id).typ))
+      case QuintLet(_, opDef, expr) => tla.letIn(tlaExpression(expr), opDefConverter(opDef))
+      case lam: QuintLambda =>
+        val (body, typedParams) = lambdaBodyAndParams(lam)
+        tla.lambda(uniqueLambdaName(), body, typedParams: _*)
+      case app: QuintApp => tlaApplication(app)
+    }
+
+    val convert: QuintEx => Try[TlaEx] = quintEx => Try(build(tlaExpression(quintEx)))
   }
 
   /**
