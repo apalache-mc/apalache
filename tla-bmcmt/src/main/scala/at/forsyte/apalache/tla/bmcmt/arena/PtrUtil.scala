@@ -42,6 +42,12 @@ object PtrUtil {
     }
   }
 
+  def samePointer(original: ElemPtr): ArenaCell => ElemPtr = original match {
+    case _: FixedElemPtr          => FixedElemPtr
+    case _: SmtConstElemPtr       => SmtConstElemPtr
+    case SmtExprElemPtr(_, smtEx) => SmtExprElemPtr(_, smtEx)
+  }
+
   // When looking at cartesian product sets (e.g. for Map), the following holds true:
   // If c_S represents S, c_a represents a, c_T represents T, c_b represents b, c_ST represents S x T
   // and c_tup represents <<a,b>>, then
