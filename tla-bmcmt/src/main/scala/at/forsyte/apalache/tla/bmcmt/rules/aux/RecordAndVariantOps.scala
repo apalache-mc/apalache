@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PtrUtil, PureArenaAdapter, SmtConstElemPtr}
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
@@ -46,7 +46,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val recordCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- fields.valuesIterator) {
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, SmtConstElemPtr(fieldCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, FixedElemPtr(fieldCell)))
     }
 
     // In contrast to the old records, we do not associate the record domain with a record.
@@ -292,15 +292,15 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val fieldTypes = getFieldTypes(recordCell)
     expectFieldName(recordCell, fieldTypes, fieldName)
     val index = fieldTypes.keySet.toList.indexOf(fieldName)
-    val elems = state.arena.getHas(recordCell)
+    val elems = state.arena.getHasPtr(recordCell)
     assert(0 <= index && index < elems.length)
 
     var nextState = state.updateArena(_.appendCell(recordCell.cellType.toTlaType1))
     val newRecord = nextState.arena.topCell
     // add the fields in the order of their names, update by name
-    for ((name, oldCell) <- fieldTypes.keySet.zip(elems)) {
-      val updatedCell = if (name == fieldName) newCell else oldCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, SmtConstElemPtr(updatedCell)))
+    for ((name, oldPtr) <- fieldTypes.keySet.toSeq.zip(elems)) {
+      val updatedPtr = if (name == fieldName) PtrUtil.samePointer(oldPtr)(newCell) else oldPtr
+      nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, updatedPtr))
     }
 
     nextState.setRex(newRecord.toBuilder)
