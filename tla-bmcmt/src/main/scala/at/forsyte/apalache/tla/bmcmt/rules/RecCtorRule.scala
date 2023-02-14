@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.types.tla
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 
@@ -96,7 +96,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           defaultValue
         }
       // link this cell to the record
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, SmtConstElemPtr(valueCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, FixedElemPtr(valueCell)))
     }
 
     for ((key, tp) <- recordT.fieldTypes) {

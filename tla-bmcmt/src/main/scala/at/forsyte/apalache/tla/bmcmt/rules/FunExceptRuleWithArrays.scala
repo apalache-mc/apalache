@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PtrUtil}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
@@ -39,22 +39,23 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
 
     // Declare the updated set of pairs <arg,res>
     val relation = nextState.arena.getCdm(funCell)
-    val relationCells = nextState.arena.getHas(relation)
+    val relationCellPtrs = nextState.arena.getHasPtr(relation)
     nextState = nextState.updateArena(_.appendCellNoSmt(relation.cellType))
     val resultRelation = nextState.arena.topCell
 
-    def eachRelationPair(pair: ArenaCell): Unit = {
+    def eachRelationPair(pairPtr: ElemPtr): Unit = {
+      val pair = pairPtr.elem
       val pairIndex = nextState.arena.getHas(pair).head
       val ite = tla
         .ite(tla.eql(pairIndex.toBuilder, indexCell.toBuilder), newPairCell.toBuilder, pair.toBuilder)
 
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell
-      nextState = nextState.updateArena(_.appendHasNoSmt(resultRelation, SmtConstElemPtr(updatedCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(resultRelation, PtrUtil.samePointer(pairPtr)(updatedCell)))
     }
 
     // Add the appropriate pairs <arg,res> to resultRelation
-    relationCells.foreach(eachRelationPair)
+    relationCellPtrs.foreach(eachRelationPair)
     nextState = nextState.updateArena(_.setCdm(resultFunCell, resultRelation))
     // For the decoder to work, the pairs' arguments may need to be equated to the domain elements
     nextState = constrainRelationArgs(nextState, rewriter, domainCell, resultRelation)
@@ -63,9 +64,9 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     val eql = tla.eql(resultFunCell.toBuilder, funCell.toBuilder)
     rewriter.solverContext.assertGroundExpr(eql)
 
-    // We need to constrain resultRelationElems w.r.t relationCells and newPairCell
+    // We need to constrain resultRelationElems w.r.t relationCellPtrs and newPairCell
     val resultRelationElems = nextState.arena.getHas(resultRelation)
-    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.zip(relationCells))
+    nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.zip(relationCellPtrs.map(_.elem)))
     nextState = rewriter.lazyEq.cacheEqConstraints(nextState, resultRelationElems.map((_, newPairCell)))
 
     // There is no need to constrain updates, only accesses

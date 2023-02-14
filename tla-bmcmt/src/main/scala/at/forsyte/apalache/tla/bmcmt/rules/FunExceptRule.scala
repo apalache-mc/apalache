@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PtrUtil}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 import scalaz.unused
 
 /**
@@ -74,14 +74,15 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
     // get the function relation from the arena
     val relation = nextState.arena.getCdm(funCell)
-    val relationCells = nextState.arena.getHas(relation)
+    val relationCells = nextState.arena.getHasPtr(relation)
     nextState = nextState.updateArena(_.appendCellOld(relation.cellType))
     val resultRelation = nextState.arena.topCell
 
     // introduce a new function relation that is organized as follows:
     // [ p \in f_rel |-> IF p[1] = i THEN <<i, e>> ELSE p ]
-    def eachRelationPair(pair: ArenaCell): ArenaCell = {
+    def eachRelationPair(pairPtr: ElemPtr): Unit = {
       // Since the expression goes to the solver, we don't care about types.
+      val pair = pairPtr.elem
       val pairIndex = nextState.arena.getHas(pair).head // this is pair[1]
       val ite = tla
         .ite(tla.eql(pairIndex.toBuilder, indexCell.toBuilder), newPairCell.toBuilder, pair.toBuilder)
@@ -89,22 +90,21 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(ite))
       val updatedCell = nextState.asCell
       // add the new cell to the arena immediately, as we are going to use the IN predicates
-      nextState = nextState.updateArena(_.appendHas(resultRelation, SmtConstElemPtr(updatedCell)))
+      nextState = nextState.updateArena(_.appendHas(resultRelation, PtrUtil.samePointer(pairPtr)(updatedCell)))
       // The new cell belongs to the new relation iff the old cell belongs to the old relation.
       val assertion = tla
         .ite(tla.selectInSet(pair.toBuilder, relation.toBuilder),
             tla.storeInSet(updatedCell.toBuilder, resultRelation.toBuilder),
             tla.storeNotInSet(updatedCell.toBuilder, resultRelation.toBuilder))
       solverAssert(assertion)
-      updatedCell
     }
 
     // compute all updated cells in case we are dealing with a function over non-basic indices
     relationCells.foreach(eachRelationPair)
 
     // cache equality constraints between the indices and the indices in the function relation
-    def cacheEqForPair(p: ArenaCell): Unit = {
-      val pairIndex = nextState.arena.getHas(p).head
+    def cacheEqForPair(p: ElemPtr): Unit = {
+      val pairIndex = nextState.arena.getHas(p.elem).head
       nextState = cacheEq(nextState, pairIndex, indexCell)
     }
 
@@ -140,9 +140,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     nextState = nextState.updateArena(_.setDom(newRecord, domain))
 
     // add the key-value pairs of the old record but update the key that was requested to be updated
-    def updateOrKeep(key: String, oldValue: ElemPtr): ElemPtr =
-      if (key == keyToUpdate) SmtConstElemPtr(newValue)
-      else oldValue
+    def updateOrKeep(key: String, oldPtr: ElemPtr): ElemPtr =
+      if (key == keyToUpdate) PtrUtil.samePointer(oldPtr)(newValue)
+      else oldPtr
 
     for ((key, cell) <- recType.fieldTypes.keySet.toSeq.zip(nextState.arena.getHasPtr(oldRecord))) {
       nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, updateOrKeep(key, cell)))
@@ -180,9 +180,9 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val newTuple = nextState.arena.topCell
 
     // add the indices of old tuple but update the index that was requested to be updated
-    def updateOrKeep(index: Int, oldValue: ElemPtr): ElemPtr =
-      if (index == indexToUpdate) SmtConstElemPtr(newValue)
-      else oldValue
+    def updateOrKeep(index: Int, oldPtr: ElemPtr): ElemPtr =
+      if (index == indexToUpdate) PtrUtil.samePointer(oldPtr)(newValue)
+      else oldPtr
 
     for ((cell, index0based) <- nextState.arena.getHasPtr(oldTuple).zipWithIndex) {
       nextState = nextState.updateArena(_.appendHasNoSmt(newTuple, updateOrKeep(index0based + 1, cell)))
