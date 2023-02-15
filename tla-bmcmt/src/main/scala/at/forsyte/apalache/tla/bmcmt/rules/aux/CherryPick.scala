@@ -597,7 +597,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       pickSetNonEmpty(cellType, state, oracle, memberSets, elseAssert, noSmt)
   }
 
-  // Alternative method, with no interleaving. Unused at the moment, awaiting performance testing.
+  // Alternative method, with no interleaving. Unused at the moment, awaiting performance testing (#2415)
   private def pickSetNonEmptyPtr(
       cellType: SetT1,
       state: SymbState,
