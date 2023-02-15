@@ -117,13 +117,125 @@ class Quint(moduleData: QuintOutput) {
       }
     }
 
+    private type T = TBuilderInstruction
+
+    private def throwOperatorArityError(op: String, arity: String, args: List[QuintEx]) =
+      throw new QuintIRParseError(s"too many arguments passed to ${arity} operator ${op}: ${args}")
+
+    private val unaryApp: (String, T => T) => List[QuintEx] => T =
+      (op, builder) => {
+        case a :: Nil    => builder(tlaExpression(a))
+        case tooManyArgs => throwOperatorArityError(op, "unary", tooManyArgs)
+      }
+
+    private val binaryApp: (String, (T, T) => T) => List[QuintEx] => T =
+      (op, builder) => {
+        case a :: b :: Nil => builder(tlaExpression(a), tlaExpression(b))
+        case tooManyArgs   => throwOperatorArityError(op, "binary", tooManyArgs)
+      }
+
+    private val ternaryApp: (String, (T, T, T) => T) => List[QuintEx] => T =
+      (op, builder) => {
+        case a :: b :: c :: Nil => builder(tlaExpression(a), tlaExpression(b), tlaExpression(c))
+        case tooManyArgs        => throwOperatorArityError(op, "binary", tooManyArgs)
+      }
+
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
-      val paramTypes = quintArgs.map(arg => Quint.typeToTlaType(types(arg.id).typ))
-      val returnType = Quint.typeToTlaType(types(id).typ)
-      val operType = OperT1(paramTypes, returnType)
-      val oper = tla.name(opName, operType)
-      val args = quintArgs.map(tlaExpression)
-      tla.appOp(oper, args: _*)
+      val applicationBuilder: List[QuintEx] => TBuilderInstruction = opName match {
+        // TODO: The builtin quint operators are in the same order as they appear in https://github.com/informalsystems/quint/main/quint/src/builtin.qnt
+        case "eq"        => binaryApp(opName, tla.eql)
+        case "neq"       => binaryApp(opName, tla.neql)
+        case "iff"       => binaryApp(opName, tla.equiv)
+        case "implies"   => binaryApp(opName, tla.impl)
+        case "not"       => unaryApp(opName, tla.not)
+        case "in"        => binaryApp(opName, tla.in)
+        case "notin"     => binaryApp(opName, tla.notin)
+        case "contains"  => binaryApp(opName, (set, elem) => tla.in(elem, set))
+        case "union"     => binaryApp(opName, tla.cup)
+        case "intersect" => binaryApp(opName, tla.cap)
+        case "exclude"   => binaryApp(opName, tla.setminus)
+        case "fold"      => ternaryApp(opName, (set, init, op) => tla.foldSet(op, init, set))
+        case "powerset"  => unaryApp(opName, tla.powSet)
+        case "flatten"   => unaryApp(opName, tla.union)
+        case "allLists"  => unaryApp(opName, tla.seqSet)
+        case "oneOf"     => unaryApp(opName, tla.guess)
+        case "isFinite"  => unaryApp(opName, tla.isFiniteSet)
+        case "size"      => unaryApp(opName, tla.cardinality)
+        case "get"       => binaryApp(opName, tla.app)
+        case "set"       => ternaryApp(opName, tla.except)
+        case "keys"      => unaryApp(opName, tla.dom)
+        case "setOfMaps" => binaryApp(opName, tla.funSet)
+        case "setToMap"  => unaryApp(opName, tla.setAsFun)
+        case "append"    => binaryApp(opName, tla.append)
+        case "concat"    => binaryApp(opName, tla.concat)
+        case "head"      => unaryApp(opName, tla.head)
+        case "tail"      => unaryApp(opName, tla.tail)
+        case "length"    => unaryApp(opName, tla.len)
+        case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
+
+        case "iadd"    => binaryApp(opName, tla.plus)
+        case "isub"    => binaryApp(opName, tla.minus)
+        case "imul"    => binaryApp(opName, tla.mult)
+        case "idiv"    => binaryApp(opName, tla.div)
+        case "imod"    => binaryApp(opName, tla.mod)
+        case "ipow"    => binaryApp(opName, tla.exp)
+        case "ilt"     => binaryApp(opName, tla.lt)
+        case "igt"     => binaryApp(opName, tla.gt)
+        case "ilte"    => binaryApp(opName, tla.le)
+        case "igte"    => binaryApp(opName, tla.ge)
+        case "iuminus" => unaryApp(opName, tla.uminus)
+        case "to"      => binaryApp(opName, tla.dotdot)
+
+        case "always"     => unaryApp(opName, tla.box)
+        case "eventually" => unaryApp(opName, tla.diamond)
+
+        // Action operators
+        case "next"       => unaryApp(opName, tla.prime)
+        case "orKeep"     => binaryApp(opName, tla.stutt)
+        case "mustChange" => binaryApp(opName, tla.nostutt)
+        case "enabled"    => unaryApp(opName, tla.enabled)
+        case "weakFair"   => binaryApp(opName, (A, e) => tla.WF(e, A))
+        case "strongFair" => binaryApp(opName, (A, e) => tla.SF(e, A))
+        case "assign"     => binaryApp(opName, tla.assign)
+        case "ite"        => ternaryApp(opName, tla.ite)
+        case "then"       => binaryApp(opName, tla.comp)
+        case "fail"       => unaryApp(opName, tla.not)
+        case "assert"     => unaryApp(opName, tla.and(_, tla.bool(true))) // Better way to do this?
+        // TODO compound value constructors
+
+        // TODO: Lists indexing requires indexes adjustment, since they are base 0 in quint but base 1 in TLA
+        case "nth"       => binaryApp(opName, tla.app)
+        case "indices"   => unaryApp(opName, tla.dom)
+        case "replaceAt" => ternaryApp(opName, tla.except)
+        // TODO: start must be reduced but end left the same (cause it is exclusive in quint)
+        case "slice" => ternaryApp(opName, tla.subseq)
+
+        // TODO: These operators require extracting the variable name and exp body from the lambda arg
+        case "filter"     => null
+        case "map"        => null // filter(S, x => e) ~> tla.map((x => e)(fv), fv \in S')
+        case "forall"     => null
+        case "chooseSome" => null
+
+        // TODO: need custom constructions?
+        case "mapBy"    => null
+        case "setBy"    => null
+        case "put"      => null
+        case "select"   => null
+        case "foldr"    => null
+        case "repeated" => null
+        case "range"    => null
+
+        // The applied operator is defined, and not a builtin
+        case definedOpName => { args =>
+          val paramTypes = quintArgs.map(arg => Quint.typeToTlaType(types(arg.id).typ))
+          val returnType = Quint.typeToTlaType(types(id).typ)
+          val operType = OperT1(paramTypes, returnType)
+          val oper = tla.name(definedOpName, operType)
+          val tlaArgs = args.map(tlaExpression)
+          tla.appOp(oper, tlaArgs: _*)
+        }
+      }
+      applicationBuilder(quintArgs)
     }
 
     private val tlaExpression: QuintEx => TBuilderInstruction = {
