@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PtrUtil, SmtConstElemPtr, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
@@ -229,7 +229,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = newState.setArena(newState.arena.appendCell(cellType))
     val newTuple = newState.arena.topCell
     // for each index i, pick a value from the projection { t[i] : t \in tuples }
-    val newFields = cellType.elems.indices.map(pickAtPos).map { SmtConstElemPtr }
+    val newFields = cellType.elems.indices.map(pickAtPos).map { FixedElemPtr }
 
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element t[i], as it will use the same oracle!
@@ -323,7 +323,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     )
     val newDom = newState.asCell
     // pick the fields using the oracle
-    val fieldCells = commonRecordT.fieldTypes.keySet.toSeq.map(pickAtPos).map(SmtConstElemPtr)
+    val fieldCells = commonRecordT.fieldTypes.keySet.toSeq.map(pickAtPos).map(FixedElemPtr)
     // and connect them to the record
     var newArena = newState.arena.setDom(newRecord, newDom)
     newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
@@ -436,7 +436,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           pickValueByTag(key)
         }
       }
-      .map(SmtConstElemPtr)
+      .map(FixedElemPtr)
     nextState = nextState.updateArena(_.appendHasNoSmt(newVariant, pickedValuesAndTag: _*))
     rewriter.solverContext.log(s"; } CHERRY-PICK $newVariant:$variantT")
 
@@ -478,7 +478,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // Add the cells for all potential keys.
       // Importantly, they all come from strValueCache, so the same key produces the same cell.
       val keyCells = keyToCell.values.toSeq
-      nextState = nextState.updateArena(_.appendHas(newDom, keyCells.map(SmtConstElemPtr): _*))
+      nextState = nextState.updateArena(_.appendHas(newDom,
+              keyCells.map { c =>
+                SmtExprElemPtr(c, tla.in(c.toBuilder, newDom.toBuilder))
+              }: _*))
       // Constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
         val domainCells = nextState.arena.getHas(dom)
@@ -979,8 +982,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.config.smtEncoding match {
         case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
           // We carry the metadata here
-          nextState = nextState.updateArena(_.appendHasNoSmt(pair, arg, SmtConstElemPtr(pickedResult)))
-          nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, SmtConstElemPtr(pair)))
+          nextState = nextState.updateArena(_.appendHasNoSmt(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
+          nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, PtrUtil.samePointer(arg)(pair)))
           // We update the SMT array here
           // We don't use isNonDup because writing on an array entry twice has no adverse effect, if pickedResult is valid
           val store = tla.storeInSet(pickedResult.toBuilder, funCell.toBuilder, arg.elem.toBuilder)
@@ -1025,8 +1028,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
           }
 
         case SMTEncoding.OOPSLA19 =>
-          nextState = nextState.updateArena(_.appendHas(pair, arg, SmtConstElemPtr(pickedResult)))
-          nextState = nextState.updateArena(_.appendHas(relationCell, SmtConstElemPtr(pair)))
+          nextState = nextState.updateArena(_.appendHas(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
+          nextState = nextState.updateArena(_.appendHas(relationCell, PtrUtil.samePointer(arg)(pair)))
           val ite = tla.ite(isNonDup.toBuilder, tla.storeInSet(pair.toBuilder, relationCell.toBuilder),
               tla.storeNotInSet(pair.toBuilder, relationCell.toBuilder))
           rewriter.solverContext.assertGroundExpr(ite)

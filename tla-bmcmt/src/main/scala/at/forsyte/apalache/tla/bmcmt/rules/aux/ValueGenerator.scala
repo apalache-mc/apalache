@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -87,7 +87,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
           nextState = gen(nextState, elemType)
           nextState.asCell
         }
-        .map { SmtConstElemPtr }
+        .map { FixedElemPtr }
     nextState = nextState.updateArena(a => a.appendHasNoSmt(recCell, elemCells: _*))
     nextState.setRex(recCell.toNameEx.withTag(Typed(recordType)))
   }
@@ -104,7 +104,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
           nextState = gen(nextState, elemType)
           nextState.asCell
         }
-        .map { SmtConstElemPtr }
+        .map { FixedElemPtr }
     nextState = nextState.updateArena(a => a.appendHasNoSmt(recCell, elemCells: _*))
     nextState.setRex(recCell.toNameEx.withTag(Typed(CellTFrom(recordT))))
   }
@@ -130,7 +130,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val variantCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- variantFields.valuesIterator) {
-      nextState = nextState.updateArena(_.appendHasNoSmt(variantCell, SmtConstElemPtr(fieldCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(variantCell, FixedElemPtr(fieldCell)))
     }
 
     nextState.setRex(variantCell.toNameEx)
@@ -146,7 +146,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
           nextState = gen(nextState, elemType)
           nextState.asCell
         }
-        .map { SmtConstElemPtr }
+        .map { FixedElemPtr }
     nextState = nextState.updateArena(a => a.appendHasNoSmt(tupleCell, elemCells: _*))
     nextState.setRex(tupleCell.toNameEx.withTag(Typed(tupleType)))
   }
@@ -161,7 +161,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val setType = CellT.fromType1(SetT1(elemType))
     nextState = nextState.updateArena(a => a.appendCellOld(setType))
     val setCell = nextState.arena.topCell
-    nextState = nextState.updateArena(a => a.appendHas(setCell, elems.map { SmtConstElemPtr }: _*))
+    nextState = nextState.updateArena(a => a.appendHas(setCell, elems.map { FixedElemPtr }: _*))
     // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
     if (rewriter.solverContext.config.smtEncoding == SMTEncoding.Arrays) {
       for (elem <- elems) {
@@ -216,7 +216,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         // create a relation cell
         nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funType.arg, funType.res)))))
         val relationCell = nextState.arena.topCell
-        nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pairs.map { SmtConstElemPtr }: _*))
+        nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pairs.map { FixedElemPtr }: _*))
         nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
 
         val domainCells = pairs.map(pair => nextState.arena.getHas(pair)(0))
@@ -224,7 +224,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
 
         nextState = nextState.updateArena(_.appendCell(SetT1(funType.arg)))
         val domainCell = nextState.arena.topCell
-        nextState = nextState.updateArena(_.appendHas(domainCell, domainCells.map { SmtConstElemPtr }: _*))
+        nextState = nextState.updateArena(_.appendHas(domainCell, domainCells.map { FixedElemPtr }: _*))
         // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
         for (domainElem <- domainCells) {
           // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
@@ -256,7 +256,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         val relationCell = nextState.arena.topCell
         // we just add the pairs, but do not restrict their membership, as the generator is free to produce a set
         // that is an arbitrary subset of the pairs
-        nextState = nextState.updateArena(_.appendHas(relationCell, pairs.map { SmtConstElemPtr }: _*))
+        nextState = nextState.updateArena(_.appendHas(relationCell, pairs.map { FixedElemPtr }: _*))
 
         nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
         // Require that if two arguments belong to the domain, they are distinct.
