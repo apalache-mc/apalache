@@ -40,10 +40,7 @@ class SetCupRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
         // We map each cell, which appears in either the left or the right set, to all (1 or 2) of the pointers
         // pointing to it.
-        val cellMap = (leftPtrs ++ rightPtrs).foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]]) { case (m, ptr) =>
-          val elem = ptr.elem
-          m + (elem -> (m.getOrElse(elem, Seq.empty) :+ ptr))
-        }
+        val cellMap = PtrUtil.getCellMap(leftPtrs ++ rightPtrs)
 
         // Fixed pointers dominate, if no pointer is fixed we take the disjunction of the smt constraints
         val unionElemPtrs: Seq[ElemPtr] = cellMap.toSeq.map { case (cell, ptrs) =>

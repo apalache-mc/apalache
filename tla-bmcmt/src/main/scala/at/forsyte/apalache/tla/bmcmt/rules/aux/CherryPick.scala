@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PtrUtil, SmtConstElemPtr, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PtrUtil, SmtConstElemPtr, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
@@ -593,9 +593,55 @@ class CherryPick(rewriter: SymbStateRewriter) {
     } else if (memberSets.forall(ms => state.arena.getHas(ms).isEmpty)) {
       // multiple sets that are statically empty, just pick the first one
       state.setRex(memberSets.head.toBuilder)
-    } else {
+    } else
       pickSetNonEmpty(cellType, state, oracle, memberSets, elseAssert, noSmt)
+  }
+
+  // Alternative method, with no interleaving. Unused at the moment, awaiting performance testing.
+  private def pickSetNonEmptyPtr(
+      cellType: SetT1,
+      state: SymbState,
+      oracle: Oracle,
+      memberSets: Seq[ArenaCell],
+      noSMT: Boolean): SymbState = {
+    def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
+
+    rewriter.solverContext
+      .log("; CHERRY-PICK %s FROM [%s] {".format(cellType, memberSets.map(_.toString).mkString(", ")))
+    var nextState = state
+    // introduce a fresh cell for the set
+    nextState = nextState.setArena(state.arena.appendCell(cellType))
+    val resultCell = nextState.arena.topCell
+
+    // get all the cells pointed by the elements of every member set
+    val elemsOfMemberSets: Seq[Seq[ElemPtr]] = memberSets.map(s => nextState.arena.getHasPtr(s))
+
+    val flatPtrs = elemsOfMemberSets.zipWithIndex.flatMap { case (ptrSeq, i) =>
+      val oracleConstraint = oracle.whenEqualTo(nextState, i) // state doesn't matter for IntOracle
+      ptrSeq.map { _.restrict(oracleConstraint) }
     }
+
+    val mergedPtrs = PtrUtil
+      .getCellMap(flatPtrs)
+      .toSeq
+      .map { case (cell, ptrs) =>
+        PtrUtil.mergePtrs(cell, ptrs)
+      }
+
+    nextState = nextState.updateArena(_.appendHas(resultCell, mergedPtrs: _*))
+
+    if (!noSMT) {
+      // getHas might be different from flatPtrs, because of pointer caching
+      nextState.arena.getHasPtr(resultCell).foreach { ptr =>
+        val inSet = tla.ite(ptr.toSmt, tla.storeInSet(ptr.elem.toBuilder, resultCell.toBuilder),
+            tla.storeNotInSet(ptr.elem.toBuilder, resultCell.toBuilder))
+        solverAssert(inSet)
+      }
+    }
+
+    rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$cellType")
+    nextState.setRex(resultCell.toBuilder)
+
   }
 
   private def pickSetNonEmpty(
@@ -615,7 +661,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val resultCell = nextState.arena.topCell
 
     // get all the cells pointed by the elements of every member set
-    val elemsOfMemberSets: Seq[Seq[ArenaCell]] = memberSets.map(s => Set(nextState.arena.getHas(s): _*).toSeq)
+    val elemsOfMemberSets: Seq[Seq[ElemPtr]] = memberSets.map(s => nextState.arena.getHasPtr(s))
 
     // Here we are using the awesome linear encoding that uses interleaving.
     // We give an explanation for two statically non-empty sets, statically empty sets should be treated differently.
@@ -632,12 +678,15 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     val maxLen = elemsOfMemberSets.map(_.size).reduce((i, j) => if (i > j) i else j)
     assert(maxLen != 0)
-    val maxPadded = elemsOfMemberSets.find(_.size == maxLen).get // existence is guaranteed by maxLen
+    // existence is guaranteed by maxLen, but since we use it to pad, we set all pointers to False
+    val maxPadded = elemsOfMemberSets.find(_.size == maxLen).get.map { p => SmtExprElemPtr(p.elem, tla.bool(false)) }
 
     // pad a non-empty sequence to the given length, keep the empty sequence intact
-    def padNonEmptySeq(s: Seq[ArenaCell], len: Int): Seq[ArenaCell] = s match {
+    def padNonEmptySeq(s: Seq[ElemPtr], len: Int): Seq[ElemPtr] = s match {
       // copy last as many times as needed
-      case allButLast :+ last => allButLast ++ Seq.fill(len - allButLast.length)(last)
+      case allButLast :+ last =>
+        // Padded pointers get set to false
+        allButLast ++ Seq.fill(len - allButLast.length)(SmtExprElemPtr(last.elem, tla.bool(false)))
       // the empty sequence is a special case
       case Nil => maxPadded
     }
@@ -645,9 +694,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val paddedOfMemberSets = elemsOfMemberSets.map(padNonEmptySeq(_, maxLen))
     // for each index i, pick from {c_i, ..., d_i}.
     def pickOneElement(i: Int): Unit = {
-      val toPickFrom = paddedOfMemberSets.map { _(i) }
+      val toPickFrom = paddedOfMemberSets.map { _(i).elem }
       nextState = pickByOracle(nextState, oracle, toPickFrom, elseAssert)
       val picked = nextState.asCell
+      val membershipEx = tla.storeInSet(picked.toBuilder, resultCell.toBuilder)
 
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
 
@@ -656,8 +706,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
       def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (TBuilderInstruction, TBuilderInstruction) = {
         if (elemsOfMemberSets(no).nonEmpty) {
-          val inSet = tla.ite(tla.selectInSet(elemAndSet._1.toBuilder, elemAndSet._2.toBuilder),
-              tla.storeInSet(picked.toBuilder, resultCell.toBuilder),
+          val inSet = tla.ite(tla.selectInSet(elemAndSet._1.toBuilder, elemAndSet._2.toBuilder), membershipEx,
               tla.storeNotInSet(picked.toBuilder, resultCell.toBuilder))
           val unchangedSet = rewriter.solverContext.config.smtEncoding match {
             case SMTEncoding.Arrays =>
@@ -676,7 +725,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       }
 
       // add the cell to the arena
-      nextState = nextState.updateArena(_.appendHas(resultCell, SmtConstElemPtr(picked)))
+      nextState = nextState.updateArena(_.appendHas(resultCell, SmtExprElemPtr(picked, membershipEx)))
       if (!noSMT) { // add the SMT constraints
         val assertions = (toPickFrom.zip(memberSets).zipWithIndex.map((nthIn _).tupled)).unzip
         // (chosen = 1 /\ in(z_i, R) = in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) = in(d_i, S_2))

@@ -11,6 +11,12 @@ import at.forsyte.apalache.tla.types.tla
  */
 object PtrUtil {
 
+  def getCellMap(ptrs: Seq[ElemPtr]): Map[ArenaCell, Seq[ElemPtr]] =
+    ptrs.foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]]) { case (m, ptr) =>
+      val elem = ptr.elem
+      m + (elem -> (m.getOrElse(elem, Seq.empty) :+ ptr))
+    }
+
   // Maps each cell, which appears in some set, to all of the pointers pointing to it, and
   // all the sets containing it
   def getCellAndPointingSetMaps(
