@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter}
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
@@ -59,10 +59,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
 
     // attach the cells to the proto sequence, do not track this in SMT
     nextState = nextState
-      .updateArena(_.appendHasNoSmt(protoSeq,
-              ArraySeq.unsafeWrapArray(cellsAsArray).map {
-                SmtConstElemPtr // @Igor: Should we use Expr pointers here?
-              }: _*))
+      .updateArena(_.appendHasNoSmt(protoSeq, ArraySeq.unsafeWrapArray(cellsAsArray).map { FixedElemPtr }: _*))
     nextState.setRex(protoSeq.toBuilder)
   }
 

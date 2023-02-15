@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PtrUtil, PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PtrUtil, PureArenaAdapter, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
@@ -251,7 +251,6 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
         val variants = nextState.arena.getHas(setCell)
         // get the values unsafely and leave only those values that are produced from the variants tagged with tagName
         val values = variants.map(v => getUnsafeVariantValue(nextState.arena, v, tagName))
-        nextState = nextState.updateArena(_.appendHas(filteredSetCell, values.map { SmtConstElemPtr }: _*))
         variants.zip(values).foreach { case (variant, value) =>
           val inFiltered = tla.storeInSet(value.toBuilder, filteredSetCell.toBuilder)
           val notInFiltered = tla.storeNotInSet(value.toBuilder, filteredSetCell.toBuilder)
@@ -259,7 +258,9 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
           val variantTag = getVariantTag(nextState.arena, variant)
           nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, goalTagAsCell, variantTag)
           val tagsEq = rewriter.lazyEq.safeEq(goalTagAsCell, variantTag)
-          val storeIf = tla.ite(tla.and(tagsEq, inOriginal), inFiltered, notInFiltered)
+          val ifCond = tla.and(tagsEq, inOriginal)
+          nextState = nextState.updateArena(_.appendHas(filteredSetCell, SmtExprElemPtr(value, ifCond)))
+          val storeIf = tla.ite(ifCond, inFiltered, notInFiltered)
           rewriter.solverContext.assertGroundExpr(storeIf)
         }
 

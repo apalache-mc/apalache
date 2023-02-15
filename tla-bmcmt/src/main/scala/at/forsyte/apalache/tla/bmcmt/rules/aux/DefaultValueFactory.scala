@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.arena.{PureArenaAdapter, SmtConstElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
 
@@ -44,7 +44,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val tuple = newArena.topCell
         newArena = argTypes.foldLeft(newArena) { (arena, argT) =>
           val (nextArena, valueCell) = makeUpValue(arena, argT)
-          nextArena.appendHasNoSmt(tuple, SmtConstElemPtr(valueCell)) // made-up cell = ConstElemPtr
+          nextArena.appendHasNoSmt(tuple, FixedElemPtr(valueCell))
         }
         (newArena, tuple)
 
@@ -53,7 +53,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val recCell = newArena.topCell
         newArena = recT.fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
-          nextArena.appendHasNoSmt(recCell, SmtConstElemPtr(valueCell)) // made-up cell = ConstElemPtr
+          nextArena.appendHasNoSmt(recCell, FixedElemPtr(valueCell))
         }
         // create the domain and attach it to the record
         val pairOfSets = (recT.fieldTypes.keySet, SortedSet[String]())
@@ -67,7 +67,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val recCell = newArena.topCell
         newArena = fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
-          nextArena.appendHasNoSmt(recCell, SmtConstElemPtr(valueCell)) // made-up cell = ConstElemPtr
+          nextArena.appendHasNoSmt(recCell, FixedElemPtr(valueCell))
         }
         (newArena, recCell)
 
@@ -104,7 +104,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         nextArena = nextArena.appendCell(variantT)
         val variantCell = nextArena.topCell
         for (fieldCell <- (variantValues + (RecordAndVariantOps.variantTagField -> tagAsCell)).valuesIterator) {
-          nextArena = nextArena.appendHasNoSmt(variantCell, SmtConstElemPtr(fieldCell)) // made-up cell = ConstElemPtr
+          nextArena = nextArena.appendHasNoSmt(variantCell, FixedElemPtr(fieldCell))
         }
 
         (nextArena, variantCell)

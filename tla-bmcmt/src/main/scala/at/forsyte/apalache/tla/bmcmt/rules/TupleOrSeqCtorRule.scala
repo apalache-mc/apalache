@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.SmtConstElemPtr
+import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -53,7 +53,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val tuple = arena.topCell
 
     // connect the cells to the tuple (or a sequence): the order of edges is important!
-    arena = arena.appendHasNoSmt(tuple, cells.map(SmtConstElemPtr): _*)
+    arena = arena.appendHasNoSmt(tuple, cells.map(FixedElemPtr): _*)
     state.setArena(arena).setRex(tuple.toNameEx)
   }
 
