@@ -120,6 +120,7 @@ class Quint(moduleData: QuintOutput) {
     private type T = TBuilderInstruction
 
     private def throwOperatorArityError(op: String, arity: String, args: List[QuintEx]) =
+      // This should be impossible to hit, unless quint produces a malformed AST
       throw new QuintIRParseError(s"too many arguments passed to ${arity} operator ${op}: ${args}")
 
     private val unaryApp: (String, T => T) => List[QuintEx] => T =
@@ -137,7 +138,7 @@ class Quint(moduleData: QuintOutput) {
     private val ternaryApp: (String, (T, T, T) => T) => List[QuintEx] => T =
       (op, builder) => {
         case a :: b :: c :: Nil => builder(tlaExpression(a), tlaExpression(b), tlaExpression(c))
-        case tooManyArgs        => throwOperatorArityError(op, "binary", tooManyArgs)
+        case tooManyArgs        => throwOperatorArityError(op, "ternary", tooManyArgs)
       }
 
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
