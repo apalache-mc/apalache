@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types._
 
+import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 
 /**
@@ -598,6 +599,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
   }
 
   // Alternative method, with no interleaving. Unused at the moment, awaiting performance testing (#2415)
+  @unused
   private def pickSetNonEmptyPtr(
       cellType: SetT1,
       state: SymbState,
