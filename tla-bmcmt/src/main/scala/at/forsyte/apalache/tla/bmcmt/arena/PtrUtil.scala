@@ -11,14 +11,19 @@ import at.forsyte.apalache.tla.types.tla
  */
 object PtrUtil {
 
+  /**
+   * Maps each cell, which appears in some set, to all of the pointers pointing to it. Simpler version of
+   * `getCellAndPointingSetMaps`, when pointing sets aren't needed.
+   */
   def getCellMap(ptrs: Seq[ElemPtr]): Map[ArenaCell, Seq[ElemPtr]] =
     ptrs.foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]]) { case (m, ptr) =>
       val elem = ptr.elem
       m + (elem -> (m.getOrElse(elem, Seq.empty) :+ ptr))
     }
 
-  // Maps each cell, which appears in some set, to all of the pointers pointing to it, and
-  // all the sets containing it
+  /**
+   * Maps each cell, which appears in some set, to all of the pointers pointing to it, and all the sets containing it.
+   */
   def getCellAndPointingSetMaps(
       elemsOfSets: Seq[(ArenaCell, Seq[ElemPtr])]): (Map[ArenaCell, Seq[ElemPtr]], Map[ArenaCell, Set[ArenaCell]]) =
     elemsOfSets.foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]], Map.empty[ArenaCell, Set[ArenaCell]]) {
@@ -46,6 +51,11 @@ object PtrUtil {
         if (ptrs.exists { _.isInstanceOf[FixedElemPtr] }) FixedElemPtr(cell)
         else SmtExprElemPtr(cell, tla.or(ptrs.map(_.toSmt): _*))
     }
+  }
+
+  // Sequentially combines getCellMap and mergePtrs
+  def mergePtrsByCellMap(ptrs: Seq[ElemPtr]): Seq[ElemPtr] = getCellMap(ptrs).toSeq.map { case (cell, ps) =>
+    mergePtrs(cell, ps)
   }
 
   def samePointer(original: ElemPtr): ArenaCell => ElemPtr = original match {

@@ -680,7 +680,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
 
     val maxLen = elemsOfMemberSets.map(_.size).reduce((i, j) => if (i > j) i else j)
     assert(maxLen != 0)
-    // existence is guaranteed by maxLen, but since we use it to pad, we set all pointers to False
+    // Existence is guaranteed by maxLen.
+    // Since maxPadded is used below to pad empty sets' has-pointers, we set all pointers to false.
     val maxPadded = elemsOfMemberSets.find(_.size == maxLen).get.map { p => SmtExprElemPtr(p.elem, tla.bool(false)) }
 
     // pad a non-empty sequence to the given length, keep the empty sequence intact

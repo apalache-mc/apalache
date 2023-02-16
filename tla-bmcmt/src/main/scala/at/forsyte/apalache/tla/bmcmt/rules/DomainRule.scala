@@ -118,12 +118,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     }
 
     // We merge multiple pointers to the same cell into a single pointer per cell
-    val mergedCellPtrs = PtrUtil
-      .getCellMap(domCellPtrs)
-      .toSeq
-      .map { case (cell, ptrs) =>
-        PtrUtil.mergePtrs(cell, ptrs)
-      }
+    val mergedCellPtrs = PtrUtil.mergePtrsByCellMap(domCellPtrs)
 
     // construct a map from cell ids to lists of pairs
     type KeyToPairs = Map[Int, Set[ArenaCell]]

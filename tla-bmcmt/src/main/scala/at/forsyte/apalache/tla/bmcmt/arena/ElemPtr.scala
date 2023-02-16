@@ -30,7 +30,8 @@ sealed trait ElemPtr {
 
   /**
    * Collection transformations evaluate membership based on original membership _and_ additional restrictions (e.g.
-   * filter).
+   * filter). `ptr.restrict(x)` returns `ptr2`, such that `ptr2.toSmt` is logically equivalent (but not necessarily
+   * syntactically equal) to `tla.and(ptr.toSmt, x)`, while `ptr.elem = ptr2.elem`.
    */
   def restrict(cond: TBuilderInstruction): SmtExprElemPtr
 }
