@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PtrUtil, SmtConstElemPtr, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PtrUtil, SmtExprElemPtr}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
@@ -375,7 +375,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     nextState = nextState.setArena(nextState.arena.appendCell(recordT))
     val newRecord = nextState.arena.topCell
     // pick the fields using the oracle and connect them to the record
-    val pickedFieldValues = fieldTypes.keySet.toSeq.map(projectOnField).map(SmtConstElemPtr)
+    val pickedFieldValues = fieldTypes.keySet.toSeq.map(projectOnField).map(FixedElemPtr)
     nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, pickedFieldValues: _*))
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!

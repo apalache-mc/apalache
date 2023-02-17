@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
-import at.forsyte.apalache.tla.lir.{BoolT1, UID}
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
@@ -50,35 +49,8 @@ case class FixedElemPtr(elem: ArenaCell) extends ElemPtr {
 }
 
 /**
- * An element pointer whose value is encoded as a Boolean constant. Its value is found by the SMT solver. This pointer
- * is used as a general case, where set membership is completely delegated to SMT. For example, this case class may be
- * used when a set is created non-deterministically with `Gen(n)`.
- *
- * @param elem
- *   the element this pointer is pointing to.
- */
-case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
-
-  /**
-   * The unique id of the pointer.
-   */
-  val id: UID = UID.unique
-
-  /**
-   * The unique name of the pointer.
-   */
-  val uniqueName = s"_bool_elem$id"
-
-  override def toSmt: TBuilderInstruction = tla.name(uniqueName, BoolT1)
-
-  // soon-to-be deleted anyway
-  override def restrict(cond: TBuilderInstruction): SmtExprElemPtr = SmtExprElemPtr(elem, tla.bool(false))
-
-}
-
-/**
- * An element pointer whose value is encoded via an SMT expression. This is a generalization of [[SmtConstElemPtr]]. For
- * instance, it can be used to join memberships of two sets: `(and in_123_S in_124_T)`.
+ * An element pointer whose value is encoded via an SMT expression. For instance, it can be used to join memberships of
+ * two sets: `(and in_123_S in_124_T)`.
  *
  * @param elem
  *   the element this pointer is pointing to.
