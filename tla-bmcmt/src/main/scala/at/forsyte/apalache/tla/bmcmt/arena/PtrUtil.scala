@@ -60,7 +60,6 @@ object PtrUtil {
 
   def samePointer(original: ElemPtr): ArenaCell => ElemPtr = original match {
     case _: FixedElemPtr          => FixedElemPtr
-    case _: SmtConstElemPtr       => SmtConstElemPtr
     case SmtExprElemPtr(_, smtEx) => SmtExprElemPtr(_, smtEx)
   }
 
