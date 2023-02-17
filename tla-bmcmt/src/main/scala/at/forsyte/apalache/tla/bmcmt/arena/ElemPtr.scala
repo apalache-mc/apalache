@@ -49,8 +49,8 @@ case class FixedElemPtr(elem: ArenaCell) extends ElemPtr {
 }
 
 /**
- * An element pointer whose value is encoded via an SMT expression. This is a generalization of [[SmtConstElemPtr]]. For
- * instance, it can be used to join memberships of two sets: `(and in_123_S in_124_T)`.
+ * An element pointer whose value is encoded via an SMT expression. For instance, it can be used to join memberships of
+ * two sets: `(and in_123_S in_124_T)`.
  *
  * @param elem
  *   the element this pointer is pointing to.
