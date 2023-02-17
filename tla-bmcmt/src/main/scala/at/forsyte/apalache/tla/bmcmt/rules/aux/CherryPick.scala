@@ -9,7 +9,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types._
 
-import scala.annotation.unused
 import scala.collection.immutable.SortedMap
 
 /**
@@ -596,54 +595,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state.setRex(memberSets.head.toBuilder)
     } else
       pickSetNonEmpty(cellType, state, oracle, memberSets, elseAssert, noSmt)
-  }
-
-  // Alternative method, with no interleaving. Unused at the moment, awaiting performance testing (#2415)
-  @unused
-  private def pickSetNonEmptyPtr(
-      cellType: SetT1,
-      state: SymbState,
-      oracle: Oracle,
-      memberSets: Seq[ArenaCell],
-      noSMT: Boolean): SymbState = {
-    def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
-
-    rewriter.solverContext
-      .log("; CHERRY-PICK %s FROM [%s] {".format(cellType, memberSets.map(_.toString).mkString(", ")))
-    var nextState = state
-    // introduce a fresh cell for the set
-    nextState = nextState.setArena(state.arena.appendCell(cellType))
-    val resultCell = nextState.arena.topCell
-
-    // get all the cells pointed by the elements of every member set
-    val elemsOfMemberSets: Seq[Seq[ElemPtr]] = memberSets.map(s => nextState.arena.getHasPtr(s))
-
-    val flatPtrs = elemsOfMemberSets.zipWithIndex.flatMap { case (ptrSeq, i) =>
-      val oracleConstraint = oracle.whenEqualTo(nextState, i) // state doesn't matter for IntOracle
-      ptrSeq.map { _.restrict(oracleConstraint) }
-    }
-
-    val mergedPtrs = PtrUtil
-      .getCellMap(flatPtrs)
-      .toSeq
-      .map { case (cell, ptrs) =>
-        PtrUtil.mergePtrs(cell, ptrs)
-      }
-
-    nextState = nextState.updateArena(_.appendHas(resultCell, mergedPtrs: _*))
-
-    if (!noSMT) {
-      // getHas might be different from flatPtrs, because of pointer caching
-      nextState.arena.getHasPtr(resultCell).foreach { ptr =>
-        val inSet = tla.ite(ptr.toSmt, tla.storeInSet(ptr.elem.toBuilder, resultCell.toBuilder),
-            tla.storeNotInSet(ptr.elem.toBuilder, resultCell.toBuilder))
-        solverAssert(inSet)
-      }
-    }
-
-    rewriter.solverContext.log(s"; } CHERRY-PICK $resultCell:$cellType")
-    nextState.setRex(resultCell.toBuilder)
-
   }
 
   private def pickSetNonEmpty(
