@@ -38,6 +38,15 @@ class TestQuintEx extends AnyFunSuite {
     val barDef = QuintDef.QuintOpDef(8, "bar", "def", lambda)
     val appBar = QuintApp(9, "bar", List(int))
     val letBarBeLambdaInAppBar = QuintLet(10, barDef, appBar)
+
+    // Builtin operator application
+    val trueEqTrue = QuintApp(11, "eq", List(bool, bool))
+    val trueNeqTrue = QuintApp(12, "neq", List(bool, bool))
+    val trueIffTrue = QuintApp(13, "iff", List(bool, bool))
+    val trueImpliesTrue = QuintApp(14, "implies", List(bool, bool))
+    val notTrue = QuintApp(15, "not", List(bool))
+    val trueAndTrue = QuintApp(16, "and", List(bool, bool))
+    val trueOrTrue = QuintApp(17, "or", List(bool, bool))
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -110,5 +119,38 @@ class TestQuintEx extends AnyFunSuite {
       LetInEx(OperEx(TlaOper.apply, NameEx("bar"), ValEx(TlaInt(42))),
           TlaOperDecl("bar", List(OperParam("x")), ValEx(TlaStr("s"))))
     assert(actual == expected)
+  }
+
+  // Convert a quint operator application to TLA and render as a string
+  def convertApp(qex: QuintApp): String = {
+    quint.exToTla(qex).get.toString()
+  }
+
+  test("can convert builtin eq operator application") {
+    assert(convertApp(Q.trueEqTrue) == "TRUE = TRUE")
+  }
+
+  test("can convert builtin neq operator application") {
+    assert(convertApp(Q.trueNeqTrue) == "TRUE ≠ TRUE")
+  }
+
+  test("can convert builtin iff operator application") {
+    assert(convertApp(Q.trueIffTrue) == "TRUE ⇔ TRUE")
+  }
+
+  test("can convert builtin implies operator application") {
+    assert(convertApp(Q.trueImpliesTrue) == "TRUE ⇒ TRUE")
+  }
+
+  test("can convert builtin not operator application") {
+    assert(convertApp(Q.notTrue) == "¬TRUE")
+  }
+
+  test("can convert builtin and operator application") {
+    assert(convertApp(Q.trueAndTrue) == "TRUE ∧ TRUE")
+  }
+
+  test("can convert builtin or operator application") {
+    assert(convertApp(Q.trueOrTrue) == "TRUE ∨ TRUE")
   }
 }
