@@ -51,7 +51,7 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val computedPreds: Seq[TlaEx] = potentialCells.map(eachElem)
         // At this point, we force all pointers to SmtExprElemPtr
         val filteredCellsAndPreds = potentialCells.zip(computedPreds).map { case (ptr, pred) =>
-          (ptr.generalize.restrict(tla.unchecked(pred)), pred)
+          (ptr.restrict(tla.unchecked(pred)), pred)
         }
 
         // get the result type from the type finder

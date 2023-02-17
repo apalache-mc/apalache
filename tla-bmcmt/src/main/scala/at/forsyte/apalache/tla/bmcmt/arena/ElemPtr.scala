@@ -27,6 +27,13 @@ sealed trait ElemPtr {
    * guarantees of e.g. FixedElemPtr.
    */
   def generalize: SmtExprElemPtr = SmtExprElemPtr(elem, toSmt)
+
+  /**
+   * Collection transformations evaluate membership based on original membership _and_ additional restrictions (e.g.
+   * filter). `ptr.restrict(x)` returns `ptr2`, such that `ptr2.toSmt` is logically equivalent (but not necessarily
+   * syntactically equal) to `tla.and(ptr.toSmt, x)`, while `ptr.elem = ptr2.elem`.
+   */
+  def restrict(cond: TBuilderInstruction): SmtExprElemPtr
 }
 
 /**
@@ -38,6 +45,8 @@ sealed trait ElemPtr {
  */
 case class FixedElemPtr(elem: ArenaCell) extends ElemPtr {
   override def toSmt: TBuilderInstruction = tla.bool(true)
+
+  override def restrict(cond: TBuilderInstruction): SmtExprElemPtr = SmtExprElemPtr(elem, cond)
 }
 
 /**
@@ -61,6 +70,9 @@ case class SmtConstElemPtr(elem: ArenaCell) extends ElemPtr {
   val uniqueName = s"_bool_elem$id"
 
   override def toSmt: TBuilderInstruction = tla.name(uniqueName, BoolT1)
+
+  // soon-to-be deleted anyway
+  override def restrict(cond: TBuilderInstruction): SmtExprElemPtr = SmtExprElemPtr(elem, tla.bool(false))
 
 }
 

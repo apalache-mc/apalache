@@ -75,7 +75,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     val staticPtrs = arena.getHasPtr(staticDom)
     // the element is in range, if indexBase0 < len
     val actualPtrs = staticPtrs.zipWithIndex.map { case (p, indexBase0) =>
-      p.generalize.restrict(tla.lt(tla.int(indexBase0), len.toBuilder))
+      p.restrict(tla.lt(tla.int(indexBase0), len.toBuilder))
     }
 
     arena = arena.appendHas(dom, actualPtrs: _*)
@@ -118,15 +118,7 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
     }
 
     // We merge multiple pointers to the same cell into a single pointer per cell
-    val mergedCellPtrs = domCellPtrs
-      .foldLeft(Map.empty[ArenaCell, Seq[ElemPtr]]) { case (partialCellMap, ptr) =>
-        val elem = ptr.elem
-        partialCellMap + (elem -> (partialCellMap.getOrElse(elem, Seq.empty) :+ ptr))
-      }
-      .toSeq
-      .map { case (cell, ptrs) =>
-        PtrUtil.mergePtrs(cell, ptrs)
-      }
+    val mergedCellPtrs = PtrUtil.mergePtrsByCellMap(domCellPtrs)
 
     // construct a map from cell ids to lists of pairs
     type KeyToPairs = Map[Int, Set[ArenaCell]]
