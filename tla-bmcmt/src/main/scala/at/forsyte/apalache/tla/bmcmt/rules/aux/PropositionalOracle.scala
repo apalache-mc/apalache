@@ -45,6 +45,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
   }
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+    logger.info("prop")
     def cellsToInt(bits: Seq[ArenaCell]): Int = {
       bits match {
         case Nil => 0

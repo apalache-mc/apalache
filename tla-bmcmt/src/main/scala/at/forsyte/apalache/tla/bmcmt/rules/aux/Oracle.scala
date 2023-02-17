@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * An abstract version of an oracle that is used e.g. in CherryPick.
@@ -11,7 +12,7 @@ import at.forsyte.apalache.tla.types.tla
  * @author
  *   Igor Konnov
  */
-trait Oracle extends Serializable {
+trait Oracle extends Serializable with LazyLogging {
 
   /**
    * The number of values that this oracle is defined over: `0..(size - 1)`.

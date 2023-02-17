@@ -68,6 +68,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   z3solver.setParameters(params)
   log(s";; ${params}")
 
+  private var assumptionCounter: Int = 0
+  private def mkAssumptionConst(i: Int): Expr[BoolSort] = z3context.mkBoolConst("$A$" + i)
+  private def getCurrentAssumption(): Expr[BoolSort] = mkAssumptionConst(assumptionCounter)
+  private def getEnabledAssumptions(): Seq[Expr[BoolSort]] = assumptions.top.map { mkAssumptionConst(_) }
+
+  private val assumptions: mutable.Stack[Seq[Int]] = new mutable.Stack[Seq[Int]]
+  log(s"(declare-const ${getCurrentAssumption()} Bool)")
+  assumptions.push(Seq(assumptionCounter))
+
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
    */
@@ -327,9 +336,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     val (z3expr, size) = toExpr(ex)
     _metrics = _metrics.addNSmtExprs(size)
     smtListener.onSmtAssert(ex, size)
-    log(s"(assert ${z3expr.toString})")
-    z3solver.add(z3expr.asInstanceOf[BoolExpr])
+    val assumption = getCurrentAssumption()
+    log(s"(assert (=> ${assumption} ${z3expr}))")
+    val assumedZ3Expr = z3context.mkImplies(assumption, z3expr.asInstanceOf[BoolExpr])
+    z3solver.add(assumedZ3Expr)
   }
+
 
   /**
    * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat(). This method
@@ -351,6 +363,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         case Z3_lbool.Z3_L_FALSE =>
           tla.bool(false)
         case _ =>
+          logger.info("to solver")
           // If we cannot get a result from evaluating the model, we query the solver
           z3solver.add(z3expr.asInstanceOf[BoolExpr])
           tla.bool(sat())
@@ -440,41 +453,34 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    * Push SMT context
    */
   override def push(): Unit = {
-    log("(push) ;; becomes %d".format(level + 1))
-    flushLogs() // good time to flush
-    z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
+    assumptionCounter += 1
+    log(s"(declare-const ${getCurrentAssumption()} Bool)")
+    assumptions.push(assumptions.top :+ assumptionCounter)
+    log(s";; (push) current assumptions: ${assumptions.top}")
+    flushLogs() // good time to flush
   }
 
   /**
    * Pop SMT context
    */
-  override def pop(): Unit = {
-    if (level > 0) {
-      log("(pop) ;; becomes %d".format(level - 1))
-      flushLogs() // good time to flush
-      z3solver.pop()
-      maxCellIdPerContext = maxCellIdPerContext.tail
-      level -= 1
-      // clean the caches
-      cellSorts.filterInPlace((_, value) => value._2 <= level)
-      funDecls.filterInPlace((_, value) => value._2 <= level)
-      cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
-      cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
-      inCache.filterInPlace((_, value) => value._2 <= level)
-      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
-      cellDefaults.filterInPlace((_, value) => value._2 <= level)
-    }
-  }
+  override def pop(): Unit = pop(1)
 
+  /**
+   * Pop SMT context
+   */
   override def pop(n: Int): Unit = {
     if (n > 0) {
-      log("(pop %d) ;; becomes %d".format(n, level - n))
-      flushLogs() // good time to flush
-      z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
+      assumptionCounter += 1
+      assumptions.dropInPlace(n)
+      val newAssumptions = assumptions.top :+ assumptionCounter
+      assumptions.dropInPlace(1)
+      assumptions.push(newAssumptions)
+      log(s";; (pop ${n}); current assumptions: ${assumptions.top}")
+      flushLogs() // good time to flush
       // clean the caches
       cellSorts.filterInPlace((_, value) => value._2 <= level)
       funDecls.filterInPlace((_, value) => value._2 <= level)
@@ -487,8 +493,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   }
 
   override def sat(): Boolean = {
-    log("(check-sat)")
-    val status = z3solver.check()
+    log(s"(check-sat ${assumptions.top.mkString(" ")})")
+    val status = z3solver.check(getEnabledAssumptions(): _*)
     log(s";; sat = ${status.name()}")
     flushLogs() // good time to flush
     if (status == Status.UNKNOWN) {
@@ -515,8 +521,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       require(timeoutSec < Int.MaxValue / 1000, s"Expected a timeout of <=${Int.MaxValue / 1000} seconds.")
       // temporarily, change the timeout
       setTimeout(timeoutSec * 1000)
-      log("(check-sat)")
-      val status = z3solver.check()
+      log(s"(check-sat ${getEnabledAssumptions().mkString(" ")})")
+      val status = z3solver.check(getEnabledAssumptions(): _*)
       log(s";; sat = ${status.name()}")
       // return timeout to maximum
       setTimeout(Int.MaxValue)

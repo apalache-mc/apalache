@@ -37,11 +37,13 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
     super.caseAssertions(state, assertions, elseAssertions)
   }
 
-  override def evalPosition(solverContext: SolverContext, state: SymbState): Int =
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+    logger.info("Int")
     solverContext.evalGroundExpr(intCell.toBuilder) match {
       case ValEx(TlaInt(i)) => i.toInt
       case _                => throw new IllegalStateException(s"Invalid call to evalPosition, not an integer.")
     }
+  }
 }
 
 object IntOracle {

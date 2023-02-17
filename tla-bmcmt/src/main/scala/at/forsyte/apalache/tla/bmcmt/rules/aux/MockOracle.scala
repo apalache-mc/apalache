@@ -26,6 +26,8 @@ class MockOracle(fixedValue: Int) extends Oracle {
       elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction =
     assertions(fixedValue)
 
-  override def evalPosition(solverContext: SolverContext, state: SymbState): Int =
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+    logger.info("Mock")
     fixedValue
+  }
 }

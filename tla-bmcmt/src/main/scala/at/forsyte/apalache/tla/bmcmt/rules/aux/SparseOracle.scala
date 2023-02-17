@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * The oracle for sparse values, that is, a set S of naturals. This oracle is mapped on a smaller contiguous range
@@ -16,7 +17,7 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
  * @param values
  *   the set S of oracle values
  */
-class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
+class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle with LazyLogging {
   // a reverse mapping from elements to their indices in the sorted sequence of the elements of S
   private val sortedValues: Seq[Int] = values.toSeq.sorted
   private val indexMap: Map[Int, Int] = Map(sortedValues.zipWithIndex: _*)
@@ -36,6 +37,7 @@ class SparseOracle(oracle: Oracle, val values: Set[Int]) extends Oracle {
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
     val rawPos = oracle.evalPosition(solverContext, state)
+    logger.info(s"rawPos = ${rawPos}, ${oracle.getClass}")
     assert(sortedValues.isDefinedAt(rawPos))
     sortedValues(rawPos)
   }

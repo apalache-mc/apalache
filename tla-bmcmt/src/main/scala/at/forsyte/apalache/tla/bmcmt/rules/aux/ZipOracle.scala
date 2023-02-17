@@ -28,6 +28,7 @@ class ZipOracle(backOracle: Oracle, groups: Seq[Seq[Int]]) extends Oracle {
   }
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+    logger.info("zip")
     val backIndex = backOracle.evalPosition(solverContext, state)
     groups.indexWhere(_.contains(backIndex))
   }

@@ -25,6 +25,7 @@ class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell
   }
 
   override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
+    logger.info("UIC")
     def isEqual(valueCell: ArenaCell): Boolean = {
       val eq = tla.eql(valueCell.toBuilder, oracleCell.toBuilder)
       solverContext.evalGroundExpr(eq) == tla.bool(true).build

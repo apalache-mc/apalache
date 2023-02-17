@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter
 
 /**
- * An executor context for an incremental SMT solver.
+ * An executor context for an incremental SMT solver, using push/pop.
  *
  * @param rewriter
  *   an expression rewriter
