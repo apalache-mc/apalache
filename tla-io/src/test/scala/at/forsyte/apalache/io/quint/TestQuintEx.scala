@@ -66,7 +66,7 @@ class TestQuintEx extends AnyFunSuite {
   // We construct a converter supplied with the needed type map
   val quint = new Quint(QuintOutput(
           "typechecking",
-          QuintModule(0, "MockedModule", List()),
+          List(QuintModule(0, "MockedModule", List())),
           typeMapping.map { case (ex, typ) =>
             // Wrap each type in the TypeScheme required by the Quint IR
             ex.id -> QuintTypeScheme(typ)

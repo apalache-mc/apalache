@@ -30,7 +30,7 @@ private[quint] class QuintIRParseError(errMsg: String)
 /** The JSON output produced by quint parse */
 private[quint] case class QuintOutput(
     stage: String,
-    module: QuintModule,
+    modules: List[QuintModule],
     // Maps source IDs to types, see the `WithId` trait
     types: Map[Int, QuintTypeScheme])
 
