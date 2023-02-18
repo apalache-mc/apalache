@@ -21,6 +21,7 @@ import scala.util.Failure
 import scala.util.Success
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.io.annotations.AnnotationParserError
+import at.forsyte.apalache.io.quint.Quint
 
 /**
  * Parsing TLA+ code with SANY.
@@ -39,15 +40,16 @@ class SanyParserPassImpl @Inject() (
 
   private def loadFromJsonSource(source: SourceOption): PassResult = {
     import SourceOption._
-    val readable: ujson.Readable = source match {
-      case FileSource(f, Format.Json)      => f
-      case StringSource(s, _, Format.Json) => s
-      case _ => throw new IllegalArgumentException("loadFromJsonSource called with non Json SourceOption")
-    }
 
     val result = for {
-      moduleJson <- Try(UJsonRep(ujson.read(readable)))
-      module <- new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromSingleModule(moduleJson)
+      module <- source.format match {
+        case Format.Qnt =>
+          Quint.toTla(source.content)
+        case Format.Json =>
+          Try(UJsonRep(ujson.read(source.content))).flatMap(json =>
+            new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromSingleModule(json))
+        case _ => throw new IllegalArgumentException(s"loadFromJsonSource called with non Json SourceOption ${source}")
+      }
     } yield module
 
     result match {
@@ -114,14 +116,17 @@ class SanyParserPassImpl @Inject() (
     passFailure(List(msg), ExitCodes.ERROR)
   }
 
-  private def parseSource(src: SourceOption): PassResult = for {
-    rootModule <- src.format match {
-      case SourceOption.Format.Itf  => throw new SanyImporterException("Parsing the ITF format is not supported")
-      case SourceOption.Format.Json => loadFromJsonSource(src)
-      case SourceOption.Format.Tla  => loadFromTlaSource(src)
-    }
-    sortedModule <- sortDeclarations(rootModule)
-    _ <- saveLoadedModule(sortedModule)
-  } yield sortedModule
+  private def parseSource(src: SourceOption): PassResult = {
+    import SourceOption.Format._
+    for {
+      rootModule <- src.format match {
+        case Itf          => throw new SanyImporterException("Parsing the ITF format is not supported")
+        case (Json | Qnt) => loadFromJsonSource(src)
+        case Tla          => loadFromTlaSource(src)
+      }
+      sortedModule <- sortDeclarations(rootModule)
+      _ <- saveLoadedModule(sortedModule)
+    } yield sortedModule
 
+  }
 }
