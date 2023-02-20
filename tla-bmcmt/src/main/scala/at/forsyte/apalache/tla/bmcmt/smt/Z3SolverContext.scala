@@ -201,33 +201,35 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     _metrics = _metrics.addNCells(1)
   }
 
+  def addInToCache(name: String, setId: Int, elemId: Int): ExprSort = {
+    smtListener.onIntroSmtConst(name)
+    log(s";; declare edge predicate $name: Bool")
+    log(s"(declare-const $name Bool)")
+    nBoolConsts += 1
+    val const = z3context.mkConst(name, z3context.getBoolSort).asInstanceOf[ExprSort]
+    inCache += ((setId, elemId) -> ((const, level)))
+    _metrics = _metrics.addNConsts(1)
+    const
+  }
+
   override def declareInPredIfNeeded(set: ArenaCell, elem: ArenaCell): Unit = {
     val elemT = elem.cellType
     val setT = set.cellType
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (encoding == SMTEncoding.OOPSLA19 || encoding == SMTEncoding.FunArrays) {
-        smtListener.onIntroSmtConst(name)
-        log(s";; declare edge predicate $name: Bool")
-        log(s"(declare-const $name Bool)")
-        nBoolConsts += 1
-        val const = z3context.mkConst(name, z3context.getBoolSort)
-        inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
-        _metrics = _metrics.addNConsts(1)
-      }
+      if (encoding == SMTEncoding.OOPSLA19 || encoding == SMTEncoding.FunArrays)
+        addInToCache(name, set.id, elem.id)
     }
   }
 
   private def getInPred(setId: Int, elemId: Int): ExprSort = {
+    val setT = cellCache(setId).head._2
+    val elemT = cellCache(elemId).head._2
+    val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
     inCache.get((setId, elemId)) match {
       case None =>
-        val setT = cellCache(setId).head._2
-        val elemT = cellCache(elemId).head._2
-        val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-        flushLogs()
-        throw new IllegalStateException(
-            s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
+        addInToCache(name, setId, elemId)
 
       case Some((const, _)) =>
         const

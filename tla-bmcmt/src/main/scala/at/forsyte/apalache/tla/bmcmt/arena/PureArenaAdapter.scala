@@ -175,7 +175,7 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
         case Some(cacheGen) =>
           val aWithCacheCell = a.appendCell(BoolT1)
           val (cachedPtr, constraints) = cacheGen(aWithCacheCell.topCell.toBuilder)
-          context.assertGroundExpr(constraints)
+          aWithCacheCell.context.assertGroundExpr(constraints)
           (aWithCacheCell, cachedPtr)
         case _ => (a, ptr)
       }
