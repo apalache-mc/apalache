@@ -18,6 +18,9 @@ object PtrUtil {
 
   object Heuristics {
 
+    // for debugging; using this is equivalent to disabling caching
+    def alwaysFalse: CachingHeuristic = _ => false
+
     def notAName: CachingHeuristic = {
       case _: NameEx => false
       case _         => true

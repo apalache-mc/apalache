@@ -651,7 +651,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       val toPickFrom = paddedOfMemberSets.map { _(i).elem }
       nextState = pickByOracle(nextState, oracle, toPickFrom, elseAssert)
       val picked = nextState.asCell
-      val membershipEx = tla.storeInSet(picked.toBuilder, resultCell.toBuilder)
+      val membershipEx = tla.selectInSet(picked.toBuilder, resultCell.toBuilder)
 
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
 
@@ -660,7 +660,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
       def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (TBuilderInstruction, TBuilderInstruction) = {
         if (elemsOfMemberSets(no).nonEmpty) {
-          val inSet = tla.ite(tla.selectInSet(elemAndSet._1.toBuilder, elemAndSet._2.toBuilder), membershipEx,
+          val inSet = tla.ite(tla.selectInSet(elemAndSet._1.toBuilder, elemAndSet._2.toBuilder),
+              tla.storeInSet(picked.toBuilder, resultCell.toBuilder),
               tla.storeNotInSet(picked.toBuilder, resultCell.toBuilder))
           val unchangedSet = rewriter.solverContext.config.smtEncoding match {
             case SMTEncoding.Arrays =>

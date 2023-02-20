@@ -230,7 +230,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     inCache.get((setId, elemId)) match {
       case None =>
         addInToCache(name, setId, elemId)
-
       case Some((const, _)) =>
         const
     }
