@@ -201,7 +201,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     _metrics = _metrics.addNCells(1)
   }
 
-  def addInToCache(name: String, setId: Int, elemId: Int): ExprSort = {
+  private def addInToCache(name: String, setId: Int, elemId: Int): ExprSort = {
     smtListener.onIntroSmtConst(name)
     log(s";; declare edge predicate $name: Bool")
     log(s"(declare-const $name Bool)")
