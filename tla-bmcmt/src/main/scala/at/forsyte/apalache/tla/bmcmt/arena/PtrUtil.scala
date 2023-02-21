@@ -1,6 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
 /**
@@ -10,6 +13,38 @@ import at.forsyte.apalache.tla.types.tla
  *   Jure Kukovec
  */
 object PtrUtil {
+
+  type CachingHeuristic = TlaEx => Boolean
+
+  object Heuristics {
+
+    // for debugging; using this is equivalent to disabling caching
+    def alwaysFalse: CachingHeuristic = _ => false
+
+    def notAName: CachingHeuristic = {
+      case _: NameEx => false
+      case _         => true
+    }
+
+    def notConjunctionOfNames: CachingHeuristic = {
+      case _: NameEx                          => false
+      case OperEx(TlaBoolOper.and, args @ _*) => args.exists(notConjunctionOfNames)
+      case _                                  => true
+    }
+
+  }
+
+  // When creating SmtExprElemPtr from other ElemPtrs, their `smtExpr` expressions have varying complexity
+  // Should these expressions grow too complex, we replace the pointer with an equivalent one, where the complex expression
+  // is substituted with a single boolean variable, and push an assertion to the solver. This allows us to
+  // use the newly introduced variable in future edges, without copying the entire complex expression.
+  def cacheIfExprTooComplex(
+      heuristic: CachingHeuristic
+    )(ptr: ElemPtr): Option[TBuilderInstruction => (ElemPtr, TBuilderInstruction)] = ptr match {
+    case SmtExprElemPtr(elem, smtEx) if heuristic(smtEx) =>
+      Some({ predName => (SmtExprElemPtr(elem, predName), tla.eql(predName, smtEx)) })
+    case _ => None
+  }
 
   /**
    * Maps each cell, which appears in some set, to all of the pointers pointing to it. Simpler version of

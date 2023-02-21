@@ -163,15 +163,25 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
    *
    * @param parentCell
    *   the cell that points to the children cells
-   * @param childrenCells
+   * @param childrenPtrs
    *   the cells that are pointed by the parent cell
    * @return
    *   the updated arena
    */
-  def appendHas(parentCell: ArenaCell, childrenCells: ElemPtr*): PureArenaAdapter =
-    childrenCells.foldLeft(this) { (a, c) =>
-      a.appendOneHasEdge(addInPred = true, parentCell, c)
+  def appendHas(parentCell: ArenaCell, childrenPtrs: ElemPtr*): PureArenaAdapter = {
+    childrenPtrs.foldLeft(this) { (a, ptr) =>
+      // Cache any pointers, the expressions of which are too complex
+      val (newArena, newPtr) = PtrUtil.cacheIfExprTooComplex(PtrUtil.Heuristics.notConjunctionOfNames)(ptr) match {
+        case Some(cacheGen) =>
+          val aWithCacheCell = a.appendCell(BoolT1)
+          val (cachedPtr, constraints) = cacheGen(aWithCacheCell.topCell.toBuilder)
+          aWithCacheCell.context.assertGroundExpr(constraints)
+          (aWithCacheCell, cachedPtr)
+        case _ => (a, ptr)
+      }
+      newArena.appendOneHasEdge(addInPred = true, parentCell, newPtr)
     }
+  }
 
   /**
    * Append 'has' edges that connect the first cell to the other cells, in the given order. The previously added edges
