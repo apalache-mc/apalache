@@ -493,7 +493,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   }
 
   override def sat(): Boolean = {
-    log(s"(check-sat ${assumptions.top.mkString(" ")})")
+    log(s"(check-sat ${getEnabledAssumptions().mkString(" ")})")
     val status = z3solver.check(getEnabledAssumptions(): _*)
     log(s";; sat = ${status.name()}")
     flushLogs() // good time to flush
