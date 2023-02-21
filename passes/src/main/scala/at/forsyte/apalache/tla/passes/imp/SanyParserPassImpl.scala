@@ -43,11 +43,13 @@ class SanyParserPassImpl @Inject() (
 
     val result = for {
       module <- source.format match {
-        case Format.Qnt =>
-          Quint.toTla(source.content)
+        case Format.Qnt => source.getContent.flatMap(Quint.toTla(_))
         case Format.Json =>
-          Try(UJsonRep(ujson.read(source.content))).flatMap(json =>
-            new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromSingleModule(json))
+          for {
+            str <- source.getContent
+            json <- Try(UJsonRep(ujson.read(str)))
+            tla <- new UJsonToTla(Some(sourceStore))(DefaultTagReader).fromSingleModule(json)
+          } yield tla
         case _ => throw new IllegalArgumentException(s"loadFromJsonSource called with non Json SourceOption ${source}")
       }
     } yield module

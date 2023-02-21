@@ -10,6 +10,7 @@ import org.apache.commons.io.FilenameUtils
 import java.io.{File, FileReader, IOException}
 import scala.util.{Failure, Success, Try}
 import scala.io.Codec
+import java.io.FileNotFoundException
 
 /**
  * The components of this package specify the configurations and options used to configure Apalache
@@ -283,8 +284,8 @@ sealed abstract class SourceOption {
    */
   def toSources: (scala.io.Source, Seq[scala.io.Source])
 
-  /** The content of the source as a string. */
-  def content: String
+  /** Get the content of the source as a string. */
+  def getContent: Try[String]
 }
 
 object SourceOption {
@@ -304,7 +305,11 @@ object SourceOption {
     def isFile = true
     def exists = file.exists()
     def toSources = (Source.fromFile(file), Seq())
-    def content = Source.fromFile(file)(Codec.UTF8).mkString
+    def getContent = Try(Source.fromFile(file)(Codec.UTF8))
+      .recoverWith { case e: FileNotFoundException =>
+        Failure(new PassOptionException(s"File not found: ${e.getMessage()}"))
+      }
+      .map(_.mkString)
 
     override def toString = file.toString()
   }
@@ -316,20 +321,16 @@ object SourceOption {
 
     /** Create a FileSource from a file, deriving the format from the file's extension */
     def apply(file: java.io.File): Try[FileSource] = {
-      if (!file.exists()) {
-        Failure(new PassOptionException(s"File ${file} does not exist"))
-      } else {
-        val fname = file.getName()
-        for {
-          format <- FilenameUtils.getExtension(fname) match {
-            case "tla"                                   => Success(Format.Tla)
-            case "json" if hasSubExtension(fname, "qnt") => Success(Format.Qnt)
-            case "json" if hasSubExtension(fname, "itf") => Success(Format.Itf)
-            case "json"                                  => Success(Format.Json)
-            case unknown => Failure(new PassOptionException(s"Unsupported file format ${unknown}"))
-          }
-        } yield new FileSource(file, format)
-      }
+      val fname = file.getName()
+      for {
+        format <- FilenameUtils.getExtension(fname) match {
+          case "tla"                                   => Success(Format.Tla)
+          case "json" if hasSubExtension(fname, "qnt") => Success(Format.Qnt)
+          case "json" if hasSubExtension(fname, "itf") => Success(Format.Itf)
+          case "json"                                  => Success(Format.Json)
+          case unknown => Failure(new PassOptionException(s"Unsupported file format ${unknown}"))
+        }
+      } yield new FileSource(file, format)
     }
   }
 
@@ -346,6 +347,7 @@ object SourceOption {
     def isFile = false
     def exists = true
     def toSources = (Source.fromString(content), aux.map(Source.fromString(_)))
+    def getContent = Try(content)
 
     override def toString = s"StringSource(${format})"
   }
