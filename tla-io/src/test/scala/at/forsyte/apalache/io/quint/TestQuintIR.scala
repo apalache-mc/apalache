@@ -13,14 +13,14 @@ class TestQuintIR extends AnyFunSuite {
   test("Can load tictactoe.json") {
     val tictactoeQuintJson = scala.io.Source.fromResource("tictactoe.json").mkString
     val quintIR = QuintOutput.read(tictactoeQuintJson).get
-    assert(quintIR.module.name == "tictactoe")
+    assert(quintIR.modules(0).name == "tictactoe")
   }
 
   test("Invalid JSON returns sensible error") {
     QuintOutput.read("""{"foo": 1}""") match {
       case Success(_) => fail("should return a failure")
       case Failure(err) =>
-        assert(err.getMessage().contains("missing keys in dictionary: stage, module, types"))
+        assert(err.getMessage().contains("missing keys in dictionary: stage, modules, types"))
     }
   }
 }

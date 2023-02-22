@@ -3,7 +3,7 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: default all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run docs docs-view
+.PHONY: default all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run docs docs-view tla-io/src/test/resources/tictactoe.json
 
 default: package
 
@@ -38,6 +38,12 @@ test-coverage:
 # Run the integration tests
 integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
+
+TEMP_QNT_FILE := $(shell mktemp)
+tla-io/src/test/resources/tictactoe.json:
+	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/puzzles/tictactoe/tictactoe.qnt > $(TEMP_QNT_FILE)
+	quint typecheck --out $@ $(TEMP_QNT_FILE)
+	rm $(TEMP_QNT_FILE)
 
 # Build the docker image
 docker:

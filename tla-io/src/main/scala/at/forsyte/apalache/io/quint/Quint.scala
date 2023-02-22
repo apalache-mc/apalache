@@ -30,8 +30,10 @@ import at.forsyte.apalache.tla.lir.Typed
 import at.forsyte.apalache.tla.lir.TlaVarDecl
 import at.forsyte.apalache.tla.lir.TypeTag
 import at.forsyte.apalache.tla.lir.TlaAssumeDecl
+import at.forsyte.apalache.tla.lir.TlaModule
 
 class Quint(moduleData: QuintOutput) {
+  protected val module = moduleData.modules(0)
   private val types = moduleData.types
 
   // benign state to generate unique names for lambdas
@@ -154,6 +156,11 @@ class Quint(moduleData: QuintOutput) {
         case "and"     => variadicApp(args => tla.and(args: _*))
         case "or"      => variadicApp(args => tla.or(args: _*))
 
+        // Actions
+        case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
+        case "actionAll" => variadicApp(args => tla.and(args: _*))
+        case "actionAny" => variadicApp(args => tla.or(args: _*))
+
         // Otherwise, the applied operator is defined, and not a builtin
         case definedOpName => { args =>
           val paramTypes = args.map(arg => Quint.typeToTlaType(types(arg.id).typ))
@@ -188,9 +195,28 @@ class Quint(moduleData: QuintOutput) {
   private[quint] object exToTla {
     def apply(quintExp: QuintEx): Try[TlaEx] = (new exToTla()).convert(quintExp)
   }
+
+  /**
+   * Convert a [[QuintDef]] to a [[TlaDecl]]
+   */
+  private[quint] object defToTla {
+    def apply(quintDef: QuintDef): Try[TlaDecl] =
+      (new exToTla())
+        .tlaDef(quintDef)
+        .toRight(new QuintIRParseError(s"Definition ${quintDef} was not convertible to TLA"))
+        .toTry
+  }
 }
 
 object Quint {
+
+  def apply(readable: ujson.Readable): Try[Quint] = QuintOutput.read(readable).map(new Quint(_))
+
+  def toTla(readable: ujson.Readable): Try[TlaModule] = for {
+    quint <- Quint(readable)
+    declarations <- Try(quint.module.defs.map(quint.defToTla(_).get))
+    name = quint.module.name
+  } yield TlaModule(name, declarations)
 
   // Convert a QuintType into a TlaType1
   //
