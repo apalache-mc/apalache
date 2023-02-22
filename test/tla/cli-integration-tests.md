@@ -296,6 +296,17 @@ EXITCODE: OK
 ...
 ```
 
+### parse Bug2429 succeeds
+
+Long lines caused an issue with Apalache's source position handling (see #2429).
+
+```sh
+$ apalache-mc parse Bug2429.tla | sed 's/W@.*//'
+...
+EXITCODE: OK
+...
+```
+
 ### parse --output=annotations.tla Annotations succeeds
 
 And also check that it actually parses into TLA (see #1079)
