@@ -48,6 +48,13 @@ class TestSourceRegion extends AnyFunSuite {
     assert(r24.hashCode() == SourceRegion(pos2, pos4).hashCode())
   }
 
+  test("compare") {
+    Seq(pos1, pos2, pos3, pos4, pos5, pos6).foreach(p => assert(p > pos0))
+    assert(pos1.compare(pos2) == 0)
+    Seq(pos0, pos1, pos2, pos3, pos4, pos5).foreach(p => assert(p < pos6))
+    assert(pos2.compare(pos3) < 0)
+  }
+
   test("isInside") {
     assert(r15.isInside(root))
     assert(r16.isInside(root))

@@ -117,8 +117,8 @@ class TestSourceLocator extends AnyFunSuite {
     new SourceLocation(
         "filename",
         new SourceRegion(
-            new SourcePosition(uid.id.toInt),
-            new SourcePosition(uid.id.toInt),
+            new SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
+            new SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
         ),
     )
 

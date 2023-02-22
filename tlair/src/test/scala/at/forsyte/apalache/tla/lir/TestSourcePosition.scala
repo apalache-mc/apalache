@@ -49,4 +49,11 @@ class TestSourcePosition extends AnyFunSuite {
     assert(pos1.hashCode() == pos2.hashCode())
     assert(pos6.hashCode() == SourcePosition(5454, 4646).hashCode())
   }
+
+  test("compare") {
+    Seq(pos1, pos2, pos3, pos4, pos5, pos6).foreach(p => assert(p > pos0))
+    assert(pos1.compare(pos2) == 0)
+    Seq(pos0, pos1, pos2, pos3, pos4, pos5).foreach(p => assert(p < pos6))
+    assert(pos2.compare(pos3) < 0)
+  }
 }

@@ -11,7 +11,7 @@ package at.forsyte.apalache.tla.lir.src
 class RegionTree {
   private class Node(val index: Int, val region: SourceRegion, val children: Seq[Node])
 
-  private val rootRegion = SourceRegion(SourcePosition(0), SourcePosition(Int.MaxValue))
+  private val rootRegion = SourceRegion(SourcePosition(0, 0), SourcePosition(Int.MaxValue, Int.MaxValue))
   private var root: Node = new Node(0, rootRegion, Seq())
   private var regions: Seq[SourceRegion] = Seq(rootRegion)
 
