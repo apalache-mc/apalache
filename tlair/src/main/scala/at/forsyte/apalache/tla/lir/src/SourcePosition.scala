@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.lir.src
 
+import scala.math.Ordering._
+
 /**
  * Represent a position in a text file as a `(line, column)` tuple.
  */
@@ -17,10 +19,8 @@ class SourcePosition(val line: Int, val column: Int) extends Ordered[SourcePosit
     line * 31 + column
   }
 
-  override def compare(that: SourcePosition): Int = this.line - that.line match {
-    case 0    => this.column - that.column
-    case diff => diff
-  }
+  override def compare(that: SourcePosition): Int =
+    Tuple2[Int, Int].compare((this.line, this.column), (that.line, that.column))
 }
 
 object SourcePosition {
