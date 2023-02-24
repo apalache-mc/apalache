@@ -171,7 +171,7 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
   def appendHas(parentCell: ArenaCell, childrenPtrs: ElemPtr*): PureArenaAdapter = {
     childrenPtrs.foldLeft(this) { (a, ptr) =>
       // Cache any pointers, the expressions of which are too complex
-      val (newArena, newPtr) = PtrUtil.cacheIfExprTooComplex(PtrUtil.Heuristics.notConjunctionOfNames)(ptr) match {
+      val (newArena, newPtr) = PtrUtil.cacheIfExprTooComplex(PtrUtil.Heuristics.boundedExprTreeSize(8))(ptr) match {
         case Some(cacheGen) =>
           val aWithCacheCell = a.appendCell(BoolT1)
           val (cachedPtr, constraints) = cacheGen(aWithCacheCell.topCell.toBuilder)

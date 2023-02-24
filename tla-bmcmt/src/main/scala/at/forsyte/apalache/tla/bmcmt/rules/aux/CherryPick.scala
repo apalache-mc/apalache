@@ -651,7 +651,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       val toPickFrom = paddedOfMemberSets.map { _(i).elem }
       nextState = pickByOracle(nextState, oracle, toPickFrom, elseAssert)
       val picked = nextState.asCell
-      val membershipEx = tla.selectInSet(picked.toBuilder, resultCell.toBuilder)
+      val membershipEx = tla.in(picked.toBuilder, resultCell.toBuilder)
 
       // this property is enforced by the oracle magic: chosen = 1 => z_i = c_i /\ chosen = 2 => z_i = d_i
 

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
@@ -31,6 +31,14 @@ object PtrUtil {
       case OperEx(TlaBoolOper.and, args @ _*) => args.exists(notConjunctionOfNames)
       case _                                  => true
     }
+
+    private def exprTreeSize: TlaEx => Int = {
+      case OperEx(_, args @ _*)        => 1 + args.map(exprTreeSize).sum
+      case LetInEx(bodyEx, decls @ _*) => 1 + exprTreeSize(bodyEx) + decls.map(d => exprTreeSize(d.body)).sum
+      case _                           => 1
+    }
+
+    def boundedExprTreeSize(n: Int): CachingHeuristic = exprTreeSize(_) > n
 
   }
 
