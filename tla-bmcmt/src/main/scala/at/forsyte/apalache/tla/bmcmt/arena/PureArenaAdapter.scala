@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil.Heuristics
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom, InfSetT}
 import at.forsyte.apalache.tla.lir._
@@ -169,9 +170,22 @@ case class PureArenaAdapter(arena: PureArena, context: SolverContext) {
    *   the updated arena
    */
   def appendHas(parentCell: ArenaCell, childrenPtrs: ElemPtr*): PureArenaAdapter = {
+    // This is only for the experimental branch
+    val heuristic = sys.env.get("APA_HEURISTIC") match {
+      case None => Heuristics.alwaysFalse
+      case Some(s) =>
+        try {
+          val sInt = s.toInt
+          if (sInt > 0) PtrUtil.Heuristics.boundedExprTreeSize(sInt)
+          else Heuristics.notConjunctionOfNames
+        } catch {
+          case _: Exception => Heuristics.alwaysFalse
+        }
+    }
+
     childrenPtrs.foldLeft(this) { (a, ptr) =>
       // Cache any pointers, the expressions of which are too complex
-      val (newArena, newPtr) = PtrUtil.cacheIfExprTooComplex(PtrUtil.Heuristics.boundedExprTreeSize(8))(ptr) match {
+      val (newArena, newPtr) = PtrUtil.cacheIfExprTooComplex(heuristic)(ptr) match {
         case Some(cacheGen) =>
           val aWithCacheCell = a.appendCell(BoolT1)
           val (cachedPtr, constraints) = cacheGen(aWithCacheCell.topCell.toBuilder)
