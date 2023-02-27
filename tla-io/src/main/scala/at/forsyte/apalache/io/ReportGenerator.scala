@@ -63,6 +63,7 @@ object ReportGenerator {
       |## Log files
       |
       |<details>
+      |
       |```
       |$log
       |```
