@@ -6,17 +6,6 @@ import org.scalatestplus.junit.JUnitRunner
 
 import QuintType._
 import QuintEx._
-import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.lir.ValEx
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.lir.NameEx
-import at.forsyte.apalache.tla.lir.LetInEx
-import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.lir.OperParam
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.OperEx
 
 /**
  * Tests the conversion of quint expressions and declarations into TLA expressions
@@ -25,37 +14,41 @@ import at.forsyte.apalache.tla.lir.OperEx
 class TestQuintEx extends AnyFunSuite {
 
   // Quint expressions used in the unit tests
-  // expression IDs must be unique
   object Q {
-    val bool = QuintBool(1, true)
-    val int = QuintInt(2, 42)
-    val str = QuintStr(3, "s")
-    val name = QuintName(4, "n")
-    val fooDef = QuintDef.QuintOpDef(5, "foo", "val", bool)
-    val letFooBeTrueIn42 = QuintLet(6, fooDef, int)
-    val lambda = QuintLambda(7, List("x"), "def", str)
+
+    // expression IDs must be unique, and any constructed
+    // expression should use this thunk to produce a
+    // unique ID (uid)
+    private var nextId = 1
+    private def uid: Int = {
+      val x = nextId
+      nextId += 1
+      x
+    }
+
+    val tt = QuintBool(uid, true)
+    val _42 = QuintInt(uid, 42)
+    val s = QuintStr(uid, "s")
+    val name = QuintName(uid, "n")
+    val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
+    val letFooBeTrueIn42 = QuintLet(uid, fooDef, _42)
+    val lambda = QuintLambda(uid, List("x"), "def", s)
     // Applications can only be by name (lambdas are not first class)
-    val barDef = QuintDef.QuintOpDef(8, "bar", "def", lambda)
-    val appBar = QuintApp(9, "bar", List(int))
-    val letBarBeLambdaInAppBar = QuintLet(10, barDef, appBar)
+    val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
+    val appBar = QuintApp(uid, "bar", List(_42))
+    val letBarBeLambdaInAppBar = QuintLet(uid, barDef, appBar)
 
     // Builtin operator application
-    val trueEqTrue = QuintApp(11, "eq", List(bool, bool))
-    val trueNeqTrue = QuintApp(12, "neq", List(bool, bool))
-    val trueIffTrue = QuintApp(13, "iff", List(bool, bool))
-    val trueImpliesTrue = QuintApp(14, "implies", List(bool, bool))
-    val notTrue = QuintApp(15, "not", List(bool))
-    val trueAndTrue = QuintApp(16, "and", List(bool, bool))
-    val trueOrTrue = QuintApp(17, "or", List(bool, bool))
+    def app(name: String, args: QuintEx*): QuintApp = QuintApp(uid, name, args)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
   // to enable expression conversion, requires a correctly constructed
   // map of expression IDs to their inferred and checked types.
   val typeMapping: Map[QuintEx, QuintType] = Map(
-      Q.bool -> QuintBoolT(),
-      Q.int -> QuintIntT(),
-      Q.str -> QuintStrT(),
+      Q.tt -> QuintBoolT(),
+      Q._42 -> QuintIntT(),
+      Q.s -> QuintStrT(),
       Q.name -> QuintIntT(),
       Q.letFooBeTrueIn42 -> QuintBoolT(),
       Q.lambda -> QuintOperT(List(QuintIntT()), QuintStrT()),
@@ -73,84 +66,65 @@ class TestQuintEx extends AnyFunSuite {
           },
       ))
 
-  test("can convert boolean") {
-    val actual = quint.exToTla(Q.bool).get
-    val expected = ValEx(TlaBool(true))
-    assert(actual == expected)
-  }
-
-  test("can convert int") {
-    val actual = quint.exToTla(Q.int).get
-    val expected = ValEx(TlaInt(42))
-    assert(actual == expected)
-  }
-
-  test("can convert str") {
-    val actual = quint.exToTla(Q.str).get
-    val expected = ValEx(TlaStr("s"))
-    assert(actual == expected)
-  }
-
-  test("can convert name") {
-    val actual = quint.exToTla(Q.name).get
-    val expected = NameEx("n")
-    assert(actual == expected)
-  }
-
-  test("can convert let expression") {
-    val actual = quint.exToTla(Q.letFooBeTrueIn42).get
-    val expected = LetInEx(ValEx(TlaInt(42)), TlaOperDecl("foo", List(), ValEx(TlaBool(true))))
-    assert(actual == expected)
-  }
-
-  test("can convert lambda") {
-    val actual = quint.exToTla(Q.lambda).get
-    val expected =
-      LetInEx(
-          NameEx("__QUINT_LAMBDA0"),
-          TlaOperDecl("__QUINT_LAMBDA0", List(OperParam("x")), ValEx(TlaStr("s"))),
-      )
-    assert(actual == expected)
-  }
-
-  test("can convert operator application") {
-    val actual = quint.exToTla(Q.letBarBeLambdaInAppBar).get
-    val expected =
-      LetInEx(OperEx(TlaOper.apply, NameEx("bar"), ValEx(TlaInt(42))),
-          TlaOperDecl("bar", List(OperParam("x")), ValEx(TlaStr("s"))))
-    assert(actual == expected)
-  }
-
-  // Convert a quint operator application to TLA and render as a string
-  def convertApp(qex: QuintApp): String = {
+  // Convert a quint expression to TLA and render as a string
+  def convert(qex: QuintEx): String = {
     quint.exToTla(qex).get.toString()
   }
 
+  test("can convert boolean") {
+    assert(convert(Q.tt) == "TRUE")
+  }
+
+  test("can convert int") {
+    assert(convert(Q._42) == "42")
+  }
+
+  test("can convert str") {
+    assert(convert(Q.s) == "\"s\"")
+  }
+
+  test("can convert name") {
+    assert(convert(Q.name) == "n")
+  }
+
+  test("can convert let expression") {
+    assert(convert(Q.letFooBeTrueIn42) == "LET foo ≜ TRUE IN 42")
+  }
+
+  test("can convert lambda") {
+    assert(convert(Q.lambda) == """LET __QUINT_LAMBDA0(x) ≜ "s" IN __QUINT_LAMBDA0""")
+  }
+
+  test("can convert operator application") {
+    assert(convert(Q.letBarBeLambdaInAppBar) == """LET bar(x) ≜ "s" IN bar(42)""")
+  }
+
+  // Booleans
   test("can convert builtin eq operator application") {
-    assert(convertApp(Q.trueEqTrue) == "TRUE = TRUE")
+    assert(convert(Q.app("eq", Q.tt, Q.tt)) == "TRUE = TRUE")
   }
 
   test("can convert builtin neq operator application") {
-    assert(convertApp(Q.trueNeqTrue) == "TRUE ≠ TRUE")
+    assert(convert(Q.app("neq", Q.tt, Q.tt)) == "TRUE ≠ TRUE")
   }
 
   test("can convert builtin iff operator application") {
-    assert(convertApp(Q.trueIffTrue) == "TRUE ⇔ TRUE")
+    assert(convert(Q.app("iff", Q.tt, Q.tt)) == "TRUE ⇔ TRUE")
   }
 
   test("can convert builtin implies operator application") {
-    assert(convertApp(Q.trueImpliesTrue) == "TRUE ⇒ TRUE")
+    assert(convert(Q.app("implies", Q.tt, Q.tt)) == "TRUE ⇒ TRUE")
   }
 
   test("can convert builtin not operator application") {
-    assert(convertApp(Q.notTrue) == "¬TRUE")
+    assert(convert(Q.app("not", Q.tt)) == "¬TRUE")
   }
 
   test("can convert builtin and operator application") {
-    assert(convertApp(Q.trueAndTrue) == "TRUE ∧ TRUE")
+    assert(convert(Q.app("and", Q.tt, Q.tt)) == "TRUE ∧ TRUE")
   }
 
   test("can convert builtin or operator application") {
-    assert(convertApp(Q.trueOrTrue) == "TRUE ∨ TRUE")
+    assert(convert(Q.app("or", Q.tt, Q.tt)) == "TRUE ∨ TRUE")
   }
 }
