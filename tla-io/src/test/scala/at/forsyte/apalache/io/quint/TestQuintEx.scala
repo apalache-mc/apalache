@@ -127,4 +127,49 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin or operator application") {
     assert(convert(Q.app("or", Q.tt, Q.tt)) == "TRUE ∨ TRUE")
   }
+
+  // Integers
+  test("can convert builtin iadd operator application") {
+    assert(convert(Q.app("iadd", Q._42, Q._42)) == "42 + 42")
+  }
+
+  test("can convert builtin isub operator application") {
+    assert(convert(Q.app("isub", Q._42, Q._42)) == "42 - 42")
+  }
+
+  test("can convert builtin imul operator application") {
+    assert(convert(Q.app("imul", Q._42, Q._42)) == "42 * 42")
+  }
+
+  test("can convert builtin idiv operator application") {
+    assert(convert(Q.app("idiv", Q._42, Q._42)) == "42 // 42")
+  }
+
+  test("can convert builtin imod operator application") {
+    assert(convert(Q.app("imod", Q._42, Q._42)) == "42 % 42")
+  }
+
+  test("can convert builtin ipow operator application") {
+    assert(convert(Q.app("ipow", Q._42, Q._42)) == "42 ^ 42")
+  }
+
+  test("can convert builtin ilt operator application") {
+    assert(convert(Q.app("ilt", Q._42, Q._42)) == "42 < 42")
+  }
+
+  test("can convert builtin igt operator application") {
+    assert(convert(Q.app("igt", Q._42, Q._42)) == "42 > 42")
+  }
+
+  test("can convert builtin ilte operator application") {
+    assert(convert(Q.app("ilte", Q._42, Q._42)) == "42 ≤ 42")
+  }
+
+  test("can convert builtin igte operator application") {
+    assert(convert(Q.app("igte", Q._42, Q._42)) == "42 ≥ 42")
+  }
+
+  test("can convert builtin iuminus operator application") {
+    assert(convert(Q.app("iuminus", Q._42)) == "-42")
+  }
 }

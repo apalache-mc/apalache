@@ -156,6 +156,19 @@ class Quint(moduleData: QuintOutput) {
         case "and"     => variadicApp(args => tla.and(args: _*))
         case "or"      => variadicApp(args => tla.or(args: _*))
 
+        // Integers
+        case "iadd"    => binaryApp(opName, tla.plus)
+        case "isub"    => binaryApp(opName, tla.minus)
+        case "imul"    => binaryApp(opName, tla.mult)
+        case "idiv"    => binaryApp(opName, tla.div)
+        case "imod"    => binaryApp(opName, tla.mod)
+        case "ipow"    => binaryApp(opName, tla.exp)
+        case "ilt"     => binaryApp(opName, tla.lt)
+        case "igt"     => binaryApp(opName, tla.gt)
+        case "ilte"    => binaryApp(opName, tla.le)
+        case "igte"    => binaryApp(opName, tla.ge)
+        case "iuminus" => unaryApp(opName, tla.uminus)
+
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))
