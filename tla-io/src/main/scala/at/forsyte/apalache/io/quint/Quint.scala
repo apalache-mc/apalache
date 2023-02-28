@@ -75,7 +75,7 @@ class Quint(moduleData: QuintOutput) {
     // operators that take parameters, but these require different constructs
     // in Apalache's IR. Thus, we need to decompose the parts of a QuintLambda
     // for two different purposes.
-    private val lambdaBodyAndParams: QuintLambda => (TBuilderInstruction, List[(OperParam, TlaType1)]) = {
+    private val lambdaBodyAndParams: QuintLambda => (TBuilderInstruction, Seq[(OperParam, TlaType1)]) = {
       case ex @ QuintLambda(id, paramNames, _, body) =>
         val quintParamTypes = types(id).typ match {
           case QuintOperT(types, _) => types
@@ -121,30 +121,30 @@ class Quint(moduleData: QuintOutput) {
 
     private type T = TBuilderInstruction
 
-    private def throwOperatorArityError(op: String, arity: String, args: List[QuintEx]) =
+    private def throwOperatorArityError(op: String, arity: String, args: Seq[QuintEx]) =
       // This should be impossible to hit, unless quint produces a malformed AST
       throw new QuintIRParseError(s"too many arguments passed to ${arity} operator ${op}: ${args}")
 
     // The following *App operators are helpers to factor out building operator applications
     // and the related error handling for operators of different arities.
-    private val unaryApp: (String, T => T) => List[QuintEx] => T =
+    private val unaryApp: (String, T => T) => Seq[QuintEx] => T =
       (op, tlaBuilder) => {
-        case a :: Nil    => tlaBuilder(tlaExpression(a))
+        case Seq(a)      => tlaBuilder(tlaExpression(a))
         case tooManyArgs => throwOperatorArityError(op, "unary", tooManyArgs)
       }
 
-    private val binaryApp: (String, (T, T) => T) => List[QuintEx] => T =
+    private val binaryApp: (String, (T, T) => T) => Seq[QuintEx] => T =
       (op, tlaBuilder) => {
-        case a :: b :: Nil => tlaBuilder(tlaExpression(a), tlaExpression(b))
-        case tooManyArgs   => throwOperatorArityError(op, "binary", tooManyArgs)
+        case Seq(a, b)   => tlaBuilder(tlaExpression(a), tlaExpression(b))
+        case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
-    private val variadicApp: (Seq[T] => T) => List[QuintEx] => T =
+    private val variadicApp: (Seq[T] => T) => Seq[QuintEx] => T =
       // opName ignored since we can't hit an arity error
       tlaBuilder => args => tlaBuilder(args.map(tlaExpression))
 
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
-      val applicationBuilder: List[QuintEx] => TBuilderInstruction = opName match {
+      val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
         // First we check for application of builtin operators
 
         // Booleans
@@ -245,10 +245,10 @@ object Quint {
 
     import QuintType._
 
-    def rowToTupleElems(row: Row): List[TlaType1] = {
+    def rowToTupleElems(row: Row): Seq[TlaType1] = {
       // Since we have to concat lists here, which can be expensive, we use an
       // accumulator to benefit from tail call optimization. This is purely a precaution.
-      def aux(r: Row, acc0: List[TlaType1]): List[TlaType1] = r match {
+      def aux(r: Row, acc0: Seq[TlaType1]): Seq[TlaType1] = r match {
         // TODO Update with support for row-based tuples: https://github.com/informalsystems/apalache/issues/1591
         // Row variables in tuples are not currently supported. But we will proceed assuming that this is an
         // over generalization, and that we can safely treat the tuple as a closed tuple type.
@@ -272,7 +272,7 @@ object Quint {
       // `other` is either `Some(var)` for an open row or `None` for a closed row.
       //
       // `acc` is used as an accumulator to enable tail recursion
-      def aux(r: Row, acc0: List[(String, TlaType1)]): (List[(String, TlaType1)], Option[VarT1]) = r match {
+      def aux(r: Row, acc0: Seq[(String, TlaType1)]): (Seq[(String, TlaType1)], Option[VarT1]) = r match {
         case Row.Nil()  => (acc0, None)
         case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
         case Row.Cell(fields, other) =>
@@ -320,7 +320,7 @@ object Quint {
     // rows and convert them into a single TlaType1 record, for which all the values
     // are themselves records, and the keys are given by the values of the `tag`
     // field from quint rows.
-    def unionToRowT1(variants: List[UnionRecord]): RowT1 = {
+    def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
       val fieldTypes = variants.map {
         case UnionRecord(tag, row) => {
           (tag, RecRowT1(rowToRowT1(row)))
