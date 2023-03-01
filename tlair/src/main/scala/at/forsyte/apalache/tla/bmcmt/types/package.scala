@@ -2,10 +2,6 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.lir._
 
-/**
- * @author
- *   Jure Kukovec
- */
 package object types {
 
   /**

@@ -479,7 +479,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // Importantly, they all come from strValueCache, so the same key produces the same cell.
       val keyCells = keyToCell.values.toSeq
       nextState = nextState.updateArena(_.appendHas(newDom,
-              keyCells.map { c => SmtExprElemPtr(c, tla.in(c.toBuilder, newDom.toBuilder)) }: _*))
+              keyCells.map { c =>
+                SmtExprElemPtr(c, tla.in(c.toBuilder, newDom.toBuilder))
+              }: _*))
       // Constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
         val domainCells = nextState.arena.getHas(dom)
@@ -983,8 +985,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.config.smtEncoding match {
         case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
           // We carry the metadata here
-          nextState = nextState
-            .updateArena(_.appendHasNoSmt(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
+          nextState = nextState.updateArena(_.appendHasNoSmt(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, PtrUtil.samePointer(arg)(pair)))
           // We update the SMT array here
           // We don't use isNonDup because writing on an array entry twice has no adverse effect, if pickedResult is valid
@@ -1030,8 +1031,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           }
 
         case SMTEncoding.OOPSLA19 =>
-          nextState = nextState
-            .updateArena(_.appendHas(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
+          nextState = nextState.updateArena(_.appendHas(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
           nextState = nextState.updateArena(_.appendHas(relationCell, PtrUtil.samePointer(arg)(pair)))
           val ite = tla.ite(isNonDup.toBuilder, tla.storeInSet(pair.toBuilder, relationCell.toBuilder),
               tla.storeNotInSet(pair.toBuilder, relationCell.toBuilder))
