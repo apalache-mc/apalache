@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
@@ -112,9 +111,9 @@ class DomainRule(rewriter: SymbStateRewriter, intRangeCache: IntRangeCache) exte
       // Inherit FixedPtr status from pair
       ptr match {
         case _: FixedElemPtr =>
-          bmcmt.FixedElemPtr(argCell)
+          FixedElemPtr(argCell)
         case _ =>
-          bmcmt.SmtExprElemPtr(argCell, ptr.toSmt)
+          SmtExprElemPtr(argCell, ptr.toSmt)
       }
     }
 

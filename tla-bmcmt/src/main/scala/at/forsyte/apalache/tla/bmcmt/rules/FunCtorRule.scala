@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -106,8 +105,8 @@ class FunCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
       nextState = rewriter.rewriteUntilDone(nextState.setRex(mapEx).setBinding(newBinding))
       val cell = nextState.asCell
       cellPtr match {
-        case _: FixedElemPtr => bmcmt.FixedElemPtr(cell)
-        case _               => bmcmt.SmtExprElemPtr(cell, cellPtr.toSmt)
+        case _: FixedElemPtr => FixedElemPtr(cell)
+        case _               => SmtExprElemPtr(cell, cellPtr.toSmt)
       }
     }
 

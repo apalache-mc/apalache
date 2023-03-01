@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
-import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, ElemPtr, FixedElemPtr, SmtExprElemPtr}
 import at.forsyte.apalache.tla.types.tla
 
@@ -49,7 +48,7 @@ object PtrUtil {
     ptrs match {
       case Seq(single) => single
       case _ =>
-        if (ptrs.exists { _.isInstanceOf[FixedElemPtr] }) bmcmt.FixedElemPtr(cell)
+        if (ptrs.exists { _.isInstanceOf[FixedElemPtr] }) FixedElemPtr(cell)
         else SmtExprElemPtr(cell, tla.or(ptrs.map(_.toSmt): _*))
     }
   }
@@ -61,7 +60,7 @@ object PtrUtil {
 
   def samePointer(original: ElemPtr): ArenaCell => ElemPtr = original match {
     case _: FixedElemPtr          => FixedElemPtr
-    case SmtExprElemPtr(_, smtEx) => bmcmt.SmtExprElemPtr(_, smtEx)
+    case SmtExprElemPtr(_, smtEx) => SmtExprElemPtr(_, smtEx)
   }
 
   // When looking at cartesian product sets (e.g. for Map), the following holds true:
@@ -75,7 +74,7 @@ object PtrUtil {
     if (setElemPtrs.forall(_.isInstanceOf[FixedElemPtr]))
       FixedElemPtr
     else
-      bmcmt.SmtExprElemPtr(_, tla.and(setElemPtrs.map(_.toSmt): _*))
+      SmtExprElemPtr(_, tla.and(setElemPtrs.map(_.toSmt): _*))
   }
 
 }

@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.{MalformedTlaError, NameEx, TlaEx}
 
@@ -235,7 +234,7 @@ object PureArena {
   val natSetName: String = namePrefix + "3"
   val intSetName: String = namePrefix + "4"
 
-  def empty: PureArena = bmcmt.PureArena(Map.empty, Map.empty, Map.empty, Map.empty)
+  def empty: PureArena = PureArena(Map.empty, Map.empty, Map.empty, Map.empty)
 
   def cellInvalid: ArenaCell = new ArenaCell(-1, UnknownT())
 
