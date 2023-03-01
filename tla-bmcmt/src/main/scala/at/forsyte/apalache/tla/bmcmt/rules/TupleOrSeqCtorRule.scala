@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._

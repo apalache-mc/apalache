@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PtrUtil, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._

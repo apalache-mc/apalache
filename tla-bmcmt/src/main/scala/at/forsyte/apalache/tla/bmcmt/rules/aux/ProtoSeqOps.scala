@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter}
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 

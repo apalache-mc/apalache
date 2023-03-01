@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.ElemPtr
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper

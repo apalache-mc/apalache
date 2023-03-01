@@ -1,11 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.arena.PureArena
-import at.forsyte.apalache.tla.bmcmt.arena.PureArena.namePrefix
-import at.forsyte.apalache.tla.bmcmt.types.CellT
+import at.forsyte.apalache.tla.bmcmt.PureArena.namePrefix
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import at.forsyte.apalache.tla.typecomp
 import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.bmcmt.types.CellT
 
 object ArenaCell {
   def isValidName(name: String): Boolean = {

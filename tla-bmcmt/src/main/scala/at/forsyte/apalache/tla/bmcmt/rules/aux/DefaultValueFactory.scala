@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, RewriterException, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedSet

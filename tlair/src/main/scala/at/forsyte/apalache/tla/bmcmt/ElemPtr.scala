@@ -1,6 +1,5 @@
-package at.forsyte.apalache.tla.bmcmt.arena
+package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 

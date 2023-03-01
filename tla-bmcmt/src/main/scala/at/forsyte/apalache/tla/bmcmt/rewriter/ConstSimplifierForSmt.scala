@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rewriter
 
-import at.forsyte.apalache.tla.bmcmt.arena.PureArena
+import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaBool

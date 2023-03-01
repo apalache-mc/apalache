@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.tla.bmcmt.ArenaCell
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, PureArenaAdapter, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, ElemPtr, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.{SetT1, StrT1}
 import at.forsyte.apalache.tla.types.tla
