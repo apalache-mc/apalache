@@ -30,7 +30,7 @@ private[quint] class QuintIRParseError(errMsg: String)
 /** The JSON output produced by quint parse */
 private[quint] case class QuintOutput(
     stage: String,
-    modules: List[QuintModule],
+    modules: Seq[QuintModule],
     // Maps source IDs to types, see the `WithId` trait
     types: Map[Int, QuintTypeScheme])
 
@@ -46,7 +46,7 @@ private[quint] object QuintOutput {
 private[quint] case class QuintModule(
     id: Int,
     name: String,
-    defs: List[QuintDef])
+    defs: Seq[QuintDef])
 private[quint] object QuintModule {
   implicit val rw: RW[QuintModule] = macroRW
 }
@@ -110,7 +110,7 @@ private[quint] object QuintEx {
       /** The name of the operator being applied */
       opcode: String,
       /** A list of arguments to the operator */
-      args: List[QuintEx])
+      args: Seq[QuintEx])
       extends QuintEx {}
   object QuintApp {
     implicit val rw: RW[QuintApp] = macroRW
@@ -119,7 +119,7 @@ private[quint] object QuintEx {
   @key("lambda") case class QuintLambda(
       id: Int,
       /** Identifiers for the formal parameters */
-      params: List[String],
+      params: Seq[String],
       /** The qualifier for the defined operator */
       // TODO should this eventually be a sumtype?
       qualifier: String,
@@ -302,7 +302,7 @@ private[quint] object QuintType {
     implicit val rw: RW[QuintFunT] = macroRW
   }
 
-  @key("oper") case class QuintOperT(args: List[QuintType], res: QuintType) extends QuintType
+  @key("oper") case class QuintOperT(args: Seq[QuintType], res: QuintType) extends QuintType
   object QuintOperT {
     implicit val rw: RW[QuintOperT] = macroRW
   }
@@ -317,7 +317,7 @@ private[quint] object QuintType {
   object Row {
     implicit val rw: RW[Row] = RW.merge(Cell.rw, Var.rw, Nil.rw)
 
-    @key("row") case class Cell(fields: List[RecordField], other: Row) extends Row
+    @key("row") case class Cell(fields: Seq[RecordField], other: Row) extends Row
     object Cell {
       implicit val rw: RW[Cell] = macroRW
     }
@@ -348,7 +348,7 @@ private[quint] object QuintType {
     implicit val rw: RW[UnionRecord] = macroRW
   }
 
-  @key("union") case class QuintUnionT(tag: String, records: List[UnionRecord]) extends QuintType
+  @key("union") case class QuintUnionT(tag: String, records: Seq[UnionRecord]) extends QuintType
   object QuintUnionT {
     implicit val rw: RW[QuintUnionT] = macroRW
   }
