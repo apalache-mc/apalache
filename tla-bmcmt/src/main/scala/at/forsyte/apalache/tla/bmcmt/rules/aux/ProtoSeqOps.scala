@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PureArenaAdapter}
+import at.forsyte.apalache.tla.bmcmt
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 
@@ -251,7 +252,7 @@ class ProtoSeqOps(rewriter: SymbStateRewriter) {
     var newArena = arena.appendCell(seqT)
     val seq = newArena.topCell
     // note that we do not track in SMT the relation between the sequence, the proto sequence, and its length
-    newArena = newArena.appendHasNoSmt(seq, FixedElemPtr(len), FixedElemPtr(protoSeq))
+    newArena = newArena.appendHasNoSmt(seq, bmcmt.FixedElemPtr(len), bmcmt.FixedElemPtr(protoSeq))
     (newArena, seq)
   }
 

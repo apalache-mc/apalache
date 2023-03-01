@@ -1,8 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{ElemPtr, FixedElemPtr, PtrUtil, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
@@ -480,7 +481,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       val keyCells = keyToCell.values.toSeq
       nextState = nextState.updateArena(_.appendHas(newDom,
               keyCells.map { c =>
-                SmtExprElemPtr(c, tla.in(c.toBuilder, newDom.toBuilder))
+                bmcmt.SmtExprElemPtr(c, tla.in(c.toBuilder, newDom.toBuilder))
               }: _*))
       // Constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
@@ -633,14 +634,15 @@ class CherryPick(rewriter: SymbStateRewriter) {
     assert(maxLen != 0)
     // Existence is guaranteed by maxLen.
     // Since maxPadded is used below to pad empty sets' has-pointers, we set all pointers to false.
-    val maxPadded = elemsOfMemberSets.find(_.size == maxLen).get.map { p => SmtExprElemPtr(p.elem, tla.bool(false)) }
+    val maxPadded =
+      elemsOfMemberSets.find(_.size == maxLen).get.map { p => bmcmt.SmtExprElemPtr(p.elem, tla.bool(false)) }
 
     // pad a non-empty sequence to the given length, keep the empty sequence intact
     def padNonEmptySeq(s: Seq[ElemPtr], len: Int): Seq[ElemPtr] = s match {
       // copy last as many times as needed
       case allButLast :+ last =>
         // Padded pointers get set to false
-        allButLast ++ Seq.fill(len - allButLast.length)(SmtExprElemPtr(last.elem, tla.bool(false)))
+        allButLast ++ Seq.fill(len - allButLast.length)(bmcmt.SmtExprElemPtr(last.elem, tla.bool(false)))
       // the empty sequence is a special case
       case Nil => maxPadded
     }
@@ -679,7 +681,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       }
 
       // add the cell to the arena
-      nextState = nextState.updateArena(_.appendHas(resultCell, SmtExprElemPtr(picked, membershipEx)))
+      nextState = nextState.updateArena(_.appendHas(resultCell, bmcmt.SmtExprElemPtr(picked, membershipEx)))
       if (!noSMT) { // add the SMT constraints
         val assertions = (toPickFrom.zip(memberSets).zipWithIndex.map((nthIn _).tupled)).unzip
         // (chosen = 1 /\ in(z_i, R) = in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) = in(d_i, S_2))
@@ -985,7 +987,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.config.smtEncoding match {
         case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
           // We carry the metadata here
-          nextState = nextState.updateArena(_.appendHasNoSmt(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
+          nextState = nextState
+            .updateArena(_.appendHasNoSmt(pair, bmcmt.FixedElemPtr(arg.elem), bmcmt.FixedElemPtr(pickedResult)))
           nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, PtrUtil.samePointer(arg)(pair)))
           // We update the SMT array here
           // We don't use isNonDup because writing on an array entry twice has no adverse effect, if pickedResult is valid
@@ -1031,7 +1034,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
           }
 
         case SMTEncoding.OOPSLA19 =>
-          nextState = nextState.updateArena(_.appendHas(pair, FixedElemPtr(arg.elem), FixedElemPtr(pickedResult)))
+          nextState = nextState
+            .updateArena(_.appendHas(pair, bmcmt.FixedElemPtr(arg.elem), bmcmt.FixedElemPtr(pickedResult)))
           nextState = nextState.updateArena(_.appendHas(relationCell, PtrUtil.samePointer(arg)(pair)))
           val ite = tla.ite(isNonDup.toBuilder, tla.storeInSet(pair.toBuilder, relationCell.toBuilder),
               tla.storeNotInSet(pair.toBuilder, relationCell.toBuilder))

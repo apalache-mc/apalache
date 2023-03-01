@@ -1,8 +1,8 @@
-package at.forsyte.apalache.tla.bmcmt.arena
+package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, UnknownT}
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, CheckerException}
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
+import at.forsyte.apalache.tla.bmcmt
+import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir.{MalformedTlaError, NameEx, TlaEx}
 
 /**
  * An SMT-context free implementation of arenas.
@@ -39,7 +39,7 @@ case class PureArena(
    */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = nameEx match {
     case NameEx(name) if ArenaCell.isValidName(name) => findCellByName(name)
-    case _ => throw new CheckerException("Expected NameEx with a cell name, found: %s".format(nameEx), nameEx)
+    case _ => throw new MalformedTlaError("Expected NameEx with a cell name, found: %s".format(nameEx), nameEx)
   }
 
   /**
@@ -235,7 +235,7 @@ object PureArena {
   val natSetName: String = namePrefix + "3"
   val intSetName: String = namePrefix + "4"
 
-  def empty: PureArena = PureArena(Map.empty, Map.empty, Map.empty, Map.empty)
+  def empty: PureArena = bmcmt.PureArena(Map.empty, Map.empty, Map.empty, Map.empty)
 
   def cellInvalid: ArenaCell = new ArenaCell(-1, UnknownT())
 

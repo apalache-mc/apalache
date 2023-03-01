@@ -1,6 +1,6 @@
-package at.forsyte.apalache.tla.bmcmt.arena
+package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
@@ -25,7 +25,7 @@ sealed trait ElemPtr {
    * After certain set operations, every pointer must become a SmtExprElemPtr, because the operation invalidates the
    * guarantees of e.g. FixedElemPtr.
    */
-  def generalize: SmtExprElemPtr = SmtExprElemPtr(elem, toSmt)
+  def generalize: SmtExprElemPtr = bmcmt.SmtExprElemPtr(elem, toSmt)
 
   /**
    * Collection transformations evaluate membership based on original membership _and_ additional restrictions (e.g.

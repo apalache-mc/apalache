@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
+import at.forsyte.apalache.tla.bmcmt
+import at.forsyte.apalache.tla.bmcmt.{FixedElemPtr, _}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -130,7 +130,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
     val variantCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- variantFields.valuesIterator) {
-      nextState = nextState.updateArena(_.appendHasNoSmt(variantCell, FixedElemPtr(fieldCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(variantCell, bmcmt.FixedElemPtr(fieldCell)))
     }
 
     nextState.setRex(variantCell.toNameEx)

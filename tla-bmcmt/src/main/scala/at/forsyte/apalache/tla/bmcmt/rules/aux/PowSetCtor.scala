@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
+import at.forsyte.apalache.tla.bmcmt.{FixedElemPtr, _}
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.types.tla
 

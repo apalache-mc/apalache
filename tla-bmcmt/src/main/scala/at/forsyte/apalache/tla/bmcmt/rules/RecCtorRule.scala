@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.FixedElemPtr
 import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
@@ -96,7 +96,7 @@ class RecCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           defaultValue
         }
       // link this cell to the record
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, FixedElemPtr(valueCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, bmcmt.FixedElemPtr(valueCell)))
     }
 
     for ((key, tp) <- recordT.fieldTypes) {

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
+import at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{FixedElemPtr, PtrUtil, PureArenaAdapter, SmtExprElemPtr}
+import at.forsyte.apalache.tla.bmcmt.arena.{PtrUtil, PureArenaAdapter}
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
@@ -46,7 +47,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
     val recordCell = nextState.arena.topCell
     // add the fields in the order of their names
     for (fieldCell <- fields.valuesIterator) {
-      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, FixedElemPtr(fieldCell)))
+      nextState = nextState.updateArena(_.appendHasNoSmt(recordCell, bmcmt.FixedElemPtr(fieldCell)))
     }
 
     // In contrast to the old records, we do not associate the record domain with a record.
@@ -259,7 +260,7 @@ class RecordAndVariantOps(rewriter: SymbStateRewriter) {
           nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, goalTagAsCell, variantTag)
           val tagsEq = rewriter.lazyEq.safeEq(goalTagAsCell, variantTag)
           val ifCond = tla.and(tagsEq, inOriginal)
-          nextState = nextState.updateArena(_.appendHas(filteredSetCell, SmtExprElemPtr(value, ifCond)))
+          nextState = nextState.updateArena(_.appendHas(filteredSetCell, bmcmt.SmtExprElemPtr(value, ifCond)))
           val storeIf = tla.ite(ifCond, inFiltered, notInFiltered)
           rewriter.solverContext.assertGroundExpr(storeIf)
         }

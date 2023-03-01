@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
-import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, ElemPtr, FixedElemPtr, PureArena}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom, InfSetT}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 
