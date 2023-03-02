@@ -37,6 +37,7 @@ class TestQuintEx extends AnyFunSuite {
     val _42 = QuintInt(uid, 42)
     val s = QuintStr(uid, "s")
     val name = QuintName(uid, "n")
+    val acc = QuintName(uid, "acc")
     val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
     val letFooBeTrueIn42 = QuintLet(uid, fooDef, _42)
     val lambda = QuintLambda(uid, List("x"), "def", s)
@@ -49,6 +50,11 @@ class TestQuintEx extends AnyFunSuite {
     val intIsGreaterThanZero = QuintLambda(uid, List("n"), "def", nIsGreaterThanZero)
     val intSet = app("Set", _1, _2, _3)
     val emptyIntSet = app("Set")
+    val setOfIntSets = app("Set", intSet, intSet, intSet)
+    // For use in folds
+    val addNameAndAcc = app("isum", name, acc)
+    val accumulatingOpp = QuintLambda(uid, List("acc", "n"), "def", addNameAndAcc)
+    val chooseSomeFromIntSet = app("chooseSome", intSet)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -63,6 +69,7 @@ class TestQuintEx extends AnyFunSuite {
       Q._42 -> QuintIntT(),
       Q.s -> QuintStrT(),
       Q.name -> QuintIntT(),
+      Q.acc -> QuintIntT(),
       Q.letFooBeTrueIn42 -> QuintBoolT(),
       Q.lambda -> QuintOperT(List(QuintIntT()), QuintStrT()),
       Q.appBar -> QuintStrT(),
@@ -71,6 +78,10 @@ class TestQuintEx extends AnyFunSuite {
       Q.intIsGreaterThanZero -> QuintOperT(List(QuintIntT()), QuintBoolT()),
       Q.intSet -> QuintSetT(QuintIntT()),
       Q.emptyIntSet -> QuintSetT(QuintIntT()),
+      Q.setOfIntSets -> QuintSetT(QuintSetT(QuintIntT())),
+      Q.addNameAndAcc -> QuintIntT(),
+      Q.accumulatingOpp -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintIntT()),
+      Q.chooseSomeFromIntSet -> QuintIntT(),
   )
 
   // We construct a converter supplied with the needed type map
@@ -219,5 +230,74 @@ class TestQuintEx extends AnyFunSuite {
     }
     assert(exn.getMessage.contains(
             "Input was not a valid representation of the QuintIR: too many arguments passed to binary operator forall"))
+  }
+
+  test("can convert builtin in operator application") {
+    assert(convert(Q.app("in", Q._1, Q.intSet)) == "1 ∈ {1, 2, 3}")
+  }
+
+  test("can convert builtin contains operator application") {
+    assert(convert(Q.app("contains", Q.intSet, Q._1)) == "1 ∈ {1, 2, 3}")
+  }
+
+  test("can convert builtin notin operator application") {
+    assert(convert(Q.app("notin", Q._1, Q.intSet)) == "1 ∉ {1, 2, 3}")
+  }
+
+  test("can convert builtin union operator application") {
+    assert(convert(Q.app("union", Q.intSet, Q.intSet)) == "{1, 2, 3} ∪ {1, 2, 3}")
+  }
+
+  test("can convert builtin intersect operator application") {
+    assert(convert(Q.app("intersect", Q.intSet, Q.intSet)) == "{1, 2, 3} ∩ {1, 2, 3}")
+  }
+
+  test("can convert builtin exclude operator application") {
+    assert(convert(Q.app("exclude", Q.intSet, Q.intSet)) == "{1, 2, 3} ∖ {1, 2, 3}")
+  }
+
+  test("can convert builtin subseteq operator application") {
+    assert(convert(Q.app("subseteq", Q.intSet, Q.intSet)) == "{1, 2, 3} ⊆ {1, 2, 3}")
+  }
+
+  test("can convert builtin filter operator application") {
+    assert(convert(Q.app("filter", Q.intSet, Q.intIsGreaterThanZero)) == "{n ∈ {1, 2, 3}: (n > 0)}")
+  }
+
+  test("can convert builtin map operator application") {
+    assert(convert(Q.app("map", Q.intSet, Q.intIsGreaterThanZero)) == "{n > 0 : n ∈ {1, 2, 3}}")
+  }
+
+  test("can convert builtin fold operator application") {
+    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA1(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA1, 1, {1, 2, 3})"
+    assert(convert(Q.app("fold", Q.intSet, Q._1, Q.accumulatingOpp)) == expected)
+  }
+
+  test("can convert builtin powerset operator application") {
+    assert(convert(Q.app("powerset", Q.intSet)) == "SUBSET {1, 2, 3}")
+  }
+
+  test("can convert builtin flatten operator application") {
+    assert(convert(Q.app("flatten", Q.setOfIntSets)) == "UNION {{1, 2, 3}, {1, 2, 3}, {1, 2, 3}}")
+  }
+
+  test("can convert builtin allLists operator application") {
+    assert(convert(Q.app("allLists", Q.intSet)) == "Seq({1, 2, 3})")
+  }
+
+  test("can convert builtin chooseSome operator application") {
+    assert(convert(Q.chooseSomeFromIntSet) == "CHOOSE __quint_var0 ∈ {1, 2, 3} : TRUE")
+  }
+
+  test("can convert builtin isFinite operator application") {
+    assert(convert(Q.app("isFinite", Q.intSet)) == "IsFiniteSet({1, 2, 3})")
+  }
+
+  test("can convert builtin size operator application") {
+    assert(convert(Q.app("size", Q.intSet)) == "Cardinality({1, 2, 3})")
+  }
+
+  test("can convert builtin to operator application") {
+    assert(convert(Q.app("to", Q._1, Q._42)) == "1 .. 42")
   }
 }
