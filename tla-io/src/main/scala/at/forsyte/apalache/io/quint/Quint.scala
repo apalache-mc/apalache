@@ -143,6 +143,50 @@ class Quint(moduleData: QuintOutput) {
       // opName ignored since we can't hit an arity error
       tlaBuilder => args => tlaBuilder(args.map(tlaExpression))
 
+    // A binding operator is an operator that involves binding a name to a referent within a scope.
+    //
+    // In quint, all binding operators delegate scoped name-binding to an anonymous operator. E.g., in
+    // `Set(1, 2, 3).forall(n => n > 0)` the scoped binding of the name `n` is delegated to the
+    // anonymous operator given in the second argument.
+    //
+    // In TLA+, we have several different binding constructs. The quint expression given above must
+    // become `∀n ∈ {1, 2, 3}: (n > 0)` in Apalache's IR, which has no uniform construct for representing
+    // bindings.
+    //
+    // The following operator deconstruct quint binding operators to provide the extracted name and body
+    // to the given `tlaBuilder`, which is expected to be one of the special binding operators.
+    //
+    // - `op` is the name of the quint operator we are converting, and is used only for error reporting
+    // - `tlaBuilder` is the tla binding operator we are to construct, if `op` has arity n, `tlaBuilder`
+    //    will have arity n + 1, accounting for the need to take the name as a separate argument.
+    //
+    // The combinators return a function that takes a Seq of quint expressions to a tla builder instruction,
+    // performing all needed validation and extraction.
+    private val binaryBindingApp: (String, (T, T, T) => T) => Seq[QuintEx] => T =
+      (op, tlaBuilder) => {
+        case Seq(set, QuintLambda(id, params, _, body)) => {
+          (types(id).typ, params) match {
+            case (QuintOperT(Seq(qNameType), _), Seq(qName)) =>
+              val tlaName = tla.name(qName, Quint.typeToTlaType(qNameType))
+              val tlaSet = tlaExpression(set)
+              val tlaBody = tlaExpression(body)
+              tlaBuilder(tlaName, tlaSet, tlaBody)
+            case (invaldTyp, invalidParams) =>
+              throw new QuintIRParseError(
+                  s"""|Operator ${op} is a binding operator requiring a unary
+                      |operator type as its second argument, but it was given
+                      |type ${invaldTyp} with params ${invalidParams}""".stripMargin
+              )
+          }
+        }
+        case Seq(_, invalidArg) =>
+          throw new QuintIRParseError(
+              s"""|Operator ${op} is a binding operator requiring a lambda as it's second argument,
+                  |but it was given ${invalidArg}""".stripMargin
+          )
+        case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
+      }
+
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
       val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
         // First we check for application of builtin operators
@@ -169,6 +213,16 @@ class Quint(moduleData: QuintOutput) {
         case "igte"    => binaryApp(opName, tla.ge)
         case "iuminus" => unaryApp(opName, tla.uminus)
 
+        // Sets
+        case "Set" =>
+          variadicApp {
+            // Empty sets must be handled specially since we cannot infer their type
+            // from the given arguments
+            case Seq() => tla.emptySet(Quint.typeToTlaType(types(id).typ))
+            case args  => tla.enumSet(args: _*)
+          }
+        case "exists" => binaryBindingApp(opName, tla.exists)
+        case "forall" => binaryBindingApp(opName, tla.forall)
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))

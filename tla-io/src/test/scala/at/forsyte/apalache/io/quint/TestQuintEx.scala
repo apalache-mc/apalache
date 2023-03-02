@@ -26,7 +26,14 @@ class TestQuintEx extends AnyFunSuite {
       x
     }
 
+    // Operator application
+    def app(name: String, args: QuintEx*): QuintApp = QuintApp(uid, name, args)
+
     val tt = QuintBool(uid, true)
+    val _0 = QuintInt(uid, 0)
+    val _1 = QuintInt(uid, 1)
+    val _2 = QuintInt(uid, 2)
+    val _3 = QuintInt(uid, 3)
     val _42 = QuintInt(uid, 42)
     val s = QuintStr(uid, "s")
     val name = QuintName(uid, "n")
@@ -37,9 +44,11 @@ class TestQuintEx extends AnyFunSuite {
     val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
     val appBar = QuintApp(uid, "bar", List(_42))
     val letBarBeLambdaInAppBar = QuintLet(uid, barDef, appBar)
-
-    // Builtin operator application
-    def app(name: String, args: QuintEx*): QuintApp = QuintApp(uid, name, args)
+    val nIsGreaterThanZero = app("igt", name, _0)
+    // A predicate on ints
+    val intIsGreaterThanZero = QuintLambda(uid, List("n"), "def", nIsGreaterThanZero)
+    val intSet = app("Set", _1, _2, _3)
+    val emptyIntSet = app("Set")
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -47,6 +56,10 @@ class TestQuintEx extends AnyFunSuite {
   // map of expression IDs to their inferred and checked types.
   val typeMapping: Map[QuintEx, QuintType] = Map(
       Q.tt -> QuintBoolT(),
+      Q._0 -> QuintIntT(),
+      Q._1 -> QuintIntT(),
+      Q._2 -> QuintIntT(),
+      Q._3 -> QuintIntT(),
       Q._42 -> QuintIntT(),
       Q.s -> QuintStrT(),
       Q.name -> QuintIntT(),
@@ -54,6 +67,10 @@ class TestQuintEx extends AnyFunSuite {
       Q.lambda -> QuintOperT(List(QuintIntT()), QuintStrT()),
       Q.appBar -> QuintStrT(),
       Q.letBarBeLambdaInAppBar -> QuintStrT(),
+      Q.nIsGreaterThanZero -> QuintBoolT(),
+      Q.intIsGreaterThanZero -> QuintOperT(List(QuintIntT()), QuintBoolT()),
+      Q.intSet -> QuintSetT(QuintIntT()),
+      Q.emptyIntSet -> QuintSetT(QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -171,5 +188,36 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin iuminus operator application") {
     assert(convert(Q.app("iuminus", Q._42)) == "-42")
+  }
+
+  test("can convert builtin Set operator application") {
+    assert(convert(Q.app("Set", Q.s, Q.s, Q.s)) == """{"s", "s", "s"}""")
+  }
+
+  test("can convert builtin Set operator application for empty sets") {
+    assert(convert(Q.emptyIntSet) == """{}""")
+  }
+  test("can convert builtin exists operator application") {
+    assert(convert(Q.app("exists", Q.intSet, Q.intIsGreaterThanZero)) == "∃n ∈ {1, 2, 3}: (n > 0)")
+  }
+
+  test("can convert builtin forall operator application") {
+    assert(convert(Q.app("forall", Q.intSet, Q.intIsGreaterThanZero)) == "∀n ∈ {1, 2, 3}: (n > 0)")
+  }
+
+  test("converting binary binding operator with missing lambda fails") {
+    val exn = intercept[QuintIRParseError] {
+      convert(Q.app("forall", Q.intSet, Q.intSet))
+    }
+    assert(exn.getMessage.contains(
+            "Input was not a valid representation of the QuintIR: Operator forall is a binding operator requiring a lambda as it's second argument"))
+  }
+
+  test("converting binary binding operator with invalid arity fails") {
+    val exn = intercept[QuintIRParseError] {
+      convert(Q.app("forall", Q.intSet))
+    }
+    assert(exn.getMessage.contains(
+            "Input was not a valid representation of the QuintIR: too many arguments passed to binary operator forall"))
   }
 }
