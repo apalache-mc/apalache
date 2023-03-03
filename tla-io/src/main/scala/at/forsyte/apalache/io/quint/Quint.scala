@@ -44,6 +44,14 @@ class Quint(moduleData: QuintOutput) {
     s"__QUINT_LAMBDA${n}"
   }
 
+  // benign state to generate unique variable names
+  private var uniqueVarNo = 0
+  private def uniqueVarName(): String = {
+    val n = uniqueVarNo
+    uniqueVarNo += 1
+    s"__quint_var${n}"
+  }
+
   // Convert a QuintEx into a TlaEx
   //
   // We implement a small family of mutually recursive conversion functions using this
@@ -139,6 +147,12 @@ class Quint(moduleData: QuintOutput) {
         case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
+    private val ternaryApp: (String, (T, T, T) => T) => Seq[QuintEx] => T =
+      (op, builder) => {
+        case Seq(a, b, c) => builder(tlaExpression(a), tlaExpression(b), tlaExpression(c))
+        case tooManyArgs  => throwOperatorArityError(op, "ternary", tooManyArgs)
+      }
+
     private val variadicApp: (Seq[T] => T) => Seq[QuintEx] => T =
       // opName ignored since we can't hit an arity error
       tlaBuilder => args => tlaBuilder(args.map(tlaExpression))
@@ -221,8 +235,33 @@ class Quint(moduleData: QuintOutput) {
             case Seq() => tla.emptySet(Quint.typeToTlaType(types(id).typ))
             case args  => tla.enumSet(args: _*)
           }
-        case "exists" => binaryBindingApp(opName, tla.exists)
-        case "forall" => binaryBindingApp(opName, tla.forall)
+        case "exists"    => binaryBindingApp(opName, tla.exists)
+        case "forall"    => binaryBindingApp(opName, tla.forall)
+        case "in"        => binaryApp(opName, tla.in)
+        case "contains"  => binaryApp(opName, (set, elem) => tla.in(elem, set))
+        case "notin"     => binaryApp(opName, tla.notin)
+        case "union"     => binaryApp(opName, tla.cup)
+        case "intersect" => binaryApp(opName, tla.cap)
+        case "exclude"   => binaryApp(opName, tla.setminus)
+        case "subseteq"  => binaryApp(opName, tla.subseteq)
+        case "filter"    => binaryBindingApp(opName, tla.filter)
+        case "map"       => binaryBindingApp(opName, (name, set, expr) => tla.map(expr, (name, set)))
+        case "fold"      => ternaryApp(opName, (set, init, op) => tla.foldSet(op, init, set))
+        case "powerset"  => unaryApp(opName, tla.powSet)
+        case "flatten"   => unaryApp(opName, tla.union)
+        case "allLists"  => unaryApp(opName, tla.seqSet)
+        case "isFinite"  => unaryApp(opName, tla.isFiniteSet)
+        case "size"      => unaryApp(opName, tla.cardinality)
+        case "to"        => binaryApp(opName, tla.dotdot)
+        case "chooseSome" => {
+          // `chooseSome(S)` is translated to `CHOOSE x \in S: TRUE`
+          // and to construct the latter we need to generate a unique
+          // variable name for `x` and find the expected type
+          val elementType = Quint.typeToTlaType(types(id).typ)
+          val varName = tla.name(uniqueVarName(), elementType)
+          unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
+        }
+
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))
