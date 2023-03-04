@@ -42,13 +42,13 @@ __f1 @@ __f2 ==
 
 \* Print is doing nothing in Apalache.
 \* 
-\* @type: (Str, a) => a;
+\* @type: (a, b) => b;
 Print(__out, __val) == 
     __val
 
 \* Print is doing nothing in Apalache.
 \*
-\* @type: Str => Bool;
+\* @type: a => Bool;
 PrintT(__out) == 
     TRUE
 
