@@ -1717,6 +1717,18 @@ $ apalache-mc check --inv=Inv --discard-disabled=false TrivialFail.tla | sed 's/
 EXITCODE: ERROR (12)
 ```
 
+### check ConstantOperatorImpl succeeds
+
+Tests that model checking properly handles substitutions for operators declared as `CONSTANTS`.
+
+```sh
+$ apalache-mc check --length=0 ConstantOperatorImpl.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh
@@ -3428,7 +3440,11 @@ $ apalache-mc typecheck CommentedTypeAnnotation.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### typecheck ConstantOperator.tla
+### constant operators
+
+#### typecheck ConstantOperator.tla
+
+Test that typechecker supports operators as `CONSTANTS`.
 
 ```sh
 $ apalache-mc typecheck ConstantOperator.tla | sed 's/[IEW]@.*//'
@@ -3436,7 +3452,9 @@ $ apalache-mc typecheck ConstantOperator.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### typecheck ConstantOperatorImpl.tla
+#### typecheck ConstantOperatorImpl.tla
+
+Test that typechecker supports substituting an operator in an `INSTANCE`.
 
 ```sh
 $ apalache-mc typecheck ConstantOperatorImpl.tla | sed 's/[IEW]@.*//'
