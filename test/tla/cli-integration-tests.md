@@ -3410,6 +3410,14 @@ $ apalache-mc typecheck PolyTooGeneral.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (120)
 ```
 
+### typecheck PrintTypes
+
+```sh
+$ apalache-mc typecheck PrintTypes.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### typecheck annotation with comments
 
 Regression test for https://github.com/informalsystems/apalache/issues/2163
