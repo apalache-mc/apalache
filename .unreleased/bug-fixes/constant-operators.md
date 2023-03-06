@@ -1,1 +1,1 @@
-Fixed type checking and model checking of operators declared as `CONSTANTS`, see #2389.
+Add support for first-order `CONSTANTS`, see #2389.

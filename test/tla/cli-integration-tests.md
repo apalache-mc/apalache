@@ -1719,7 +1719,9 @@ EXITCODE: ERROR (12)
 
 ### check ConstantOperatorImpl succeeds
 
-Tests that model checking properly handles substitutions for operators declared as `CONSTANTS`.
+Test that model checking properly handles first-order `CONSTANTS`.
+
+Regression test for https://github.com/informalsystems/apalache/issues/2388
 
 ```sh
 $ apalache-mc check --length=0 --inv=Inv ConstantOperatorImpl.tla | sed 's/I@.*//'
@@ -3444,7 +3446,9 @@ EXITCODE: OK
 
 #### typecheck ConstantOperator.tla
 
-Test that typechecker supports operators as `CONSTANTS`.
+Test that typechecker supports first-order `CONSTANTS`.
+
+Regression test for https://github.com/informalsystems/apalache/issues/2388
 
 ```sh
 $ apalache-mc typecheck ConstantOperator.tla | sed 's/[IEW]@.*//'
@@ -3454,7 +3458,10 @@ EXITCODE: OK
 
 #### typecheck ConstantOperatorImpl.tla
 
-Test that typechecker supports substituting an operator in an `INSTANCE`.
+Test that typechecker supports substituting a first-order `CONSTANT` via
+`INSTANCE`.
+
+Regression test for https://github.com/informalsystems/apalache/issues/2388
 
 ```sh
 $ apalache-mc typecheck ConstantOperatorImpl.tla | sed 's/[IEW]@.*//'
