@@ -223,7 +223,7 @@ class Quint(moduleData: QuintOutput) {
         case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
-    private def setEnumeration(id: Int): Seq[QuintEx] => TBuilderInstruction = {
+    private def setEnumeration(id: Int): Seq[QuintEx] => TBuilderInstruction =
       variadicApp {
         // Empty sets must be handled specially since we cannot infer their type
         // from the given arguments
@@ -236,7 +236,21 @@ class Quint(moduleData: QuintOutput) {
           tla.emptySet(elementType)
         case args => tla.enumSet(args: _*)
       }
-    }
+
+    // Increments the integer value of the `n`th expression in `quintExs`
+    // iff the `n`th expression is a quint int
+    //
+    // Used in the conversion of quint list operator to TLA sequence operators,
+    // due to the fact that quint indexing is 0-based but TLA indexing is 1-based.
+    //
+    // NOTE: This combinator doesn't perform any error checking for invalid parameter
+    // types or arities, since that is handled by the *App combinators
+    private val incrIndexAtNthArg: (Int, Seq[QuintEx]) => Seq[QuintEx] = (n, quintExs) =>
+      quintExs.zipWithIndex
+        .map {
+          case (qInt: QuintInt, i) if i == n => qInt.copy(value = qInt.value + 1)
+          case (param, _)                    => param
+        }
 
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
       val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
@@ -292,6 +306,24 @@ class Quint(moduleData: QuintOutput) {
           val varName = tla.name(uniqueVarName(), elementType)
           unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
         }
+
+        // Lists (Sequences)
+        case "List"      => variadicApp(args => tla.seq(args: _*))
+        case "append"    => binaryApp(opName, tla.append)
+        case "concat"    => binaryApp(opName, tla.concat)
+        case "head"      => unaryApp(opName, tla.head)
+        case "tail"      => unaryApp(opName, tla.tail)
+        case "length"    => unaryApp(opName, tla.len)
+        case "indices"   => unaryApp(opName, tla.dom)
+        case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
+        case "nth"       => quintArgs => binaryApp(opName, tla.app)(incrIndexAtNthArg(1, quintArgs))
+        case "replaceAt" => quintArgs => ternaryApp(opName, tla.except)(incrIndexAtNthArg(1, quintArgs))
+        case "slice" =>
+          quintArgs => ternaryApp(opName, tla.subseq)(incrIndexAtNthArg(1, incrIndexAtNthArg(2, quintArgs)))
+        // TODO: list operations requiring rewiring  https://github.com/informalsystems/apalache/issues/2437
+        case "select" => null
+        case "range"  => null
+        case "foldr"  => null
 
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
