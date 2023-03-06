@@ -9,20 +9,34 @@ CONSTANTS
 \* @type: (Int, Int) => Bool;
 Equal(x, y) == x = y
 
-Success == INSTANCE ConstantOperator WITH
+\* @type: (Int, Int) => Bool;
+NotEqual(x, y) == x /= y
+
+EqualsAreGoodAndEqualElements == INSTANCE ConstantOperator WITH
     A <- { 0, 1 },
     B <- { 1, 2 },
     AreGood <- Equal
 
-Failure == INSTANCE ConstantOperator WITH
+EqualsAreGoodButNoEqualElements == INSTANCE ConstantOperator WITH
     A <- { 0, 1 },
     B <- { 2, 3 },
     AreGood <- Equal
 
-ASSUME Success!GOOD_PAIR_EXISTS
-ASSUME ~Failure!GOOD_PAIR_EXISTS
+InequalsAreGoodAndInequalElements == INSTANCE ConstantOperator WITH
+    A <- { 0, 1 },
+    B <- { 2, 3 },
+    AreGood <- NotEqual
+
+InequalsAreGoodButOnlyEqualElements == INSTANCE ConstantOperator WITH
+    A <- { 2 },
+    B <- { 2 },
+    AreGood <- NotEqual
 
 Init == TRUE
 Next == TRUE
+Inv == /\ EqualsAreGoodAndEqualElements!GOOD_PAIR_EXISTS
+       /\ InequalsAreGoodAndInequalElements!GOOD_PAIR_EXISTS
+       /\ ~EqualsAreGoodButNoEqualElements!GOOD_PAIR_EXISTS
+       /\ ~InequalsAreGoodButOnlyEqualElements!GOOD_PAIR_EXISTS
 
 ====

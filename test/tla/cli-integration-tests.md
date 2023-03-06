@@ -1722,7 +1722,7 @@ EXITCODE: ERROR (12)
 Tests that model checking properly handles substitutions for operators declared as `CONSTANTS`.
 
 ```sh
-$ apalache-mc check --length=0 ConstantOperatorImpl.tla | sed 's/I@.*//'
+$ apalache-mc check --length=0 --inv=Inv ConstantOperatorImpl.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
