@@ -201,6 +201,44 @@ class Quint(moduleData: QuintOutput) {
         case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
+    // Increments the integer value of the `n`th expression in `quintExs`
+    // iff the `n`th expression is a quint int
+    //
+    // Used in the conversion of quint list operator to TLA sequence operators,
+    // due to the fact that quint indexing is 0-based but TLA indexing is 1-based.
+    //
+    // NOTE: This combinator doesn't perform any error checking for invalid parameter
+    // types or arities, since that is handled by the *App combinators
+    private val incrIndexAtNthArg: (Int, Seq[QuintEx]) => Seq[QuintEx] = (n, quintExs) =>
+      quintExs.zipWithIndex
+        .map {
+          case (qInt: QuintInt, i) if i == n => qInt.copy(value = qInt.value + 1)
+          case (param, _)                    => param
+        }
+
+    // Duplicates the rewiring logic from /src/tla/__rewire_sequences_in_apalache.tla
+    private def selectSeq(
+        elementType: TlaType1
+      )(seq: TBuilderInstruction,
+        test: TBuilderInstruction): TBuilderInstruction = {
+      val seqType = SeqT1(elementType)
+      val appendIfTestStr = "__AppendIfTest"
+      val appendIfTestType = OperT1(Seq(seqType), elementType)
+      val appendIfTestDecl = {
+        val resParamName = "__res"
+        val elemParamName = "__e"
+        val params = Seq((OperParam(resParamName, 0), seqType), (OperParam(elemParamName, 0), elementType))
+        val body = {
+          val resName = tla.name(resParamName, seqType)
+          val elemName = tla.name(elemParamName, elementType)
+          tla.ite(tla.appOp(test, elemName), tla.append(resName, elemName), resName)
+        }
+        tla.decl(appendIfTestStr, body, params: _*)
+      }
+      val body = tla.foldSeq(tla.name(appendIfTestStr, appendIfTestType), tla.seq(), seq)
+      tla.letIn(body, appendIfTestDecl)
+    }
+
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
       val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
         // First we check for application of builtin operators
@@ -261,6 +299,23 @@ class Quint(moduleData: QuintOutput) {
           val varName = tla.name(uniqueVarName(), elementType)
           unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
         }
+
+        // Lists (Sequences)
+        case "List"      => variadicApp(args => tla.seq(args: _*))
+        case "append"    => binaryApp(opName, tla.append)
+        case "concat"    => binaryApp(opName, tla.concat)
+        case "head"      => unaryApp(opName, tla.head)
+        case "tail"      => unaryApp(opName, tla.tail)
+        case "length"    => unaryApp(opName, tla.len)
+        case "indices"   => unaryApp(opName, tla.dom)
+        case "select"    => binaryApp(opName, selectSeq(Quint.typeToTlaType(types(id).typ)))
+        case "range"     => null
+        case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
+        case "foldr"     => null
+        case "nth"       => quintArgs => binaryApp(opName, tla.app)(incrIndexAtNthArg(1, quintArgs))
+        case "replaceAt" => quintArgs => ternaryApp(opName, tla.except)(incrIndexAtNthArg(1, quintArgs))
+        case "slice" =>
+          quintArgs => ternaryApp(opName, tla.subseq)(incrIndexAtNthArg(1, incrIndexAtNthArg(2, quintArgs)))
 
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
