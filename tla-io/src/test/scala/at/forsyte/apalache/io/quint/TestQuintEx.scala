@@ -140,6 +140,10 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.lambda) == """LET __QUINT_LAMBDA0(x) ≜ "s" IN __QUINT_LAMBDA0""")
   }
 
+  test("can convert multi argument lambda") {
+    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA1(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA1""")
+  }
+
   test("can convert operator application") {
     assert(convert(Q.letBarBeLambdaInAppBar) == """LET bar(x) ≜ "s" IN bar(42)""")
   }
@@ -301,7 +305,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin fold operator application") {
-    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA1(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA1, 1, {1, 2, 3})"
+    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA2(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA2, 1, {1, 2, 3})"
     assert(convert(Q.app("fold", Q.intSet, Q._1, Q.accumulatingOpp)) == expected)
   }
 
