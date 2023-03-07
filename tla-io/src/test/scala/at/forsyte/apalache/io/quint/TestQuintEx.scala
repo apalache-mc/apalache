@@ -6,6 +6,9 @@ import org.scalatestplus.junit.JUnitRunner
 
 import QuintType._
 import QuintEx._
+import at.forsyte.apalache.tla.lir.Typed
+import at.forsyte.apalache.tla.lir.SetT1
+import at.forsyte.apalache.tla.lir.IntT1
 
 /**
  * Tests the conversion of quint expressions and declarations into TLA expressions
@@ -206,7 +209,13 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin Set operator application for empty sets") {
-    assert(convert(Q.emptyIntSet) == """{}""")
+    val tlaEx = quint.exToTla(Q.emptyIntSet).get
+    // Ensure the constructed empty set has the required type
+    assert(tlaEx.typeTag match {
+      case Typed(SetT1(IntT1)) => true
+      case _                   => false
+    })
+    assert(tlaEx.toString() == """{}""")
   }
   test("can convert builtin exists operator application") {
     assert(convert(Q.app("exists", Q.intSet, Q.intIsGreaterThanZero)) == "∃n ∈ {1, 2, 3}: (n > 0)")

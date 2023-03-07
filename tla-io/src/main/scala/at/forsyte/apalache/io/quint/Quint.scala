@@ -201,6 +201,21 @@ class Quint(moduleData: QuintOutput) {
         case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
+    private def setEnumeration(id: Int): Seq[QuintEx] => TBuilderInstruction = {
+      variadicApp {
+        // Empty sets must be handled specially since we cannot infer their type
+        // from the given arguments
+        case Seq() =>
+          val elementType = types(id).typ match {
+            case QuintSetT(t) => Quint.typeToTlaType(t)
+            case invalidType =>
+              throw new QuintIRParseError(s"Set with id ${id} has invalid type ${invalidType}")
+          }
+          tla.emptySet(elementType)
+        case args => tla.enumSet(args: _*)
+      }
+    }
+
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
       val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
         // First we check for application of builtin operators
@@ -228,13 +243,7 @@ class Quint(moduleData: QuintOutput) {
         case "iuminus" => unaryApp(opName, tla.uminus)
 
         // Sets
-        case "Set" =>
-          variadicApp {
-            // Empty sets must be handled specially since we cannot infer their type
-            // from the given arguments
-            case Seq() => tla.emptySet(Quint.typeToTlaType(types(id).typ))
-            case args  => tla.enumSet(args: _*)
-          }
+        case "Set"       => setEnumeration(id)
         case "exists"    => binaryBindingApp(opName, tla.exists)
         case "forall"    => binaryBindingApp(opName, tla.forall)
         case "in"        => binaryApp(opName, tla.in)
