@@ -651,6 +651,69 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     }
   }
 
+  def assertThrowsBoundVarIntroductionTernaryTupled(
+      // order: variables, set, expr
+      method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.str("x"), builder.name("y", IntT1)), // got ValEx(TlaStr), expected NameEx
+              builder.name("S", SetT1(TupT1(StrT1, IntT1))),
+              builder.bool(true),
+          )
+      )
+    }
+
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("x", StrT1)),
+              builder.name("S", SetT1(TupT1(StrT1, StrT1))),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)), // x: Str
+              builder.name("S", SetT1(TupT1(StrT1, IntT1))),
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)), // x: Int
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op(<<x,y>>, {<<x,y>>}, TRUE)
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
+              builder.enumSet(builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1))),
+              builder.bool(true),
+          )
+      )
+    }
+
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op( <<x,y>>, S, \E x \in T: TRUE)
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
+              builder.name("S", SetT1(TupT1(StrT1, IntT1))),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("T", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
+  }
+
   def assertThrowsBoundVarIntroductionBinary(
       // order: variable, expr
       method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
@@ -680,6 +743,54 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
           // Op( x, \E x \in S: TRUE)
           method(
               builder.name("x", StrT1),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("S", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
+  }
+
+  def assertThrowsBoundVarIntroductionBinaryTupled(
+      // order: variables, expr
+      method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.str("x"), builder.name("y", IntT1)), // got ValEx(TlaStr), expected NameEx
+              builder.bool(true),
+          )
+      )
+    }
+
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("x", StrT1)),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)), // x: Str
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)), // x: Int
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op( <<x,y>>, \E x \in S: TRUE)
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
               builder.exists(
                   builder.name("x", StrT1),
                   builder.name("S", SetT1(StrT1)),

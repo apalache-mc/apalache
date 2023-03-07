@@ -117,14 +117,21 @@ class TestBoolBuilder extends BuilderTest {
 
   test("forall3/exists3") {
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
-    def mkWellTyped(tt: TlaType1): T =
+    type TParam = (TlaType1, Seq[TlaType1])
+
+    def mkWellTyped(tparam: TParam): T = {
+      val (t, ts) = tparam
+      val tt = if (ts.isEmpty) t else TupT1(ts: _*)
       (
           builder.name("x", tt),
           builder.name("set", SetT1(tt)),
           builder.name("p", BoolT1),
       )
+    }
 
-    def mkIllTyped(tt: TlaType1): Seq[T] =
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (t, ts) = tparam
+      val tt = if (ts.isEmpty) t else TupT1(ts: _*)
       Seq(
           (
               builder.name("x", InvalidTypeMethods.differentFrom(tt)),
@@ -147,8 +154,9 @@ class TestBoolBuilder extends BuilderTest {
               builder.name("p", InvalidTypeMethods.notBool),
           ),
       )
+    }
 
-    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TlaType1, T](
+    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TParam, T](
         oper,
         mkWellTyped,
         ToSeq.ternary,
@@ -165,31 +173,41 @@ class TestBoolBuilder extends BuilderTest {
           resultIsExpected(oper),
       ) _
 
-    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.forall, builder.forall))
+    checkRun(Generators.typeAndSeqGen)(run(TlaBoolOper.forall, builder.forall))
     assertThrowsBoundVarIntroductionTernary(builder.forall)
+    assertThrowsBoundVarIntroductionTernaryTupled(builder.forall)
 
-    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.exists, builder.exists))
+    checkRun(Generators.typeAndSeqGen)(run(TlaBoolOper.exists, builder.exists))
     assertThrowsBoundVarIntroductionTernary(builder.exists)
+    assertThrowsBoundVarIntroductionTernaryTupled(builder.exists)
+
   }
 
   test("forall2/exists2") {
     type T = (TBuilderInstruction, TBuilderInstruction)
+    type TParam = (TlaType1, Seq[TlaType1])
 
-    def mkWellTyped(tt: TlaType1): T =
+    def mkWellTyped(tparam: TParam): T = {
+      val (t, ts) = tparam
+      val tt = if (ts.isEmpty) t else TupT1(ts: _*)
       (
           builder.name("x", tt),
           builder.name("p", BoolT1),
       )
+    }
 
-    def mkIllTyped(tt: TlaType1): Seq[T] =
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (t, ts) = tparam
+      val tt = if (ts.isEmpty) t else TupT1(ts: _*)
       Seq(
           (
               builder.name("x", tt),
               builder.name("p", InvalidTypeMethods.notBool),
           )
       )
+    }
 
-    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TlaType1, T](
+    def resultIsExpected(oper: TlaBoolOper) = expectEqTyped[TParam, T](
         oper,
         mkWellTyped,
         ToSeq.binary,
@@ -206,10 +224,12 @@ class TestBoolBuilder extends BuilderTest {
           resultIsExpected(oper),
       ) _
 
-    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.forallUnbounded, builder.forall))
+    checkRun(Generators.typeAndSeqGen)(run(TlaBoolOper.forallUnbounded, builder.forall))
     assertThrowsBoundVarIntroductionBinary(builder.forall)
+    assertThrowsBoundVarIntroductionBinaryTupled(builder.forall)
 
-    checkRun(Generators.singleTypeGen)(run(TlaBoolOper.existsUnbounded, builder.exists))
+    checkRun(Generators.typeAndSeqGen)(run(TlaBoolOper.existsUnbounded, builder.exists))
     assertThrowsBoundVarIntroductionBinary(builder.exists)
+    assertThrowsBoundVarIntroductionBinaryTupled(builder.exists)
   }
 }

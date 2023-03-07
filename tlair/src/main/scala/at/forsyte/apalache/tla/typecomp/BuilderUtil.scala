@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir.oper.{OperArity, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{OperArity, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaType1, Typed}
 import scalaz._
 import scalaz.Scalaz._
@@ -23,10 +23,27 @@ object BuilderUtil {
       OperEx(oper, args: _*)(Typed(typeRes))
   }
 
+  /**
+   * Returns the variable or set of variables, if elem is either a variable name or a tuple of variable names, otherwise
+   * throws an IllegalArgumentException.
+   */
+  def getBoundVarsOrThrow(elem: TlaEx): Set[String] = elem match {
+    case NameEx(name) => Set(name)
+    case OperEx(TlaFunOper.tuple, args @ _*) if args.forall(_.isInstanceOf[NameEx]) =>
+      val varnames = args.map { _.asInstanceOf[NameEx].name }.toSet
+      if (varnames.size < args.size)
+        throw new IllegalArgumentException(
+            s"requirement failed: Expected elem to be a tuple of unique variable names, found duplicates.")
+      else varnames
+    case _ =>
+      throw new IllegalArgumentException(
+          s"requirement failed: Expected elem to be a variable name or a tuple of variable names, found $elem.")
+  }
+
   /** Removes elem from the scope, as the scope only contains types of free variables */
   def markAsBound(elem: TlaEx): TBuilderInternalState[Unit] = State[TBuilderContext, Unit] { mi: TBuilderContext =>
-    require(elem.isInstanceOf[NameEx], s"Expected elem to be a variable name, found $elem.")
-    (mi.copy(freeNameScope = mi.freeNameScope - elem.asInstanceOf[NameEx].name), ())
+    val vars = getBoundVarsOrThrow(elem)
+    (mi.copy(freeNameScope = mi.freeNameScope -- vars), ())
   }
 
   /**
@@ -46,14 +63,13 @@ object BuilderUtil {
     boundAfterExpr <- getAllBound // variable may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
-    // variable is shadowed iff boundAfterVar \subseteq usedInSet \union boundAfrerExpr
-    boundAfterVar <- getAllBound
   } yield {
     val ret = unsafeMethod(varEx, setEx, exprEx)
-    if (boundAfterVar.nonEmpty && boundAfterVar.subsetOf(usedInSet.union(boundAfterExpr))) {
-      val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
-      throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
-    } else ret
+    val names = getBoundVarsOrThrow(varEx)
+    // variable is shadowed iff names \cap (usedInSet \union boundAfterExpr) /= {}
+    val shadowed = names.intersect(usedInSet.union(boundAfterExpr))
+    if (shadowed.nonEmpty) throw new TBuilderScopeException(s"Variable shadowing in $ret: ${shadowed.mkString(", ")}.")
+    else ret
   }
 
   /**
@@ -69,14 +85,13 @@ object BuilderUtil {
     boundAfterExpr <- getAllBound // variable may not appear as bound in expr
     varEx <- variable
     _ <- markAsBound(varEx)
-    // variable is shadowed iff boundAfterVar \subseteq boundAfterExpr
-    boundAfterVar <- getAllBound
   } yield {
     val ret = unsafeMethod(varEx, exprEx)
-    if (boundAfterVar.nonEmpty && boundAfterVar.subsetOf(boundAfterExpr)) {
-      val name = varEx.asInstanceOf[NameEx].name // assume ret would have already thrown if not NameEx
-      throw new TBuilderScopeException(s"Variable $name is shadowed in $ret.")
-    } else ret
+    val names = getBoundVarsOrThrow(varEx)
+    // variable is shadowed iff names \cap boundAfterExpr /= {}
+    val shadowed = names.intersect(boundAfterExpr)
+    if (shadowed.nonEmpty) throw new TBuilderScopeException(s"Variable shadowing in $ret: ${shadowed.mkString(", ")}.")
+    else ret
   }
 
   /**
@@ -100,12 +115,12 @@ object BuilderUtil {
           varEx <- variable
           // we delay marking as bound, to not interfere with other variable-set pairs
         } yield {
-          require(varEx.isInstanceOf[NameEx], s"Expected varEx to be a variable name, found $varEx.")
-          // variable_i is shadowed iff boundVar \in usedInSet \union boundAfterBodyEx
-          val boundVar = varEx.asInstanceOf[NameEx].name
-          if (usedInSet.union(boundAfterBodyEx).contains(boundVar)) {
-            val source = if (boundAfterBodyEx.contains(boundVar)) bodyEx else setEx
-            throw new TBuilderScopeException(s"Variable $varEx is shadowed in $source.")
+          val names = getBoundVarsOrThrow(varEx)
+          // variable_i is shadowed iff names \cap (usedInSet \union boundAfterBodyEx) /= {}
+          val shadowed = names.intersect(usedInSet.union(boundAfterBodyEx))
+          if (shadowed.nonEmpty) {
+            val source = if (names.intersect(boundAfterBodyEx).nonEmpty) bodyEx else setEx
+            throw new TBuilderScopeException(s"Variable shadowing in $source: ${shadowed.mkString(", ")}.")
           } else seq :+ (varEx, setEx)
         }
     }
