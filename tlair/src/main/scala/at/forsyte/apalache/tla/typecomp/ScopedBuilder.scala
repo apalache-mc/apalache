@@ -140,7 +140,7 @@ import scalaz.Scalaz._
 class ScopedBuilder(val strict: Boolean = true)
     extends BaseBuilder with BoolBuilder with ArithmeticBuilder with SetBuilder with FiniteSetBuilder with SeqBuilder
     with ActionBuilder with FunBuilder with ControlBuilder with TemporalBuilder with ApalacheInternalBuilder
-    with ApalacheBuilder with VariantBuilder with LiteralAndNameBuilder with TupledBuilder {
+    with ApalacheBuilder with VariantBuilder with LiteralAndNameBuilder {
 
   /**
    * Creates a `TBuilderInstruction` from a precomputed `TlaEx`. Voids correctness guarantees.

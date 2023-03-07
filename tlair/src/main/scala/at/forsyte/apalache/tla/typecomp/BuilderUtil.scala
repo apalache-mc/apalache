@@ -30,7 +30,11 @@ object BuilderUtil {
   def getBoundVarsOrThrow(elem: TlaEx): Set[String] = elem match {
     case NameEx(name) => Set(name)
     case OperEx(TlaFunOper.tuple, args @ _*) if args.forall(_.isInstanceOf[NameEx]) =>
-      args.map { _.asInstanceOf[NameEx].name }.toSet
+      val varnames = args.map { _.asInstanceOf[NameEx].name }.toSet
+      if (varnames.size < args.size)
+        throw new IllegalArgumentException(
+            s"requirement failed: Expected elem to be a tuple of unique variable names, found duplicates.")
+      else varnames
     case _ =>
       throw new IllegalArgumentException(
           s"requirement failed: Expected elem to be a variable name or a tuple of variable names, found $elem.")

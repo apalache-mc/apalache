@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.typecomp.unsafe
 
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
+import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
+import at.forsyte.apalache.tla.typecomp.BuilderUtil
 
 /**
  * Scope-unsafe builder for TlaBoolOper expressions.
@@ -32,7 +33,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def forall(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
+    BuilderUtil.getBoundVarsOrThrow(x)
     buildBySignatureLookup(TlaBoolOper.forall, x, set, p)
   }
 
@@ -42,7 +43,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def forall(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
+    BuilderUtil.getBoundVarsOrThrow(x)
     buildBySignatureLookup(TlaBoolOper.forallUnbounded, x, p)
   }
 
@@ -52,7 +53,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def exists(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
+    BuilderUtil.getBoundVarsOrThrow(x)
     buildBySignatureLookup(TlaBoolOper.exists, x, set, p)
   }
 
@@ -62,7 +63,7 @@ class UnsafeBoolBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def exists(x: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
+    BuilderUtil.getBoundVarsOrThrow(x)
     buildBySignatureLookup(TlaBoolOper.existsUnbounded, x, p)
   }
 }
