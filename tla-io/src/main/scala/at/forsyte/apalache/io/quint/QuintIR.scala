@@ -336,6 +336,12 @@ private[quint] object QuintType {
   @key("tup") case class QuintTupleT(fields: Row) extends QuintType
   object QuintTupleT {
     implicit val rw: RW[QuintTupleT] = macroRW
+
+    // Helper for manually constructing tuple types
+    def ofTypes(types: QuintType*): QuintTupleT = {
+      val fields = types.zipWithIndex.map { case (t, i) => RecordField(i.toString, t) }
+      QuintTupleT(Row.Cell(fields, Row.Nil()))
+    }
   }
 
   @key("rec") case class QuintRecordT(fields: Row) extends QuintType
