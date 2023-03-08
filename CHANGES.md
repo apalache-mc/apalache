@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.30.4 - 2023-03-08
+
+### Bug fixes
+
+- Fix the typing of quint empty sets during conversion (see #2466)
+
 ## 0.30.3 - 2023-03-06
 
 ### Features
