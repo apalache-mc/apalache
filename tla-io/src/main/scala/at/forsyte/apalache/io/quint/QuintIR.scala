@@ -116,10 +116,17 @@ private[quint] object QuintEx {
     implicit val rw: RW[QuintApp] = macroRW
   }
 
+  case class QuintLambdaParameter(
+      id: Int,
+      name: String)
+  object QuintLambdaParameter {
+    implicit val rw: RW[QuintLambdaParameter] = macroRW
+  }
+
   @key("lambda") case class QuintLambda(
       id: Int,
       /** Identifiers for the formal parameters */
-      params: Seq[String],
+      params: Seq[QuintLambdaParameter],
       /** The qualifier for the defined operator */
       // TODO should this eventually be a sumtype?
       qualifier: String,
