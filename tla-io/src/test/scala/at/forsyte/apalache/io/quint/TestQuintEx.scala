@@ -62,6 +62,7 @@ class TestQuintEx extends AnyFunSuite {
     val int2ToBool = QuintLambda(uid, List(nParam, accParam), "def", tt)
     val intSet = app("Set", _1, _2, _3)
     val intPair = app("Tup", _1, _2)
+    val intList = app("List", _1, _2, _3)
     val intPairSet = app("Set", intPair, intPair)
     val emptyIntSet = app("Set")
     val setOfIntSets = app("Set", intSet, intSet, intSet)
@@ -69,6 +70,8 @@ class TestQuintEx extends AnyFunSuite {
     val addNameAndAcc = app("isum", name, acc)
     val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
     val chooseSomeFromIntSet = app("chooseSome", intSet)
+    // Requires ID registered with type
+    val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -93,12 +96,14 @@ class TestQuintEx extends AnyFunSuite {
       Q.intIsGreaterThanZero -> QuintOperT(List(QuintIntT()), QuintBoolT()),
       Q.intSet -> QuintSetT(QuintIntT()),
       Q.intPair -> QuintTupleT.ofTypes(QuintIntT(), QuintIntT()),
+      Q.intList -> QuintSeqT(QuintIntT()),
       Q.intPairSet -> QuintSetT(QuintTupleT.ofTypes(QuintIntT(), QuintIntT())),
       Q.emptyIntSet -> QuintSetT(QuintIntT()),
       Q.setOfIntSets -> QuintSetT(QuintSetT(QuintIntT())),
       Q.addNameAndAcc -> QuintIntT(),
       Q.accumulatingOpp -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintIntT()),
       Q.chooseSomeFromIntSet -> QuintIntT(),
+      Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -138,6 +143,10 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert lambda") {
     assert(convert(Q.lambda) == """LET __QUINT_LAMBDA0(x) ≜ "s" IN __QUINT_LAMBDA0""")
+  }
+
+  test("can convert multi argument lambda") {
+    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA1(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA1""")
   }
 
   test("can convert operator application") {
@@ -301,7 +310,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin fold operator application") {
-    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA1(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA1, 1, {1, 2, 3})"
+    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA2(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA2, 1, {1, 2, 3})"
     assert(convert(Q.app("fold", Q.intSet, Q._1, Q.accumulatingOpp)) == expected)
   }
 
@@ -331,5 +340,51 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin to operator application") {
     assert(convert(Q.app("to", Q._1, Q._42)) == "1 .. 42")
+  }
+
+  test("can convert builtin List operator application") {
+    assert(convert(Q.app("List", Q._1, Q._2, Q._3)) == "<<1, 2, 3>>")
+  }
+
+  test("can convert builtin append operator application") {
+    assert(convert(Q.app("append", Q.intList, Q._42)) == "Append(<<1, 2, 3>>, 42)")
+  }
+
+  test("can convert builtin concat operator application") {
+    assert(convert(Q.app("concat", Q.intList, Q.intList)) == "(<<1, 2, 3>>) ∘ (<<1, 2, 3>>)")
+  }
+
+  test("can convert builtin head operator application") {
+    assert(convert(Q.app("head", Q.intList)) == "Head(<<1, 2, 3>>)")
+  }
+
+  test("can convert builtin tail operator application") {
+    assert(convert(Q.app("tail", Q.intList)) == "Tail(<<1, 2, 3>>)")
+  }
+
+  test("can convert builtin length operator application") {
+    assert(convert(Q.app("length", Q.intList)) == "Len(<<1, 2, 3>>)")
+  }
+
+  test("can convert builtin indices operator application") {
+    assert(convert(Q.app("indices", Q.intList)) == "DOMAIN (<<1, 2, 3>>)")
+  }
+
+  test("can convert builtin foldl operator application") {
+    val expected =
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA3(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA3, 0, <<1, 2, 3>>)"
+    assert(convert(Q.app("foldl", Q.intList, Q._0, Q.accumulatingOpp)) == expected)
+  }
+
+  test("can convert builtin nth operator application") {
+    assert(convert(Q.app("nth", Q.intList, Q._1)) == "(<<1, 2, 3>>)[2]")
+  }
+
+  test("can convert builtin replaceAt operator application") {
+    assert(convert(Q.app("replaceAt", Q.intList, Q._1, Q._42)) == "[<<1, 2, 3>> EXCEPT ![2] = 42]")
+  }
+
+  test("can convert builtin slice operator application") {
+    assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)) == "Sequences!SubSeq(<<1, 2, 3>>, 1, 2)")
   }
 }
