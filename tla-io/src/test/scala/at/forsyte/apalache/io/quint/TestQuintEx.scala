@@ -51,7 +51,10 @@ class TestQuintEx extends AnyFunSuite {
     val nIsGreaterThanZero = app("igt", name, _0)
     // A predicate on ints
     val intIsGreaterThanZero = QuintLambda(uid, List("n"), "def", nIsGreaterThanZero)
+    val int2ToBool = QuintLambda(uid, List("n", "acc"), "def", tt)
     val intSet = app("Set", _1, _2, _3)
+    val intPair = app("Tup", _1, _2)
+    val intPairSet = app("Set", intPair, intPair)
     val emptyIntSet = app("Set")
     val setOfIntSets = app("Set", intSet, intSet, intSet)
     // For use in folds
@@ -78,8 +81,11 @@ class TestQuintEx extends AnyFunSuite {
       Q.appBar -> QuintStrT(),
       Q.letBarBeLambdaInAppBar -> QuintStrT(),
       Q.nIsGreaterThanZero -> QuintBoolT(),
+      Q.int2ToBool -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintBoolT()),
       Q.intIsGreaterThanZero -> QuintOperT(List(QuintIntT()), QuintBoolT()),
       Q.intSet -> QuintSetT(QuintIntT()),
+      Q.intPair -> QuintTupleT.ofTypes(QuintIntT(), QuintIntT()),
+      Q.intPairSet -> QuintSetT(QuintTupleT.ofTypes(QuintIntT(), QuintIntT())),
       Q.emptyIntSet -> QuintSetT(QuintIntT()),
       Q.setOfIntSets -> QuintSetT(QuintSetT(QuintIntT())),
       Q.addNameAndAcc -> QuintIntT(),
@@ -217,12 +223,21 @@ class TestQuintEx extends AnyFunSuite {
     })
     assert(tlaEx.toString() == """{}""")
   }
+
   test("can convert builtin exists operator application") {
     assert(convert(Q.app("exists", Q.intSet, Q.intIsGreaterThanZero)) == "∃n ∈ {1, 2, 3}: (n > 0)")
   }
 
+  test("can convert builtin exists operator application using tuple-bound names") {
+    assert(convert(Q.app("exists", Q.intPairSet, Q.int2ToBool)) == "∃(<<n, acc>>) ∈ {Tup(1, 2), Tup(1, 2)}: TRUE")
+  }
+
   test("can convert builtin forall operator application") {
     assert(convert(Q.app("forall", Q.intSet, Q.intIsGreaterThanZero)) == "∀n ∈ {1, 2, 3}: (n > 0)")
+  }
+
+  test("can convert builtin forall operator application using tuple-bound names") {
+    assert(convert(Q.app("forall", Q.intPairSet, Q.int2ToBool)) == "∀(<<n, acc>>) ∈ {Tup(1, 2), Tup(1, 2)}: TRUE")
   }
 
   test("converting binary binding operator with missing lambda fails") {

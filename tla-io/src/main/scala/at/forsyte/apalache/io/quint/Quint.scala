@@ -178,20 +178,42 @@ class Quint(moduleData: QuintOutput) {
     // performing all needed validation and extraction.
     private val binaryBindingApp: (String, (T, T, T) => T) => Seq[QuintEx] => T =
       (op, tlaBuilder) => {
-        case Seq(set, QuintLambda(id, params, _, body)) => {
-          (types(id).typ, params) match {
-            case (QuintOperT(Seq(qNameType), _), Seq(qName)) =>
-              val tlaName = tla.name(qName, Quint.typeToTlaType(qNameType))
-              val tlaSet = tlaExpression(set)
-              val tlaBody = tlaExpression(body)
-              tlaBuilder(tlaName, tlaSet, tlaBody)
-            case (invaldTyp, invalidParams) =>
+        case Seq(set, lambda @ QuintLambda(id, params, _, scope)) => {
+          // We assume the set giving the domain within which the names are to be bound
+          // is given as the first argument. Use a lambda so shuffle the argument
+          // order if the binding operator expects its domain in a different position.
+          val tlaSet = tlaExpression(set)
+          val tlaScope = tlaExpression(scope)
+          // The parameter types are needed for constructing TLA names for
+          // binding
+          val paramTypes = types(id).typ match {
+            case QuintOperT(ts, _) => ts
+            case invaldType =>
               throw new QuintIRParseError(
-                  s"""|Operator ${op} is a binding operator requiring a unary
-                      |operator type as its second argument, but it was given
-                      |type ${invaldTyp} with params ${invalidParams}""".stripMargin
+                  s"""|Operator ${op} is a binding operator requiring an
+                      |operator as its second argument, but it was given
+                      |type ${invaldType}""".stripMargin
               )
           }
+          // The TLA version of the names to be bound
+          val tlaNames = params.zip(paramTypes).map { case (n, t) =>
+            tla.name(n, Quint.typeToTlaType(t))
+          }
+          // We need to determine whether the operator binds a single name or
+          // multiple names. In the latter case the names must be be packaged
+          // up into a tuple
+          val varBindings = tlaNames match {
+            case Seq() =>
+              throw new QuintIRParseError(
+                  s"""|Operator ${op} is a binding operator requiring a non nullary
+                      |operator as its second argument, but it was given the nullary
+                      | ${lambda}""".stripMargin
+              )
+            case Seq(singleName) => singleName
+            case names           => tla.tuple(names: _*)
+          }
+
+          tlaBuilder(varBindings, tlaSet, tlaScope)
         }
         case Seq(_, invalidArg) =>
           throw new QuintIRParseError(
