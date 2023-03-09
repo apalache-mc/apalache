@@ -74,9 +74,9 @@ class Quint(moduleData: QuintOutput) {
     // OperParams are required by the ScopedBuilder for building
     // operators and consist of the param's name and its arity,
     // which we here derive from the QuintType.
-    private val operParam: ((String, QuintType)) => OperParam = {
-      case (name, QuintOperT(args, _)) => OperParam(name, args.length)
-      case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
+    private val operParam: ((QuintLambdaParameter, QuintType)) => OperParam = {
+      case (param, QuintOperT(args, _)) => OperParam(param.name, args.length)
+      case (param, _)                   => OperParam(param.name, 0) // Otherwise, we have a value
     }
 
     // QuintLambda is used both for anonymous operators and for defined
@@ -196,8 +196,8 @@ class Quint(moduleData: QuintOutput) {
               )
           }
           // The TLA version of the names to be bound
-          val tlaNames = params.zip(paramTypes).map { case (n, t) =>
-            tla.name(n, Quint.typeToTlaType(t))
+          val tlaNames = (params.zip(paramTypes)).map { case (p, t) =>
+            tla.name(p.name, Quint.typeToTlaType(t))
           }
           // We need to determine whether the operator binds a single name or
           // multiple names. In the latter case the names must be be packaged

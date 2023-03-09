@@ -32,6 +32,7 @@ class TestQuintEx extends AnyFunSuite {
     // Operator application
     def app(name: String, args: QuintEx*): QuintApp = QuintApp(uid, name, args)
 
+    // Scalar values
     val tt = QuintBool(uid, true)
     val _0 = QuintInt(uid, 0)
     val _1 = QuintInt(uid, 1)
@@ -39,19 +40,26 @@ class TestQuintEx extends AnyFunSuite {
     val _3 = QuintInt(uid, 3)
     val _42 = QuintInt(uid, 42)
     val s = QuintStr(uid, "s")
+
+    // Names and parameters
     val name = QuintName(uid, "n")
+    val nParam = QuintLambdaParameter(uid, "n")
     val acc = QuintName(uid, "acc")
+    val accParam = QuintLambdaParameter(uid, "acc")
+    val xParam = QuintLambdaParameter(uid, "x")
+
+    // Definitions and compound data types
     val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
     val letFooBeTrueIn42 = QuintLet(uid, fooDef, _42)
-    val lambda = QuintLambda(uid, List("x"), "def", s)
+    val lambda = QuintLambda(uid, List(xParam), "def", s)
     // Applications can only be by name (lambdas are not first class)
     val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
     val appBar = QuintApp(uid, "bar", List(_42))
     val letBarBeLambdaInAppBar = QuintLet(uid, barDef, appBar)
     val nIsGreaterThanZero = app("igt", name, _0)
     // A predicate on ints
-    val intIsGreaterThanZero = QuintLambda(uid, List("n"), "def", nIsGreaterThanZero)
-    val int2ToBool = QuintLambda(uid, List("n", "acc"), "def", tt)
+    val intIsGreaterThanZero = QuintLambda(uid, List(nParam), "def", nIsGreaterThanZero)
+    val int2ToBool = QuintLambda(uid, List(nParam, accParam), "def", tt)
     val intSet = app("Set", _1, _2, _3)
     val intPair = app("Tup", _1, _2)
     val intPairSet = app("Set", intPair, intPair)
@@ -59,7 +67,7 @@ class TestQuintEx extends AnyFunSuite {
     val setOfIntSets = app("Set", intSet, intSet, intSet)
     // For use in folds
     val addNameAndAcc = app("isum", name, acc)
-    val accumulatingOpp = QuintLambda(uid, List("acc", "n"), "def", addNameAndAcc)
+    val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
     val chooseSomeFromIntSet = app("chooseSome", intSet)
   }
 
