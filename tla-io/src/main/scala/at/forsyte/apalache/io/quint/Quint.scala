@@ -325,6 +325,12 @@ class Quint(moduleData: QuintOutput) {
         case "range"  => null
         case "foldr"  => null
 
+        // Tuples
+        case "Tup" => variadicApp(args => tla.tuple(args: _*))
+        // product projection is just function application on TLA
+        case "item"   => binaryApp(opName, tla.app)
+        case "tuples" => variadicApp(tla.times)
+
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))
