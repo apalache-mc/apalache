@@ -387,4 +387,20 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin slice operator application") {
     assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)) == "Sequences!SubSeq(<<1, 2, 3>>, 1, 2)")
   }
+
+  test("can convert builtin Tup operator application") {
+    assert(convert(Q.app("Tup", Q._0, Q._1)) == "<<0, 1>>")
+  }
+
+  test("can convert builtin Tup operator application to heterogeneous elemens") {
+    assert(convert(Q.app("Tup", Q._0, Q.s)) == "<<0, \"s\">>")
+  }
+
+  test("can convert builtin item operator application") {
+    assert(convert(Q.app("item", Q.intPair, Q._1)) == "(<<1, 2>>)[1]")
+  }
+
+  test("can convert builtin tuples operator application") {
+    assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
+  }
 }
