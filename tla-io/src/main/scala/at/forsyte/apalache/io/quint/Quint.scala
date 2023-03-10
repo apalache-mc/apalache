@@ -325,6 +325,9 @@ class Quint(moduleData: QuintOutput) {
         case "range"  => null
         case "foldr"  => null
 
+        // Tupples
+        case "Tup" => variadicApp(args => tla.tuple(args: _*))
+
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))

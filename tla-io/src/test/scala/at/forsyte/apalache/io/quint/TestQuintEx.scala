@@ -246,7 +246,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin exists operator application using tuple-bound names") {
-    assert(convert(Q.app("exists", Q.intPairSet, Q.int2ToBool)) == "∃(<<n, acc>>) ∈ {Tup(1, 2), Tup(1, 2)}: TRUE")
+    assert(convert(Q.app("exists", Q.intPairSet, Q.int2ToBool)) == "∃(<<n, acc>>) ∈ {<<1, 2>>, <<1, 2>>}: TRUE")
   }
 
   test("can convert builtin forall operator application") {
@@ -254,7 +254,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin forall operator application using tuple-bound names") {
-    assert(convert(Q.app("forall", Q.intPairSet, Q.int2ToBool)) == "∀(<<n, acc>>) ∈ {Tup(1, 2), Tup(1, 2)}: TRUE")
+    assert(convert(Q.app("forall", Q.intPairSet, Q.int2ToBool)) == "∀(<<n, acc>>) ∈ {<<1, 2>>, <<1, 2>>}: TRUE")
   }
 
   test("converting binary binding operator with missing lambda fails") {
