@@ -384,14 +384,13 @@ class Quint(moduleData: QuintOutput) {
         case "tuples" => variadicApp(tla.times)
 
         // Maps (functions)
-        // case "Map"       => null // Rewire with "Apalache!SetAsFun"
-        // case "Map"       => variadicApp(args => tla.appOp("Apalache!SetAsFun", tla.enumSet(args: _*)))
+        case "Map"       => variadicApp(args => tla.setAsFun(args: _))
         case "get"       => binaryApp(opName, tla.app)
         case "keys"      => unaryApp(opName, tla.dom)
-        case "mapBy"     => null
         case "setToMap"  => unaryApp(opName, tla.setAsFun)
         case "setOfMaps" => binaryApp(opName, tla.funSet)
         case "set"       => ternaryApp(opName, tla.except)
+        case "mapBy"     => null
         case "setBy"     => null
         case "put" =>
           quintArgs =>
