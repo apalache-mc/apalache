@@ -10,6 +10,11 @@ import at.forsyte.apalache.tla.lir.Typed
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.lir.IntT1
 
+// You can run all these tests in watch mode in the
+// sbt console with
+//
+//      sbt:apalache> ~tla_io/testOnly *TestQuint*
+
 /**
  * Tests the conversion of quint expressions and declarations into TLA expressions
  */
@@ -403,4 +408,5 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin tuples operator application") {
     assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
   }
+
 }
