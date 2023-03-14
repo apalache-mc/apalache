@@ -5,7 +5,9 @@ VARIABLE
   \* @type: Int -> Int;
   f
 
-Init == f \in [{1} -> {}]
+Init == 
+  \/ f \in [{1} -> {}]
+  \/ f \in [{} -> {}] 
 
 Next == f' = f
 
