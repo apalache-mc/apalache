@@ -220,6 +220,10 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaBoolOper.forall, _, set, ValEx(TlaBool(false))) =>
       simplifyShallow(OperEx(TlaOper.eq, set, emptySet(set.typeTag))(boolTag))
 
+    // [ _ -> {} ] <=> {}
+    case funSet @ OperEx(TlaSetOper.funSet, _, OperEx(TlaSetOper.enumSet)) =>
+      emptySet(funSet.typeTag)
+
     // default
     case ex =>
       ex

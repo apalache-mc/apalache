@@ -2387,6 +2387,14 @@ Input error (see the manual): SubstRule: Variable N is not assigned a value
 EXITCODE: ERROR (255)
 ```
 
+### check Bug1058.tla throws no exception: regression for #Bug1058
+
+```sh
+$ apalache-mc check Bug1058.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Bug1136.tla reports no error: regression for #1136
 
 ```sh
