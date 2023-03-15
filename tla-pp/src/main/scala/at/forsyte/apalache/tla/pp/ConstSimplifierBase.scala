@@ -226,8 +226,8 @@ abstract class ConstSimplifierBase {
       val funSetT = TlaType1.fromTypeTag(funSet.typeTag)
       funSetT match {
         case SetT1(FunT1(domElemT, cdmElemT)) =>
-          val mockCdm = tla.enumSet(tla.gen(1, cdmElemT))
-          simplifyShallow(tla.funSet(tla.emptySet(domElemT), mockCdm))
+          val mockCdm = tla.gen(1, SetT1(cdmElemT))
+          tla.funSet(tla.emptySet(domElemT), mockCdm)
         case t =>
           throw new TypingException(s"Function-set $funSet should have a set-of-functions type, found: $t", funSet.ID)
       }
