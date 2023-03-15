@@ -74,9 +74,9 @@ class Quint(moduleData: QuintOutput) {
     // OperParams are required by the ScopedBuilder for building
     // operators and consist of the param's name and its arity,
     // which we here derive from the QuintType.
-    private val operParam: ((String, QuintType)) => OperParam = {
-      case (name, QuintOperT(args, _)) => OperParam(name, args.length)
-      case (name, _)                   => OperParam(name, 0) // Otherwise, we have a value
+    private val operParam: ((QuintLambdaParameter, QuintType)) => OperParam = {
+      case (param, QuintOperT(args, _)) => OperParam(param.name, args.length)
+      case (param, _)                   => OperParam(param.name, 0) // Otherwise, we have a value
     }
 
     // QuintLambda is used both for anonymous operators and for defined
@@ -178,20 +178,42 @@ class Quint(moduleData: QuintOutput) {
     // performing all needed validation and extraction.
     private val binaryBindingApp: (String, (T, T, T) => T) => Seq[QuintEx] => T =
       (op, tlaBuilder) => {
-        case Seq(set, QuintLambda(id, params, _, body)) => {
-          (types(id).typ, params) match {
-            case (QuintOperT(Seq(qNameType), _), Seq(qName)) =>
-              val tlaName = tla.name(qName, Quint.typeToTlaType(qNameType))
-              val tlaSet = tlaExpression(set)
-              val tlaBody = tlaExpression(body)
-              tlaBuilder(tlaName, tlaSet, tlaBody)
-            case (invaldTyp, invalidParams) =>
+        case Seq(set, lambda @ QuintLambda(id, params, _, scope)) => {
+          // We assume the set giving the domain within which the names are to be bound
+          // is given as the first argument. Use a lambda so shuffle the argument
+          // order if the binding operator expects its domain in a different position.
+          val tlaSet = tlaExpression(set)
+          val tlaScope = tlaExpression(scope)
+          // The parameter types are needed for constructing TLA names for
+          // binding
+          val paramTypes = types(id).typ match {
+            case QuintOperT(ts, _) => ts
+            case invaldType =>
               throw new QuintIRParseError(
-                  s"""|Operator ${op} is a binding operator requiring a unary
-                      |operator type as its second argument, but it was given
-                      |type ${invaldTyp} with params ${invalidParams}""".stripMargin
+                  s"""|Operator ${op} is a binding operator requiring an
+                      |operator as its second argument, but it was given
+                      |type ${invaldType}""".stripMargin
               )
           }
+          // The TLA version of the names to be bound
+          val tlaNames = (params.zip(paramTypes)).map { case (p, t) =>
+            tla.name(p.name, Quint.typeToTlaType(t))
+          }
+          // We need to determine whether the operator binds a single name or
+          // multiple names. In the latter case the names must be be packaged
+          // up into a tuple
+          val varBindings = tlaNames match {
+            case Seq() =>
+              throw new QuintIRParseError(
+                  s"""|Operator ${op} is a binding operator requiring a non nullary
+                      |operator as its second argument, but it was given the nullary
+                      | ${lambda}""".stripMargin
+              )
+            case Seq(singleName) => singleName
+            case names           => tla.tuple(names: _*)
+          }
+
+          tlaBuilder(varBindings, tlaSet, tlaScope)
         }
         case Seq(_, invalidArg) =>
           throw new QuintIRParseError(
@@ -201,7 +223,7 @@ class Quint(moduleData: QuintOutput) {
         case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
-    private def setEnumeration(id: Int): Seq[QuintEx] => TBuilderInstruction = {
+    private def setEnumeration(id: Int): Seq[QuintEx] => TBuilderInstruction =
       variadicApp {
         // Empty sets must be handled specially since we cannot infer their type
         // from the given arguments
@@ -214,7 +236,21 @@ class Quint(moduleData: QuintOutput) {
           tla.emptySet(elementType)
         case args => tla.enumSet(args: _*)
       }
-    }
+
+    // Increments the integer value of the `n`th expression in `quintExs`
+    // iff the `n`th expression is a quint int
+    //
+    // Used in the conversion of quint list operator to TLA sequence operators,
+    // due to the fact that quint indexing is 0-based but TLA indexing is 1-based.
+    //
+    // NOTE: This combinator doesn't perform any error checking for invalid parameter
+    // types or arities, since that is handled by the *App combinators
+    private val incrIndexAtNthArg: (Int, Seq[QuintEx]) => Seq[QuintEx] = (n, quintExs) =>
+      quintExs.zipWithIndex
+        .map {
+          case (qInt: QuintInt, i) if i == n => qInt.copy(value = qInt.value + 1)
+          case (param, _)                    => param
+        }
 
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
       val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
@@ -270,6 +306,30 @@ class Quint(moduleData: QuintOutput) {
           val varName = tla.name(uniqueVarName(), elementType)
           unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
         }
+
+        // Lists (Sequences)
+        case "List"      => variadicApp(args => tla.seq(args: _*))
+        case "append"    => binaryApp(opName, tla.append)
+        case "concat"    => binaryApp(opName, tla.concat)
+        case "head"      => unaryApp(opName, tla.head)
+        case "tail"      => unaryApp(opName, tla.tail)
+        case "length"    => unaryApp(opName, tla.len)
+        case "indices"   => unaryApp(opName, tla.dom)
+        case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
+        case "nth"       => quintArgs => binaryApp(opName, tla.app)(incrIndexAtNthArg(1, quintArgs))
+        case "replaceAt" => quintArgs => ternaryApp(opName, tla.except)(incrIndexAtNthArg(1, quintArgs))
+        case "slice" =>
+          quintArgs => ternaryApp(opName, tla.subseq)(incrIndexAtNthArg(1, incrIndexAtNthArg(2, quintArgs)))
+        // TODO: list operations requiring rewiring  https://github.com/informalsystems/apalache/issues/2437
+        case "select" => null
+        case "range"  => null
+        case "foldr"  => null
+
+        // Tuples
+        case "Tup" => variadicApp(args => tla.tuple(args: _*))
+        // product projection is just function application on TLA
+        case "item"   => binaryApp(opName, tla.app)
+        case "tuples" => variadicApp(tla.times)
 
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
