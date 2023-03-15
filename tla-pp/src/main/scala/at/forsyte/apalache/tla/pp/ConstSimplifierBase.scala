@@ -221,8 +221,8 @@ abstract class ConstSimplifierBase {
     case OperEx(TlaBoolOper.forall, _, set, ValEx(TlaBool(false))) =>
       simplifyShallow(OperEx(TlaOper.eq, set, emptySet(set.typeTag))(boolTag))
 
-    // [{} -> {}] <=> [{} -> {Gen(1)}]
-    case funSet @ OperEx(TlaSetOper.funSet, OperEx(TlaSetOper.enumSet), OperEx(TlaSetOper.enumSet)) =>
+    // [{} -> X] <=> [{} -> {Gen(1)}]
+    case funSet @ OperEx(TlaSetOper.funSet, OperEx(TlaSetOper.enumSet), _) =>
       val funSetT = TlaType1.fromTypeTag(funSet.typeTag)
       funSetT match {
         case SetT1(FunT1(domElemT, cdmElemT)) =>

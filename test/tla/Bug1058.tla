@@ -8,6 +8,7 @@ VARIABLE
 Init == 
   \/ f \in [{1} -> {}]
   \/ f \in [{} -> {}] 
+  \/ f \in [{} -> {1}] 
 
 Next == f' = f
 
