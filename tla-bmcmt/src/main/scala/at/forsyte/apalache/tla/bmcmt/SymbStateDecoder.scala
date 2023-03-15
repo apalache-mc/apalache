@@ -62,13 +62,13 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       throw new IllegalStateException(s"Found cell $cell of cell type Unknown")
 
     case CellTFrom(SetT1(elemT)) =>
-      def inSet(e: ArenaCell) = {
-        val mem = tla.selectInSet(e.toBuilder, cell.toBuilder)
-        solverContext.evalGroundExpr(mem) == tla.bool(true).build
+      def inSet(e: ElemPtr) = e match {
+        case _: FixedElemPtr         => true
+        case SmtExprElemPtr(_, cond) => solverContext.evalGroundExpr(cond) == tla.bool(true).build
       }
 
-      val elems = arena.getHas(cell).filter(inSet)
-      val decodedElems = elems.map(decodeCellToTlaEx(arena, _).build)
+      val elemPtrs = arena.getHasPtr(cell).filter(inSet)
+      val decodedElems = elemPtrs.map(p => decodeCellToTlaEx(arena, p.elem).build)
       // try to normalize the set for better user experience
       val niceElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr).map(tla.unchecked)
       if (niceElems.isEmpty) tla.emptySet(elemT)
@@ -186,7 +186,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     // a function is represented with the relation {(x, f[x]) : x \in S}
     val relation = arena.getCdm(cell)
 
-    def isInRelation(pair: ArenaCell): Boolean = {
+    def isInRelation(pairPtr: ElemPtr): Boolean = {
       solverContext.config.smtEncoding match {
         case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
           // in the arrays encoding the relation is only represented in the arena
@@ -200,21 +200,23 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           }
 
           // check if the pair's head is in the domain
-          val funArg = arena.getHas(pair).head
+          val funArg = arena.getHas(pairPtr.elem).head
           val argsInDom = inDom(funArg)
           solverContext.evalGroundExpr(argsInDom) == tla.bool(true).build
 
         case SMTEncoding.OOPSLA19 =>
-          val mem = tla.selectInSet(pair.toBuilder, relation.toBuilder)
-          solverContext.evalGroundExpr(mem) == tla.bool(true).build
+          pairPtr match {
+            case _: FixedElemPtr          => true
+            case SmtExprElemPtr(_, smtEx) => solverContext.evalGroundExpr(smtEx) == tla.bool(true).build
+          }
 
         case oddEncodingType =>
           throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
       }
     }
 
-    def decodePair(seen: Map[TlaEx, TlaEx], pair: ArenaCell): Map[TlaEx, TlaEx] = {
-      val keyCell :: valueCell :: _ = arena.getHas(pair)
+    def decodePair(seen: Map[TlaEx, TlaEx], pairPtr: ElemPtr): Map[TlaEx, TlaEx] = {
+      val keyCell :: valueCell :: _ = arena.getHas(pairPtr.elem)
       val keyEx = decodeCellToTlaEx(arena, keyCell)
       if (seen.contains(keyEx)) {
         seen
@@ -225,7 +227,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     }
 
     val pairs = arena
-      .getHas(relation)
+      .getHasPtr(relation)
       .filter(isInRelation)
       .foldLeft(Map.empty[TlaEx, TlaEx])(decodePair)
       .toSeq
