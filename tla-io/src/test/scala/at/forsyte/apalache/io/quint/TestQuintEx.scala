@@ -107,7 +107,7 @@ class TestQuintEx extends AnyFunSuite {
   )
 
   // We construct a converter supplied with the needed type map
-  val quint = new Quint(QuintOutput(
+  def quint = new Quint(QuintOutput(
           "typechecking",
           List(QuintModule(0, "MockedModule", List())),
           typeMapping.map { case (ex, typ) =>
@@ -146,7 +146,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert multi argument lambda") {
-    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA1(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA1""")
+    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0""")
   }
 
   test("can convert operator application") {
@@ -310,7 +310,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin fold operator application") {
-    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA2(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA2, 1, {1, 2, 3})"
+    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0, 1, {1, 2, 3})"
     assert(convert(Q.app("fold", Q.intSet, Q._1, Q.accumulatingOpp)) == expected)
   }
 
@@ -372,7 +372,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin foldl operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA3(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA3, 0, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0, 0, <<1, 2, 3>>)"
     assert(convert(Q.app("foldl", Q.intList, Q._0, Q.accumulatingOpp)) == expected)
   }
 
