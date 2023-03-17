@@ -388,6 +388,14 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)) == "Sequences!SubSeq(<<1, 2, 3>>, 1, 2)")
   }
 
+  test("can convert builtin select operator application") {
+    val isGreatThanZeroLambda = "LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__e)"
+    val selectLambda =
+      s"LET __QUINT_LAMBDA1(__res, __e) ≜ IF (${isGreatThanZeroLambda}) THEN (Append(__res, __e)) ELSE __res IN __QUINT_LAMBDA1"
+    val expected = s"Apalache!ApaFoldSeqLeft(${selectLambda}, <<>>, <<1, 2, 3>>)"
+    assert(convert(Q.app("select", Q.intList, Q.intIsGreaterThanZero)) == expected)
+  }
+
   test("can convert builtin Tup operator application") {
     assert(convert(Q.app("Tup", Q._0, Q._1)) == "<<0, 1>>")
   }
