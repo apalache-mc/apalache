@@ -411,4 +411,8 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin tuples operator application") {
     assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
   }
+
+  test("can convert builtin assert operator") {
+    assert(convert(Q.app("assert", Q.nIsGreaterThanZero)) == "n > 0")
+  }
 }
