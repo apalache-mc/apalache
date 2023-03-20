@@ -329,10 +329,10 @@ class Quint(moduleData: QuintOutput) {
                     case SeqT1(elem) => elem
                     case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
                   }
-                  val elemParam = tla.param("__e", elemType)
-                  val resultParam = tla.param("__res", seqType)
-                  val elem = tla.name(elemParam._1.name, elemParam._2)
+                  val resultParam = tla.param(uniqueVarName(), seqType)
+                  val elemParam = tla.param(uniqueVarName(), elemType)
                   val result = tla.name(resultParam._1.name, resultParam._2)
+                  val elem = tla.name(elemParam._1.name, elemParam._2)
                   val ite = tla.ite(tla.appOp(test, elem), tla.append(result, elem), result)
                   val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
                   tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)

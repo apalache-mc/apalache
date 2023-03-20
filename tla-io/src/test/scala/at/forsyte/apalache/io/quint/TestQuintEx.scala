@@ -389,9 +389,9 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin select operator application") {
-    val isGreatThanZeroLambda = "LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__e)"
+    val isGreatThanZeroLambda = "LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__quint_var1)"
     val selectLambda =
-      s"LET __QUINT_LAMBDA1(__res, __e) ≜ IF (${isGreatThanZeroLambda}) THEN (Append(__res, __e)) ELSE __res IN __QUINT_LAMBDA1"
+      s"LET __QUINT_LAMBDA1(__quint_var0, __quint_var1) ≜ IF (${isGreatThanZeroLambda}) THEN (Append(__quint_var0, __quint_var1)) ELSE __quint_var0 IN __QUINT_LAMBDA1"
     val expected = s"Apalache!ApaFoldSeqLeft(${selectLambda}, <<>>, <<1, 2, 3>>)"
     assert(convert(Q.app("select", Q.intList, Q.intIsGreaterThanZero)) == expected)
   }
