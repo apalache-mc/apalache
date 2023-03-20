@@ -329,6 +329,10 @@ class Quint(moduleData: QuintOutput) {
                     case SeqT1(elem) => elem
                     case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
                   }
+                  // SelectSeq(__s, __Test(_)) ==
+                  //    LET __AppendIfTest(__res, __e) ==
+                  //      IF __Test(__e) THEN Append(__res, __e) ELSE __res IN
+                  // __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
                   val resultParam = tla.param(uniqueVarName(), seqType)
                   val elemParam = tla.param(uniqueVarName(), elemType)
                   val result = tla.name(resultParam._1.name, resultParam._2)
