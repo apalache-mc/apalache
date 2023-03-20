@@ -396,6 +396,20 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("select", Q.intList, Q.intIsGreaterThanZero)) == expected)
   }
 
+  test("can convert builtin foldr operator application") {
+    val expected = {
+      val slenDecl = "__QUINT_LAMBDA1 ≜ Len(<<1, 2, 3>>)"
+      val get_ith = "LET __QUINT_LAMBDA2(__i) ≜ __s[(__QUINT_LAMBDA1() - __i) + 1] IN __QUINT_LAMBDA2"
+      val reverseDecl =
+        s"__QUINT_LAMBDA3(__s) ≜ LET ${slenDecl} IN Sequences!SubSeq(Apalache!MkSeq(ApalacheInternal!__ApalacheSeqCapacity(__s), ${get_ith}), 1, __QUINT_LAMBDA1())"
+      val map =
+        "LET __QUINT_LAMBDA4(__y, __x) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0(__x, __y) IN __QUINT_LAMBDA4"
+      val reversedSeq = "__QUINT_LAMBDA3(<<1, 2, 3>>)"
+      s"LET ${reverseDecl} IN Apalache!ApaFoldSeqLeft(${map}, 0, ${reversedSeq})"
+    }
+    assert(convert(Q.app("foldr", Q.intList, Q._0, Q.accumulatingOpp)) == expected)
+  }
+
   test("can convert builtin Tup operator application") {
     assert(convert(Q.app("Tup", Q._0, Q._1)) == "<<0, 1>>")
   }
