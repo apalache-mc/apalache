@@ -320,10 +320,30 @@ class Quint(moduleData: QuintOutput) {
         case "replaceAt" => quintArgs => ternaryApp(opName, tla.except)(incrIndexAtNthArg(1, quintArgs))
         case "slice" =>
           quintArgs => ternaryApp(opName, tla.subseq)(incrIndexAtNthArg(1, incrIndexAtNthArg(2, quintArgs)))
+        case "select" =>
+          quintArgs =>
+            binaryApp(opName,
+                (seq, test) => {
+                  val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                  val elemType = seqType match {
+                    case SeqT1(elem) => elem
+                    case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+                  }
+                  // SelectSeq(__s, __Test(_)) ==
+                  //    LET __AppendIfTest(__res, __e) ==
+                  //      IF __Test(__e) THEN Append(__res, __e) ELSE __res IN
+                  // __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
+                  val resultParam = tla.param(uniqueVarName(), seqType)
+                  val elemParam = tla.param(uniqueVarName(), elemType)
+                  val result = tla.name(resultParam._1.name, resultParam._2)
+                  val elem = tla.name(elemParam._1.name, elemParam._2)
+                  val ite = tla.ite(tla.appOp(test, elem), tla.append(result, elem), result)
+                  val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
+                  tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
+                })(quintArgs)
         // TODO: list operations requiring rewiring  https://github.com/informalsystems/apalache/issues/2437
-        case "select" => null
-        case "range"  => null
-        case "foldr"  => null
+        case "range" => null
+        case "foldr" => null
 
         // Tuples
         case "Tup" => variadicApp(args => tla.tuple(args: _*))
