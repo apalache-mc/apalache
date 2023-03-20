@@ -399,11 +399,12 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin foldr operator application") {
     val expected = {
       val slenDecl = "__QUINT_LAMBDA1 ≜ Len(<<1, 2, 3>>)"
-      val get_ith = "LET __QUINT_LAMBDA2(__i) ≜ __s[(__QUINT_LAMBDA1() - __i) + 1] IN __QUINT_LAMBDA2"
+      val get_ith =
+        "LET __QUINT_LAMBDA2(__quint_var1) ≜ __quint_var0[(__QUINT_LAMBDA1() - __quint_var1) + 1] IN __QUINT_LAMBDA2"
       val reverseDecl =
-        s"__QUINT_LAMBDA3(__s) ≜ LET ${slenDecl} IN Sequences!SubSeq(Apalache!MkSeq(ApalacheInternal!__ApalacheSeqCapacity(__s), ${get_ith}), 1, __QUINT_LAMBDA1())"
+        s"__QUINT_LAMBDA3(__quint_var0) ≜ LET ${slenDecl} IN Sequences!SubSeq(Apalache!MkSeq(ApalacheInternal!__ApalacheSeqCapacity(__quint_var0), ${get_ith}), 1, __QUINT_LAMBDA1())"
       val map =
-        "LET __QUINT_LAMBDA4(__y, __x) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0(__x, __y) IN __QUINT_LAMBDA4"
+        "LET __QUINT_LAMBDA4(__quint_var3, __quint_var2) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0(__quint_var2, __quint_var3) IN __QUINT_LAMBDA4"
       val reversedSeq = "__QUINT_LAMBDA3(<<1, 2, 3>>)"
       s"LET ${reverseDecl} IN Apalache!ApaFoldSeqLeft(${map}, 0, ${reversedSeq})"
     }

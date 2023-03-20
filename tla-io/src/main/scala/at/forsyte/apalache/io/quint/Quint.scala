@@ -344,7 +344,6 @@ class Quint(moduleData: QuintOutput) {
         // TODO: list operations requiring rewiring  https://github.com/informalsystems/apalache/issues/2437
         case "range" => null
         case "foldr" =>
-          // TODO: unique names for LET-INs!
           quintArgs =>
             ternaryApp(opName,
                 (seq, init, op) => {
@@ -358,9 +357,9 @@ class Quint(moduleData: QuintOutput) {
                   //  LET __s_len == Len(__s) IN
                   //  LET __get_ith(__i) == __s[__s_len - __i + 1] IN
                   //  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __get_ith), 1, __s_len)
-                  val sParam = tla.param("__s", seqType)
+                  val sParam = tla.param(uniqueVarName(), seqType)
                   val s = tla.name(sParam._1.name, sParam._2)
-                  val iParam = tla.param("__i", IntT1)
+                  val iParam = tla.param(uniqueVarName(), IntT1)
                   val i = tla.name(iParam._1.name, iParam._2)
                   val s_lenDecl = tla.decl(uniqueLambdaName(), tla.len(seq))
                   val s_len = tla.name(s_lenDecl.name, OperT1(Seq(), IntT1))
@@ -372,9 +371,9 @@ class Quint(moduleData: QuintOutput) {
                   // FoldRight(__op(_, _), __seq, __base) ==
                   //  LET __map (__y, __x) == __op(__x, __y) IN
                   //  __ApalacheFoldSeq(__map, __base, Reverse(__seq))
-                  val xParam = tla.param("__x", elemType)
+                  val xParam = tla.param(uniqueVarName(), elemType)
                   val x = tla.name(xParam._1.name, xParam._2)
-                  val yParam = tla.param("__y", accType)
+                  val yParam = tla.param(uniqueVarName(), accType)
                   val y = tla.name(yParam._1.name, yParam._2)
                   val reverse = tla.name(reverseDecl.name, OperT1(Seq(seqType), seqType))
                   tla.letIn(tla.foldSeq(tla.lambda(uniqueLambdaName(), tla.appOp(op, x, y), yParam, xParam), init,
