@@ -355,6 +355,7 @@ class Quint(moduleData: QuintOutput) {
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))
         case "actionAny" => variadicApp(args => tla.or(args: _*))
+        case "assert"    => unaryApp(opName, identity) // `assert` does not have side-effects in Apalache
 
         // Otherwise, the applied operator is defined, and not a builtin
         case definedOpName => { args =>
