@@ -70,6 +70,16 @@ trait ApalacheBuilder {
   def mkSeq(n: BigInt, F: TBuilderInstruction): TBuilderInstruction = F.map(unsafeBuilder.mkSeq(n, _))
 
   /**
+   * {{{MkSeq(n, F)}}}
+   * @param n
+   *   must be a nonnegative constant expression
+   * @param F
+   *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
+   */
+  def mkSeqConst(n: TBuilderInstruction, F: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(n, F)(unsafeBuilder.mkSeqConst)
+
+  /**
    * {{{FoldSet(F, v, S)}}}
    * @param F
    *   must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}}

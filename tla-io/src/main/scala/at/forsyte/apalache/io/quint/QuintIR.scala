@@ -116,10 +116,17 @@ private[quint] object QuintEx {
     implicit val rw: RW[QuintApp] = macroRW
   }
 
+  case class QuintLambdaParameter(
+      id: Int,
+      name: String)
+  object QuintLambdaParameter {
+    implicit val rw: RW[QuintLambdaParameter] = macroRW
+  }
+
   @key("lambda") case class QuintLambda(
       id: Int,
       /** Identifiers for the formal parameters */
-      params: Seq[String],
+      params: Seq[QuintLambdaParameter],
       /** The qualifier for the defined operator */
       // TODO should this eventually be a sumtype?
       qualifier: String,
@@ -336,6 +343,12 @@ private[quint] object QuintType {
   @key("tup") case class QuintTupleT(fields: Row) extends QuintType
   object QuintTupleT {
     implicit val rw: RW[QuintTupleT] = macroRW
+
+    // Helper for manually constructing tuple types
+    def ofTypes(types: QuintType*): QuintTupleT = {
+      val fields = types.zipWithIndex.map { case (t, i) => RecordField(i.toString, t) }
+      QuintTupleT(Row.Cell(fields, Row.Nil()))
+    }
   }
 
   @key("rec") case class QuintRecordT(fields: Row) extends QuintType

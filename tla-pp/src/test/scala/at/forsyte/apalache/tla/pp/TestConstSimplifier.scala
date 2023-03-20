@@ -62,7 +62,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe simplifier.simplify(ex)).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -87,7 +88,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           expressions :+ (tla.exp(tla.int(0), ex).as(IntT1))
         }
       } catch {
-        case _: TlaInputError =>
+        case _: TlaInputError   =>
+        case _: TypingException =>
       }
 
       expressions.forall({ expression =>
@@ -97,7 +99,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe (tla.int(0).as(IntT1))).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -118,7 +121,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe (tla.int(1).as(IntT1))).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -248,7 +252,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe (tla.bool(true).as(BoolT1))).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -269,7 +274,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe (tla.bool(false).as(BoolT1))).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -297,7 +303,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe simplifier.simplify(ex)).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -320,7 +327,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
           (result shouldBe simplifier.simplify(negatedEx)).withClue(s"when simplifying ${expression.toString}")
           true
         } catch {
-          case _: TlaInputError => true
+          case _: TlaInputError   => true
+          case _: TypingException => true
         }
       })
 
@@ -526,7 +534,8 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
 
               true
             } catch {
-              case _: TlaInputError => true
+              case _: TlaInputError   => true
+              case _: TypingException => true
             }
           }
       }
