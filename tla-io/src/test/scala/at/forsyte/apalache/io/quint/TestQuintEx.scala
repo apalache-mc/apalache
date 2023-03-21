@@ -396,6 +396,11 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("select", Q.intList, Q.intIsGreaterThanZero)) == expected)
   }
 
+  test("can convert builtin range operator application") {
+    assert(convert(Q.app("range", Q._3,
+            Q._42)) == "Apalache!MkSeq(42 - 3, LET __QUINT_LAMBDA0(__quint_var0) ≜ (3 + __quint_var0) - 1 IN __QUINT_LAMBDA0)")
+  }
+
   test("can convert builtin foldr operator application") {
     val expected = {
       val slenDecl = "__QUINT_LAMBDA1 ≜ Len(<<1, 2, 3>>)"

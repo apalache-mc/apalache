@@ -341,8 +341,14 @@ class Quint(moduleData: QuintOutput) {
                   val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
                   tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
                 })(quintArgs)
-        // TODO: list operations requiring rewiring  https://github.com/informalsystems/apalache/issues/2437
-        case "range" => null
+        case "range" =>
+          binaryApp(opName,
+              (low, high) => {
+                val iParam = tla.param(uniqueVarName(), IntT1)
+                val i = tla.name(iParam._1.name, iParam._2)
+                tla.mkSeqConst(tla.minus(high, low),
+                    tla.lambda(uniqueLambdaName(), tla.minus(tla.plus(low, i), tla.int(1)), iParam))
+              })
         case "foldr" =>
           quintArgs =>
             ternaryApp(opName,
