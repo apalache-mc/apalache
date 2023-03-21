@@ -343,7 +343,42 @@ class Quint(moduleData: QuintOutput) {
                 })(quintArgs)
         // TODO: list operations requiring rewiring  https://github.com/informalsystems/apalache/issues/2437
         case "range" => null
-        case "foldr" => null
+        case "foldr" =>
+          quintArgs =>
+            ternaryApp(opName,
+                (seq, init, op) => {
+                  val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                  val elemType = seqType match {
+                    case SeqT1(elem) => elem
+                    case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+                  }
+                  val accType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
+                  // Reverse(__s) ==
+                  //  LET __s_len == Len(__s) IN
+                  //  LET __get_ith(__i) == __s[__s_len - __i + 1] IN
+                  //  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __get_ith), 1, __s_len)
+                  val sParam = tla.param(uniqueVarName(), seqType)
+                  val s = tla.name(sParam._1.name, sParam._2)
+                  val iParam = tla.param(uniqueVarName(), IntT1)
+                  val i = tla.name(iParam._1.name, iParam._2)
+                  val s_lenDecl = tla.decl(uniqueLambdaName(), tla.len(seq))
+                  val s_len = tla.name(s_lenDecl.name, OperT1(Seq(), IntT1))
+                  val get_ith = tla.lambda(uniqueLambdaName(),
+                      tla.app(s, tla.plus(tla.minus(tla.appOp(s_len), i), tla.int(1))), iParam)
+                  val reverseDecl = tla.decl(uniqueLambdaName(),
+                      tla.letIn(tla.subseq(tla.mkSeqConst(tla.apalacheSeqCapacity(s), get_ith), tla.int(1),
+                              tla.appOp(s_len)), s_lenDecl), sParam)
+                  // FoldRight(__op(_, _), __seq, __base) ==
+                  //  LET __map (__y, __x) == __op(__x, __y) IN
+                  //  __ApalacheFoldSeq(__map, __base, Reverse(__seq))
+                  val xParam = tla.param(uniqueVarName(), elemType)
+                  val x = tla.name(xParam._1.name, xParam._2)
+                  val yParam = tla.param(uniqueVarName(), accType)
+                  val y = tla.name(yParam._1.name, yParam._2)
+                  val reverse = tla.name(reverseDecl.name, OperT1(Seq(seqType), seqType))
+                  tla.letIn(tla.foldSeq(tla.lambda(uniqueLambdaName(), tla.appOp(op, x, y), yParam, xParam), init,
+                          tla.appOp(reverse, seq)), reverseDecl)
+                })(quintArgs)
 
         // Tuples
         case "Tup" => variadicApp(args => tla.tuple(args: _*))
