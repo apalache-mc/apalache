@@ -377,15 +377,19 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin nth operator application") {
-    assert(convert(Q.app("nth", Q.intList, Q._1)) == "(<<1, 2, 3>>)[2]")
+    assert(convert(Q.app("nth", Q.intList, Q._1)) == "(<<1, 2, 3>>)[1 + 1]")
+  }
+
+  test("can convert builtin nth operator application to variable index") {
+    assert(convert(Q.app("nth", Q.intList, Q.name)) == "(<<1, 2, 3>>)[n + 1]")
   }
 
   test("can convert builtin replaceAt operator application") {
-    assert(convert(Q.app("replaceAt", Q.intList, Q._1, Q._42)) == "[<<1, 2, 3>> EXCEPT ![2] = 42]")
+    assert(convert(Q.app("replaceAt", Q.intList, Q._1, Q._42)) == "[<<1, 2, 3>> EXCEPT ![(1 + 1)] = 42]")
   }
 
   test("can convert builtin slice operator application") {
-    assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)) == "Sequences!SubSeq(<<1, 2, 3>>, 1, 2)")
+    assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)) == "Sequences!SubSeq(<<1, 2, 3>>, 0 + 1, 1 + 1)")
   }
 
   test("can convert builtin select operator application") {
