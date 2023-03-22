@@ -384,13 +384,16 @@ class Quint(moduleData: QuintOutput) {
         case "tuples" => variadicApp(tla.times)
 
         // Maps (functions)
-        case "Map"       => variadicApp(args => tla.setAsFun(args: _))
+        case "Map" =>
+          // Map is variadic on n tuples, so build a set of these tuple args
+          // before converting the resulting set of tuples to a function.
+          quintArgs => tla.setAsFun(setEnumeration(id)(quintArgs))
         case "get"       => binaryApp(opName, tla.app)
         case "keys"      => unaryApp(opName, tla.dom)
         case "setToMap"  => unaryApp(opName, tla.setAsFun)
         case "setOfMaps" => binaryApp(opName, tla.funSet)
         case "set"       => ternaryApp(opName, tla.except)
-        case "mapBy"     => null
+        case "mapBy"     => binaryBindingApp(opName, (name, set, expr) => tla.funDef(expr, (name, set)))
         case "setBy"     => null
         case "put" =>
           quintArgs =>
@@ -407,17 +410,17 @@ class Quint(moduleData: QuintOutput) {
                   val mapCacheName = uniqueVarName()
                   val domName = uniqueVarName()
                   // TLA+ name expressions
-                  val mapCache = tla.name(mapCacheName, mapType)
-                  val dom = tla.name(domName, SetT1(keyType))
+                  val mapCache = tla.name(mapCacheName, OperT1(Seq(), mapType))
+                  val dom = tla.name(domName, OperT1(Seq(), SetT1(keyType)))
                   // build the final funDef, i.e., the LET-IN body
                   val bindingVar = tla.name(uniqueVarName(), keyType)
-                  val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(mapCache, bindingVar))
-                  val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), dom)))
+                  val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(tla.appOp(mapCache), bindingVar))
+                  val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), tla.appOp(dom))))
                   // build the entire LET-IN
                   tla.letIn(
                       composed,
                       tla.decl(mapCacheName, map),
-                      tla.decl(domName, tla.dom(mapCache)),
+                      tla.decl(domName, tla.dom(tla.appOp(mapCache))),
                   )
                 })(quintArgs)
 

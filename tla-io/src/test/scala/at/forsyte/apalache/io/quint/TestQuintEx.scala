@@ -112,6 +112,7 @@ class TestQuintEx extends AnyFunSuite {
       Q.accumulatingOpp -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintIntT()),
       Q.chooseSomeFromIntSet -> QuintIntT(),
       Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
+      Q.intMap -> QuintFunT(QuintIntT(), QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -448,8 +449,13 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("assert", Q.nIsGreaterThanZero)) == "n > 0")
   }
 
-  ignore("can convert builtin put operator application") {
-    // TODO(#2480): extend when we have support for `Map()`
-    assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)) == "")
+  test("can convert builtin put operator application") {
+    val expected = """
+        |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
+        |LET __quint_var1 ≜ DOMAIN __quint_var0() IN
+        |[__quint_var2 ∈ ({3} ∪ __quint_var1()) ↦ IF (__quint_var2 = 3) THEN 42 ELSE __quint_var0()[__quint_var2]]
+        """.stripMargin.linesIterator.mkString(" ").trim
+
+    assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)) == expected)
   }
 }
