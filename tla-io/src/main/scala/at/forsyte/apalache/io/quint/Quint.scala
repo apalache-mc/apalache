@@ -341,50 +341,32 @@ class Quint(moduleData: QuintOutput) {
         case "setOfMaps" => binaryApp(opName, tla.funSet)
         case "set"       => ternaryApp(opName, tla.except)
         case "setBy"     => null
-        case "put"       =>
-          // put(map, key, value) ~~> (key :> value) @@ map
+        case "put" =>
           quintArgs =>
             ternaryApp(opName,
                 (map, key, value) => {
-                  // (1) build `key :> value` == `[ _ \in {key} |-> value ]`
+                  // (key :> value) @@ map ==
+                  //    LET __map_cache == __map IN
+                  //    LET __dom == DOMAIN __map_cache IN
+                  //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
                   // extract types
                   val mapType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
                   val keyType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
-                  val valType = Quint.typeToTlaType(types(quintArgs(2).id).typ)
-                  // f1 == key :> value
-                  val f1 = tla.funDef(value, (tla.name(uniqueVarName(), keyType), tla.enumSet(key)))
-
-                  // (2) build (key :> value) @@ map, where
-                  // __f1 @@ __f2 ==
-                  //    LET __f1_cache == __f1
-                  //        __f2_cache == __f2
-                  //    IN
-                  //    LET __d1 == DOMAIN __f1_cache
-                  //        __d2 == DOMAIN __f2_cache
-                  //    IN
-                  //    [__x \in __d1 \union __d2 |-> IF __x \in __d1 THEN __f1_cache[__x] ELSE __f2_cache[__x]]
-                  val f2 = map
                   // string names
-                  val cacheName1 = uniqueVarName()
-                  val cacheName2 = uniqueVarName()
-                  val domName1 = uniqueVarName()
-                  val domName2 = uniqueVarName()
+                  val mapCacheName = uniqueVarName()
+                  val domName = uniqueVarName()
                   // TLA+ name expressions
-                  val cache1 = tla.name(cacheName1, mapType)
-                  val cache2 = tla.name(cacheName2, mapType)
-                  val dom1 = tla.name(domName1, SetT1(valType))
-                  val dom2 = tla.name(domName2, SetT1(valType))
+                  val mapCache = tla.name(mapCacheName, mapType)
+                  val dom = tla.name(domName, SetT1(keyType))
                   // build the final funDef, i.e., the LET-IN body
                   val bindingVar = tla.name(uniqueVarName(), keyType)
-                  val ite = tla.ite(tla.in(bindingVar, dom1), tla.app(cache1, bindingVar), tla.app(cache2, bindingVar))
-                  val composed = tla.funDef(ite, (bindingVar, tla.cup(dom1, dom2)))
+                  val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(mapCache, bindingVar))
+                  val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), dom)))
                   // build the entire LET-IN
                   tla.letIn(
                       composed,
-                      tla.decl(cacheName1, f1),
-                      tla.decl(cacheName2, f2),
-                      tla.decl(domName1, tla.dom(cache1)),
-                      tla.decl(domName2, tla.dom(cache2)),
+                      tla.decl(mapCacheName, map),
+                      tla.decl(domName, tla.dom(mapCache)),
                   )
                 })(quintArgs)
 
