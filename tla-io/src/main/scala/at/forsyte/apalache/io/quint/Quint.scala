@@ -237,20 +237,12 @@ class Quint(moduleData: QuintOutput) {
         case args => tla.enumSet(args: _*)
       }
 
-    // Increments the integer value of the `n`th expression in `quintExs`
-    // iff the `n`th expression is a quint int
+    // Increments the TLA expression (as a TBuilderInstruction), which is assumed
+    // to be an integer.
     //
     // Used in the conversion of quint list operator to TLA sequence operators,
     // due to the fact that quint indexing is 0-based but TLA indexing is 1-based.
-    //
-    // NOTE: This combinator doesn't perform any error checking for invalid parameter
-    // types or arities, since that is handled by the *App combinators
-    private val incrIndexAtNthArg: (Int, Seq[QuintEx]) => Seq[QuintEx] = (n, quintExs) =>
-      quintExs.zipWithIndex
-        .map {
-          case (qInt: QuintInt, i) if i == n => qInt.copy(value = qInt.value + 1)
-          case (param, _)                    => param
-        }
+    private val incrTla: T => T = tlaEx => tla.plus(tlaEx, tla.int(1))
 
     private val tlaApplication: QuintApp => TBuilderInstruction = { case QuintApp(id, opName, quintArgs) =>
       val applicationBuilder: Seq[QuintEx] => TBuilderInstruction = opName match {
@@ -316,10 +308,9 @@ class Quint(moduleData: QuintOutput) {
         case "length"    => unaryApp(opName, tla.len)
         case "indices"   => unaryApp(opName, tla.dom)
         case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
-        case "nth"       => quintArgs => binaryApp(opName, tla.app)(incrIndexAtNthArg(1, quintArgs))
-        case "replaceAt" => quintArgs => ternaryApp(opName, tla.except)(incrIndexAtNthArg(1, quintArgs))
-        case "slice" =>
-          quintArgs => ternaryApp(opName, tla.subseq)(incrIndexAtNthArg(1, incrIndexAtNthArg(2, quintArgs)))
+        case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
+        case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
+        case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
         case "select" =>
           quintArgs =>
             binaryApp(opName,
