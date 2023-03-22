@@ -393,7 +393,34 @@ class Quint(moduleData: QuintOutput) {
         case "setOfMaps" => binaryApp(opName, tla.funSet)
         case "set"       => ternaryApp(opName, tla.except)
         case "setBy"     => null
-        case "put"       => null
+        case "put" =>
+          quintArgs =>
+            ternaryApp(opName,
+                (map, key, value) => {
+                  // (key :> value) @@ map ==
+                  //    LET __map_cache == __map IN
+                  //    LET __dom == DOMAIN __map_cache IN
+                  //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
+                  // extract types
+                  val mapType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                  val keyType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
+                  // string names
+                  val mapCacheName = uniqueVarName()
+                  val domName = uniqueVarName()
+                  // TLA+ name expressions
+                  val mapCache = tla.name(mapCacheName, mapType)
+                  val dom = tla.name(domName, SetT1(keyType))
+                  // build the final funDef, i.e., the LET-IN body
+                  val bindingVar = tla.name(uniqueVarName(), keyType)
+                  val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(mapCache, bindingVar))
+                  val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), dom)))
+                  // build the entire LET-IN
+                  tla.letIn(
+                      composed,
+                      tla.decl(mapCacheName, map),
+                      tla.decl(domName, tla.dom(mapCache)),
+                  )
+                })(quintArgs)
 
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))

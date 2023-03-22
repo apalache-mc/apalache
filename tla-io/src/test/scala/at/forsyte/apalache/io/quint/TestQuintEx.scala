@@ -71,6 +71,9 @@ class TestQuintEx extends AnyFunSuite {
     val intPairSet = app("Set", intPair, intPair)
     val emptyIntSet = app("Set")
     val setOfIntSets = app("Set", intSet, intSet, intSet)
+    val intTup1 = app("Tup", _0, _1)
+    val intTup2 = app("Tup", _3, _42)
+    val intMap = app("Map", intTup1, intTup2) // Map(0 -> 1, 3 -> 42)
     // For use in folds
     val addNameAndAcc = app("isum", name, acc)
     val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
@@ -443,5 +446,10 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin assert operator") {
     assert(convert(Q.app("assert", Q.nIsGreaterThanZero)) == "n > 0")
+  }
+
+  ignore("can convert builtin put operator application") {
+    // TODO(#2480): extend when we have support for `Map()`
+    assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)) == "")
   }
 }
