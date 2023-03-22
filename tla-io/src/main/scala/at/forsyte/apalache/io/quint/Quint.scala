@@ -394,7 +394,9 @@ class Quint(moduleData: QuintOutput) {
         case "setOfMaps" => binaryApp(opName, tla.funSet)
         case "set"       => ternaryApp(opName, tla.except)
         case "mapBy"     => binaryBindingApp(opName, (name, set, expr) => tla.funDef(expr, (name, set)))
-        case "setBy"     => null
+        case "setBy"     =>
+          // f.setBy(x, op) ~~> [f EXCEPT ![k] |-> op(f[k])]
+          ternaryApp(opName, (f, x, op) => tla.except(f, x, tla.appOp(op, tla.app(f, x))))
         case "put" =>
           quintArgs =>
             ternaryApp(opName,
