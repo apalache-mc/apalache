@@ -80,6 +80,8 @@ class TestQuintEx extends AnyFunSuite {
     val chooseSomeFromIntSet = app("chooseSome", intSet)
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)
+    val addOne = app("iadd", name, _1)
+    val addOneOp = QuintLambda(uid, List(nParam), "def", addOne)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -113,6 +115,8 @@ class TestQuintEx extends AnyFunSuite {
       Q.chooseSomeFromIntSet -> QuintIntT(),
       Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
       Q.intMap -> QuintFunT(QuintIntT(), QuintIntT()),
+      Q.addOne -> QuintIntT(),
+      Q.addOneOp -> QuintOperT(List(QuintIntT()), QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -449,13 +453,52 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("assert", Q.nIsGreaterThanZero)) == "n > 0")
   }
 
+  test("can convert builtin Map operator") {
+    assert(convert(Q.app("Map", Q.intTup1, Q.intTup2)) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+  }
+
+  test("can convert builtin get operator") {
+    assert(convert(Q.app("get", Q.intMap, Q._0)) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})[0]")
+  }
+
+  test("can convert builtin keys operator") {
+    assert(convert(Q.app("keys", Q.intMap)) == "DOMAIN Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+  }
+
+  test("can convert builtin setToMap operator") {
+    assert(convert(Q.app("setToMap", Q.intPairSet)) == "Apalache!SetAsFun({<<1, 2>>, <<1, 2>>})")
+  }
+
+  test("can convert builtin setOfMaps operator") {
+    assert(convert(Q.app("setOfMaps", Q.intSet, Q.intSet)) == "[{1, 2, 3} → {1, 2, 3}]")
+  }
+
+  test("can convert builtin set operator") {
+    assert(
+        convert(Q.app("set", Q.intMap, Q._1, Q._42))
+          ==
+            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![1] = 42]"
+    )
+  }
+
+  test("can convert builtin mapBy operator") {
+    assert(convert(Q.app("mapBy", Q.intSet, Q.addOneOp)) == "[n ∈ {1, 2, 3} ↦ n + 1]")
+  }
+
+  test("can convert builtin setBy operator") {
+    val expected = """
+        |[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![1] =
+        |(LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})[1]))]
+        """.stripMargin.linesIterator.mkString(" ").trim
+    assert(convert(Q.app("setBy", Q.intMap, Q._1, Q.addOneOp)) == expected)
+  }
+
   test("can convert builtin put operator application") {
     val expected = """
         |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
         |LET __quint_var1 ≜ DOMAIN __quint_var0() IN
         |[__quint_var2 ∈ ({3} ∪ __quint_var1()) ↦ IF (__quint_var2 = 3) THEN 42 ELSE __quint_var0()[__quint_var2]]
         """.stripMargin.linesIterator.mkString(" ").trim
-
     assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)) == expected)
   }
 }
