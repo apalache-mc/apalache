@@ -75,7 +75,7 @@ class TestQuintEx extends AnyFunSuite {
     val intTup2 = app("Tup", _3, _42)
     val intMap = app("Map", intTup1, intTup2) // Map(0 -> 1, 3 -> 42)
     // For use in folds
-    val addNameAndAcc = app("isum", name, acc)
+    val addNameAndAcc = app("iadd", name, acc)
     val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
     val chooseSomeFromIntSet = app("chooseSome", intSet)
     // Requires ID registered with type
@@ -155,7 +155,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert multi argument lambda") {
-    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0""")
+    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0""")
   }
 
   test("can convert operator application") {
@@ -319,7 +319,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin fold operator application") {
-    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0, 1, {1, 2, 3})"
+    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0, 1, {1, 2, 3})"
     assert(convert(Q.app("fold", Q.intSet, Q._1, Q.accumulatingOpp)) == expected)
   }
 
@@ -381,7 +381,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin foldl operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0, 0, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0, 0, <<1, 2, 3>>)"
     assert(convert(Q.app("foldl", Q.intList, Q._0, Q.accumulatingOpp)) == expected)
   }
 
@@ -422,7 +422,7 @@ class TestQuintEx extends AnyFunSuite {
       val reverseDecl =
         s"__QUINT_LAMBDA3(__quint_var0) ≜ LET ${slenDecl} IN Sequences!SubSeq(Apalache!MkSeq(ApalacheInternal!__ApalacheSeqCapacity(__quint_var0), ${get_ith}), 1, __QUINT_LAMBDA1())"
       val map =
-        "LET __QUINT_LAMBDA4(__quint_var3, __quint_var2) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0(__quint_var2, __quint_var3) IN __QUINT_LAMBDA4"
+        "LET __QUINT_LAMBDA4(__quint_var3, __quint_var2) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0(__quint_var2, __quint_var3) IN __QUINT_LAMBDA4"
       val reversedSeq = "__QUINT_LAMBDA3(<<1, 2, 3>>)"
       s"LET ${reverseDecl} IN Apalache!ApaFoldSeqLeft(${map}, 0, ${reversedSeq})"
     }
