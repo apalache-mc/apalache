@@ -395,8 +395,21 @@ class Quint(moduleData: QuintOutput) {
         case "set"       => ternaryApp(opName, tla.except)
         case "mapBy"     => binaryBindingApp(opName, (name, set, expr) => tla.funDef(expr, (name, set)))
         case "setBy"     =>
-          // f.setBy(x, op) ~~> [f EXCEPT ![k] |-> op(f[k])]
-          ternaryApp(opName, (f, x, op) => tla.except(f, x, tla.appOp(op, tla.app(f, x))))
+          // f.setBy(x, op) ~~>
+          //
+          // LET f_cache = f IN
+          // [f_cache EXCEPT ![k] |-> op(f_cache[k])]
+          ternaryApp(opName,
+              (f, x, op) => {
+                val f_cache_name = uniqueVarName()
+                val f_type = Quint.typeToTlaType(types(id).typ)
+                val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
+                val cacheDecl = tla.decl(f_cache_name, f)
+                tla.letIn(
+                    tla.except(f_cache, x, tla.appOp(op, tla.app(f_cache, x))),
+                    cacheDecl,
+                )
+              })
         case "put" =>
           quintArgs =>
             ternaryApp(opName,

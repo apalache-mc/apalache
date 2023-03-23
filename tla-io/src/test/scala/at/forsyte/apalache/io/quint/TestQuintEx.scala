@@ -82,6 +82,7 @@ class TestQuintEx extends AnyFunSuite {
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)
     val addOne = app("iadd", name, _1)
     val addOneOp = QuintLambda(uid, List(nParam), "def", addOne)
+    val setByExpression = app("setBy", intMap, _1, addOneOp)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -113,10 +114,11 @@ class TestQuintEx extends AnyFunSuite {
       Q.addNameAndAcc -> QuintIntT(),
       Q.accumulatingOpp -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintIntT()),
       Q.chooseSomeFromIntSet -> QuintIntT(),
-      Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
       Q.intMap -> QuintFunT(QuintIntT(), QuintIntT()),
       Q.addOne -> QuintIntT(),
       Q.addOneOp -> QuintOperT(List(QuintIntT()), QuintIntT()),
+      Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
+      Q.setByExpression -> QuintFunT(QuintIntT(), QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -487,10 +489,10 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin setBy operator") {
     val expected = """
-        |[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![1] =
-        |(LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})[1]))]
+        |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
+        |[__quint_var0() EXCEPT ![1] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
         """.stripMargin.linesIterator.mkString(" ").trim
-    assert(convert(Q.app("setBy", Q.intMap, Q._1, Q.addOneOp)) == expected)
+    assert(convert(Q.setByExpression) == expected)
   }
 
   test("can convert builtin put operator application") {
