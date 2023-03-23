@@ -1,5 +1,13 @@
 ---- MODULE Antipatterns ----
-\* Contains a collection of known-to-be-inefficient Apalache constructs
+(* Contains a collection of known-to-be-inefficient Apalache constructs, a.k.a. "antipatterns".
+We explain why these constructs are inefficient in 
+https://apalache.informal.systems/docs/apalache/antipatterns.html
+
+The purpose of this file is to collect known antipatterns, so we can measure just how 
+much they affect performance, across various versions of Apalache.
+As a side-effect of the work done on ADR20, the performance hit when using anipatterns,
+while still present, is expected to be less drastic than before.
+*)
 
 EXTENDS Integers, Apalache, TLC
 
