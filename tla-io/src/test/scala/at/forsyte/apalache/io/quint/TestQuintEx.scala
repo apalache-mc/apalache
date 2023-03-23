@@ -475,9 +475,9 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin set operator") {
     assert(
-        convert(Q.app("set", Q.intMap, Q._1, Q._42))
+        convert(Q.app("set", Q.intMap, Q._3, Q._2))
           ==
-            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![1] = 42]"
+            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![3] = 2]"
     )
   }
 
