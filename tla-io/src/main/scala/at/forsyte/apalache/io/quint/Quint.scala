@@ -470,11 +470,28 @@ class Quint(moduleData: QuintOutput) {
       applicationBuilder(quintArgs)
     }
 
+    private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => TBuilderInstruction = {
+      // val nondet name = oneOf(domain); scope
+      // ~~>
+      // LET wrap = \E name \in domain: scope IN wrap
+      case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain)), _), scope) =>
+        val wrapName = uniqueVarName()
+        val wrap = tla.name(wrapName, OperT1(Seq(), BoolT1))
+        val elemType = Quint.typeToTlaType(types(id).typ)
+        val tlaName = tla.name(name, elemType)
+        val nondetChoice = tla.exists(tlaName, tlaExpression(domain), tlaExpression(scope))
+        tla.letIn(wrap, tla.decl(wrapName, nondetChoice))
+      case invalidValue =>
+        throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
+    }
+
     private val tlaExpression: QuintEx => TBuilderInstruction = {
-      case QuintBool(_, b)          => tla.bool(b)
-      case QuintInt(_, i)           => tla.int(i)
-      case QuintStr(_, s)           => tla.str(s)
-      case QuintName(id, n)         => tla.name(n, Quint.typeToTlaType(types(id).typ))
+      case QuintBool(_, b)  => tla.bool(b)
+      case QuintInt(_, i)   => tla.int(i)
+      case QuintStr(_, s)   => tla.str(s)
+      case QuintName(id, n) => tla.name(n, Quint.typeToTlaType(types(id).typ))
+      case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
+        nondetBinding(binding, scope)
       case QuintLet(_, opDef, expr) => tla.letIn(tlaExpression(expr), opDefConverter(opDef))
       case lam: QuintLambda =>
         val (body, typedParams) = lambdaBodyAndParams(lam)
