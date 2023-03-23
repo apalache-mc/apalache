@@ -7,6 +7,14 @@ CONSTANT
   \* @type: Int;
   N
 
+CInit10 == N = 10
+CInit20 == N = 20
+CInit40 == N = 40
+CInit80 == N = 80
+CInit160 == N = 160
+
+Init == TRUE
+Next == TRUE
 
 \* Equivalent to S
 \* @type: (Set(t)) => Set(t);
@@ -19,10 +27,6 @@ RemakeSet(S) ==
   IN
     ApaFoldSet(addOne, empty, S)
 
-Init == TRUE
-Next == TRUE
-
-
 \* Equivalent to [x \in DOMAIN fn |-> fn[x] + 1]
 \* @type: (a -> Int) => a -> Int;
 IncrementalFnChange(fn) ==
@@ -31,7 +35,6 @@ IncrementalFnChange(fn) ==
     addOneInCdm(f, x) == [f EXCEPT ![x] = f[x] + 1]
   IN
     ApaFoldSet(addOneInCdm, fn, DOMAIN fn)
-
 
 \* Equivalent to [x \in S |-> A(x)]
 \* @type: (Set(a), (a) => b) => a -> b;
@@ -50,11 +53,5 @@ Inv ==
   /\ RemakeSet(1..N) = 1..N
   /\ IncrementalFnChange([x \in 1..N |-> x]) = [x \in 1..N |-> x + 1]
   /\ IncrementalFnBuild(1..N, A) = [ x \in 1..N |-> A(x) ]
-
-CInit10 == N = 10
-CInit20 == N = 20
-CInit40 == N = 40
-CInit80 == N = 80
-CInit160 == N = 160
 
 ====
