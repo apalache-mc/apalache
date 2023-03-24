@@ -470,10 +470,15 @@ class Quint(moduleData: QuintOutput) {
       applicationBuilder(quintArgs)
     }
 
+    // Convert Quint's nondet variable binding
+    //
+    //   val nondet name = oneOf(domain); scope
+    //   ~~>
+    //   LET wrap = \E name \in domain: scope IN wrap
+    //
+    // We must wrap the binding, because this is at the declaration level of the quint
+    // IR, but must be at the expression level in the Apalache IR.
     private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => TBuilderInstruction = {
-      // val nondet name = oneOf(domain); scope
-      // ~~>
-      // LET wrap = \E name \in domain: scope IN wrap
       case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain)), _), scope) =>
         val wrapName = uniqueVarName()
         val wrap = tla.name(wrapName, OperT1(Seq(), BoolT1))
