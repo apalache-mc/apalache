@@ -245,43 +245,73 @@ class TestSetBuilder extends BuilderTest {
 
   test("map") {
     type T = (TBuilderInstruction, Seq[TBuilderInstruction])
-    type TParam = (TlaType1, Seq[TlaType1])
+    type TParam = (TlaType1, Seq[(TlaType1, Seq[TlaType1])])
+
+    def varInSet[T](
+        wrapper: (TBuilderInstruction, TBuilderInstruction) => T
+      )(i: Int,
+        ti: TlaType1,
+        tsi: Seq[TlaType1]): T =
+      if (tsi.isEmpty)
+        wrapper(
+            builder.name(s"x$i", ti),
+            builder.name(s"S$i", SetT1(ti)),
+        )
+      else {
+        val names = tsi.zipWithIndex.map { case (tij, j) =>
+          builder.name(s"x${i}_$j", tij)
+        }
+        wrapper(
+            builder.tuple(names: _*),
+            builder.name(s"S$i", SetT1(TupT1(tsi: _*))),
+        )
+      }
 
     def mkWellTyped(tparam: TParam): T = {
       val (t, ts) = tparam
       (
           builder.name("e", t),
-          ts.zipWithIndex.flatMap { case (tt, i) =>
-            Seq(
-                builder.name(s"x$i", tt),
-                builder.name(s"S$i", SetT1(tt)),
-            )
-          },
+          ts.zipWithIndex.flatMap { case ((ti, tsi), i) => varInSet(Seq(_, _))(i, ti, tsi) },
       )
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
       val (t, ts) = tparam
-      Seq(
-          (
-              builder.name("e", t),
-              ts.zipWithIndex.flatMap { case (tt, i) =>
-                Seq(
-                    builder.name(s"x$i", InvalidTypeMethods.differentFrom(tt)),
-                    builder.name(s"S$i", SetT1(tt)),
-                )
-              },
-          ),
-          (
-              builder.name("e", t),
-              ts.zipWithIndex.flatMap { case (tt, i) =>
-                Seq(
-                    builder.name(s"x$i", tt),
-                    builder.name(s"S$i", InvalidTypeMethods.notSet),
-                )
-              },
-          ),
-      )
+      ts.indices.map { badIdx =>
+        (
+            builder.name("e", t),
+            ts.zipWithIndex.flatMap { case ((ti, tsi), i) =>
+              if (i == badIdx) {
+                if (tsi.isEmpty)
+                  Seq(
+                      builder.name(s"x$i", InvalidTypeMethods.differentFrom(ti)),
+                      builder.name(s"S$i", SetT1(ti)),
+                  )
+                else {
+                  val names = tsi.zipWithIndex.map { case (tij, j) =>
+                    builder.name(s"x${i}_$j", if (j == 0) InvalidTypeMethods.differentFrom(tij) else tij)
+                  }
+                  Seq(
+                      builder.tuple(names: _*),
+                      builder.name(s"S$i", SetT1(TupT1(tsi: _*))),
+                  )
+                }
+              } else {
+                varInSet(Seq(_, _))(i, ti, tsi)
+              }
+            },
+        )
+      } :+
+        (
+            builder.name("e", t),
+            ts.zipWithIndex.flatMap { case ((ti, _), i) =>
+              Seq(
+                  builder.name(s"x$i", ti),
+                  builder.name(s"S$i", InvalidTypeMethods.notSet),
+              )
+            }
+        )
+
     }
 
     val resultIsExpected = expectEqTyped[TParam, T](
@@ -291,7 +321,7 @@ class TestSetBuilder extends BuilderTest {
         { case (t, _) => SetT1(t) },
     )
 
-    checkRun(Generators.typeAndNonemptySeqGen)(
+    checkRun(Generators.typeAndNonemptySeqOfTypeAndSeqGen)(
         runVariadicWithDistinguishedFirst(
             builder.mapMixed,
             mkWellTyped,
@@ -327,6 +357,10 @@ class TestSetBuilder extends BuilderTest {
       builder.mapMixed(expr, variable, set)
     }
 
+    assertThrowsBoundVarIntroductionTernaryTupled { case (variable, set, expr) =>
+      builder.mapMixed(expr, variable, set)
+    }
+
     // throws on shadowing: multi-arity
     assertThrows[TBuilderScopeException] {
       build(
@@ -341,6 +375,24 @@ class TestSetBuilder extends BuilderTest {
               builder.name("S", SetT1(StrT1)),
               builder.name("y", IntT1),
               builder.name("T", SetT1(IntT1)),
+          )
+      )
+    }
+
+    // throws on shadowing: multi-arity tupled
+    assertThrows[TBuilderScopeException] {
+      build(
+          // { \E y \in T: TRUE : x \in S, y \in T }
+          builder.mapMixed(
+              builder.exists(
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
+                  builder.bool(true),
+              ),
+              builder.name("a", StrT1),
+              builder.name("A", SetT1(StrT1)),
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
+              builder.name("ST", SetT1(TupT1(StrT1, IntT1))),
           )
       )
     }
@@ -373,30 +425,40 @@ class TestSetBuilder extends BuilderTest {
       val (t, ts) = tparam
       (
           builder.name("e", t),
-          ts.zipWithIndex.map { case (tt, i) =>
-            builder.name(s"x$i", tt) ->
-              builder.name(s"S$i", SetT1(tt))
+          ts.zipWithIndex.map { case ((ti, tsi), i) =>
+            varInSet(_ -> _)(i, ti, tsi)
           },
       )
     }
 
     def mkIllTyped2(tparam: TParam): Seq[T2] = {
       val (t, ts) = tparam
-      Seq(
-          (
-              builder.name("e", t),
-              ts.zipWithIndex.map { case (tt, i) =>
-                builder.name(s"x$i", InvalidTypeMethods.differentFrom(tt)) ->
-                  builder.name(s"S$i", SetT1(tt))
-              },
-          ),
-          (
-              builder.name("e", t),
-              ts.zipWithIndex.map { case (tt, i) =>
-                builder.name(s"x$i", tt) ->
-                  builder.name(s"S$i", InvalidTypeMethods.notSet)
-              },
-          ),
+      ts.indices.map { badIdx =>
+        (
+            builder.name("e", t),
+            ts.zipWithIndex.map { case ((ti, tsi), i) =>
+              if (i == badIdx) {
+                if (tsi.isEmpty)
+                  builder.name(s"x$i", InvalidTypeMethods.differentFrom(ti)) ->
+                    builder.name(s"S$i", SetT1(ti))
+                else {
+                  val names = tsi.zipWithIndex.map { case (tij, j) =>
+                    builder.name(s"x${i}_$j", if (j == 0) InvalidTypeMethods.differentFrom(tij) else tij)
+                  }
+                  builder.tuple(names: _*) ->
+                    builder.name(s"S$i", SetT1(TupT1(tsi: _*)))
+                }
+              } else {
+                varInSet(_ -> _)(i, ti, tsi)
+              }
+            },
+        )
+      } :+ (
+          builder.name("e", t),
+          ts.zipWithIndex.map { case ((ti, _), i) =>
+            builder.name(s"x$i", ti) ->
+              builder.name(s"S$i", InvalidTypeMethods.notSet)
+          }
       )
     }
 
@@ -407,7 +469,7 @@ class TestSetBuilder extends BuilderTest {
         { case (t, _) => SetT1(t) },
     )
 
-    checkRun(Generators.typeAndNonemptySeqGen)(
+    checkRun(Generators.typeAndNonemptySeqOfTypeAndSeqGen)(
         runVariadicWithDistinguishedFirst(
             builder.map,
             mkWellTyped2,
@@ -422,6 +484,10 @@ class TestSetBuilder extends BuilderTest {
     }
 
     assertThrowsBoundVarIntroductionTernary { case (variable, set, expr) =>
+      builder.map(expr, (variable, set))
+    }
+
+    assertThrowsBoundVarIntroductionTernaryTupled { case (variable, set, expr) =>
       builder.map(expr, (variable, set))
     }
 
@@ -442,6 +508,23 @@ class TestSetBuilder extends BuilderTest {
       )
     }
 
+    // throws on duplicate vars
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.map(
+              builder.name("e", IntT1),
+              (
+                  builder.name(s"x1", IntT1),
+                  builder.name(s"S1", SetT1(IntT1)),
+              ),
+              (
+                  builder.tuple(builder.name(s"x1", IntT1), builder.name(s"x2", IntT1)),
+                  builder.name(s"S2", SetT1(TupT1(IntT1, IntT1))),
+              ),
+          )
+      )
+    }
+
     // throws on shadowing: multi-arity
     assertThrows[TBuilderScopeException] {
       build(
@@ -454,6 +537,24 @@ class TestSetBuilder extends BuilderTest {
               ),
               (builder.name("x", StrT1), builder.name("S", SetT1(StrT1))),
               (builder.name("y", IntT1), builder.name("T", SetT1(IntT1))),
+          )
+      )
+    }
+
+    // throws on shadowing: multi-arity tupled
+    assertThrows[TBuilderScopeException] {
+      build(
+          // { \E y \in T: TRUE : x \in S, y \in T }
+          builder.map(
+              builder.exists(
+                  builder.name("y", IntT1),
+                  builder.name("T", SetT1(IntT1)),
+                  builder.bool(true),
+              ),
+              builder.name("a", StrT1) ->
+                builder.name("A", SetT1(StrT1)),
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)) ->
+                builder.name("ST", SetT1(TupT1(StrT1, IntT1))),
           )
       )
     }

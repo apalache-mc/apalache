@@ -87,10 +87,14 @@ class UnsafeSetBuilder extends ProtoBuilder {
     // Even, non-zero number of args and every other argument is NameEx
     require(TlaSetOper.map.arity.cond(1 + pairs.size), s"Expected pairs to have even, positive arity, found $pairs.")
     val (vars, _) = TlaOper.deinterleave(pairs)
-    require(vars.forall { _.isInstanceOf[NameEx] }, s"Expected vars to be variable names, found $vars.")
+    val varsMultiseq = vars.flatMap(BuilderUtil.getBoundVarsOrThrow) // any can throw if not the right form
     // Vars must be unique
-    val duplicates = vars.filter(k => vars.count(_ == k) > 1)
-    require(duplicates.isEmpty, s"Expected vars to be unique, found duplicates: ${duplicates.mkString(", ")}.")
+    val duplicates = varsMultiseq
+      .foldLeft(Map.empty[String, Int]) { case (m, s) =>
+        m + (s -> (m.getOrElse(s, 0) + 1))
+      }
+      .filter { case (_, v) => v > 1 }
+    require(duplicates.isEmpty, s"Expected vars to be unique, found duplicates: ${duplicates.keySet.mkString(", ")}.")
     buildBySignatureLookup(TlaSetOper.map, e +: pairs: _*)
   }
 

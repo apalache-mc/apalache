@@ -272,6 +272,8 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
     val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonEmptySeqOfTypesGen)
+    val typeAndNonemptySeqOfTypeAndSeqGen: Gen[(TlaType1, Seq[(TlaType1, Seq[TlaType1])])] =
+      Gen.zip(singleTypeGen, minIntGen(1).flatMap(Gen.listOfN(_, typeAndSeqGen)))
 
     // unsafe for non-applicative
     private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
@@ -665,6 +667,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       )
     }
 
+    // test fail on duplicate variable
     assertThrows[IllegalArgumentException] {
       build(
           method(
