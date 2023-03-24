@@ -474,18 +474,12 @@ class Quint(moduleData: QuintOutput) {
     //
     //   val nondet name = oneOf(domain); scope
     //   ~~>
-    //   LET wrap = \E name \in domain: scope IN wrap
-    //
-    // We must wrap the binding, because this is at the declaration level of the quint
-    // IR, but must be at the expression level in the Apalache IR.
+    //   \E name \in domain: scope
     private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => TBuilderInstruction = {
       case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain)), _), scope) =>
-        val wrapName = uniqueVarName()
-        val wrap = tla.name(wrapName, OperT1(Seq(), BoolT1))
         val elemType = Quint.typeToTlaType(types(id).typ)
         val tlaName = tla.name(name, elemType)
-        val nondetChoice = tla.exists(tlaName, tlaExpression(domain), tlaExpression(scope))
-        tla.letIn(wrap, tla.decl(wrapName, nondetChoice))
+        tla.exists(tlaName, tlaExpression(domain), tlaExpression(scope))
       case invalidValue =>
         throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
     }

@@ -509,6 +509,6 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert nondet bindings") {
-    assert(convert(Q.nondetBinding) == "LET __quint_var0 ≜ ∃n ∈ {1, 2, 3}: (n > 0) IN __quint_var0")
+    assert(convert(Q.nondetBinding) == "∃n ∈ {1, 2, 3}: (n > 0)")
   }
 }
