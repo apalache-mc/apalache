@@ -9,7 +9,7 @@ As a side-effect of the work done on ADR20, the performance hit when using anipa
 while still present, is expected to be less drastic than before.
 *)
 
-EXTENDS Integers, Apalache, TLC
+EXTENDS Integers, Apalache, TLC, Sequences
 
 CONSTANT
   \* @type: Int;
@@ -23,6 +23,8 @@ CInit160 == N = 160
 
 Init == TRUE
 Next == TRUE
+
+Id(x) == x
 
 \* Equivalent to S
 \* @type: (Set(t)) => Set(t);
@@ -55,11 +57,27 @@ IncrementalFnBuild(S, A(_)) ==
   IN
     ApaFoldSet(extend, emptyFn, S)
 
-A(x) == x
+\* Equivalent to MkSeq(N, LET F(x) == f[x] IN F), if 1..N \subseteq DOMAIN f
+\* @type: (Int -> b) => Seq(b);
+SeqFromFun(f) ==
+  LET 
+    \* @type: (Seq(b), Int) => Seq(b);
+    extend(s, x) == Append(s, f[x])
+    \* @type: () => Seq(b);
+    emptySeq == <<>>
+  IN
+    ApaFoldSeqLeft(extend, emptySeq, MkSeq(N, Id))
+
 
 Inv == 
-  /\ RemakeSet(1..N) = 1..N
-  /\ IncrementalFnChange([x \in 1..N |-> x]) = [x \in 1..N |-> x + 1]
-  /\ IncrementalFnBuild(1..N, A) = [ x \in 1..N |-> A(x) ]
+  LET range == 1..N
+  IN
+  /\ RemakeSet(range) = range
+  /\ IncrementalFnChange([x \in range |-> x]) = [x \in range |-> x + 1]
+  /\ IncrementalFnBuild(range, Id) = [ x \in range |-> Id(x) ]
+  /\ LET 
+      f == [x \in range |-> 2 * x]
+      F(x) == f[x]
+     IN SeqFromFun(f) = MkSeq(N, F)
 
 ====
