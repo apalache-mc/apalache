@@ -383,6 +383,62 @@ class Quint(moduleData: QuintOutput) {
         case "item"   => binaryApp(opName, tla.app)
         case "tuples" => variadicApp(tla.times)
 
+        // Maps (functions)
+        case "Map" =>
+          // Map is variadic on n tuples, so build a set of these tuple args
+          // before converting the resulting set of tuples to a function.
+          quintArgs => tla.setAsFun(setEnumeration(id)(quintArgs))
+        case "get"       => binaryApp(opName, tla.app)
+        case "keys"      => unaryApp(opName, tla.dom)
+        case "setToMap"  => unaryApp(opName, tla.setAsFun)
+        case "setOfMaps" => binaryApp(opName, tla.funSet)
+        case "set"       => ternaryApp(opName, tla.except)
+        case "mapBy"     => binaryBindingApp(opName, (name, set, expr) => tla.funDef(expr, (name, set)))
+        case "setBy"     =>
+          // f.setBy(x, op) ~~>
+          //
+          // LET f_cache = f IN
+          // [f_cache EXCEPT ![k] |-> op(f_cache[k])]
+          ternaryApp(opName,
+              (f, x, op) => {
+                val f_cache_name = uniqueVarName()
+                val f_type = Quint.typeToTlaType(types(id).typ)
+                val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
+                val cacheDecl = tla.decl(f_cache_name, f)
+                tla.letIn(
+                    tla.except(f_cache, x, tla.appOp(op, tla.app(f_cache, x))),
+                    cacheDecl,
+                )
+              })
+        case "put" =>
+          quintArgs =>
+            ternaryApp(opName,
+                (map, key, value) => {
+                  // (key :> value) @@ map ==
+                  //    LET __map_cache == __map IN
+                  //    LET __dom == DOMAIN __map_cache IN
+                  //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
+                  // extract types
+                  val mapType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                  val keyType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
+                  // string names
+                  val mapCacheName = uniqueVarName()
+                  val domName = uniqueVarName()
+                  // TLA+ name expressions
+                  val mapCache = tla.name(mapCacheName, OperT1(Seq(), mapType))
+                  val dom = tla.name(domName, OperT1(Seq(), SetT1(keyType)))
+                  // build the final funDef, i.e., the LET-IN body
+                  val bindingVar = tla.name(uniqueVarName(), keyType)
+                  val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(tla.appOp(mapCache), bindingVar))
+                  val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), tla.appOp(dom))))
+                  // build the entire LET-IN
+                  tla.letIn(
+                      composed,
+                      tla.decl(mapCacheName, map),
+                      tla.decl(domName, tla.dom(tla.appOp(mapCache))),
+                  )
+                })(quintArgs)
+
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
         case "actionAll" => variadicApp(args => tla.and(args: _*))
