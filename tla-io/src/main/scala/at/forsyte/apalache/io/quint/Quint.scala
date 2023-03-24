@@ -223,19 +223,129 @@ class Quint(moduleData: QuintOutput) {
         case tooManyArgs => throwOperatorArityError(op, "binary", tooManyArgs)
       }
 
-    private def setEnumeration(id: Int): Seq[QuintEx] => TBuilderInstruction =
-      variadicApp {
-        // Empty sets must be handled specially since we cannot infer their type
-        // from the given arguments
-        case Seq() =>
-          val elementType = types(id).typ match {
-            case QuintSetT(t) => Quint.typeToTlaType(t)
-            case invalidType =>
-              throw new QuintIRParseError(s"Set with id ${id} has invalid type ${invalidType}")
-          }
-          tla.emptySet(elementType)
-        case args => tla.enumSet(args: _*)
-      }
+    private object MkTla {
+      // MkTla gathers non-trivial conversion functions from quint args to TLA builder instructions
+      type Converter = Seq[QuintEx] => TBuilderInstruction
+
+      def setEnumeration(id: Int): Converter =
+        variadicApp {
+          // Empty sets must be handled specially since we cannot infer their type
+          // from the given arguments
+          case Seq() =>
+            val elementType = types(id).typ match {
+              case QuintSetT(t) => Quint.typeToTlaType(t)
+              case invalidType =>
+                throw new QuintIRParseError(s"Set with id ${id} has invalid type ${invalidType}")
+            }
+            tla.emptySet(elementType)
+          case args => tla.enumSet(args: _*)
+        }
+
+      def selectSeq(opName: String): Converter =
+        quintArgs =>
+          binaryApp(opName,
+              (seq, test) => {
+                val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                val elemType = seqType match {
+                  case SeqT1(elem) => elem
+                  case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+                }
+                // SelectSeq(__s, __Test(_)) ==
+                //    LET __AppendIfTest(__res, __e) ==
+                //      IF __Test(__e) THEN Append(__res, __e) ELSE __res IN
+                // __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
+                val resultParam = tla.param(uniqueVarName(), seqType)
+                val elemParam = tla.param(uniqueVarName(), elemType)
+                val result = tla.name(resultParam._1.name, resultParam._2)
+                val elem = tla.name(elemParam._1.name, elemParam._2)
+                val ite = tla.ite(tla.appOp(test, elem), tla.append(result, elem), result)
+                val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
+                tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
+              })(quintArgs)
+
+      def foldr(opName: String): Converter =
+        quintArgs =>
+          ternaryApp(opName,
+              (seq, init, op) => {
+                val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                val elemType = seqType match {
+                  case SeqT1(elem) => elem
+                  case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+                }
+                val accType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
+                // Reverse(__s) ==
+                //  LET __s_len == Len(__s) IN
+                //  LET __get_ith(__i) == __s[__s_len - __i + 1] IN
+                //  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __get_ith), 1, __s_len)
+                val sParam = tla.param(uniqueVarName(), seqType)
+                val s = tla.name(sParam._1.name, sParam._2)
+                val iParam = tla.param(uniqueVarName(), IntT1)
+                val i = tla.name(iParam._1.name, iParam._2)
+                val s_lenDecl = tla.decl(uniqueLambdaName(), tla.len(seq))
+                val s_len = tla.name(s_lenDecl.name, OperT1(Seq(), IntT1))
+                val get_ith = tla.lambda(uniqueLambdaName(),
+                    tla.app(s, tla.plus(tla.minus(tla.appOp(s_len), i), tla.int(1))), iParam)
+                val reverseDecl = tla.decl(uniqueLambdaName(),
+                    tla.letIn(tla.subseq(tla.mkSeqConst(tla.apalacheSeqCapacity(s), get_ith), tla.int(1),
+                            tla.appOp(s_len)), s_lenDecl), sParam)
+                // FoldRight(__op(_, _), __seq, __base) ==
+                //  LET __map (__y, __x) == __op(__x, __y) IN
+                //  __ApalacheFoldSeq(__map, __base, Reverse(__seq))
+                val xParam = tla.param(uniqueVarName(), elemType)
+                val x = tla.name(xParam._1.name, xParam._2)
+                val yParam = tla.param(uniqueVarName(), accType)
+                val y = tla.name(yParam._1.name, yParam._2)
+                val reverse = tla.name(reverseDecl.name, OperT1(Seq(seqType), seqType))
+                tla.letIn(tla.foldSeq(tla.lambda(uniqueLambdaName(), tla.appOp(op, x, y), yParam, xParam), init,
+                        tla.appOp(reverse, seq)), reverseDecl)
+              })(quintArgs)
+
+      def exceptWithUpdate(opName: String, id: Int): Converter =
+        // f.setBy(x, op) ~~>
+        //
+        // LET f_cache = f IN
+        // [f_cache EXCEPT ![k] |-> op(f_cache[k])]
+        ternaryApp(opName,
+            (f, x, op) => {
+              val f_cache_name = uniqueVarName()
+              val f_type = Quint.typeToTlaType(types(id).typ)
+              val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
+              val cacheDecl = tla.decl(f_cache_name, f)
+              tla.letIn(
+                  tla.except(f_cache, x, tla.appOp(op, tla.app(f_cache, x))),
+                  cacheDecl,
+              )
+            })
+
+      def extendFunction(opName: String): Converter =
+        quintArgs =>
+          ternaryApp(opName,
+              (map, key, value) => {
+                // (key :> value) @@ map ==
+                //    LET __map_cache == __map IN
+                //    LET __dom == DOMAIN __map_cache IN
+                //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
+                // extract types
+                val mapType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
+                val keyType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
+                // string names
+                val mapCacheName = uniqueVarName()
+                val domName = uniqueVarName()
+                // TLA+ name expressions
+                val mapCache = tla.name(mapCacheName, OperT1(Seq(), mapType))
+                val dom = tla.name(domName, OperT1(Seq(), SetT1(keyType)))
+                // build the final funDef, i.e., the LET-IN body
+                val bindingVar = tla.name(uniqueVarName(), keyType)
+                val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(tla.appOp(mapCache), bindingVar))
+                val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), tla.appOp(dom))))
+                // build the entire LET-IN
+                tla.letIn(
+                    composed,
+                    tla.decl(mapCacheName, map),
+                    tla.decl(domName, tla.dom(tla.appOp(mapCache))),
+                )
+              })(quintArgs)
+    }
 
     // Increments the TLA expression (as a TBuilderInstruction), which is assumed
     // to be an integer.
@@ -271,7 +381,7 @@ class Quint(moduleData: QuintOutput) {
         case "iuminus" => unaryApp(opName, tla.uminus)
 
         // Sets
-        case "Set"       => setEnumeration(id)
+        case "Set"       => MkTla.setEnumeration(id)
         case "exists"    => binaryBindingApp(opName, tla.exists)
         case "forall"    => binaryBindingApp(opName, tla.forall)
         case "in"        => binaryApp(opName, tla.in)
@@ -308,30 +418,11 @@ class Quint(moduleData: QuintOutput) {
         case "length"    => unaryApp(opName, tla.len)
         case "indices"   => unaryApp(opName, tla.dom)
         case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
+        case "foldr"     => MkTla.foldr(opName)
         case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
         case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
         case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
-        case "select" =>
-          quintArgs =>
-            binaryApp(opName,
-                (seq, test) => {
-                  val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
-                  val elemType = seqType match {
-                    case SeqT1(elem) => elem
-                    case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
-                  }
-                  // SelectSeq(__s, __Test(_)) ==
-                  //    LET __AppendIfTest(__res, __e) ==
-                  //      IF __Test(__e) THEN Append(__res, __e) ELSE __res IN
-                  // __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
-                  val resultParam = tla.param(uniqueVarName(), seqType)
-                  val elemParam = tla.param(uniqueVarName(), elemType)
-                  val result = tla.name(resultParam._1.name, resultParam._2)
-                  val elem = tla.name(elemParam._1.name, elemParam._2)
-                  val ite = tla.ite(tla.appOp(test, elem), tla.append(result, elem), result)
-                  val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
-                  tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
-                })(quintArgs)
+        case "select"    => MkTla.selectSeq(opName)
         case "range" =>
           binaryApp(opName,
               (low, high) => {
@@ -340,48 +431,25 @@ class Quint(moduleData: QuintOutput) {
                 tla.mkSeqConst(tla.minus(high, low),
                     tla.lambda(uniqueLambdaName(), tla.minus(tla.plus(low, i), tla.int(1)), iParam))
               })
-        case "foldr" =>
-          quintArgs =>
-            ternaryApp(opName,
-                (seq, init, op) => {
-                  val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
-                  val elemType = seqType match {
-                    case SeqT1(elem) => elem
-                    case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
-                  }
-                  val accType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
-                  // Reverse(__s) ==
-                  //  LET __s_len == Len(__s) IN
-                  //  LET __get_ith(__i) == __s[__s_len - __i + 1] IN
-                  //  SubSeq(__ApalacheMkSeq(__ApalacheSeqCapacity(__s), __get_ith), 1, __s_len)
-                  val sParam = tla.param(uniqueVarName(), seqType)
-                  val s = tla.name(sParam._1.name, sParam._2)
-                  val iParam = tla.param(uniqueVarName(), IntT1)
-                  val i = tla.name(iParam._1.name, iParam._2)
-                  val s_lenDecl = tla.decl(uniqueLambdaName(), tla.len(seq))
-                  val s_len = tla.name(s_lenDecl.name, OperT1(Seq(), IntT1))
-                  val get_ith = tla.lambda(uniqueLambdaName(),
-                      tla.app(s, tla.plus(tla.minus(tla.appOp(s_len), i), tla.int(1))), iParam)
-                  val reverseDecl = tla.decl(uniqueLambdaName(),
-                      tla.letIn(tla.subseq(tla.mkSeqConst(tla.apalacheSeqCapacity(s), get_ith), tla.int(1),
-                              tla.appOp(s_len)), s_lenDecl), sParam)
-                  // FoldRight(__op(_, _), __seq, __base) ==
-                  //  LET __map (__y, __x) == __op(__x, __y) IN
-                  //  __ApalacheFoldSeq(__map, __base, Reverse(__seq))
-                  val xParam = tla.param(uniqueVarName(), elemType)
-                  val x = tla.name(xParam._1.name, xParam._2)
-                  val yParam = tla.param(uniqueVarName(), accType)
-                  val y = tla.name(yParam._1.name, yParam._2)
-                  val reverse = tla.name(reverseDecl.name, OperT1(Seq(seqType), seqType))
-                  tla.letIn(tla.foldSeq(tla.lambda(uniqueLambdaName(), tla.appOp(op, x, y), yParam, xParam), init,
-                          tla.appOp(reverse, seq)), reverseDecl)
-                })(quintArgs)
 
         // Tuples
         case "Tup" => variadicApp(args => tla.tuple(args: _*))
         // product projection is just function application on TLA
         case "item"   => binaryApp(opName, tla.app)
         case "tuples" => variadicApp(tla.times)
+
+        // Maps (functions)
+        // Map is variadic on n tuples, so build a set of these tuple args
+        // before converting the resulting set of tuples to a function.
+        case "Map"       => quintArgs => tla.setAsFun(MkTla.setEnumeration(id)(quintArgs))
+        case "get"       => binaryApp(opName, tla.app)
+        case "keys"      => unaryApp(opName, tla.dom)
+        case "setToMap"  => unaryApp(opName, tla.setAsFun)
+        case "setOfMaps" => binaryApp(opName, tla.funSet)
+        case "set"       => ternaryApp(opName, tla.except)
+        case "mapBy"     => binaryBindingApp(opName, (name, set, expr) => tla.funDef(expr, (name, set)))
+        case "setBy"     => MkTla.exceptWithUpdate(opName, id)
+        case "put"       => MkTla.extendFunction(opName)
 
         // Actions
         case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
@@ -402,11 +470,27 @@ class Quint(moduleData: QuintOutput) {
       applicationBuilder(quintArgs)
     }
 
+    // Convert Quint's nondet variable binding
+    //
+    //   val nondet name = oneOf(domain); scope
+    //   ~~>
+    //   \E name \in domain: scope
+    private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => TBuilderInstruction = {
+      case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain)), _), scope) =>
+        val elemType = Quint.typeToTlaType(types(id).typ)
+        val tlaName = tla.name(name, elemType)
+        tla.exists(tlaName, tlaExpression(domain), tlaExpression(scope))
+      case invalidValue =>
+        throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
+    }
+
     private val tlaExpression: QuintEx => TBuilderInstruction = {
-      case QuintBool(_, b)          => tla.bool(b)
-      case QuintInt(_, i)           => tla.int(i)
-      case QuintStr(_, s)           => tla.str(s)
-      case QuintName(id, n)         => tla.name(n, Quint.typeToTlaType(types(id).typ))
+      case QuintBool(_, b)  => tla.bool(b)
+      case QuintInt(_, i)   => tla.int(i)
+      case QuintStr(_, s)   => tla.str(s)
+      case QuintName(id, n) => tla.name(n, Quint.typeToTlaType(types(id).typ))
+      case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
+        nondetBinding(binding, scope)
       case QuintLet(_, opDef, expr) => tla.letIn(tlaExpression(expr), opDefConverter(opDef))
       case lam: QuintLambda =>
         val (body, typedParams) = lambdaBodyAndParams(lam)

@@ -10,6 +10,11 @@ import at.forsyte.apalache.tla.lir.Typed
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.lir.IntT1
 
+// You can run all these tests in watch mode in the
+// sbt console with
+//
+//      sbt:apalache> ~tla_io/testOnly *TestQuint*
+
 /**
  * Tests the conversion of quint expressions and declarations into TLA expressions
  */
@@ -66,12 +71,20 @@ class TestQuintEx extends AnyFunSuite {
     val intPairSet = app("Set", intPair, intPair)
     val emptyIntSet = app("Set")
     val setOfIntSets = app("Set", intSet, intSet, intSet)
+    val intTup1 = app("Tup", _0, _1)
+    val intTup2 = app("Tup", _3, _42)
+    val intMap = app("Map", intTup1, intTup2) // Map(0 -> 1, 3 -> 42)
     // For use in folds
-    val addNameAndAcc = app("isum", name, acc)
+    val addNameAndAcc = app("iadd", name, acc)
     val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
     val chooseSomeFromIntSet = app("chooseSome", intSet)
+    val oneOfSet = app("oneOf", intSet)
+    val nondetBinding = QuintLet(uid, QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), nIsGreaterThanZero)
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)
+    val addOne = app("iadd", name, _1)
+    val addOneOp = QuintLambda(uid, List(nParam), "def", addOne)
+    val setByExpression = app("setBy", intMap, _1, addOneOp)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -103,7 +116,13 @@ class TestQuintEx extends AnyFunSuite {
       Q.addNameAndAcc -> QuintIntT(),
       Q.accumulatingOpp -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintIntT()),
       Q.chooseSomeFromIntSet -> QuintIntT(),
+      Q.intMap -> QuintFunT(QuintIntT(), QuintIntT()),
+      Q.addOne -> QuintIntT(),
+      Q.addOneOp -> QuintOperT(List(QuintIntT()), QuintIntT()),
       Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
+      Q.setByExpression -> QuintFunT(QuintIntT(), QuintIntT()),
+      Q.oneOfSet -> QuintIntT(),
+      Q.nondetBinding -> QuintIntT(),
   )
 
   // We construct a converter supplied with the needed type map
@@ -146,7 +165,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert multi argument lambda") {
-    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0""")
+    assert(convert(Q.accumulatingOpp) == """LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0""")
   }
 
   test("can convert operator application") {
@@ -310,7 +329,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin fold operator application") {
-    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0, 1, {1, 2, 3})"
+    val expected = "Apalache!ApaFoldSet(LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0, 1, {1, 2, 3})"
     assert(convert(Q.app("fold", Q.intSet, Q._1, Q.accumulatingOpp)) == expected)
   }
 
@@ -372,7 +391,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin foldl operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0, 0, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0, 0, <<1, 2, 3>>)"
     assert(convert(Q.app("foldl", Q.intList, Q._0, Q.accumulatingOpp)) == expected)
   }
 
@@ -413,7 +432,7 @@ class TestQuintEx extends AnyFunSuite {
       val reverseDecl =
         s"__QUINT_LAMBDA3(__quint_var0) ≜ LET ${slenDecl} IN Sequences!SubSeq(Apalache!MkSeq(ApalacheInternal!__ApalacheSeqCapacity(__quint_var0), ${get_ith}), 1, __QUINT_LAMBDA1())"
       val map =
-        "LET __QUINT_LAMBDA4(__quint_var3, __quint_var2) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ isum(n, acc) IN __QUINT_LAMBDA0(__quint_var2, __quint_var3) IN __QUINT_LAMBDA4"
+        "LET __QUINT_LAMBDA4(__quint_var3, __quint_var2) ≜ LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0(__quint_var2, __quint_var3) IN __QUINT_LAMBDA4"
       val reversedSeq = "__QUINT_LAMBDA3(<<1, 2, 3>>)"
       s"LET ${reverseDecl} IN Apalache!ApaFoldSeqLeft(${map}, 0, ${reversedSeq})"
     }
@@ -438,5 +457,58 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin assert operator") {
     assert(convert(Q.app("assert", Q.nIsGreaterThanZero)) == "n > 0")
+  }
+
+  test("can convert builtin Map operator") {
+    assert(convert(Q.app("Map", Q.intTup1, Q.intTup2)) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+  }
+
+  test("can convert builtin get operator") {
+    assert(convert(Q.app("get", Q.intMap, Q._0)) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})[0]")
+  }
+
+  test("can convert builtin keys operator") {
+    assert(convert(Q.app("keys", Q.intMap)) == "DOMAIN Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+  }
+
+  test("can convert builtin setToMap operator") {
+    assert(convert(Q.app("setToMap", Q.intPairSet)) == "Apalache!SetAsFun({<<1, 2>>, <<1, 2>>})")
+  }
+
+  test("can convert builtin setOfMaps operator") {
+    assert(convert(Q.app("setOfMaps", Q.intSet, Q.intSet)) == "[{1, 2, 3} → {1, 2, 3}]")
+  }
+
+  test("can convert builtin set operator") {
+    assert(
+        convert(Q.app("set", Q.intMap, Q._3, Q._2))
+          ==
+            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![3] = 2]"
+    )
+  }
+
+  test("can convert builtin mapBy operator") {
+    assert(convert(Q.app("mapBy", Q.intSet, Q.addOneOp)) == "[n ∈ {1, 2, 3} ↦ n + 1]")
+  }
+
+  test("can convert builtin setBy operator") {
+    val expected = """
+        |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
+        |[__quint_var0() EXCEPT ![1] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
+        """.stripMargin.linesIterator.mkString(" ").trim
+    assert(convert(Q.setByExpression) == expected)
+  }
+
+  test("can convert builtin put operator application") {
+    val expected = """
+        |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
+        |LET __quint_var1 ≜ DOMAIN __quint_var0() IN
+        |[__quint_var2 ∈ ({3} ∪ __quint_var1()) ↦ IF (__quint_var2 = 3) THEN 42 ELSE __quint_var0()[__quint_var2]]
+        """.stripMargin.linesIterator.mkString(" ").trim
+    assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)) == expected)
+  }
+
+  test("can convert nondet bindings") {
+    assert(convert(Q.nondetBinding) == "∃n ∈ {1, 2, 3}: (n > 0)")
   }
 }
