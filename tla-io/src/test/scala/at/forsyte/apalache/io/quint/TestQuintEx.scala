@@ -78,6 +78,8 @@ class TestQuintEx extends AnyFunSuite {
     val addNameAndAcc = app("iadd", name, acc)
     val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
     val chooseSomeFromIntSet = app("chooseSome", intSet)
+    val oneOfSet = app("oneOf", intSet)
+    val nondetBinding = QuintLet(uid, QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), nIsGreaterThanZero)
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)
     val addOne = app("iadd", name, _1)
@@ -119,6 +121,8 @@ class TestQuintEx extends AnyFunSuite {
       Q.addOneOp -> QuintOperT(List(QuintIntT()), QuintIntT()),
       Q.selectGreaterThanZero -> QuintSeqT(QuintIntT()),
       Q.setByExpression -> QuintFunT(QuintIntT(), QuintIntT()),
+      Q.oneOfSet -> QuintIntT(),
+      Q.nondetBinding -> QuintIntT(),
   )
 
   // We construct a converter supplied with the needed type map
@@ -502,5 +506,9 @@ class TestQuintEx extends AnyFunSuite {
         |[__quint_var2 ∈ ({3} ∪ __quint_var1()) ↦ IF (__quint_var2 = 3) THEN 42 ELSE __quint_var0()[__quint_var2]]
         """.stripMargin.linesIterator.mkString(" ").trim
     assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)) == expected)
+  }
+
+  test("can convert nondet bindings") {
+    assert(convert(Q.nondetBinding) == "∃n ∈ {1, 2, 3}: (n > 0)")
   }
 }
