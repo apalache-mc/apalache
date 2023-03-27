@@ -804,4 +804,24 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     }
   }
 
+  def varInSet[RetT](
+      wrapper: (TBuilderInstruction, TBuilderInstruction) => RetT
+    )(i: Int,
+      ti: TlaType1,
+      tsi: Seq[TlaType1]): RetT =
+    if (tsi.isEmpty)
+      wrapper(
+          builder.name(s"x$i", ti),
+          builder.name(s"S$i", SetT1(ti)),
+      )
+    else {
+      val names = tsi.zipWithIndex.map { case (tij, j) =>
+        builder.name(s"x${i}_$j", tij)
+      }
+      wrapper(
+          builder.tuple(names: _*),
+          builder.name(s"S$i", SetT1(TupT1(tsi: _*))),
+      )
+    }
+
 }

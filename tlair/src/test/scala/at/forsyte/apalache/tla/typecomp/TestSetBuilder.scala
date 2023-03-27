@@ -197,41 +197,43 @@ class TestSetBuilder extends BuilderTest {
   test("filter") {
 
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
+    type TParam = (TlaType1, Seq[TlaType1])
 
-    def mkWellTyped(tt: TlaType1): T =
-      (
-          builder.name("x", tt),
-          builder.name("S", SetT1(tt)),
-          builder.name("p", BoolT1),
-      )
+    def mkWellTyped(tparam: TParam): T = {
+      val (t, ts) = tparam
+      varInSet((_, _, builder.name("p", BoolT1)))(0, t, ts)
+    }
 
-    def mkIllTyped(tt: TlaType1): Seq[T] =
+    def mkIllTyped(tparam: TParam): Seq[T] = {
+      val (t, ts) = tparam
       Seq(
+          varInSet((_, _, builder.name("p", InvalidTypeMethods.notBool)))(0, t, ts),
           (
-              builder.name("x", tt),
-              builder.name("S", SetT1(tt)),
-              builder.name("p", InvalidTypeMethods.notBool),
-          ),
-          (
-              builder.name("x", tt),
+              builder.name("x", t),
               builder.name("S", InvalidTypeMethods.notSet),
               builder.name("p", BoolT1),
           ),
+      ) :++
+        ts.indices.map { badIndex =>
+          val names = ts.zipWithIndex.map { case (tj, j) =>
+            builder.name(s"x$j", if (j == badIndex) InvalidTypeMethods.differentFrom(tj) else tj)
+          }
           (
-              builder.name("x", InvalidTypeMethods.differentFrom(tt)),
-              builder.name("S", SetT1(tt)),
+              builder.tuple(names: _*),
+              builder.name(s"S", SetT1(TupT1(ts: _*))),
               builder.name("p", BoolT1),
-          ),
-      )
+          )
+        }
+    }
 
-    val resultIsExpected = expectEqTyped[TlaType1, T](
+    val resultIsExpected = expectEqTyped[TParam, T](
         TlaSetOper.filter,
         mkWellTyped,
         ToSeq.ternary,
-        tt => SetT1(tt),
+        { case (tt, ts) => SetT1(if (ts.isEmpty) tt else TupT1(ts: _*)) },
     )
 
-    checkRun(Generators.singleTypeGen)(
+    checkRun(Generators.typeAndSeqGen)(
         runTernary(
             builder.filter,
             mkWellTyped,
@@ -241,31 +243,12 @@ class TestSetBuilder extends BuilderTest {
     )
 
     assertThrowsBoundVarIntroductionTernary(builder.filter)
+    assertThrowsBoundVarIntroductionTernaryTupled(builder.filter)
   }
 
   test("map") {
     type T = (TBuilderInstruction, Seq[TBuilderInstruction])
     type TParam = (TlaType1, Seq[(TlaType1, Seq[TlaType1])])
-
-    def varInSet[T](
-        wrapper: (TBuilderInstruction, TBuilderInstruction) => T
-      )(i: Int,
-        ti: TlaType1,
-        tsi: Seq[TlaType1]): T =
-      if (tsi.isEmpty)
-        wrapper(
-            builder.name(s"x$i", ti),
-            builder.name(s"S$i", SetT1(ti)),
-        )
-      else {
-        val names = tsi.zipWithIndex.map { case (tij, j) =>
-          builder.name(s"x${i}_$j", tij)
-        }
-        wrapper(
-            builder.tuple(names: _*),
-            builder.name(s"S$i", SetT1(TupT1(tsi: _*))),
-        )
-      }
 
     def mkWellTyped(tparam: TParam): T = {
       val (t, ts) = tparam

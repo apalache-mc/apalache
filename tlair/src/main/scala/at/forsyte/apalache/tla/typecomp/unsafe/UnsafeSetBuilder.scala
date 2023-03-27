@@ -57,7 +57,7 @@ class UnsafeSetBuilder extends ProtoBuilder {
    *   must be a variable name
    */
   def filter(x: TlaEx, set: TlaEx, p: TlaEx): TlaEx = {
-    require(x.isInstanceOf[NameEx], s"Expected x to be a variable name, found $x.")
+    BuilderUtil.getBoundVarsOrThrow(x)
     buildBySignatureLookup(TlaSetOper.filter, x, set, p)
   }
 
