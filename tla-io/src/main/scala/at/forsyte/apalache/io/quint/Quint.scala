@@ -95,17 +95,6 @@ class Quint(moduleData: QuintOutput) {
         (tlaExpression(body), typedParams)
     }
 
-    private val opDefConverter: QuintDef.QuintOpDef => TBuilderOperDeclInstruction = {
-      case QuintDef.QuintOpDef(_, name, _, expr, _) =>
-        val (body, typedParams) = expr match {
-          // Parameterized operators are defined in Quint using Lambdas
-          case lam: QuintLambda => lambdaBodyAndParams(lam)
-          // Otherwise it's an operator with no params
-          case other => (tlaExpression(other), List())
-        }
-        tla.decl(name, body, typedParams: _*)
-    }
-
     private def typeTagOfId(id: Int): TypeTag = {
       Typed(Quint.typeToTlaType(types(id).typ))
     }
@@ -482,6 +471,17 @@ class Quint(moduleData: QuintOutput) {
         tla.exists(tlaName, tlaExpression(domain), tlaExpression(scope))
       case invalidValue =>
         throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
+    }
+
+    private val opDefConverter: QuintDef.QuintOpDef => TBuilderOperDeclInstruction = {
+      case QuintDef.QuintOpDef(_, name, _, expr, _) =>
+        val (body, typedParams) = expr match {
+          // Parameterized operators are defined in Quint using Lambdas
+          case lam: QuintLambda => lambdaBodyAndParams(lam)
+          // Otherwise it's an operator with no params
+          case other => (tlaExpression(other), List())
+        }
+        tla.decl(name, body, typedParams: _*)
     }
 
     private val tlaExpression: QuintEx => TBuilderInstruction = {
