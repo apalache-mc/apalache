@@ -15,15 +15,6 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.lir.TupT1
 import at.forsyte.apalache.tla.lir.VarT1
-import at.forsyte.apalache.tla.lir.VariantT1
-import at.forsyte.apalache.tla.typecomp.ScopedBuilder
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction
-import at.forsyte.apalache.tla.typecomp.build
-import com.typesafe.scalalogging.LazyLogging
-
-import scala.collection.mutable
-import scala.util.Try
 import at.forsyte.apalache.tla.lir.TlaDecl
 import at.forsyte.apalache.tla.lir.TlaConstDecl
 import at.forsyte.apalache.tla.lir.Typed
@@ -31,6 +22,16 @@ import at.forsyte.apalache.tla.lir.TlaVarDecl
 import at.forsyte.apalache.tla.lir.TypeTag
 import at.forsyte.apalache.tla.lir.TlaAssumeDecl
 import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.VariantT1
+import at.forsyte.apalache.tla.typecomp.ScopedBuilder
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction
+import at.forsyte.apalache.tla.typecomp.build
+
+import scalaz._
+import com.typesafe.scalalogging.LazyLogging
+import scala.collection.mutable
+import scala.util.Try
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -97,23 +98,6 @@ class Quint(moduleData: QuintOutput) {
 
     private def typeTagOfId(id: Int): TypeTag = {
       Typed(Quint.typeToTlaType(types(id).typ))
-    }
-
-    private[quint] val tlaDef: QuintDef => Option[TlaDecl] = {
-      import QuintDef._
-      {
-        // We don't currently support type definitions in the Apalache IR:
-        // all compound types are expected to be inlined.
-        case QuintTypeDef(_, _, _) => None
-        // Constant and var declarations are trivial to construct, and
-        // no methods for them are provided by the ScopedBuilder.
-        case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
-        case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
-        case op: QuintOpDef          => Some(build(opDefConverter(op)))
-        case QuintAssume(id, _, quintEx) =>
-          val tlaEx = build(tlaExpression(quintEx))
-          Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
-      }
     }
 
     private type T = TBuilderInstruction
@@ -496,6 +480,23 @@ class Quint(moduleData: QuintOutput) {
         val (body, typedParams) = lambdaBodyAndParams(lam)
         tla.lambda(uniqueLambdaName(), body, typedParams: _*)
       case app: QuintApp => tlaApplication(app)
+    }
+
+    private[quint] val tlaDef: QuintDef => Option[TlaDecl] = {
+      import QuintDef._
+      {
+        // We don't currently support type definitions in the Apalache IR:
+        // all compound types are expected to be inlined.
+        case QuintTypeDef(_, _, _) => None
+        // Constant and var declarations are trivial to construct, and
+        // no methods for them are provided by the ScopedBuilder.
+        case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
+        case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
+        case op: QuintOpDef          => Some(build(opDefConverter(op)))
+        case QuintAssume(id, _, quintEx) =>
+          val tlaEx = build(tlaExpression(quintEx))
+          Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
+      }
     }
 
     val convert: QuintEx => Try[TlaEx] = quintEx => Try(build(tlaExpression(quintEx)))
