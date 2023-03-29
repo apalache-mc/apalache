@@ -1,1 +1,1 @@
-Fix conversion of quint list indexing operator. See #2495.
+Fix quint list conversion. See #2495, #2509, #2510.

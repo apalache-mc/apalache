@@ -71,6 +71,7 @@ class TestQuintEx extends AnyFunSuite {
     val intPair = app("Tup", _1, _2)
     val intList = app("List", _1, _2, _3)
     val intPairSet = app("Set", intPair, intPair)
+    val emptyIntList = app("List")
     val emptyIntSet = app("Set")
     val setOfIntSets = app("Set", intSet, intSet, intSet)
     val intTup1 = app("Tup", _0, _1)
@@ -126,6 +127,7 @@ class TestQuintEx extends AnyFunSuite {
       Q.setByExpression -> QuintFunT(QuintIntT(), QuintIntT()),
       Q.oneOfSet -> QuintIntT(),
       Q.nondetBinding -> QuintIntT(),
+      Q.emptyIntList -> QuintSeqT(QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -368,6 +370,10 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("List", Q._1, Q._2, Q._3)) == "<<1, 2, 3>>")
   }
 
+  test("can convert builtin List operator application for empty list") {
+    assert(convert(Q.emptyIntList) == "<<>>")
+  }
+
   test("can convert builtin append operator application") {
     assert(convert(Q.app("append", Q.intList, Q._42)) == "Append(<<1, 2, 3>>, 42)")
   }
@@ -389,7 +395,9 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin indices operator application") {
-    assert(convert(Q.app("indices", Q.intList)) == "DOMAIN (<<1, 2, 3>>)")
+    val expected =
+      "LET __quint_var0 ≜ DOMAIN (<<1, 2, 3>>) IN IF (__quint_var0() = {}) THEN {} ELSE ((__quint_var0() ∪ {0}) ∖ {Len(<<1, 2, 3>>)})"
+    assert(convert(Q.app("indices", Q.intList)) == expected)
   }
 
   test("can convert builtin foldl operator application") {
