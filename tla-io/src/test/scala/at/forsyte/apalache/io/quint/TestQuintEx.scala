@@ -61,9 +61,11 @@ class TestQuintEx extends AnyFunSuite {
     val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
     val appBar = QuintApp(uid, "bar", List(_42))
     val letBarBeLambdaInAppBar = QuintLet(uid, barDef, appBar)
-    val nIsGreaterThanZero = app("igt", name, _0)
+    val nIsGreaterThan0 = app("igt", name, _0)
+    val nDefindedAs42 = QuintDef.QuintOpDef(uid, "n", "val", _42)
+    val letNbe42inNisGreaterThan0 = QuintLet(uid, nDefindedAs42, nIsGreaterThan0)
     // A predicate on ints
-    val intIsGreaterThanZero = QuintLambda(uid, List(nParam), "def", nIsGreaterThanZero)
+    val intIsGreaterThanZero = QuintLambda(uid, List(nParam), "def", nIsGreaterThan0)
     val int2ToBool = QuintLambda(uid, List(nParam, accParam), "def", tt)
     val intSet = app("Set", _1, _2, _3)
     val intPair = app("Tup", _1, _2)
@@ -79,7 +81,7 @@ class TestQuintEx extends AnyFunSuite {
     val accumulatingOpp = QuintLambda(uid, List(accParam, nParam), "def", addNameAndAcc)
     val chooseSomeFromIntSet = app("chooseSome", intSet)
     val oneOfSet = app("oneOf", intSet)
-    val nondetBinding = QuintLet(uid, QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), nIsGreaterThanZero)
+    val nondetBinding = QuintLet(uid, QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), nIsGreaterThan0)
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)
     val addOne = app("iadd", name, _1)
@@ -104,7 +106,8 @@ class TestQuintEx extends AnyFunSuite {
       Q.lambda -> QuintOperT(List(QuintIntT()), QuintStrT()),
       Q.appBar -> QuintStrT(),
       Q.letBarBeLambdaInAppBar -> QuintStrT(),
-      Q.nIsGreaterThanZero -> QuintBoolT(),
+      Q.nIsGreaterThan0 -> QuintBoolT(),
+      Q.letNbe42inNisGreaterThan0 -> QuintBoolT(),
       Q.int2ToBool -> QuintOperT(List(QuintIntT(), QuintIntT()), QuintBoolT()),
       Q.intIsGreaterThanZero -> QuintOperT(List(QuintIntT()), QuintBoolT()),
       Q.intSet -> QuintSetT(QuintIntT()),
@@ -456,7 +459,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin assert operator") {
-    assert(convert(Q.app("assert", Q.nIsGreaterThanZero)) == "n > 0")
+    assert(convert(Q.app("assert", Q.nIsGreaterThan0)) == "n > 0")
   }
 
   test("can convert builtin Map operator") {
@@ -510,5 +513,9 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert nondet bindings") {
     assert(convert(Q.nondetBinding) == "∃n ∈ {1, 2, 3}: (n > 0)")
+  }
+
+  test("can convert let binding with reference to name in scope") {
+    assert(convert(Q.letNbe42inNisGreaterThan0) == "LET n ≜ 42 IN n() > 0")
   }
 }
