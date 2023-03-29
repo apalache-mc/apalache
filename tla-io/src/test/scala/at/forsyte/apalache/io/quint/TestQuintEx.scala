@@ -516,6 +516,6 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert let binding with reference to name in scope") {
-    assert(convert(Q.letNbe42inNisGreaterThan0) == "LET n == 42 IN (n > 0)")
+    assert(convert(Q.letNbe42inNisGreaterThan0) == "LET n ≜ 42 IN n() > 0")
   }
 }

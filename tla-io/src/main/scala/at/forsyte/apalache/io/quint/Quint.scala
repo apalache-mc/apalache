@@ -502,34 +502,49 @@ class Quint(moduleData: QuintOutput) {
         throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
     }
 
-    private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[TBuilderOperDeclInstruction] = {
+    private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[(TBuilderOperDeclInstruction, Option[String])] = {
       case QuintDef.QuintOpDef(_, name, _, expr, _) =>
         (expr match {
           // Parameterized operators are defined in Quint using Lambdas
           case lam: QuintLambda => lambdaBodyAndParams(lam)
           // Otherwise it's an operator with no params
           case other => tlaExpression(other).map(b => (b, List()))
-        }).map { case (body, params) =>
-          tla.decl(name, body, params: _*)
+        }).map {
+          case (body, params) => {
+            val nullaryName = if (params.isEmpty) Some(name) else None
+            (tla.decl(name, body, params: _*), nullaryName)
+          }
         }
     }
 
     private def tlaExpression(qEx: QuintEx): NullaryOpReader[TBuilderInstruction] =
       qEx match {
-        case QuintBool(_, b)  => Reader(_ => tla.bool(b))
-        case QuintInt(_, i)   => Reader(_ => tla.int(i))
-        case QuintStr(_, s)   => Reader(_ => tla.str(s))
-        case QuintName(id, n) => Reader(_ => tla.name(n, Quint.typeToTlaType(types(id).typ)))
+        // scalar values don't need to read anything
+        case QuintBool(_, b) => Reader(_ => tla.bool(b))
+        case QuintInt(_, i)  => Reader(_ => tla.int(i))
+        case QuintStr(_, s)  => Reader(_ => tla.str(s))
+        case QuintName(id, name) =>
+          val t = Quint.typeToTlaType(types(id).typ)
+          Reader { nullaryOpNames =>
+            if (nullaryOpNames.contains(name)) {
+              tla.appOp(tla.name(name, OperT1(Seq(), t)))
+            } else {
+              tla.name(name, t)
+            }
+          }
         case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
           nondetBinding(binding, scope)
         case QuintLet(_, opDef, expr) =>
-          for {
-            tlaOpDef <- opDefConverter(opDef)
-            tlaExpr <- tlaExpression(expr).local {
-              // TODO: Add nullary op names locally
-              (names: Set[String]) => names
-            }
-          } yield tla.letIn(tlaExpr, tlaOpDef)
+          opDefConverter(opDef).flatMap { case (tlaOpDef, nullaryName) =>
+            tlaExpression(expr)
+              .local { (names: Set[String]) =>
+                nullaryName match {
+                  case None    => names
+                  case Some(n) => names + n
+                }
+              }
+              .map(tlaExpr => tla.letIn(tlaExpr, tlaOpDef))
+          }
         case lam: QuintLambda =>
           lambdaBodyAndParams(lam).map { case (body, typedParams) =>
             tla.lambda(uniqueLambdaName(), body, typedParams: _*)
@@ -547,7 +562,7 @@ class Quint(moduleData: QuintOutput) {
         // no methods for them are provided by the ScopedBuilder.
         case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
         case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
-        case op: QuintOpDef          => Some(build(opDefConverter(op).run(Set())))
+        case op: QuintOpDef          => Some(build(opDefConverter(op).run(Set())._1))
         case QuintAssume(id, _, quintEx) =>
           val tlaEx = build(tlaExpression(quintEx).run(Set()))
           Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
