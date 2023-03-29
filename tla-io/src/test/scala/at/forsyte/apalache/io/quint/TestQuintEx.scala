@@ -389,7 +389,9 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin indices operator application") {
-    assert(convert(Q.app("indices", Q.intList)) == "DOMAIN (<<1, 2, 3>>)")
+    val expected =
+      "LET __quint_var0 ≜ DOMAIN (<<1, 2, 3>>) IN IF (__quint_var0() = {}) THEN {} ELSE ((__quint_var0() ∪ {0}) ∖ {Len(<<1, 2, 3>>)})"
+    assert(convert(Q.app("indices", Q.intList)) == expected)
   }
 
   test("can convert builtin foldl operator application") {

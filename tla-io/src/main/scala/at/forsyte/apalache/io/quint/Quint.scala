@@ -323,6 +323,29 @@ class Quint(moduleData: QuintOutput) {
                     tla.decl(domName, tla.dom(tla.appOp(mapCache))),
                 )
               })(quintArgs)
+
+      // We cannot simply use DOMAIN b/c quint lists are 0-indexed
+      // so we convert `s.indices` into
+      //
+      //    LET dom ≜ DOMAIN s IN
+      //    IF dom = {} THEN
+      //      {}
+      //    ELSE
+      //      (dom ∪ {0}) ∖ {Len(s)}
+      def indices(opName: String): Converter =
+        unaryApp(opName,
+            seq => {
+              val emptyDom = tla.emptySet(IntT1)
+              val domNameStr = uniqueVarName()
+              val domName = tla.name(domNameStr, OperT1(Seq(), SetT1(IntT1)))
+              val dom = tla.decl(domNameStr, tla.dom(seq))
+              val body = tla.ite(
+                  tla.eql(tla.appOp(domName), emptyDom),
+                  emptyDom,
+                  tla.setminus(tla.cup(tla.appOp(domName), tla.enumSet(tla.int(0))), tla.enumSet(tla.len(seq))),
+              )
+              tla.letIn(body, dom)
+            })
     }
 
     // Increments the TLA expression (as a TBuilderInstruction), which is assumed
@@ -395,7 +418,7 @@ class Quint(moduleData: QuintOutput) {
           case "head"      => unaryApp(opName, tla.head)
           case "tail"      => unaryApp(opName, tla.tail)
           case "length"    => unaryApp(opName, tla.len)
-          case "indices"   => unaryApp(opName, tla.dom)
+          case "indices"   => MkTla.indices(opName)
           case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
           case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
           case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
