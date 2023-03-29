@@ -256,6 +256,20 @@ class Quint(moduleData: QuintOutput) {
           case args => tla.enumSet(args: _*)
         }
 
+      def listConstruction(id: Int): Converter =
+        variadicApp {
+          // Empty lists must be handled specially since we cannot infer their type
+          // from the given arguments
+          case Seq() =>
+            val elementType = types(id).typ match {
+              case QuintSeqT(t) => Quint.typeToTlaType(t)
+              case invalidType =>
+                throw new QuintIRParseError(s"List with id ${id} has invalid type ${invalidType}")
+            }
+            tla.emptySeq(elementType)
+          case args => tla.seq(args: _*)
+        }
+
       def selectSeq(opName: String): Converter =
         quintArgs =>
           binaryApp(opName,
@@ -412,7 +426,7 @@ class Quint(moduleData: QuintOutput) {
           }
 
           // Lists (Sequences)
-          case "List"      => variadicApp(args => tla.seq(args: _*))
+          case "List"      => MkTla.listConstruction(id)
           case "append"    => binaryApp(opName, tla.append)
           case "concat"    => binaryApp(opName, tla.concat)
           case "head"      => unaryApp(opName, tla.head)
