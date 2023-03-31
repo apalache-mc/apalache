@@ -89,7 +89,7 @@ class TestQuintEx extends AnyFunSuite {
     val addOne = app("iadd", name, _1)
     val addOneOp = QuintLambda(uid, List(nParam), "def", addOne)
     val setByExpression = app("setBy", intMap, _1, addOneOp)
-    val selectIntIsGreatexThanZero = app("select", intList, intIsGreaterThanZero)
+    val selectIntIsGreaterThanZero = app("select", intList, intIsGreaterThanZero)
     val selectNamedIntToBoolOp = app("select", intList, namedIntToBoolOp)
   }
 
