@@ -431,7 +431,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin select operator application") {
     val expected =
       "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(__quint_var0, n) ≜ IF (n > 0) THEN (Append(__quint_var0, n)) ELSE __quint_var0 IN __QUINT_LAMBDA0, <<>>, <<1, 2, 3>>)"
-    assert(convert(Q.selectIntIsGreatexThanZero) == expected)
+    assert(convert(Q.selectIntIsGreaterThanZero) == expected)
   }
 
   test("can convert builtin select operator application with named test operator") {
