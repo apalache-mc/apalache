@@ -1,14 +1,14 @@
 package at.forsyte.apalache.io.quint
 
+import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.lir.SetT1
+import at.forsyte.apalache.tla.lir.Typed
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 import QuintType._
 import QuintEx._
-import at.forsyte.apalache.tla.lir.Typed
-import at.forsyte.apalache.tla.lir.SetT1
-import at.forsyte.apalache.tla.lir.IntT1
 
 // You can run all these tests in watch mode in the
 // sbt console with
@@ -52,6 +52,7 @@ class TestQuintEx extends AnyFunSuite {
     val acc = QuintName(uid, "acc")
     val accParam = QuintLambdaParameter(uid, "acc")
     val xParam = QuintLambdaParameter(uid, "x")
+    val namedIntToBoolOp = QuintName(uid, "intToBoolOp")
 
     // Definitions and compound data types
     val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
@@ -88,6 +89,8 @@ class TestQuintEx extends AnyFunSuite {
     val addOne = app("iadd", name, _1)
     val addOneOp = QuintLambda(uid, List(nParam), "def", addOne)
     val setByExpression = app("setBy", intMap, _1, addOneOp)
+    val selectIntIsGreaterThanZero = app("select", intList, intIsGreaterThanZero)
+    val selectNamedIntToBoolOp = app("select", intList, namedIntToBoolOp)
   }
 
   // The Quint conversion class requires a QuintOutput object which,
@@ -103,6 +106,7 @@ class TestQuintEx extends AnyFunSuite {
       Q.s -> QuintStrT(),
       Q.name -> QuintIntT(),
       Q.acc -> QuintIntT(),
+      Q.namedIntToBoolOp -> QuintOperT(Seq(QuintIntT()), QuintBoolT()),
       Q.letFooBeTrueIn42 -> QuintBoolT(),
       Q.lambda -> QuintOperT(List(QuintIntT()), QuintStrT()),
       Q.appBar -> QuintStrT(),
@@ -128,6 +132,8 @@ class TestQuintEx extends AnyFunSuite {
       Q.oneOfSet -> QuintIntT(),
       Q.nondetBinding -> QuintIntT(),
       Q.emptyIntList -> QuintSeqT(QuintIntT()),
+      Q.selectNamedIntToBoolOp -> QuintSeqT(QuintIntT()),
+      Q.selectIntIsGreaterThanZero -> QuintSeqT(QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
@@ -423,11 +429,15 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin select operator application") {
-    val isGreatThanZeroLambda = "LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__quint_var1)"
-    val selectLambda =
-      s"LET __QUINT_LAMBDA1(__quint_var0, __quint_var1) ≜ IF (${isGreatThanZeroLambda}) THEN (Append(__quint_var0, __quint_var1)) ELSE __quint_var0 IN __QUINT_LAMBDA1"
-    val expected = s"Apalache!ApaFoldSeqLeft(${selectLambda}, <<>>, <<1, 2, 3>>)"
-    assert(convert(Q.app("select", Q.intList, Q.intIsGreaterThanZero)) == expected)
+    val expected =
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(__quint_var0, n) ≜ IF (n > 0) THEN (Append(__quint_var0, n)) ELSE __quint_var0 IN __QUINT_LAMBDA0, <<>>, <<1, 2, 3>>)"
+    assert(convert(Q.selectIntIsGreaterThanZero) == expected)
+  }
+
+  test("can convert builtin select operator application with named test operator") {
+    val expected =
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(__quint_var1, __quint_var0) ≜ IF (intToBoolOp(__quint_var0)) THEN (Append(__quint_var1, __quint_var0)) ELSE __quint_var1 IN __QUINT_LAMBDA0, <<>>, <<1, 2, 3>>)"
+    assert(convert(Q.selectNamedIntToBoolOp) == expected)
   }
 
   test("can convert builtin range operator application") {
