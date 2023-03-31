@@ -133,7 +133,7 @@ class TestQuintEx extends AnyFunSuite {
       Q.nondetBinding -> QuintIntT(),
       Q.emptyIntList -> QuintSeqT(QuintIntT()),
       Q.selectNamedIntToBoolOp -> QuintSeqT(QuintIntT()),
-      Q.selectIntIsGreatexThanZero -> QuintSeqT(QuintIntT()),
+      Q.selectIntIsGreaterThanZero -> QuintSeqT(QuintIntT()),
   )
 
   // We construct a converter supplied with the needed type map
