@@ -39,6 +39,7 @@ import scalaz._
 // list and traverse give us monadic mapping over lists
 // see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
 import scalaz.std.list._, scalaz.syntax.traverse._
+import at.forsyte.apalache.tla.lir.NameEx
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -270,27 +271,87 @@ class Quint(moduleData: QuintOutput) {
           case args => tla.seq(args: _*)
         }
 
-      def selectSeq(opName: String): Converter =
-        quintArgs =>
-          binaryApp(opName,
-              (seq, test) => {
-                val seqType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
-                val elemType = seqType match {
-                  case SeqT1(elem) => elem
-                  case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
-                }
-                // SelectSeq(__s, __Test(_)) ==
-                //    LET __AppendIfTest(__res, __e) ==
-                //      IF __Test(__e) THEN Append(__res, __e) ELSE __res IN
-                // __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
-                val resultParam = tla.param(uniqueVarName(), seqType)
-                val elemParam = tla.param(uniqueVarName(), elemType)
-                val result = tla.name(resultParam._1.name, resultParam._2)
-                val elem = tla.name(elemParam._1.name, elemParam._2)
-                val ite = tla.ite(tla.appOp(test, elem), tla.append(result, elem), result)
-                val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
-                tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
-              })(quintArgs)
+      // Convert Quint's `select : (List[a], (a => bool)) => List[a]` to the
+      // something like the rewired SelectSeq in /src/tla/__rewire_sequences_in_apalache.tla
+      //
+      // This should look like:
+      //
+      //    SelectSeq(__s, __Test(_)) ==
+      //      LET __AppendIfTest(__res, __e) ==
+      //        IF __Test(__e) THEN Append(__res, __e) ELSE __res IN
+      //    __ApalacheFoldSeq(__AppendIfTest, <<>>, __s)
+      //
+      // This works when `__Test` is passed by name.
+      //
+      // However, when `__Test` is a lambda, and thus represented in Apalache's IR as a
+      // 'de-lambdad' let expression like `LET __test(x) == p(x) IN _test`
+      // we hit a snag because Apalache does not support applying such expressions
+      // as operators.
+      //
+      // Consequently, when called with a lambda, we deconstruct the lambda as a binding operator
+      // to obtain
+      //
+      //   __e    = boundVarFrom(__Test)
+      //   __test = bodyFrom(__Test)
+      //
+      // and then produce:
+      //
+      //   SelectSeq(__s, __Test(_)) ==
+      //     ApaFoldSeqLeft(
+      //       LET __QUINT_LAMBDA0(__quint_var0, __e) ≜
+      //         IF __test THEN (Append(__quint_var0, __e)) ELSE __quint_var0
+      //       IN QUINT_LAMBDA0,
+      //       <<>>,
+      //       <<1, 2, 3>>
+      //     )
+      //
+      //  Since `__e` is free in `__test` the binding in the head of `__QUINT_LAMBDA0`
+      //  will bind the element at the appropriate place in the test.
+      def selectSeq(opName: String, seqType: TlaType1): Converter = quintArgs => {
+        // `mk(varNam, seq, test)` is an implementation of Apalache's rewired
+        // version of `SelectSeq` using the variable named 'varName' in the
+        // append operation over the give `seq` guarded by the given `test`.
+        // `test` is given the TLA name constructed with the given `varName`,
+        // so that the test can be applied to that element if needed.
+        def mk(elemVarName: String, seq: T, test: T => T): T = {
+          val elemType = seqType match {
+            case SeqT1(elem) => elem
+            case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+          }
+          val resultParam = tla.param(uniqueVarName(), seqType)
+          val elemParam = tla.param(elemVarName, elemType)
+          val result = tla.name(resultParam._1.name, resultParam._2)
+          val elem = tla.name(elemParam._1.name, elemParam._2)
+          val ite = tla.ite(test(elem), tla.append(result, elem), result)
+          val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
+          tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
+        }
+
+        quintArgs match {
+          case Seq(_, _: QuintLambda) =>
+            binaryBindingApp(opName,
+                (x, seq, testBody) => {
+                  // When the test operator is given as a lambda we derive
+                  // the element variable name from the lambda's parameter
+                  val elemNameStr = build[TlaEx](x) match {
+                    case NameEx(n) => n
+                    case exp       => throw new QuintIRParseError(s"binaryBindingApp did not provide ${exp} as a name")
+                  }
+                  // The element is ignored in the test, since the variable
+                  // is already present n the testBody
+                  val test = ((_: T) => testBody)
+                  mk(elemNameStr, seq, test)
+                })(quintArgs)
+          case _ => {
+            binaryApp(opName,
+                (seq, testOp) => {
+                  // When the test operator is given by name, we apply it to the element.
+                  val test = (elem: T) => tla.appOp(testOp, elem)
+                  mk(uniqueVarName(), seq, test)
+                })(quintArgs)
+          }
+        }
+      }
 
       def exceptWithUpdate(opName: String, id: Int): Converter =
         // f.setBy(x, op) ~~>
@@ -437,7 +498,7 @@ class Quint(moduleData: QuintOutput) {
           case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
           case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
           case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
-          case "select"    => MkTla.selectSeq(opName)
+          case "select"    => MkTla.selectSeq(opName, Quint.typeToTlaType(types(id).typ))
           case "range" =>
             binaryApp(opName,
                 (low, high) => {
