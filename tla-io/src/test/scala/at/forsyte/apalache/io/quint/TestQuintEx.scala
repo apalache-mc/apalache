@@ -60,13 +60,13 @@ class TestQuintEx extends AnyFunSuite {
     }
 
     // Scalar values
-    val tt = e(QuintBool(uid, true), QuintIntT())
+    val tt = e(QuintBool(uid, true), QuintBoolT())
     val _0 = e(QuintInt(uid, 0), QuintIntT())
     val _1 = e(QuintInt(uid, 1), QuintIntT())
     val _2 = e(QuintInt(uid, 2), QuintIntT())
     val _3 = e(QuintInt(uid, 3), QuintIntT())
     val _42 = e(QuintInt(uid, 42), QuintIntT())
-    val s = e(QuintStr(uid, "s"), QuintIntT())
+    val s = e(QuintStr(uid, "s"), QuintStrT())
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
