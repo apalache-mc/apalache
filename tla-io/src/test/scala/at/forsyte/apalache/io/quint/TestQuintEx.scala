@@ -75,6 +75,7 @@ class TestQuintEx extends AnyFunSuite {
     val accParam = param("acc", QuintIntT())
     val xParam = param("x", QuintIntT())
     val namedIntToBoolOp = e(QuintName(uid, "intToBoolOp"), QuintOperT(Seq(QuintIntT()), QuintBoolT()))
+    val namedInt2ToBoolOp = e(QuintName(uid, "int2ToBoolOp"), QuintOperT(Seq(QuintIntT(), QuintIntT()), QuintBoolT()))
 
     // Definitions and compound data types
     val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
@@ -264,6 +265,17 @@ class TestQuintEx extends AnyFunSuite {
             QuintBoolT())) == "∃(<<n, acc>>) ∈ {<<1, 2>>, <<1, 2>>}: TRUE")
   }
 
+  test("can convert builtin exists operator when predicate is supplied by name") {
+    assert(convert(Q.app("exists", Q.intSet, Q.namedIntToBoolOp)(
+            QuintBoolT())) == "∃__quint_var0 ∈ {1, 2, 3}: (intToBoolOp(__quint_var0))")
+  }
+
+  test("can convert builtin exists operator when multi-arity predicate is supplied by name") {
+    assert(convert(Q.app("exists", Q.intPairSet, Q.namedInt2ToBoolOp)(QuintBoolT()))
+      ==
+        "∃(<<__quint_var0, __quint_var1>>) ∈ {<<1, 2>>, <<1, 2>>}: (int2ToBoolOp(__quint_var0, __quint_var1))")
+  }
+
   test("can convert builtin forall operator application") {
     assert(convert(Q.app("forall", Q.intSet, Q.intIsGreaterThanZero)(QuintBoolT())) == "∀n ∈ {1, 2, 3}: (n > 0)")
   }
@@ -273,12 +285,23 @@ class TestQuintEx extends AnyFunSuite {
             QuintBoolT())) == "∀(<<n, acc>>) ∈ {<<1, 2>>, <<1, 2>>}: TRUE")
   }
 
+  test("can convert builtin forall operator when predicate is supplied by name") {
+    assert(convert(Q.app("forall", Q.intSet, Q.namedIntToBoolOp)(
+            QuintBoolT())) == "∀__quint_var0 ∈ {1, 2, 3}: (intToBoolOp(__quint_var0))")
+  }
+
+  test("can convert builtin forall operator when multi-arity predicate is supplied by name") {
+    assert(convert(Q.app("forall", Q.intPairSet, Q.namedInt2ToBoolOp)(QuintBoolT()))
+      ==
+        "∀(<<__quint_var0, __quint_var1>>) ∈ {<<1, 2>>, <<1, 2>>}: (int2ToBoolOp(__quint_var0, __quint_var1))")
+  }
+
   test("converting binary binding operator with missing lambda fails") {
     val exn = intercept[QuintIRParseError] {
       convert(Q.app("forall", Q.intSet, Q.intSet)(QuintBoolT()))
     }
     assert(exn.getMessage.contains(
-            "Input was not a valid representation of the QuintIR: Operator forall is a binding operator requiring a lambda as it's second argument"))
+            "Input was not a valid representation of the QuintIR: Operator forall is a binding operator requiring an operator as it's second argument"))
   }
 
   test("converting binary binding operator with invalid arity fails") {
