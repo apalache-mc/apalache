@@ -34,8 +34,8 @@ object Dependencies {
     val slf4j = "org.slf4j" % "slf4j-api" % "2.0.7"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.10"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
-    val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
-    val upickle = "com.lihaoyi" %% "upickle" % "2.0.0"
+    val ujson = "com.lihaoyi" %% "ujson" % "3.1.0"
+    val upickle = "com.lihaoyi" %% "upickle" % "3.1.0"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.11.2"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
