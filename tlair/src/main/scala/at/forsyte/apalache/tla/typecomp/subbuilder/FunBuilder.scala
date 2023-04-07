@@ -101,6 +101,7 @@ trait FunBuilder {
    *   must be [[Applicative]]
    */
   def except(f: TBuilderInstruction, x: TBuilderInstruction, e: TBuilderInstruction): TBuilderInstruction =
-    ternaryFromUnsafe(f, x, e)(unsafeBuilder.except)
+    // We must wrap the accessor in a tuple: https://github.com/informalsystems/apalache/issues/2511
+    ternaryFromUnsafe(f, tuple(x), e)(unsafeBuilder.except)
 
 }

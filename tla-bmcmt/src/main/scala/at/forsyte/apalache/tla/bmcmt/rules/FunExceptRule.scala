@@ -128,7 +128,8 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       newValue: ArenaCell): SymbState = {
 
     val keyToUpdate = indexEx match {
-      case ValEx(TlaStr(key)) => key
+      case ValEx(TlaStr(key))                           => key
+      case OperEx(TlaFunOper.tuple, ValEx(TlaStr(key))) => key
       case ex => throw new RewriterException("Expected a string when updating a record, found: " + ex, ex)
     }
 
