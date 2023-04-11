@@ -433,7 +433,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin replaceAt operator application") {
     assert(convert(Q.app("replaceAt", Q.intList, Q._1, Q._42)(
-            QuintSeqT(QuintIntT()))) == "[<<1, 2, 3>> EXCEPT ![(1 + 1)] = 42]")
+            QuintSeqT(QuintIntT()))) == "[<<1, 2, 3>> EXCEPT ![<<1 + 1>>] = 42]")
   }
 
   test("can convert builtin slice operator application") {
@@ -508,7 +508,7 @@ class TestQuintEx extends AnyFunSuite {
     assert(
         convert(Q.app("set", Q.intMap, Q._3, Q._2)(intMapT))
           ==
-            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![3] = 2]"
+            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![<<3>>] = 2]"
     )
   }
 
@@ -519,7 +519,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin setBy operator") {
     val expected = """
         |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
-        |[__quint_var0() EXCEPT ![1] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
+        |[__quint_var0() EXCEPT ![<<1>>] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
         """.stripMargin.linesIterator.mkString(" ").trim
     assert(convert(Q.setByExpression) == expected)
   }
