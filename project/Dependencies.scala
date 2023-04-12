@@ -20,7 +20,7 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.8.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.9.0"
     val commonsIo = "commons-io" % "commons-io" % "2.11.0"
     val guice = "com.google.inject" % "guice" % "5.1.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0"
@@ -31,7 +31,7 @@ object Dependencies {
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.2.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
-    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.6"
+    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.7"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.10"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "2.0.0"
@@ -40,7 +40,7 @@ object Dependencies {
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
-    val grpcNetty = "io.grpc" % "grpc-netty" % "1.53.0"
+    val grpcNetty = "io.grpc" % "grpc-netty" % "1.54.0"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)

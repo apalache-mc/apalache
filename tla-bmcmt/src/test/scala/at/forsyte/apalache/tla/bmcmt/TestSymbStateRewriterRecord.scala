@@ -2,9 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.types.tla._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.types.tla._
 
 import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
@@ -243,18 +242,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         "a" -> int(1),
         "b" -> bool(false),
     )
-    val updatedRec = except(record, str("a"), int(3)).map {
-      // Our rewriting rules expect EXCEPT [<<...>>], but that's type-incorrect w.r.t. the current builder signatures
-      // TODO: implement exceptTupled on builder
-      case ex @ OperEx(TlaFunOper.except, f, x, e) =>
-        OperEx(
-            TlaFunOper.except,
-            f,
-            OperEx(TlaFunOper.tuple, x)(Typed(TupT1(TlaType1.fromTypeTag(x.typeTag)))),
-            e,
-        )(ex.typeTag)
-      case ex => ex
-    }
+    val updatedRec = except(record, str("a"), int(3))
     val expectedRec = rec(
         "a" -> int(3),
         "b" -> bool(false),

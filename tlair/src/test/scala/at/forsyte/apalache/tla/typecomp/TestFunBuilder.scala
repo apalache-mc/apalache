@@ -562,6 +562,8 @@ class TestFunBuilder extends BuilderTest {
   test("except") {
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
 
+    def tuplifyArg(ex: TBuilderInstruction): TBuilderInstruction = builder.tuple(ex)
+
     def mkWellTyped(tparam: TParam): T = {
       val (appT, arg) = tparam
       (
@@ -569,6 +571,11 @@ class TestFunBuilder extends BuilderTest {
           arg,
           builder.name("e", Applicative.asInstanceOfApplicative(appT, arg).get.toT),
       )
+    }
+
+    def wellTypedTuplified(tparam: TParam): T = {
+      val (a, b, c) = mkWellTyped(tparam)
+      (a, tuplifyArg(b), c)
     }
 
     def mkIllTyped(tparam: TParam): Seq[T] = {
@@ -611,7 +618,7 @@ class TestFunBuilder extends BuilderTest {
 
     def resultIsExpected = expectEqTyped[TParam, T](
         TlaFunOper.except,
-        mkWellTyped,
+        wellTypedTuplified,
         ToSeq.ternary,
         { case (appT, _) => appT },
     )
