@@ -544,4 +544,51 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert application of defined operator") {
     assert(convert(Q.applyNamedIntToBoolOp) == "intToBoolOp(42, 42)")
   }
+
+  test("can convert fail operator") {
+    assert(convert(Q.app("fail", Q.tt)(QuintBoolT())) == "¬TRUE")
+  }
+
+  test("can convert next operator") {
+    assert(convert(Q.app("next", Q.name)(QuintIntT())) == "n'")
+  }
+
+  test("can convert orKeep operator") {
+    assert(convert(Q.app("orKeep", Q.tt, Q.name)(QuintBoolT())) == "[TRUE]_n")
+  }
+
+  test("can convert mustChange operator") {
+    assert(convert(Q.app("mustChange", Q.tt, Q.name)(QuintBoolT())) == "<TRUE>_n")
+  }
+
+  test("can convert enabled operator") {
+    assert(convert(Q.app("enabled", Q.tt)(QuintBoolT())) == "ENABLED TRUE")
+  }
+
+  test("can convert then operator") {
+    assert(convert(Q.app("then", Q.tt, Q.tt)(QuintBoolT())) == "TRUE ⋅ TRUE")
+  }
+
+  test("cannot convert repeated operator") {
+    val exn = intercept[QuintIRParseError] {
+      convert(Q.app("repeated", Q.tt)(QuintBoolT()))
+    }
+    assert(exn.getMessage.contains("Operator 'repeated' is not supported"))
+  }
+
+  test("can convert always operator") {
+    assert(convert(Q.app("always", Q.tt)(QuintBoolT())) == "☐TRUE")
+  }
+
+  test("can convert eventually operator") {
+    assert(convert(Q.app("eventually", Q.tt)(QuintBoolT())) == "♢TRUE")
+  }
+
+  test("can convert weakFair operator") {
+    assert(convert(Q.app("weakFair", Q.tt, Q.tt)(QuintBoolT())) == "WF_TRUE(TRUE)")
+  }
+
+  test("can convert strongFair operator") {
+    assert(convert(Q.app("strongFair", Q.tt, Q.tt)(QuintBoolT())) == "SF_TRUE(TRUE)")
+  }
 }
