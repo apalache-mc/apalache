@@ -535,11 +535,26 @@ class Quint(moduleData: QuintOutput) {
           case "setBy"     => MkTla.exceptWithUpdate(opName, id)
           case "put"       => MkTla.extendFunction(opName)
 
-          // Actions
-          case "assign"    => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
-          case "actionAll" => variadicApp(args => tla.and(args: _*))
-          case "actionAny" => variadicApp(args => tla.or(args: _*))
-          case "assert"    => unaryApp(opName, identity) // `assert` does not have side-effects in Apalache
+          // Action operators
+          case "assign"     => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
+          case "actionAll"  => variadicApp(args => tla.and(args: _*))
+          case "actionAny"  => variadicApp(args => tla.or(args: _*))
+          case "assert"     => unaryApp(opName, identity) // `assert` does not have side-effects in Apalache
+          case "fail"       => unaryApp(opName, tla.not)
+          case "next"       => unaryApp(opName, tla.prime)
+          case "orKeep"     => binaryApp(opName, tla.stutt)
+          case "mustChange" => binaryApp(opName, tla.nostutt)
+          case "enabled"    => unaryApp(opName, tla.enabled)
+          case "then"       => binaryApp(opName, tla.comp)
+          case "repeated"   => throw new QuintIRParseError("Operator 'repeated' is not supported")
+
+          // Temporal operators
+          case "always"     => unaryApp(opName, tla.box)
+          case "eventually" => unaryApp(opName, tla.diamond)
+          case "weakFair"   => binaryApp(opName, tla.WF)
+          case "strongFair" => binaryApp(opName, tla.SF)
+
+          case "ite" => ternaryApp(opName, tla.ite)
 
           // Otherwise, the applied operator is defined, and not a builtin
           case definedOpName => { args =>
