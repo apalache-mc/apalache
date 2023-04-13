@@ -251,18 +251,12 @@ class Quint(moduleData: QuintOutput) {
       // MkTla gathers non-trivial conversion functions from quint args to TLA builder instructions
       type Converter = Seq[QuintEx] => NullaryOpReader[TBuilderInstruction]
 
-      def setEnumeration(id: Int): Converter =
+      def setEnumeration(elementType: QuintType): Converter =
         variadicApp {
           // Empty sets must be handled specially since we cannot infer their type
           // from the given arguments
-          case Seq() =>
-            val elementType = types(id).typ match {
-              case QuintSetT(t) => Quint.typeToTlaType(t)
-              case invalidType =>
-                throw new QuintIRParseError(s"Set with id ${id} has invalid type ${invalidType}")
-            }
-            tla.emptySet(elementType)
-          case args => tla.enumSet(args: _*)
+          case Seq() => tla.emptySet(Quint.typeToTlaType(elementType))
+          case args  => tla.enumSet(args: _*)
         }
 
       def listConstruction(id: Int): Converter =
@@ -466,7 +460,11 @@ class Quint(moduleData: QuintOutput) {
           case "iuminus" => unaryApp(opName, tla.uminus)
 
           // Sets
-          case "Set"       => MkTla.setEnumeration(id)
+          case "Set" =>
+            types(id).typ match {
+              case QuintSetT(t) => MkTla.setEnumeration(t)
+              case invalidType  => throw new QuintIRParseError(s"Set with id ${id} has invalid type ${invalidType}")
+            }
           case "exists"    => binaryBindingApp(opName, tla.exists)
           case "forall"    => binaryBindingApp(opName, tla.forall)
           case "in"        => binaryApp(opName, tla.in)
@@ -525,7 +523,13 @@ class Quint(moduleData: QuintOutput) {
           // Maps (functions)
           // Map is variadic on n tuples, so build a set of these tuple args
           // before converting the resulting set of tuples to a function.
-          case "Map"       => quintArgs => MkTla.setEnumeration(id)(quintArgs).map(tla.setAsFun)
+          case "Map" =>
+            quintArgs =>
+              types(id).typ match {
+                case QuintFunT(dom, codom) =>
+                  MkTla.setEnumeration(QuintType.QuintTupleT.ofTypes(dom, codom))(quintArgs).map(tla.setAsFun)
+                case invalidType => throw new QuintIRParseError(s"Map with id ${id} has invalid type ${invalidType}")
+              }
           case "get"       => binaryApp(opName, tla.app)
           case "keys"      => unaryApp(opName, tla.dom)
           case "setToMap"  => unaryApp(opName, tla.setAsFun)

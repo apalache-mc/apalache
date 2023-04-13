@@ -462,7 +462,7 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "<<0, 1>>")
   }
 
-  test("can convert builtin Tup operator application to heterogeneous elemens") {
+  test("can convert builtin Tup operator application to heterogeneous elements") {
     assert(convert(Q.app("Tup", Q._0, Q.s)(QuintTupleT.ofTypes(QuintStrT(), QuintStrT()))) == "<<0, \"s\">>")
   }
 
@@ -482,6 +482,10 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin Map operator") {
     assert(convert(Q.app("Map", Q.intTup1, Q.intTup2)(QuintFunT(QuintIntT(),
                 QuintIntT()))) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+  }
+
+  test("can convert builtin Map operator for empty maps") {
+    assert(convert(Q.app("Map")(QuintFunT(QuintIntT(), QuintIntT()))) == "Apalache!SetAsFun({})")
   }
 
   test("can convert builtin get operator") {
