@@ -354,6 +354,12 @@ private[quint] object QuintType {
   @key("rec") case class QuintRecordT(fields: Row) extends QuintType
   object QuintRecordT {
     implicit val rw: RW[QuintRecordT] = macroRW
+
+    // Helper for manually constructing record type
+    def ofFieldTypes(fieldTypes: (String, QuintType)*): QuintRecordT = {
+      val fields = fieldTypes.map { case (f, t) => RecordField(f, t) }
+      QuintRecordT(Row.Cell(fields, Row.Nil()))
+    }
   }
 
   case class UnionRecord(tagValue: String, fields: Row)

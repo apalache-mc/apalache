@@ -67,6 +67,7 @@ class TestQuintEx extends AnyFunSuite {
     val _3 = e(QuintInt(uid, 3), QuintIntT())
     val _42 = e(QuintInt(uid, 42), QuintIntT())
     val s = e(QuintStr(uid, "s"), QuintStrT())
+    val t = e(QuintStr(uid, "t"), QuintStrT())
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
@@ -456,6 +457,11 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin range operator application") {
     assert(convert(Q.app("range", Q._3, Q._42)(
             QuintSeqT(QuintIntT()))) == "Apalache!MkSeq(42 - 3, LET __QUINT_LAMBDA0(__quint_var0) ≜ (3 + __quint_var0) - 1 IN __QUINT_LAMBDA0)")
+  }
+
+  test("can convert builtin Rec operator application") {
+    val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+    assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
   test("can convert builtin Tup operator application") {

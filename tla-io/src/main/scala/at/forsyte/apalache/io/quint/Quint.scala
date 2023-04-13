@@ -423,6 +423,30 @@ class Quint(moduleData: QuintOutput) {
               )
               tla.letIn(body, dom)
             })
+
+      // Create a TLA record
+      val record: Converter =
+        quintArgs => {
+          // The quint Rec operator takes its field and value arguments
+          // via a variadic operator requiring field names passed as strings to
+          // be alternated with values. E.g.,
+          //
+          //    Rec("f1", 1, "f2", 2)
+          //
+          // So we first separate out the filed names from the values, so we
+          // can make use of the existing combinator for variadic operators.
+          val (fieldNames, quintVals) = quintArgs
+            .grouped(2)
+            .foldRight((List[String](), List[QuintEx]())) {
+              case (Seq(QuintStr(_, f), v), (fields, values)) => ((f :: fields), v :: values)
+              case (invalidArgs, _) =>
+                throw new QuintIRParseError(s"Invalid argument given to Rec ${invalidArgs}")
+            }
+          variadicApp { tlaVals =>
+            val fieldsAndArgs = fieldNames.zip(tlaVals)
+            tla.rec(fieldsAndArgs: _*)
+          }(quintVals)
+        }
     }
 
     // Increments the TLA expression (as a TBuilderInstruction), which is assumed
@@ -519,6 +543,9 @@ class Quint(moduleData: QuintOutput) {
           // product projection is just function application on TLA
           case "item"   => binaryApp(opName, tla.app)
           case "tuples" => variadicApp(tla.times)
+
+          // Records
+          case "Rec" => MkTla.record
 
           // Maps (functions)
           // Map is variadic on n tuples, so build a set of these tuple args
