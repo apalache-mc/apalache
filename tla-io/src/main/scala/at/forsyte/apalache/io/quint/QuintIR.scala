@@ -24,8 +24,12 @@ private[quint] object QuintDeserializer extends upickle.AttributeTagged {
 
 import QuintDeserializer.{macroRW, ReadWriter => RW}
 
+// Internal error
 private[quint] class QuintIRParseError(errMsg: String)
     extends Exception("Input was not a valid representation of the QuintIR: " + errMsg)
+
+// User facing error
+class QuintUnsupportedError(errMsg: String) extends Exception("Unsupported quint input: " + errMsg)
 
 /** The JSON output produced by quint parse */
 private[quint] case class QuintOutput(

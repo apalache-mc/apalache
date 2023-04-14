@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.itf.ItfError
 import at.forsyte.apalache.io.json.JsonDeserializationError
+import at.forsyte.apalache.io.quint.QuintUnsupportedError
 import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -108,6 +109,9 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
     case err: MalformedTlaError =>
       val msg = "%s: unexpected TLA+ expression: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       FailureMessage(msg)
+
+    case err: QuintUnsupportedError =>
+      FailureMessage(err.getMessage)
 
     case err: MalformedSepecificationError =>
       val msg = "The specification is malformed: %s".format(err.getMessage)

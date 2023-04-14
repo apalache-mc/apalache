@@ -425,8 +425,9 @@ class Quint(moduleData: QuintOutput) {
             })
 
       // Create a TLA record
-      val record: Converter =
-        quintArgs => {
+      val record: Converter = {
+        case Seq() => throw new QuintUnsupportedError("Given empty record, but Apalache doesn't support empty records.")
+        case quintArgs =>
           // The quint Rec operator takes its field and value arguments
           // via a variadic operator requiring field names passed as strings to
           // be alternated with values. E.g.,
@@ -446,7 +447,8 @@ class Quint(moduleData: QuintOutput) {
             val fieldsAndArgs = fieldNames.zip(tlaVals)
             tla.rec(fieldsAndArgs: _*)
           }(quintVals)
-        }
+
+      }
     }
 
     // Increments the TLA expression (as a TBuilderInstruction), which is assumed
@@ -545,7 +547,10 @@ class Quint(moduleData: QuintOutput) {
           case "tuples" => variadicApp(tla.times)
 
           // Records
-          case "Rec" => MkTla.record
+          case "Rec"        => MkTla.record
+          case "field"      => binaryApp(opName, tla.app)
+          case "fieldNames" => unaryApp(opName, tla.dom)
+          case "with"       => ternaryApp(opName, tla.except)
 
           // Maps (functions)
           // Map is variadic on n tuples, so build a set of these tuple args

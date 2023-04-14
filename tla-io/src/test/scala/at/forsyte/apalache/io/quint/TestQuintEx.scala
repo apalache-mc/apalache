@@ -464,6 +464,37 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
+  test("convert builtin Rec operator constructing empty record fails") {
+    val exn = intercept[QuintUnsupportedError] {
+      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      convert(Q.app("Rec")(typ))
+    }
+    assert(exn.getMessage.contains(
+            "Unsupported quint input: Given empty record, but Apalache doesn't support empty records."))
+  }
+
+  test("can convert builtin field operator application") {
+    val rec = {
+      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    }
+    assert(convert(Q.app("field", rec, Q.s)(QuintIntT())) == """(["s" ↦ 1, "t" ↦ 2])["s"]""")
+  }
+
+  test("can convert builtin fieldNames operator application") {
+    val rec = {
+      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    }
+    assert(convert(Q.app("fieldNames", rec)(QuintSetT(QuintStrT()))) == """DOMAIN (["s" ↦ 1, "t" ↦ 2])""")
+  }
+
+  test("can convert builtin with operator application") {
+    val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+    val rec = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    assert(convert(Q.app("with", rec, Q.s, Q._42)(typ)) == """[["s" ↦ 1, "t" ↦ 2] EXCEPT ![<<"s">>] = 42]""")
+  }
+
   test("can convert builtin Tup operator application") {
     assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "<<0, 1>>")
   }
