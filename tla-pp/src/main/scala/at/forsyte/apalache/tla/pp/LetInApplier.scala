@@ -5,13 +5,15 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.transformations._
 
 /**
- * DeLambdifier turns applications of operator-typed LET-expressions, into LET-expressions with applications pushed into
+ * LetInApplier turns applications of operator-typed LET-expressions, into LET-expressions with applications pushed into
  * the body.
+ *
+ * Workaround until LAMBDAS are systematically supported (#2534).
  *
  * @author
  *   Jure Kukovec
  */
-class DeLambdifier(tracker: TransformationTracker) extends TlaExTransformation {
+class LetInApplier(tracker: TransformationTracker) extends TlaExTransformation {
   override def apply(input: TlaEx): TlaEx = {
     transform(input)
   }

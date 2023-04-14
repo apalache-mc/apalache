@@ -10,12 +10,12 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestDeLambdifier extends AnyFunSuite with BeforeAndAfterEach {
+class TestLetInApplier extends AnyFunSuite with BeforeAndAfterEach {
 
-  private var delambda = new DeLambdifier(new IdleTracker)
+  private var delambda = new LetInApplier(new IdleTracker)
 
   override def beforeEach(): Unit = {
-    delambda = new DeLambdifier(new IdleTracker)
+    delambda = new LetInApplier(new IdleTracker)
   }
 
   val intToIntT: TlaType1 = OperT1(Seq(IntT1), IntT1)
