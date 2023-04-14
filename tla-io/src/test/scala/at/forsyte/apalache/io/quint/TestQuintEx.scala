@@ -523,7 +523,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin setBy operator") {
     val expected = """
         |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
-        |[__quint_var0() EXCEPT ![<<1>>] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
+        |[__quint_var0() EXCEPT ![<<1>>] = LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1])]
         """.stripMargin.linesIterator.mkString(" ").trim
     assert(convert(Q.setByExpression) == expected)
   }
