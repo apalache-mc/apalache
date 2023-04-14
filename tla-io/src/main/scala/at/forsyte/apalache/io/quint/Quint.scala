@@ -39,7 +39,6 @@ import scalaz._
 // list and traverse give us monadic mapping over lists
 // see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
 import scalaz.std.list._, scalaz.syntax.traverse._
-import at.forsyte.apalache.tla.lir.NameEx
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -309,51 +308,22 @@ class Quint(moduleData: QuintOutput) {
       //
       //  Since `__e` is free in `__test` the binding in the head of `__QUINT_LAMBDA0`
       //  will bind the element at the appropriate place in the test.
-      def selectSeq(opName: String, seqType: TlaType1): Converter = quintArgs => {
-        // `mk(varNam, seq, test)` is an implementation of Apalache's rewired
-        // version of `SelectSeq` using the variable named 'varName' in the
-        // append operation over the give `seq` guarded by the given `test`.
-        // `test` is given the TLA name constructed with the given `varName`,
-        // so that the test can be applied to that element if needed.
-        def mk(elemVarName: String, seq: T, test: T => T): T = {
-          val elemType = seqType match {
-            case SeqT1(elem) => elem
-            case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
-          }
-          val resultParam = tla.param(uniqueVarName(), seqType)
-          val elemParam = tla.param(elemVarName, elemType)
-          val result = tla.name(resultParam._1.name, resultParam._2)
-          val elem = tla.name(elemParam._1.name, elemParam._2)
-          val ite = tla.ite(test(elem), tla.append(result, elem), result)
-          val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
-          tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
-        }
-
-        quintArgs match {
-          case Seq(_, _: QuintLambda) =>
-            binaryBindingApp(opName,
-                (x, seq, testBody) => {
-                  // When the test operator is given as a lambda we derive
-                  // the element variable name from the lambda's parameter
-                  val elemNameStr = build[TlaEx](x) match {
-                    case NameEx(n) => n
-                    case exp       => throw new QuintIRParseError(s"binaryBindingApp did not provide ${exp} as a name")
-                  }
-                  // The element is ignored in the test, since the variable
-                  // is already present n the testBody
-                  val test = ((_: T) => testBody)
-                  mk(elemNameStr, seq, test)
-                })(quintArgs)
-          case _ => {
-            binaryApp(opName,
-                (seq, testOp) => {
-                  // When the test operator is given by name, we apply it to the element.
-                  val test = (elem: T) => tla.appOp(testOp, elem)
-                  mk(uniqueVarName(), seq, test)
-                })(quintArgs)
-          }
-        }
-      }
+      def selectSeq(opName: String, seqType: TlaType1): Converter =
+        binaryApp(opName,
+            (seq, testOp) => {
+              // When the test operator is given by name, we apply it to the element.
+              val elemType = seqType match {
+                case SeqT1(elem) => elem
+                case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+              }
+              val resultParam = tla.param(uniqueVarName(), seqType)
+              val elemParam = tla.param(uniqueLambdaName(), elemType)
+              val result = tla.name(resultParam._1.name, resultParam._2)
+              val elem = tla.name(elemParam._1.name, elemParam._2)
+              val ite = tla.ite(tla.appOp(testOp, elem), tla.append(result, elem), result)
+              val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
+              tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
+            })
 
       def exceptWithUpdate(opName: String, id: Int): Converter =
         // f.setBy(x, op) ~~>
