@@ -1,16 +1,16 @@
 package at.forsyte.apalache.tla.passes.pp
 
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.lir.TlaWriterFactory
+import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, LetInApplier, Normalizer, UniqueNameGenerator}
 import com.google.inject.Inject
-import at.forsyte.apalache.infra.passes.options.OptionGroup
-import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * A preprocessing pass that simplifies TLA+ expression by running multiple transformation.
@@ -51,6 +51,7 @@ class PreproPassImpl @Inject() (
       List(
           ("PrimePropagation", createModuleTransformerForPrimePropagation(varSet)),
           ("Desugarer", ModuleByExTransformer(Desugarer(gen, varSet, tracker))),
+          ("LetInApplier", ModuleByExTransformer(LetInApplier(tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
           ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
