@@ -1,6 +1,5 @@
-package at.forsyte.apalache.tla.bmcmt.arena
+package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, ElemPtr, FixedElemPtr, SmtExprElemPtr}
 import at.forsyte.apalache.tla.types.tla
 
 /**

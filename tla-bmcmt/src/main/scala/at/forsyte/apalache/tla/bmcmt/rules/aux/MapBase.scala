@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
+import at.forsyte.apalache.tla.bmcmt.{PtrUtil, _}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1

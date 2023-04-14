@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
+import at.forsyte.apalache.tla.bmcmt.{PtrUtil, _}
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla

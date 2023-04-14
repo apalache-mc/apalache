@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
+import at.forsyte.apalache.tla.bmcmt.{PtrUtil, _}
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper

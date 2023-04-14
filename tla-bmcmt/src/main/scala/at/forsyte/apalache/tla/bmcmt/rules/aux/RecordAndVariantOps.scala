@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.arena.{PtrUtil, PureArenaAdapter}
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
