@@ -67,6 +67,7 @@ class TestQuintEx extends AnyFunSuite {
     val _3 = e(QuintInt(uid, 3), QuintIntT())
     val _42 = e(QuintInt(uid, 42), QuintIntT())
     val s = e(QuintStr(uid, "s"), QuintStrT())
+    val t = e(QuintStr(uid, "t"), QuintStrT())
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
@@ -456,6 +457,42 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin range operator application") {
     assert(convert(Q.app("range", Q._3, Q._42)(
             QuintSeqT(QuintIntT()))) == "Apalache!MkSeq(42 - 3, LET __QUINT_LAMBDA0(__quint_var0) ≜ (3 + __quint_var0) - 1 IN __QUINT_LAMBDA0)")
+  }
+
+  test("can convert builtin Rec operator application") {
+    val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+    assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
+  }
+
+  test("convert builtin Rec operator constructing empty record fails") {
+    val exn = intercept[QuintUnsupportedError] {
+      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      convert(Q.app("Rec")(typ))
+    }
+    assert(exn.getMessage.contains(
+            "Unsupported quint input: Given empty record, but Apalache doesn't support empty records."))
+  }
+
+  test("can convert builtin field operator application") {
+    val rec = {
+      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    }
+    assert(convert(Q.app("field", rec, Q.s)(QuintIntT())) == """(["s" ↦ 1, "t" ↦ 2])["s"]""")
+  }
+
+  test("can convert builtin fieldNames operator application") {
+    val rec = {
+      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    }
+    assert(convert(Q.app("fieldNames", rec)(QuintSetT(QuintStrT()))) == """DOMAIN (["s" ↦ 1, "t" ↦ 2])""")
+  }
+
+  test("can convert builtin with operator application") {
+    val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+    val rec = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    assert(convert(Q.app("with", rec, Q.s, Q._42)(typ)) == """[["s" ↦ 1, "t" ↦ 2] EXCEPT ![<<"s">>] = 42]""")
   }
 
   test("can convert builtin Tup operator application") {

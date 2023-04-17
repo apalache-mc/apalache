@@ -24,8 +24,12 @@ private[quint] object QuintDeserializer extends upickle.AttributeTagged {
 
 import QuintDeserializer.{macroRW, ReadWriter => RW}
 
+// Internal error
 private[quint] class QuintIRParseError(errMsg: String)
     extends Exception("Input was not a valid representation of the QuintIR: " + errMsg)
+
+// User facing error
+class QuintUnsupportedError(errMsg: String) extends Exception("Unsupported quint input: " + errMsg)
 
 /** The JSON output produced by quint parse */
 private[quint] case class QuintOutput(
@@ -354,6 +358,12 @@ private[quint] object QuintType {
   @key("rec") case class QuintRecordT(fields: Row) extends QuintType
   object QuintRecordT {
     implicit val rw: RW[QuintRecordT] = macroRW
+
+    // Helper for manually constructing record type
+    def ofFieldTypes(fieldTypes: (String, QuintType)*): QuintRecordT = {
+      val fields = fieldTypes.map { case (f, t) => RecordField(f, t) }
+      QuintRecordT(Row.Cell(fields, Row.Nil()))
+    }
   }
 
   case class UnionRecord(tagValue: String, fields: Row)
