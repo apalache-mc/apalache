@@ -444,13 +444,13 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin select operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(__quint_var0, n) ≜ IF (n > 0) THEN (Append(__quint_var0, n)) ELSE __quint_var0 IN __QUINT_LAMBDA0, <<>>, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA2(__quint_var0, __QUINT_LAMBDA1) ≜ IF LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__QUINT_LAMBDA1) THEN (Append(__quint_var0, __QUINT_LAMBDA1)) ELSE __quint_var0 IN __QUINT_LAMBDA2, <<>>, <<1, 2, 3>>)"
     assert(convert(Q.selectGreaterThanZero) == expected)
   }
 
   test("can convert builtin select operator application with named test operator") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(__quint_var1, __quint_var0) ≜ IF (intToBoolOp(__quint_var0)) THEN (Append(__quint_var1, __quint_var0)) ELSE __quint_var1 IN __QUINT_LAMBDA0, <<>>, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA1(__quint_var0, __QUINT_LAMBDA0) ≜ IF (intToBoolOp(__QUINT_LAMBDA0)) THEN (Append(__quint_var0, __QUINT_LAMBDA0)) ELSE __quint_var0 IN __QUINT_LAMBDA1, <<>>, <<1, 2, 3>>)"
     assert(convert(Q.selectNamedIntToBoolOp) == expected)
   }
 
@@ -560,7 +560,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin setBy operator") {
     val expected = """
         |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
-        |[__quint_var0() EXCEPT ![<<1>>] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
+        |[__quint_var0() EXCEPT ![<<1>>] = LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1])]
         """.stripMargin.linesIterator.mkString(" ").trim
     assert(convert(Q.setByExpression) == expected)
   }
