@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
  *   Jure Kukovec
  */
 trait ArenaRule {
-  def isApplicable(ex: TlaEx): Boolean
+  def isApplicable(ex: TlaEx): ArenaComputationInternalState[Boolean]
 
   def apply(tlaEx: TlaEx): ArenaComputation
 }

@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp.arenas.rules
 import at.forsyte.apalache.tla.bmcmt.PtrUtil
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx, TlaType1}
-import at.forsyte.apalache.tla.pp.arenas._
+import at.forsyte.apalache.tla.pp.arenas.{ArenaComputationInternalState, _}
 import scalaz.Scalaz._
 import scalaz._
 
@@ -12,10 +12,10 @@ import scalaz._
  *   Jure Kukovec
  */
 class SetCupArenaRule(rewriter: ArenaRewriter) extends ArenaRule {
-  override def isApplicable(tlaEx: TlaEx): Boolean = tlaEx match {
+  override def isApplicable(tlaEx: TlaEx): ArenaComputationInternalState[Boolean] = (tlaEx match {
     case OperEx(TlaSetOper.cup, _*) => true
     case _                          => false
-  }
+  }).point[ArenaComputationInternalState]
 
   override def apply(tlaEx: TlaEx): ArenaComputation = tlaEx match {
     case OperEx(TlaSetOper.cup, leftSet, rightSet) =>

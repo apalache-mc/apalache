@@ -26,6 +26,11 @@ package object arenas {
   def getArena: ArenaComputationInternalState[PureArena] = gets { _.arena }
   def getVarCtx: ArenaComputationInternalState[VariableContext] = gets { _.varContext }
 
+  def bind(name: String, cell: ArenaCell): ArenaComputationInternalState[Unit] = modify[ArenaComputationContext] {
+    ctx =>
+      ctx.copy(varContext = ctx.varContext + (name -> cell))
+  }
+
   def newCell(uid: UID, cellType: TlaType1): ArenaComputation = State[ArenaComputationContext, ArenaCell] {
     case s @ ArenaComputationContext(arena, varContext, cellCreationMap) =>
       val cellT = CellT.fromType1(cellType)
