@@ -364,6 +364,12 @@ private[quint] object QuintType {
       val fields = fieldTypes.map { case (f, t) => RecordField(f, t) }
       QuintRecordT(Row.Cell(fields, Row.Nil()))
     }
+
+    // Helper for manually constructing record type with free row variable
+    def ofFieldTypes(rowVar: String, fieldTypes: (String, QuintType)*): QuintRecordT = {
+      val fields = fieldTypes.map { case (f, t) => RecordField(f, t) }
+      QuintRecordT(Row.Cell(fields, Row.Var(rowVar)))
+    }
   }
 
   case class UnionRecord(tagValue: String, fields: Row)

@@ -9,6 +9,9 @@ import org.scalatestplus.junit.JUnitRunner
 
 import QuintType._
 import QuintEx._
+import at.forsyte.apalache.tla.lir.RecRowT1
+import at.forsyte.apalache.tla.lir.RowT1
+import at.forsyte.apalache.tla.lir.VarT1
 
 // You can run all these tests in watch mode in the
 // sbt console with
@@ -464,13 +467,23 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
-  test("convert builtin Rec operator constructing empty record fails") {
+  test("converting builtin Rec operator constructing empty record fails") {
     val exn = intercept[QuintUnsupportedError] {
-      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      val typ = QuintRecordT.ofFieldTypes()
       convert(Q.app("Rec")(typ))
     }
     assert(exn.getMessage.contains(
             "Unsupported quint input: Given empty record, but Apalache doesn't support empty records."))
+  }
+
+  test("can convert row-polymorphic record") {
+    val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
+    val exp = Q.quint.exToTla(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)).get
+    val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
+
+    assert(Quint.typeToTlaType(typ) == expectedTlaType)
+    assert(exp.typeTag == Typed(expectedTlaType))
+    assert(exp.toString == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
   test("can convert builtin field operator application") {
