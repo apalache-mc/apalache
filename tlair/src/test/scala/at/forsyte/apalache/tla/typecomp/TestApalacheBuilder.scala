@@ -388,6 +388,93 @@ class TestApalacheBuilder extends BuilderTest {
     }
   }
 
+  test("mkSeqConst") {
+    import LambdaFactory.mkLambda
+    type T = (TBuilderInstruction, TBuilderInstruction)
+
+    // MkSeq(n, LET F(i) == e IN F)
+    def mkWellTyped(t: TlaType1): T = {
+      val param = builder.param("i", IntT1)
+      (
+          builder.name("n", IntT1),
+          mkLambda(
+              "F",
+              Seq(param),
+              builder.name("e", t),
+              t,
+          ),
+      )
+    }
+
+    def mkIllTyped(t: TlaType1): Seq[T] = {
+      Seq(
+          (
+              builder.name("n", InvalidTypeMethods.notInt),
+              mkLambda(
+                  "F",
+                  Seq(builder.param("i", IntT1)),
+                  builder.name("e", t),
+                  t,
+              ),
+          ),
+          // F is a unary lambda, but the arg-type is not Int
+          (
+              builder.name("n", IntT1),
+              mkLambda(
+                  "F",
+                  Seq(builder.param("i", InvalidTypeMethods.notInt)),
+                  builder.name("e", t),
+                  t,
+              ),
+          ),
+      )
+    }
+
+    def resultIsExpected = expectEqTyped[TlaType1, T](
+        ApalacheOper.mkSeq,
+        mkWellTyped,
+        ToSeq.binary,
+        SeqT1,
+    )
+
+    checkRun(Generators.singleTypeGen)(
+        runBinary(
+            builder.mkSeqConst,
+            mkWellTyped,
+            mkIllTyped,
+            resultIsExpected,
+        )
+    )
+
+    // throws on non-lambda
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mkSeqConst(
+              builder.int(1),
+              builder.name("NonLambda", OperT1(Seq(IntT1), IntT1)),
+          )
+      )
+    }
+
+    // throws on non-unary lambda
+    assertThrows[IllegalArgumentException] {
+      build(
+          builder.mkSeqConst(
+              builder.int(2),
+              mkLambda(
+                  "F",
+                  Seq(
+                      builder.param("i", IntT1),
+                      builder.param("j", IntT1),
+                  ),
+                  builder.name("e", IntT1),
+                  IntT1,
+              ),
+          )
+      )
+    }
+  }
+
   test("foldSet/foldSeq") {
     import LambdaFactory.mkLambda
     type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)

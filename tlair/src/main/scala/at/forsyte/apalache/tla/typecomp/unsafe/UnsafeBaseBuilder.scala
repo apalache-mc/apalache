@@ -22,7 +22,17 @@ class UnsafeBaseBuilder extends ProtoBuilder {
   def neql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.ne, lhs, rhs)
 
   /** {{{Op(args[1],...,args[n])}}} */
-  def appOp(Op: TlaEx, args: TlaEx*): TlaEx = buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
+  def appOp(Op: TlaEx, args: TlaEx*): TlaEx = {
+    Op match {
+      // This is a workaround for the fact that that we currently de-lambda,
+      // because lambdas are not supported in the Apalache IR. See
+      // https://github.com/informalsystems/apalache/issues/2532
+      case LetInEx(nameEx @ NameEx(operName), decl) if operName == decl.name =>
+        val appliedByName = buildBySignatureLookup(TlaOper.apply, nameEx +: args: _*)
+        LetInEx(appliedByName, decl)(appliedByName.typeTag)
+      case _ => buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
+    }
+  }
 
   /**
    * {{{CHOOSE x: p}}}

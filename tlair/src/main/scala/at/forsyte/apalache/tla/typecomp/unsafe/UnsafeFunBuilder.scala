@@ -174,11 +174,18 @@ class UnsafeFunBuilder extends ProtoBuilder {
    *   must be [[Applicative]]
    */
   def except(f: TlaEx, x: TlaEx, e: TlaEx): TlaEx = {
+
+    // EXCEPT requires arguments to be wrapped in a tuple, i.e. [<<x>>]
+    def tuplifyAppT(t: TlaType1): Option[Applicative] = asInstanceOfApplicative(t, x).map {
+      case Applicative(fromT, toT) => Applicative(TupT1(fromT), toT)
+    }
+
     val partialSignature: PartialSignature = {
       // asInstanceOfApplicative verifies that x is a ValEx(_), and not just any domT-typed value
-      case Seq(appT, domT, cdmT) if asInstanceOfApplicative(appT, x).contains(Applicative(domT, cdmT)) => appT
+      case Seq(appT, domT, cdmT) if tuplifyAppT(appT).contains(Applicative(domT, cdmT)) => appT
     }
-    buildFromPartialSignature(partialSignature)(TlaFunOper.except, f, x, e)
+
+    buildFromPartialSignature(partialSignature)(TlaFunOper.except, f, tuple(x), e)
   }
 
 }

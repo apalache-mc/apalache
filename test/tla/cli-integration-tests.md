@@ -1717,6 +1717,20 @@ $ apalache-mc check --inv=Inv --discard-disabled=false TrivialFail.tla | sed 's/
 EXITCODE: ERROR (12)
 ```
 
+### check ConstantOperatorImpl succeeds
+
+Test that model checking properly handles first-order `CONSTANTS`.
+
+Regression test for https://github.com/informalsystems/apalache/issues/2388
+
+```sh
+$ apalache-mc check --length=0 --inv=Inv ConstantOperatorImpl.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh
@@ -2371,6 +2385,14 @@ Check the manual: https://apalache.informal.systems/docs/apalache/parameters.htm
 Input error (see the manual): SubstRule: Variable N is not assigned a value
 ...
 EXITCODE: ERROR (255)
+```
+
+### check Bug1058.tla reports no error: regression for #Bug1058
+
+```sh
+$ apalache-mc check Bug1058.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
 ```
 
 ### check Bug1136.tla reports no error: regression for #1136
@@ -3410,12 +3432,47 @@ $ apalache-mc typecheck PolyTooGeneral.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (120)
 ```
 
+### typecheck PrintTypes
+
+```sh
+$ apalache-mc typecheck PrintTypes.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### typecheck annotation with comments
 
 Regression test for https://github.com/informalsystems/apalache/issues/2163
 
 ```sh
 $ apalache-mc typecheck CommentedTypeAnnotation.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### constant operators
+
+#### typecheck ConstantOperator.tla
+
+Test that typechecker supports first-order `CONSTANTS`.
+
+Regression test for https://github.com/informalsystems/apalache/issues/2388
+
+```sh
+$ apalache-mc typecheck ConstantOperator.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+#### typecheck ConstantOperatorImpl.tla
+
+Test that typechecker supports substituting a first-order `CONSTANT` via
+`INSTANCE`.
+
+Regression test for https://github.com/informalsystems/apalache/issues/2388
+
+```sh
+$ apalache-mc typecheck ConstantOperatorImpl.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```

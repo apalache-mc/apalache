@@ -272,6 +272,8 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val typeAndSeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, seqOfTypesGen)
     val typeAndNonemptySeqGen: Gen[(TlaType1, Seq[TlaType1])] = Gen.zip(singleTypeGen, nonEmptySeqOfTypesGen)
+    val typeAndNonemptySeqOfTypeAndSeqGen: Gen[(TlaType1, Seq[(TlaType1, Seq[TlaType1])])] =
+      Gen.zip(singleTypeGen, minIntGen(1).flatMap(Gen.listOfN(_, typeAndSeqGen)))
 
     // unsafe for non-applicative
     private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
@@ -651,6 +653,70 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     }
   }
 
+  def assertThrowsBoundVarIntroductionTernaryTupled(
+      // order: variables, set, expr
+      method: (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.str("x"), builder.name("y", IntT1)), // got ValEx(TlaStr), expected NameEx
+              builder.name("S", SetT1(TupT1(StrT1, IntT1))),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on duplicate variable
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("x", StrT1)),
+              builder.name("S", SetT1(TupT1(StrT1, StrT1))),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)), // x: Str
+              builder.name("S", SetT1(TupT1(StrT1, IntT1))),
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)), // x: Int
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op(<<x,y>>, {<<x,y>>}, TRUE)
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
+              builder.enumSet(builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1))),
+              builder.bool(true),
+          )
+      )
+    }
+
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op( <<x,y>>, S, \E x \in T: TRUE)
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
+              builder.name("S", SetT1(TupT1(StrT1, IntT1))),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("T", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
+  }
+
   def assertThrowsBoundVarIntroductionBinary(
       // order: variable, expr
       method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
@@ -689,5 +755,73 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
       )
     }
   }
+
+  def assertThrowsBoundVarIntroductionBinaryTupled(
+      // order: variables, expr
+      method: (TBuilderInstruction, TBuilderInstruction) => TBuilderInstruction): Unit = {
+    // test fail on non-name
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.str("x"), builder.name("y", IntT1)), // got ValEx(TlaStr), expected NameEx
+              builder.bool(true),
+          )
+      )
+    }
+
+    assertThrows[IllegalArgumentException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("x", StrT1)),
+              builder.bool(true),
+          )
+      )
+    }
+
+    // test fail on scope error
+    assertThrows[TBuilderScopeException] {
+      build(
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)), // x: Str
+              builder.eql(builder.name("x", IntT1), builder.name("x", IntT1)), // x: Int
+          )
+      )
+    }
+
+    // test fail on shadowing
+    assertThrows[TBuilderScopeException] {
+      build(
+          // Op( <<x,y>>, \E x \in S: TRUE)
+          method(
+              builder.tuple(builder.name("x", StrT1), builder.name("y", IntT1)),
+              builder.exists(
+                  builder.name("x", StrT1),
+                  builder.name("S", SetT1(StrT1)),
+                  builder.bool(true),
+              ),
+          )
+      )
+    }
+  }
+
+  def varInSet[RetT](
+      wrapper: (TBuilderInstruction, TBuilderInstruction) => RetT
+    )(i: Int,
+      ti: TlaType1,
+      tsi: Seq[TlaType1]): RetT =
+    if (tsi.isEmpty)
+      wrapper(
+          builder.name(s"x$i", ti),
+          builder.name(s"S$i", SetT1(ti)),
+      )
+    else {
+      val names = tsi.zipWithIndex.map { case (tij, j) =>
+        builder.name(s"x${i}_$j", tij)
+      }
+      wrapper(
+          builder.tuple(names: _*),
+          builder.name(s"S$i", SetT1(TupT1(tsi: _*))),
+      )
+    }
 
 }

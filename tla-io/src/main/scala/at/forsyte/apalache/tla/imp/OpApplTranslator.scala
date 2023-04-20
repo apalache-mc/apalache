@@ -61,9 +61,13 @@ class OpApplTranslator(
         case ASTConstants.UserDefinedOpKind =>
           translateUserOperator(node)
 
+        // a higher-order operator declared as CONSTANT
+        case ASTConstants.ConstantDeclKind =>
+          translateNonLocalUserOperator(node)
+
         case _ =>
           throw new SanyImporterException(
-              "Unsupported operator type: " + node.getOperator
+              "Unsupported operator type: " + oper + ", kind: " + oper.getKind
           )
       }
     }
@@ -178,7 +182,7 @@ class OpApplTranslator(
 
     def translateNonRec(): TlaEx = {
       context.lookup(opcode) match {
-        case DeclUnit(decl: TlaOperDecl) =>
+        case DeclUnit(decl) =>
           // call the user-defined operator
           val args = node.getArgs.toList.map { p =>
             exTran.translate(p)

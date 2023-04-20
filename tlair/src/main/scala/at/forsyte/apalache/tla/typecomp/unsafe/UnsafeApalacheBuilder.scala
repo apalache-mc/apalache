@@ -107,6 +107,18 @@ class UnsafeApalacheBuilder(private val strict: Boolean = true) extends ProtoBui
   }
 
   /**
+   * {{{MkSeq(n, F)}}}
+   * @param n
+   *   must be a nonnegative constant expression
+   * @param F
+   *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
+   */
+  def mkSeqConst(n: TlaEx, F: TlaEx): TlaEx = {
+    if (strict) require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
+    buildBySignatureLookup(ApalacheOper.mkSeq, n, F)
+  }
+
+  /**
    * {{{FoldSet(F, v, S)}}}
    * @param F
    *   must be an expression of the shape {{{LET Op(a,b) == ... IN Op}}}

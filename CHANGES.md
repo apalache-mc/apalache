@@ -1,6 +1,63 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.30.8 - 2023-04-17
+
+### Features
+
+- Add support for converting quint record operators. See #2530.
+
+### Bug fixes
+
+- Fix conversion of quint `setBy` operator. See #2531.
+
+## 0.30.7 - 2023-04-11
+
+### Bug fixes
+
+- Fix conversion of quint binding operators to support operator passed by name. See #2520.
+
+## 0.30.6 - 2023-04-01
+
+### Features
+
+- Add conversion of quint operators `range`, `foldr`, `assert`, `select`, and operators over maps (TLA+ functions). See #2439, #2489, #2492, #2493.
+- Support conversion of Quin't `nondet` bindings. See #2499.
+
+### Bug fixes
+
+- Fix quint list conversion. See #2495, #2509, #2510.
+- Fix conversion of quint let-binding. See #2501.
+
+## 0.30.5 - 2023-03-10
+
+### Breaking changes
+
+- Updated support for quint input, for compatibility with the (forthcoming) Quint v0.8.0. Output from earlier versions of quint will no longer be supported. See #2473 and https://github.com/informalsystems/quint/pull/689.
+
+### Features
+
+- Add support for quint tuples. See #2441.
+- Add support for converting (most) quint list operator. See #2440.
+- Added support for quint's variadic bindings in `forall` and `exists` operators. See #2471.
+
+## 0.30.4 - 2023-03-08
+
+### Bug fixes
+
+- Fix the typing of quint empty sets during conversion (see #2466)
+
+## 0.30.3 - 2023-03-06
+
+### Features
+
+- Added support for transpiling [quint](https://github.com/informalsystems/quint) booleans, integers, and sets (See #2451, #2449, #2445)
+
+### Bug fixes
+
+- Add support for first-order `CONSTANTS`, see #2389.
+- Fixed type checking of specs that use `Print` and `PrintT`, see #2456.
+
 ## 0.30.2 - 2023-02-22
 
 ### Features
