@@ -395,7 +395,7 @@ class Quint(moduleData: QuintOutput) {
             })
 
       // Create a TLA record
-      val record: Converter = {
+      def record(rowVar: Option[String]): Converter = {
         case Seq() => throw new QuintUnsupportedError("Given empty record, but Apalache doesn't support empty records.")
         case quintArgs =>
           // The quint Rec operator takes its field and value arguments
@@ -404,7 +404,7 @@ class Quint(moduleData: QuintOutput) {
           //
           //    Rec("f1", 1, "f2", 2)
           //
-          // So we first separate out the filed names from the values, so we
+          // So we first separate out the field names from the values, so we
           // can make use of the existing combinator for variadic operators.
           val (fieldNames, quintVals) = quintArgs
             .grouped(2)
@@ -415,7 +415,7 @@ class Quint(moduleData: QuintOutput) {
             }
           variadicApp { tlaVals =>
             val fieldsAndArgs = fieldNames.zip(tlaVals)
-            tla.rec(fieldsAndArgs: _*)
+            tla.rowRec(rowVar, fieldsAndArgs: _*)
           }(quintVals)
 
       }
@@ -517,7 +517,13 @@ class Quint(moduleData: QuintOutput) {
           case "tuples" => variadicApp(tla.times)
 
           // Records
-          case "Rec"        => MkTla.record
+          case "Rec" =>
+            val rowVar = types(id).typ match {
+              case r: QuintRecordT => r.rowVar
+              case invalidType =>
+                throw new QuintIRParseError(s"Invalid type given for Rec operator application ${invalidType}")
+            }
+            MkTla.record(rowVar)
           case "field"      => binaryApp(opName, tla.app)
           case "fieldNames" => unaryApp(opName, tla.dom)
           case "with"       => ternaryApp(opName, tla.except)

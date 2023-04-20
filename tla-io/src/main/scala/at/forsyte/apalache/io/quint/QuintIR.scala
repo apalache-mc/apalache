@@ -355,7 +355,19 @@ private[quint] object QuintType {
     }
   }
 
-  @key("rec") case class QuintRecordT(fields: Row) extends QuintType
+  @key("rec") case class QuintRecordT(fields: Row) extends QuintType {
+
+    // `r.rowVar` is `Some(s)` if it is an open row and `s` is the name of the row variable.
+    // Otherwise it is `None`.
+    def rowVar: Option[String] = getVar(fields)
+
+    private val getVar: Row => Option[String] = {
+      case Row.Var(v)           => Some(v)
+      case Row.Nil()            => None
+      case Row.Cell(_, moreRow) => getVar(moreRow)
+    }
+  }
+
   object QuintRecordT {
     implicit val rw: RW[QuintRecordT] = macroRW
 

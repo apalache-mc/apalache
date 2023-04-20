@@ -478,7 +478,8 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert row-polymorphic record") {
     val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
-    val exp = Q.quint.exToTla(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)).get
+    val quintEx = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    val exp = Q.quint.exToTla(quintEx).get
     val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
 
     assert(Quint.typeToTlaType(typ) == expectedTlaType)
