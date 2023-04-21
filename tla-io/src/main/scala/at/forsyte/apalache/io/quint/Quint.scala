@@ -730,7 +730,11 @@ object Quint {
     val vars = mutable.Map[String, Int]()
     def getVarNo(varName: String): Int = {
       vars.get(varName) match {
-        case None    => val v = varNo; varNo += 1; v
+        case None =>
+          val v = varNo
+          vars += varName -> v
+          varNo += 1
+          v
         case Some(n) => n
       }
     }
