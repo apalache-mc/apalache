@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.quint
 
 import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.lir.OperT1
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.lir.Typed
 import org.junit.runner.RunWith
@@ -56,10 +57,23 @@ class TestQuintEx extends AnyFunSuite {
       e(QuintApp(uid, name, args), retType)
     }
 
+    def opDef(name: String, body: QuintEx): QuintDef.QuintOpDef = {
+      QuintDef.QuintOpDef(body.id, name, "def", body, None)
+    }
+
     def param(name: String, typ: QuintType): QuintLambdaParameter = {
       val id = uid
       typeMap += (id -> typ)
       QuintLambdaParameter(id, name)
+    }
+
+    def lam(params: Seq[(String, QuintType)], body: QuintEx, typ: QuintType): QuintLambda = {
+      val opTyp = QuintOperT(params.map(_._2), typ)
+      e(QuintLambda(uid, params.map { case (n, t) => param(n, t) }, "def", body), opTyp)
+    }
+
+    def nam(s: String, t: QuintType): QuintName = {
+      e(QuintName(uid, s), t)
     }
 
     // Scalar values
@@ -517,6 +531,21 @@ class TestQuintEx extends AnyFunSuite {
 
     assert(Quint.typeToTlaType(typ) == expectedTlaType)
     assert(exp.typeTag == Typed(expectedTlaType))
+  }
+
+  test("operator def conversion preserves row-typing") {
+    // def updateF1(r) : {f1: int | a} => {s: int | a} = r.with("f1", 1)
+    val recType = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()))
+    val opType = QuintOperT(Seq(recType), recType)
+    val rName = Q.nam("r", recType)
+    val body = Q.app("with", rName, Q.s, Q._1)(recType)
+    val abs = Q.lam(Seq(("r", recType)), body, recType)
+    val opDef = Q.opDef("updateF1", abs)
+    val tlaOpDef = Q.quint.defToTla(opDef).get
+    val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
+    val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
+    assert(Quint.typeToTlaType(opType) == expectedTlaType)
+    assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 
   test("can convert builtin Tup operator application") {
