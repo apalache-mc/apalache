@@ -39,6 +39,8 @@ import scalaz._
 // list and traverse give us monadic mapping over lists
 // see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
 import scalaz.std.list._, scalaz.syntax.traverse._
+import at.forsyte.apalache.tla.typecomp.TBuilderScopeException
+import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -657,9 +659,21 @@ class Quint(moduleData: QuintOutput) {
         // no methods for them are provided by the ScopedBuilder.
         case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
         case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
-        case op: QuintOpDef          => Some(build(opDefConverter(op).run(Set())._1))
+        case op: QuintOpDef =>
+          try {
+            val nullaryOpNameContext = Set[String]()
+            Some(build(opDefConverter(op).run(nullaryOpNameContext)._1))
+          } catch {
+            // If the builder fails, then we've done something wrong in our
+            // conversion logic
+            case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
+              throw new QuintIRParseError(
+                  s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
+          }
+
         case QuintAssume(id, _, quintEx) =>
-          val tlaEx = build(tlaExpression(quintEx).run(Set()))
+          val nullaryOpNameContext = Set[String]()
+          val tlaEx = build(tlaExpression(quintEx).run(nullaryOpNameContext))
           Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
       }
     }
