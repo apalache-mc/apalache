@@ -509,6 +509,16 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("with", rec, Q.s, Q._42)(typ)) == """[["s" ↦ 1, "t" ↦ 2] EXCEPT ![<<"s">>] = 42]""")
   }
 
+  test("`with` operator conversion preserves row-typing") {
+    val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
+    val rec = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    val exp = Q.quint.exToTla(rec).get
+    val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
+
+    assert(Quint.typeToTlaType(typ) == expectedTlaType)
+    assert(exp.typeTag == Typed(expectedTlaType))
+  }
+
   test("can convert builtin Tup operator application") {
     assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "<<0, 1>>")
   }
