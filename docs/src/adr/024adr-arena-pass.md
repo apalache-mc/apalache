@@ -48,7 +48,7 @@ This ADR seeks to explore ways in which arena construction and SMT concerns may 
      considered but not adopted.
 -->
 
-1. Redesign the interface of rewriting rules/arenas/solver contexts, to better identify interacting with mutable state. Rewriting rules only get access to a limited mutable state interface, and all the interactions between SMT and arenas are pushed out of the rules, into the mutable state implementation.
+1. Redesign the interface of rewriting rules/arenas/solver contexts, to better identify interactions with mutable state. Rewriting rules only get access to a limited mutable state interface, and all the interactions between SMT and arenas are pushed out of the rules, into the mutable state implementation.
 2. Extract arena generation into a separate static analysis pass. Change the rewriting rules, such that they read from a fixed arena object on demand. Optionally also abstract discharging constraints, to relieve the dependency on Z3-specific constructs.
 3. Compute arenas and generate SMT constraints in a single tree-exploration pass, but stratify the rewriting rules, such that arena generation and SMT operators for a given rule are clearly separated.
 
@@ -59,9 +59,9 @@ This ADR seeks to explore ways in which arena construction and SMT concerns may 
      problem. -->
 
 After initially exploring [(2)](#consequences), we have decided to ultimately implement option (3). The reasons for this decision are threefold:
-  - Memory: As this exploration traverses the tree exactly once, no persistent storage between passes ever needs to exist, and thus the memory footprint is greatly reduced. Additionally, during performance discussions, we have come to the realization, that computing and holding the entire arena in memory, like how the current implementation does, is actually unnecessary. In fact, only a sub-arena, describing the relevant relations of the cells belonging to an expression sub-tree is ever needed in the scope of that sub-tree.
+  - Memory: As this exploration traverses the tree exactly once, no persistent storage between passes ever needs to exist, and thus the memory footprint is greatly reduced. Additionally, during performance discussions, we have come to the realization that computing and holding the entire arena in memory, as the current implementation does, is actually unnecessary. In fact, only a sub-arena, describing the relevant relations of the cells belonging to an expression sub-tree is ever needed in the scope of that sub-tree.
   - Separation of concerns: While arena generation and SMT aren't separated on the level of a pass, they are still clearly separated within each node exploration step, reaping the benefits of readability and maintainability all the same. Additionally, this form allows us to handle SMT encoding variations (e.g. arrays vs non-arrays) much more elegantly.
-  - Refactoring effort: The final form of the new rules will be syntactically much closer to the current rules, and have a much smaller penalty on incremental change, and our ability to compare and evaluate the changes.
+  - Reduced refactoring effort: The final form of the new rules will be syntactically much closer to the current rules, and have a much smaller penalty on incremental change, and our ability to compare and evaluate the changes.
 
 ## Consequences
 
@@ -70,7 +70,7 @@ After initially exploring [(2)](#consequences), we have decided to ultimately im
 -->
 
 ### Isolated arena pass
-We initially choose option (2), as we believed it best embodied the "separation of concerns" principle. 
+We initially explored option (2), as we believed it best embodied the "separation of concerns" principle. 
 Additionally, the idea was that removing arena computation from the rewriting rules should simplify the rules and result in more clarity, readability, and maintainability.
 A prototype can be found [here][proto].
 
