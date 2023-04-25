@@ -28,7 +28,7 @@ accepting a reasonable time investment into refactoring.\
      This is the story explaining the problem we are looking to resolve.
 -->
 
-The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts.
+The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. [#1774](https://github.com/informalsystems/apalache/issues/1774), [#2338](https://github.com/informalsystems/apalache/issues/2338)).
 Relevant for this ADR is the fact that rewriting rules do multiple things at once, which are difficult to separate. They:
   1. Modify arenas
   2. Push constraints into SMT
