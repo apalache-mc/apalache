@@ -113,3 +113,4 @@
 - [RFC-021: Prioritization of Work](./adr/021rfc-prioritization.md)
 - [ADR-022: Unify Configuration Management and "Pass Options"](./adr/022adr-unification-of-configs-and-options.md)
 - [ADR-023: Trace evaluation](./adr/023adr-trace-evaluation.md)
+- [ADR-024: Arena computation isolation](./adr/024adr-arena-pass.md)
