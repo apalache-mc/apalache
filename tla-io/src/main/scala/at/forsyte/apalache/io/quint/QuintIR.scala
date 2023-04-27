@@ -31,12 +31,21 @@ private[quint] class QuintIRParseError(errMsg: String)
 // User facing error
 class QuintUnsupportedError(errMsg: String) extends Exception("Unsupported quint input: " + errMsg)
 
+private[quint] case class QuintLookupTableEntry(
+    kind: String,
+    reference: Int)
+private[quint] object QuintLookupTableEntry {
+  implicit val rw: RW[QuintLookupTableEntry] = macroRW
+}
+
 /** The JSON output produced by quint parse */
 private[quint] case class QuintOutput(
     stage: String,
     modules: Seq[QuintModule],
     // Maps source IDs to types, see the `WithId` trait
-    types: Map[Int, QuintTypeScheme])
+    types: Map[Int, QuintTypeScheme],
+    // Maps name IDs to declaration IDs
+    table: Map[Int, QuintLookupTableEntry])
 
 private[quint] object QuintOutput {
   implicit val rw: RW[QuintOutput] = macroRW

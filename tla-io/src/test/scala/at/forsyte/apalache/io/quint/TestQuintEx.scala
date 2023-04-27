@@ -139,12 +139,13 @@ class TestQuintEx extends AnyFunSuite {
 
     // We construct a converter supplied with the needed type map
     def quint = new Quint(QuintOutput(
-            "typechecking",
-            List(QuintModule(0, "MockedModule", List())),
-            typeMap.map { case (id, typ) =>
+            stage = "typechecking",
+            modules = List(QuintModule(0, "MockedModule", List())),
+            types = typeMap.map { case (id, typ) =>
               // Wrap each type in the TypeScheme required by the Quint IR
               id -> QuintTypeScheme(typ)
             }.toMap,
+            table = Map(),
         ))
 
   }
