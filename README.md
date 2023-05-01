@@ -125,6 +125,8 @@ We are collecting [apalache benchmarks]. See the Apalache performance when
 
 To read an academic paper about the theory behind Apalache,
 check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+For the details of our novel encoding using SMT arrays, check our
+[paper at TACAS23](https://link.springer.com/chapter/10.1007/978-3-031-30823-9_7).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
 
