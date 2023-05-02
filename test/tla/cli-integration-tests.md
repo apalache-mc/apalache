@@ -3893,7 +3893,7 @@ The Apalache server is running on port 8888. Press Ctrl-C to stop.
 
 ### quint input: quint spec can be checked
 
-`booleans.qnt.json` is parsed using `quint` from https://github.com/informalsystems/quint/blob/main/examples/language-features/booleans.qnt
+`booleans.qnt.json` updated via `make quint-fixtures`
 
 ```sh
 $ apalache-mc check booleans.qnt.json | sed 's/[IEW]@.*//'
