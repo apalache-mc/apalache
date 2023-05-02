@@ -22,7 +22,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
   private val strBuilder = new UnsafeLiteralAndNameBuilder
   private def mkTlaStr: String => TlaEx = strBuilder.str
 
-  private def formRecordFieldType(args: Seq[TlaEx]): SortedMap[String, TlaType1] = {
+  private def formRecordFieldTypes(args: Seq[TlaEx]): SortedMap[String, TlaType1] = {
     require(TlaFunOper.rec.arity.cond(args.size), s"Expected args to have even, positive arity, found $args.")
     // All keys must be ValEx(TlaStr(_))
     val (keys, _) = TlaOper.deinterleave(args)
@@ -69,7 +69,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
    *   The name of a free row variable
    */
   def rowRecMixed(rowVar: Option[VarT1], args: TlaEx*): TlaEx = {
-    val fieldTypes = formRecordFieldType(args)
+    val fieldTypes = formRecordFieldTypes(args)
     val recType = RecRowT1(RowT1(fieldTypes, rowVar))
     OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
   }
@@ -93,7 +93,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
    *   must have even, positive arity, and all keys must be unique strings
    */
   def recMixed(args: TlaEx*): TlaEx = {
-    val fieldTypes = formRecordFieldType(args)
+    val fieldTypes = formRecordFieldTypes(args)
     val recType = RecT1(fieldTypes)
     OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
   }
