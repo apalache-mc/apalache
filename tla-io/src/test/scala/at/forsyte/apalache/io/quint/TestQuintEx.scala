@@ -525,7 +525,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("operator def conversion preserves row-typing") {
-    // def updateF1(r) : {f1: int | a} => {s: int | a} = r.with("f1", 1)
+    // def updateF1(r) : {s: int | a} => {s: int | a} = r.with("s", 1)
     val recType = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()))
     val opType = QuintOperT(Seq(recType), recType)
     val rName = Q.nam("r", recType)
