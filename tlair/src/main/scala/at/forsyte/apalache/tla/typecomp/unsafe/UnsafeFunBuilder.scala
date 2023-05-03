@@ -22,6 +22,58 @@ class UnsafeFunBuilder extends ProtoBuilder {
   private val strBuilder = new UnsafeLiteralAndNameBuilder
   private def mkTlaStr: String => TlaEx = strBuilder.str
 
+  private def formRecordFieldTypes(args: Seq[TlaEx]): SortedMap[String, TlaType1] = {
+    require(TlaFunOper.rec.arity.cond(args.size), s"Expected args to have even, positive arity, found $args.")
+    // All keys must be ValEx(TlaStr(_))
+    val (keys, _) = TlaOper.deinterleave(args)
+    require(keys.forall {
+          case ValEx(_: TlaStr) => true
+          case _                => false
+        }, s"Expected keys to be TLA+ strings, found $keys.")
+    // Keys must be unique
+    val duplicates = keys.filter(k => keys.count(_ == k) > 1)
+    require(duplicates.isEmpty, s"Expected keys to be unique, found duplicates: ${duplicates.mkString(", ")}.")
+
+    // We don't need a dynamic TypeComputation, because a record constructor admits all types (we've already validated
+    // all keys as strings with `require`)
+    val keyTypeMap = args
+      .grouped(2)
+      .map {
+        case Seq(ValEx(TlaStr(s)), ex) => (s -> ex.typeTag.asTlaType1())
+        case _ => // Impossible, but need to suppress warning
+          throw new IllegalArgumentException("record field must be a TLA string")
+      }
+      .toSeq
+
+    SortedMap(keyTypeMap: _*)
+  }
+
+  /**
+   * Like [[rec]] but with a `RowRecT1` types
+   *
+   * @param rowVar
+   *   The name of a free row variable
+   */
+  def rowRec(rowVar: Option[VarT1], args: (String, TlaEx)*): TlaEx = {
+    // _recMixed does all the require checks
+    val flatArgs = args.flatMap { case (k, v) =>
+      Seq(mkTlaStr(k), v)
+    }
+    rowRecMixed(rowVar, flatArgs: _*)
+  }
+
+  /**
+   * Like [[recMixed]] but with a `RowRecT1` types
+   *
+   * @param rowVar
+   *   The name of a free row variable
+   */
+  def rowRecMixed(rowVar: Option[VarT1], args: TlaEx*): TlaEx = {
+    val fieldTypes = formRecordFieldTypes(args)
+    val recType = RecRowT1(RowT1(fieldTypes, rowVar))
+    OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
+  }
+
   /**
    * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}}
    * @param args
@@ -41,29 +93,8 @@ class UnsafeFunBuilder extends ProtoBuilder {
    *   must have even, positive arity, and all keys must be unique strings
    */
   def recMixed(args: TlaEx*): TlaEx = {
-    require(TlaFunOper.rec.arity.cond(args.size), s"Expected args to have even, positive arity, found $args.")
-    // All keys must be ValEx(TlaStr(_))
-    val (keys, vals) = TlaOper.deinterleave(args)
-    require(keys.forall {
-          case ValEx(_: TlaStr) => true
-          case _                => false
-        }, s"Expected keys to be TLA+ strings, found $keys.")
-    // Keys must be unique
-    val duplicates = keys.filter(k => keys.count(_ == k) > 1)
-    require(duplicates.isEmpty, s"Expected keys to be unique, found duplicates: ${duplicates.mkString(", ")}.")
-
-    // We don't need a dynamic TypeComputation, because a record constructor admits all types (we've already validated
-    // all keys as strings with `require`)
-
-    val keyTypeMap = keys.zip(vals).foldLeft(SortedMap.empty[String, TlaType1]) {
-      case (map, (ValEx(TlaStr(s)), ex)) =>
-        map + (s -> ex.typeTag.asTlaType1())
-      case (map, _) => // Impossible, but need to suppress warning
-        map
-    }
-
-    val recType = RecT1(keyTypeMap)
-
+    val fieldTypes = formRecordFieldTypes(args)
+    val recType = RecT1(fieldTypes)
     OperEx(TlaFunOper.rec, args: _*)(Typed(recType))
   }
 
