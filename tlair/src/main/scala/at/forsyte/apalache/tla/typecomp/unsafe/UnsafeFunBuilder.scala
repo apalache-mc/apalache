@@ -22,7 +22,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
   private val strBuilder = new UnsafeLiteralAndNameBuilder
   private def mkTlaStr: String => TlaEx = strBuilder.str
 
-  private def formRecordFieldType(args: Seq[TlaEx]): SortedMap[String, TlaType1] = {
+  private def formRecordFieldTypes(args: Seq[TlaEx]): SortedMap[String, TlaType1] = {
     require(TlaFunOper.rec.arity.cond(args.size), s"Expected record args to have even, positive arity, found $args.")
     // All keys must be ValEx(TlaStr(_))
     val (keys, _) = TlaOper.deinterleave(args)
