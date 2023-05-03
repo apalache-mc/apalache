@@ -13,7 +13,7 @@ import org.scalacheck.Prop._
 @RunWith(classOf[JUnitRunner])
 class TestRowTypedRecords extends AnyFunSuite with Checkers {
 
-  val GenTBI = GenTBuilderInstruction
+  val GenTBI = TypecompPBT.GenTBuilderInstruction
 
   test("can construct row-typed records") {
     implicit val builder = new ScopedBuilder()
