@@ -128,16 +128,8 @@ object BuilderUtil {
         }
     }
     // Mark as bound later
-    a <- getAllBound
-    //    _ <- buildSeq(pairs.map(pa => markAsBound(pa._1)))
-    b <- getAllBound
-  } yield {
-    val x = a
-    val y = b
-    assert(x == x)
-    assert(y == y)
-    unsafeMethod(bodyEx, pairs)
-  }
+    _ <- buildSeq(pairs.map(pa => markAsBound(pa._1)))
+  } yield unsafeMethod(bodyEx, pairs)
 
   /**
    * Convenience shorthand to access the set of used names. May return different values at different places, depending
