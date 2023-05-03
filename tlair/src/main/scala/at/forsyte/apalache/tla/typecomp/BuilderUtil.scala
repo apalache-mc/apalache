@@ -60,8 +60,8 @@ object BuilderUtil {
     setEx <- set
     usedInSetOrBefore <- getAllUsed // variable may not appear as bound or free in set
     exprEx <- expr
-    boundAfterExpr <- getAllBound // variable may not appear as bound in expr
-    usedInScope = (usedInSetOrBefore -- usedBefore) ++ (boundAfterExpr -- boundBefore)
+    boundAfterExprOrBefore <- getAllBound // variable may not appear as bound in expr
+    usedInScope = (usedInSetOrBefore -- usedBefore) ++ (boundAfterExprOrBefore -- boundBefore)
     varEx <- variable
     _ <- markAsBound(varEx)
   } yield {
