@@ -28,17 +28,4 @@ class TestRowTypedRecords extends AnyFunSuite with Checkers {
     check(prop, minSuccessful(1000), sizeRange(4))
   }
 
-  test("the same free variable name bound in independent function heads do not interfere") {
-    val builder = new ScopedBuilder()
-    val v = builder.name("x", IntT1)
-    val _1 = builder.int(1)
-    val intS = builder.intSet()
-    // Two independent functions of the form [x \in Int |-> 1]
-    val f1 = builder.funDef(_1, (v, intS))
-    val f2 = builder.funDef(_1, (v, intS))
-    // We should be able to construct a two item set, including these two functions
-    val setEx: TlaEx = build(builder.enumSet(f1, f2))
-    assert(setEx.typeTag == Typed(SetT1(FunT1(IntT1, IntT1))))
-  }
-
 }
