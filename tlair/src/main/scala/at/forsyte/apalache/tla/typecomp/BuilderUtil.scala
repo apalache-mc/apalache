@@ -56,18 +56,19 @@ object BuilderUtil {
       set: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
     usedBefore <- getAllUsed
+    boundBefore <- getAllBound
     setEx <- set
     usedInSetOrBefore <- getAllUsed // variable may not appear as bound or free in set
-    usedInSet = usedInSetOrBefore -- usedBefore
     exprEx <- expr
-    boundAfterExpr <- getAllBound // variable may not appear as bound in expr
+    boundAfterExprOrBefore <- getAllBound // variable may not appear as bound in expr
+    usedInScope = (usedInSetOrBefore -- usedBefore) ++ (boundAfterExprOrBefore -- boundBefore)
     varEx <- variable
     _ <- markAsBound(varEx)
   } yield {
     val ret = unsafeMethod(varEx, setEx, exprEx)
     val names = getBoundVarsOrThrow(varEx)
-    // variable is shadowed iff names \cap (usedInSet \union boundAfterExpr) /= {}
-    val shadowed = names.intersect(usedInSet.union(boundAfterExpr))
+    // variable is shadowed iff names \cap usedInScope /= {}
+    val shadowed = names.intersect(usedInScope)
     if (shadowed.nonEmpty) throw new TBuilderScopeException(s"Variable shadowing in $ret: ${shadowed.mkString(", ")}.")
     else ret
   }
@@ -81,6 +82,7 @@ object BuilderUtil {
       unsafeMethod: (TlaEx, TlaEx) => TlaEx // argument order: (variable, expression)
     )(variable: TBuilderInstruction,
       expr: TBuilderInstruction): TBuilderInstruction = for {
+    boundBefore <- getAllBound
     exprEx <- expr
     boundAfterExpr <- getAllBound // variable may not appear as bound in expr
     varEx <- variable
@@ -88,8 +90,8 @@ object BuilderUtil {
   } yield {
     val ret = unsafeMethod(varEx, exprEx)
     val names = getBoundVarsOrThrow(varEx)
-    // variable is shadowed iff names \cap boundAfterExpr /= {}
-    val shadowed = names.intersect(boundAfterExpr)
+    // variable is shadowed iff names \cap (boundAfterExpr \ boundBefore) /= {}
+    val shadowed = names.intersect(boundAfterExpr -- boundBefore)
     if (shadowed.nonEmpty) throw new TBuilderScopeException(s"Variable shadowing in $ret: ${shadowed.mkString(", ")}.")
     else ret
   }
@@ -102,6 +104,7 @@ object BuilderUtil {
       unsafeMethod: (TlaEx, Seq[(TlaEx, TlaEx)]) => TlaEx
     )(ex: TBuilderInstruction,
       varSetPairs: (TBuilderInstruction, TBuilderInstruction)*): TBuilderInstruction = for {
+    boundBefore <- getAllBound
     bodyEx <- ex
     boundAfterBodyEx <- getAllBound // variables may not appear as bound in bodyEx
     pairs <- varSetPairs.foldLeft(Seq.empty[(TlaEx, TlaEx)].point[TBuilderInternalState]) {
@@ -111,13 +114,13 @@ object BuilderUtil {
           usedBefore <- getAllUsed
           setEx <- set
           usedInSetOrBefore <- getAllUsed // variable_i may not appear as bound or free in set_i
-          usedInSet = usedInSetOrBefore -- usedBefore
+          usedInScope = (usedInSetOrBefore -- usedBefore) ++ (boundAfterBodyEx -- boundBefore)
           varEx <- variable
           // we delay marking as bound, to not interfere with other variable-set pairs
         } yield {
           val names = getBoundVarsOrThrow(varEx)
-          // variable_i is shadowed iff names \cap (usedInSet \union boundAfterBodyEx) /= {}
-          val shadowed = names.intersect(usedInSet.union(boundAfterBodyEx))
+          // variable_i is shadowed iff names \cap usedInScope /= {}
+          val shadowed = names.intersect(usedInScope)
           if (shadowed.nonEmpty) {
             val source = if (names.intersect(boundAfterBodyEx).nonEmpty) bodyEx else setEx
             throw new TBuilderScopeException(s"Variable shadowing in $source: ${shadowed.mkString(", ")}.")
