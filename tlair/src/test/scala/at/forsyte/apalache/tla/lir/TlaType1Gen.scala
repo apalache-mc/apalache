@@ -161,8 +161,8 @@ trait TlaType1Gen {
 }
 
 /**
- * Generators for the case classes of TlaType1's that can be built into the principle supported `values` TlaEx. This
- * means all types are concrete, and unsupported or deprecated types are excluded.
+ * Generators for the case classes of TlaType1's that can be built into the principle supported _values_ of TlaEx. This
+ * means all types are concrete, while unsupported, non-first class, and deprecated types are excluded.
  *
  * The excluded types:
  *
@@ -170,6 +170,7 @@ trait TlaType1Gen {
  *   - RecT1 (deprecated in favor of RecRowT1)
  *   - VarT1 (abstract)
  *   - Open row types (abstract)
+ *   - RowT1 (this is not a type)
  *   - OperT (not values)
  */
 trait TlaType1ConcreteGen extends TlaType1Gen {
