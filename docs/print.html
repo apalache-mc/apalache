@@ -14336,7 +14336,7 @@ reply.result match {
 API from the start.</p>
 <h1><a class="header" href="#adr-011-alternative-smt-encoding-using-arrays" id="adr-011-alternative-smt-encoding-using-arrays">ADR-011: alternative SMT encoding using arrays</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Rodrigo Otoni</td><td align="right">1.7</td></tr>
+<tr><td>Rodrigo Otoni</td><td align="right">1.8</td></tr>
 </tbody></table>
 <p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
@@ -14346,7 +14346,8 @@ We target the <a href="https://github.com/Z3Prover/z3">Z3</a> solver and will us
 with Z3-specific operators, e.g. constant arrays.</p>
 <p>For an overview of the current encoding check the <a href="https://dl.acm.org/doi/10.1145/3360549">TLA+ Model Checking Made Symbolic</a> paper,
 presented at OOPSLA'19. In the remainder of the document the use of the new encoding and the
-treatment of different TLA+ operators are described.</p>
+treatment of different TLA+ operators are described. For further details on the new encoding
+check the <a href="https://doi.org/10.1007/978-3-031-30823-9_7">Symbolic Model Checking for TLA+ Made Faster</a> paper, presented at TACAS'23.</p>
 <h2><a class="header" href="#1-cli-encoding-option" id="1-cli-encoding-option">1. CLI encoding option</a></h2>
 <p>The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the <code>check</code> command of the CLI. The default encoding will be
