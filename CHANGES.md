@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.30.9 - 2023-05-08
+
+### Bug fixes
+
+- Fix conversion of quint records. See #2542.
+
 ## 0.30.8 - 2023-04-17
 
 ### Features
