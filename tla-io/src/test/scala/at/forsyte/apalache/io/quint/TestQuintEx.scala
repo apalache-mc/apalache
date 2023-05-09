@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.quint
 
 import at.forsyte.apalache.tla.lir.IntT1
+import at.forsyte.apalache.tla.lir.OperT1
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.lir.Typed
 import org.junit.runner.RunWith
@@ -9,6 +10,9 @@ import org.scalatestplus.junit.JUnitRunner
 
 import QuintType._
 import QuintEx._
+import at.forsyte.apalache.tla.lir.RecRowT1
+import at.forsyte.apalache.tla.lir.RowT1
+import at.forsyte.apalache.tla.lir.VarT1
 
 // You can run all these tests in watch mode in the
 // sbt console with
@@ -53,10 +57,23 @@ class TestQuintEx extends AnyFunSuite {
       e(QuintApp(uid, name, args), retType)
     }
 
+    def opDef(name: String, body: QuintEx): QuintDef.QuintOpDef = {
+      QuintDef.QuintOpDef(body.id, name, "def", body, None)
+    }
+
     def param(name: String, typ: QuintType): QuintLambdaParameter = {
       val id = uid
       typeMap += (id -> typ)
       QuintLambdaParameter(id, name)
+    }
+
+    def lam(params: Seq[(String, QuintType)], body: QuintEx, typ: QuintType): QuintLambda = {
+      val opTyp = QuintOperT(params.map(_._2), typ)
+      e(QuintLambda(uid, params.map { case (n, t) => param(n, t) }, "def", body), opTyp)
+    }
+
+    def nam(s: String, t: QuintType): QuintName = {
+      e(QuintName(uid, s), t)
     }
 
     // Scalar values
@@ -122,12 +139,13 @@ class TestQuintEx extends AnyFunSuite {
 
     // We construct a converter supplied with the needed type map
     def quint = new Quint(QuintOutput(
-            "typechecking",
-            List(QuintModule(0, "MockedModule", List())),
-            typeMap.map { case (id, typ) =>
+            stage = "typechecking",
+            modules = List(QuintModule(0, "MockedModule", List())),
+            types = typeMap.map { case (id, typ) =>
               // Wrap each type in the TypeScheme required by the Quint IR
               id -> QuintTypeScheme(typ)
             }.toMap,
+            table = Map(),
         ))
 
   }
@@ -464,13 +482,24 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
-  test("convert builtin Rec operator constructing empty record fails") {
+  test("converting builtin Rec operator constructing empty record fails") {
     val exn = intercept[QuintUnsupportedError] {
-      val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
+      val typ = QuintRecordT.ofFieldTypes()
       convert(Q.app("Rec")(typ))
     }
     assert(exn.getMessage.contains(
             "Unsupported quint input: Given empty record, but Apalache doesn't support empty records."))
+  }
+
+  test("can convert row-polymorphic record") {
+    val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
+    val quintEx = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
+    val exp = Q.quint.exToTla(quintEx).get
+    val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
+
+    assert(Quint.typeToTlaType(typ) == expectedTlaType)
+    assert(exp.typeTag == Typed(expectedTlaType))
+    assert(exp.toString == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
   test("can convert builtin field operator application") {
@@ -493,6 +522,21 @@ class TestQuintEx extends AnyFunSuite {
     val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
     val rec = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
     assert(convert(Q.app("with", rec, Q.s, Q._42)(typ)) == """[["s" ↦ 1, "t" ↦ 2] EXCEPT ![<<"s">>] = 42]""")
+  }
+
+  test("operator def conversion preserves row-typing") {
+    // def updateF1(r) : {s: int | a} => {s: int | a} = r.with("s", 1)
+    val recType = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()))
+    val opType = QuintOperT(Seq(recType), recType)
+    val rName = Q.nam("r", recType)
+    val body = Q.app("with", rName, Q.s, Q._1)(recType)
+    val abs = Q.lam(Seq(("r", recType)), body, recType)
+    val opDef = Q.opDef("updateF1", abs)
+    val tlaOpDef = Q.quint.defToTla(opDef).get
+    val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
+    val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
+    assert(Quint.typeToTlaType(opType) == expectedTlaType)
+    assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 
   test("can convert builtin Tup operator application") {

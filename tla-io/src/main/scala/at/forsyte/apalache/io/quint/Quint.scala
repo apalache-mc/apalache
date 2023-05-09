@@ -39,6 +39,8 @@ import scalaz._
 // list and traverse give us monadic mapping over lists
 // see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
 import scalaz.std.list._, scalaz.syntax.traverse._
+import at.forsyte.apalache.tla.typecomp.TBuilderScopeException
+import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -395,7 +397,7 @@ class Quint(moduleData: QuintOutput) {
             })
 
       // Create a TLA record
-      val record: Converter = {
+      def record(rowVar: Option[String]): Converter = {
         case Seq() => throw new QuintUnsupportedError("Given empty record, but Apalache doesn't support empty records.")
         case quintArgs =>
           // The quint Rec operator takes its field and value arguments
@@ -404,7 +406,7 @@ class Quint(moduleData: QuintOutput) {
           //
           //    Rec("f1", 1, "f2", 2)
           //
-          // So we first separate out the filed names from the values, so we
+          // So we first separate out the field names from the values, so we
           // can make use of the existing combinator for variadic operators.
           val (fieldNames, quintVals) = quintArgs
             .grouped(2)
@@ -415,7 +417,7 @@ class Quint(moduleData: QuintOutput) {
             }
           variadicApp { tlaVals =>
             val fieldsAndArgs = fieldNames.zip(tlaVals)
-            tla.rec(fieldsAndArgs: _*)
+            tla.rowRec(rowVar, fieldsAndArgs: _*)
           }(quintVals)
 
       }
@@ -517,7 +519,13 @@ class Quint(moduleData: QuintOutput) {
           case "tuples" => variadicApp(tla.times)
 
           // Records
-          case "Rec"        => MkTla.record
+          case "Rec" =>
+            val rowVar = types(id).typ match {
+              case r: QuintRecordT => r.rowVar
+              case invalidType =>
+                throw new QuintIRParseError(s"Invalid type given for Rec operator application ${invalidType}")
+            }
+            MkTla.record(rowVar)
           case "field"      => binaryApp(opName, tla.app)
           case "fieldNames" => unaryApp(opName, tla.dom)
           case "with"       => ternaryApp(opName, tla.except)
@@ -651,9 +659,21 @@ class Quint(moduleData: QuintOutput) {
         // no methods for them are provided by the ScopedBuilder.
         case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
         case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
-        case op: QuintOpDef          => Some(build(opDefConverter(op).run(Set())._1))
+        case op: QuintOpDef =>
+          try {
+            val nullaryOpNameContext = Set[String]()
+            Some(build(opDefConverter(op).run(nullaryOpNameContext)._1))
+          } catch {
+            // If the builder fails, then we've done something wrong in our
+            // conversion logic
+            case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
+              throw new QuintIRParseError(
+                  s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
+          }
+
         case QuintAssume(id, _, quintEx) =>
-          val tlaEx = build(tlaExpression(quintEx).run(Set()))
+          val nullaryOpNameContext = Set[String]()
+          val tlaEx = build(tlaExpression(quintEx).run(nullaryOpNameContext))
           Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
       }
     }
@@ -710,7 +730,11 @@ object Quint {
     val vars = mutable.Map[String, Int]()
     def getVarNo(varName: String): Int = {
       vars.get(varName) match {
-        case None    => val v = varNo; varNo += 1; v
+        case None =>
+          val v = varNo
+          vars += varName -> v
+          varNo += 1
+          v
         case Some(n) => n
       }
     }

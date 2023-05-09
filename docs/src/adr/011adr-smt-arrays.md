@@ -2,7 +2,7 @@
 
 | author        | revision |
 | ------------- |---------:|
-| Rodrigo Otoni |      1.7 |
+| Rodrigo Otoni |      1.8 |
 
 This ADR describes an alternative encoding of the [KerA+] fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the [core theory] of SMT,
@@ -13,7 +13,8 @@ with Z3-specific operators, e.g. constant arrays.
 
 For an overview of the current encoding check the [TLA+ Model Checking Made Symbolic] paper,
 presented at OOPSLA'19. In the remainder of the document the use of the new encoding and the
-treatment of different TLA+ operators are described.
+treatment of different TLA+ operators are described. For further details on the new encoding
+check the [Symbolic Model Checking for TLA+ Made Faster] paper, presented at TACAS'23.
 
 ## 1. CLI encoding option
 
@@ -314,6 +315,7 @@ additional features using SMT arrays, or potentially ADTs, will be left for the 
 [SMT-LIB Standard]: http://smtlib.cs.uiowa.edu/index.shtml
 [Version 2.6]: https://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf
 [TLA+ Model Checking Made Symbolic]: https://dl.acm.org/doi/10.1145/3360549
+[Symbolic Model Checking for TLA+ Made Faster]: https://doi.org/10.1007/978-3-031-30823-9_7
 [model checking parameters]: https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters
 [represented internally in Z3]: https://theory.stanford.edu/~nikolaj/programmingz3.html#sec-arrays
 [PR 2027]: https://github.com/informalsystems/apalache/pull/2027
