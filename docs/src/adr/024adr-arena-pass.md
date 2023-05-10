@@ -63,6 +63,21 @@ After initially exploring [(2)](#consequences), we have decided to ultimately im
   - Separation of concerns: While arena generation and SMT aren't separated on the level of a pass, they are still clearly separated within each node exploration step, reaping the benefits of readability and maintainability all the same. Additionally, this form allows us to handle SMT encoding variations (e.g. arrays vs non-arrays) much more elegantly.
   - Reduced refactoring effort: The final form of the new rules will be syntactically much closer to the current rules, and have a much smaller penalty on incremental change, and our ability to compare and evaluate the changes.
 
+## Illustration
+Let us use an example rewriting rule, and visualize the difference between the approaches. Take, for instance `SetCupRule`, the rule used in translating the union of two sets.
+Currently, the sequence diagram for this rule looks like this (with the OOPSLA19 encoding): 
+![](seqDiaBefore.png)
+
+Of note are the multiple calls needed to mutate and read from `SymbState`, as well as the `PureArenaAdapter` wrapper, which connects arena generation to SMT solving.
+Observe also, that calls to `Z3SolverContext` happen at multiple points, in between other code (in part due to `PureArenaAdapter`).
+
+Under (3), the same rule would look more like this:
+![](seqDiaAfter.png)
+
+Specifically, we would no longer need `PureArenaAdapters`, and we could drop the parts of `SymbState`, which are treated as mutable (the `TlaEx` value). In the above, `RewriterScope` is what remains of `SymbState`, when we remove the `TlaEx` value.
+
+A prototype implementation can be found in [this PR](https://github.com/informalsystems/apalache/pull/2554).
+
 ## Consequences
 
 <!-- Records the results of the decision over the long term.

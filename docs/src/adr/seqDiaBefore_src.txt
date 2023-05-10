@@ -1,0 +1,26 @@
+sequenceDiagram
+    Rewriter --> Rule: 
+    Rule -->> SymbState: setRex
+    Rule -->> Rewriter: rewriteUntilDone
+    Rule-->>SymbState: asCell
+    Rule -->> SymbState: setRex
+    Rule -->> Rewriter: rewriteUntilDone
+    Rule-->>SymbState: asCell
+    Rule-->>SymbState: arena
+    SymbState -->> PureArenaAdapter: getHasPtr
+    Rule-->>SymbState: arena
+    SymbState -->> PureArenaAdapter: getHasPtr
+    Rule-->>SymbState: updateArena 
+    SymbState -->> PureArenaAdapter: appendCell
+    PureArenaAdapter -->> PureArena: nextCell
+    PureArenaAdapter -->> PureArena: appendCell
+    PureArenaAdapter -->>Z3SolverContext: declareCell
+    Rule-->>SymbState: arena
+    SymbState -->> PureArenaAdapter: topCell
+    Rule-->>SymbState: updateArena 
+    SymbState -->> PureArenaAdapter: appendHas
+    PureArenaAdapter -->>Z3SolverContext: declareInPredIfNeeded
+    PureArenaAdapter -->> PureArena: appendHas
+    Rule -->> Rewriter: solverContext
+    Rewriter -->> Z3SolverContext: assertGroundExpr
+    Rule -->> SymbState: setRex
