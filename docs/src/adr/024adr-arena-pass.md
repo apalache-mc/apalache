@@ -76,7 +76,7 @@ Under (3), the same rule would look more like this:
 
 Specifically, we would no longer need `PureArenaAdapters`, and we could drop the parts of `SymbState`, which are treated as mutable (the `TlaEx` value). In the above, `RewriterScope` is what remains of `SymbState`, when we remove the `TlaEx` value.
 
-A prototype implementation can be found in [this](https://github.com/informalsystems/apalache/pull/2554) PR.
+A prototype implementation can be found in [this PR](https://github.com/informalsystems/apalache/pull/2554).
 
 ## Consequences
 
