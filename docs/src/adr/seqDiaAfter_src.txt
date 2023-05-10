@@ -1,0 +1,14 @@
+sequenceDiagram
+    Rewriter --> Rule: 
+    Rule -->> Rewriter: rewrite
+    Rule -->> Rewriter: rewrite
+    Rule -->> RewriterScope: arena
+    RewriterScope -->> PureArena: getHas
+    Rule -->> RewriterScope: arena
+    RewriterScope -->> PureArena: appendCell
+    RewriterScope -->> PureArena: topCell
+    RewriterScope -->> PureArena: appendHas
+    Rewriter -> Z3SolverContext: 
+    Rewriter -> Z3SolverContext: [addConstraints]
+    Rewriter -->> Z3SolverContext: assert
+    
