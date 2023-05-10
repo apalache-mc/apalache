@@ -17539,6 +17539,16 @@ As a result, arenas are incredibly fragile, as it becomes easy to inadvertently 
 <li>Separation of concerns: While arena generation and SMT aren't separated on the level of a pass, they are still clearly separated within each node exploration step, reaping the benefits of readability and maintainability all the same. Additionally, this form allows us to handle SMT encoding variations (e.g. arrays vs non-arrays) much more elegantly.</li>
 <li>Reduced refactoring effort: The final form of the new rules will be syntactically much closer to the current rules, and have a much smaller penalty on incremental change, and our ability to compare and evaluate the changes.</li>
 </ul>
+<h2><a class="header" href="#illustration" id="illustration">Illustration</a></h2>
+<p>Let us use an example rewriting rule, and visualize the difference between the approaches. Take, for instance <code>SetCupRule</code>, the rule used in translating the union of two sets.
+Currently, the sequence diagram for this rule looks like this (with the OOPSLA19 encoding): 
+<img src="adr/seqDiaBefore.png" alt="" /></p>
+<p>Of note are the multiple calls needed to mutate and read from <code>SymbState</code>, as well as the <code>PureArenaAdapter</code> wrapper, which connects arena generation to SMT solving.
+Observe also, that calls to <code>Z3SolverContext</code> happen at multiple points, in between other code (in part due to <code>PureArenaAdapter</code>).</p>
+<p>Under (3), the same rule would look more like this:
+<img src="adr/seqDiaAfter.png" alt="" /></p>
+<p>Specifically, we would no longer need <code>PureArenaAdapters</code>, and we could drop the parts of <code>SymbState</code>, which are treated as mutable (the <code>TlaEx</code> value). In the above, <code>RewriterScope</code> is what remains of <code>SymbState</code>, when we remove the <code>TlaEx</code> value.</p>
+<p>A prototype implementation can be found in <a href="https://github.com/informalsystems/apalache/pull/2554">this PR</a>.</p>
 <h2><a class="header" href="#consequences-10" id="consequences-10">Consequences</a></h2>
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
