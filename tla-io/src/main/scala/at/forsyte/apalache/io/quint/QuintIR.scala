@@ -31,12 +31,21 @@ private[quint] class QuintIRParseError(errMsg: String)
 // User facing error
 class QuintUnsupportedError(errMsg: String) extends Exception("Unsupported quint input: " + errMsg)
 
+private[quint] case class QuintLookupTableEntry(
+    kind: String,
+    reference: Int)
+private[quint] object QuintLookupTableEntry {
+  implicit val rw: RW[QuintLookupTableEntry] = macroRW
+}
+
 /** The JSON output produced by quint parse */
 private[quint] case class QuintOutput(
     stage: String,
     modules: Seq[QuintModule],
     // Maps source IDs to types, see the `WithId` trait
-    types: Map[Int, QuintTypeScheme])
+    types: Map[Int, QuintTypeScheme],
+    // Maps name IDs to declaration IDs
+    table: Map[Int, QuintLookupTableEntry])
 
 private[quint] object QuintOutput {
   implicit val rw: RW[QuintOutput] = macroRW
@@ -355,7 +364,19 @@ private[quint] object QuintType {
     }
   }
 
-  @key("rec") case class QuintRecordT(fields: Row) extends QuintType
+  @key("rec") case class QuintRecordT(fields: Row) extends QuintType {
+
+    // `r.rowVar` is `Some(s)` if it is an open row and `s` is the name of the row variable.
+    // Otherwise it is `None`.
+    def rowVar: Option[String] = getVar(fields)
+
+    private val getVar: Row => Option[String] = {
+      case Row.Var(v)           => Some(v)
+      case Row.Nil()            => None
+      case Row.Cell(_, moreRow) => getVar(moreRow)
+    }
+  }
+
   object QuintRecordT {
     implicit val rw: RW[QuintRecordT] = macroRW
 
@@ -363,6 +384,12 @@ private[quint] object QuintType {
     def ofFieldTypes(fieldTypes: (String, QuintType)*): QuintRecordT = {
       val fields = fieldTypes.map { case (f, t) => RecordField(f, t) }
       QuintRecordT(Row.Cell(fields, Row.Nil()))
+    }
+
+    // Helper for manually constructing record type with free row variable
+    def ofFieldTypes(rowVar: String, fieldTypes: (String, QuintType)*): QuintRecordT = {
+      val fields = fieldTypes.map { case (f, t) => RecordField(f, t) }
+      QuintRecordT(Row.Cell(fields, Row.Var(rowVar)))
     }
   }
 

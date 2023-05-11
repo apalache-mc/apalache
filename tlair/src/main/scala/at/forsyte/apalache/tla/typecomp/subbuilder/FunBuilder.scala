@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, TBuilderInternalSt
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFunBuilder
 import scalaz._
 import scalaz.Scalaz._
+import at.forsyte.apalache.tla.lir.VarT1
 
 /**
  * Scope-safe builder for TlaFunOper expressions.
@@ -25,6 +26,18 @@ trait FunBuilder {
     vs <- buildSeq(args.map(_._2))
     ks = args.map(_._1)
   } yield unsafeBuilder.rec(ks.zip(vs): _*)
+
+  /**
+   * Like [[rec]] but using `RowRecT1` types
+   *
+   * @param rowVar
+   *   The name of a free row variable
+   */
+  def rowRec(rowVar: Option[String], args: (String, TBuilderInstruction)*): TBuilderInstruction = for {
+    vs <- buildSeq(args.map(_._2))
+    ks = args.map(_._1)
+    v = rowVar.map(VarT1(_))
+  } yield unsafeBuilder.rowRec(v, ks.zip(vs): _*)
 
   /**
    * {{{[ args[0] |-> args[1], ..., args[n-1] |-> args[n] ]}}}
