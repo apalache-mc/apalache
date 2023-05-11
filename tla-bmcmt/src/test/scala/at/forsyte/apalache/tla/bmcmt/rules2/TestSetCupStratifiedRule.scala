@@ -16,7 +16,7 @@ class TestSetCupStratifiedRule extends AnyFunSuite {
       (startingScope, cheatyMap(ex.ID))
   }
 
-  test("Basic") {
+  test("Union of two sets with a nonempty intersection. ") {
 
     val lSetCell = new ArenaCell(0, CellT.fromType1(SetT1(IntT1)))
     val lElems = Seq(1, 2).map(new ArenaCell(_, CellT.fromType1(IntT1)))
@@ -38,6 +38,7 @@ class TestSetCupStratifiedRule extends AnyFunSuite {
             left.ID -> lSetCell,
             right.ID -> rSetCell,
         )
+      case _ => Map.empty // impossible, but silences compiler warning
     }
     val rule = new SetCupStratifiedRule(MockRewriter(cellMap))
 
@@ -45,8 +46,9 @@ class TestSetCupStratifiedRule extends AnyFunSuite {
 
     val (RewriterScope(resultArena, _), resultCell) = rule.apply(cup)(startScope)
 
-    println(resultCell)
-    println(resultArena)
+    assert {
+      resultArena.getHas(resultCell) == lElems.map(FixedElemPtr)
+    }
 
   }
 }

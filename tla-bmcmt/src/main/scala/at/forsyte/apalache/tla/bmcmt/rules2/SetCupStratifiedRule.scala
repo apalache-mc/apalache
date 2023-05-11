@@ -7,11 +7,10 @@ import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
- * Rewrites X \cup Y, that is, a union of two sets (not UNION). In the first encoding, we used a linear number of `in`
- * queries. However, this happens to be unsound, and we need a quadratic number of queries.
+ * Rewrites X \cup Y, that is, a union of two sets (not UNION).
  *
  * @author
- *   Igor Konnov
+ *   Jure Kukovec
  */
 class SetCupStratifiedRule(rewriter: Rewriter) extends StratifiedRule[Unit] {
 
