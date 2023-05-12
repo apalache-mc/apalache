@@ -61,6 +61,16 @@ class TestQuintEx extends AnyFunSuite {
       QuintDef.QuintOpDef(body.id, name, "def", body)
     }
 
+    def let(
+        kind: String,
+        name: String,
+        typ: QuintType,
+        value: QuintEx,
+        body: QuintEx): QuintLet = {
+      val binding = opDef(name, value, kind)
+      e(QuintLet(uid, binding, body), typ)
+    }
+
     def param(name: String, typ: QuintType): QuintLambdaParameter = {
       val id = uid
       typeMap += (id -> typ)
@@ -675,5 +685,35 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert strongFair operator") {
     assert(convert(Q.app("strongFair", Q.tt, Q.tt)(QuintBoolT())) == "SF_TRUE(TRUE)")
+  }
+
+  test("can convert polymorphic operator applied polymorphically") {
+    // We define a polymorphic operator, using type variable `a`
+    val a = QuintVarT("a")
+    // With a type `a => int`
+    // Which is just a polymorphic constant function, mapping values of any type to an int
+    val t: QuintType = QuintOperT(Seq(a), QuintIntT())
+    // The anonymous operator of this type looks like `(x) => 1`
+    val oper = Q.lam(Seq("x" -> a), Q._1, t)
+    // We'll call the operator
+    val polyConst1 = "polyConst1"
+
+    // We want to test that we can use this polymorphic operator by applying it to two
+    // different values of the same type.
+    val appliedToStr = Q.app(polyConst1, Q.s)(QuintIntT())
+    val appliedToBool = Q.app(polyConst1, Q.tt)(QuintIntT())
+    // We'll combine these two applications using addition, just to form a compound expression that includes both
+    val body = Q.app("iadd", appliedToStr, appliedToBool)(QuintIntT())
+
+    // Putting it all to gether, we have the let expression
+    //
+    // ```
+    // def polyConst1(x): a => int = 1;
+    // polyConst1("s") + polyConst1(true)
+    // ```
+    val expr = Q.let("def", polyConst1, t, oper, body)
+
+    // And if our conversion logic is correct, we can convert this to Apalache's IR:
+    assert(convert(expr) == "")
   }
 }
