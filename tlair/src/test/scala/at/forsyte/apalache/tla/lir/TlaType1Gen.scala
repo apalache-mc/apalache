@@ -161,17 +161,21 @@ trait TlaType1Gen {
 }
 
 /**
- * Generators for the case classes of TlaType1's that can be built into the principle supported _values_ of TlaEx. This
- * means all types are concrete, while unsupported, non-first class, and deprecated types are excluded.
+ * Generators for the case classes of TlaType1's that are
  *
- * The excluded types:
+ *   - first-class -- meaning they can occur in any expression, which is not true of operator
+ *   - constructable -- meaning the types are concrete, since parametric types do not correspond to first-class values
+ *   - checkable -- meaning their values are supported in our bsmc, unlike TLA's Real
+ *   - non-deprecated -- we still plan forward maintenance of the type
+ *
+ * The specific tydes we exclude are:
  *
  *   - RealT1
  *   - RecT1 (deprecated in favor of RecRowT1)
  *   - VarT1 (abstract)
- *   - Open row types (abstract)
+ *   - Open row typed records (abstract)
  *   - RowT1 (this is not a type)
- *   - OperT (not values)
+ *   - OperT (not a values)
  */
 trait TlaType1ConcreteGen extends TlaType1Gen {
   override val genRowVar = Gen.const(None)
