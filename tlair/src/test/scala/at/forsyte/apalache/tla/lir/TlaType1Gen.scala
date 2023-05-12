@@ -18,7 +18,7 @@ trait TlaType1Gen {
       // produce an absolute value. Note that Math.abs(Integer.MIN_VALUE) = Integer.MIN_VALUE, so use max(0, abs(i)).
     } yield VarT1(i)
 
-  // Only monomorphic types for the values we support (i.e., not for reals)
+  // Only monomorphic types for the values we support in the model checker (i.e., not for reals)
   def genSupportedPrimitiveMono: Gen[TlaType1] =
     oneOf(const(BoolT1), const(IntT1), const(StrT1), genConst)
 
