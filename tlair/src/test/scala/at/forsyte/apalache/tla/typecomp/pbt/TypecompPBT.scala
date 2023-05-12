@@ -33,7 +33,8 @@ object TypecompPBT {
      * @param typ
      *   The type of term of which to generate a builder
      * @param builder
-     *   Optionally and implicitly, the builder instance to use
+     *   Optionally and implicitly, the builder instance to use. If no builder instance is provided, each generated
+     *   expression is constructed as if it were in an independent scope.
      */
     def ofType(typ: TlaType1)(implicit builder: ScopedBuilder = new ScopedBuilder()): Gen[T] = {
       // Used to ensure generated names are unique within the generated term
