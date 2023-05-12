@@ -20,7 +20,7 @@ object TypecompPBT {
      *
      * Instructions are not supported for values of the following "types":
      *
-     *   - RealT1: not supported in apalache)
+     *   - RealT1: not supported in apalache
      *   - OperT1: not values
      *   - VarT1: TODO should generate an arbitrary expression
      *   - RecT1: deprecated
