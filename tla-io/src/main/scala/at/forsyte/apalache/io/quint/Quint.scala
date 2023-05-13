@@ -46,6 +46,20 @@ class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
   private val types = moduleData.types
 
+  // Find the type for an id via the lookup table
+  private def getReferenecType(id: Int): QuintType = {
+    moduleData.table.get(id) match {
+      case None => throw new QuintIRParseError(s"No entry found for id ${id} in lookup table")
+      case Some(lookupEntry) =>
+        moduleData.types.get(lookupEntry.reference) match {
+          case None =>
+            throw new QuintIRParseError(
+                s"No type found for reference ${lookupEntry.reference} associated with id ${id}")
+          case Some(t) => t.typ
+        }
+    }
+  }
+
   // benign state to generate unique names for lambdas
   private var uniqueLambdaNo = 0
   private def uniqueLambdaName(): String = {
@@ -572,9 +586,10 @@ class Quint(moduleData: QuintOutput) {
 
           // Otherwise, the applied operator is defined, and not a builtin
           case definedOpName => { args =>
-            val paramTypes = args.map(arg => Quint.typeToTlaType(types(arg.id).typ))
-            val returnType = Quint.typeToTlaType(types(id).typ)
-            val operType = OperT1(paramTypes, returnType)
+            // val paramTypes = args.map(arg => Quint.typeToTlaType(types(arg.id).typ))
+            // val returnType = Quint.typeToTlaType(types(id).typ)
+            // val operType = OperT1(paramTypes, returnType)
+            val operType = Quint.typeToTlaType(getReferenecType(id))
             val oper = tla.name(definedOpName, operType)
             args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
           }
