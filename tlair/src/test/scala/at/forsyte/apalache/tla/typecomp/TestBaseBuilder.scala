@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir.oper.TlaOper
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import scalaz.unused
+import scala.util.Try
+import scala.util.Failure
 
 @RunWith(classOf[JUnitRunner])
 class TestBaseBuilder extends BuilderTest {
@@ -113,55 +115,41 @@ class TestBaseBuilder extends BuilderTest {
     )
   }
 
-  test("choose3") {
-    type T = (TBuilderInstruction, TBuilderInstruction, TBuilderInstruction)
-    def mkWellTyped(tt: TlaType1): T =
-      (
-          builder.name("x", tt),
-          builder.name("set", SetT1(tt)),
-          builder.name("p", BoolT1),
-      )
+  val succeeds: TBuilderInstruction => Boolean = (i: TBuilderInstruction) => Try(build(i)).isSuccess
+  val throwsTBuilderTypeException: TBuilderInstruction => Boolean =
+    (i: TBuilderInstruction) =>
+      Try(build(i)) match {
+        case Failure(_: TBuilderTypeException) => true
+        case _                                 => false
+      }
 
-    def mkIllTyped(tt: TlaType1): Seq[T] =
-      Seq(
-          (
-              builder.name("x", InvalidTypeMethods.differentFrom(tt)),
-              builder.name("set", SetT1(tt)),
-              builder.name("p", BoolT1),
-          ),
-          (
-              builder.name("x", tt),
-              builder.name("set", SetT1(InvalidTypeMethods.differentFrom(tt))),
-              builder.name("p", BoolT1),
-          ),
-          (
-              builder.name("x", tt),
-              builder.name("set", InvalidTypeMethods.notSet),
-              builder.name("p", BoolT1),
-          ),
-          (
-              builder.name("x", tt),
-              builder.name("set", SetT1(tt)),
-              builder.name("p", InvalidTypeMethods.notBool),
-          ),
-      )
+  test("building `CHOOSE x \\in S: p` RESPECTS and ENSURES type correctness") {
+    import org.scalacheck.Prop._
+    // The generator for TlaType1 provided by ArbTBuilderInstruction
+    // will only generate concrete supported types
+    import pbt.ArbTBuilderInstruction._
 
-    def resultIsExpected = expectEqTyped[TlaType1, T](
-        TlaOper.chooseBounded,
-        mkWellTyped,
-        ToSeq.ternary,
-        tt => tt,
-    )
+    val prop = forAll { (nameType: TlaType1, elemType: TlaType1) =>
+      // Build an expression of the form
+      // CHOOSE x \in set: p
+      val x = builder.name("x", nameType)
+      val set = builder.name("S", SetT1(elemType))
+      val p = builder.name("p", BoolT1)
+      val instruction = builder.choose(x, set, p)
 
-    checkRun(Generators.singleTypeGen)(
-        runTernary(
-            builder.choose,
-            mkWellTyped,
-            mkIllTyped,
-            resultIsExpected,
-        )
-    )
+      // We RESPECT type correctness if we succeed whenever the type of `x` is the same as the type of elements in `S`
+      val wellTypedChooseSucceeds = (nameType == elemType) ==> succeeds(instruction)
 
+      // We ENSURE type correctness if we raise a type exception whenever the types conflict
+      val illTypedChooseFails = (nameType != elemType) ==> throwsTBuilderTypeException(instruction)
+
+      (wellTypedChooseSucceeds || illTypedChooseFails)
+    }
+    check(prop, sizeRange(4))
+  }
+
+  test("""building CHOOSE "x" \\in S: TRUE raises an IllegalArgumentException""") {
+    // Since "CHOOSE" requires a name
     assertThrowsBoundVarIntroductionTernary(builder.choose)
   }
 
