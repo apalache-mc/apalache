@@ -38,12 +38,14 @@ class TestQuintEx extends AnyFunSuite {
       x
     }
 
-    // The Quint conversion class requires a QuintOutput object which,
-    // to enable expression conversion, requires a correctly constructed
-    // map of expression IDs to their inferred and checked types.
-    // This mutable map is used to register those types to record a type
-    // map for the expressions entered in the Q object
+    // The Quint conversion class requires a QuintOutput object. This is because
+    // the  QuintOutput holds a map of expression IDs to their inferred types
+    // and a lookup table of references to their defining iD.
+    //
+    // These two mutable map are used to construct those mappings, which are
+    // then passed to the conversion class.
     private val typeMap = collection.mutable.Map[Int, QuintType]()
+    private val lookupMap = collection.mutable.Map[Int, QuintLookupTableEntry]()
 
     // Register the type of an expression in the typeMap.
     // Think of this as a type annotation.
@@ -53,12 +55,26 @@ class TestQuintEx extends AnyFunSuite {
     }
 
     // Operator application
-    def app(name: String, args: QuintEx*)(retType: QuintType): QuintApp = {
-      e(QuintApp(uid, name, args), retType)
+    def app(name: String, args: QuintEx*)(retType: QuintType, refId: Int = -1): QuintApp = {
+      val id = uid
+      if (refId != -1) {
+        lookupMap += (id -> QuintLookupTableEntry("def", refId))
+      }
+      e(QuintApp(id, name, args), retType)
     }
 
-    def opDef(name: String, body: QuintEx): QuintDef.QuintOpDef = {
+    def opDef(name: String, body: QuintEx, kind: String = "def"): QuintDef.QuintOpDef = {
       QuintDef.QuintOpDef(body.id, name, "def", body)
+    }
+
+    // An ofDef bound to a lambda
+    def opDef(
+        name: String,
+        params: Seq[(String, QuintType)],
+        body: QuintEx,
+        retTyp: QuintType): QuintDef.QuintOpDef = {
+      val lambda = lam(params, body, retTyp)
+      QuintDef.QuintOpDef(lambda.id, name, "def", lambda)
     }
 
     def let(
@@ -102,6 +118,7 @@ class TestQuintEx extends AnyFunSuite {
     val acc = e(QuintName(uid, "acc"), QuintIntT())
     val accParam = param("acc", QuintIntT())
     val xParam = param("x", QuintIntT())
+    val intToBoolDef = opDef("intToBoolOp", List("x" -> QuintIntT()), tt, QuintBoolT())
     val namedIntToBoolOp = e(QuintName(uid, "intToBoolOp"), QuintOperT(Seq(QuintIntT()), QuintBoolT()))
     val namedInt2ToBoolOp = e(QuintName(uid, "int2ToBoolOp"), QuintOperT(Seq(QuintIntT(), QuintIntT()), QuintBoolT()))
 
@@ -110,8 +127,9 @@ class TestQuintEx extends AnyFunSuite {
     val letFooBeTrueIn42 = e(QuintLet(uid, fooDef, _42), QuintIntT())
     val lambda = e(QuintLambda(uid, List(xParam), "def", s), QuintOperT(List(QuintIntT()), QuintStrT()))
     // Applications can only be by name (lambdas are not first class)
-    val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
-    val appBar = app("bar", _42)(QuintStrT())
+    val barDef = opDef("bar", List("x" -> QuintIntT()), s, QuintStrT())
+    // val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
+    val appBar = app("bar", _42)(QuintStrT(), barDef.id)
     val letBarBeLambdaInAppBar = e(QuintLet(uid, barDef, appBar), QuintStrT())
     val nIsGreaterThan0 = app("igt", name, _0)(QuintBoolT())
     val nDefindedAs42 = QuintDef.QuintOpDef(uid, "n", "val", _42)
@@ -145,7 +163,7 @@ class TestQuintEx extends AnyFunSuite {
     val addOneOp = e(QuintLambda(uid, List(nParam), "def", addOne), QuintOperT(List(QuintIntT()), QuintIntT()))
     val setByExpression = app("setBy", intMap, _1, addOneOp)(QuintFunT(QuintIntT(), QuintIntT()))
     val selectNamedIntToBoolOp = app("select", intList, namedIntToBoolOp)(QuintSeqT(QuintIntT()))
-    val applyNamedIntToBoolOp = app(namedIntToBoolOp.name, _42, _42)(QuintBoolT())
+    val applyNamedIntToBoolOp = app(namedIntToBoolOp.name, _42)(QuintBoolT(), intToBoolDef.id)
 
     // We construct a converter supplied with the needed type map
     def quint = new Quint(QuintOutput(
@@ -155,7 +173,7 @@ class TestQuintEx extends AnyFunSuite {
               // Wrap each type in the TypeScheme required by the Quint IR
               id -> QuintTypeScheme(typ)
             }.toMap,
-            table = Map(),
+            table = lookupMap.toMap,
         ))
 
   }
@@ -637,7 +655,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert application of defined operator") {
-    assert(convert(Q.applyNamedIntToBoolOp) == "intToBoolOp(42, 42)")
+    assert(convert(Q.applyNamedIntToBoolOp) == "intToBoolOp(42)")
   }
 
   test("can convert fail operator") {
@@ -690,18 +708,18 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert polymorphic operator applied polymorphically") {
     // We define a polymorphic operator, using type variable `a`
     val a = QuintVarT("a")
-    // With a type `a => int`
-    // Which is just a polymorphic constant function, mapping values of any type to an int
+    // in the type signature `a => int`, which is just a
+    // polymorphic constant function, mapping values of any type to an int.
     val t: QuintType = QuintOperT(Seq(a), QuintIntT())
     // The anonymous operator of this type looks like `(x) => 1`
-    val oper = Q.lam(Seq("x" -> a), Q._1, t)
+    val oper = Q.lam(Seq("x" -> a), Q._1, QuintIntT())
     // We'll call the operator
     val polyConst1 = "polyConst1"
 
     // We want to test that we can use this polymorphic operator by applying it to two
     // different values of the same type.
-    val appliedToStr = Q.app(polyConst1, Q.s)(QuintIntT())
-    val appliedToBool = Q.app(polyConst1, Q.tt)(QuintIntT())
+    val appliedToStr = Q.app(polyConst1, Q.s)(QuintIntT(), oper.id)
+    val appliedToBool = Q.app(polyConst1, Q.tt)(QuintIntT(), oper.id)
     // We'll combine these two applications using addition, just to form a compound expression that includes both
     val body = Q.app("iadd", appliedToStr, appliedToBool)(QuintIntT())
 
