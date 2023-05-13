@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.typecomp.signatures
 import at.forsyte.apalache.tla.lir.{FunT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, TlaType1, TupT1}
 
 import scala.collection.immutable.SortedMap
+import at.forsyte.apalache.tla.lir.VarT1
 
 /**
  * Determines flexible equality ([[compatible]]), i.e. an equivalence relation over TT1, which is equality for
@@ -16,6 +17,8 @@ object FlexibleEquality {
   // None if no common supertype, Some(e) if compatible, and common supertype is e.
   def commonSupertype(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = (lhs, rhs) match {
     case (a, b) if a == b     => Some(a)
+    case (VarT1(_), b)        => Some(b)
+    case (a, VarT1(_))        => Some(a)
     case (SeqT1(l), SeqT1(r)) => commonSupertype(l, r).map(SeqT1)
     case (SetT1(l), SetT1(r)) => commonSupertype(l, r).map(SetT1)
     case (FunT1(lD, lC), FunT1(rD, rC)) =>
