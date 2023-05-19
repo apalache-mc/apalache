@@ -8,9 +8,9 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import java.io.{PrintWriter, StringWriter}
 
@@ -296,6 +296,20 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     writer.write(not(eql(int(1), int(2))))
     printWriter.flush()
     assert("~(1 = 2)" == stringWriter.toString)
+  }
+
+  test("5 \\div 3") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(div(int(5), int(3)))
+    printWriter.flush()
+    assert("5 \\div 3" == stringWriter.toString)
+  }
+
+  test("5 / 3") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(OperEx(TlaArithOper.realDiv, int(5), int(3)))
+    printWriter.flush()
+    assert("5 / 3" == stringWriter.toString)
   }
 
   test("[S -> T]") {
