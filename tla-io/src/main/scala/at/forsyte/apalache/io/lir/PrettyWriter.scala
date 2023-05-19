@@ -1,15 +1,15 @@
 package at.forsyte.apalache.io.lir
 
-import java.io.{File, FileWriter, PrintWriter}
+import at.forsyte.apalache.io.PrettyPrinterError
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
+import java.io.{File, FileWriter, PrintWriter}
 import scala.collection.immutable.{HashMap, HashSet}
-import at.forsyte.apalache.io.PrettyPrinterError
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -701,26 +701,26 @@ object PrettyWriter {
 
   protected val binaryOps =
     HashMap(
-        TlaOper.eq -> "=",
-        TlaOper.ne -> "/=",
-        TlaBoolOper.implies -> "=>",
-        TlaBoolOper.equiv -> "<=>",
-        TlaArithOper.plus -> "+",
-        TlaArithOper.minus -> "-",
-        TlaArithOper.mult -> "*",
-        TlaArithOper.div -> "/",
-        TlaArithOper.mod -> "%",
-        TlaArithOper.realDiv -> "/.",
-        TlaArithOper.exp -> "^",
-        TlaArithOper.dotdot -> "..",
-        TlaArithOper.lt -> "<",
-        TlaArithOper.gt -> ">",
-        TlaArithOper.le -> "<=",
-        TlaArithOper.ge -> ">=",
-        TlaSetOper.in -> "\\in",
-        TlaSetOper.notin -> "\\notin",
-        TlaSetOper.cap -> "\\intersect",
-        TlaSetOper.cup -> "\\union",
+      TlaOper.eq -> "=",
+      TlaOper.ne -> "/=",
+      TlaBoolOper.implies -> "=>",
+      TlaBoolOper.equiv -> "<=>",
+      TlaArithOper.plus -> "+",
+      TlaArithOper.minus -> "-",
+      TlaArithOper.mult -> "*",
+      TlaArithOper.div -> "\\div",
+      TlaArithOper.mod -> "%",
+      TlaArithOper.realDiv -> "/",
+      TlaArithOper.exp -> "^",
+      TlaArithOper.dotdot -> "..",
+      TlaArithOper.lt -> "<",
+      TlaArithOper.gt -> ">",
+      TlaArithOper.le -> "<=",
+      TlaArithOper.ge -> ">=",
+      TlaSetOper.in -> "\\in",
+      TlaSetOper.notin -> "\\notin",
+      TlaSetOper.cap -> "\\intersect",
+      TlaSetOper.cup -> "\\union",
         TlaSetOper.setminus -> "\\",
         TlaSetOper.subseteq -> "\\subseteq",
         TlaActionOper.composition -> "\\cdot",
