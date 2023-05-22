@@ -18,7 +18,7 @@ trait StratifiedRule[T] {
 
   /**
    * Returns a triple `(scope,cell,aux)`, where
-   *   - `scope` contains the new Arena adn Binding generated from `ex`.
+   *   - `scope` contains the new Arena and Binding generated from `ex`.
    *   - `cell` is an ArenaCell representation of `ex`
    *   - `aux` contains miscellaneous data, which may be used in `addConstraints` in the process of constraint
    *     generation.
