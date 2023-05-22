@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.30.10 - 2023-05-22
+
+### Bug fixes
+
+- - fix pretty printing of `x \div y` and `x / y` (#2562)
+
 ## 0.30.9 - 2023-05-08
 
 ### Bug fixes
