@@ -26,6 +26,8 @@ import at.forsyte.apalache.tla.lir.VariantT1
 import at.forsyte.apalache.tla.typecomp.ScopedBuilder
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction
+import at.forsyte.apalache.tla.typecomp.TBuilderScopeException
+import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
 import at.forsyte.apalache.tla.typecomp.build
 
 import com.typesafe.scalalogging.LazyLogging
@@ -39,8 +41,6 @@ import scalaz._
 // list and traverse give us monadic mapping over lists
 // see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
 import scalaz.std.list._, scalaz.syntax.traverse._
-import at.forsyte.apalache.tla.typecomp.TBuilderScopeException
-import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -649,33 +649,40 @@ class Quint(moduleData: QuintOutput) {
         case app: QuintApp => tlaApplication(app)
       }
 
-    private[quint] val tlaDef: QuintDef => Option[TlaDecl] = {
+    // `tlaDef(quintDef)` is a NullaryOpReader that can be run to obtain a value `Some((tlaDecl, maybeName))`
+    // where `tlaDecl` is derived from the given `quintDef`, and `maybeName` is `Some(n)` when the `quintDef`
+    // defines a nullary operator named `n`, or  `None` when `quintDef` is not a nullary operator definition.
+    // If the `quintDef` is not convertable (e.g., a quint type definition), it the outer value is `None`.
+    private[quint] def tlaDef(quintDef: QuintDef): NullaryOpReader[Option[(Option[String], TlaDecl)]] = {
       import QuintDef._
-      {
-        // We don't currently support type definitions in the Apalache IR:
-        // all compound types are expected to be inlined.
-        case QuintTypeDef(_, _, _) => None
-        // Constant and var declarations are trivial to construct, and
-        // no methods for them are provided by the ScopedBuilder.
-        case QuintConst(id, name, _) => Some(TlaConstDecl(name)(typeTagOfId(id)))
-        case QuintVar(id, name, _)   => Some(TlaVarDecl(name)(typeTagOfId(id)))
-        case op: QuintOpDef =>
-          try {
+      Reader(nullaryOps =>
+        quintDef match {
+          // We don't currently support type definitions in the Apalache IR:
+          // all compound types are expected to be inlined.
+          case QuintTypeDef(_, _, _) => None
+          // Constant and var declarations are trivial to construct, and
+          // no methods for them are provided by the ScopedBuilder.
+          case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
+          case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
+          case QuintAssume(id, _, quintEx) =>
             val nullaryOpNameContext = Set[String]()
-            Some(build(opDefConverter(op).run(nullaryOpNameContext)._1))
-          } catch {
-            // If the builder fails, then we've done something wrong in our
-            // conversion logic
-            case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
-              throw new QuintIRParseError(
-                  s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
-          }
+            val tlaEx = build(tlaExpression(quintEx).run(nullaryOpNameContext))
+            Some(None, TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
+          case op: QuintOpDef =>
+            val (tlaInstruction, maybeName) = opDefConverter(op).run(nullaryOps)
+            val tlaDecl =
+              try {
+                build(tlaInstruction)
+              } catch {
+                // If the builder fails, then we've done something wrong in our
+                // conversion logic or quint construction, and this is an internal error
+                case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
+                  throw new QuintIRParseError(
+                      s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
+              }
+            Some(maybeName, tlaDecl)
 
-        case QuintAssume(id, _, quintEx) =>
-          val nullaryOpNameContext = Set[String]()
-          val tlaEx = build(tlaExpression(quintEx).run(nullaryOpNameContext))
-          Some(TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
-      }
+        })
     }
 
     val convert: QuintEx => Try[TlaEx] = quintEx => Try(build(tlaExpression(quintEx).run(Set())))
@@ -691,12 +698,14 @@ class Quint(moduleData: QuintOutput) {
   /**
    * Convert a [[QuintDef]] to a [[TlaDecl]]
    */
-  private[quint] object defToTla {
-    def apply(quintDef: QuintDef): Try[TlaDecl] =
-      (new exToTla())
-        .tlaDef(quintDef)
-        .toRight(new QuintIRParseError(s"Definition ${quintDef} was not convertible to TLA"))
-        .toTry
+  private[quint] def defToTla(quintDef: QuintDef): Option[TlaDecl] = {
+    defToTla(Set(), quintDef).map(_._2)
+  }
+
+  // A wrapper around `tlaDef` that takes care of instantiating the `exToTla` class and running the
+  // reader.
+  private[quint] def defToTla(nullaryOps: Set[String], quintDef: QuintDef): Option[(Option[String], TlaDecl)] = {
+    (new exToTla()).tlaDef(quintDef).run(nullaryOps)
   }
 }
 
@@ -706,8 +715,34 @@ object Quint {
 
   def toTla(readable: ujson.Readable): Try[TlaModule] = for {
     quint <- Quint(readable)
-    declarations <- Try(quint.module.defs.map(quint.defToTla(_).get))
     name = quint.module.name
+    declarations <- Try {
+      // For each quint declaration, we need to try converting it to
+      // a TlaDecl, and if it is a nullary operator, we need to add its
+      // name to our set of nullary operators.
+      // See the comment on `NullaryOpReader` for an explanation of the latter.
+      val accumulatedNullarOpNames = Set[String]()
+      val accumulatedTlaDecls = List[TlaDecl]()
+      // Translate all definitions from the quint module
+      quint.module.defs
+        .foldLeft((accumulatedNullarOpNames, accumulatedTlaDecls)) {
+          // Accumulate the converted definition and the name of the operator, of it is nullary
+          case ((nullaryOps, tlaDecls), quintDef) =>
+            quint.defToTla(nullaryOps, quintDef) match {
+              case None =>
+                // Couldn't convert the declaration (e.g., for a type declaration) so ignore it
+                (nullaryOps, tlaDecls)
+              case Some((None, tlaDecl)) =>
+                // Converted a non-nullary operator declaration
+                (nullaryOps, tlaDecl :: tlaDecls)
+              case Some((Some(nullOp), tlaDecl)) =>
+                // Converted a nullary operator declaration, record the nullary op name
+                (nullaryOps + nullOp, tlaDecl :: tlaDecls)
+            }
+        }
+        ._2 // Just take the resulting TlaDecls
+        .reverse // Return the declarations to their original order
+    }
   } yield TlaModule(name, declarations)
 
   // Convert a QuintType into a TlaType1
