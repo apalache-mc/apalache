@@ -27,6 +27,12 @@
     eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        # FIXME(#2565): pin old nixpkgs, to pull in mdx 2.1.0, need to workaround this regression:
+        # https://github.com/realworldocaml/mdx/issues/428
+        pkgsOldMdx = import (builtins.fetchTarball {
+          url = https://github.com/NixOS/nixpkgs/archive/76be8d2d04a00e5e2df6fa147dfc4797874edc97.tar.gz;
+          sha256 = "Nw1lgrAQG++uzYQc1SilzGdeoy9RZ/HwcKlbaAp1rTE=";
+        }) { inherit system; };
       in
       {
         # Nix Build
@@ -66,7 +72,7 @@
                 metals
 
                 # Testing
-                ocamlPackages.mdx
+                pkgsOldMdx.ocamlPackages.mdx
                 python39Full
               ];
             };
