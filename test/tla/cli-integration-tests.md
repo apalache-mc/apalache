@@ -1997,6 +1997,45 @@ The outcome is: Error
 EXITCODE: ERROR (12)
 ```
 
+### enable debug mode, which outputs SMT log
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=0 --debug Counter.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
+application-configs.cfg
+detailed.log
+log0.smt
+run.txt
+$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
+;; fp.spacer.random_seed = 0
+;; nlsat.seed = 0
+;; sat.random_seed = 0
+;; sls.random_seed = 0
+;; smt.random_seed = 0
+;; (params seed 0 random_seed 0)
+...
+$ rm -rf ./test-out-dir
+```
+
+#### check SMT seed is picked up
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
+;; fp.spacer.random_seed = 4242
+;; nlsat.seed = 4242
+;; sat.random_seed = 4242
+;; sls.random_seed = 4242
+;; smt.random_seed = 4242
+;; (params seed 4242 random_seed 4242)
+...
+$ rm -rf ./test-out-dir
+```
+
 ## testing the slicer of symbolic transitions in TransitionFinderPass
 
 ### check Slicer1

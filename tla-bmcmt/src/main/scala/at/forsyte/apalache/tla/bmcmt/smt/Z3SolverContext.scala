@@ -43,9 +43,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
-    log(";; %s = %s".format(p, config.randomSeed))
-  // FIXME(#2140): the following throws `java.lang.NoSuchFieldError: com.microsoft.z3.Native$StringPtr.value`
-  // logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+    log(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
   private def encoding: SMTEncoding = config.smtEncoding
