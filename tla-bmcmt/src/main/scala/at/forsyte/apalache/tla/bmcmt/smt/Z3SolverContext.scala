@@ -504,7 +504,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       Some(sat())
     } else {
       def setTimeout(tm: Int): Unit = {
-        val params = z3context.mkParams()
         params.add("timeout", tm)
         z3solver.setParameters(params)
         log(s";; ${params}")
