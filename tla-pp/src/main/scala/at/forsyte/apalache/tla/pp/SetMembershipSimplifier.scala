@@ -21,6 +21,7 @@ import at.forsyte.apalache.tla.lir.values._
  *   - `fun \in [TDS1 -> TDS2]` ~> `TRUE`
  *   - `fun \in [Dom -> TDS]` ~> `DOMAIN fun = Dom`
  *   - `tup \in TDS1 \X ... \X TDSn` ~> `TRUE`
+ *   - `rec \in [name_1: TDS1, ..., name_n: TDSn]` ~> `TRUE`
  *
  * @author
  *   Thomas Pani
@@ -46,7 +47,8 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    *   - sets of sequences over type-defining sets, e.g., Seq(BOOLEAN), Seq(Int), Seq(Seq(Int)), Seq(SUBSET Int), ...
    *   - power sets of type-defining sets, e.g., SUBSET BOOLEAN, SUBSET Int, SUBSET Seq(Int), ...
    *   - sets of functions over type-defining sets, e.g., [Int -> BOOLEAN], ...
-   *   - the cartesian product TDS1 \X ...\X TDSn of type-defining sets
+   *   - the cartesian product TDS1 \X ...\X TDSn of type-defining sets, e.g., BOOLEAN \X Int, ...
+   *   - sets of records over type-defining field types, e.g., [type: STRING, val: Int], ...
    *
    * In particular, `Nat` is not type-defining, nor are sequence sets / power sets thereof, since `i \in Nat` does not
    * hold for all `IntT1`-typed `i`.
@@ -63,7 +65,11 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     // 3. [s1 -> s2] for type-defining sets `s1` and `s2`
     case OperEx(TlaSetOper.funSet, set1, set2) => isTypeDefining(set1) && isTypeDefining(set2)
     // 4. s1 \X ... \X sn for type-defining sets `s1` to `sn`
-    case OperEx(TlaSetOper.times, args @ _*) => args.forall(set => isTypeDefining(set))
+    case OperEx(TlaSetOper.times, args @ _*) => args.forall(isTypeDefining)
+    // 5. [name_1: s1, ..., name_n: sn] for type-defining sets `s1` to `sn`
+    case OperEx(TlaSetOper.recSet, namesAndSets @ _*) =>
+      val (_, sets) = TlaOper.deinterleave(namesAndSets)
+      sets.forall(isTypeDefining)
 
     // otherwise
     case _ => false
