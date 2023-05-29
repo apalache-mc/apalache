@@ -732,6 +732,6 @@ class TestQuintEx extends AnyFunSuite {
     val expr = Q.let("def", polyConst1, t, oper, body)
 
     // And if our conversion logic is correct, we can convert this to Apalache's IR:
-    assert(convert(expr) == "")
+    assert(convert(expr) == """LET polyConst1(x) ≜ 1 IN (polyConst1("s")) + (polyConst1(TRUE))""")
   }
 }
