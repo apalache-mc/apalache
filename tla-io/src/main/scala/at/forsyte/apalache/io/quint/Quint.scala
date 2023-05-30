@@ -668,6 +668,9 @@ class Quint(moduleData: QuintOutput) {
             val nullaryOpNameContext = Set[String]()
             val tlaEx = build(tlaExpression(quintEx).run(nullaryOpNameContext))
             Some(None, TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
+          case op: QuintOpDef if op.qualifier == "run" =>
+            // We don't currently support run definitions
+            None
           case op: QuintOpDef =>
             val (tlaInstruction, maybeName) = opDefConverter(op).run(nullaryOps)
             val tlaDecl =
