@@ -17,8 +17,8 @@ object FlexibleEquality {
 
   // None if no common supertype, Some(e) if compatible, and the common supertype is e.
   def commonSupertype(lhs: TlaType1, rhs: TlaType1): Option[TlaType1] = {
-    // TypeUnifier is not threadsafe, and creating a new instance
-    // for each invocation prevents race conditions in the tests
+    // TypeUnifier is not threadsafe, and creating a new instance for each invocation
+    // prevents race conditions (e.g., in the tests and in the server)
     val typeUnifier = new TypeUnifier(new TypeVarPool())
     typeUnifier.unify(Substitution.empty, lhs, rhs).map(_._2)
   }
