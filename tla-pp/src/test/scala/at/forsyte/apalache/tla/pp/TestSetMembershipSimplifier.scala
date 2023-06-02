@@ -76,6 +76,12 @@ class TestSetMembershipSimplifier
   private val cartesianSet =
     tla.times(tla.intSet().as(intSetT), tla.intSet().as(intSetT)).as(SetT1(TupT1(IntT1, IntT1)))
 
+  private val recType = RecT1("a" -> IntT1, "b" -> BoolT1)
+  private val recVal = tla.enumFun(tla.str("a").as(StrT1), intVal, tla.str("b").as(StrT1), boolVal).as(recType)
+  private val recName = tla.name("rec").as(recType)
+  private val recordSet =
+    tla.recSet(tla.str("a").as(StrT1), intSet, tla.str("b").as(StrT1), boolSet).as(SetT1(recType))
+
   override def beforeEach(): Unit = {
     simplifier = SetMembershipSimplifier(new IdleTracker)
   }
@@ -94,6 +100,7 @@ class TestSetMembershipSimplifier
         (strSetName, strSetVal, strPowerset),
         (intSetName, intSetVal, intPowerset),
         (tupleVal, tupleName, cartesianSet),
+        (recVal, recName, recordSet),
     )
 
     expressions.foreach { case (name, value, set) =>
@@ -157,6 +164,20 @@ class TestSetMembershipSimplifier
             .as(nestedFunSetType))
       .as(BoolT1)
     simplifier(nestedInput) shouldBe tlaTrue
+  }
+
+  test("rewrites function over records over Seq/SUBSET to TRUE") {
+    import at.forsyte.apalache.tla.lir.convenience.tla._
+    // fun \in [["a": Seq(SUBSET Int)] -> ["b": SUBSET Seq(BOOLEAN)]], ...  ~>  TRUE
+    val funRecType = SetT1(FunT1(RecT1("a" -> intPowersetSeqType), RecT1("b" -> boolSeqPowersetType)))
+    val funRecInput = in(funName,
+        funSet(recSet(str("a").as(StrT1), seqSet(intSeqSet).as(intPowersetSeqType))
+              .as(RecT1("a" -> intPowersetSeqType)),
+            recSet(str("b").as(StrT1), powSet(boolSeqSet).as(boolSeqPowersetType))
+              .as(RecT1("b" -> boolSeqPowersetType)))
+          .as(funRecType))
+      .as(BoolT1)
+    simplifier(funRecInput) shouldBe tlaTrue
   }
 
   test("rewrites non-typedefining function set domain to DOMAIN") {
