@@ -27,7 +27,7 @@ object Dependencies {
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
     val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
-    val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.3"
+    val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.4"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
@@ -40,7 +40,7 @@ object Dependencies {
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
-    val grpcNetty = "io.grpc" % "grpc-netty" % "1.54.1"
+    val grpcNetty = "io.grpc" % "grpc-netty" % "1.55.1"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)
