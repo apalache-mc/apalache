@@ -588,7 +588,7 @@ class Quint(moduleData: QuintOutput) {
     //   ~~>
     //   \E name \in domain: scope
     private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => NullaryOpReader[TBuilderInstruction] = {
-      case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain)), _), scope) =>
+      case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain))), scope) =>
         val elemType = Quint.typeToTlaType(types(id).typ)
         val tlaName = tla.name(name, elemType)
         for {
@@ -600,7 +600,7 @@ class Quint(moduleData: QuintOutput) {
     }
 
     private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[(TBuilderOperDeclInstruction, Option[String])] = {
-      case QuintDef.QuintOpDef(_, name, _, expr, _) =>
+      case QuintDef.QuintOpDef(_, name, _, expr) =>
         (expr match {
           // Parameterized operators are defined in Quint using Lambdas
           case lam: QuintLambda => lambdaBodyAndParams(lam)

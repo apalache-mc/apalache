@@ -191,10 +191,6 @@ sealed private[quint] trait QuintDef extends WithID
 private[quint] object QuintDef {
   implicit val rw: RW[QuintDef] = RW.merge(QuintOpDef.rw, QuintVar.rw, QuintConst.rw, QuintAssume.rw, QuintTypeDef.rw)
 
-  trait WithOptionalTypeAnnotation {
-    val typeAnnotation: Option[QuintType]
-  }
-
   trait WithTypeAnnotation {
     val typeAnnotation: QuintType
   }
@@ -204,6 +200,9 @@ private[quint] object QuintDef {
    *
    * Note that QuintOpDef does not have any formal parameters. If an operator definition has formal parameters, then
    * `expr` is a lambda expression over those parameters.
+   *
+   * NOTE: The QuintIR includes an optional type annotation in operator defs, but we have no use for it, as the final
+   * type of any operator declaration is given in the type map. So we simply omit it.
    */
   @key("def") case class QuintOpDef(
       id: Int,
@@ -212,9 +211,8 @@ private[quint] object QuintDef {
       /** qualifiers that identify definition kinds, like `def`, `val`, etc. */
       qualifier: String,
       /** expression to be associated with the definition */
-      expr: QuintEx,
-      typeAnnotation: Option[QuintType] = None)
-      extends QuintDef with WithOptionalTypeAnnotation {}
+      expr: QuintEx)
+      extends QuintDef {}
   object QuintOpDef {
     implicit val rw: RW[QuintOpDef] = macroRW
   }
