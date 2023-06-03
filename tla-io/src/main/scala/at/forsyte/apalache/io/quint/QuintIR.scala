@@ -5,6 +5,29 @@ package at.forsyte.apalache.io.quint
 //
 // See https://com-lihaoyi.github.io/upickle/#Builtins for documentation on
 // upickle semi-automatic JSON serialization docs.
+//
+//
+//////////////////////////
+// >> DEBUGGING TIPS << //
+//////////////////////////
+//
+// When serialization fails, it will give an error of the form
+//
+//    expected <JSON value> got <diff JSON value> at index <N>
+//
+// E.g.,
+//
+//    expected sequence got dictionary at index 525
+//
+// The _index_ is the character count of the JSON data. To debug,
+// first get quint's JSON representation of the spec with
+//
+//    quint typecheck --out spec.qnt.json spec.qnt
+//
+// Then look at the JSON data at the Nth character of spec.qnt.json.
+// Comparing this against the IR datastructure defined below, in the
+// context upickle serialization referenced above should make the
+// problem clear.
 
 // The `key` package allows customizing the JSON key for a class tag or attribute
 // See https://com-lihaoyi.github.io/upickle/#CustomKeys
@@ -52,7 +75,7 @@ private[quint] object QuintOutput {
 
   def read(s: ujson.Readable): Try[QuintOutput] =
     Try(QuintDeserializer.read[QuintOutput](s)).recoverWith { case err: upickle.core.AbortException =>
-      scala.util.Failure(new QuintIRParseError(err.clue))
+      scala.util.Failure(new QuintIRParseError(s"${err.getMessage()}"))
     }
 }
 
