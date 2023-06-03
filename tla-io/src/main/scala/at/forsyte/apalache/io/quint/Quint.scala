@@ -659,15 +659,16 @@ class Quint(moduleData: QuintOutput) {
         quintDef match {
           // We don't currently support type definitions in the Apalache IR:
           // all compound types are expected to be inlined.
-          case QuintTypeDef(_, _, _) => None
+          case _: QuintTypeDef => None
           // Constant and var declarations are trivial to construct, and
           // no methods for them are provided by the ScopedBuilder.
           case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
           case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
-          case QuintAssume(id, _, quintEx) =>
+          case QuintAssume(_, _, quintEx) =>
             val nullaryOpNameContext = Set[String]()
             val tlaEx = build(tlaExpression(quintEx).run(nullaryOpNameContext))
-            Some(None, TlaAssumeDecl(tlaEx)(typeTagOfId(id)))
+            // assume declarations have no entry in the type map, and are always typed bool
+            Some(None, TlaAssumeDecl(tlaEx)(Typed(BoolT1)))
           case op: QuintOpDef if op.qualifier == "run" =>
             // We don't currently support run definitions
             None
