@@ -209,7 +209,7 @@ private[quint] object QuintDef {
         case Some("var")     => QuintDeserializer.read[QuintVar](o)
         case Some("assume")  => QuintDeserializer.read[QuintAssume](o)
         case Some("typedef") => QuintDeserializer.read[QuintTypeDef](o)
-        case Some(_)         => throw new QuintIRParseError(s"Definition mas invalid `kind` field: ${o}")
+        case Some(_)         => throw new QuintIRParseError(s"Definition has invalid `kind` field: ${o}")
         case None            => throw new QuintIRParseError(s"Definition missing `kind` field: ${o}")
       }
     case invalidJson =>
