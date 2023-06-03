@@ -189,7 +189,34 @@ private[quint] object QuintEx {
 sealed private[quint] trait QuintDef extends WithID
 
 private[quint] object QuintDef {
-  implicit val rw: RW[QuintDef] = RW.merge(QuintOpDef.rw, QuintVar.rw, QuintConst.rw, QuintAssume.rw, QuintTypeDef.rw)
+  // The boilerplate here is a result of the infectious nature
+  // of ser/de customization in upickle currently.
+  // See https://github.com/com-lihaoyi/upickle/issues/394
+  //
+  // The customization is needed for QuintTypeDef.
+  private val toJson: QuintDef => ujson.Value = {
+    case d: QuintOpDef   => QuintDeserializer.writeJs(d)
+    case d: QuintVar     => QuintDeserializer.writeJs(d)
+    case d: QuintConst   => QuintDeserializer.writeJs(d)
+    case d: QuintAssume  => QuintDeserializer.writeJs(d)
+    case d: QuintTypeDef => QuintDeserializer.writeJs(d)
+  }
+  private val ofJson: ujson.Value => QuintDef = {
+    case ujson.Obj(o) if o.get("kind").isDefined =>
+      o.get("kind").map(_.str) match {
+        case Some("def")     => QuintDeserializer.read[QuintOpDef](o)
+        case Some("const")   => QuintDeserializer.read[QuintConst](o)
+        case Some("var")     => QuintDeserializer.read[QuintVar](o)
+        case Some("assume")  => QuintDeserializer.read[QuintAssume](o)
+        case Some("typedef") => QuintDeserializer.read[QuintTypeDef](o)
+        case Some(_)         => throw new QuintIRParseError(s"Definition mas invalid `kind` field: ${o}")
+        case None            => throw new QuintIRParseError(s"Definition missing `kind` field: ${o}")
+      }
+    case invalidJson =>
+      throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
+  }
+
+  implicit val rw: RW[QuintDef] = QuintDeserializer.readwriter[ujson.Value].bimap(toJson, ofJson)
 
   trait WithTypeAnnotation {
     val typeAnnotation: QuintType
@@ -263,11 +290,26 @@ private[quint] object QuintDef {
        *
        * Type aliases have `Some(type)` while abstract types have `None`
        */
-      // TODO need special instruction for this conversion
       typ: Option[QuintType])
       extends QuintDef {}
   object QuintTypeDef {
-    implicit val rw: RW[QuintTypeDef] = macroRW
+    // We need custom ser/de here to cope with the optionality of the `type` field
+    // see https://github.com/com-lihaoyi/upickle/issues/75
+    private val toJson: QuintTypeDef => ujson.Value = {
+      case QuintTypeDef(id, name, None) => ujson.Obj("id" -> id, "name" -> name)
+      case QuintTypeDef(id, name, Some(t)) =>
+        ujson.Obj("id" -> id, "name" -> name, "type" -> QuintDeserializer.writeJs[QuintType](t))
+    }
+
+    private val ofJson: ujson.Value => QuintTypeDef = {
+      case ujson.Obj(entries) if entries.get("id").isDefined && entries.get("name").isDefined =>
+        QuintTypeDef(entries.get("id").get.num.toInt, entries.get("name").get.str,
+            entries.get("type").map(t => QuintDeserializer.read[QuintType](t)))
+      case invalidJson =>
+        throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
+    }
+
+    implicit val rw: RW[QuintTypeDef] = QuintDeserializer.readwriter[ujson.Value].bimap(toJson, ofJson)
   }
 }
 
