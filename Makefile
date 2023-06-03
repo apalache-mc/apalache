@@ -40,13 +40,19 @@ integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
 # Generate fixtures needed to test quint integration
-quint-fixtures: tla-io/src/test/resources/tictactoe.json test/tla/booleans.qnt.json
+quint-fixtures: tla-io/src/test/resources/tictactoe.json tla-io/src/test/resources/clockSync3.json test/tla/booleans.qnt.json
 
 TEMP_QNT_TTT_FILE := $(shell mktemp)
 tla-io/src/test/resources/tictactoe.json:
 	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/puzzles/tictactoe/tictactoe.qnt > $(TEMP_QNT_TTT_FILE)
 	quint typecheck --out $@ $(TEMP_QNT_TTT_FILE)
 	rm $(TEMP_QNT_TTT_FILE)
+
+TEMP_QNT_CS_FILE := $(shell mktemp)
+tla-io/src/test/resources/clockSync3.json:
+	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/classic/distributed/ClockSync/clockSync3.qnt > $(TEMP_QNT_TTT_FILE)
+	quint typecheck --out $@ $(TEMP_QNT_CS_FILE)
+	rm $(TEMP_QNT_CS_FILE)
 
 TEMP_QNT_BOOL_FILE := $(shell mktemp)
 test/tla/booleans.qnt.json:

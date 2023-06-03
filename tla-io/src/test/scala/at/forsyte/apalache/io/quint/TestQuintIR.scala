@@ -16,6 +16,15 @@ class TestQuintIR extends AnyFunSuite {
     assert(quintIR.modules(0).name == "tictactoe")
   }
 
+  // clockSync3.json is located in tla-io/src/test/resources/clockSync3.json
+  // Regression tests for https://github.com/informalsystems/quint/issues/927
+  // and related serialization problems.
+  test("Can load clockSync3.json") {
+    val clockSync3QuintJson = scala.io.Source.fromResource("clockSync3.json").mkString
+    val quintIR = QuintOutput.read(clockSync3QuintJson).get
+    assert(quintIR.modules(0).name == "ClockSync3")
+  }
+
   test("Invalid JSON returns sensible error") {
     QuintOutput.read("""{"foo": 1}""") match {
       case Success(_) => fail("should return a failure")

@@ -58,7 +58,7 @@ class TestQuintEx extends AnyFunSuite {
     }
 
     def opDef(name: String, body: QuintEx): QuintDef.QuintOpDef = {
-      QuintDef.QuintOpDef(body.id, name, "def", body, None)
+      QuintDef.QuintOpDef(body.id, name, "def", body)
     }
 
     def param(name: String, typ: QuintType): QuintLambdaParameter = {
