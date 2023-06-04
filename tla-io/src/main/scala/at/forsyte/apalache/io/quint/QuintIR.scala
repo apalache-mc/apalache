@@ -5,6 +5,29 @@ package at.forsyte.apalache.io.quint
 //
 // See https://com-lihaoyi.github.io/upickle/#Builtins for documentation on
 // upickle semi-automatic JSON serialization docs.
+//
+//
+//////////////////////////
+// >> DEBUGGING TIPS << //
+//////////////////////////
+//
+// When serialization fails, it will give an error of the form
+//
+//    expected <JSON value> got <diff JSON value> at index <N>
+//
+// E.g.,
+//
+//    expected sequence got dictionary at index 525
+//
+// The _index_ is the character count of the JSON data. To debug,
+// first get quint's JSON representation of the spec with
+//
+//    quint typecheck --out spec.qnt.json spec.qnt
+//
+// Then look at the JSON data at the Nth character of spec.qnt.json.
+// Comparing this against the IR datastructure defined below, in the
+// context upickle serialization referenced above should make the
+// problem clear.
 
 // The `key` package allows customizing the JSON key for a class tag or attribute
 // See https://com-lihaoyi.github.io/upickle/#CustomKeys
@@ -52,7 +75,7 @@ private[quint] object QuintOutput {
 
   def read(s: ujson.Readable): Try[QuintOutput] =
     Try(QuintDeserializer.read[QuintOutput](s)).recoverWith { case err: upickle.core.AbortException =>
-      scala.util.Failure(new QuintIRParseError(err.clue))
+      scala.util.Failure(new QuintIRParseError(s"${err.getMessage()}"))
     }
 }
 
@@ -166,11 +189,34 @@ private[quint] object QuintEx {
 sealed private[quint] trait QuintDef extends WithID
 
 private[quint] object QuintDef {
-  implicit val rw: RW[QuintDef] = RW.merge(QuintOpDef.rw, QuintVar.rw, QuintConst.rw, QuintAssume.rw, QuintTypeDef.rw)
-
-  trait WithOptionalTypeAnnotation {
-    val typeAnnotation: Option[QuintType]
+  // The boilerplate here is a result of the infectious nature
+  // of ser/de customization in upickle currently.
+  // See https://github.com/com-lihaoyi/upickle/issues/394
+  //
+  // The customization is needed for QuintTypeDef.
+  private val toJson: QuintDef => ujson.Value = {
+    case d: QuintOpDef   => QuintDeserializer.writeJs(d)
+    case d: QuintVar     => QuintDeserializer.writeJs(d)
+    case d: QuintConst   => QuintDeserializer.writeJs(d)
+    case d: QuintAssume  => QuintDeserializer.writeJs(d)
+    case d: QuintTypeDef => QuintDeserializer.writeJs(d)
   }
+  private val ofJson: ujson.Value => QuintDef = {
+    case ujson.Obj(o) if o.get("kind").isDefined =>
+      o.get("kind").map(_.str) match {
+        case Some("def")     => QuintDeserializer.read[QuintOpDef](o)
+        case Some("const")   => QuintDeserializer.read[QuintConst](o)
+        case Some("var")     => QuintDeserializer.read[QuintVar](o)
+        case Some("assume")  => QuintDeserializer.read[QuintAssume](o)
+        case Some("typedef") => QuintDeserializer.read[QuintTypeDef](o)
+        case Some(_)         => throw new QuintIRParseError(s"Definition has invalid `kind` field: ${o}")
+        case None            => throw new QuintIRParseError(s"Definition missing `kind` field: ${o}")
+      }
+    case invalidJson =>
+      throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
+  }
+
+  implicit val rw: RW[QuintDef] = QuintDeserializer.readwriter[ujson.Value].bimap(toJson, ofJson)
 
   trait WithTypeAnnotation {
     val typeAnnotation: QuintType
@@ -181,6 +227,9 @@ private[quint] object QuintDef {
    *
    * Note that QuintOpDef does not have any formal parameters. If an operator definition has formal parameters, then
    * `expr` is a lambda expression over those parameters.
+   *
+   * NOTE: The QuintIR includes an optional type annotation in operator defs, but we have no use for it, as the final
+   * type of any operator declaration is given in the type map. So we simply omit it.
    */
   @key("def") case class QuintOpDef(
       id: Int,
@@ -189,9 +238,8 @@ private[quint] object QuintDef {
       /** qualifiers that identify definition kinds, like `def`, `val`, etc. */
       qualifier: String,
       /** expression to be associated with the definition */
-      expr: QuintEx,
-      typeAnnotation: Option[QuintType] = None)
-      extends QuintDef with WithOptionalTypeAnnotation {}
+      expr: QuintEx)
+      extends QuintDef {}
   object QuintOpDef {
     implicit val rw: RW[QuintOpDef] = macroRW
   }
@@ -242,11 +290,26 @@ private[quint] object QuintDef {
        *
        * Type aliases have `Some(type)` while abstract types have `None`
        */
-      // TODO need special instruction for this conversion
       typ: Option[QuintType])
       extends QuintDef {}
   object QuintTypeDef {
-    implicit val rw: RW[QuintTypeDef] = macroRW
+    // We need custom ser/de here to cope with the optionality of the `type` field
+    // see https://github.com/com-lihaoyi/upickle/issues/75
+    private val toJson: QuintTypeDef => ujson.Value = {
+      case QuintTypeDef(id, name, None) => ujson.Obj("id" -> id, "name" -> name)
+      case QuintTypeDef(id, name, Some(t)) =>
+        ujson.Obj("id" -> id, "name" -> name, "type" -> QuintDeserializer.writeJs[QuintType](t))
+    }
+
+    private val ofJson: ujson.Value => QuintTypeDef = {
+      case ujson.Obj(entries) if entries.get("id").isDefined && entries.get("name").isDefined =>
+        QuintTypeDef(entries.get("id").get.num.toInt, entries.get("name").get.str,
+            entries.get("type").map(t => QuintDeserializer.read[QuintType](t)))
+      case invalidJson =>
+        throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
+    }
+
+    implicit val rw: RW[QuintTypeDef] = QuintDeserializer.readwriter[ujson.Value].bimap(toJson, ofJson)
   }
 }
 
