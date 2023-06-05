@@ -234,7 +234,9 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     val uninterpretedIndexAndTypeGen: Gen[(String, ConstT1)] = Gen.zip(nonEmptyStrGen, uninterpretedTypeGen)
 
-    protected val tt1gen: TlaType1Gen = new TlaType1Gen {}
+    // We only test over "concrete types",
+    // because we only need the builder to build things that can be build.
+    protected val tt1gen: TlaType1Gen = new TlaType1ConcreteGen {}
 
     val singleTypeGen: Gen[TlaType1] = tt1gen.genType1
     val doubleTypeGen: Gen[(TlaType1, TlaType1)] = Gen.zip(singleTypeGen, singleTypeGen)
