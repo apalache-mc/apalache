@@ -179,6 +179,10 @@ trait TlaType1Gen {
  */
 trait TlaType1ConcreteGen extends TlaType1Gen {
   override val genRowVar = Gen.const(None)
+
+  // The concrete primitive types are monomorphic
+  override def genPrimitive: Gen[TlaType1] = genPrimitiveMono
+
   override def genTypeTree: Gen[TlaType1] = lzy {
     sized { size =>
       if (size <= 1) {

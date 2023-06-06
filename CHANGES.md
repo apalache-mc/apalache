@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.40.2 - 2023-06-05
+
+### Bug fixes
+
+- Fix deserialization of Quint type and operator definitions. (See #2588)
+
 ## 0.40.1 - 2023-06-02
 
 ### Features

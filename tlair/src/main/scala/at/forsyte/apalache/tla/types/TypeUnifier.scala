@@ -223,6 +223,11 @@ class TypeUnifier(varPool: TypeVarPool) {
       case (RecRowT1(RowT1(lfields, lv)), RecRowT1(RowT1(rfields, rv))) =>
         unifyRows(lfields, rfields, lv, rv).map(t => RecRowT1(t))
 
+      case (rec @ RecT1(_), rowRec @ RecRowT1(_)) => compute(rowRec, rec)
+
+      // An old record type can be treated as a monomorphic row-typed record
+      case (rowRec @ RecRowT1(_), RecT1(fields)) => compute(rowRec, RecRowT1(RowT1(fields, None)))
+
       case (VariantT1(RowT1(lfields, lv)), VariantT1(RowT1(rfields, rv))) =>
         unifyRows(lfields, rfields, lv, rv).map(t => VariantT1(t))
 
