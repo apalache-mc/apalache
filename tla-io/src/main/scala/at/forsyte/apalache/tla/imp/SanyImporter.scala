@@ -12,6 +12,7 @@ import java.io._
 import java.nio.file.Files
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
+import java.nio.charset.StandardCharsets
 
 // The SANY parser is not thread safe. This singleton object is used to create a
 // mutex around its execution.
@@ -27,10 +28,15 @@ import scala.util.{Failure, Success, Try}
 object SANYSyncWrapper {
   def loadSpecObject(specObj: SpecObj, file: File, errBuf: Writer): Int = {
     this.synchronized {
+      val outStream = WriterOutputStream
+        .builder()
+        .setWriter(errBuf)
+        .setCharset(StandardCharsets.UTF_8)
+        .get()
       SANY.frontEndMain(
           specObj,
           file.getAbsolutePath,
-          new PrintStream(new WriterOutputStream(errBuf, "UTF8")),
+          new PrintStream(outStream),
       )
     }
   }
