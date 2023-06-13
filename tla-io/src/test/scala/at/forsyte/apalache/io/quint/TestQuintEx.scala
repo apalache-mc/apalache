@@ -136,7 +136,6 @@ class TestQuintEx extends AnyFunSuite {
     val lambda = e(QuintLambda(uid, List(xParam), "def", s), QuintOperT(List(QuintIntT()), QuintStrT()))
     // Applications can only be by name (lambdas are not first class)
     val barDef = opDef("bar", List("x" -> QuintIntT()), s, QuintStrT())
-    // val barDef = QuintDef.QuintOpDef(uid, "bar", "def", lambda)
     val appBar = app("bar", _42)(QuintStrT(), barDef.id)
     val letBarBeLambdaInAppBar = e(QuintLet(uid, barDef, appBar), QuintStrT())
     val nIsGreaterThan0 = app("igt", name, _0)(QuintBoolT())
