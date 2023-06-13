@@ -46,8 +46,8 @@ class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
   private val types = moduleData.types
 
-  // Find the type for an id via the lookup table
-  private def getReferenecType(id: Int): QuintType = {
+  // Find the type for an id via the lookup table provided in the quint output
+  private def getTypeFromLookupTable(id: Int): QuintType = {
     moduleData.table.get(id) match {
       case None => throw new QuintIRParseError(s"No entry found for id ${id} in lookup table")
       case Some(lookupEntry) =>
@@ -586,10 +586,7 @@ class Quint(moduleData: QuintOutput) {
 
           // Otherwise, the applied operator is defined, and not a builtin
           case definedOpName => { args =>
-            // val paramTypes = args.map(arg => Quint.typeToTlaType(types(arg.id).typ))
-            // val returnType = Quint.typeToTlaType(types(id).typ)
-            // val operType = OperT1(paramTypes, returnType)
-            val operType = Quint.typeToTlaType(getReferenecType(id))
+            val operType = Quint.typeToTlaType(getTypeFromLookupTable(id))
             val oper = tla.name(definedOpName, operType)
             args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
           }
