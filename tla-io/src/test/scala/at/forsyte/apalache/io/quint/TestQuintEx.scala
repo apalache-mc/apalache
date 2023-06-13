@@ -55,6 +55,14 @@ class TestQuintEx extends AnyFunSuite {
     }
 
     // Operator application
+    //
+    // The optional `refId` is the id of the declaration defining
+    // the operator `name` which is to be applied to `args`. When
+    // `refId` is `-1` it is ignored. But when it is a valid
+    // (positive) id we add an entry to the Quint module's lookup
+    // table. This mocks quint's practice of recording the type
+    // of an applied operator in the lookup table for defined
+    // operator, while omitting this data for bulitins.
     def app(name: String, args: QuintEx*)(retType: QuintType, refId: Int = -1): QuintApp = {
       val id = uid
       if (refId != -1) {
