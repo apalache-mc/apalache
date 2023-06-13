@@ -64,7 +64,7 @@ class TestQuintEx extends AnyFunSuite {
     }
 
     def opDef(name: String, body: QuintEx, kind: String = "def"): QuintDef.QuintOpDef = {
-      QuintDef.QuintOpDef(body.id, name, "def", body)
+      QuintDef.QuintOpDef(body.id, name, kind, body)
     }
 
     // An ofDef bound to a lambda
