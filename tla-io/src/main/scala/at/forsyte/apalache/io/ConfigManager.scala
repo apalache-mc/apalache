@@ -28,16 +28,18 @@ private object Converters {
   // Path deserialization behavior, so we get path expansion in all configured
   // paths.
   // See https://pureconfig.github.io/docs/overriding-behavior-for-types.html
-  implicit val overridePathReader = ConfigReader.fromString[Path](catchReadError(expandedFilePath))
-  implicit val overrideFileReader = ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
+  implicit val overridePathReader: ConfigReader[Path] = ConfigReader.fromString[Path](catchReadError(expandedFilePath))
+  implicit val overrideFileReader: ConfigReader[File] =
+    ConfigReader.fromString[File](catchReadError(expandedFilePath(_).toFile()))
   // PureConfig's optF will convert None values to appropriate configuration errors
-  implicit val featureReader = ConfigReader.fromString[Feature](optF(Feature.fromString))
-  implicit val featureWriter = ConfigWriter.toString[Feature](_.toString)
+  implicit val featureReader: ConfigReader[Feature] = ConfigReader.fromString[Feature](optF(Feature.fromString))
+  implicit val featureWriter: ConfigWriter[Feature] = ConfigWriter.toString[Feature](_.toString)
 
   // Converstion for options.Algorithm, manual conversion here allows
   // configuration as `algo = incremental` instead of `algo = type.incremental`
-  implicit val algorithmReader = ConfigReader.fromString[Algorithm](catchReadError(Algorithm.ofString))
-  implicit val algorithmWriter = ConfigWriter.toString[Algorithm](_.toString)
+  implicit val algorithmReader: ConfigReader[Algorithm] =
+    ConfigReader.fromString[Algorithm](catchReadError(Algorithm.ofString))
+  implicit val algorithmWriter: ConfigWriter[Algorithm] = ConfigWriter.toString[Algorithm](_.toString)
 
   // Derive a reader and writer for SourceOption.Format based on the case object family
   // See https://pureconfig.github.io/docs/overriding-behavior-for-sealed-families.html#sealed-families
@@ -48,12 +50,12 @@ private object Converters {
 
   // Do not allow unknown keys
   // See https://pureconfig.github.io/docs/overriding-behavior-for-case-classes.html#unknown-keys
-  implicit val hint = ProductHint[ApalacheConfig](allowUnknownKeys = false)
+  implicit val hint: ProductHint[ApalacheConfig] = ProductHint[ApalacheConfig](allowUnknownKeys = false)
 
   // Enables encoding and decoding `SourceOption`s on the base the value of a `type` field
   // See https://pureconfig.github.io/docs/overriding-behavior-for-sealed-families.html#sealed-families
-  implicit val sourceOptionHint = new FieldCoproductHint[SourceOption]("type") {
-    // Truncates the required value of value of `type` so that only `file` or `string` is needed.
+  implicit val sourceOptionHint: FieldCoproductHint[SourceOption] = new FieldCoproductHint[SourceOption]("type") {
+    // Truncates the required value of `type` so that only `file` or `string` is needed, instead of requiring `fileSource` or `stringSource`
     // E.g.:
     //
     //   source {
