@@ -206,6 +206,12 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.name) == "n")
   }
 
+  test("can convert predefined sets") {
+    assert(convert(Q.nam("Bool", QuintSetT(QuintBoolT()))) == "BOOLEAN")
+    assert(convert(Q.nam("Int", QuintSetT(QuintIntT()))) == "Int")
+    assert(convert(Q.nam("Nat", QuintSetT(QuintIntT()))) == "Nat")
+  }
+
   test("can convert let expression") {
     assert(convert(Q.letFooBeTrueIn42) == "LET foo ≜ TRUE IN 42")
   }

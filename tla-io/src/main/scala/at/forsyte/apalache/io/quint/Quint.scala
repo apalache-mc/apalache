@@ -633,13 +633,19 @@ class Quint(moduleData: QuintOutput) {
         case QuintInt(_, i)  => Reader(_ => tla.int(i))
         case QuintStr(_, s)  => Reader(_ => tla.str(s))
         case QuintName(id, name) =>
-          val t = Quint.typeToTlaType(types(id).typ)
-          Reader { nullaryOpNames =>
-            if (nullaryOpNames.contains(name)) {
-              tla.appOp(tla.name(name, OperT1(Seq(), t)))
-            } else {
-              tla.name(name, t)
-            }
+          name match {
+            // special case: predefined set BOOLEAN is Bool in Quint
+            case "Bool" => Reader(_ => tla.booleanSet())
+            // general case: some other name
+            case _ =>
+              val t = Quint.typeToTlaType(types(id).typ)
+              Reader { nullaryOpNames =>
+                if (nullaryOpNames.contains(name)) {
+                  tla.appOp(tla.name(name, OperT1(Seq(), t)))
+                } else {
+                  tla.name(name, t)
+                }
+              }
           }
         case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
           nondetBinding(binding, scope)
