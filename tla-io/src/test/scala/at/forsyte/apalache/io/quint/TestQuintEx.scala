@@ -705,11 +705,11 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert weakFair operator") {
-    assert(convert(Q.app("weakFair", Q.tt, Q.tt)(QuintBoolT())) == "WF_TRUE(TRUE)")
+    assert(convert(Q.app("weakFair", Q.tt, Q.name)(QuintBoolT())) == "WF_n(TRUE)")
   }
 
   test("can convert strongFair operator") {
-    assert(convert(Q.app("strongFair", Q.tt, Q.tt)(QuintBoolT())) == "SF_TRUE(TRUE)")
+    assert(convert(Q.app("strongFair", Q.tt, Q.name)(QuintBoolT())) == "SF_n(TRUE)")
   }
 
   test("can convert polymorphic operator applied polymorphically") {
