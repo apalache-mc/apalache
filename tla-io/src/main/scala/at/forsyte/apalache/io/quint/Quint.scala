@@ -579,8 +579,8 @@ class Quint(moduleData: QuintOutput) {
           // Temporal operators
           case "always"     => unaryApp(opName, tla.box)
           case "eventually" => unaryApp(opName, tla.diamond)
-          case "weakFair"   => binaryApp(opName, tla.WF)
-          case "strongFair" => binaryApp(opName, tla.SF)
+          case "weakFair"   => binaryApp(opName, (action, vars) => tla.WF(vars, action))
+          case "strongFair" => binaryApp(opName, (action, vars) => tla.SF(vars, action))
 
           case "ite" => ternaryApp(opName, tla.ite)
 
