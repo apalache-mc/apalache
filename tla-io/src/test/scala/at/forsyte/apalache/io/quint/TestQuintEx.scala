@@ -122,6 +122,9 @@ class TestQuintEx extends AnyFunSuite {
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
+    val nameBoolSet = e(QuintName(uid, "Bool"), QuintSetT(QuintBoolT()))
+    val nameIntSet = e(QuintName(uid, "Int"), QuintSetT(QuintIntT()))
+    val nameNatSet = e(QuintName(uid, "Nat"), QuintSetT(QuintIntT()))
     val nParam = param("n", QuintIntT())
     val acc = e(QuintName(uid, "acc"), QuintIntT())
     val accParam = param("acc", QuintIntT())
@@ -204,6 +207,12 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert name") {
     assert(convert(Q.name) == "n")
+  }
+
+  test("converts predefined sets") {
+    assert(convert(Q.nameBoolSet) == "BOOLEAN")
+    assert(convert(Q.nameIntSet) == "Int")
+    assert(convert(Q.nameNatSet) == "Nat")
   }
 
   test("can convert let expression") {
