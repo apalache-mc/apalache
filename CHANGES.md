@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.40.3 - 2023-06-19
+
+### Bug fixes
+
+- Fix handling of applied polymorphic operators in Quint. This increases the number of quint specs that we can successfully verify. (See #2552)
+
 ## 0.40.2 - 2023-06-05
 
 ### Bug fixes
