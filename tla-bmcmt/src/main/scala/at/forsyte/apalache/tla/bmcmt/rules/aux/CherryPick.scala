@@ -915,11 +915,24 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val resultSet = nextState.arena.topCell
     val baseSet = nextState.arena.getDom(set)
     val elems = nextState.arena.getHasPtr(baseSet)
+
     // resultSet may contain all the elements from the baseSet of the powerset SUBSET(S)
-    nextState = nextState.updateArena(_.appendHas(resultSet, elems: _*))
+    // We have to restrict the pointers with base-set membership conditions
+    val (freshConsMap, restrictedElems) =
+      elems.foldLeft((Map.empty[ElemPtr, ArenaCell], Seq.empty[ElemPtr])) { case ((map, ptrs), elemPtr) =>
+        nextState = nextState.updateArena(_.appendCell(BoolT1))
+        val unconstrainedCell = nextState.arena.topCell
+        val ptr = elemPtr.restrict(unconstrainedCell.toBuilder)
+        val resPtrs = ptrs :+ ptr
+        val resMap = map + (ptr -> unconstrainedCell)
+        (resMap, resPtrs)
+      }
+
+    nextState = nextState.updateArena(_.appendHas(resultSet, restrictedElems: _*))
 
     // if resultSet has an element, then it must be also in baseSet
-    def inResultIfInBase(elem: ArenaCell): Unit = {
+    def inResultIfInBase(ptr: ElemPtr): Unit = {
+      val elem = ptr.elem
       // In the oopsla19 encoding resultSet is initially unconstrained, and thus can contain any combination of elems.
       // To emulate this in the arrays encoding, in which the all sets are initially empty, unconstrained predicates
       // are used to allow the SMT solver to consider all possible combinations of elems.
@@ -931,12 +944,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
         rewriter.solverContext.assertGroundExpr(tla.ite(pred, storeElem, notStoreElem))
       }
 
+      // The selectInSet / in predicates have a special meaning, so we cannot use them as the
+      // unconstrained variables. However, we can just say that they are equal to those variables,
+      // which gives us the same models.
       val inResult = tla.selectInSet(elem.toBuilder, resultSet.toBuilder)
+      rewriter.solverContext.assertGroundExpr(tla.eql(inResult, freshConsMap(ptr).toBuilder))
       val inBase = tla.selectInSet(elem.toBuilder, baseSet.toBuilder)
       rewriter.solverContext.assertGroundExpr(tla.impl(inResult, inBase))
     }
 
-    elems.foreach(e => inResultIfInBase(e.elem))
+    restrictedElems.foreach(e => inResultIfInBase(e))
     rewriter.solverContext.log("; } PICK %s FROM %s".format(resultType, set))
     nextState.setRex(resultSet.toBuilder)
   }
