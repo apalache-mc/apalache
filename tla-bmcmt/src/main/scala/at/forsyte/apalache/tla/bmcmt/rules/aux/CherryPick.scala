@@ -920,9 +920,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // We have to restrict the pointers with base-set membership conditions
     val (freshConsMap, restrictedElems) =
       elems.foldLeft((Map.empty[ElemPtr, ArenaCell], Seq.empty[ElemPtr])) { case ((map, ptrs), elemPtr) =>
+        // add a fresh Boolean constant
         nextState = nextState.updateArena(_.appendCell(BoolT1))
         val unconstrainedCell = nextState.arena.topCell
         val ptr = elemPtr.restrict(unconstrainedCell.toBuilder)
+        // add the unconstrained edge to the list of pointers
         val resPtrs = ptrs :+ ptr
         val resMap = map + (ptr -> unconstrainedCell)
         (resMap, resPtrs)
