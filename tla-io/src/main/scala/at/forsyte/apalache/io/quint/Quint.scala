@@ -226,7 +226,13 @@ class Quint(moduleData: QuintOutput) {
                       | ${lambda}""".stripMargin
               )
             case QuintLambda(_, params, _, scope) =>
-              val tlaArgs = params.map(p => tla.name(p.name, Quint.typeToTlaType(types(p.id).typ)))
+              // uniquely rename parameters of name "_" to prevent shadowing of nested "_"s
+              // https://github.com/informalsystems/quint/issues/926
+              val translateParameterName: QuintLambdaParameter => String = {
+                case QuintLambdaParameter(id, "_") => s"__QUINT_UNDERSCORE_${id}"
+                case QuintLambdaParameter(_, name) => name
+              }
+              val tlaArgs = params.map(p => tla.name(translateParameterName(p), Quint.typeToTlaType(types(p.id).typ)))
               val varBindings = wrapArgs(tlaArgs)
               for {
                 tlaSet <- tlaExpression(set)
