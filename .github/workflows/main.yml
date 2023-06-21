@@ -121,7 +121,6 @@ jobs:
       # Allows other OS tests to proceed even if one fails
       fail-fast: false
       matrix:
-        # Pinned to maxos-10 as temp workaround for https://github.com/cachix/install-nix-action/issues/96
         operating-system: [ubuntu-latest, macos-latest]
         smt-encoding: [oopsla19, arrays]
         exclude:
@@ -152,7 +151,7 @@ jobs:
             ${{ runner.os }}-nix-
             ${{ runner.os }}-
       - name: Install Nix
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
@@ -181,7 +180,7 @@ jobs:
             ${{ runner.os }}-nix-
             ${{ runner.os }}-
       - name: Install Nix
-        uses: cachix/install-nix-action@v18
+        uses: cachix/install-nix-action@v22
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
