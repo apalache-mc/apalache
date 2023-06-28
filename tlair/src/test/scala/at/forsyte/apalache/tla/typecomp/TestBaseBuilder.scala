@@ -239,4 +239,14 @@ class TestBaseBuilder extends BuilderTest {
     }
   }
 
+  test("Regression for #2618: appOp works with polymorphic types") {
+    // def add: a => Set[a]
+    val add = builder.name("add", OperT1(Seq(VarT1("a")), SetT1(VarT1("a"))))
+    //  rcvd.set(1, add(42))
+    val rcvd = builder.name("rcvd", FunT1(IntT1, SetT1(IntT1)))
+    val nested = builder.appOp(add, builder.int(42))
+    val inst = builder.except(rcvd, builder.int(1), nested)
+    build(inst)
+  }
+
 }
