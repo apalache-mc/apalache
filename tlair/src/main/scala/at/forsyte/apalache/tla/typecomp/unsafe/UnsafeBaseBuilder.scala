@@ -2,6 +2,8 @@ package at.forsyte.apalache.tla.typecomp.unsafe
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
+import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
+import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * Scope-unsafe builder for base TlaOper expressions.
@@ -23,15 +25,36 @@ class UnsafeBaseBuilder extends ProtoBuilder {
 
   /** {{{Op(args[1],...,args[n])}}} */
   def appOp(Op: TlaEx, args: TlaEx*): TlaEx = {
-    Op match {
-      // This is a workaround for the fact that that we currently de-lambda,
-      // because lambdas are not supported in the Apalache IR. See
-      // https://github.com/informalsystems/apalache/issues/2532
-      case LetInEx(nameEx @ NameEx(operName), decl) if operName == decl.name =>
-        val appliedByName = buildBySignatureLookup(TlaOper.apply, nameEx +: args: _*)
-        LetInEx(appliedByName, decl)(appliedByName.typeTag)
-      case _ => buildBySignatureLookup(TlaOper.apply, Op +: args: _*)
+    // To support polymorphic operators, we first attempt to compute the post-unification types
+    require(Op.typeTag.isInstanceOf[Typed[TlaType1]])
+    require(args.forall(_.typeTag.isInstanceOf[Typed[TlaType1]]))
+    val opType = TlaType1.fromTypeTag(Op.typeTag)
+    require(opType.isInstanceOf[OperT1])
+    val OperT1(_, resT) = opType.asInstanceOf[OperT1]
+    val argTs = args.map(a => TlaType1.fromTypeTag(a.typeTag))
+    val mockOperT = OperT1(argTs, resT)
+    val unifOpt = new TypeUnifier(new TypeVarPool()).unify(Substitution.empty, opType, mockOperT)
+
+    unifOpt match {
+      case Some((subst, unifiedOperT)) =>
+        val retypedArgs = args.zip(argTs).map { case (arg, argT) =>
+          arg.withTag(Typed(subst.subRec(argT)))
+        }
+        val retypedOp = Op.withTag(Typed(unifiedOperT))
+
+        retypedOp match {
+          // This is a workaround for the fact that that we currently de-lambda,
+          // because lambdas are not supported in the Apalache IR. See
+          // https://github.com/informalsystems/apalache/issues/2532
+          case LetInEx(nameEx @ NameEx(operName), decl) if operName == decl.name =>
+            val appliedByName = buildBySignatureLookup(TlaOper.apply, nameEx +: retypedArgs: _*)
+            LetInEx(appliedByName, decl)(appliedByName.typeTag)
+          case _ => buildBySignatureLookup(TlaOper.apply, retypedOp +: retypedArgs: _*)
+        }
+      case None =>
+        throw new TBuilderTypeException(s"Operator application argument types do not unify with the operator type.")
     }
+
   }
 
   /**
