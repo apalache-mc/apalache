@@ -690,17 +690,12 @@ class Quint(moduleData: QuintOutput) {
     private val convert: QuintEx => Try[TlaEx] = quintEx => Try(build(tlaExpression(quintEx).run(Set())))
   }
 
-  /**
-   * Convert a [[QuintEx]] to a [[TlaEx]]
-   */
-  private[quint] object exToTla {
-    def apply(quintExp: QuintEx): Try[TlaEx] = (new exToTla()).convert(quintExp)
-  }
+  object exToTla {
+    def apply(quintExp: QuintEx): Try[TlaEx] = new exToTla().convert(quintExp)
 
-  // A wrapper around `tlaDef` that takes care of instantiating the `exToTla` class and running the
-  // reader.
-  private[quint] def defToTla(nullaryOps: Set[String], quintDef: QuintDef): Option[(Option[String], TlaDecl)] = {
-    (new exToTla()).tlaDef(quintDef).run(nullaryOps)
+    def apply(quintDef: QuintDef, nullaryOps: Set[String]): Option[(Option[String], TlaDecl)] = {
+      new exToTla().tlaDef(quintDef).run(nullaryOps)
+    }
   }
 }
 
@@ -720,7 +715,7 @@ object Quint {
         .foldLeft((accumulatedNullarOpNames, accumulatedTlaDecls)) {
           // Accumulate the converted definition and the name of the operator, of it is nullary
           case ((nullaryOps, tlaDecls), quintDef) =>
-            quint.defToTla(nullaryOps, quintDef) match {
+            quint.exToTla(quintDef, nullaryOps) match {
               case None =>
                 // Couldn't convert the declaration (e.g., for a type declaration) so ignore it
                 (nullaryOps, tlaDecls)
