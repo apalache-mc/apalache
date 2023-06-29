@@ -538,7 +538,7 @@ class TestQuintEx extends AnyFunSuite {
     val exp = Q.quint.exToTla(quintEx).get
     val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
 
-    assert(Quint.typeToTlaType(typ) == expectedTlaType)
+    assert(QuintTypeConverter(typ) == expectedTlaType)
     assert(exp.typeTag == Typed(expectedTlaType))
     assert(exp.toString == """["s" ↦ 1, "t" ↦ 2]""")
   }
@@ -576,7 +576,7 @@ class TestQuintEx extends AnyFunSuite {
     val tlaOpDef = Q.quint.defToTla(opDef).get
     val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
     val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
-    assert(Quint.typeToTlaType(opType) == expectedTlaType)
+    assert(QuintTypeConverter(opType) == expectedTlaType)
     assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 

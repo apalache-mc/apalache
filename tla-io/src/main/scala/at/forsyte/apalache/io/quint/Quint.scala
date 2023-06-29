@@ -1,37 +1,8 @@
 package at.forsyte.apalache.io.quint
 
-import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.lir.ConstT1
-import at.forsyte.apalache.tla.lir.FunT1
-import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.lir.OperParam
-import at.forsyte.apalache.tla.lir.OperT1
-import at.forsyte.apalache.tla.lir.RecRowT1
-import at.forsyte.apalache.tla.lir.RowT1
-import at.forsyte.apalache.tla.lir.SeqT1
-import at.forsyte.apalache.tla.lir.SetT1
-import at.forsyte.apalache.tla.lir.StrT1
-import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.lir.TupT1
-import at.forsyte.apalache.tla.lir.VarT1
-import at.forsyte.apalache.tla.lir.TlaDecl
-import at.forsyte.apalache.tla.lir.TlaConstDecl
-import at.forsyte.apalache.tla.lir.Typed
-import at.forsyte.apalache.tla.lir.TlaVarDecl
-import at.forsyte.apalache.tla.lir.TypeTag
-import at.forsyte.apalache.tla.lir.TlaAssumeDecl
-import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.VariantT1
-import at.forsyte.apalache.tla.typecomp.ScopedBuilder
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.typecomp.TBuilderOperDeclInstruction
-import at.forsyte.apalache.tla.typecomp.TBuilderScopeException
-import at.forsyte.apalache.tla.typecomp.TBuilderTypeException
-import at.forsyte.apalache.tla.typecomp.build
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecomp.{ScopedBuilder, TBuilderInstruction, TBuilderOperDeclInstruction, TBuilderScopeException, TBuilderTypeException, build}
 
-import com.typesafe.scalalogging.LazyLogging
-import scala.collection.mutable
 import scala.util.Try
 
 // scalaz is brought in For the Reader monad, which we use for
@@ -40,7 +11,8 @@ import scala.util.Try
 import scalaz._
 // list and traverse give us monadic mapping over lists
 // see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
-import scalaz.std.list._, scalaz.syntax.traverse._
+import scalaz.std.list._
+import scalaz.syntax.traverse._
 
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
@@ -134,7 +106,7 @@ class Quint(moduleData: QuintOutput) {
           case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
         }
         val operParams = paramNames.zip(quintParamTypes).map(operParam)
-        val paramTypes = quintParamTypes.map(Quint.typeToTlaType(_))
+        val paramTypes = quintParamTypes.map(QuintTypeConverter(_))
         val typedParams = operParams.zip(paramTypes)
         for {
           tlaBody <- tlaExpression(body)
@@ -142,7 +114,7 @@ class Quint(moduleData: QuintOutput) {
     }
 
     private def typeTagOfId(id: Int): TypeTag = {
-      Typed(Quint.typeToTlaType(types(id).typ))
+      Typed(QuintTypeConverter(types(id).typ))
     }
 
     private type T = TBuilderInstruction
@@ -232,7 +204,7 @@ class Quint(moduleData: QuintOutput) {
                 case QuintLambdaParameter(id, "_") => s"__QUINT_UNDERSCORE_${id}"
                 case QuintLambdaParameter(_, name) => name
               }
-              val tlaArgs = params.map(p => tla.name(translateParameterName(p), Quint.typeToTlaType(types(p.id).typ)))
+              val tlaArgs = params.map(p => tla.name(translateParameterName(p), QuintTypeConverter(types(p.id).typ)))
               val varBindings = wrapArgs(tlaArgs)
               for {
                 tlaSet <- tlaExpression(set)
@@ -250,7 +222,7 @@ class Quint(moduleData: QuintOutput) {
                           |but it was given ${opName} with type ${invalidType}""".stripMargin
                   )
               }
-              val tlaArgs = paramTypes.map(typ => tla.name(uniqueVarName(), Quint.typeToTlaType(typ)))
+              val tlaArgs = paramTypes.map(typ => tla.name(uniqueVarName(), QuintTypeConverter(typ)))
               val varBindings = wrapArgs(tlaArgs)
               for {
                 tlaOpName <- tlaExpression(opName)
@@ -276,7 +248,7 @@ class Quint(moduleData: QuintOutput) {
         variadicApp {
           // Empty sets must be handled specially since we cannot infer their type
           // from the given arguments
-          case Seq() => tla.emptySet(Quint.typeToTlaType(elementType))
+          case Seq() => tla.emptySet(QuintTypeConverter(elementType))
           case args  => tla.enumSet(args: _*)
         }
 
@@ -286,7 +258,7 @@ class Quint(moduleData: QuintOutput) {
           // from the given arguments
           case Seq() =>
             val elementType = types(id).typ match {
-              case QuintSeqT(t) => Quint.typeToTlaType(t)
+              case QuintSeqT(t) => QuintTypeConverter(t)
               case invalidType =>
                 throw new QuintIRParseError(s"List with id ${id} has invalid type ${invalidType}")
             }
@@ -355,7 +327,7 @@ class Quint(moduleData: QuintOutput) {
         ternaryApp(opName,
             (f, x, op) => {
               val f_cache_name = uniqueVarName()
-              val f_type = Quint.typeToTlaType(types(id).typ)
+              val f_type = QuintTypeConverter(types(id).typ)
               val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
               val cacheDecl = tla.decl(f_cache_name, f)
               tla.letIn(
@@ -373,8 +345,8 @@ class Quint(moduleData: QuintOutput) {
                 //    LET __dom == DOMAIN __map_cache IN
                 //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
                 // extract types
-                val mapType = Quint.typeToTlaType(types(quintArgs(0).id).typ)
-                val keyType = Quint.typeToTlaType(types(quintArgs(1).id).typ)
+                val mapType = QuintTypeConverter(types(quintArgs(0).id).typ)
+                val keyType = QuintTypeConverter(types(quintArgs(1).id).typ)
                 // string names
                 val mapCacheName = uniqueVarName()
                 val domName = uniqueVarName()
@@ -505,7 +477,7 @@ class Quint(moduleData: QuintOutput) {
             // `chooseSome(S)` is translated to `CHOOSE x \in S: TRUE`
             // and to construct the latter we need to generate a unique
             // variable name for `x` and find the expected type
-            val elementType = Quint.typeToTlaType(types(id).typ)
+            val elementType = QuintTypeConverter(types(id).typ)
             val varName = tla.name(uniqueVarName(), elementType)
             unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
           }
@@ -522,7 +494,7 @@ class Quint(moduleData: QuintOutput) {
           case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
           case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
           case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
-          case "select"    => MkTla.selectSeq(opName, Quint.typeToTlaType(types(id).typ))
+          case "select"    => MkTla.selectSeq(opName, QuintTypeConverter(types(id).typ))
           case "range" =>
             binaryApp(opName,
                 (low, high) => {
@@ -592,7 +564,7 @@ class Quint(moduleData: QuintOutput) {
 
           // Otherwise, the applied operator is defined, and not a builtin
           case definedOpName => { args =>
-            val operType = Quint.typeToTlaType(getTypeFromLookupTable(id))
+            val operType = QuintTypeConverter(getTypeFromLookupTable(id))
             val oper = tla.name(definedOpName, operType)
             args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
           }
@@ -607,7 +579,7 @@ class Quint(moduleData: QuintOutput) {
     //   \E name \in domain: scope
     private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => NullaryOpReader[TBuilderInstruction] = {
       case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain))), scope) =>
-        val elemType = Quint.typeToTlaType(types(id).typ)
+        val elemType = QuintTypeConverter(types(id).typ)
         val tlaName = tla.name(name, elemType)
         for {
           tlaDomain <- tlaExpression(domain)
@@ -621,7 +593,8 @@ class Quint(moduleData: QuintOutput) {
       case QuintDef.QuintOpDef(_, name, _, expr) =>
         (expr match {
           // Parameterized operators are defined in Quint using Lambdas
-          case lam: QuintLambda => lambdaBodyAndParams(lam)
+          case lam: QuintLambda =>
+            lambdaBodyAndParams(lam)
           // Otherwise it's an operator with no params
           case other => tlaExpression(other).map(b => (b, List()))
         }).map {
@@ -646,7 +619,7 @@ class Quint(moduleData: QuintOutput) {
             case "Nat"  => Reader(_ => tla.natSet())
             // general case: some other name
             case _ =>
-              val t = Quint.typeToTlaType(types(id).typ)
+              val t = QuintTypeConverter(types(id).typ)
               Reader { nullaryOpNames =>
                 if (nullaryOpNames.contains(name)) {
                   tla.appOp(tla.name(name, OperT1(Seq(), t)))
@@ -773,145 +746,4 @@ object Quint {
         .reverse // Return the declarations to their original order
     }
   } yield TlaModule(name, declarations)
-
-  // Convert a QuintType into a TlaType1
-  //
-  // We implement a small family of mutually recursive conversion functions using this
-  // class in order to:
-  //
-  // - Encapsulate and store benign state used to track variable numbers (see below)
-  // - Support and encapsulate the mutual recursion needed in the methods
-  private[quint] class typeToTlaType() extends LazyLogging {
-
-    // quint type variables are represented with strings, but in TlaType1 they are integers.
-    // This little bundle of state lets us track the conversion of quint var names to
-    // TlaType1 var numbers.
-    //
-    // Since the scope of type variables in quint is always limited to single top-level type expressions,
-    // and since the converter class is constructed fresh for each (top-level) type conversion,
-    // we don't need to worry about variable name collisions.
-    private var varNo = 0
-    private val vars = mutable.Map[String, Int]()
-    private def getVarNo(varName: String): Int = {
-      vars.get(varName) match {
-        case None =>
-          val v = varNo
-          vars += varName -> v
-          varNo += 1
-          v
-        case Some(n) => n
-      }
-    }
-
-    import QuintType._
-
-    private def rowToTupleElems(row: Row): Seq[TlaType1] = {
-      // Since we have to concat lists here, which can be expensive, we use an
-      // accumulator to benefit from tail call optimization. This is purely a precaution.
-      def aux(r: Row, acc0: Seq[TlaType1]): Seq[TlaType1] = r match {
-        // TODO Update with support for row-based tuples: https://github.com/informalsystems/apalache/issues/1591
-        // Row variables in tuples are not currently supported. But we will proceed assuming that this is an
-        // over generalization, and that we can safely treat the tuple as a closed tuple type.
-        case Row.Var(_) =>
-          logger.debug(
-              s"Found open row variable in quint tuple with fields $row. Polymorphic tuples are not supported, but we will proceed assuming the tuple can be treated as a closed type.")
-          acc0
-        case Row.Nil() => acc0
-        case Row.Cell(fields, other) =>
-          val acc1 = fields.map(f => convert(f.fieldType)) ++ acc0
-          aux(other, acc1)
-      }
-
-      aux(row, List())
-    }
-
-    private def rowToRowT1(row: Row): RowT1 = {
-
-      // `aux(r, acc)` is a `(fields, other)`
-      // where `fields` is the list of field names and their types, and
-      // `other` is either `Some(var)` for an open row or `None` for a closed row.
-      //
-      // `acc` is used as an accumulator to enable tail recursion
-      def aux(r: Row, acc0: Seq[(String, TlaType1)]): (Seq[(String, TlaType1)], Option[VarT1]) = r match {
-        case Row.Nil()  => (acc0, None)
-        case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
-        case Row.Cell(fields, other) =>
-          val acc1 = fields.map { case f => (f.fieldName, convert(f.fieldType)) } ++ acc0
-          aux(other, acc1)
-      }
-
-      aux(row, List()) match {
-        case (fields, None)          => RowT1(fields: _*)
-        case (fields, Some(typeVar)) => RowT1(typeVar, fields: _*)
-      }
-    }
-
-    // Convert a quint union to a TlaType1 row (which is used to represent variants)
-    //
-    // NOTE: Union types in quint aren't fully implemented and supported, so this
-    // corner of the transformation is likely to require update soon.
-    // See https://github.com/informalsystems/quint/issues/244
-    //
-    // In quint, unions are currently represented by a list of tagged rows.
-    // E.g., (abstracting rom the concrete type representation):
-    //
-    // ```
-    // type u =
-    //   | ( "Foo", {a: Int, b: String })
-    //   | ( "Bar", {c: Set[Int] })
-    // ```
-    //
-    // But Variant types in Apalache are represented by a single row, in which
-    // the row's keys are the tags, and it's values can be of any type, e.g.:
-    //
-    // ```
-    // type u = { "Foo": { a: Int, b: Str }
-    //          , "Bar": Set[Int]
-    //          }
-    // ```
-    //
-    // Which we parse and represent as
-    //
-    // ```
-    // @typeAlias: u = Foo({a: Int, b: Str}) | Bar(Int);
-    // ```
-    //
-    // As a result, our conversion from quint has to take a list of records of quint
-    // rows and convert them into a single TlaType1 record, for which all the values
-    // are themselves records, and the keys are given by the values of the `tag`
-    // field from quint rows.
-    private def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
-      val fieldTypes = variants.map {
-        case UnionRecord(tag, row) => {
-          (tag, RecRowT1(rowToRowT1(row)))
-        }
-      }
-      RowT1(fieldTypes: _*)
-    }
-
-    private val convert: QuintType => TlaType1 = {
-      case QuintBoolT()             => BoolT1
-      case QuintIntT()              => IntT1
-      case QuintStrT()              => StrT1
-      case QuintConstT(name)        => ConstT1(name)
-      case QuintVarT(name)          => VarT1(getVarNo(name))
-      case QuintSetT(elem)          => SetT1(convert(elem))
-      case QuintSeqT(elem)          => SeqT1(convert(elem))
-      case QuintFunT(arg, res)      => FunT1(convert(arg), convert(res))
-      case QuintOperT(args, res)    => OperT1(args.map(convert), convert(res))
-      case QuintTupleT(row)         => TupT1(rowToTupleElems(row): _*)
-      case QuintRecordT(row)        => RecRowT1(rowToRowT1(row))
-      case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
-    }
-  }
-
-  /**
-   * Convert a [[QuintType]] to a [[TlaType1]].
-   *
-   * Constructs a fresh scope for translating Quint type variables to Apalache type variables (see
-   * [[typeToTlaType.getVarNo()]] for details).
-   */
-  private[quint] object typeToTlaType {
-    def apply(quintType: QuintType): TlaType1 = new typeToTlaType().convert(quintType)
-  }
 }
