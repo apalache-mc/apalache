@@ -697,13 +697,6 @@ class Quint(moduleData: QuintOutput) {
     def apply(quintExp: QuintEx): Try[TlaEx] = (new exToTla()).convert(quintExp)
   }
 
-  /**
-   * Convert a [[QuintDef]] to a [[TlaDecl]]
-   */
-  private[quint] def defToTla(quintDef: QuintDef): Option[TlaDecl] = {
-    defToTla(Set(), quintDef).map(_._2)
-  }
-
   // A wrapper around `tlaDef` that takes care of instantiating the `exToTla` class and running the
   // reader.
   private[quint] def defToTla(nullaryOps: Set[String], quintDef: QuintDef): Option[(Option[String], TlaDecl)] = {
