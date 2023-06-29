@@ -187,7 +187,7 @@ class TestQuintEx extends AnyFunSuite {
 
   // Convert a quint expression to TLA and render as a string
   def convert(qex: QuintEx): String = {
-    Q.quint.exToTla(qex).get.toString()
+    Q.quint.translate(qex).get.toString()
   }
 
   test("can convert boolean") {
@@ -307,7 +307,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin Set operator application for empty sets") {
-    val tlaEx = Q.quint.exToTla(Q.emptyIntSet).get
+    val tlaEx = Q.quint.translate(Q.emptyIntSet).get
     // Ensure the constructed empty set has the required type
     assert(tlaEx.typeTag match {
       case Typed(SetT1(IntT1)) => true
@@ -535,7 +535,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert row-polymorphic record") {
     val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
     val quintEx = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
-    val exp = Q.quint.exToTla(quintEx).get
+    val exp = Q.quint.translate(quintEx).get
     val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
 
     assert(QuintTypeConverter(typ) == expectedTlaType)
@@ -573,7 +573,7 @@ class TestQuintEx extends AnyFunSuite {
     val body = Q.app("with", rName, Q.s, Q._1)(recType)
     val abs = Q.lam(Seq(("r", recType)), body, recType)
     val opDef = Q.opDef("updateF1", abs)
-    val tlaOpDef = Q.quint.exToTla(opDef, Set()).get._2
+    val tlaOpDef = Q.quint.translate(opDef, Set()).get._2
     val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
     val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
     assert(QuintTypeConverter(opType) == expectedTlaType)
