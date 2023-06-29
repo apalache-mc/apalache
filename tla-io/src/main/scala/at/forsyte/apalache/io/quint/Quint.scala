@@ -712,11 +712,8 @@ class Quint(moduleData: QuintOutput) {
 }
 
 object Quint {
-
-  def apply(readable: ujson.Readable): Try[Quint] = QuintOutput.read(readable).map(new Quint(_))
-
   def toTla(readable: ujson.Readable): Try[TlaModule] = for {
-    quint <- Quint(readable)
+    quint <- QuintOutput.read(readable).map(new Quint(_))
     name = quint.module.name
     declarations <- Try {
       // For each quint declaration, we need to try converting it to
