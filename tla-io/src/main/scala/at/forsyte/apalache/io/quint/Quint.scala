@@ -652,7 +652,7 @@ class Quint(moduleData: QuintOutput) {
     // where `tlaDecl` is derived from the given `quintDef`, and `maybeName` is `Some(n)` when the `quintDef`
     // defines a nullary operator named `n`, or  `None` when `quintDef` is not a nullary operator definition.
     // If the `quintDef` is not convertable (e.g., a quint type definition), it the outer value is `None`.
-    private[quint] def tlaDef(quintDef: QuintDef): NullaryOpReader[Option[(Option[String], TlaDecl)]] = {
+    private def tlaDef(quintDef: QuintDef): NullaryOpReader[Option[(Option[String], TlaDecl)]] = {
       import QuintDef._
       Reader(nullaryOps =>
         quintDef match {
