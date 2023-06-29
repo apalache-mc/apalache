@@ -94,7 +94,7 @@ class Quint(moduleData: QuintOutput) {
   // to values, we need to track the nullary operator in scope. Use of the
   // reader monad lets us express computations in a context with set of names
   // accumulated as scopes are nested, but not shared between unrelated scopes.
-  type NullaryOpReader[A] = Reader[Set[String], A]
+  private type NullaryOpReader[A] = Reader[Set[String], A]
 
   // Convert a QuintEx into a TlaEx
   //
@@ -111,7 +111,7 @@ class Quint(moduleData: QuintOutput) {
     import QuintType._
 
     // Construct Apalache IR expressions
-    val tla = new ScopedBuilder()
+    private val tla = new ScopedBuilder()
 
     // Derive a OperParam from a paramter name and it's type.
     //
@@ -714,7 +714,7 @@ class Quint(moduleData: QuintOutput) {
         })
     }
 
-    val convert: QuintEx => Try[TlaEx] = quintEx => Try(build(tlaExpression(quintEx).run(Set())))
+    private val convert: QuintEx => Try[TlaEx] = quintEx => Try(build(tlaExpression(quintEx).run(Set())))
   }
 
   /**
@@ -790,9 +790,9 @@ object Quint {
     // Since the scope of type variables in quint is always limited to single top-level type expressions,
     // and since the converter class is constructed fresh for each (top-level) type conversion,
     // we don't need to worry about variable name collisions.
-    var varNo = 0
-    val vars = mutable.Map[String, Int]()
-    def getVarNo(varName: String): Int = {
+    private var varNo = 0
+    private val vars = mutable.Map[String, Int]()
+    private def getVarNo(varName: String): Int = {
       vars.get(varName) match {
         case None =>
           val v = varNo
@@ -805,7 +805,7 @@ object Quint {
 
     import QuintType._
 
-    def rowToTupleElems(row: Row): Seq[TlaType1] = {
+    private def rowToTupleElems(row: Row): Seq[TlaType1] = {
       // Since we have to concat lists here, which can be expensive, we use an
       // accumulator to benefit from tail call optimization. This is purely a precaution.
       def aux(r: Row, acc0: Seq[TlaType1]): Seq[TlaType1] = r match {
@@ -825,7 +825,7 @@ object Quint {
       aux(row, List())
     }
 
-    def rowToRowT1(row: Row): RowT1 = {
+    private def rowToRowT1(row: Row): RowT1 = {
 
       // `aux(r, acc)` is a `(fields, other)`
       // where `fields` is the list of field names and their types, and
@@ -880,7 +880,7 @@ object Quint {
     // rows and convert them into a single TlaType1 record, for which all the values
     // are themselves records, and the keys are given by the values of the `tag`
     // field from quint rows.
-    def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
+    private def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
       val fieldTypes = variants.map {
         case UnionRecord(tag, row) => {
           (tag, RecRowT1(rowToRowT1(row)))
@@ -889,7 +889,7 @@ object Quint {
       RowT1(fieldTypes: _*)
     }
 
-    val convert: QuintType => TlaType1 = {
+    private val convert: QuintType => TlaType1 = {
       case QuintBoolT()             => BoolT1
       case QuintIntT()              => IntT1
       case QuintStrT()              => StrT1
