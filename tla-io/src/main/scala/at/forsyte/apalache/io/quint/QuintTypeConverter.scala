@@ -45,7 +45,7 @@ private class QuintTypeConverter extends LazyLogging {
       // over generalization, and that we can safely treat the tuple as a closed tuple type.
       case Row.Var(_) =>
         logger.debug(
-          s"Found open row variable in quint tuple with fields $row. Polymorphic tuples are not supported, but we will proceed assuming the tuple can be treated as a closed type.")
+            s"Found open row variable in quint tuple with fields $row. Polymorphic tuples are not supported, but we will proceed assuming the tuple can be treated as a closed type.")
         acc0
       case Row.Nil() => acc0
       case Row.Cell(fields, other) =>

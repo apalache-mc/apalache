@@ -17,6 +17,7 @@ import scalaz.syntax.traverse._
 class Quint(moduleData: QuintOutput) {
   protected val module = moduleData.modules(0)
   private val types = moduleData.types
+  private val nameGen = new QuintNameGen
 
   // Find the type for an id via the lookup table provided in the quint output
   private def getTypeFromLookupTable(id: Int): QuintType = {
@@ -30,22 +31,6 @@ class Quint(moduleData: QuintOutput) {
           case Some(t) => t.typ
         }
     }
-  }
-
-  // benign state to generate unique names for lambdas
-  private var uniqueLambdaNo = 0
-  private def uniqueLambdaName(): String = {
-    val n = uniqueLambdaNo
-    uniqueLambdaNo += 1
-    s"__QUINT_LAMBDA${n}"
-  }
-
-  // benign state to generate unique variable names
-  private var uniqueVarNo = 0
-  private def uniqueVarName(): String = {
-    val n = uniqueVarNo
-    uniqueVarNo += 1
-    s"__quint_var${n}"
   }
 
   // A `NullaryOpReader[A]` is a computation producing values of type `A` that
@@ -222,7 +207,7 @@ class Quint(moduleData: QuintOutput) {
                           |but it was given ${opName} with type ${invalidType}""".stripMargin
                   )
               }
-              val tlaArgs = paramTypes.map(typ => tla.name(uniqueVarName(), QuintTypeConverter(typ)))
+              val tlaArgs = paramTypes.map(typ => tla.name(nameGen.uniqueVarName(), QuintTypeConverter(typ)))
               val varBindings = wrapArgs(tlaArgs)
               for {
                 tlaOpName <- tlaExpression(opName)
@@ -310,12 +295,12 @@ class Quint(moduleData: QuintOutput) {
                 case SeqT1(elem) => elem
                 case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
               }
-              val resultParam = tla.param(uniqueVarName(), seqType)
-              val elemParam = tla.param(uniqueLambdaName(), elemType)
+              val resultParam = tla.param(nameGen.uniqueVarName(), seqType)
+              val elemParam = tla.param(nameGen.uniqueLambdaName(), elemType)
               val result = tla.name(resultParam._1.name, resultParam._2)
               val elem = tla.name(elemParam._1.name, elemParam._2)
               val ite = tla.ite(tla.appOp(testOp, elem), tla.append(result, elem), result)
-              val testLambda = tla.lambda(uniqueLambdaName(), ite, resultParam, elemParam)
+              val testLambda = tla.lambda(nameGen.uniqueLambdaName(), ite, resultParam, elemParam)
               tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
             })
 
@@ -326,7 +311,7 @@ class Quint(moduleData: QuintOutput) {
         // [f_cache EXCEPT ![k] |-> op(f_cache[k])]
         ternaryApp(opName,
             (f, x, op) => {
-              val f_cache_name = uniqueVarName()
+              val f_cache_name = nameGen.uniqueVarName()
               val f_type = QuintTypeConverter(types(id).typ)
               val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
               val cacheDecl = tla.decl(f_cache_name, f)
@@ -348,13 +333,13 @@ class Quint(moduleData: QuintOutput) {
                 val mapType = QuintTypeConverter(types(quintArgs(0).id).typ)
                 val keyType = QuintTypeConverter(types(quintArgs(1).id).typ)
                 // string names
-                val mapCacheName = uniqueVarName()
-                val domName = uniqueVarName()
+                val mapCacheName = nameGen.uniqueVarName()
+                val domName = nameGen.uniqueVarName()
                 // TLA+ name expressions
                 val mapCache = tla.name(mapCacheName, OperT1(Seq(), mapType))
                 val dom = tla.name(domName, OperT1(Seq(), SetT1(keyType)))
                 // build the final funDef, i.e., the LET-IN body
-                val bindingVar = tla.name(uniqueVarName(), keyType)
+                val bindingVar = tla.name(nameGen.uniqueVarName(), keyType)
                 val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(tla.appOp(mapCache), bindingVar))
                 val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), tla.appOp(dom))))
                 // build the entire LET-IN
@@ -377,7 +362,7 @@ class Quint(moduleData: QuintOutput) {
         unaryApp(opName,
             seq => {
               val emptyDom = tla.emptySet(IntT1)
-              val domNameStr = uniqueVarName()
+              val domNameStr = nameGen.uniqueVarName()
               val domName = tla.name(domNameStr, OperT1(Seq(), SetT1(IntT1)))
               val dom = tla.decl(domNameStr, tla.dom(seq))
               val body = tla.ite(
@@ -478,7 +463,7 @@ class Quint(moduleData: QuintOutput) {
             // and to construct the latter we need to generate a unique
             // variable name for `x` and find the expected type
             val elementType = QuintTypeConverter(types(id).typ)
-            val varName = tla.name(uniqueVarName(), elementType)
+            val varName = tla.name(nameGen.uniqueVarName(), elementType)
             unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
           }
 
@@ -498,10 +483,10 @@ class Quint(moduleData: QuintOutput) {
           case "range" =>
             binaryApp(opName,
                 (low, high) => {
-                  val iParam = tla.param(uniqueVarName(), IntT1)
+                  val iParam = tla.param(nameGen.uniqueVarName(), IntT1)
                   val i = tla.name(iParam._1.name, iParam._2)
                   tla.mkSeqConst(tla.minus(high, low),
-                      tla.lambda(uniqueLambdaName(), tla.minus(tla.plus(low, i), tla.int(1)), iParam))
+                      tla.lambda(nameGen.uniqueLambdaName(), tla.minus(tla.plus(low, i), tla.int(1)), iParam))
                 })
 
           // Tuples
@@ -643,7 +628,7 @@ class Quint(moduleData: QuintOutput) {
           }
         case lam: QuintLambda =>
           lambdaBodyAndParams(lam).map { case (body, typedParams) =>
-            tla.lambda(uniqueLambdaName(), body, typedParams: _*)
+            tla.lambda(nameGen.uniqueLambdaName(), body, typedParams: _*)
           }
         case app: QuintApp => tlaApplication(app)
       }
