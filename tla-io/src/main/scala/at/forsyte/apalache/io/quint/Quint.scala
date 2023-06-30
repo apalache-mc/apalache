@@ -4,6 +4,7 @@ import at.forsyte.apalache.io.quint.QuintEx._
 import at.forsyte.apalache.io.quint.QuintType._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 // scalaz is brought in For the Reader monad, which we use for
 // append-only, context local state for tracking reference to nullary TLA
@@ -51,9 +52,6 @@ private class Quint(
   // reader monad lets us express computations in a context with set of names
   // accumulated as scopes are nested, but not shared between unrelated scopes.
   private type NullaryOpReader[A] = Reader[Set[String], A]
-
-  // Construct Apalache IR expressions
-  private val tla = new ScopedBuilder()
 
   // Find the type for an id via the lookup table provided in the quint output
   private def getTypeFromLookupTable(id: Int): QuintType = {
