@@ -1,10 +1,14 @@
 package at.forsyte.apalache.shai.v1
 
 import zio.{console, Ref, ZEnv, ZIO}
+
+import scala.language.existentials
+
 import java.util.UUID
 import scalapb.zio_grpc.ServerMain
 import scalapb.zio_grpc.ServiceList
 import com.typesafe.scalalogging.LazyLogging
+import io.grpc.ServerBuilder
 
 /**
  * The Shai RPC server handling gRPC requests to interact with the model checker
@@ -27,6 +31,12 @@ class RpcServer(override val port: Int) extends ServerMain with LazyLogging {
 
   def services: ServiceList[ZEnv] =
     ServiceList.addM(createTransExplorerService).addM(createCmdExecutorService)
+
+  // Double max inbound message size to 8MB
+  // Fixes `io.grpc.StatusRuntimeException: RESOURCE_EXHAUSTED: gRPC message exceeds maximum size`:
+  // https://github.com/informalsystems/apalache/issues/2622
+  override def builder: (x0) forSome { type x0 <: ServerBuilder[x0] } =
+    super.builder.maxInboundMessageSize(8 * 1024 * 1024)
 }
 
 object RpcServer {
