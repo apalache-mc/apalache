@@ -1,21 +1,14 @@
 package at.forsyte.apalache.io.quint
 
 import at.forsyte.apalache.tla.lir._
-import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Try
-
-class Quint(moduleData: QuintOutput) extends LazyLogging {
-  private val nameGen = new QuintNameGen
-
-  def translate(quintExp: QuintEx): Try[TlaEx] = new QuintExprConverter(moduleData.table, moduleData.types, nameGen).convert(quintExp)
-}
 
 object Quint {
   def toTla(readable: ujson.Readable): Try[TlaModule] = for {
     quintOutput <- QuintOutput.read(readable)
     module = quintOutput.modules(0) // the flattened main module
-    nameGen = new QuintNameGen      // name generator, reused across the entire spec
+    nameGen = new QuintNameGen // name generator, reused across the entire spec
     declarations <- Try {
       // For each quint declaration, we need to try converting it to
       // a TlaDecl, and if it is a nullary operator, we need to add its
