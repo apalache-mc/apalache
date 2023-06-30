@@ -640,8 +640,10 @@ class Quint(moduleData: QuintOutput) {
         case QuintStr(_, s)  => Reader(_ => tla.str(s))
         case QuintName(id, name) =>
           name match {
-            // special case: predefined set BOOLEAN is Bool in Quint
+            // special case: Nat, Int and BOOLEAN are built-in values
             case "Bool" => Reader(_ => tla.booleanSet())
+            case "Int"  => Reader(_ => tla.intSet())
+            case "Nat"  => Reader(_ => tla.natSet())
             // general case: some other name
             case _ =>
               val t = Quint.typeToTlaType(types(id).typ)
