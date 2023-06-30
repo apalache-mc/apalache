@@ -180,7 +180,7 @@ class TestQuintEx extends AnyFunSuite {
 
   def translate(qex: QuintEx): TlaEx = {
     val nameGen = new QuintNameGen
-    val translator = new QuintExprConverter(Q.quintOutput.table, Q.quintOutput.types, nameGen)
+    val translator = new Quint(Q.quintOutput.table, Q.quintOutput.types, nameGen)
     val nullaryOps = Set[String]()
     val tlaEx = build(translator.tlaExpression(qex).run(nullaryOps))
     tlaEx
@@ -574,7 +574,7 @@ class TestQuintEx extends AnyFunSuite {
     val opDef = Q.opDef("updateF1", abs)
 
     val nameGen = new QuintNameGen
-    val translator = new QuintExprConverter(Q.quintOutput.table, Q.quintOutput.types, nameGen)
+    val translator = new Quint(Q.quintOutput.table, Q.quintOutput.types, nameGen)
     val nullaryOps = Set[String]()
     val tlaOpDef = translator.tlaDef(opDef).run(nullaryOps).get._2
 
