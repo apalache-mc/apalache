@@ -27,11 +27,10 @@ import scala.util.Try
 //
 // Since we need access to the statefull uniqeLambdaName, this class must be
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
-private class Quint(
-                                  table: Map[Int, QuintLookupTableEntry],
-                                  types: Map[Int, QuintTypeScheme],
-                                  nameGen: QuintNameGen) {
-
+private class Quint(quintOutput: QuintOutput) {
+  private val nameGen = new QuintNameGen // name generator, reused across the entire spec
+  private val table = quintOutput.table
+  private val types = quintOutput.types
 
   // A `NullaryOpReader[A]` is a computation producing values of type `A` that
   // can read from a set of strings.
@@ -673,7 +672,7 @@ object Quint {
   def toTla(readable: ujson.Readable): Try[TlaModule] = for {
     quintOutput <- QuintOutput.read(readable)
     module = quintOutput.modules(0) // the flattened main module
-    nameGen = new QuintNameGen // name generator, reused across the entire spec
+    translator = new Quint(quintOutput)
     declarations <- Try {
       // For each quint declaration, we need to try converting it to
       // a TlaDecl, and if it is a nullary operator, we need to add its
@@ -686,7 +685,6 @@ object Quint {
         .foldLeft((accumulatedNullarOpNames, accumulatedTlaDecls)) {
           // Accumulate the converted definition and the name of the operator, of it is nullary
           case ((nullaryOps, tlaDecls), quintDef) =>
-            val translator = new Quint(quintOutput.table, quintOutput.types, nameGen)
             translator.tlaDef(quintDef).run(nullaryOps) match {
               case None =>
                 // Couldn't convert the declaration (e.g., for a type declaration) so ignore it
