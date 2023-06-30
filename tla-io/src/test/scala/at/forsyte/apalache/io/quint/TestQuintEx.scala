@@ -573,7 +573,12 @@ class TestQuintEx extends AnyFunSuite {
     val body = Q.app("with", rName, Q.s, Q._1)(recType)
     val abs = Q.lam(Seq(("r", recType)), body, recType)
     val opDef = Q.opDef("updateF1", abs)
-    val tlaOpDef = Q.quint.translate(opDef, Set()).get._2
+
+    val nameGen = new QuintNameGen
+    val translator = new QuintExprConverter(Q.quintOutput.table, Q.quintOutput.types, nameGen)
+    val nullaryOps = Set[String]()
+    val tlaOpDef = translator.tlaDef(opDef).run(nullaryOps).get._2
+
     val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
     val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
     assert(QuintTypeConverter(opType) == expectedTlaType)

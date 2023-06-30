@@ -6,20 +6,16 @@ import com.typesafe.scalalogging.LazyLogging
 import scala.util.Try
 
 class Quint(moduleData: QuintOutput) extends LazyLogging {
-  private val module = moduleData.modules(0)
   private val nameGen = new QuintNameGen
 
   def translate(quintExp: QuintEx): Try[TlaEx] = new QuintExprConverter(moduleData.table, moduleData.types, nameGen).convert(quintExp)
-
-  def translate(quintDef: QuintDef, nullaryOps: Set[String]): Option[(Option[String], TlaDecl)] = {
-    new QuintExprConverter(moduleData.table, moduleData.types, nameGen).tlaDef(quintDef).run(nullaryOps)
-  }
 }
 
 object Quint {
   def toTla(readable: ujson.Readable): Try[TlaModule] = for {
-    quint <- QuintOutput.read(readable).map(new Quint(_))
-    name = quint.module.name
+    quintOutput <- QuintOutput.read(readable)
+    module = quintOutput.modules(0) // the flattened main module
+    nameGen = new QuintNameGen      // name generator, reused across the entire spec
     declarations <- Try {
       // For each quint declaration, we need to try converting it to
       // a TlaDecl, and if it is a nullary operator, we need to add its
@@ -28,11 +24,12 @@ object Quint {
       val accumulatedNullarOpNames = Set[String]()
       val accumulatedTlaDecls = List[TlaDecl]()
       // Translate all definitions from the quint module
-      quint.module.defs
+      module.defs
         .foldLeft((accumulatedNullarOpNames, accumulatedTlaDecls)) {
           // Accumulate the converted definition and the name of the operator, of it is nullary
           case ((nullaryOps, tlaDecls), quintDef) =>
-            quint.translate(quintDef, nullaryOps) match {
+            val translator = new QuintExprConverter(quintOutput.table, quintOutput.types, nameGen)
+            translator.tlaDef(quintDef).run(nullaryOps) match {
               case None =>
                 // Couldn't convert the declaration (e.g., for a type declaration) so ignore it
                 (nullaryOps, tlaDecls)
@@ -47,5 +44,5 @@ object Quint {
         ._2 // Just take the resulting TlaDecls
         .reverse // Return the declarations to their original order
     }
-  } yield TlaModule(name, declarations)
+  } yield TlaModule(module.name, declarations)
 }
