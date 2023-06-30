@@ -27,7 +27,7 @@ import scala.util.Try
 //
 // Since we need access to the statefull uniqeLambdaName, this class must be
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
-private class Quint(quintOutput: QuintOutput) {
+class Quint(quintOutput: QuintOutput) {
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val table = quintOutput.table
   private val types = quintOutput.types
@@ -643,7 +643,7 @@ private class Quint(quintOutput: QuintOutput) {
         // Constant and var declarations are trivial to construct, and
         // no methods for them are provided by the ScopedBuilder.
         case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
-        case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
+        case QuintVar(id, name, _) => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
         case QuintAssume(_, _, quintEx) =>
           val tlaEx = build(tlaExpression(quintEx).run(nullaryOps))
           // assume declarations have no entry in the type map, and are always typed bool
@@ -659,20 +659,15 @@ private class Quint(quintOutput: QuintOutput) {
             } catch {
               // If the builder fails, then we've done something wrong in our
               // conversion logic or quint construction, and this is an internal error
-              case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
+              case err@(_: TBuilderScopeException | _: TBuilderTypeException) =>
                 throw new QuintIRParseError(
                   s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
             }
           Some(maybeName, tlaDecl)
       })
   }
-}
 
-object Quint {
-  def toTla(readable: ujson.Readable): Try[TlaModule] = for {
-    quintOutput <- QuintOutput.read(readable)
-    module = quintOutput.modules(0) // the flattened main module
-    translator = new Quint(quintOutput)
+  def tlaModule(module: QuintModule): Try[TlaModule] = for {
     declarations <- Try {
       // For each quint declaration, we need to try converting it to
       // a TlaDecl, and if it is a nullary operator, we need to add its
@@ -685,7 +680,7 @@ object Quint {
         .foldLeft((accumulatedNullarOpNames, accumulatedTlaDecls)) {
           // Accumulate the converted definition and the name of the operator, of it is nullary
           case ((nullaryOps, tlaDecls), quintDef) =>
-            translator.tlaDef(quintDef).run(nullaryOps) match {
+            tlaDef(quintDef).run(nullaryOps) match {
               case None =>
                 // Couldn't convert the declaration (e.g., for a type declaration) so ignore it
                 (nullaryOps, tlaDecls)
@@ -702,3 +697,4 @@ object Quint {
     }
   } yield TlaModule(module.name, declarations)
 }
+

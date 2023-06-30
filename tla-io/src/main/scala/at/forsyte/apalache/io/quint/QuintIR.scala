@@ -70,7 +70,7 @@ private[quint] case class QuintOutput(
     // Maps name IDs to declaration IDs
     table: Map[Int, QuintLookupTableEntry])
 
-private[quint] object QuintOutput {
+object QuintOutput {
   implicit val rw: RW[QuintOutput] = macroRW
 
   def read(s: ujson.Readable): Try[QuintOutput] =
