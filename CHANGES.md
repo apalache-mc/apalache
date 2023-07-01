@@ -1,6 +1,13 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.40.5 - 2023-06-30
+
+### Bug fixes
+
+- Increase max inbound gRPC message size, see #2623
+- Fix Quint translation of `Nat` and `Int`, see #2621
+
 ## 0.40.4 - 2023-06-23
 
 ### Bug fixes
