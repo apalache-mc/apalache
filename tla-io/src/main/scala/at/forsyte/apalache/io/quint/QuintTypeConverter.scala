@@ -137,10 +137,10 @@ private class QuintTypeConverter extends LazyLogging {
 }
 
 /**
- * Convert a [[QuintType]] to a [[TlaType1]].
+ * Convert a QuintType to a TlaType1.
  *
  * Constructs a fresh scope for translating Quint type variables to Apalache type variables (see
- * [[QuintTypeConverter.getVarNo()]] for details).
+ * QuintTypeConverter.getVarNo() for details).
  */
 object QuintTypeConverter {
   def apply(quintType: QuintType): TlaType1 = new QuintTypeConverter().convert(quintType)
