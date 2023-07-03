@@ -60,7 +60,7 @@ class Quint(quintOutput: QuintOutput) {
         types.get(lookupEntry.reference) match {
           case None =>
             throw new QuintIRParseError(
-              s"No type found for reference ${lookupEntry.reference} associated with id ${id}")
+                s"No type found for reference ${lookupEntry.reference} associated with id ${id}")
           case Some(t) => t.typ
         }
     }
@@ -101,19 +101,19 @@ class Quint(quintOutput: QuintOutput) {
   private type T = TBuilderInstruction
 
   private def throwOperatorArityError(op: String, arity: String, args: Seq[QuintEx]) =
-  // This should be impossible to hit, unless quint produces a malformed AST
+    // This should be impossible to hit, unless quint produces a malformed AST
     throw new QuintIRParseError(s"too many arguments passed to ${arity} operator ${op}: ${args}")
 
   // The following *App operators are helpers to factor out building operator applications
   // and the related error handling for operators of different arities.
   private val unaryApp: (String, T => T) => Seq[QuintEx] => NullaryOpReader[T] =
-  (op, tlaBuilder) => {
-    case Seq(a) =>
-      for {
-        tlaA <- tlaExpression(a)
-      } yield tlaBuilder(tlaA)
-    case tooManyArgs => throwOperatorArityError(op, "unary", tooManyArgs)
-  }
+    (op, tlaBuilder) => {
+      case Seq(a) =>
+        for {
+          tlaA <- tlaExpression(a)
+        } yield tlaBuilder(tlaA)
+      case tooManyArgs => throwOperatorArityError(op, "unary", tooManyArgs)
+    }
 
   private val binaryApp: (String, (T, T) => T) => Seq[QuintEx] => NullaryOpReader[T] =
     (op, tlaBuilder) => {
@@ -174,7 +174,7 @@ class Quint(quintOutput: QuintOutput) {
         binder match {
           case lambda @ QuintLambda(_, Seq(), _, _) =>
             throw new QuintIRParseError(
-              s"""|Operator ${op} is a binding operator requiring a non nullary
+                s"""|Operator ${op} is a binding operator requiring a non nullary
                   |operator as its second argument, but it was given the nullary
                   | ${lambda}""".stripMargin
             )
@@ -199,7 +199,7 @@ class Quint(quintOutput: QuintOutput) {
               case QuintOperT(args, _) => args
               case invalidType =>
                 throw new QuintIRParseError(
-                  s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
+                    s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
                       |but it was given ${opName} with type ${invalidType}""".stripMargin
                 )
             }
@@ -213,7 +213,7 @@ class Quint(quintOutput: QuintOutput) {
             } yield tlaBuilder(varBindings, tlaSet, tlaScope)
           case invalidBinder =>
             throw new QuintIRParseError(
-              s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
+                s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
                   |but it was given ${invalidBinder}""".stripMargin
             )
         }
@@ -285,66 +285,66 @@ class Quint(quintOutput: QuintOutput) {
     //  will bind the element at the appropriate place in the test.
     def selectSeq(opName: String, seqType: TlaType1): Converter =
       binaryApp(opName,
-        (seq, testOp) => {
-          // When the test operator is given by name, we apply it to the element.
-          val elemType = seqType match {
-            case SeqT1(elem) => elem
-            case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
-          }
-          val resultParam = tla.param(nameGen.uniqueVarName(), seqType)
-          val elemParam = tla.param(nameGen.uniqueLambdaName(), elemType)
-          val result = tla.name(resultParam._1.name, resultParam._2)
-          val elem = tla.name(elemParam._1.name, elemParam._2)
-          val ite = tla.ite(tla.appOp(testOp, elem), tla.append(result, elem), result)
-          val testLambda = tla.lambda(nameGen.uniqueLambdaName(), ite, resultParam, elemParam)
-          tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
-        })
+          (seq, testOp) => {
+            // When the test operator is given by name, we apply it to the element.
+            val elemType = seqType match {
+              case SeqT1(elem) => elem
+              case invalidType => throw new QuintIRParseError(s"sequence ${seq} has invalid type ${invalidType}")
+            }
+            val resultParam = tla.param(nameGen.uniqueVarName(), seqType)
+            val elemParam = tla.param(nameGen.uniqueLambdaName(), elemType)
+            val result = tla.name(resultParam._1.name, resultParam._2)
+            val elem = tla.name(elemParam._1.name, elemParam._2)
+            val ite = tla.ite(tla.appOp(testOp, elem), tla.append(result, elem), result)
+            val testLambda = tla.lambda(nameGen.uniqueLambdaName(), ite, resultParam, elemParam)
+            tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
+          })
 
     def exceptWithUpdate(opName: String, id: Int): Converter =
-    // f.setBy(x, op) ~~>
-    //
-    // LET f_cache = f IN
-    // [f_cache EXCEPT ![k] |-> op(f_cache[k])]
+      // f.setBy(x, op) ~~>
+      //
+      // LET f_cache = f IN
+      // [f_cache EXCEPT ![k] |-> op(f_cache[k])]
       ternaryApp(opName,
-        (f, x, op) => {
-          val f_cache_name = nameGen.uniqueVarName()
-          val f_type = QuintTypeConverter(types(id).typ)
-          val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
-          val cacheDecl = tla.decl(f_cache_name, f)
-          tla.letIn(
-            tla.except(f_cache, x, tla.appOp(op, tla.app(f_cache, x))),
-            cacheDecl,
-          )
-        })
+          (f, x, op) => {
+            val f_cache_name = nameGen.uniqueVarName()
+            val f_type = QuintTypeConverter(types(id).typ)
+            val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
+            val cacheDecl = tla.decl(f_cache_name, f)
+            tla.letIn(
+                tla.except(f_cache, x, tla.appOp(op, tla.app(f_cache, x))),
+                cacheDecl,
+            )
+          })
 
     def extendFunction(opName: String): Converter =
       quintArgs =>
         ternaryApp(opName,
-          (map, key, value) => {
-            // (key :> value) @@ map ==
-            //    LET __map_cache == __map IN
-            //    LET __dom == DOMAIN __map_cache IN
-            //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
-            // extract types
-            val mapType = QuintTypeConverter(types(quintArgs(0).id).typ)
-            val keyType = QuintTypeConverter(types(quintArgs(1).id).typ)
-            // string names
-            val mapCacheName = nameGen.uniqueVarName()
-            val domName = nameGen.uniqueVarName()
-            // TLA+ name expressions
-            val mapCache = tla.name(mapCacheName, OperT1(Seq(), mapType))
-            val dom = tla.name(domName, OperT1(Seq(), SetT1(keyType)))
-            // build the final funDef, i.e., the LET-IN body
-            val bindingVar = tla.name(nameGen.uniqueVarName(), keyType)
-            val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(tla.appOp(mapCache), bindingVar))
-            val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), tla.appOp(dom))))
-            // build the entire LET-IN
-            tla.letIn(
-              composed,
-              tla.decl(mapCacheName, map),
-              tla.decl(domName, tla.dom(tla.appOp(mapCache))),
-            )
-          })(quintArgs)
+            (map, key, value) => {
+              // (key :> value) @@ map ==
+              //    LET __map_cache == __map IN
+              //    LET __dom == DOMAIN __map_cache IN
+              //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
+              // extract types
+              val mapType = QuintTypeConverter(types(quintArgs(0).id).typ)
+              val keyType = QuintTypeConverter(types(quintArgs(1).id).typ)
+              // string names
+              val mapCacheName = nameGen.uniqueVarName()
+              val domName = nameGen.uniqueVarName()
+              // TLA+ name expressions
+              val mapCache = tla.name(mapCacheName, OperT1(Seq(), mapType))
+              val dom = tla.name(domName, OperT1(Seq(), SetT1(keyType)))
+              // build the final funDef, i.e., the LET-IN body
+              val bindingVar = tla.name(nameGen.uniqueVarName(), keyType)
+              val ite = tla.ite(tla.eql(bindingVar, key), value, tla.app(tla.appOp(mapCache), bindingVar))
+              val composed = tla.funDef(ite, (bindingVar, tla.cup(tla.enumSet(key), tla.appOp(dom))))
+              // build the entire LET-IN
+              tla.letIn(
+                  composed,
+                  tla.decl(mapCacheName, map),
+                  tla.decl(domName, tla.dom(tla.appOp(mapCache))),
+              )
+            })(quintArgs)
 
     // We cannot simply use DOMAIN b/c quint lists are 0-indexed
     // so we convert `s.indices` into
@@ -356,18 +356,18 @@ class Quint(quintOutput: QuintOutput) {
     //      (dom ∪ {0}) ∖ {Len(s)}
     def indices(opName: String): Converter =
       unaryApp(opName,
-        seq => {
-          val emptyDom = tla.emptySet(IntT1)
-          val domNameStr = nameGen.uniqueVarName()
-          val domName = tla.name(domNameStr, OperT1(Seq(), SetT1(IntT1)))
-          val dom = tla.decl(domNameStr, tla.dom(seq))
-          val body = tla.ite(
-            tla.eql(tla.appOp(domName), emptyDom),
-            emptyDom,
-            tla.setminus(tla.cup(tla.appOp(domName), tla.enumSet(tla.int(0))), tla.enumSet(tla.len(seq))),
-          )
-          tla.letIn(body, dom)
-        })
+          seq => {
+            val emptyDom = tla.emptySet(IntT1)
+            val domNameStr = nameGen.uniqueVarName()
+            val domName = tla.name(domNameStr, OperT1(Seq(), SetT1(IntT1)))
+            val dom = tla.decl(domNameStr, tla.dom(seq))
+            val body = tla.ite(
+                tla.eql(tla.appOp(domName), emptyDom),
+                emptyDom,
+                tla.setminus(tla.cup(tla.appOp(domName), tla.enumSet(tla.int(0))), tla.enumSet(tla.len(seq))),
+            )
+            tla.letIn(body, dom)
+          })
 
     // Create a TLA record
     def record(rowVar: Option[String]): Converter = {
@@ -478,12 +478,12 @@ class Quint(quintOutput: QuintOutput) {
         case "select"    => MkTla.selectSeq(opName, QuintTypeConverter(types(id).typ))
         case "range" =>
           binaryApp(opName,
-            (low, high) => {
-              val iParam = tla.param(nameGen.uniqueVarName(), IntT1)
-              val i = tla.name(iParam._1.name, iParam._2)
-              tla.mkSeqConst(tla.minus(high, low),
-                tla.lambda(nameGen.uniqueLambdaName(), tla.minus(tla.plus(low, i), tla.int(1)), iParam))
-            })
+              (low, high) => {
+                val iParam = tla.param(nameGen.uniqueVarName(), IntT1)
+                val i = tla.name(iParam._1.name, iParam._2)
+                tla.mkSeqConst(tla.minus(high, low),
+                    tla.lambda(nameGen.uniqueLambdaName(), tla.minus(tla.plus(low, i), tla.int(1)), iParam))
+              })
 
         // Tuples
         case "Tup" => variadicApp(args => tla.tuple(args: _*))
@@ -643,7 +643,7 @@ class Quint(quintOutput: QuintOutput) {
         // Constant and var declarations are trivial to construct, and
         // no methods for them are provided by the ScopedBuilder.
         case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
-        case QuintVar(id, name, _) => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
+        case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
         case QuintAssume(_, _, quintEx) =>
           val tlaEx = build(tlaExpression(quintEx).run(nullaryOps))
           // assume declarations have no entry in the type map, and are always typed bool
@@ -659,9 +659,9 @@ class Quint(quintOutput: QuintOutput) {
             } catch {
               // If the builder fails, then we've done something wrong in our
               // conversion logic or quint construction, and this is an internal error
-              case err@(_: TBuilderScopeException | _: TBuilderTypeException) =>
+              case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
                 throw new QuintIRParseError(
-                  s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
+                    s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
             }
           Some(maybeName, tlaDecl)
       })
@@ -697,4 +697,3 @@ class Quint(quintOutput: QuintOutput) {
     }
   } yield TlaModule(module.name, declarations)
 }
-

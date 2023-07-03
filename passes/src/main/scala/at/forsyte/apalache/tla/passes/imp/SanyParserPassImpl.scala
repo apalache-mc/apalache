@@ -43,7 +43,8 @@ class SanyParserPassImpl @Inject() (
 
     val result = for {
       module <- source.format match {
-        case Format.Qnt => for {
+        case Format.Qnt =>
+          for {
             source <- source.getContent
             quintOutput <- QuintOutput.read(source)
             tla <- new Quint(quintOutput).tlaModule(quintOutput.modules(0))
