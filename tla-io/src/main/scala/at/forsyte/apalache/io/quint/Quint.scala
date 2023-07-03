@@ -29,6 +29,7 @@ import scala.util.Try
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
 class Quint(quintOutput: QuintOutput) {
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
+  private val typeConv = new QuintTypeConverter
   private val table = quintOutput.table
   private val types = quintOutput.types
 
@@ -87,7 +88,7 @@ class Quint(quintOutput: QuintOutput) {
         case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
       }
       val operParams = paramNames.zip(quintParamTypes).map(operParam)
-      val paramTypes = quintParamTypes.map(QuintTypeConverter(_))
+      val paramTypes = quintParamTypes.map(typeConv.convert(_))
       val typedParams = operParams.zip(paramTypes)
       for {
         tlaBody <- tlaExpression(body)
@@ -95,7 +96,7 @@ class Quint(quintOutput: QuintOutput) {
   }
 
   private def typeTagOfId(id: Int): TypeTag = {
-    Typed(QuintTypeConverter(types(id).typ))
+    Typed(typeConv.convert(types(id).typ))
   }
 
   private type T = TBuilderInstruction
@@ -185,7 +186,7 @@ class Quint(quintOutput: QuintOutput) {
               case QuintLambdaParameter(id, "_") => s"__QUINT_UNDERSCORE_${id}"
               case QuintLambdaParameter(_, name) => name
             }
-            val tlaArgs = params.map(p => tla.name(translateParameterName(p), QuintTypeConverter(types(p.id).typ)))
+            val tlaArgs = params.map(p => tla.name(translateParameterName(p), typeConv.convert(types(p.id).typ)))
             val varBindings = wrapArgs(tlaArgs)
             for {
               tlaSet <- tlaExpression(set)
@@ -203,7 +204,7 @@ class Quint(quintOutput: QuintOutput) {
                       |but it was given ${opName} with type ${invalidType}""".stripMargin
                 )
             }
-            val tlaArgs = paramTypes.map(typ => tla.name(nameGen.uniqueVarName(), QuintTypeConverter(typ)))
+            val tlaArgs = paramTypes.map(typ => tla.name(nameGen.uniqueVarName(), typeConv.convert(typ)))
             val varBindings = wrapArgs(tlaArgs)
             for {
               tlaOpName <- tlaExpression(opName)
@@ -229,7 +230,7 @@ class Quint(quintOutput: QuintOutput) {
       variadicApp {
         // Empty sets must be handled specially since we cannot infer their type
         // from the given arguments
-        case Seq() => tla.emptySet(QuintTypeConverter(elementType))
+        case Seq() => tla.emptySet(typeConv.convert(elementType))
         case args  => tla.enumSet(args: _*)
       }
 
@@ -239,7 +240,7 @@ class Quint(quintOutput: QuintOutput) {
         // from the given arguments
         case Seq() =>
           val elementType = types(id).typ match {
-            case QuintSeqT(t) => QuintTypeConverter(t)
+            case QuintSeqT(t) => typeConv.convert(t)
             case invalidType =>
               throw new QuintIRParseError(s"List with id ${id} has invalid type ${invalidType}")
           }
@@ -308,7 +309,7 @@ class Quint(quintOutput: QuintOutput) {
       ternaryApp(opName,
           (f, x, op) => {
             val f_cache_name = nameGen.uniqueVarName()
-            val f_type = QuintTypeConverter(types(id).typ)
+            val f_type = typeConv.convert(types(id).typ)
             val f_cache = tla.appOp(tla.name(f_cache_name, OperT1(Seq(), f_type)))
             val cacheDecl = tla.decl(f_cache_name, f)
             tla.letIn(
@@ -326,8 +327,8 @@ class Quint(quintOutput: QuintOutput) {
               //    LET __dom == DOMAIN __map_cache IN
               //    [__x \in {key} \union __dom |-> IF __x = key THEN value ELSE __map_cache[__x]]
               // extract types
-              val mapType = QuintTypeConverter(types(quintArgs(0).id).typ)
-              val keyType = QuintTypeConverter(types(quintArgs(1).id).typ)
+              val mapType = typeConv.convert(types(quintArgs(0).id).typ)
+              val keyType = typeConv.convert(types(quintArgs(1).id).typ)
               // string names
               val mapCacheName = nameGen.uniqueVarName()
               val domName = nameGen.uniqueVarName()
@@ -458,7 +459,7 @@ class Quint(quintOutput: QuintOutput) {
           // `chooseSome(S)` is translated to `CHOOSE x \in S: TRUE`
           // and to construct the latter we need to generate a unique
           // variable name for `x` and find the expected type
-          val elementType = QuintTypeConverter(types(id).typ)
+          val elementType = typeConv.convert(types(id).typ)
           val varName = tla.name(nameGen.uniqueVarName(), elementType)
           unaryApp(opName, tla.choose(varName, _, tla.bool(true)))
         }
@@ -475,7 +476,7 @@ class Quint(quintOutput: QuintOutput) {
         case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
         case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
         case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
-        case "select"    => MkTla.selectSeq(opName, QuintTypeConverter(types(id).typ))
+        case "select"    => MkTla.selectSeq(opName, typeConv.convert(types(id).typ))
         case "range" =>
           binaryApp(opName,
               (low, high) => {
@@ -545,7 +546,7 @@ class Quint(quintOutput: QuintOutput) {
 
         // Otherwise, the applied operator is defined, and not a builtin
         case definedOpName => { args =>
-          val operType = QuintTypeConverter(getTypeFromLookupTable(id))
+          val operType = typeConv.convert(getTypeFromLookupTable(id))
           val oper = tla.name(definedOpName, operType)
           args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
         }
@@ -560,7 +561,7 @@ class Quint(quintOutput: QuintOutput) {
   //   \E name \in domain: scope
   private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => NullaryOpReader[TBuilderInstruction] = {
     case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain))), scope) =>
-      val elemType = QuintTypeConverter(types(id).typ)
+      val elemType = typeConv.convert(types(id).typ)
       val tlaName = tla.name(name, elemType)
       for {
         tlaDomain <- tlaExpression(domain)
@@ -600,7 +601,7 @@ class Quint(quintOutput: QuintOutput) {
           case "Nat"  => Reader(_ => tla.natSet())
           // general case: some other name
           case _ =>
-            val t = QuintTypeConverter(types(id).typ)
+            val t = typeConv.convert(types(id).typ)
             Reader { nullaryOpNames =>
               if (nullaryOpNames.contains(name)) {
                 tla.appOp(tla.name(name, OperT1(Seq(), t)))
