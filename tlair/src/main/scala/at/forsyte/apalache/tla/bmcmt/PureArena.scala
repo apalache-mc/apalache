@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.{MalformedTlaError, NameEx, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, MalformedTlaError, NameEx, SetT1, TlaEx}
 
 /**
  * An SMT-context free implementation of arenas.
@@ -248,4 +248,22 @@ object PureArena {
 
   def cellIntSet(a: PureArena): ArenaCell = a.findCellByName(intSetName)
 
+  def initial: PureArena = {
+    val emptyArena = PureArena.empty
+    // by convention, the first cells have the following semantics:
+    //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
+    val appendSeq = Seq(
+        CellTFrom(BoolT1),
+        CellTFrom(BoolT1),
+        CellTFrom(SetT1(BoolT1)),
+        InfSetT(CellTFrom(IntT1)),
+        InfSetT(CellTFrom(IntT1)),
+    )
+
+    val (initArena, cells) = emptyArena.appendCellSeq(appendSeq: _*)
+    // declare Boolean cells in SMT
+    val Seq(cellFalse, cellTrue, cellBoolean, _, _) = cells
+
+    initArena.appendHas(cellBoolean, Seq(cellFalse, cellTrue).map(FixedElemPtr): _*)
+  }
 }

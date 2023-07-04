@@ -43,13 +43,10 @@ class SetCupStratifiedRule(rewriter: Rewriter) extends StratifiedRule[Unit] {
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), ex)
     }
 
-  def addConstraints(scope: RewriterScope, cell: ArenaCell, auxData: Unit): Unit = {
-    val hasEdges = scope.arena.getHas(cell)
-
-    hasEdges.foreach { ptr =>
+  def addConstraints(scope: RewriterScope, cell: ArenaCell, auxData: Unit): Unit =
+    scope.arena.getHas(cell).foreach { ptr =>
       // assert here
       println(s"Assert: ${ptr.toSmt.build}")
     }
 
-  }
 }
