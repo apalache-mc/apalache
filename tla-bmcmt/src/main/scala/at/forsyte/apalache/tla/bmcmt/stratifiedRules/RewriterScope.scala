@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
 import at.forsyte.apalache.tla.bmcmt.{Binding, PureArena}
 

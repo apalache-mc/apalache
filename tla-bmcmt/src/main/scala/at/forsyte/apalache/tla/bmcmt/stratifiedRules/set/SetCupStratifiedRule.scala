@@ -1,7 +1,9 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.set
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
+import at.forsyte.apalache.tla.bmcmt.rules2.StratifiedRule
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, StratifiedRule}
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}

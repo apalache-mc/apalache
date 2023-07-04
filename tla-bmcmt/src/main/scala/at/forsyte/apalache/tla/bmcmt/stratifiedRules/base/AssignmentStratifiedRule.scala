@@ -1,6 +1,8 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.base
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules2.StratifiedRule
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, StratifiedRule}
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx}
 

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules2
 
-
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, TestingRewriter}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.RewriterScope
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetCupStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.types.CellT
@@ -15,15 +15,6 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
-<<<<<<<< Updated upstream:tla-bmcmt/src/test/scala/at/forsyte/apalache/tla/bmcmt/rules2/SetRewriterTest.scala
-  sealed case class MockRewriter(cheatyMap: Map[UID, ArenaCell]) extends Rewriter {
-    def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell) =
-      (startingScope, cheatyMap(ex.ID))
-  }
-
-  test("Union of two sets with a nonempty intersection. ") {
-========
->>>>>>>> Stashed changes:tla-bmcmt/src/test/scala/at/forsyte/apalache/tla/bmcmt/stratifiedRules/SetRewriterTest.scala
   var rewriter: TestingRewriter = TestingRewriter(Map.empty)
 
   override def beforeEach(): Unit = {

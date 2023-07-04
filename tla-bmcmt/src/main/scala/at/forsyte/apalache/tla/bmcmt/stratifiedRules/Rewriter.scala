@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -24,5 +24,13 @@ trait Rewriter {
    * tuple, while the ArenaCell part of the return is the cell representation of the input TlaEx.
    */
   def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell)
+
+  /**
+   * Fully rewrite a TlaEx into an ArenaCell.
+   *
+   * Any Binding or Arena changes made as part of the rewriting are returned in the RewriterScope part of the return
+   * tuple, while the ArenaCell part of the return is the cell representation of the input TlaEx.
+   */
+  def assert(ex: TlaEx): Unit
 
 }
