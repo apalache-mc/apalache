@@ -21,7 +21,7 @@ import scala.util.Failure
 import scala.util.Success
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.io.annotations.AnnotationParserError
-import at.forsyte.apalache.io.quint.Quint
+import at.forsyte.apalache.io.quint.{Quint, QuintOutput}
 
 /**
  * Parsing TLA+ code with SANY.
@@ -43,7 +43,12 @@ class SanyParserPassImpl @Inject() (
 
     val result = for {
       module <- source.format match {
-        case Format.Qnt => source.getContent.flatMap(Quint.toTla(_))
+        case Format.Qnt =>
+          for {
+            source <- source.getContent
+            quintOutput <- QuintOutput.read(source)
+            tla <- new Quint(quintOutput).tlaModule(quintOutput.modules(0))
+          } yield tla
         case Format.Json =>
           for {
             str <- source.getContent
