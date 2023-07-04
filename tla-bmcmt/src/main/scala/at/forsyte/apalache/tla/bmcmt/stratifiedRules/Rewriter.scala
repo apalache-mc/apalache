@@ -26,10 +26,8 @@ trait Rewriter {
   def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell)
 
   /**
-   * Fully rewrite a TlaEx into an ArenaCell.
-   *
-   * Any Binding or Arena changes made as part of the rewriting are returned in the RewriterScope part of the return
-   * tuple, while the ArenaCell part of the return is the cell representation of the input TlaEx.
+   * Side-effect: assert boolean constraint for BMC. Concrete details depend on the implementation (e.g. pushing into z3
+   * as SMT asserts, or collecting them in a Scala list).
    */
   def assert(ex: TlaEx): Unit
 

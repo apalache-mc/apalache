@@ -1,7 +1,5 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, TestingRewriter}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.RewriterScope
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetCupStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, Binding, FixedElemPtr, PureArena}
@@ -36,18 +34,11 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     val rSet = tla.name("T", SetT1(IntT1))
     val cup = tla.cup(lSet, rSet).build
 
-    // We don't have other rules implemented, so we have to hack it a bit
-    val cellMap: Map[UID, ArenaCell] = cup match {
-      case OperEx(_, left, right) =>
-        Map(
-            left.ID -> lSetCell,
-            right.ID -> rSetCell,
-        )
-      case _ => Map.empty // impossible, but silences compiler warning
-    }
-    val rule = new SetCupStratifiedRule(MockRewriter(cellMap))
+    val binding = new Binding(Map("S" -> lSetCell, "T" -> rSetCell))
 
-    val startScope = RewriterScope(arenaWithHas, new Binding(Map.empty))
+    val rule = new SetCupStratifiedRule(TestingRewriter(Map.empty))
+
+    val startScope = RewriterScope(arenaWithHas, binding)
 
     val (RewriterScope(resultArena, _), resultCell) = rule.apply(cup)(startScope)
 

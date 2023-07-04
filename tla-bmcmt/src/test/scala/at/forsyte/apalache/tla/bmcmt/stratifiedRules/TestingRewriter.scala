@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.{RewriterImpl, RewriterScope}
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.RewriterImpl
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaType1, UID}
 

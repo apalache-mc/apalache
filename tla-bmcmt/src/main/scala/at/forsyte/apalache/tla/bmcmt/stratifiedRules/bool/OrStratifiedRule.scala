@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.bool
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{addCell, StratifiedRule}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.{Rewriter, RewriterScope}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope}
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction

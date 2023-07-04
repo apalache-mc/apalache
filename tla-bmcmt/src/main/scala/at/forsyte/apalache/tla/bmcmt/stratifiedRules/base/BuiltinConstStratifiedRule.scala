@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.base
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.StratifiedRuleInterface
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.RewriterScope
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaBoolSet, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 
