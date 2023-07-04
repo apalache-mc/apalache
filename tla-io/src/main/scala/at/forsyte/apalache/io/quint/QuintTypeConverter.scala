@@ -120,7 +120,7 @@ private class QuintTypeConverter extends LazyLogging {
     RowT1(fieldTypes: _*)
   }
 
-  private val convert: QuintType => TlaType1 = {
+  val convert: QuintType => TlaType1 = {
     case QuintBoolT()             => BoolT1
     case QuintIntT()              => IntT1
     case QuintStrT()              => StrT1
@@ -134,14 +134,4 @@ private class QuintTypeConverter extends LazyLogging {
     case QuintRecordT(row)        => RecRowT1(rowToRowT1(row))
     case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
   }
-}
-
-/**
- * Convert a QuintType to a TlaType1.
- *
- * Constructs a fresh scope for translating Quint type variables to Apalache type variables (see
- * QuintTypeConverter.getVarNo() for details).
- */
-object QuintTypeConverter {
-  def apply(quintType: QuintType): TlaType1 = new QuintTypeConverter().convert(quintType)
 }

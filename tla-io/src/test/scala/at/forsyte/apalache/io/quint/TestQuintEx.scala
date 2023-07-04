@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.quint
 
-import at.forsyte.apalache.tla.lir.{IntT1, OperT1, RecRowT1, RowT1, SetT1, TlaEx, Typed, VarT1}
+import at.forsyte.apalache.tla.lir.{IntT1, OperT1, RecRowT1, RowT1, SetT1, TlaEx, TlaType1, Typed, VarT1}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -177,6 +177,8 @@ class TestQuintEx extends AnyFunSuite {
         table = lookupMap.toMap,
     )
   }
+
+  val translate: QuintType => TlaType1 = (new QuintTypeConverter).convert(_)
 
   def translate(qex: QuintEx): TlaEx = {
     val translator = new Quint(Q.quintOutput)
@@ -536,7 +538,7 @@ class TestQuintEx extends AnyFunSuite {
     val exp = translate(quintEx)
     val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
 
-    assert(QuintTypeConverter(typ) == expectedTlaType)
+    assert(translate(typ) == expectedTlaType)
     assert(exp.typeTag == Typed(expectedTlaType))
     assert(exp.toString == """["s" ↦ 1, "t" ↦ 2]""")
   }
@@ -578,7 +580,7 @@ class TestQuintEx extends AnyFunSuite {
 
     val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
     val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
-    assert(QuintTypeConverter(opType) == expectedTlaType)
+    assert(translate(opType) == expectedTlaType)
     assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 
