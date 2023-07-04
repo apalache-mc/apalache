@@ -180,7 +180,7 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
             // To see how testing is different from verification,
             // replace 'passed' with 'falsified' and observe that no error will be found ;-)
             passed
-          // no exceptions
+            // no exceptions
           }
         },
         minSuccessful(300),

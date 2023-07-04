@@ -454,7 +454,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
-  // there is not much to check here, since it is just a function that returns an integer
+    // there is not much to check here, since it is just a function that returns an integer
   }
 
   // the model checker will never meet such an expression, as it will be optimized into several existentials by ExprOptimizer

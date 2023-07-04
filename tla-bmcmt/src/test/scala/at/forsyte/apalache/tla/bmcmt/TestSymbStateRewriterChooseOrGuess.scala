@@ -68,9 +68,9 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
     rewriter.rewriteUntilDone(state)
     // the buggy implementation of choose fails on a dynamically empty set
     assert(solverContext.sat())
-  // The semantics of choose does not restrict the outcome on the empty sets,
-  // so we do not test for anything here. Our previous implementation of CHOOSE produced default values in this case,
-  // but this happened to be error-prone and sometimes conflicting with other rules. So, no default values.
+    // The semantics of choose does not restrict the outcome on the empty sets,
+    // so we do not test for anything here. Our previous implementation of CHOOSE produced default values in this case,
+    // but this happened to be error-prone and sometimes conflicting with other rules. So, no default values.
   }
 
   test("""CHOOSE x \in {}: x > 1""") { rewriterType: SMTEncoding =>
