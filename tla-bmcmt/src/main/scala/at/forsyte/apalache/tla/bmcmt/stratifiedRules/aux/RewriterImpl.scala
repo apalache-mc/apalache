@@ -16,9 +16,14 @@ import at.forsyte.apalache.tla.types.tla
 import scalaz.unused
 
 /**
- * Implementation of Rewriter, using a rule lookup table.
+ * Rewrite a TLA+ expression into a graph of cells (Arena).
  *
- * SolverContext is unused in the interim, but will be present in the final version.
+ * This is the central access point to the rewriting rules.
+ *
+ * As a by-product, implementations may use a [[at.forsyte.apalache.tla.bmcmt.smt.SolverContext]] and produce SMT
+ * constraints over the computed Arena cells.
+ *
+ * TODO: SolverContext is unused in the interim, but will be present in the final version.
  *
  * @author
  *   Jure Kukovec
@@ -26,9 +31,8 @@ import scalaz.unused
 abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewriter {
 
   override def assert(ex: TlaEx): Unit = {
-    // For now, we don-t actually use `ctx` yet, so we just print what would have been asserted.
-    println(s"ASSERT: $ex")
-//    ctx.assertGroundExpr(ex)
+    // TODO: For now, we don't actually use `ctx` yet
+    // ctx.assertGroundExpr(ex)
   }
 
   /**
@@ -58,10 +62,11 @@ abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewr
   @transient
   lazy val ruleLookupTable: Map[String, StratifiedRuleInterface] = {
     Map(
-        // the order is only important to improve readability
+        // - the order is only important to improve readability
+        // - types don't matter for lookup, but are required by the builder
 
         // substitution
-        key(tla.name("x", IntT1)) -> new SubstStratifiedRule, // Type doesn't matter, but is needed
+        key(tla.name("x", IntT1)) -> new SubstStratifiedRule,
 //      key(tla.prime(NameEx("x")))
 //        -> List(new PrimeRule),
 //      // assignment

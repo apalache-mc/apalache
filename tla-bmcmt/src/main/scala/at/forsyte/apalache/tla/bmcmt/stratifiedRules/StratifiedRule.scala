@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
- * * A single rewriting rule interface.
+ * A rewriting rule interface.
  *
  * Since actual rules will be parameterized by type, we implement an interface trait without parameters, defining only
  * the public methods.
@@ -18,7 +18,7 @@ trait StratifiedRuleInterface {
 }
 
 /**
- * * A single rewriting rule that implements operational semantics.
+ * A rewriting rule that implements operational semantics.
  *
  * A rule may be parameterized by `T`, which defines the sort of supplementary information passed between the
  * `buildArena` and `addConstraints` methods, for the purpose of generating SMT constraints. If no such information is

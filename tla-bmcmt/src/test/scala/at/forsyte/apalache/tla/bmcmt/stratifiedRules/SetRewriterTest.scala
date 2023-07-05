@@ -19,7 +19,7 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     rewriter = TestingRewriter(Map.empty)
   }
 
-  test("Cup") {
+  test("Set operator rewriting rule: S \\cup T") {
 
     val lSetCell = new ArenaCell(0, CellT.fromType1(SetT1(IntT1)))
     val lElems = Seq(1, 2).map(new ArenaCell(_, CellT.fromType1(IntT1)))

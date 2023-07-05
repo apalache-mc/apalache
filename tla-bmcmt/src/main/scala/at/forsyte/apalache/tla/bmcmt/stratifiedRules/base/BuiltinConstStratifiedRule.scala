@@ -7,9 +7,9 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaBoolSet, TlaIntSet, TlaNa
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
 
 /**
- * Rewriting BOOLEAN, Int, and Nat into predefined cells.
+ * Rewriting TRUE, FALSE, BOOLEAN, Int, and Nat into predefined cells.
  *
- * Extends -Interface directly, since there's no arena/constraint manipulation.
+ * Extends [[StratifiedRuleInterface]] directly, since there's no arena/constraint manipulation.
  *
  * @author
  *   Jure Kukovec
