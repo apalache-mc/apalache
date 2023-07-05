@@ -3,6 +3,7 @@ package at.forsyte.apalache.io.quint
 import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.collection.immutable.SortedMap
 import scala.collection.mutable
 
 // Convert a QuintType into a TlaType1
@@ -36,24 +37,24 @@ private class QuintTypeConverter extends LazyLogging {
 
   import QuintType._
 
-  private def rowToTupleElems(row: Row): Seq[TlaType1] = {
-    // Since we have to concat lists here, which can be expensive, we use an
-    // accumulator to benefit from tail call optimization. This is purely a precaution.
-    def aux(r: Row, acc0: Seq[TlaType1]): Seq[TlaType1] = r match {
-      // TODO Update with support for row-based tuples: https://github.com/informalsystems/apalache/issues/1591
-      // Row variables in tuples are not currently supported. But we will proceed assuming that this is an
-      // over generalization, and that we can safely treat the tuple as a closed tuple type.
-      case Row.Var(_) =>
-        logger.debug(
-            s"Found open row variable in quint tuple with fields $row. Polymorphic tuples are not supported, but we will proceed assuming the tuple can be treated as a closed type.")
-        acc0
-      case Row.Nil() => acc0
+  private def rowToTupleT1(row: Row): TlaType1 = {
+    // `aux(r, acc)` is a `(fields, other)`
+    // where `fields` is a map from tuple indices to tuple types, and
+    // `other` is either `Some(var)` for an open row or `None` for a closed row.
+    //
+    // `acc` is used as an accumulator to enable tail recursion
+    def aux(r: Row, acc0: SortedMap[Int, TlaType1]): (SortedMap[Int, TlaType1], Option[VarT1]) = r match {
+      case Row.Nil()  => (acc0, None)
+      case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
       case Row.Cell(fields, other) =>
-        val acc1 = fields.map(f => convert(f.fieldType)) ++ acc0
+        val acc1 = acc0 ++ fields.map { f => f.fieldName.toInt + 1 -> convert(f.fieldType) }
         aux(other, acc1)
     }
 
-    aux(row, List())
+    aux(row, SortedMap()) match {
+      case (fields, None)    => TupT1(fields.map(_._2).toSeq: _*)
+      case (fields, Some(_)) => SparseTupT1(fields)
+    }
   }
 
   private def rowToRowT1(row: Row): RowT1 = {
@@ -130,7 +131,7 @@ private class QuintTypeConverter extends LazyLogging {
     case QuintSeqT(elem)          => SeqT1(convert(elem))
     case QuintFunT(arg, res)      => FunT1(convert(arg), convert(res))
     case QuintOperT(args, res)    => OperT1(args.map(convert), convert(res))
-    case QuintTupleT(row)         => TupT1(rowToTupleElems(row): _*)
+    case QuintTupleT(row)         => rowToTupleT1(row)
     case QuintRecordT(row)        => RecRowT1(rowToRowT1(row))
     case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
   }
