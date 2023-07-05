@@ -4,7 +4,9 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.io.quint.QuintType._
-import at.forsyte.apalache.tla.lir.{FunT1, IntT1, RecRowT1, RowT1, StrT1, TlaType1, TupT1, VarT1, VariantT1}
+import at.forsyte.apalache.tla.lir.{
+  FunT1, IntT1, RecRowT1, RowT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1, VariantT1,
+}
 
 /**
  * Tests the conversion of quint types, represented as QuintTypes, into TlaType1
@@ -27,15 +29,15 @@ class TestQuintTypes extends AnyFunSuite {
   test("Quint tuple types are converted correctly") {
     val tuple =
       // i.e.: (int, string)
-      QuintTupleT(Row.Cell(List(RecordField("1", QuintIntT()), RecordField("2", QuintStrT())), Row.Nil()))
+      QuintTupleT(Row.Cell(List(RecordField("0", QuintIntT()), RecordField("1", QuintStrT())), Row.Nil()))
     assert(translate(tuple) == TupT1(IntT1, StrT1))
   }
 
-  test("Polymorphic Quint tuples types are converted to plain, closed tuples") {
+  test("Polymorphic Quint tuples types are converted to sparse tuples") {
     val tuple =
       // i.e.: (int, string | r)
-      QuintTupleT(Row.Cell(List(RecordField("1", QuintIntT()), RecordField("2", QuintStrT())), Row.Var("r")))
-    assert(translate(tuple) == TupT1(IntT1, StrT1))
+      QuintTupleT(Row.Cell(List(RecordField("0", QuintIntT()), RecordField("1", QuintStrT())), Row.Var("r")))
+    assert(translate(tuple) == SparseTupT1(1 -> IntT1, 2 -> StrT1))
   }
 
   test("Open Quint record types are converted into open TlaType1 records") {
