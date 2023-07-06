@@ -1,6 +1,13 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.40.7 - 2023-07-06
+
+### Bug fixes
+
+- Fix a bug when translating certain Quint tuple types, see #2634
+- Fix a typing issue when translating Quint name expressions, see #2635
+
 ## 0.40.6 - 2023-07-04
 
 ### Bug fixes
