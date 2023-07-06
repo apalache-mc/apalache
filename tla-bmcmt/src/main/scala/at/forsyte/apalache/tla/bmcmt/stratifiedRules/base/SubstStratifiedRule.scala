@@ -1,6 +1,7 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.base
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{RewriterScope, StratifiedRule}
 import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
 import at.forsyte.apalache.tla.pp.TlaInputError
 import com.typesafe.scalalogging.LazyLogging

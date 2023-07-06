@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
 import at.forsyte.apalache.tla.bmcmt.{Binding, PureArena}
 
@@ -13,3 +13,7 @@ import at.forsyte.apalache.tla.bmcmt.{Binding, PureArena}
  *   Jure Kukovec
  */
 sealed case class RewriterScope(arena: PureArena, binding: Binding)
+
+object RewriterScope {
+  def initial(): RewriterScope = RewriterScope(PureArena.initial, Binding())
+}

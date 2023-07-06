@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -24,5 +24,11 @@ trait Rewriter {
    * tuple, while the ArenaCell part of the return is the cell representation of the input TlaEx.
    */
   def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell)
+
+  /**
+   * Side-effect: assert boolean constraint for BMC. Concrete details depend on the implementation (e.g. pushing into z3
+   * as SMT asserts, or collecting them in a Scala list).
+   */
+  def assert(ex: TlaEx): Unit
 
 }

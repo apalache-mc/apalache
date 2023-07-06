@@ -1,22 +1,25 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetCupStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, Binding, FixedElemPtr, PureArena}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestSetCupStratifiedRule extends AnyFunSuite {
+class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
-  sealed case class MockRewriter(cheatyMap: Map[UID, ArenaCell]) extends Rewriter {
-    def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell) =
-      (startingScope, cheatyMap(ex.ID))
+  var rewriter: TestingRewriter = TestingRewriter(Map.empty)
+
+  override def beforeEach(): Unit = {
+    rewriter = TestingRewriter(Map.empty)
   }
 
-  test("Union of two sets with a nonempty intersection. ") {
+  test("Set operator rewriting rule: S \\cup T") {
 
     val lSetCell = new ArenaCell(0, CellT.fromType1(SetT1(IntT1)))
     val lElems = Seq(1, 2).map(new ArenaCell(_, CellT.fromType1(IntT1)))
@@ -31,18 +34,11 @@ class TestSetCupStratifiedRule extends AnyFunSuite {
     val rSet = tla.name("T", SetT1(IntT1))
     val cup = tla.cup(lSet, rSet).build
 
-    // We don't have other rules implemented, so we have to hack it a bit
-    val cellMap: Map[UID, ArenaCell] = cup match {
-      case OperEx(_, left, right) =>
-        Map(
-            left.ID -> lSetCell,
-            right.ID -> rSetCell,
-        )
-      case _ => Map.empty // impossible, but silences compiler warning
-    }
-    val rule = new SetCupStratifiedRule(MockRewriter(cellMap))
+    val binding = new Binding(Map("S" -> lSetCell, "T" -> rSetCell))
 
-    val startScope = RewriterScope(arenaWithHas, new Binding(Map.empty))
+    val rule = new SetCupStratifiedRule(TestingRewriter(Map.empty))
+
+    val startScope = RewriterScope(arenaWithHas, binding)
 
     val (RewriterScope(resultArena, _), resultCell) = rule.apply(cup)(startScope)
 
