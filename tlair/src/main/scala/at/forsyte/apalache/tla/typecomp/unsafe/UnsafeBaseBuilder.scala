@@ -50,7 +50,9 @@ class UnsafeBaseBuilder extends ProtoBuilder {
           case _ => buildBySignatureLookup(TlaOper.apply, retypedOp +: retypedArgs: _*)
         }
       case None =>
-        throw new TBuilderTypeException(s"Operator application argument types do not unify with the operator type.")
+        throw new TBuilderTypeException(
+            s"Operator application argument types ${mockOperT} do not unify with the operator type ${opType} in ${Op}(${args
+                .mkString(", ")}).")
     }
 
   }
