@@ -47,7 +47,7 @@ private class QuintTypeConverter extends LazyLogging {
       case Row.Nil()  => (acc0, None)
       case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
       case Row.Cell(fields, other) =>
-        val acc1 = acc0 ++ fields.map { f => f.fieldName.toInt + 1 -> convert(f.fieldType) }
+        val acc1 = acc0 ++ fields.map { f => (f.fieldName.toInt + 1) -> convert(f.fieldType) }
         aux(other, acc1)
     }
 
