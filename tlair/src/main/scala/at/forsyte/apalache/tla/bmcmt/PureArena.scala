@@ -249,8 +249,8 @@ object PureArena {
   def cellIntSet(a: PureArena): ArenaCell = a.findCellByName(intSetName)
 
   /**
-   * Return an initialized PureArena, pre-populated with cells representing Boolean literals, and the BOOLEAN/Int/Nat set
-   * cells.
+   * Return an initialized PureArena, pre-populated with cells representing Boolean literals, and the BOOLEAN/Int/Nat
+   * set cells.
    */
   def initial: PureArena = {
     val emptyArena = PureArena.empty
