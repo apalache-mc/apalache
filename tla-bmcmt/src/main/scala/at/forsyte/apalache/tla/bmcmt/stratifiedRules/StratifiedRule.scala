@@ -1,10 +1,24 @@
-package at.forsyte.apalache.tla.bmcmt.rules2
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
- * * A single rewriting rule that implements operational semantics.
+ * A rewriting rule interface.
+ *
+ * Since actual rules will be parameterized by type, we implement an interface trait without parameters, defining only
+ * the public methods.
+ *
+ * @author
+ *   Jure Kukovec
+ */
+trait StratifiedRuleInterface {
+  def isApplicable(ex: TlaEx, scope: RewriterScope): Boolean
+  def apply(ex: TlaEx)(startingScope: RewriterScope): RuleOutput
+}
+
+/**
+ * A rewriting rule that implements operational semantics.
  *
  * A rule may be parameterized by `T`, which defines the sort of supplementary information passed between the
  * `buildArena` and `addConstraints` methods, for the purpose of generating SMT constraints. If no such information is
@@ -13,7 +27,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
  * @author
  *   Jure Kukovec
  */
-trait StratifiedRule[T] {
+trait StratifiedRule[T] extends StratifiedRuleInterface {
   def isApplicable(ex: TlaEx, scope: RewriterScope): Boolean
 
   /**
@@ -25,14 +39,14 @@ trait StratifiedRule[T] {
    *
    * This method promises not to generate constraints as a side-effect.
    */
-  def buildArena(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell, T)
+  protected def buildArena(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell, T)
 
   /**
    * Given the output of `buildArena`, generates SMT constraints as a side-effect.
    */
-  def addConstraints(scope: RewriterScope, cell: ArenaCell, auxData: T): Unit
+  protected def addConstraints(scope: RewriterScope, cell: ArenaCell, auxData: T): Unit
 
-  def apply(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell) = {
+  def apply(ex: TlaEx)(startingScope: RewriterScope): RuleOutput = {
     val (scope, exprCell, auxCells) = buildArena(ex)(startingScope)
     addConstraints(scope, exprCell, auxCells)
     (scope, exprCell)
