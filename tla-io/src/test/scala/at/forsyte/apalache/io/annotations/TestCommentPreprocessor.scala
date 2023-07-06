@@ -166,7 +166,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
         {
           forAll(asciiStr) { str =>
             hasAnnotationsWhenNonEmpty(str)
-          // no exceptions
+            // no exceptions
           }
         },
         minSuccessful(300),
