@@ -19,7 +19,7 @@ class ApalacheRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     rewriter = TestingRewriter(Map.empty)
   }
 
-  test("Assignments") {
+  test("Apalache operator rewriting rule: x := y") {
 
     val cellName = tla.name("$C$9", IntT1)
     val nonCellStr = "C9"

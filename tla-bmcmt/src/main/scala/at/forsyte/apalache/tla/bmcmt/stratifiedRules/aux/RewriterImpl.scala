@@ -55,8 +55,7 @@ abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewr
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
   // For each key, there is a short list of rules that may be applicable.
-  @transient
-  lazy val ruleLookupTable: Map[String, StratifiedRuleInterface] = {
+  val ruleLookupTable: Map[String, StratifiedRuleInterface] = {
     Map(
         // - the order is only important to improve readability
         // - types don't matter for lookup, but are required by the builder
