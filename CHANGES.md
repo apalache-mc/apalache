@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.40.6 - 2023-07-04
+
+### Bug fixes
+
+- Fix an issue with translating Quint type variables, see #2629
+
 ## 0.40.5 - 2023-06-30
 
 ### Bug fixes

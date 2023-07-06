@@ -1,18 +1,12 @@
 package at.forsyte.apalache.io.quint
 
-import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.lir.OperT1
-import at.forsyte.apalache.tla.lir.SetT1
-import at.forsyte.apalache.tla.lir.Typed
+import at.forsyte.apalache.tla.lir.{IntT1, OperT1, RecRowT1, RowT1, SetT1, TlaEx, TlaType1, Typed, VarT1}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
-
 import QuintType._
 import QuintEx._
-import at.forsyte.apalache.tla.lir.RecRowT1
-import at.forsyte.apalache.tla.lir.RowT1
-import at.forsyte.apalache.tla.lir.VarT1
+import at.forsyte.apalache.tla.typecomp.build
 
 // You can run all these tests in watch mode in the
 // sbt console with
@@ -173,22 +167,28 @@ class TestQuintEx extends AnyFunSuite {
     val applyNamedIntToBoolOp = app(namedIntToBoolOp.name, _42)(QuintBoolT(), intToBoolDef.id)
 
     // We construct a converter supplied with the needed type map
-    def quint = new Quint(QuintOutput(
-            stage = "typechecking",
-            modules = List(QuintModule(0, "MockedModule", List())),
-            types = typeMap.map { case (id, typ) =>
-              // Wrap each type in the TypeScheme required by the Quint IR
-              id -> QuintTypeScheme(typ)
-            }.toMap,
-            table = lookupMap.toMap,
-        ))
+    def quintOutput = QuintOutput(
+        stage = "typechecking",
+        modules = List(QuintModule(0, "MockedModule", List())),
+        types = typeMap.map { case (id, typ) =>
+          // Wrap each type in the TypeScheme required by the Quint IR
+          id -> QuintTypeScheme(typ)
+        }.toMap,
+        table = lookupMap.toMap,
+    )
+  }
 
+  val translate: QuintType => TlaType1 = (new QuintTypeConverter).convert(_)
+
+  def translate(qex: QuintEx): TlaEx = {
+    val translator = new Quint(Q.quintOutput)
+    val nullaryOps = Set[String]()
+    val tlaEx = build(translator.tlaExpression(qex).run(nullaryOps))
+    tlaEx
   }
 
   // Convert a quint expression to TLA and render as a string
-  def convert(qex: QuintEx): String = {
-    Q.quint.exToTla(qex).get.toString()
-  }
+  val convert: QuintEx => String = translate(_).toString
 
   test("can convert boolean") {
     assert(convert(Q.tt) == "TRUE")
@@ -307,7 +307,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin Set operator application for empty sets") {
-    val tlaEx = Q.quint.exToTla(Q.emptyIntSet).get
+    val tlaEx = translate(Q.emptyIntSet)
     // Ensure the constructed empty set has the required type
     assert(tlaEx.typeTag match {
       case Typed(SetT1(IntT1)) => true
@@ -535,10 +535,10 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert row-polymorphic record") {
     val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
     val quintEx = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
-    val exp = Q.quint.exToTla(quintEx).get
+    val exp = translate(quintEx)
     val expectedTlaType = RecRowT1(RowT1(VarT1("a"), ("s", IntT1), ("t", IntT1)))
 
-    assert(Quint.typeToTlaType(typ) == expectedTlaType)
+    assert(translate(typ) == expectedTlaType)
     assert(exp.typeTag == Typed(expectedTlaType))
     assert(exp.toString == """["s" ↦ 1, "t" ↦ 2]""")
   }
@@ -573,10 +573,14 @@ class TestQuintEx extends AnyFunSuite {
     val body = Q.app("with", rName, Q.s, Q._1)(recType)
     val abs = Q.lam(Seq(("r", recType)), body, recType)
     val opDef = Q.opDef("updateF1", abs)
-    val tlaOpDef = Q.quint.defToTla(opDef).get
+
+    val translator = new Quint(Q.quintOutput)
+    val nullaryOps = Set[String]()
+    val tlaOpDef = translator.tlaDef(opDef).run(nullaryOps).get._2
+
     val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
     val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
-    assert(Quint.typeToTlaType(opType) == expectedTlaType)
+    assert(translate(opType) == expectedTlaType)
     assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 
