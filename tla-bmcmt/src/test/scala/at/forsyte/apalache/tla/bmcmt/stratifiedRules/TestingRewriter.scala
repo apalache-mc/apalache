@@ -16,7 +16,7 @@ case object NoRule extends StratifiedRuleInterface {
  * `cheatyMap` allows us to pre-assign cells to UIDs, such that TLA expressions, which would trigger rewriting rules
  * that aren't implemented yet, instead "rewrite" to the cells defined in the map.
  *
- * Additionally, anny assert statements are merely collected in a sequence, instead of e.g. propagating to z3.
+ * Additionally, any assert statements are merely collected in a sequence, instead of e.g. propagating to z3.
  *
  * @author
  *   Jure Kukovec
