@@ -5,8 +5,8 @@ import at.forsyte.apalache.io.OutputManager
 import scala.collection.immutable.SortedMap
 
 /**
- * The locator keeps a registry of RuleStat instances
- * -- one per rule name -- and finds the required instances when needed.
+ * The locator keeps a registry of RuleStat instances -- one per rule name -- and finds the required instances when
+ * needed.
  *
  * @author
  *   Igor Konnov

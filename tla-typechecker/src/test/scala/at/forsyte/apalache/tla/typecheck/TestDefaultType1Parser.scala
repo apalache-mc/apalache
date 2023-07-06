@@ -378,7 +378,7 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
               case _: Throwable =>
                 falsified
             }
-          // no exceptions
+            // no exceptions
           }
         }, minSuccessful(300))
   }
