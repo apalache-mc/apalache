@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.apalache.AssignmentStratifi
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.base.{BuiltinConstStratifiedRule, SubstStratifiedRule}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.{SetCtorStratifiedRule, SetCupStratifiedRule}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.bool.{AndStratifiedRule, OrStratifiedRule}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values._
@@ -83,10 +84,10 @@ abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewr
 //      // logic
 //      key(tla.eql(tla.name("x"), tla.name("y")))
 //        -> List(new EqRule(this)),
-//        key(tla.or(tla.name("x", BoolT1), tla.name("y", BoolT1)))
-//          -> new OrStratifiedRule(this),
-//        key(tla.and(tla.name("x", BoolT1), tla.name("y", BoolT1)))
-//          -> new AndStratifiedRule(this),
+        key(tla.or(tla.name("x", BoolT1), tla.name("y", BoolT1)))
+          -> new OrStratifiedRule(this),
+        key(tla.and(tla.name("x", BoolT1), tla.name("y", BoolT1)))
+          -> new AndStratifiedRule(this),
 //      key(tla.not(tla.name("x")))
 //        -> List(new NegRule(this)),
 //      key(OperEx(ApalacheOper.skolem, tla.exists(tla.name("x"), tla.name("S"), tla.name("p"))))
