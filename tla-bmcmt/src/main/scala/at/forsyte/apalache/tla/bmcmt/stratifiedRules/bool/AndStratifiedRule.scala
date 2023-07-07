@@ -12,8 +12,8 @@ import at.forsyte.apalache.tla.types.tla
 /**
  * Implements the rule for conjunction.
  *
- * If the `shortCircuit` flag is set to true, we translate A /\ B as IF A THEN B ELSE FALSE.
- * Otherwise, we translate the expression to an SMT conjunction.
+ * If the `shortCircuit` flag is set to true, we translate A /\ B as IF A THEN B ELSE FALSE. Otherwise, we translate the
+ * expression to an SMT conjunction.
  *
  * By default, short-circuiting is disabled.
  *
