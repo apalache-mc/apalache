@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.set
 
 import at.forsyte.apalache.tla.bmcmt.{RewriterException, _}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, StratifiedRule, addCell}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{addCell, Rewriter, RewriterScope, StratifiedRule}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
@@ -16,12 +16,13 @@ import at.forsyte.apalache.tla.types.tla
 class SetFilterStratifiedRule(rewriter: Rewriter) extends StratifiedRule[Unit] {
 
   override def isApplicable(ex: TlaEx, scope: RewriterScope): Boolean = ex match {
-    case OperEx(TlaSetOper.filter, NameEx(_), set, _ ) => set match {
-      // We specifically exclude Infinite sets, which may not be filtered over.
-      case ValEx(TlaIntSet | TlaNatSet) => false
-      case _ => true
-    }
-    case _                             => false
+    case OperEx(TlaSetOper.filter, NameEx(_), set, _) =>
+      set match {
+        // We specifically exclude Infinite sets, which may not be filtered over.
+        case ValEx(TlaIntSet | TlaNatSet) => false
+        case _                            => true
+      }
+    case _ => false
   }
 
   def buildArena(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell, Unit) = ex match {
