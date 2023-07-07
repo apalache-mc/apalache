@@ -10,8 +10,12 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
 /**
- * For state-level expressions, we express A \/ B as IF A THEN TRUE ELSE B. For action-level expressions, i.e.,
- * involving primes, we do a direct translation to A \/ B. This mimics the behavior of TLC.
+ * Implements the rule for disjunction.
+ *
+ * If the `shortCircuit` flag is set to true, we translate A \/ B as IF A THEN TRUE ELSE B.
+ * Otherwise, we translate the expression to an SMT disjunction.
+ *
+ * By default, short-circuiting is disabled.
  *
  * @author
  *   Jure Kukovec

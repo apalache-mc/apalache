@@ -10,10 +10,12 @@ import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 
 /**
- * Implements the rule for conjunction. Similar to TLC, we short-circuit A /\ B as IF A THEN B ELSE FALSE. This allows
- * us to introduce an optimization on-the-fly for the conjunctions that were marked with a hint. In this optimization,
- * we push the context, assume A and check satisfiability of the SMT context. If the context is unsat, we immediately
- * return FALSE. Otherwise, we pop the context and continue.
+ * Implements the rule for conjunction.
+ *
+ * If the `shortCircuit` flag is set to true, we translate A /\ B as IF A THEN B ELSE FALSE.
+ * Otherwise, we translate the expression to an SMT conjunction.
+ *
+ * By default, short-circuiting is disabled.
  *
  * @author
  *   Jure Kukovec
