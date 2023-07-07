@@ -44,7 +44,7 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     val startScope = RewriterScope(arena, binding)
 
-    // Rewrite normal and
+    // Rewrite normal 'and'
     val (_, endCell) = rewriter.rewrite(expr)(startScope)
 
     assert(rewriter.assertSeq ==
@@ -90,7 +90,7 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     val startScope = RewriterScope(arena, binding)
 
-    // Rewrite normal or
+    // Rewrite normal 'or'
     val (_, endCell) = rewriter.rewrite(expr)(startScope)
 
     assert(rewriter.assertSeq ==
