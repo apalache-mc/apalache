@@ -45,6 +45,82 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     assert {
       resultArena.getHas(resultCell) == lElems.map(FixedElemPtr)
     }
-
   }
+
+  test("Set operator rewriting rule: {e1, ..., en}") {
+
+    // Sub-case 1: primitive data
+    val cells @ Seq(a, b, c, d) = 0.to(3).map(new ArenaCell(_, CellT.fromType1(IntT1)))
+
+    val binding = Binding(Map(
+            "a" -> a,
+            "b" -> b,
+            "c" -> c,
+            "d" -> d,
+        ))
+
+    val arena1 = PureArena.empty.appendCellSeq(cells: _*)
+
+    val exEmpty = tla.emptySet(IntT1)
+
+    val exA = tla.name("a", IntT1)
+    val exB = tla.name("b", IntT1)
+    val exC = tla.name("c", IntT1)
+    val exD = tla.name("d", IntT1)
+
+    val exABCD = tla.enumSet(exA, exB, exC, exD)
+
+    val startScope1 = RewriterScope(arena1, binding)
+
+    val (endScope1empty, cellEmptySet) = rewriter.rewrite(exEmpty)(startScope1)
+
+    assert(endScope1empty.arena.getHas(cellEmptySet).isEmpty)
+
+    val (endScope1nonempty, cellNonEmptySet) = rewriter.rewrite(exABCD)(startScope1)
+
+    val endHas = endScope1nonempty.arena.getHas(cellNonEmptySet)
+
+    assert(endHas.size == cells.size && cells.forall(c => endHas.contains(FixedElemPtr(c))))
+
+    // Sub-case 1: Complex data (sets)
+
+    val lSetCell = new ArenaCell(4, CellT.fromType1(SetT1(IntT1)))
+    val lElems = Seq(a, b, c)
+    val rSetCell = new ArenaCell(5, CellT.fromType1(SetT1(IntT1)))
+    val rElems = Seq(d)
+    val emptySetCell = new ArenaCell(6, CellT.fromType1(SetT1(IntT1)))
+
+    val arena2 = PureArena.empty.appendCellSeq(cells :+ lSetCell :+ rSetCell :+ emptySetCell: _*)
+    val arenaWithHas =
+      arena2.appendHas(lSetCell, lElems.map(FixedElemPtr): _*).appendHas(rSetCell, rElems.map(FixedElemPtr): _*)
+
+    val exSetOfSets =
+      tla.enumSet(lSetCell.toBuilder, rSetCell.toBuilder, emptySetCell.toBuilder)
+
+    // We don't have the rewriting of cell.toBuilder ~~> cell implemented
+    val extendedBinding = Binding(
+        binding.toMap ++ Map(
+            lSetCell.toString -> lSetCell,
+            rSetCell.toString -> rSetCell,
+            emptySetCell.toString -> emptySetCell,
+        )
+    )
+
+    val startScope2 = RewriterScope(arenaWithHas, extendedBinding)
+
+    val (endScope2, cellSetOfSets) = rewriter.rewrite(exSetOfSets)(startScope2)
+
+    val endArena = endScope2.arena
+    val parentSetHas = endArena.getHas(cellSetOfSets)
+
+    assert(
+        parentSetHas.forall {
+          case FixedElemPtr(cell) =>
+            Seq(lSetCell, rSetCell, emptySetCell).contains(cell) &&
+            endArena.getHas(cell) == arenaWithHas.getHas(cell)
+          case _ => false
+        }
+    )
+  }
+
 }
