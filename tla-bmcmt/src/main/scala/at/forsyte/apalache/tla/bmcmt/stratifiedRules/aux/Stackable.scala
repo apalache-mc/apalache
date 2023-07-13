@@ -51,7 +51,7 @@ trait Stackable {
   /**
    * Add implementation-specific constraints for all entries added at `lvl` or later.
    */
-  def addConstraintsFromLevel(ctx: SolverContext)(lvl: Int): Unit˙
+  def addConstraintsFromLevel(ctx: SolverContext)(lvl: Int): Unit
 
   /**
    * Add constraints for all entries added at any level.
