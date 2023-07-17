@@ -25,7 +25,7 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Stackable {
   /**
    * A stack level, see [[Stackable]]
    */
-  private var _level: Int = 0
+  private var _level: LevelT = 0
 
   // the base map, tracking the level at which each entry was added.
   private var _cache: Map[SourceT, (TargetT, LevelT)] = HashMap()
