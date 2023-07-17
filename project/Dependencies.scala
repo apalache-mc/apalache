@@ -23,7 +23,7 @@ object Dependencies {
     val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.9.0"
     val commonsIo = "commons-io" % "commons-io" % "2.13.0"
     val guice = "com.google.inject" % "guice" % "5.1.0"
-    val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.0"
+    val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
     val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
