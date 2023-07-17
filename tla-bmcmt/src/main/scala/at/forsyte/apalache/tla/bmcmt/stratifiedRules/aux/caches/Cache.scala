@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.Stackable
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.Snapshottable
 
 import scala.collection.immutable.HashMap
 
@@ -11,43 +11,50 @@ import scala.collection.immutable.HashMap
  *
  * Example: IntValueCache assigns [[ArenaCell]]s to integers, while modifying a [[PureArena]].
  *
- * While it extends [[Stackable]], there's no need to implement an actual stack data structure. By assigning each cache
- * entry a level, effectively a timestamp for when it was added, we can proxy the state of the stack, by filtering out
- * entries, based on their levels.
+ * Some caches maintain a certain contract with the SMT solver, that is, they may add constraints to a
+ * [[at.forsyte.apalache.tla.bmcmt.smt.SolverContext]] on demand.
  *
  * @author
  *   Jure Kukovec
  */
-abstract class Cache[ContextT, SourceT, TargetT] extends Stackable {
+abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
+
+  /* While it extends Snapshottable, there's no need to implement an actual snapshot/stack data structure. By assigning each
+   * cache entry a level, effectively a timestamp for when it was added, we can proxy the state of the stack, by filtering
+   * out entries, based on their levels.
+   *
+   * Caches need snapshot functionality, because reverting SMT contexts should revert arenas as well, thus freeing certain
+   * cells. Otherwise, we could end up with a cache pointing to a cell, which does not exist in a post-revert arena.
+   */
 
   type LevelT = Int
 
   /**
-   * A stack level, see [[Stackable]]
+   * A stack level, see [[Snapshottable]]
    */
   private var _level: LevelT = 0
 
   // the base map, tracking the level at which each entry was added.
   private var _cache: Map[SourceT, (TargetT, LevelT)] = HashMap()
-  // inherited classes can read, but not modify without push/pop
+  // inherited classes can read, but not modify without going thorough the public interface methods
   protected def cache: Map[SourceT, (TargetT, LevelT)] = _cache
 
   // reverse mapping
   private var _reverseCache: Map[TargetT, (SourceT, LevelT)] = HashMap()
-  // inherited classes can read, but not modify without push/pop
+  // inherited classes can read, but not modify without going thorough the public interface methods
   protected def reverseCache: Map[TargetT, (SourceT, LevelT)] = _reverseCache
 
   def values(): Iterable[TargetT] = _cache.values.map(_._1)
 
   /**
-   * Create a target value based on the source value and cache it.
+   * Compute a target value and context update, based on the source value, but do not save the result.
    *
    * @param context
    *   the context before creating a new value
    * @param srcValue
    *   a source value
    * @return
-   *   a target value that is going to be cached and the new context
+   *   a target value that can be cached, and the new context
    */
   protected def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
 
@@ -113,21 +120,21 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Stackable {
   /**
    * Save the current state and push it on the stack for a later recovery with pop. Increases level by 1.
    */
-  override def push(): Unit = _level += 1
+  override def snapshot(): Unit = _level += 1
 
   /**
    * Discard all entries added at the current level. Decreases level by 1.
    *
    * Importantly, pop may be called multiple times and thus it is not sufficient to save only the latest state.
    */
-  override def pop(): Unit = pop(1)
+  override def revert(): Unit = revert(1)
 
   /**
    * Pop n times.
    * @param n
    *   pop n times, if n > 0, otherwise, do nothing
    */
-  override def pop(n: Int): Unit = {
+  override def revert(n: Int): Unit = {
     require(level >= n, s"Can't pop $n levels from a cache of level $level.")
     _level -= n
 
@@ -147,7 +154,24 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Stackable {
     _level = 0
   }
 
+  /** SMT constraints */
+
   /** Extra method, may add constraints for a single key-value pair */
   def addConstraintsForKV(ctx: SolverContext)(k: SourceT, v: TargetT): Unit
+
+  /**
+   * Add implementation-specific constraints for all entries added at `lvl` or later.
+   */
+  def addConstraintsFromLevel(ctx: SolverContext)(lvl: Int): Unit
+
+  /**
+   * Add constraints for all entries added at any level.
+   */
+  def addConstraints(ctx: SolverContext): Unit = addConstraintsFromLevel(ctx)(0)
+
+  /**
+   * Add constraints for all entries added at the current level.
+   */
+  def addConstraintsForCurrentLevel(ctx: SolverContext): Unit = addConstraintsFromLevel(ctx)(level)
 
 }
