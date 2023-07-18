@@ -3,7 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules._
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.apalache.AssignmentStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.base.{BuiltinConstStratifiedRule, SubstStratifiedRule}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.{SetCtorStratifiedRule, SetCupStratifiedRule}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.{
+  SetCtorStratifiedRule, SetCupStratifiedRule, SetFilterStratifiedRule,
+}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.bool.{AndStratifiedRule, OrStratifiedRule}
 import at.forsyte.apalache.tla.lir._
@@ -117,8 +119,8 @@ abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewr
           -> new SetCtorStratifiedRule(this),
         key(tla.cup(tla.name("X", SetT1(IntT1)), tla.name("Y", SetT1(IntT1))))
           -> new SetCupStratifiedRule(this),
-//        key(tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.name("p", BoolT1)))
-//          -> new SetFilterStratifiedRule(this),
+        key(tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.name("p", BoolT1)))
+          -> new SetFilterStratifiedRule(this),
 //      key(tla.map(tla.name("e"), tla.name("x"), tla.name("S")))
 //        -> List(new SetMapRule(this)),
 //      key(OperEx(ApalacheOper.expand, tla.name("X")))
