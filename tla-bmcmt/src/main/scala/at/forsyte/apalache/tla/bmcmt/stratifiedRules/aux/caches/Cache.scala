@@ -1,36 +1,40 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.Snapshottable
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.{DelayedConstraintGenerator, Stacklike}
 
 import scala.collection.immutable.HashMap
 
 /**
- * An abstract cache that assigns `TargetT`-typed values to `SourceT` typed values, while potentially modifying a
- * `ContextT`-typed context.
+ * Creates a [[Stacklike]] bidirectional cache, which behaves in the following way: Suppose there exists a deterministic
+ * injective function `f: (ContextT, SourceT) -> (ContextT, TargetT)`, that is, a function which, given a value of type
+ * `SourceT`, computes a value of type `TargetT`, while mutating a context of type `ContextT`.
  *
- * Example: IntValueCache assigns [[ArenaCell]]s to integers, while modifying a [[PureArena]].
+ * [[Cache]] defines an entry-point `getOrCreate`, such that
+ *   - `getOrCreate(c, x) = f(c,x)`, if this is the first time `x` appears as the source value for `getOrCreate`.
+ *   - `getOrCreate(c, x) = (c, v)`, if `getOrCreate(c', x)` was previously called, and returned `(c'', v)` (for some
+ *     `c', c''`).
  *
- * Some caches maintain a certain contract with the SMT solver, that is, they may add constraints to a
- * [[at.forsyte.apalache.tla.bmcmt.smt.SolverContext]] on demand.
+ * Concretely, `create` defines the behavior of `f`.
+ *
+ * Example: IntValueCache assigns [[ArenaCell]]s to [[Int]]s, while modifying a [[PureArena]]. Here, `f(a: PureArena, x:
+ * Int): (PureArena, ArenaCell) = (a', v)`, where `a' = a.appendCell(CellTFrom(IntT1))` and `v` is the fresh cell added
+ * via `appendCell`.
  *
  * @author
  *   Jure Kukovec
  */
-abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
+abstract class Cache[ContextT, SourceT, TargetT] extends Stacklike with DelayedConstraintGenerator[(SourceT, TargetT)] {
 
-  /* While it extends Snapshottable, there's no need to implement an actual snapshot/stack data structure. By assigning each
-   * cache entry a level, effectively a timestamp for when it was added, we can proxy the state of the stack, by filtering
-   * out entries, based on their levels.
-   *
-   * Caches need snapshot functionality, because reverting SMT contexts should revert arenas as well, thus freeing certain
-   * cells. Otherwise, we could end up with a cache pointing to a cell, which does not exist in a post-revert arena.
+  /* A note on the implementation: While Cache extends Stacklike, there's no need to implement an actual stack data
+   * structure. By assigning each cache entry a level, effectively a timestamp for when it was added, we can build a
+   * virtual stack, where "popping the stack" just means deleting the entries with the highest level(s).
    */
 
   type LevelT = Int
 
   /**
-   * A stack level, see [[Snapshottable]]
+   * A stack level, see [[Stacklike]]
    */
   private var _level: LevelT = 0
 
@@ -44,7 +48,7 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
   // inherited classes can read, but not modify without going thorough the public interface methods
   protected def reverseCache: Map[TargetT, (SourceT, LevelT)] = _reverseCache
 
-  def values(): Iterable[TargetT] = _cache.values.map(_._1)
+  def values(): Iterable[TargetT] = reverseCache.keys
 
   /**
    * Compute a target value and context update, based on the source value, but do not save the result.
@@ -59,13 +63,16 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
   protected def create(context: ContextT, srcValue: SourceT): (ContextT, TargetT)
 
   /**
-   * Get a previously cached value for a given source value, or return the previously cached one. Whenever a new value
-   * is created, it is cached. The cached value can be later removed by pop.
+   * If this is the first time this method is called with `srcValue`, then it calls `create`, then caches and returns
+   * the outcome. Otherwise, it returns the previously cached value.
    *
+   * @param context
+   *   the context in which the cache is called
    * @param srcValue
    *   a source value
    * @return
-   *   a target value
+   *   a new context and target value. If the target value is being read from a preexisting cache entry, the returned
+   *   context is exactly `context`.
    */
   def getOrCreate(context: ContextT, srcValue: SourceT): (ContextT, TargetT) =
     if (_cache.contains(srcValue)) {
@@ -85,7 +92,7 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
    * @param target
    *   the cached target value
    */
-  protected def addToCache(source: SourceT, target: TargetT): Unit = {
+  private def addToCache(source: SourceT, target: TargetT): Unit = {
     _cache += source -> (target, level)
     _reverseCache += target -> (source, level)
   }
@@ -120,21 +127,21 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
   /**
    * Save the current state and push it on the stack for a later recovery with pop. Increases level by 1.
    */
-  override def snapshot(): Unit = _level += 1
+  override def push(): Unit = _level += 1
 
   /**
    * Discard all entries added at the current level. Decreases level by 1.
    *
    * Importantly, pop may be called multiple times and thus it is not sufficient to save only the latest state.
    */
-  override def revert(): Unit = revert(1)
+  override def pop(): Unit = pop(1)
 
   /**
    * Pop n times.
    * @param n
    *   pop n times, if n > 0, otherwise, do nothing
    */
-  override def revert(n: Int): Unit = {
+  override def pop(n: Int): Unit = {
     require(level >= n, s"Can't pop $n levels from a cache of level $level.")
     _level -= n
 
@@ -154,24 +161,12 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
     _level = 0
   }
 
-  /** SMT constraints */
-
-  /** Extra method, may add constraints for a single key-value pair */
-  def addConstraintsForKV(ctx: SolverContext)(k: SourceT, v: TargetT): Unit
-
   /**
-   * Add implementation-specific constraints for all entries added at `lvl` or later.
+   * We assume that cache reverts are synced with arena and smt context reverts. Therefore, "all constraints" in the
+   * [[DelayedConstraintGenerator]] sense, refers to constraints for all elements _at the current level_.
    */
-  def addConstraintsFromLevel(ctx: SolverContext)(lvl: Int): Unit
-
-  /**
-   * Add constraints for all entries added at any level.
-   */
-  def addConstraints(ctx: SolverContext): Unit = addConstraintsFromLevel(ctx)(0)
-
-  /**
-   * Add constraints for all entries added at the current level.
-   */
-  def addConstraintsForCurrentLevel(ctx: SolverContext): Unit = addConstraintsFromLevel(ctx)(level)
-
+  def addAllConstraints(ctx: SolverContext): Unit =
+    cache.withFilter { _._2._2 == level }.foreach { case (key, (value, _)) =>
+      addConstraintsForElem(ctx)(key, value)
+    }
 }

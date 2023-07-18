@@ -21,18 +21,9 @@ class IntValueCache extends Cache[PureArena, BigInt, ArenaCell] {
     (newArena, intCell)
   }
 
-  /**
-   * The IntValueCache maintains that a cell cache for an integer N is equal to N in SMT.
-   */
-  override def addConstraintsForKV(ctx: SolverContext)(k: BigInt, v: ArenaCell): Unit =
+  /** The IntValueCache maintains that a cell cache for an integer N is equal to N in SMT. */
+  override def addConstraintsForElem(ctx: SolverContext): ((BigInt, ArenaCell)) => Unit = { case (k, v) =>
     ctx.assertGroundExpr(tla.eql(v.toBuilder, tla.int(k)))
-
-  /**
-   * Add implementation-specific constraints for all entries added at `lvl` or later.
-   */
-  override def addConstraintsFromLevel(ctx: SolverContext)(lvl: LevelT): Unit =
-    cache.withFilter { _._2._2 >= lvl }.foreach { case (intVal, (intCell, _)) =>
-      addConstraintsForKV(ctx)(intVal, intCell)
-    }
+  }
 
 }
