@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetCupStratifiedRule
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetFilterStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.types.CellT
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, Binding, FixedElemPtr, PureArena}
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
@@ -36,11 +36,9 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     val binding = new Binding(Map("S" -> lSetCell, "T" -> rSetCell))
 
-    val rule = new SetCupStratifiedRule(TestingRewriter(Map.empty))
-
     val startScope = RewriterScope(arenaWithHas, binding)
 
-    val (RewriterScope(resultArena, _), resultCell) = rule.apply(cup)(startScope)
+    val (RewriterScope(resultArena, _), resultCell) = rewriter.rewrite(cup)(startScope)
 
     assert {
       resultArena.getHas(resultCell) == lElems.map(FixedElemPtr)
@@ -120,6 +118,106 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
             endArena.getHas(cell) == arenaWithHas.getHas(cell)
           case _ => false
         }
+    )
+  }
+
+  test("Set operator rewriting rule: {x \\in Nat/Int: p}") {
+    // case 1: Nat/Int are rejected
+    val rule = new SetFilterStratifiedRule(TestingRewriter(Map.empty))
+    val exInt = tla.filter(tla.name("x", IntT1), tla.intSet(), tla.bool(true))
+    val exNat = tla.filter(tla.name("x", IntT1), tla.natSet(), tla.bool(true))
+    val exFilterTrue = tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.bool(true))
+
+    val emptyScope = RewriterScope.initial()
+
+    assert(!rule.isApplicable(exInt, emptyScope))
+    assert(!rule.isApplicable(exNat, emptyScope))
+    assert(rule.isApplicable(exFilterTrue, emptyScope))
+  }
+
+  test("Set operator rewriting rule: {x \\in {}: p}") {
+    // case 2: empty set filter gives empty set
+    val emptyScope = RewriterScope.initial()
+    val filterEmpty = tla.filter(tla.name("x", IntT1), tla.emptySet(IntT1), tla.bool(true))
+    val (RewriterScope(resultArena, _), resultCellEmpty) = rewriter.rewrite(filterEmpty)(emptyScope)
+
+    assert(resultArena.getHas(resultCellEmpty).isEmpty)
+
+  }
+
+  test("Set operator rewriting rule: {x \\in S: p}") {
+    // case 3: General set case
+    val exFilterTrue = tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.bool(true))
+
+    val setCell = new ArenaCell(100, CellT.fromType1(SetT1(IntT1)))
+    val binding = new Binding(Map("S" -> setCell))
+
+    val elems = Seq(101, 102, 103).map(new ArenaCell(_, CellT.fromType1(IntT1)))
+
+    val arena = PureArena.initial.appendCell(setCell).appendCellSeq(elems: _*)
+
+    val arenaNoDups = arena.appendHas(setCell, elems.map(FixedElemPtr): _*)
+    val arenaWithDups = arena.appendHas(setCell, (elems ++ elems).map(FixedElemPtr): _*)
+
+    // TODO: since other rules aren't implemented yet, we can't do interesting filters
+    // TODO: (e.g. filtering an int range by a midpoint). The best we can do now is const-filter with T/F
+    // TODO: revisit these tests once more rules are added
+
+    def samePtr: ((ElemPtr, ElemPtr)) => Boolean = { case (l, r) =>
+      l.elem == r.elem && l.toSmt.build == r.toSmt.build
+    }
+    def samePointerSeq(lSeq: Iterable[ElemPtr], rSeq: Iterable[ElemPtr]): Boolean =
+      if (lSeq.size != rSeq.size) false
+      else lSeq.zip(rSeq).forall(samePtr)
+
+    val trueCellEx = PureArena.cellTrue(arena).toBuilder
+    val falseCellEx = PureArena.cellFalse(arena).toBuilder
+
+    val exFilterFalse = tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.bool(false))
+
+    val startScopeNoDups = RewriterScope(arenaNoDups, binding)
+    val startScopeWithDups = RewriterScope(arenaWithDups, binding)
+
+    // Filtering by true adds the true cell to the pointer constraint as a conjunct
+    val (RewriterScope(resultArenaNoDupsFilterTrue, _), resultCellNoDupsFilterTrue) =
+      rewriter.rewrite(exFilterTrue)(startScopeNoDups)
+
+    assert(
+        samePointerSeq(
+            resultArenaNoDupsFilterTrue.getHas(resultCellNoDupsFilterTrue),
+            arenaNoDups.getHas(setCell).map(_.restrict(trueCellEx)),
+        )
+    )
+
+    val (RewriterScope(resultArenaWithDupsFilterTrue, _), resultCellWithDupsFilterTrue) =
+      rewriter.rewrite(exFilterTrue)(startScopeWithDups)
+
+    assert(
+        samePointerSeq(
+            resultArenaWithDupsFilterTrue.getHas(resultCellWithDupsFilterTrue),
+            arenaWithDups.getHas(setCell).map(_.restrict(trueCellEx)),
+        )
+    )
+
+    // Filtering by false adds the false cell to the pointer constraint as a conjunct
+    val (RewriterScope(resultArenaNoDupsFilterFalse, _), resultCellNoDupsFilterFalse) =
+      rewriter.rewrite(exFilterFalse)(startScopeNoDups)
+
+    assert(
+        samePointerSeq(
+            resultArenaNoDupsFilterFalse.getHas(resultCellNoDupsFilterFalse),
+            arenaNoDups.getHas(setCell).map(_.restrict(falseCellEx)),
+        )
+    )
+
+    val (RewriterScope(resultArenaWithDupsFilterFalse, _), resultCellWithDupsFilterFalse) =
+      rewriter.rewrite(exFilterFalse)(startScopeWithDups)
+
+    assert(
+        samePointerSeq(
+            resultArenaWithDupsFilterFalse.getHas(resultCellWithDupsFilterFalse),
+            arenaWithDups.getHas(setCell).map(_.restrict(falseCellEx)),
+        )
     )
   }
 
