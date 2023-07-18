@@ -121,10 +121,9 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     )
   }
 
-  test("Set operator rewriting rule: {x \\in S: p}") {
-    val rule = new SetFilterStratifiedRule(TestingRewriter(Map.empty))
-
+  test("Set operator rewriting rule: {x \\in Nat/Int: p}") {
     // case 1: Nat/Int are rejected
+    val rule = new SetFilterStratifiedRule(TestingRewriter(Map.empty))
     val exInt = tla.filter(tla.name("x", IntT1), tla.intSet(), tla.bool(true))
     val exNat = tla.filter(tla.name("x", IntT1), tla.natSet(), tla.bool(true))
     val exFilterTrue = tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.bool(true))
@@ -134,14 +133,21 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     assert(!rule.isApplicable(exInt, emptyScope))
     assert(!rule.isApplicable(exNat, emptyScope))
     assert(rule.isApplicable(exFilterTrue, emptyScope))
+  }
 
+  test("Set operator rewriting rule: {x \\in {}: p}") {
     // case 2: empty set filter gives empty set
+    val emptyScope = RewriterScope.initial()
     val filterEmpty = tla.filter(tla.name("x", IntT1), tla.emptySet(IntT1), tla.bool(true))
     val (RewriterScope(resultArena, _), resultCellEmpty) = rewriter.rewrite(filterEmpty)(emptyScope)
 
     assert(resultArena.getHas(resultCellEmpty).isEmpty)
 
+  }
+
+  test("Set operator rewriting rule: {x \\in S: p}") {
     // case 3: General set case
+    val exFilterTrue = tla.filter(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.bool(true))
 
     val setCell = new ArenaCell(100, CellT.fromType1(SetT1(IntT1)))
     val binding = new Binding(Map("S" -> setCell))
