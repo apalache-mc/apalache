@@ -138,11 +138,11 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Snapshottable {
     require(level >= n, s"Can't pop $n levels from a cache of level $level.")
     _level -= n
 
-    def isOld[A, B](mapEntry: (A, (B, Int))): Boolean =
+    def isRetained[A, B](mapEntry: (A, (B, Int))): Boolean =
       mapEntry._2._2 <= level
 
-    _cache = cache.filter(isOld)
-    _reverseCache = reverseCache.filter(isOld)
+    _cache = cache.filter(isRetained)
+    _reverseCache = reverseCache.filter(isRetained)
   }
 
   /**
