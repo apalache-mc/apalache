@@ -17,7 +17,7 @@ import scala.collection.immutable.HashMap
  *
  * Concretely, `create` defines the behavior of `f`.
  *
- * Example: IntValueCache assigns [[ArenaCell]]s to [[Int]]s, while modifying a [[PureArena]]. Here, `f(a: PureArena, x:
+ * Example: IntValueCache assigns [[ArenaCell]]s to Ints, while modifying a [[PureArena]]. Here, `f(a: PureArena, x:
  * Int): (PureArena, ArenaCell) = (a', v)`, where `a' = a.appendCell(CellTFrom(IntT1))` and `v` is the fresh cell added
  * via `appendCell`.
  *
