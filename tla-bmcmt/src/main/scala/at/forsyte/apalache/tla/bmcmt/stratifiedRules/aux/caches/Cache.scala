@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.{DelayedConstraintGenerator, Stacklike}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.DelayedConstraintGenerator
 
 import scala.collection.immutable.HashMap
 
 /**
- * Creates a [[Stacklike]] bidirectional cache, which behaves in the following way: Suppose there exists a deterministic
+ * Creates a stack-like bidirectional cache, which behaves in the following way: Suppose there exists a deterministic
  * injective function `f: (ContextT, SourceT) -> (ContextT, TargetT)`, that is, a function which, given a value of type
  * `SourceT`, computes a value of type `TargetT`, while mutating a context of type `ContextT`.
  *
@@ -17,6 +17,8 @@ import scala.collection.immutable.HashMap
  *
  * Concretely, `create` defines the behavior of `f`.
  *
+ * The state of the cache can be saved by `push` and later restored by `pop`, similar to an SMT context.
+ *
  * Example: IntValueCache assigns [[ArenaCell]]s to Ints, while modifying a [[PureArena]]. Here, `f(a: PureArena, x:
  * Int): (PureArena, ArenaCell) = (a', v)`, where `a' = a.appendCell(CellTFrom(IntT1))` and `v` is the fresh cell added
  * via `appendCell`.
@@ -24,18 +26,10 @@ import scala.collection.immutable.HashMap
  * @author
  *   Jure Kukovec
  */
-abstract class Cache[ContextT, SourceT, TargetT] extends Stacklike with DelayedConstraintGenerator[(SourceT, TargetT)] {
-
-  /* A note on the implementation: While Cache extends Stacklike, there's no need to implement an actual stack data
-   * structure. By assigning each cache entry a level, effectively a timestamp for when it was added, we can build a
-   * virtual stack, where "popping the stack" just means deleting the entries with the highest level(s).
-   */
-
+abstract class Cache[ContextT, SourceT, TargetT] extends DelayedConstraintGenerator[(SourceT, TargetT)] {
   type LevelT = Int
 
-  /**
-   * A stack level, see [[Stacklike]]
-   */
+  /** The "stack" level */
   private var _level: LevelT = 0
 
   // the base map, tracking the level at which each entry was added.
@@ -116,32 +110,34 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Stacklike with DelayedC
    */
   def findKey(value: TargetT): Option[SourceT] = reverseCache.get(value).map(_._1)
 
+  // Stack-like behavior
+
   /**
    * Get the current level, that is the difference between the number of pushes and pops made so far.
    *
    * @return
    *   the current level, always non-negative.
    */
-  override def level: Int = _level
+  def level: Int = _level
 
   /**
    * Save the current state and push it on the stack for a later recovery with pop. Increases level by 1.
    */
-  override def push(): Unit = _level += 1
+  def push(): Unit = _level += 1
 
   /**
    * Discard all entries added at the current level. Decreases level by 1.
    *
    * Importantly, pop may be called multiple times and thus it is not sufficient to save only the latest state.
    */
-  override def pop(): Unit = pop(1)
+  def pop(): Unit = pop(1)
 
   /**
    * Pop n times.
    * @param n
    *   pop n times, if n > 0, otherwise, do nothing
    */
-  override def pop(n: Int): Unit = {
+  def pop(n: Int): Unit = {
     require(level >= n, s"Can't pop $n levels from a cache of level $level.")
     _level -= n
 
@@ -155,11 +151,13 @@ abstract class Cache[ContextT, SourceT, TargetT] extends Stacklike with DelayedC
   /**
    * Clean the state completely.
    */
-  override def dispose(): Unit = {
+  def dispose(): Unit = {
     _cache = HashMap.empty
     _reverseCache = HashMap.empty
     _level = 0
   }
+
+  // Partial implementation of DelayedConstraintGenerator
 
   /**
    * We assume that cache reverts are synced with arena and smt context reverts. Therefore, "all constraints" in the
