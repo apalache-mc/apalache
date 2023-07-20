@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.40.8 - 2023-07-20
+
+### Breaking changes
+
+- Fixed deserialization of large Quint integer values, see #2654
+
 ## 0.40.7 - 2023-07-06
 
 ### Bug fixes
