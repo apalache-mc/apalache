@@ -3939,3 +3939,17 @@ $ apalache-mc check booleans.qnt.json | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
+
+### quint input: bigints are deserialized correctly
+
+Regression test for https://github.com/informalsystems/quint/issues/1055
+
+```sh
+$ apalache-mc check --out-dir=./test-out-dir --init=init --next=step --inv=inv bigint.qnt.json
+...
+EXITCODE: ERROR (12)
+[12]
+$ grep State0 test-out-dir/bigint.qnt.json/*/violation.tla
+State0 == balance = 100000000000
+$ rm -rf ./test-out-dir
+```
