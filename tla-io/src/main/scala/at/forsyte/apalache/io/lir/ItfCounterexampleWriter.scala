@@ -83,7 +83,7 @@ object ItfCounterexampleWriter {
     paramsToJson(rootModule).foreach(params => rootMap.put(PARAMS_FIELD, params))
     rootMap.put(VARS_FIELD, varsToJson(rootModule))
     rootMap.put(STATES_FIELD, ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
-    ujson.Obj(rootMap)
+    ujson.Obj.from(rootMap)
   }
 
   private def varsToJson(root: TlaModule): ujson.Value = {
@@ -136,10 +136,10 @@ object ItfCounterexampleWriter {
       val (keyEs, valuesEs) = deinterleave(args)
       val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)
-      ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
+      ujson.Obj.from(keys.zip(values))
 
     case OperEx(VariantOper.variant, ValEx(TlaStr(tagName)), valueEx) =>
-      ujson.Obj(mutable.LinkedHashMap(TAG_FIELD -> ujson.Str(tagName), VALUE_FIELD -> exToJson(valueEx)))
+      ujson.Obj(TAG_FIELD -> ujson.Str(tagName), VALUE_FIELD -> exToJson(valueEx))
 
     case OperEx(ApalacheOper.setAsFun, OperEx(TlaSetOper.enumSet, args @ _*)) =>
       val keyValueArrays = args.collect { case OperEx(TlaFunOper.tuple, key, value) =>
