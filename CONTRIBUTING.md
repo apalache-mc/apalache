@@ -483,8 +483,7 @@ The process proceeds in two steps:
 
 - [hub](https://github.com/github/hub) installed
   - With a `GITHUB_TOKEN` variable in your shell environment holding an access
-    token with repo permissions (you can use the same token as for
-    `release-me`).
+    token with repo permissions.
 
 #### Prepare the release
 

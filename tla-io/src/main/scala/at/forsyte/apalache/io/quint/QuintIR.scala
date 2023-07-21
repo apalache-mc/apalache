@@ -42,7 +42,6 @@ private[quint] object QuintDeserializer extends upickle.AttributeTagged {
   // override forms a custom deserializer that is just like the default, except
   // the value of "kind" is used to differentiate
   override def tagName = "kind"
-
 }
 
 import QuintDeserializer.{macroRW, ReadWriter => RW}
@@ -131,7 +130,7 @@ private[quint] object QuintEx {
     implicit val rw: RW[QuintBool] = macroRW
   }
 
-  @key("int") case class QuintInt(id: Int, value: Int) extends QuintEx {}
+  @key("int") case class QuintInt(id: Int, value: BigInt) extends QuintEx {}
   object QuintInt {
     implicit val rw: RW[QuintInt] = macroRW
   }
