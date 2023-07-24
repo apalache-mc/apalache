@@ -33,19 +33,16 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
 
     // 2nd call returns the _same_ arena and the previously computed cell
     assert(newArena == newArena2 && iCell == iCell2)
-
-    val (newArenaWith, i1Cell2) = cache.getOrCreate(newArena, i)
-
   }
 
   test("Constraints are only added when addConstraintsForElem is explicitly called, and only once per value") {
     // we make a fake context, which just intercepts any expression added via assertGroundExpr and stores it in a Seq.
-    val fakeCtx = new Z3SolverContext(SolverConfig.default) {
-
+    class FakeCtx extends Z3SolverContext(SolverConfig.default) {
       var constraints: Seq[TlaEx] = Seq.empty
-
       override def assertGroundExpr(ex: TlaEx): Unit = constraints = constraints :+ ex
     }
+
+    val fakeCtx: FakeCtx = new FakeCtx
 
     val i1: BigInt = 42
     val i2: BigInt = 0
@@ -55,7 +52,7 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
     // Some extra calls, which shouldn't affect constraint generation
     cache.getOrCreate(a0, i1)
     cache.getOrCreate(a0, i1)
-    val (a2, ci2) = cache.getOrCreate(a1, i2)
+    val (_, ci2) = cache.getOrCreate(a1, i2)
     // Some extra calls, which shouldn't affect constraint generation
     cache.getOrCreate(a1, i2)
     cache.getOrCreate(a1, i2)
