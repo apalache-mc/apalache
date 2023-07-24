@@ -1,6 +1,14 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.41.2 - 2023-07-24
+
+## 0.41.1 - 2023-07-24
+
+### Bug fixes
+
+- Fixed deserialization of Quint `bigint`s, see #2661
+
 ## 0.41.0 - 2023-07-20
 
 ### Breaking changes
