@@ -295,15 +295,19 @@ private[quint] object QuintDef {
     // We need custom ser/de here to cope with the optionality of the `type` field
     // see https://github.com/com-lihaoyi/upickle/issues/75
     private val toJson: QuintTypeDef => ujson.Value = {
-      case QuintTypeDef(id, name, None) => ujson.Obj("id" -> id, "name" -> name)
+      case QuintTypeDef(id, name, None) =>
+        ujson.Obj("id" -> QuintDeserializer.writeJs(id), "name" -> QuintDeserializer.writeJs(name))
       case QuintTypeDef(id, name, Some(t)) =>
-        ujson.Obj("id" -> id, "name" -> name, "type" -> QuintDeserializer.writeJs[QuintType](t))
+        ujson.Obj("id" -> QuintDeserializer.writeJs(id), "name" -> QuintDeserializer.writeJs(name),
+            "type" -> QuintDeserializer.writeJs(t))
     }
 
     private val ofJson: ujson.Value => QuintTypeDef = {
       case ujson.Obj(entries) if entries.get("id").isDefined && entries.get("name").isDefined =>
-        QuintTypeDef(entries.get("id").get.num.toInt, entries.get("name").get.str,
-            entries.get("type").map(t => QuintDeserializer.read[QuintType](t)))
+        val id = QuintDeserializer.read[BigInt](entries.get("id").get)
+        val name = QuintDeserializer.read[String](entries.get("name").get)
+        val tt = entries.get("type").map(t => QuintDeserializer.read[QuintType](t))
+        QuintTypeDef(id, name, tt)
       case invalidJson =>
         throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
     }
