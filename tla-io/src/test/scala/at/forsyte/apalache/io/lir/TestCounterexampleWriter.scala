@@ -241,9 +241,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |          "type": "(() => Bool)",
           |          "kind": "TlaOperDecl",
           |          "name": "ConstInit",
-          |          "formalParams": [
-        |            
-        |          ],
+          |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -258,9 +256,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -294,9 +290,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -350,9 +344,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "ConstInit",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -367,9 +359,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -403,9 +393,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State1",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -439,9 +427,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State2",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -475,9 +461,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -531,9 +515,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "ConstInit",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -548,9 +530,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State0",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -604,9 +584,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State1",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -660,9 +638,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "State2",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
@@ -716,9 +692,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |          "type": "(() => Bool)",
         |          "kind": "TlaOperDecl",
         |          "name": "InvariantViolation",
-        |          "formalParams": [
-        |            
-        |          ],
+        |          "formalParams": [],
         |          "isRecursive": false,
         |          "body": {
         |            "type": "Bool",
