@@ -8,10 +8,10 @@ import scala.collection.immutable.HashMap
 /**
  * Creates a stack-like bidirectional cache, which behaves in the following way: Suppose there exists a deterministic
  * injective function `f: (ContextT, SourceT) -> (ContextT, TargetT)`, that is, a function which, given a value of type
- * `SourceT`, computes a value of type `TargetT`, while mutating a context of type `ContextT`.
+ * `SourceT`, computes a value of type `TargetT`, while generating an updated context of type `ContextT`.
  *
  * [[Cache]] defines an entry-point `getOrCreate`, such that
- *   - `getOrCreate(c, x) = f(c,x)`, if this is the first time `x` appears as the source value for `getOrCreate`.
+ *   - `getOrCreate(c, x) = f(c',x)`, if this is the first time `x` appears as the source value for `getOrCreate`.
  *   - `getOrCreate(c, x) = (c, v)`, if `getOrCreate(c', x)` was previously called, and returned `(c'', v)` (for some
  *     `c', c''`).
  *
