@@ -5,7 +5,7 @@
 
 ### Bug fixes
 
-- - Fixed deserialization of Quint `bigint`s, see #2661
+- Fixed deserialization of Quint `bigint`s, see #2661
 
 ## 0.41.0 - 2023-07-20
 
