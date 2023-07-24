@@ -1,0 +1,1 @@
+- Fixed deserialization of Quint `bigint`s, see #2661
