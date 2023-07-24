@@ -10,6 +10,10 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
  * [[at.forsyte.apalache.tla.bmcmt.smt.SolverContext]], we can manipulate caches first, then discharge a batch of
  * constraints separately.
  *
+ * TODO: See #2668 - Explain when exactly constraints get discharged, and which class is expected to call
+ * `addAllConstraints`. Constraints shouldn't be discharged by rewriting rules, but by some transition-manager related
+ * class, which ensures every call to push() or checkSat() is preceded by addAllConstraints().
+ *
  * @tparam ElemT
  *   the type of the contents of the collection extending this trait.
  * @author

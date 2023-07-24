@@ -102,13 +102,13 @@ abstract class Cache[ContextT, SourceT, TargetT] extends DelayedConstraintGenera
   def get(srcValue: SourceT): Option[TargetT] = cache.get(srcValue).map(_._1)
 
   /**
-   * Find the key that was used to create a given value.
-   * @param value
-   *   a value, for which the key should be found
+   * Find the source value that was used to create a given target value.
+   * @param targetValue
+   *   a target value, for which the source value should be found
    * @return
-   *   the key, if exists
+   *   the source value, if exists
    */
-  def findKey(value: TargetT): Option[SourceT] = reverseCache.get(value).map(_._1)
+  def findSourceValue(targetValue: TargetT): Option[SourceT] = reverseCache.get(targetValue).map(_._1)
 
   // Stack-like behavior
 

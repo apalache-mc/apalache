@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.types.tla
  */
 class IntValueCache extends Cache[PureArena, BigInt, ArenaCell] {
 
-  def create(arena: PureArena, intValue: BigInt): (PureArena, ArenaCell) = {
+  protected def create(arena: PureArena, intValue: BigInt): (PureArena, ArenaCell) = {
     // introduce a new constant
     val newArena = arena.appendCell(CellT.fromType1(IntT1))
     val intCell = newArena.topCell
