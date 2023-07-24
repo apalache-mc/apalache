@@ -17,7 +17,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
  */
 trait DelayedConstraintGenerator[ElemT] {
 
-  /** Add implementation-specific constraints for a single entry */
+  /** Return a function to add implementation-specific constraints for a single entry */
   def addConstraintsForElem(ctx: SolverContext): ElemT => Unit
 
   /** Add implementation-specific constraints for all entries. */
