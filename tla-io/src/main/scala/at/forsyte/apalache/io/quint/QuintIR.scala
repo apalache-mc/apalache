@@ -32,6 +32,8 @@ package at.forsyte.apalache.io.quint
 // The `key` package allows customizing the JSON key for a class tag or attribute
 // See https://com-lihaoyi.github.io/upickle/#CustomKeys
 import upickle.implicits.key
+import upickle.core.{Abort, Visitor}
+
 import scala.util.Try
 
 // We use a slightly customized deserializer
@@ -42,6 +44,44 @@ private[quint] object QuintDeserializer extends upickle.AttributeTagged {
   // override forms a custom deserializer that is just like the default, except
   // the value of "kind" is used to differentiate
   override def tagName = "kind"
+
+  // Override the built-in BigInt{Reader,Writer} to also support reading/writing
+  // from/to JSON numbers.
+  implicit override val BigIntWriter: QuintDeserializer.Writer[BigInt] = new Writer[BigInt] {
+    override def write0[V](out: Visitor[_, V], v: BigInt): V = out.visitFloat64StringParts(v.toString(), -1, -1, 0)
+  }
+  implicit override val BigIntReader: QuintDeserializer.Reader[BigInt] = {
+    new NumericReader[BigInt] {
+      override def expectedMsg = "expected bigint"
+
+      // Below, `index` is the character offset of the lexical unit to be parsed inside the JSON string
+      override def visitString(s: CharSequence, index: Int) = visitFloat64String(s.toString, index)
+      override def visitInt32(d: Int, index: Int) = BigInt(d)
+      override def visitInt64(d: Long, index: Int) = BigInt(d)
+      override def visitUInt64(d: Long, index: Int) = BigInt(d)
+      override def visitFloat32(d: Float, index: Int) = BigDecimal(d).toBigIntExact match {
+        case Some(bigInt) => bigInt
+        case None         => throw Abort(expectedMsg + " got decimal (as float32)")
+      }
+      override def visitFloat64(d: Double, index: Int) = BigDecimal(d).toBigIntExact match {
+        case Some(bigInt) => bigInt
+        case None         => throw Abort(expectedMsg + " got decimal (as float64)")
+      }
+      override def visitFloat64StringParts(
+          s: CharSequence,
+          decIndex: Int,
+          expIndex: Int,
+          index: Int) = {
+        if (decIndex != -1) {
+          throw Abort(expectedMsg + " got decimal (as float64StringParts)")
+        }
+        if (expIndex != -1) {
+          throw Abort(expectedMsg + " got exp notation (as float64StringParts)")
+        }
+        BigInt(s.toString)
+      }
+    }
+  }
 }
 
 import QuintDeserializer.{macroRW, ReadWriter => RW}
