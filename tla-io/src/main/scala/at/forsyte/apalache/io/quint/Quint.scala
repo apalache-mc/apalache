@@ -54,7 +54,7 @@ class Quint(quintOutput: QuintOutput) {
   private type NullaryOpReader[A] = Reader[Set[String], A]
 
   // Find the type for an id via the lookup table provided in the quint output
-  private def getTypeFromLookupTable(id: Int): QuintType = {
+  private def getTypeFromLookupTable(id: BigInt): QuintType = {
     table.get(id) match {
       case None => throw new QuintIRParseError(s"No entry found for id ${id} in lookup table")
       case Some(lookupEntry) =>
@@ -95,7 +95,7 @@ class Quint(quintOutput: QuintOutput) {
       } yield (tlaBody, typedParams)
   }
 
-  private def typeTagOfId(id: Int): TypeTag = {
+  private def typeTagOfId(id: BigInt): TypeTag = {
     Typed(typeConv.convert(types(id).typ))
   }
 
@@ -234,7 +234,7 @@ class Quint(quintOutput: QuintOutput) {
         case args  => tla.enumSet(args: _*)
       }
 
-    def listConstruction(id: Int): Converter =
+    def listConstruction(id: BigInt): Converter =
       variadicApp {
         // Empty lists must be handled specially since we cannot infer their type
         // from the given arguments
@@ -301,7 +301,7 @@ class Quint(quintOutput: QuintOutput) {
             tla.foldSeq(testLambda, tla.emptySeq(elemType), seq)
           })
 
-    def exceptWithUpdate(opName: String, id: Int): Converter =
+    def exceptWithUpdate(opName: String, id: BigInt): Converter =
       // f.setBy(x, op) ~~>
       //
       // LET f_cache = f IN

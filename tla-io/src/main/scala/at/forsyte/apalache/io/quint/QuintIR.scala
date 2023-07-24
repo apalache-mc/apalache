@@ -55,7 +55,7 @@ class QuintUnsupportedError(errMsg: String) extends Exception("Unsupported quint
 
 private[quint] case class QuintLookupTableEntry(
     kind: String,
-    reference: Int)
+    reference: BigInt)
 private[quint] object QuintLookupTableEntry {
   implicit val rw: RW[QuintLookupTableEntry] = macroRW
 }
@@ -65,9 +65,9 @@ private[quint] case class QuintOutput(
     stage: String,
     modules: Seq[QuintModule],
     // Maps source IDs to types, see the `WithId` trait
-    types: Map[Int, QuintTypeScheme],
+    types: Map[BigInt, QuintTypeScheme],
     // Maps name IDs to declaration IDs
-    table: Map[Int, QuintLookupTableEntry])
+    table: Map[BigInt, QuintLookupTableEntry])
 
 object QuintOutput {
   implicit val rw: RW[QuintOutput] = macroRW
@@ -79,7 +79,7 @@ object QuintOutput {
 }
 
 private[quint] case class QuintModule(
-    id: Int,
+    id: BigInt,
     name: String,
     defs: Seq[QuintDef])
 private[quint] object QuintModule {
@@ -99,7 +99,7 @@ private[quint] object QuintTypeScheme {
 
 /** Source IDs, used to associate expressions with their inferred types */
 private[quint] trait WithID {
-  val id: Int
+  val id: BigInt
 }
 
 /** The representation of quint expressions */
@@ -119,29 +119,29 @@ private[quint] object QuintEx {
     )
 
   /** A name of: a variable, constant, parameter, user-defined operator */
-  @key("name") case class QuintName(id: Int, name: String) extends QuintEx {}
+  @key("name") case class QuintName(id: BigInt, name: String) extends QuintEx {}
   object QuintName {
     implicit val rw: RW[QuintName] = macroRW
   }
 
   /** The boolean literal value */
-  @key("bool") case class QuintBool(id: Int, value: Boolean) extends QuintEx {}
+  @key("bool") case class QuintBool(id: BigInt, value: Boolean) extends QuintEx {}
   object QuintBool {
     implicit val rw: RW[QuintBool] = macroRW
   }
 
-  @key("int") case class QuintInt(id: Int, value: BigInt) extends QuintEx {}
+  @key("int") case class QuintInt(id: BigInt, value: BigInt) extends QuintEx {}
   object QuintInt {
     implicit val rw: RW[QuintInt] = macroRW
   }
 
-  @key("str") case class QuintStr(id: Int, value: String) extends QuintEx {}
+  @key("str") case class QuintStr(id: BigInt, value: String) extends QuintEx {}
   object QuintStr {
     implicit val rw: RW[QuintStr] = macroRW
   }
 
   @key("app") case class QuintApp(
-      id: Int,
+      id: BigInt,
       /** The name of the operator being applied */
       opcode: String,
       /** A list of arguments to the operator */
@@ -152,14 +152,14 @@ private[quint] object QuintEx {
   }
 
   case class QuintLambdaParameter(
-      id: Int,
+      id: BigInt,
       name: String)
   object QuintLambdaParameter {
     implicit val rw: RW[QuintLambdaParameter] = macroRW
   }
 
   @key("lambda") case class QuintLambda(
-      id: Int,
+      id: BigInt,
       /** Identifiers for the formal parameters */
       params: Seq[QuintLambdaParameter],
       /** The qualifier for the defined operator */
@@ -173,7 +173,7 @@ private[quint] object QuintEx {
   }
 
   @key("let") case class QuintLet(
-      id: Int,
+      id: BigInt,
       /** The operator being defined for use in the body */
       opdef: QuintDef.QuintOpDef,
       /** The body */
@@ -231,7 +231,7 @@ private[quint] object QuintDef {
    * type of any operator declaration is given in the type map. So we simply omit it.
    */
   @key("def") case class QuintOpDef(
-      id: Int,
+      id: BigInt,
       /** definition name */
       name: String,
       /** qualifiers that identify definition kinds, like `def`, `val`, etc. */
@@ -244,7 +244,7 @@ private[quint] object QuintDef {
   }
 
   @key("const") case class QuintConst(
-      id: Int,
+      id: BigInt,
       /** name of the constant */
       name: String,
       typeAnnotation: QuintType)
@@ -254,7 +254,7 @@ private[quint] object QuintDef {
   }
 
   @key("var") case class QuintVar(
-      id: Int,
+      id: BigInt,
       /** name of the variable */
       name: String,
       typeAnnotation: QuintType)
@@ -264,7 +264,7 @@ private[quint] object QuintDef {
   }
 
   @key("assume") case class QuintAssume(
-      id: Int,
+      id: BigInt,
       /** name of the assumption, may be '_' */
       name: String,
       /** an expression to associate with the name */
@@ -281,7 +281,7 @@ private[quint] object QuintDef {
    *   - Type aliases always have an associated `type`
    */
   @key("typedef") case class QuintTypeDef(
-      id: Int,
+      id: BigInt,
       /** name of a type alias */
       name: String,
       /**

@@ -26,7 +26,7 @@ class TestQuintEx extends AnyFunSuite {
     // expression should use this thunk to produce a
     // unique ID (uid)
     private var nextId = 1
-    private def uid: Int = {
+    private def uid: BigInt = {
       val x = nextId
       nextId += 1
       x
@@ -38,8 +38,8 @@ class TestQuintEx extends AnyFunSuite {
     //
     // These two mutable map are used to construct those mappings, which are
     // then passed to the conversion class.
-    private val typeMap = collection.mutable.Map[Int, QuintType]()
-    private val lookupMap = collection.mutable.Map[Int, QuintLookupTableEntry]()
+    private val typeMap = collection.mutable.Map[BigInt, QuintType]()
+    private val lookupMap = collection.mutable.Map[BigInt, QuintLookupTableEntry]()
 
     // Register the type of an expression in the typeMap.
     // Think of this as a type annotation.
@@ -57,7 +57,7 @@ class TestQuintEx extends AnyFunSuite {
     // table. This mocks quint's practice of recording the type
     // of an applied operator in the lookup table for defined
     // operator, while omitting this data for bulitins.
-    def app(name: String, args: QuintEx*)(retType: QuintType, refId: Int = -1): QuintApp = {
+    def app(name: String, args: QuintEx*)(retType: QuintType, refId: BigInt = -1): QuintApp = {
       val id = uid
       if (refId != -1) {
         lookupMap += (id -> QuintLookupTableEntry("def", refId))
