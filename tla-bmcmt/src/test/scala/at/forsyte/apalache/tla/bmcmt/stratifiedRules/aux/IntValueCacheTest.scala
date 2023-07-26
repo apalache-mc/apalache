@@ -57,7 +57,6 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
     cache.getOrCreate(a1, i2)
     cache.getOrCreate(a1, i2)
 
-    // should be obvious
     assert(fakeCtx.constraints.isEmpty)
 
     cache.addAllConstraints(fakeCtx)
