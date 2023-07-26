@@ -662,7 +662,7 @@ class Quint(quintOutput: QuintOutput) {
               // conversion logic or quint construction, and this is an internal error
               case err @ (_: TBuilderScopeException | _: TBuilderTypeException) =>
                 throw new QuintIRParseError(
-                    s"Conversion failed while building operator definition ${op}: ${err.getMessage()}")
+                    s"Conversion failed while building operator definition `${op.name}`: ${err.getMessage}")
             }
           Some(maybeName, tlaDecl)
       })
