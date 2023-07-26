@@ -176,8 +176,8 @@ class Quint(quintOutput: QuintOutput) {
           case lambda @ QuintLambda(_, Seq(), _, _) =>
             throw new QuintIRParseError(
                 s"""|Operator ${op} is a binding operator requiring a non nullary
-                  |operator as its second argument, but it was given the nullary
-                  | ${lambda}""".stripMargin
+                    |operator as its second argument, but it was given the nullary
+                    | ${lambda}""".stripMargin
             )
           case QuintLambda(_, params, _, scope) =>
             // uniquely rename parameters of name "_" to prevent shadowing of nested "_"s
@@ -201,7 +201,7 @@ class Quint(quintOutput: QuintOutput) {
               case invalidType =>
                 throw new QuintIRParseError(
                     s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
-                      |but it was given ${opName} with type ${invalidType}""".stripMargin
+                        |but it was given ${opName} with type ${invalidType}""".stripMargin
                 )
             }
             val tlaArgs = paramTypes.map(typ => tla.name(nameGen.uniqueVarName(), typeConv.convert(typ)))
@@ -215,7 +215,7 @@ class Quint(quintOutput: QuintOutput) {
           case invalidBinder =>
             throw new QuintIRParseError(
                 s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
-                  |but it was given ${invalidBinder}""".stripMargin
+                    |but it was given ${invalidBinder}""".stripMargin
             )
         }
       case wrongNumberOfArgs => throwOperatorArityError(op, "binary", wrongNumberOfArgs)
