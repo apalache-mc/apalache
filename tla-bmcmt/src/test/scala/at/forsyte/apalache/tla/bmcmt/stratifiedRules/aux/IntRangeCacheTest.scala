@@ -86,16 +86,16 @@ class IntRangeCacheTest extends AnyFunSuite with BeforeAndAfterEach {
           fakeCtx.constraints.contains(tla.in(c.toBuilder, cr1.toBuilder).build)
         }
     )
-//    assert(
-//        csr2.forall { c =>
-//          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr2.toBuilder).build)
-//        }
-//    )
-//    assert(
-//        csr3.forall { c =>
-//          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr3.toBuilder).build)
-//        }
-//    )
+    assert(
+        csr2.forall { c =>
+          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr2.toBuilder).build)
+        }
+    )
+    assert(
+        csr3.forall { c =>
+          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr3.toBuilder).build)
+        }
+    )
   }
 
 }
