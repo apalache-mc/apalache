@@ -27,7 +27,7 @@ class UnsafeBaseBuilder extends ProtoBuilder {
   def appOp(Op: TlaEx, args: TlaEx*): TlaEx = {
     // To support polymorphic operators, we first attempt to compute the post-unification types
     val opType = TlaType1.fromTypeTag(Op.typeTag)
-    require(opType.isInstanceOf[OperT1])
+    require(opType.isInstanceOf[OperT1], s"appOp of ${Op} not tagged with type OperT1, but ${opType}")
     val OperT1(_, resT) = opType.asInstanceOf[OperT1]
     val argTs = args.map(a => TlaType1.fromTypeTag(a.typeTag))
     val mockOperT = OperT1(argTs, resT)
