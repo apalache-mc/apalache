@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.{IntT1, SetT1}
 import at.forsyte.apalache.tla.types.tla
 
 /**
- * Cache tuple domains as well as ranges a..b.
+ * Cache ranges a..b and, as a special case, tuple domains.
  *
  * @author
  *   Jure Kukovec
