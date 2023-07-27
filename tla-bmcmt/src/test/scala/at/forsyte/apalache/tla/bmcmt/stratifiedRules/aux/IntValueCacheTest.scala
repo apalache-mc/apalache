@@ -37,7 +37,7 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Constraints are only added when addConstraintsForElem is explicitly called, and only once per value") {
-    val fakeCtx: FakeCtx = new FakeCtx
+    val mockCtx: MockZ3SolverContext = new MockZ3SolverContext
 
     val i1: BigInt = 42
     val i2: BigInt = 0
@@ -52,16 +52,16 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
     cache.getOrCreate(a1, i2)
     cache.getOrCreate(a1, i2)
 
-    assert(fakeCtx.constraints.isEmpty)
+    assert(mockCtx.constraints.isEmpty)
 
-    cache.addAllConstraints(fakeCtx)
+    cache.addAllConstraints(mockCtx)
 
-    assert(fakeCtx.constraints.size == 2)
+    assert(mockCtx.constraints.size == 2)
     assert(
-        fakeCtx.constraints.contains(tla.eql(ci1.toBuilder, tla.int(i1)).build)
+        mockCtx.constraints.contains(tla.eql(ci1.toBuilder, tla.int(i1)).build)
     )
     assert(
-        fakeCtx.constraints.contains(tla.eql(ci2.toBuilder, tla.int(i2)).build)
+        mockCtx.constraints.contains(tla.eql(ci2.toBuilder, tla.int(i2)).build)
     )
 
   }

@@ -52,7 +52,7 @@ class IntRangeCacheTest extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Constraints are only added when addConstraintsForElem is explicitly called, and only once per value") {
-    val fakeCtx: FakeCtx = new FakeCtx
+    val mockCtx: MockZ3SolverContext = new MockZ3SolverContext
 
     val r1: (Int, Int) = (0, 10)
     val r2: (Int, Int) = (3, 7)
@@ -72,28 +72,28 @@ class IntRangeCacheTest extends AnyFunSuite with BeforeAndAfterEach {
     cache.getOrCreate(a2, r3)
     cache.getOrCreate(a2, r3)
 
-    assert(fakeCtx.constraints.isEmpty)
+    assert(mockCtx.constraints.isEmpty)
 
-    cache.addAllConstraints(fakeCtx)
+    cache.addAllConstraints(mockCtx)
 
     // Dependent caches don't discharge constraints unless called, so we should have 0 constraints
     // from IntValueCache, only the ones from the range cache
     def nConstraints(r: (Int, Int)): Int = math.max(r._2 - r._1 + 1, 0)
 
-    assert(fakeCtx.constraints.size == nConstraints(r1) + nConstraints(r2) + nConstraints(r3))
+    assert(mockCtx.constraints.size == nConstraints(r1) + nConstraints(r2) + nConstraints(r3))
     assert(
         csr1.forall { c =>
-          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr1.toBuilder).build)
+          mockCtx.constraints.contains(tla.in(c.toBuilder, cr1.toBuilder).build)
         }
     )
     assert(
         csr2.forall { c =>
-          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr2.toBuilder).build)
+          mockCtx.constraints.contains(tla.in(c.toBuilder, cr2.toBuilder).build)
         }
     )
     assert(
         csr3.forall { c =>
-          fakeCtx.constraints.contains(tla.in(c.toBuilder, cr3.toBuilder).build)
+          mockCtx.constraints.contains(tla.in(c.toBuilder, cr3.toBuilder).build)
         }
     )
   }
