@@ -1,13 +1,14 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
-import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.IntValueCache
-import at.forsyte.apalache.tla.lir.TlaEx
 import at.forsyte.apalache.tla.types.tla
+import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
 
   var cache: IntValueCache = new IntValueCache
@@ -36,13 +37,7 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Constraints are only added when addConstraintsForElem is explicitly called, and only once per value") {
-    // we make a fake context, which just intercepts any expression added via assertGroundExpr and stores it in a Seq.
-    class FakeCtx extends Z3SolverContext(SolverConfig.default) {
-      var constraints: Seq[TlaEx] = Seq.empty
-      override def assertGroundExpr(ex: TlaEx): Unit = constraints = constraints :+ ex
-    }
-
-    val fakeCtx: FakeCtx = new FakeCtx
+    val mockCtx: MockZ3SolverContext = new MockZ3SolverContext
 
     val i1: BigInt = 42
     val i2: BigInt = 0
@@ -57,16 +52,16 @@ class IntValueCacheTest extends AnyFunSuite with BeforeAndAfterEach {
     cache.getOrCreate(a1, i2)
     cache.getOrCreate(a1, i2)
 
-    assert(fakeCtx.constraints.isEmpty)
+    assert(mockCtx.constraints.isEmpty)
 
-    cache.addAllConstraints(fakeCtx)
+    cache.addAllConstraints(mockCtx)
 
-    assert(fakeCtx.constraints.size == 2)
+    assert(mockCtx.constraints.size == 2)
     assert(
-        fakeCtx.constraints.contains(tla.eql(ci1.toBuilder, tla.int(i1)).build)
+        mockCtx.constraints.contains(tla.eql(ci1.toBuilder, tla.int(i1)).build)
     )
     assert(
-        fakeCtx.constraints.contains(tla.eql(ci2.toBuilder, tla.int(i2)).build)
+        mockCtx.constraints.contains(tla.eql(ci2.toBuilder, tla.int(i2)).build)
     )
 
   }
