@@ -30,8 +30,8 @@ class UninterpretedLiteralCache extends Cache[PureArena, (String, String), Arena
   protected def create(
       arena: PureArena,
       typeAndIndex: (String, String)): (PureArena, ArenaCell) = {
-    // introduce a new cell
     val (utype, _) = typeAndIndex
+    // introduce a new cell
     val cellType = if (utype == StrT1.toString) StrT1 else ConstT1(utype)
     val newArena = arena.appendCell(CellT.fromType1(cellType))
     (newArena, newArena.topCell)
