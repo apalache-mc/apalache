@@ -20,8 +20,8 @@ class UninterpretedLiteralCache extends Cache[PureArena, (String, String), Arena
 
   /**
    * Given a pair `(utype,idx)`, where `utype` represents an uninterpreted type name (possibly "Str") and `idx` some
-   * unique index within that type, returns an extension of `arena`, containing a cell, which represents
-   * "$idx_OF_$utype" (or "idx", if utype = "Str"), and said cell.
+   * unique index within that type, returns an extension of `arena`, containing a cell, which represents "idx_OF_utype"
+   * (or "idx", if utype = "Str"), and said cell.
    *
    * Note that two values are equal (and get cached to the same cell) iff they have the same type and the same index, so
    * e.g. "1_OF_A" and "1_OF_B" (passed here as ("A", "1") and ("B", "1")) get cached to different, incomparable cells,
@@ -39,12 +39,14 @@ class UninterpretedLiteralCache extends Cache[PureArena, (String, String), Arena
 
   /**
    * The UninterpretedLiteralCache maintains that a cell cache for a value `idx` of type `tp` is distinct from all other
-   * values of sort S (defined so far).
+   * values of type `tp` (defined so far).
+   *
+   * Whenever possible, try to use [[addAllConstraints]] instead of this method, for performance reasons instead.
    */
   override def addConstraintsForElem(ctx: SolverContext): (((String, String), ArenaCell)) => Unit = {
     case ((tp, _), v) =>
       val cellType = if (tp == StrT1.toString) StrT1 else ConstT1(tp)
-      val others = values().withFilter(_.cellType == CellTFrom(cellType)).map(_.toBuilder).toSeq
+      val others = values().withFilter { c => c.cellType == CellTFrom(cellType) && c != v }.map(_.toBuilder).toSeq
       // The fresh cell should differ from the previously created cells.
       // We use the SMT constraint (distinct ...).
       ctx.assertGroundExpr(tla.distinct(v.toBuilder +: others: _*))

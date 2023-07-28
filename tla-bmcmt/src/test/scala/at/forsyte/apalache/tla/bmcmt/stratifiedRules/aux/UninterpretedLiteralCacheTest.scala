@@ -103,4 +103,45 @@ class UninterpretedLiteralCacheTest extends AnyFunSuite with BeforeAndAfterEach 
     ))
   }
 
+  test("Constraints are only added when addAllConstraintsForElem is explicitly called, and only once per value") {
+    val mockCtx: MockZ3SolverContext = new MockZ3SolverContext
+
+    val str1: String = "1_OF_A"
+    val str2: String = "2_OF_A"
+    val str3: String = "3_OF_A"
+
+    val pa1 = tpAndIdx(str1)
+    val pa2 = tpAndIdx(str2)
+    val pa3 = tpAndIdx(str3)
+
+    val a0 = PureArena.empty
+    val (a1, c1) = cache.getOrCreate(a0, pa1)
+    // Some extra calls, which shouldn't affect constraint generation
+    cache.getOrCreate(a0, pa1)
+    cache.getOrCreate(a0, pa1)
+
+    cache.addConstraintsForElem(mockCtx)(pa1, c1)
+
+    val (a2, c2) = cache.getOrCreate(a1, pa2)
+    // Some extra calls, which shouldn't affect constraint generation
+    cache.getOrCreate(a1, pa2)
+    cache.getOrCreate(a1, pa2)
+
+    cache.addConstraintsForElem(mockCtx)(pa2, c2)
+
+    val (_, c3) = cache.getOrCreate(a2, pa3)
+    // Some extra calls, which shouldn't affect constraint generation
+    cache.getOrCreate(a2, pa3)
+    cache.getOrCreate(a2, pa3)
+
+    cache.addConstraintsForElem(mockCtx)(pa3, c3)
+
+    // -ForElem creates 3 "distinct" constraints
+    assert(mockCtx.constraints == Seq(
+        tla.distinct(c1.toBuilder).build,
+        tla.distinct(c2.toBuilder, c1.toBuilder).build,
+        tla.distinct(c3.toBuilder, c1.toBuilder, c2.toBuilder).build,
+    ))
+  }
+
 }
