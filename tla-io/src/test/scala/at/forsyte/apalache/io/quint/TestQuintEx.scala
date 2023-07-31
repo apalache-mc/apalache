@@ -129,9 +129,13 @@ class TestQuintEx extends AnyFunSuite {
     val letFooBeTrueIn42 = e(QuintLet(uid, fooDef, _42), QuintIntT())
     val lambda = e(QuintLambda(uid, List(xParam), "def", s), QuintOperT(List(QuintIntT()), QuintStrT()))
     // Applications can only be by name (lambdas are not first class)
-    val barDef = opDef("bar", List("x" -> QuintIntT()), s, QuintStrT())
-    val appBar = app("bar", _42)(QuintStrT(), barDef.id)
+    val barDef = opDef("bar", List("x" -> QuintIntT(), "y" -> QuintIntT()), nam("x", QuintIntT()), QuintIntT())
+    val appBar = app("bar", _2, _3)(QuintIntT(), barDef.id)
     val letBarBeLambdaInAppBar = e(QuintLet(uid, barDef, appBar), QuintStrT())
+    // Applications unbox tuple argument
+    val intPair = app("Tup", _1, _2)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))
+    val appBarTup = app("bar", intPair)(QuintIntT(), barDef.id)
+    val letBarBeLambdaInAppBarTup = e(QuintLet(uid, barDef, appBarTup), QuintStrT())
     val nIsGreaterThan0 = app("igt", name, _0)(QuintBoolT())
     val nDefindedAs42 = QuintDef.QuintOpDef(uid, "n", "val", _42)
     val letNbe42inNisGreaterThan0 = e(QuintLet(uid, nDefindedAs42, nIsGreaterThan0), QuintBoolT())
@@ -141,7 +145,6 @@ class TestQuintEx extends AnyFunSuite {
     val int2ToBool =
       e(QuintLambda(uid, List(nParam, accParam), "def", tt), QuintOperT(List(QuintIntT(), QuintIntT()), QuintBoolT()))
     val intSet = app("Set", _1, _2, _3)(QuintSetT(QuintIntT()))
-    val intPair = app("Tup", _1, _2)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))
     val intList = app("List", _1, _2, _3)(QuintSeqT(QuintIntT()))
     val intPairSet = app("Set", intPair, intPair)(QuintSetT(QuintTupleT.ofTypes(QuintIntT())))
     val emptyIntList = app("List")(QuintSeqT(QuintIntT()))
@@ -225,7 +228,11 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert operator application") {
-    assert(convert(Q.letBarBeLambdaInAppBar) == """LET bar(x) ≜ "s" IN bar(42)""")
+    assert(convert(Q.letBarBeLambdaInAppBar) == """LET bar(x, y) ≜ x IN bar(2, 3)""")
+  }
+
+  test("can unbox tuples in operator application") {
+    assert(convert(Q.letBarBeLambdaInAppBarTup) == """LET bar(x, y) ≜ x IN LET __quint_var0 ≜ <<1, 2>> IN bar(__quint_var0()[1], __quint_var0()[2])""")
   }
 
   // Booleans

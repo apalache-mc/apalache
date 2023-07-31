@@ -548,7 +548,43 @@ class Quint(quintOutput: QuintOutput) {
         case definedOpName => { args =>
           val operType = typeConv.convert(getTypeFromLookupTable(id))
           val oper = tla.name(definedOpName, operType)
-          args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
+
+          // Quint allows unboxing a single tuple argument of arity `n` to parameters of an `n`-ary operator
+          // 1. We first compute the non-unboxed application:
+          val tlaArgs = args.toList.traverse(tlaExpression)
+          val noUnboxingApp = tlaArgs.map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
+          // 2. Construct the unboxed application, if necessary:
+          args match {
+            case Seq(arg) =>
+              // application to a single argument `arg`
+              val argQuintType = types(arg.id).typ
+              val argTlaType = typeConv.convert(argQuintType)
+              argTlaType match {
+                case tupleType @ TupT1(tupleElemTypes@_*) =>
+                  // `arg` is a closed tuple
+                  operType match {
+                    case OperT1(operArgs, _) if tupleElemTypes.length == operArgs.length =>
+                      // `oper` has same arity as the tuple argument (quint tuples always have arity >= 2
+                      // https://github.com/informalsystems/quint/blob/1f41cdb3d869f77b1512f1163f4bb7d724ec905e/doc/lang.md#tuples)
+                      for {
+                        tlaTuple <- tlaExpression(arg)
+                        // tlaTuple might be a literal, which cannot be applied
+                        // bind it in a name
+                        tupleName = nameGen.uniqueVarName()
+                        tuple = tla.name(tupleName, OperT1(Seq(), tupleType))
+                        tupleDecl = tla.decl(tupleName, tlaTuple)
+                        unboxedArgs = tupleElemTypes.zipWithIndex.map{ case (_, i) => tla.app(tla.appOp(tuple), tla.int(i+1)) }
+                      } yield tla.letIn(tla.appOp(oper, unboxedArgs: _*), tupleDecl)
+                    case _ =>
+                      // `oper` has different arity than the tuple argument
+                      noUnboxingApp
+                  }
+                case _ => noUnboxingApp
+                // argument is not tuple-typed
+              }
+            case _ => noUnboxingApp
+            // application to multiple arguments
+          }
         }
       }
       applicationBuilder(quintArgs)
