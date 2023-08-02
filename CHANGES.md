@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.41.3 - 2023-08-02
+
+### Bug fixes
+
+- Fixed a bug when decoding certain record types, see #2684
+
 ## 0.41.2 - 2023-07-24
 
 ## 0.41.1 - 2023-07-24
