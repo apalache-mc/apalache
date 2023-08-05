@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.4.8"
+    lazy val logbackVersion = "1.4.9"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
