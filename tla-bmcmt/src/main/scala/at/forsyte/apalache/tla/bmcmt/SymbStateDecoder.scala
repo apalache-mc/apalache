@@ -165,9 +165,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       arena: PureArenaAdapter,
       cell: ArenaCell,
       fieldTypes: SortedMap[String, TlaType1]): TBuilderInstruction =
-    tla.rec(fieldTypes.keySet.toList.map { k =>
-      k -> decodeCellToTlaEx(arena, recordOps.getField(arena, cell, k))
-    }: _*)
+    tla.rowRec(None,
+        fieldTypes.keySet.toList.map { k =>
+          k -> decodeCellToTlaEx(arena, recordOps.getField(arena, cell, k))
+        }: _*)
 
   private def decodeVariantToTlaEx(
       arena: PureArenaAdapter,
