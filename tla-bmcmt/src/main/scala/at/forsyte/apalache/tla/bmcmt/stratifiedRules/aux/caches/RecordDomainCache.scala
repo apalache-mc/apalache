@@ -18,11 +18,11 @@ class RecordDomainCache(strValueCache: UninterpretedLiteralCache)
     extends Cache[PureArena, SortedSet[String], (ArenaCell, Seq[ArenaCell])] {
 
   /**
-   * Given a set of `keys`, returns a tuple `(rArena, (rCell, rCells))`, where:
-   *   - `rCell` is the cell representing the set `keys`
-   *   - `rCells` is s sequence of cells `c_1, c_2,..., c_|keys|`, representing the set contents (e.g. "a", "b", ...).
+   * Given a set of `keys`, returns a tuple `(rArena, (setCell, allCells))`, where:
+   *   - `setCell` is the cell representing the set `keys`
+   *   - `allCells` is s sequence of cells `c_1, c_2,..., c_|keys|`, representing the set contents (e.g. "a", "b", ...).
    *   - `rArena` is an extension of `arena`, containing all of the above cells, and a relation
-   *     {{{rCell --(has)--> c_1, c_2,..., c_|keys|}}}
+   *     {{{setCell --(has)--> c_1, c_2,..., c_|keys|}}}
    *
    * Note that this method internally calls `strValueCache.getOrCreate`, which caches all strings in the set.
    */
