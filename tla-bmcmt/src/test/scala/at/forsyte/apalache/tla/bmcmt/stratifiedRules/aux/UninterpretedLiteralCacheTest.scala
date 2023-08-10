@@ -103,7 +103,7 @@ class UninterpretedLiteralCacheTest extends AnyFunSuite with BeforeAndAfterEach 
     ))
   }
 
-  test("Constraints are only added when addAllConstraintsForElem is explicitly called, and only once per value") {
+  test("Constraints are only added when addConstraintsForElem is explicitly called, and only once per value") {
     val mockCtx: MockZ3SolverContext = new MockZ3SolverContext
 
     val str1: String = "1_OF_A"
