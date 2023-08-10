@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLiteralCache
-import at.forsyte.apalache.tla.lir.StrT1
+import at.forsyte.apalache.tla.lir.{StrT1, TlaType1}
 import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
@@ -14,9 +14,9 @@ class UninterpretedLiteralCacheTest extends AnyFunSuite with BeforeAndAfterEach 
 
   var cache: UninterpretedLiteralCache = new UninterpretedLiteralCache
 
-  def tpAndIdx(s: String): (String, String) = {
+  def tpAndIdx(s: String): (TlaType1, String) = {
     val (utype, idx) = ModelValueHandler.typeAndIndex(s).getOrElse((StrT1, s))
-    (utype.toString, idx)
+    (utype, idx)
   }
 
   override def beforeEach(): Unit = {
@@ -99,7 +99,7 @@ class UninterpretedLiteralCacheTest extends AnyFunSuite with BeforeAndAfterEach 
 
     // Due to the optimized `addAllConstraints` override, we only have 1 "distinct"
     assert(mockCtx.constraints == Seq(
-        tla.distinct(c1.toBuilder, c2.toBuilder, c3.toBuilder).build
+        tla.distinct(c3.toBuilder, c2.toBuilder, c1.toBuilder).build
     ))
   }
 
