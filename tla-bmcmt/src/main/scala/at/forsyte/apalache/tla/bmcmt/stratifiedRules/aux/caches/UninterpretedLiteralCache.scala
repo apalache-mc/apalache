@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.{ConstT1, StrT1, TlaType1}
 import at.forsyte.apalache.tla.types.tla
 
 /**
- * A cache for uninterpreted literals, that are translated as uninterpreted SMT constants, with a unique sort per
+ * A cache for uninterpreted literals, that are translated to uninterpreted SMT constants, with a unique sort per
  * uninterpreted type. Since two values are equal iff they are literally the same literal, we force inequality between
  * all the respective SMT constants.
  *
