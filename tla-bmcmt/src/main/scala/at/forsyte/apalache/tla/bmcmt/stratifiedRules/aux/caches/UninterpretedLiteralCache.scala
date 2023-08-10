@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
-import at.forsyte.apalache.tla.lir.{ConstT1, StrT1}
+import at.forsyte.apalache.tla.lir.{ConstT1, StrT1, TlaType1}
 import at.forsyte.apalache.tla.types.tla
 
 /**
@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.types.tla
  * @author
  *   Jure Kukovec
  */
-class UninterpretedLiteralCache extends Cache[PureArena, (String, String), ArenaCell] {
+class UninterpretedLiteralCache extends Cache[PureArena, (TlaType1, String), ArenaCell] {
 
   /**
    * Given a pair `(utype,idx)`, where `utype` represents an uninterpreted type name (possibly "Str") and `idx` some
@@ -29,11 +29,11 @@ class UninterpretedLiteralCache extends Cache[PureArena, (String, String), Arena
    */
   protected def create(
       arena: PureArena,
-      typeAndIndex: (String, String)): (PureArena, ArenaCell) = {
+      typeAndIndex: (TlaType1, String)): (PureArena, ArenaCell) = {
     val (utype, _) = typeAndIndex
+    require(utype == StrT1 || utype.isInstanceOf[ConstT1], "Type must be Str, or an uninterpreted type.")
     // introduce a new cell
-    val cellType = if (utype == StrT1.toString) StrT1 else ConstT1(utype)
-    val newArena = arena.appendCell(CellT.fromType1(cellType))
+    val newArena = arena.appendCell(CellT.fromType1(utype))
     (newArena, newArena.topCell)
   }
 
@@ -41,13 +41,19 @@ class UninterpretedLiteralCache extends Cache[PureArena, (String, String), Arena
    * The UninterpretedLiteralCache maintains that a cell cache for a value `idx` of type `tp` is distinct from all other
    * values of type `tp` (defined so far).
    *
-   * Whenever possible, try to use [[addAllConstraints]] instead of this method, for performance reasons instead.
+   * Whenever possible, try to use [[addAllConstraints]] instead of this method, for performance reasons instead:
+   *
+   * If we consider a naive implementation of `distinct(a1,..., an)` as `a1 != a2 /\ a1 != a3 /\ ... /\ a{n-1} != an`, a
+   * `distinct` with `n` elements is equivalent to `dn = n(n-1)/2` disequalities. Suppose we end up with a collection of
+   * `N` cache values (of a given type). If we called `addConstaintsForElem` after each addition, we'd end up with `d1 +
+   * d2 + ... + dN` disequalities, i.e. {{{\sum_{n=1}^N n(n-1)/2 = N(N^2 -1)/6}}} In contrast, `addAllConstraints`
+   * produces `dN = N(N-1)/2` disequalities, which is `O(N^2)`, instead of `O(N^3)`.
    */
-  override def addConstraintsForElem(ctx: SolverContext): (((String, String), ArenaCell)) => Unit = {
-    case ((tp, _), v) =>
-      val cellType = if (tp == StrT1.toString) StrT1 else ConstT1(tp)
-      val others = values().withFilter { c => c.cellType == CellTFrom(cellType) && c != v }.map(_.toBuilder).toSeq
-      // The fresh cell should differ from the previously created cells.
+  override def addConstraintsForElem(ctx: SolverContext): (((TlaType1, String), ArenaCell)) => Unit = {
+    case ((utype, _), v) =>
+      require(utype == StrT1 || utype.isInstanceOf[ConstT1], "Type must be Str, or an uninterpreted type.")
+      val others = values().withFilter { c => c.cellType == CellTFrom(utype) && c != v }.map(_.toBuilder).toSeq
+      // The cell should differ from the previously created cells.
       // We use the SMT constraint (distinct ...).
       ctx.assertGroundExpr(tla.distinct(v.toBuilder +: others: _*))
   }
