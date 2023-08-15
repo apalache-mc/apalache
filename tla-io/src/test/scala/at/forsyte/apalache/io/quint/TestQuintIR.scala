@@ -50,7 +50,7 @@ class TestQuintIR extends AnyFunSuite {
   test("Can load clockSync3.json") {
     val clockSync3QuintJson = scala.io.Source.fromResource("clockSync3.json").mkString
     val quintIR = QuintOutput.read(clockSync3QuintJson).get
-    assert(quintIR.modules(0).name == "ClockSync3")
+    assert(quintIR.modules(0).name == "clockSync3")
   }
 
   test("Invalid JSON returns sensible error") {

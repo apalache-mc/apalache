@@ -60,7 +60,7 @@ class TestQuintEx extends AnyFunSuite {
     def app(name: String, args: QuintEx*)(retType: QuintType, refId: BigInt = -1): QuintApp = {
       val id = uid
       if (refId != -1) {
-        lookupMap += (id -> QuintLookupTableEntry("def", refId))
+        lookupMap += (id -> QuintLookupTableEntry("def", refId, name))
       }
       e(QuintApp(id, name, args), retType)
     }
