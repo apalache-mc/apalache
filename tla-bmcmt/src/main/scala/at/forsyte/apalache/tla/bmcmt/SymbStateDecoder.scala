@@ -54,7 +54,10 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           case None =>
             // not found, just use the name
             // a value that was assigned by the solver, and not created by us
-            tla.str(cell.toString)
+            tt match {
+              case CellTFrom(StrT1)                => tla.str(s"FRESH${cell.id}")
+              case CellTFrom(ttConst @ ConstT1(_)) => tla.const(s"FRESH${cell.id}", ttConst)
+            }
         }
       }
 
