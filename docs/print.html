@@ -3568,6 +3568,7 @@ The type checker <a href="HOWTOs/../apalache/typechecker-snowcat.html">Snowcat</
 </ul>
 <p>Example: <code>&quot;1_OF_UT&quot;</code> is a value belonging to the uninterpreted type <code>UT</code>, as is <code>&quot;2_OF_UT&quot;</code>. These two values are distinct by definition. On the contrary,
 <code>&quot;1_OF_ut&quot;</code> does <em>not</em> meet the criteria for a value belonging to an uninterpreted type ( lowercase <code>ut</code> is not a valid identifier for an uninterpreted type), so it is treated as a string value.</p>
+<p><strong>Note</strong>: Values matching the pattern <code>&quot;FRESH[0-9]+_OF_TYPENAME&quot;</code> are reserved for internal use, to allow Apalache to construct fresh values.</p>
 <h2><a class="header" href="#uninterpreted-types-str-and-comparisons" id="uninterpreted-types-str-and-comparisons">Uninterpreted types, <code>Str</code>, and comparisons</a></h2>
 <p>Importantly, while both strings and values belonging to uninterpreted types are introduced using the <code>&quot;...&quot;</code> notation, they are treated as having distinct, incomparable types.
 Examples:</p>
