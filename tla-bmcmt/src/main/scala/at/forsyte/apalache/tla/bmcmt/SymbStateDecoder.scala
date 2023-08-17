@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
+import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
@@ -35,27 +35,28 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     case CellTFrom(IntT1) =>
       cell.toBuilder.map(solverContext.evalGroundExpr)
 
-    case tt @ (CellTFrom(ConstT1(_)) | CellTFrom(StrT1)) =>
+    case ct @ CellTFrom(StrT1 | ConstT1(_)) =>
       // First, attempt to check the cache
       val found = rewriter.modelValueCache.findKey(cell)
-      if (found.isDefined) {
-        val pa @ (_, index) = found.get
-        if (tt == CellTFrom(StrT1)) tla.str(index)
-        else tla.constParsed(ModelValueHandler.construct(pa))
-      } else {
-        // if not in the cache, it might be the case that another cell, which has asserted equivalence
-        // with the original cell can be found
-        val values = rewriter.modelValueCache.values().filter(_.cellType == tt).toSeq
-        findCellInSet(values, cell.toBuilder) match {
-          // found among the cached keys
-          case Some(c) =>
-            decodeCellToTlaEx(arena, c)
+      found match {
+        case Some((_, index)) =>
+          if (ct == CellTFrom(StrT1)) tla.str(index)
+          else tla.const(index, ct.tt.asInstanceOf[ConstT1])
+        case None =>
+          // if not in the cache, it might be the case that another cell, which has asserted equivalence
+          // with the original cell can be found
+          val values = rewriter.modelValueCache.values().filter(_.cellType == cell.cellType).toSeq
+          findCellInSet(values, cell.toBuilder) match {
+            case Some(c) =>
+              // found among the cached keys
+              decodeCellToTlaEx(arena, c)
 
-          case None =>
-            // not found, just use the name
-            // a value that was assigned by the solver, and not created by us
-            tla.str(cell.toString)
-        }
+            case None =>
+              // not found, just use the name
+              // a value that was assigned by the solver, and not created by us
+              if (ct == CellTFrom(StrT1)) tla.str(s"FRESH${cell.id}")
+              else tla.const(s"FRESH${cell.id}", ct.tt.asInstanceOf[ConstT1])
+          }
       }
 
     case UnknownT() =>
