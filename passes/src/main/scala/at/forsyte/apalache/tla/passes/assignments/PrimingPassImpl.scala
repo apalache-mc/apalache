@@ -3,12 +3,12 @@ package at.forsyte.apalache.tla.passes.assignments
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.decorateWithPrime
 import at.forsyte.apalache.tla.lir.transformations.standard._
+import at.forsyte.apalache.tla.types.tla
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -31,14 +31,14 @@ class PrimingPassImpl @Inject() (
 
     val bodyMap = BodyMapFactory.makeFromDecls(declarations)
 
-    val cinitPrimed = derivedPreds.cinit.map { name =>
+    val cinitPrimed: Option[TlaOperDecl] = derivedPreds.cinit.map { name =>
       val operatorBody = bodyMap(name).body
       val primeTransformer = decorateWithPrime(constSet, tracker) // add primes to constants
       val cinitPrimedName = name + "Primed"
       logger.info(s"  > Introducing $cinitPrimedName for $name'")
       val newBody = primeTransformer(deepCopy.deepCopyEx(operatorBody))
       // Safe constructor: cannot be recursive
-      TlaOperDecl(cinitPrimedName, List(), newBody)
+      tla.decl(cinitPrimedName, tla.unchecked(newBody))
     }
 
     val initName = derivedPreds.init
@@ -51,7 +51,7 @@ class PrimingPassImpl @Inject() (
     )
 
     // Safe constructor: cannot be recursive
-    val initPrimed = Some(TlaOperDecl(initPrimedName, List(), newBody))
+    val initPrimed: Option[TlaOperDecl] = Some(tla.decl(initPrimedName, tla.unchecked(newBody)))
 
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
     val newModule = tlaModule.copy(declarations = newDeclarations)
