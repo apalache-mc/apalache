@@ -39,6 +39,8 @@ where:
 Example: `"1_OF_UT"` is a value belonging to the uninterpreted type `UT`, as is `"2_OF_UT"`. These two values are distinct by definition. On the contrary,
 `"1_OF_ut"` does _not_ meet the criteria for a value belonging to an uninterpreted type ( lowercase `ut` is not a valid identifier for an uninterpreted type), so it is treated as a string value.
 
+**Note**: Values matching the pattern `"FRESH[0-9]+_OF_TYPENAME"` are reserved for internal use, to allow Apalache to construct fresh values.
+
 ## Uninterpreted types, `Str`, and comparisons
 Importantly, while both strings and values belonging to uninterpreted types are introduced using the `"..."` notation, they are treated as having distinct, incomparable types.
 Examples:
