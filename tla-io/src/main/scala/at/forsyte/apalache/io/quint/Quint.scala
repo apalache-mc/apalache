@@ -58,10 +58,10 @@ class Quint(quintOutput: QuintOutput) {
     table.get(id) match {
       case None => throw new QuintIRParseError(s"No entry found for id ${id} in lookup table")
       case Some(lookupEntry) =>
-        types.get(lookupEntry.reference) match {
+        types.get(lookupEntry.id) match {
           case None =>
             throw new QuintIRParseError(
-                s"No type found for reference ${lookupEntry.reference} associated with id ${id}")
+                s"No type found for definition ${lookupEntry.name} (${lookupEntry.id}) associated with id ${id}")
           case Some(t) => t.typ
         }
     }
@@ -677,7 +677,7 @@ class Quint(quintOutput: QuintOutput) {
       val accumulatedNullarOpNames = Set[String]()
       val accumulatedTlaDecls = List[TlaDecl]()
       // Translate all definitions from the quint module
-      module.defs
+      module.declarations
         .foldLeft((accumulatedNullarOpNames, accumulatedTlaDecls)) {
           // Accumulate the converted definition and the name of the operator, of it is nullary
           case ((nullaryOps, tlaDecls), quintDef) =>
