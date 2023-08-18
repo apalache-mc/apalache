@@ -3565,7 +3565,7 @@ $ rm -rf ./test-out-dir
 ### output manager: write-intermediate files
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=0 Counter.tla | sed 's/[IEW]@.*//' 
+$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=true --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
@@ -3935,7 +3935,7 @@ The Apalache server is running on port 8888. Press Ctrl-C to stop.
 `booleans.qnt.json` updated via `make quint-fixtures`
 
 ```sh
-$ apalache-mc check booleans.qnt.json | sed 's/[IEW]@.*//'
+$ apalache-mc check --init=init --next=step booleans.qnt.json | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
