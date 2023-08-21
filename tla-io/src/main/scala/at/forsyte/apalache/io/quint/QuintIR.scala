@@ -95,7 +95,8 @@ class QuintUnsupportedError(errMsg: String) extends Exception("Unsupported quint
 
 private[quint] case class QuintLookupTableEntry(
     kind: String,
-    reference: BigInt)
+    id: BigInt,
+    name: String)
 private[quint] object QuintLookupTableEntry {
   implicit val rw: RW[QuintLookupTableEntry] = macroRW
 }
@@ -121,7 +122,7 @@ object QuintOutput {
 private[quint] case class QuintModule(
     id: BigInt,
     name: String,
-    defs: Seq[QuintDef])
+    declarations: Seq[QuintDef])
 private[quint] object QuintModule {
   implicit val rw: RW[QuintModule] = macroRW
 }
