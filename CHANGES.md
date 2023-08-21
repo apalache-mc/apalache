@@ -1,6 +1,16 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.41.4 - 2023-08-21
+
+### Breaking changes
+
+- Update Quint deserialization for compatibility with version > 0.13.0, see #2696
+
+### Bug fixes
+
+- Fix a bug with decoding unconstrained model values of uninterpreted types.
+
 ## 0.41.3 - 2023-08-02
 
 ### Bug fixes
