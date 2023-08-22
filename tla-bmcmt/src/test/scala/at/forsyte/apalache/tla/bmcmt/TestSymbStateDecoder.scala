@@ -270,7 +270,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     assertBuildEqual(vrt1, decodedEx)
   }
 
-  test("decode gen: Regression for #2702") { rewriterType: SMTEncoding =>
+  test("decode gen: Regression #1 for #2702") { rewriterType: SMTEncoding =>
     val valName = tla.name("gen", SetT1(IntT1))
     val genEx = tla.gen(1, SetT1(IntT1))
     val x = tla.name("x", IntT1)
@@ -295,6 +295,34 @@ trait TestSymbStateDecoder extends RewriterBase {
           case OperEx(TlaSetOper.enumSet, args @ _*) =>
             args.forall { _ == tla.int(0).build }
           case _ => false
+        }
+    )
+  }
+
+  test("decode gen: Regression #2 for #2702") { rewriterType: SMTEncoding =>
+    val valName = tla.name("gen", SetT1(IntT1))
+    val genEx = tla.gen(1, SetT1(IntT1))
+    val x = tla.name("x", IntT1)
+    val cond = tla.forall(x, valName, tla.neql(x, tla.int(42)))
+
+    val ex = tla.and(tla.eql(valName, genEx), cond)
+
+    val arenaWithGenCell = arena.appendCell(SetT1(IntT1))
+    val genCell = arenaWithGenCell.topCell
+
+    val rewriter = create(rewriterType)
+    val state = new SymbState(ex, arenaWithGenCell, Binding("gen" -> genCell))
+    val rewrittenState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+
+    val decoder = new SymbStateDecoder(solverContext, rewriter)
+
+    val decodedVal: TlaEx = decoder.decodeCellToTlaEx(rewrittenState.arena, genCell)
+
+    assert(
+        decodedVal match {
+          case OperEx(TlaSetOper.enumSet, args @ _*) => !args.contains(tla.int(42).build)
+          case _                                     => false
         }
     )
   }
