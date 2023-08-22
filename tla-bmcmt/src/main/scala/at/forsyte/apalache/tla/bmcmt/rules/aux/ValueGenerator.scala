@@ -151,19 +151,25 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
   }
 
   private def genSet(state: SymbState, elemType: TlaType1): SymbState = {
-    var nextState = state
-    var elems: List[ArenaCell] = Nil
-    for (_ <- 1 to bound) {
-      nextState = gen(nextState, elemType)
-      elems = nextState.asCell :: elems
-    }
     val setType = CellT.fromType1(SetT1(elemType))
-    nextState = nextState.updateArena(a => a.appendCellOld(setType))
-    val setCell = nextState.arena.topCell
-    nextState = nextState.updateArena(a => a.appendHas(setCell, elems.map { FixedElemPtr }: _*))
+    val stateWithSetCell = state.updateArena(a => a.appendCellOld(setType))
+    val setCell = stateWithSetCell.arena.topCell
+
+    val (stateWithGenElems, elemPtrs) =
+      1.to(bound).foldLeft((stateWithSetCell, List.empty[ElemPtr])) { case ((s, ptrs), _) =>
+        val nextState = gen(s, elemType)
+        val stateAsCell = nextState.asCell
+        // For Gen, not all elements necessarily belong to the set, so we should not use FixedElemPtr
+        // instead, the pointers should have unconstrained SMT constants as conditions.
+        // We can just use the edge predicate directly for those.
+        val ptr = SmtExprElemPtr(stateAsCell, tla.selectInSet(stateAsCell.toBuilder, setCell.toBuilder))
+        (nextState, ptr :: ptrs)
+      }
+
+    var nextState = stateWithGenElems.updateArena(a => a.appendHas(setCell, elemPtrs: _*))
     // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
     if (rewriter.solverContext.config.smtEncoding == SMTEncoding.Arrays) {
-      for (elem <- elems) {
+      for (elem <- elemPtrs.map(_.elem)) {
         nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
         // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
@@ -174,7 +180,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         rewriter.solverContext.assertGroundExpr(ite)
       }
     }
-    nextState.setRex(setCell.toNameEx.withTag(Typed(SetT1(elemType))))
+    nextState.setRex(setCell.toNameEx)
   }
 
   private def genSeq(state: SymbState, elemType: TlaType1): SymbState = {
