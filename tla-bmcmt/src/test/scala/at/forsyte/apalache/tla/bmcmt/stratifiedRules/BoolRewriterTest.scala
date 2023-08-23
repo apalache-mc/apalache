@@ -28,6 +28,13 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
     assert(trueCell.toNameEx.eqTyped(NameEx("$C$1")(Typed(BoolT1))))
   }
 
+  test("Boolean set rewriting rule: BOOLEAN ~~> $C$2") {
+    val boolSetEx = tla.booleanSet()
+
+    val cell = rewriter.rewrite(boolSetEx)(RewriterScope.initial())._2
+    assert(cell.toNameEx.eqTyped(NameEx("$C$2")(Typed(SetT1(BoolT1)))))
+  }
+
   test("Boolean operator rewriting rule: c_x /\\ c_y") {
     // Load up the arena with 2 var cells
     val (Seq(xCell, yCell), arena) = Seq(BoolT1, BoolT1).foldLeft((Seq.empty[ArenaCell], PureArena.initial)) {
