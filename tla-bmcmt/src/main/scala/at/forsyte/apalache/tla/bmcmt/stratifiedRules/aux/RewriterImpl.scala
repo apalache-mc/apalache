@@ -1,13 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
 
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules._
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.apalache.AssignmentStratifiedRule
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.base.{BuiltinConstStratifiedRule, SubstStratifiedRule}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.IntValueCache
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.base.{
+  BuiltinConstStratifiedRule, IntConstStratifiedRule, SubstStratifiedRule,
+}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.bool.{AndStratifiedRule, OrStratifiedRule}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.{
   SetCtorStratifiedRule, SetCupStratifiedRule, SetFilterStratifiedRule,
 }
-import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.bool.{AndStratifiedRule, OrStratifiedRule}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values._
@@ -55,6 +58,8 @@ abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewr
     case _                                    => "O@"
   }
 
+  val intValueCache: IntValueCache = new IntValueCache
+
   // A nice way to guess the candidate rules by looking at the expression key.
   // We use simple expressions to generate the keys.
   // For each key, there is a short list of rules that may be applicable.
@@ -79,8 +84,8 @@ abstract class RewriterImpl(@unused private val ctx: SolverContext) extends Rewr
           -> new BuiltinConstStratifiedRule,
         key(tla.natSet())
           -> new BuiltinConstStratifiedRule,
-//        key(ValEx(TlaInt(1)))
-//        -> List(new IntConstRule(this)),
+        key(tla.int(1))
+          -> new IntConstStratifiedRule(this, intValueCache),
 //      key(ValEx(TlaStr("red")))
 //        -> List(new StrConstRule(this)),
 //      // logic
