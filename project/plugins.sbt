@@ -3,7 +3,7 @@ addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.0")
 // https://github.com/sbt/sbt-assembly
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
 // https://github.com/marcuslonnberg/sbt-docker
-addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.10.0")
+addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.11.0")
 // https://github.com/scoverage/sbt-scoverage
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.8")
 // https://github.com/sbt/sbt-buildinfo
