@@ -49,8 +49,12 @@ trait Oracle extends Serializable {
       assertions: Seq[TBuilderInstruction],
       elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
     size match {
+      // If the oracle has no candidate values, then caseAssertions should return a no-op for SMT, i.e. TRUE.
       case 0 => state.arena.cellTrue().toBuilder
 
+      // If the oracle has a single candidate value, then the chosen value will always equal to the (sole) candidate value.
+      // In other words, for such an oracle, whenEqualTo(..., 0) will always hold.
+      // Therefore, we don't need an ITE (and don't need to consider elseAssertions), we just take the first assertion.
       case 1 => assertions.head
 
       case _ =>
