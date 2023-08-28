@@ -2785,6 +2785,17 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+
+## running the transpile command
+ 
+### transpile LanguageWatchdogRegression fails cleanly: language fragment rejected, but no stack trace shown
+
+```sh
+$ apalache-mc transpile LanguageWatchdogRegression.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (75)
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
