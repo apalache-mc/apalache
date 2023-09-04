@@ -38,7 +38,7 @@ trait Oracle {
    * `i`-th element of `assertions` describes a formula, which holds if the oracle value is equal to the `i`-th
    * candidate value `vi`.
    *
-   * Optionally, a sequence option `elseAssertionsOpt`, containing a sequence of the same length as assertions`, may be
+   * Optionally, a sequence option `elseAssertionsOpt`, containing a sequence of the same length as `assertions`, may be
    * provided. If it is, the `i`-th element of the sequence describes a formula, which holds if the oracle value is
    * _not_ equal to the `i`-th candidate value `vi`. If this value is not provided, a default sequence, containing `N`
    * copies of `TRUE` is taken in place of the aforementioned formulas.
