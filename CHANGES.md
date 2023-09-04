@@ -1,6 +1,8 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.42.1 - 2023-09-04
+
 ## 0.42.0 - 2023-08-21
 
 ### Breaking changes
