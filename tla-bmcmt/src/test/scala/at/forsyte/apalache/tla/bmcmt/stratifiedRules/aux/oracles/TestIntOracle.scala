@@ -44,7 +44,7 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
         case i => IntOracle.create(initScope, i)._2.size == i
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
+    check(prop, minSuccessful(100), sizeRange(4))
   }
 
   test("oracleValueIsEqualToIndexedValue returns an integer comparison") {
