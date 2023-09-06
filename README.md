@@ -34,6 +34,8 @@ tag.
 
 To try the latest cool features, check out the head of the [main branch][].
 
+You can also find Apalache packaged via Nix at [cosmos.nix](https://github.com/informalsystems/cosmos.nix)
+
 For more information on installation options, see [the
 manual][user-manual-installation].
 
