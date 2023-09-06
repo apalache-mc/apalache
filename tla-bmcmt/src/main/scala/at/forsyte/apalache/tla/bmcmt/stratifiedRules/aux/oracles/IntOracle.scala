@@ -18,6 +18,7 @@ import at.forsyte.apalache.tla.types.tla
  *   Jure Kukovec
  */
 class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
+  require(nvalues >= 0, "IntOracle must have a non-negative number of candidate values.")
 
   /**
    * The number of values that this oracle is defined over: `0..(size - 1)`.
@@ -28,13 +29,13 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
    * Produce an expression that states that the chosen value equals to the value `v_{index}`. The actual implementation
    * may be different from an integer comparison.
    */
-  override def oracleValueIsEqualToIndexedValue(scope: RewriterScope, index: Int): TBuilderInstruction =
+  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction =
     tla.eql(intCell.toBuilder, tla.int(index))
 
-  override def getIndexOfOracleValueFromModel(solverContext: SolverContext): Int =
+  override def getIndexOfChosenValueFromModel(solverContext: SolverContext): BigInt =
     solverContext.evalGroundExpr(intCell.toBuilder) match {
-      case ValEx(TlaInt(i)) => i.toInt
-      case _                => throw new IllegalStateException(s"Invalid call to evalPosition, not an integer.")
+      case ValEx(TlaInt(i)) => i
+      case _ => throw new IllegalStateException(s"Invalid call to \"getIndexOfOracleValueFromModel\", not an integer.")
     }
 
 }

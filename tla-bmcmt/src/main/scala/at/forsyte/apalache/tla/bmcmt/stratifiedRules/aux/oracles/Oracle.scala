@@ -29,7 +29,7 @@ trait Oracle {
    * Produce an expression that states that the chosen value equals to the value `v_{index}`. The actual implementation
    * may be different from an integer comparison.
    */
-  def oracleValueIsEqualToIndexedValue(scope: RewriterScope, index: Int): TBuilderInstruction
+  def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction
 
   /**
    * Produce a ground expression that contains assertions for the possible oracle values.
@@ -47,9 +47,8 @@ trait Oracle {
       scope: RewriterScope,
       assertions: Seq[TBuilderInstruction],
       elseAssertionsOpt: Option[Seq[TBuilderInstruction]] = None): TBuilderInstruction = {
-    if (assertions.size != this.size || elseAssertionsOpt.exists { _.size != this.size })
-      throw new IllegalStateException(s"Invalid call to Oracle, assertion sequences must have length $size.")
-
+    require(assertions.size == this.size && elseAssertionsOpt.forall { _.size == this.size },
+        s"Invalid call to Oracle, assertion sequences must have length $size.")
     size match {
       // If the oracle has no candidate values, then caseAssertions should return a no-op for SMT, i.e. TRUE.
       case 0 => PureArena.cellTrue(scope.arena).toBuilder
@@ -66,7 +65,7 @@ trait Oracle {
         // If elseAssertionsOpt is empty, each tuple has its 1st element from assertions and its 2nd defaults to TRUE.
         tla.and(
             assertions.zip(elseAssertions).zipWithIndex.map { case ((thenFormula, elseFormula), i) =>
-              tla.ite(oracleValueIsEqualToIndexedValue(scope, i), thenFormula, elseFormula)
+              tla.ite(chosenValueIsEqualToIndexedValue(scope, i), thenFormula, elseFormula)
             }: _*
         )
     }
@@ -76,5 +75,5 @@ trait Oracle {
    * Decode the value of the oracle variable into an integer index. This method assumes that the solver context has
    * produced an SMT model.
    */
-  def getIndexOfOracleValueFromModel(solverContext: SolverContext): Int
+  def getIndexOfChosenValueFromModel(solverContext: SolverContext): BigInt
 }
