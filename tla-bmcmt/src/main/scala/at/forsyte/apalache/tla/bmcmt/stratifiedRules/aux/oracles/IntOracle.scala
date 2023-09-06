@@ -10,9 +10,7 @@ import at.forsyte.apalache.tla.types.tla
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,
- * do not use this oracle by default. It is handy, when reasoning about sequences.
- *
- * TODO: add tests
+ * whenever a specialized oracle is available, it should be used instead, for performance reasons.
  *
  * @author
  *   Jure Kukovec
