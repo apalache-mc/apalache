@@ -47,7 +47,7 @@ class ValueRule extends FormulaRule {
         termFromNameEx(renamePrimesForVMT(nEx))
       case _ => throwOn(ex)
     }
-    storeUninterpretedLiteralOrVar(term).map { _ => term}
+    storeUninterpretedLiteralOrVar(term).map { _ => term }
   }
 }
 
