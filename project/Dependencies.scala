@@ -31,7 +31,7 @@ object Dependencies {
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
-    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.7"
+    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.9"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.10"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "3.1.2"
@@ -40,7 +40,7 @@ object Dependencies {
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
-    val grpcNetty = "io.grpc" % "grpc-netty" % "1.57.2"
+    val grpcNetty = "io.grpc" % "grpc-netty" % "1.58.0"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)
@@ -54,7 +54,7 @@ object Dependencies {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.17.0" % Test
-    val easymock = "org.easymock" % "easymock" % "5.1.0" % Test
+    val easymock = "org.easymock" % "easymock" % "5.2.0" % Test
 
     val scalaTestVersion = "3.2.17"
     val scalatest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
