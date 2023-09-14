@@ -25,6 +25,7 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 }
 
 object ItfCounterexampleWriter {
+
   /**
    * Produce a JSON representation of a counterexample in the ITF format
    *
