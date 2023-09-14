@@ -15428,7 +15428,7 @@ proposed solution is backwards-compatible with TLC, as we are proposing the
 default untyped implementation for the operators.</p>
 <h1><a class="header" href="#adr-015-informal-trace-format-in-json" id="adr-015-informal-trace-format-in-json">ADR-015: Informal Trace Format in JSON</a></h1>
 <table><thead><tr><th>authors</th><th>proposed by</th><th align="right">last revised</th></tr></thead><tbody>
-<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2022-11-03</td></tr>
+<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2023-09-14</td></tr>
 </tbody></table>
 <p><strong>Table of Contents</strong></p>
 <ul>
@@ -15446,6 +15446,10 @@ by Apalache. This makes tool integration harder. It also make it hard to
 communicate counterexamples to engineers who are not familiar with TLA+. This
 ADR-015 contains a very simple format that does not require any knowledge of
 TLA+ and can be easily integrated into other tools.</p>
+<h2><a class="header" href="#revisions" id="revisions">Revisions</a></h2>
+<p><strong>Rev. 2023-09-14.</strong> Each integer value <code>num</code> is now represented as <code>{ #bigint: &quot;num&quot; }</code>.
+The use of JSON numbers is not allowed anymore. This simplifies custom parsers for ITF,
+see <a href="adr/015adr-trace.html#consequences">Consequences</a>.</p>
 <h2><a class="header" href="#context-2" id="context-2">Context</a></h2>
 <p>A TLA+ execution (called a behavior in TLA+) is a very powerful concept. It can
 represent virtually any execution of a state machine, including sequential
@@ -15700,12 +15704,8 @@ specified in the field <code>vars</code>. Each state must define a value for eve
 <p>A JSON string literal, e.g., <code>&quot;hello&quot;</code>. TLA+ strings are written as strings in this format.</p>
 </li>
 <li>
-<p>A JSON integer, e.g., 123. According to <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>, JSON integers must be in the range: <code>[-(2**53)+1, (2**53)-1]</code>.
-Integers in this range <em>may be</em> written as JSON integers.</p>
-</li>
-<li>
 <p>A big integer of the following form: <code>{ &quot;#bigint&quot;: &quot;[-][0-9]+&quot; }</code>. We are using this format, as many JSON parsers
-impose limits on integer values, see <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>. Big and small integers <em>may be</em>
+impose limits on integer values, see <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>. Big and small integers <em>must be</em>
 written in this format.</p>
 </li>
 <li>
@@ -15752,7 +15752,7 @@ error.</p>
 </code></pre>
 <h3><a class="header" href="#example-4" id="example-4">Example</a></h3>
 <p>The counterexample to <code>NoSolution</code> may be written in the ITF format as follows:</p>
-<pre><code class="language-js">{
+<pre><code class="language-json">{
   &quot;#meta&quot;: {
     &quot;source&quot;: &quot;MC_MissionariesAndCannibalsTyped.tla&quot;,
     &quot;varTypes&quot;: { 
@@ -15841,7 +15841,7 @@ the <code>#meta</code> object by Apalache.</p>
 proposed format in the <a href="https://github.com/informalsystems/apalache/pull/1190">PR
 comments</a>. In a
 regular approach we would treat all expressions uniformly. For example:</p>
-<pre><code class="language-js">// proposed form:
+<pre><code class="language-json">// proposed form:
 &quot;hello&quot;
 // regular form:
 { &quot;#type&quot;: &quot;string&quot;, &quot;#value&quot;: &quot;hello&quot; }
@@ -15869,7 +15869,12 @@ we should keep it in mind and use schemas, when the need arises.</p>
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
 -->
-<p>Reserved for the future.</p>
+<p>We have found that the ITF format is easy to produce and relatively easy to parse.</p>
+<p><strong>Ambiguity in the representation of integers</strong>. As it was brought up in the initial
+discussions, the choice between representing integers
+as JSON numbers, e.g., <code>123</code> and objects, e.g., <code>{ #bigint: &quot;123&quot; }</code>, makes it harder to
+write a parser of custom ITF traces. Hence, we have decided to keep only the object format,
+as the more general of the two representations. </p>
 <h1><a class="header" href="#adr-16-retla---relational-tla" id="adr-16-retla---relational-tla">ADR-16: ReTLA - Relational TLA</a></h1>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
 <tr><td>Jure Kukovec</td><td align="right">1</td></tr>
