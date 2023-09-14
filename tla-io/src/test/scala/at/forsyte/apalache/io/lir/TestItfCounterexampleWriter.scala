@@ -44,7 +44,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
   }
 
   /**
-   * Asserts that P(seq)(json1,json2) holds for every seq in nesetedAccess, where P(seq)(json1,json2) is defined as
+   * Asserts that P(seq)(json1,json2) holds for every seq in nestedAccess, where P(seq)(json1,json2) is defined as
    *   - json1 = json2, if seq is empty, and
    *   - if seq = h +: t, a conjunction of:
    *     - json1 defines a field h, or list of length at least h
@@ -54,7 +54,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
    * In other words, for every sequence Seq(s1,...,sn) in nestedFields json1.s1.s2.(...).sn and json2.s1.s2.(...).sn
    * must be well defined and equal.
    */
-  def assertEqualOver(nesetedAccess: Seq[AbstractAccess]*)(json1: Value, json2: Value): Unit = {
+  def assertEqualOver(nestedAccess: Seq[AbstractAccess]*)(json1: Value, json2: Value): Unit = {
     def prop(seq: Seq[AbstractAccess])(v1: Value, v2: Value): Boolean = seq match {
       case Seq() => v1 == v2
       case h +: t =>
@@ -65,7 +65,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
             } yield prop(t)(v1AtH, v2AtH)
         ).getOrElse(false)
     }
-    nesetedAccess.foreach { accessSeq =>
+    nestedAccess.foreach { accessSeq =>
       assert(
           prop(accessSeq)(json1, json2),
           s": Inputs differ on _${accessSeq.map(a => s"(${a.toString})").mkString("")}",
@@ -81,7 +81,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
         List(("0", SortedMap("N" -> tla.int(4).build))),
     )
     val rawExpected =
-      """{
+      s"""{
         |  "#meta": {
         |    "format": "ITF",
         |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
@@ -94,7 +94,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
         |      "#meta": {
         |        "index": 0
         |      },
-        |      "N": 4
+        |      "N": { "#bigint": "4" }
         |    }
         |  ]
         |}""".stripMargin
@@ -187,20 +187,20 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
         |  "states": [
         |    {
         |      "#meta": { "index": 0 },
-        |      "a": 2,
+        |      "a": { "#bigint": "2" },
         |      "b": "hello",
-        |      "c": [ 3, { "#bigint": "1000000000000000000" } ],
-        |      "d": { "#set": [ 5, 6 ] },
-        |      "e": { "foo": 3, "bar": true },
-        |      "f": { "#tup": [ 7, "myStr" ] },
-        |      "g": { "#map": [[1, "a"], [2, "b"], [3, "c"]] },
+        |      "c": [ { "#bigint": "3" }, { "#bigint": "1000000000000000000" } ],
+        |      "d": { "#set": [ { "#bigint": "5" }, { "#bigint": "6" } ] },
+        |      "e": { "foo": { "#bigint": "3" }, "bar": true },
+        |      "f": { "#tup": [ { "#bigint": "7" }, "myStr" ] },
+        |      "g": { "#map": [[{ "#bigint": "1" }, "a"], [{ "#bigint": "2" }, "b"], [{ "#bigint": "3" }, "c"]] },
         |      "h": { "#map": [] },
-        |      "i": { "#map": [[1, "a"]] },
+        |      "i": { "#map": [[{ "#bigint": "1" }, "a"]] },
         |      "j": { "#unserializable": "[BOOLEAN → Int]" },
         |      "k": { "#unserializable": "SUBSET BOOLEAN" },
         |      "l": { "#unserializable": "Int" },
         |      "m": { "#unserializable": "Nat" },
-        |      "n": { "tag": "Baz", "value": { "foo": 3, "bar": true }}
+        |      "n": { "tag": "Baz", "value": { "foo": { "#bigint": "3" }, "bar": true }}
         |    }
         |  ]
         |}""".stripMargin
