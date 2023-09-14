@@ -8,7 +8,6 @@ import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import java.io.PrintWriter
 import java.util.Calendar
-import scala.collection.immutable.Map
 import scala.collection.mutable
 
 /**
@@ -26,17 +25,6 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 }
 
 object ItfCounterexampleWriter {
-
-  /**
-   * The minimal value that can be reliably represented with Double in JavaScript.
-   */
-  val MIN_JS_INT: BigInt = -BigInt(2).pow(53) + 1
-
-  /**
-   * The maximal value that can be reliably represented with Double in JavaScript.
-   */
-  val MAX_JS_INT: BigInt = BigInt(2).pow(53) - 1
-
   /**
    * Produce a JSON representation of a counterexample in the ITF format
    *
@@ -108,11 +96,7 @@ object ItfCounterexampleWriter {
 
   private def exToJson: TlaEx => ujson.Value = {
     case ValEx(TlaInt(num)) =>
-      if (num >= MIN_JS_INT && num <= MAX_JS_INT) {
-        ujson.Num(num.toDouble)
-      } else {
-        ujson.Obj(BIG_INT_FIELD -> ujson.Str(num.toString(10)))
-      }
+      ujson.Obj(BIG_INT_FIELD -> ujson.Str(num.toString(10)))
 
     case ValEx(TlaBool(b)) =>
       ujson.Bool(b)
