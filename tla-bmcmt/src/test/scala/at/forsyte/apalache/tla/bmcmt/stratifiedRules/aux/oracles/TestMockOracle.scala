@@ -56,7 +56,6 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
       }
 
     check(prop, minSuccessful(1000), sizeRange(4))
-
   }
 
   val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
@@ -84,7 +83,6 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
       }
 
     check(prop, minSuccessful(1000), sizeRange(4))
-
   }
 
   test("caseAssertions always shorthands") {
@@ -101,7 +99,6 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
       }
 
     check(prop, minSuccessful(1000), sizeRange(4))
-
   }
 
   // We don't actually need the solver in MockOracle
