@@ -11,19 +11,19 @@ import at.forsyte.apalache.tla.lir.formulas._
 @RunWith(classOf[JUnitRunner])
 class TestTermConstruction extends AnyFunSuite {
 
-  val int1 = IntLiteral(1)
-  val int2 = IntLiteral(2)
-  val intV1 = IntVar("a")
-  val intV2 = IntVar("b")
+  val int1: Term = IntLiteral(1)
+  val int2: Term = IntLiteral(2)
+  val intV1: Term = IntVar("a")
+  val intV2: Term = IntVar("b")
 
-  val usort1 = UninterpretedSort("A")
-  val usort2 = UninterpretedSort("B")
+  val usort1: UninterpretedSort = UninterpretedSort("A")
+  val usort2: UninterpretedSort = UninterpretedSort("B")
 
-  val uval1 = UninterpretedLiteral("x", usort1)
-  val uval2 = UninterpretedLiteral("y", usort2)
+  val uval1: Term = UninterpretedLiteral("x", usort1)
+  val uval2: Term = UninterpretedLiteral("y", usort2)
 
-  val uvar1 = UninterpretedVar("c", usort1)
-  val uvar2 = UninterpretedVar("d", usort2)
+  val uvar1: Term = UninterpretedVar("c", usort1)
+  val uvar2: Term = UninterpretedVar("d", usort2)
 
   test("Equal requirements") {
     // Does not throw:
@@ -61,10 +61,10 @@ class TestTermConstruction extends AnyFunSuite {
 
   test("Apply requirements.") {
 
-    val fNullary = FunctionSort(IntSort())
-    val fUnary1 = FunctionSort(IntSort(), BoolSort())
+    val fNullary = FunctionSort(IntSort)
+    val fUnary1 = FunctionSort(IntSort, BoolSort)
     val fUnary2 = FunctionSort(usort1, usort2)
-    val fNary1 = FunctionSort(usort2, IntSort(), IntSort(), BoolSort())
+    val fNary1 = FunctionSort(usort2, IntSort, IntSort, BoolSort)
 
     val fnTermNullary = FunctionVar("f", fNullary)
     val fnTermUnary1 = FunctionVar("f", fUnary1)

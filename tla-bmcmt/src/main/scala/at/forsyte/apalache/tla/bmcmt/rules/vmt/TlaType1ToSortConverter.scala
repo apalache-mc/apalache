@@ -12,8 +12,8 @@ import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, StrT1, TlaTyp
 object TlaType1ToSortConverter {
 
   def sortFromType(tt: TlaType1): Sort = tt match {
-    case IntT1                        => IntSort()
-    case BoolT1                       => BoolSort()
+    case IntT1                        => IntSort
+    case BoolT1                       => BoolSort
     case StrT1                        => UninterpretedSort(tt.toString)
     case ConstT1(name)                => UninterpretedSort(name)
     case FunT1(TupT1(args @ _*), res) => FunctionSort(sortFromType(res), args.map(sortFromType): _*)
