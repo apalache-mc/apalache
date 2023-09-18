@@ -3,23 +3,43 @@ package at.forsyte.apalache.tla.lir.formulas
 object Integers {
 
   trait IntExpr extends Term {
-    val sort: Sort = IntSort()
+    val sort: Sort = IntSort
   }
 
-  // TODO: Before introducing integers, refactor static type requirement of IntExpr to require(_.sort == IntSort)
+  sealed case class Plus(lhs: Term, rhs: Term) extends IntExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "Plus is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Minus(lhs: Term, rhs: Term) extends IntExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "Minus is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Uminus(arg: Term) extends IntExpr {
+    require(arg.sort == IntSort, "Uminus is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Mult(lhs: Term, rhs: Term) extends IntExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "Mult is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Div(lhs: Term, rhs: Term) extends IntExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "Div is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Mod(lhs: Term, rhs: Term) extends IntExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "Mod is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Abs(arg: Term) extends IntExpr {
+    require(arg.sort == IntSort, "Abs is only applicable to arguments with Integer sorts.")
+  }
 
-  sealed case class Plus(lhs: IntExpr, rhs: IntExpr) extends IntExpr
-  sealed case class Minus(lhs: IntExpr, rhs: IntExpr) extends IntExpr
-  sealed case class Uminus(arg: IntExpr) extends IntExpr
-  sealed case class Mult(lhs: IntExpr, rhs: IntExpr) extends IntExpr
-  sealed case class Div(lhs: IntExpr, rhs: IntExpr) extends IntExpr
-  sealed case class Mod(lhs: IntExpr, rhs: IntExpr) extends IntExpr
-  sealed case class Abs(arg: IntExpr) extends IntExpr
-
-  sealed case class Lt(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
-  sealed case class Le(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
-  sealed case class Gt(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
-  sealed case class Ge(lhs: IntExpr, rhs: IntExpr) extends Booleans.BoolExpr
+  sealed case class Lt(lhs: Term, rhs: Term) extends Booleans.BoolExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "[<] is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Le(lhs: Term, rhs: Term) extends Booleans.BoolExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "[<=] is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Gt(lhs: Term, rhs: Term) extends Booleans.BoolExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "[>] is only applicable to arguments with Integer sorts.")
+  }
+  sealed case class Ge(lhs: Term, rhs: Term) extends Booleans.BoolExpr {
+    require(Seq(lhs, rhs).forall { _.sort == IntSort }, "[>=] is only applicable to arguments with Integer sorts.")
+  }
 
   sealed case class IntLiteral(i: BigInt) extends IntExpr
   sealed case class IntVar(name: String) extends Variable(name) with IntExpr
