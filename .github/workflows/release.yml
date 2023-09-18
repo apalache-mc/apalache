@@ -17,7 +17,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           # We only need the two commits of the release prep branch
           fetch-depth: 2
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
           java-version: 17
       - name: Cut Release
