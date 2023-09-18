@@ -143,7 +143,11 @@ class ItfToTla[T <: JsonRepresentation](
             asStr(json.getFieldOpt(BIG_INT_FIELD).get).map { bi =>
               tla.int(BigInt(bi))
             }
-          } else asInt(json).map { i => tla.int(BigInt(i)) }
+          } else {
+            // We keep this case for the backwards compatibility with the older versions of ITF.
+            // Apalache itself does not produce this case any longer.
+            asInt(json).map { i => tla.int(BigInt(i)) }
+          }
 
         case SeqT1(elemT) =>
           for {

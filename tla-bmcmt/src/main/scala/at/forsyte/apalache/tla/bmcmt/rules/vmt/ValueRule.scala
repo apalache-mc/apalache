@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.tla.bmcmt.RewriterException
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{False, True}
 import at.forsyte.apalache.tla.lir.formulas.EUF.UninterpretedLiteral
 import at.forsyte.apalache.tla.lir.formulas.Integers.IntLiteral
 import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.ModelValueHandler
 
 /**
@@ -30,22 +30,24 @@ class ValueRule extends FormulaRule {
 
   import ValueRule._
 
-  def apply(ex: TlaEx): Term = ex match {
-    case ValEx(v) =>
-      v match {
-        case TlaInt(i) => IntLiteral(i)
-        case TlaStr(s) =>
-          val (tlaType, id) = ModelValueHandler.typeAndIndex(s).getOrElse((StrT1, s))
-          UninterpretedLiteral(id, UninterpretedSort(tlaType.toString))
-        case TlaBool(b) => if (b) True else False
-        case _          => throwOn(ex)
-      }
-    case nameEx: NameEx                           => termFromNameEx(nameEx)
-    case OperEx(TlaActionOper.prime, nEx: NameEx) =>
-      // Rename x' to x^ for VMT
-      termFromNameEx(renamePrimesForVMT(nEx))
-    case _ => throwOn(ex)
-
+  def apply(ex: TlaEx): TermBuilderT = {
+    val term = ex match {
+      case ValEx(v) =>
+        v match {
+          case TlaInt(i) => IntLiteral(i)
+          case TlaStr(s) =>
+            val (tlaType, id) = ModelValueHandler.typeAndIndex(s).getOrElse((StrT1, s))
+            UninterpretedLiteral(id, UninterpretedSort(tlaType.toString))
+          case TlaBool(b) => if (b) True else False
+          case _          => throwOn(ex)
+        }
+      case nameEx: NameEx                           => termFromNameEx(nameEx)
+      case OperEx(TlaActionOper.prime, nEx: NameEx) =>
+        // Rename x' to x^ for VMT
+        termFromNameEx(renamePrimesForVMT(nEx))
+      case _ => throwOn(ex)
+    }
+    storeUninterpretedLiteralOrVar(term).map { _ => term }
   }
 }
 
@@ -62,7 +64,7 @@ object ValueRule {
         val sort = TlaType1ToSortConverter.sortFromType(tt)
         mkVariable(ex.name, sort)
       case Untyped =>
-        mkVariable(ex.name, UntypedSort())
+        mkVariable(ex.name, UntypedSort)
       case Typed(other) =>
         throw new RewriterException(s"Term construction is not supported: $other is not in TlaType1", ex)
     }

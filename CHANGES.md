@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.43.0 - 2023-09-18
+
+### Features
+
+- - Revise the ITF format: Use only `{ "#bigint": "num" }`, even for small integers`
+
 ## 0.42.0 - 2023-08-21
 
 ### Breaking changes
