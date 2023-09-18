@@ -85,7 +85,8 @@ jobs:
       # Allows other OS tests to proceed even if one fails
       fail-fast: false
       matrix:
-        operating-system: [ubuntu-latest, macos-latest]
+        # Ubuntu version pinned as workaround for https://github.com/actions/runner-images/issues/6709
+        operating-system: [ubuntu-20.04, macos-latest]
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 17
