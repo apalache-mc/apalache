@@ -15,7 +15,7 @@ jobs:
   build-mdbook:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
@@ -30,7 +30,7 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v1
         with:
@@ -43,7 +43,7 @@ jobs:
       APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v1
         with:
@@ -56,7 +56,7 @@ jobs:
       APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
@@ -87,7 +87,7 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
@@ -129,7 +129,7 @@ jobs:
           - operating-system: macos-latest
             smt-encoding: arrays
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cache local m2 repository
         uses: actions/cache@v2
         with:
@@ -166,7 +166,7 @@ jobs:
   docker-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
         # See https://github.com/actions/cache/issues/324
