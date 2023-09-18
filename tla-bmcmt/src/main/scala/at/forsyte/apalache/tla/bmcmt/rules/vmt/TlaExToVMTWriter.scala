@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
 import at.forsyte.apalache.io.OutputManager
-import at.forsyte.apalache.tla.lir.formulas.Booleans.{And, Equiv, Exists, Forall, Impl, Neg, Or}
-import at.forsyte.apalache.tla.lir.formulas.EUF.{Apply, Equal, FunDef, ITE, UninterpretedLiteral, UninterpretedVar}
-import at.forsyte.apalache.tla.lir.formulas._
-import at.forsyte.apalache.tla.lir.{ConstT1, SetT1, StrT1, TlaConstDecl, TlaEx, TlaVarDecl, Typed}
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import at.forsyte.apalache.tla.lir.formulas._
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import scalaz.unused
 
 /**
@@ -20,69 +18,6 @@ import scalaz.unused
  *   Jure Kukovec
  */
 class TlaExToVMTWriter(gen: UniqueNameGenerator) {
-
-  // Collector is used to aggregate all function definitions, uninterpreted literals and uninterpreted sorts
-  // that appear in any operator anywhere, so we can declare them in the VMT file.
-  private class Collector {
-    var fnDefs: List[FunDef] = List.empty
-    var uninterpLits: Set[UninterpretedLiteral] = Set.empty
-    var uninterpSorts: Set[UninterpretedSort] = Set.empty
-
-    private def addFnDef(fd: FunDef): Unit =
-      fnDefs = fd :: fnDefs
-    private def addUL(ul: UninterpretedLiteral): Unit = {
-      uninterpLits += ul
-      uninterpSorts += ul.sort
-    }
-
-    private def addUS(us: UninterpretedSort): Unit =
-      uninterpSorts += us
-
-    def collectAll(t: Term): Unit = t match {
-      case fd @ FunDef(_, _, body) =>
-        addFnDef(fd)
-        collectAll(body)
-      case ITE(i, t, e) =>
-        collectAll(i)
-        collectAll(t)
-        collectAll(e)
-      case Apply(fn, args @ _*) =>
-        collectAll(fn)
-        args.foreach(collectAll)
-      case And(args @ _*) => args.foreach(collectAll)
-      case Or(args @ _*)  => args.foreach(collectAll)
-      case Equiv(lhs, rhs) =>
-        collectAll(lhs)
-        collectAll(rhs)
-      case Equal(lhs, rhs) =>
-        collectAll(lhs)
-        collectAll(rhs)
-      case Impl(lhs, rhs) =>
-        collectAll(lhs)
-        collectAll(rhs)
-      case Neg(arg) => collectAll(arg)
-      case Forall(boundVars, body) =>
-        boundVars.foreach { case (_, setSort) =>
-          setSort match {
-            case us: UninterpretedSort => addUS(us)
-            case _                     => ()
-          }
-        }
-        collectAll(body)
-      case Exists(boundVars, body) =>
-        boundVars.foreach { case (_, setSort) =>
-          setSort match {
-            case us: UninterpretedSort => addUS(us)
-            case _                     => ()
-          }
-        }
-        collectAll(body)
-      case UninterpretedVar(_, uvSort) => addUS(uvSort)
-      case ul: UninterpretedLiteral    => addUL(ul)
-      case _                           => ()
-    }
-  }
-
   // Main entry point.
   def annotateAndWrite(
       varDecls: Seq[TlaVarDecl],
@@ -111,26 +46,32 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
 //    val cinitStrs = cinits.map(TermToVMTWriter.mkSMT2String)
 
     // convenience shorthand
-    def rewrite: TlaEx => Term = rewriter.rewrite
+    def rewrite: TlaEx => TermBuilderT = rewriter.rewrite
 
     // Each transition in initTransitions needs the VMT wrapper Init
-    val inits = initTransitions.map { case (name, ex) =>
-      Init(name, rewrite(ex))
-    }
+    val initCmps = cmpSeq(initTransitions.map { case (name, ex) =>
+      rewrite(ex).map { Init(name, _) }
+    })
+
+    // Each transition in nextTransitions needs the VMT wrapper Trans
+    val transitionCmps = cmpSeq(nextTransitions.map { case (name, ex) =>
+      rewrite(ex).map { Trans(name, _) }
+    })
+
+    // Each invariant in invariants needs the VMT wrapper Invar
+    val invCmps = cmpSeq(invariants.zipWithIndex.map { case ((name, ex), i) =>
+      rewrite(ex).map { Invar(name, i, _) }
+    })
+
+    val (smtDecls, (inits, transitions, invs)) = (for {
+      initTerms <- initCmps
+      transitionTerms <- transitionCmps
+      invTerms <- invCmps
+    } yield (initTerms, transitionTerms, invTerms)).run(SmtDeclarations.init)
 
     val initStrs = inits.map(TermToVMTWriter.mkVMTString)
 
-    // Each transition in nextTransitions needs the VMT wrapper Trans
-    val transitions = nextTransitions.map { case (name, ex) =>
-      Trans(name, rewrite(ex))
-    }
-
     val transStrs = transitions.map(TermToVMTWriter.mkVMTString)
-
-    // Each invariant in invariants needs the VMT wrapper Invar
-    val invs = invariants.zipWithIndex.map { case ((name, ex), i) =>
-      Invar(name, i, rewrite(ex))
-    }
 
     val invStrs = invs.map(TermToVMTWriter.mkVMTString)
 
@@ -145,20 +86,14 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
     // Variable declarations
     val smtVarDecls = varDecls.map(TermToVMTWriter.mkSMTDecl)
 
-    // Now we declare constants and define functions aggregated by Collector
-    val collector = new Collector
-    inits.foreach { i => collector.collectAll(i.initExpr) }
-    transitions.foreach { t => collector.collectAll(t.transExpr) }
-    invs.foreach { i => collector.collectAll(i.invExpr) }
-
     // Sort declaration
-    val allSorts = (setConstants.values ++ collector.uninterpSorts).toSet
+    val allSorts = setConstants.values.toSet ++ smtDecls.uninterpretedSorts.map(UninterpretedSort)
     val sortDecls = allSorts.map(TermToVMTWriter.mkSortDecl)
 
     // Uninterpreted literal declaration and uniqueness assert
-    val ulitDecls = collector.uninterpLits.map(TermToVMTWriter.mkConstDecl)
+    val ulitDecls = smtDecls.uninterpretedLiterals.values.map(TermToVMTWriter.mkConstDecl)
     val disticntAsserts = allSorts.flatMap { s =>
-      val litsForSortS = collector.uninterpLits.filter {
+      val litsForSortS = smtDecls.uninterpretedLiterals.values.filter {
         _.sort == s
       }
       (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermToVMTWriter.assertDistinct)

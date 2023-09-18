@@ -1,12 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.formulas.Booleans.{BoolVar, True}
 import at.forsyte.apalache.tla.lir.formulas.EUF.{UninterpretedLiteral, UninterpretedVar}
 import at.forsyte.apalache.tla.lir.formulas.Integers.{IntLiteral, IntVar}
 import at.forsyte.apalache.tla.lir.formulas.{Term, UninterpretedSort}
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, StrT1, TlaEx}
+import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, SetT1, StrT1, TlaEx, TlaType1}
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -14,33 +14,33 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestValueRule extends AnyFunSuite {
 
-  val rule = new ValueRule
+  val rule: FormulaRule = new ValueRule
 
-  val b = BoolT1
-  val i = IntT1
-  val aType = ConstT1("A")
-  val bType = ConstT1("B")
+  val b: TlaType1 = BoolT1
+  val i: TlaType1 = IntT1
+  val aType: TlaType1 = ConstT1("A")
+  val bType: TlaType1 = ConstT1("B")
 
-  val intEx1 = tla.int(1).as(i)
-  val intEx2 = tla.name("x").as(i)
-  val intEx3 = tla.plus(intEx1, intEx2).as(i)
+  val intEx1: TBuilderInstruction = tla.int(1)
+  val intEx2: TBuilderInstruction = tla.name("x", i)
+  val intEx3: TBuilderInstruction = tla.plus(intEx1, intEx2)
 
-  val boolEx1 = tla.bool(true).as(b)
-  val boolEx2 = tla.name("p").as(b)
-  val boolEx3 = tla.and(boolEx1, boolEx2).as(b)
+  val boolEx1: TBuilderInstruction = tla.bool(true)
+  val boolEx2: TBuilderInstruction = tla.name("p", b)
+  val boolEx3: TBuilderInstruction = tla.and(boolEx1, boolEx2)
 
-  val uninterpEx1 = tla.str("1_OF_A").as(aType)
-  val uninterpEx2 = tla.name("v").as(bType)
-  val uninterpEx3 = tla.str("string").as(StrT1)
+  val uninterpEx1: TBuilderInstruction = tla.constParsed("1_OF_A")
+  val uninterpEx2: TBuilderInstruction = tla.name("v", bType)
+  val uninterpEx3: TBuilderInstruction = tla.str("string")
 
   val expected: Map[TlaEx, Term] = Map(
-      intEx1 -> IntLiteral(1),
-      intEx2 -> IntVar("x"),
-      boolEx1 -> True,
-      boolEx2 -> BoolVar("p"),
-      uninterpEx1 -> UninterpretedLiteral("1", UninterpretedSort("A")),
-      uninterpEx2 -> UninterpretedVar("v", UninterpretedSort("B")),
-      uninterpEx3 -> UninterpretedLiteral("string", UninterpretedSort(StrT1.toString)),
+      intEx1.build -> IntLiteral(1),
+      intEx2.build -> IntVar("x"),
+      boolEx1.build -> True,
+      boolEx2.build -> BoolVar("p"),
+      uninterpEx1.build -> UninterpretedLiteral("1", UninterpretedSort("A")),
+      uninterpEx2.build -> UninterpretedVar("v", UninterpretedSort("B")),
+      uninterpEx3.build -> UninterpretedLiteral("string", UninterpretedSort(StrT1.toString)),
   )
 
   test("ValueRule applicability") {
@@ -48,25 +48,23 @@ class TestValueRule extends AnyFunSuite {
       assert(rule.isApplicable(ex))
     }
 
-    import at.forsyte.apalache.tla.lir.UntypedPredefs._
-
     val notApp = List(
         tla.and(tla.bool(true), tla.bool(false)),
-        tla.impl(tla.name("x"), tla.name("q")),
+        tla.impl(tla.name("x", BoolT1), tla.name("q", BoolT1)),
         tla.tuple(tla.int(1), tla.int(2)),
-        tla.funSet(tla.name("S"), tla.dotdot(tla.int(1), tla.int(42))),
-        tla.unchanged(tla.name("x")),
-        tla.forall(tla.name("x"), tla.name("S"), tla.name("p")),
+        tla.funSet(tla.name("S", SetT1(IntT1)), tla.dotdot(tla.int(1), tla.int(42))),
+        tla.unchanged(tla.name("x", IntT1)),
+        tla.forall(tla.name("x", IntT1), tla.name("S", SetT1(IntT1)), tla.name("p", BoolT1)),
     )
 
     notApp.foreach { ex =>
-      assert(!rule.isApplicable(ex.untyped()))
+      assert(!rule.isApplicable(ex))
     }
   }
 
   test("ValueRune correctness") {
     expected.foreach { case (k, expected) =>
-      val actual = rule(k)
+      val actual = rule(k).run(SmtDeclarations.init)._2
       assert(actual == expected)
     }
   }
