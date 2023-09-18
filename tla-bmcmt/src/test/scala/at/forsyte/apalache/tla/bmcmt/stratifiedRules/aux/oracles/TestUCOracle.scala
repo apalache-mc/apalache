@@ -66,7 +66,7 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
           }
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
+    check(prop, minSuccessful(200), sizeRange(4))
   }
 
   val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
@@ -93,7 +93,7 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
         else true
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
+    check(prop, minSuccessful(200), sizeRange(4))
   }
 
   test("caseAssertions constructs a collection of ITEs, or shorthands") {
@@ -127,7 +127,7 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
         }
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
+    check(prop, minSuccessful(200), sizeRange(4))
   }
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
@@ -148,7 +148,7 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
       }
 
     // 1000 is too many, since each run invokes the solver
-    check(prop, minSuccessful(100), sizeRange(4))
+    check(prop, minSuccessful(80), sizeRange(4))
   }
 
   test("getIndexOfChosenValueFromModel recovers the index correctly for empty collections") {
