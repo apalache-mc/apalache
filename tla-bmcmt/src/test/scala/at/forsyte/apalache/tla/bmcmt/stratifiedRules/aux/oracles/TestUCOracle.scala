@@ -38,18 +38,18 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     idx <- Gen.choose(0, max - 1) // index must be <
   } yield (max, idx)
 
-  // test("Oracle cannot be constructed with negative size") {
-  //   val prop =
-  //     forAll(intGen) {
-  //       case i if i < 0 =>
-  //         Prop.throws(classOf[IllegalArgumentException]) {
-  //           UninterpretedConstOracle.create(rewriter, cache, initScope, i)
-  //         }
-  //       case i => UninterpretedConstOracle.create(rewriter, cache, initScope, i)._2.size == i
-  //     }
+  test("Oracle cannot be constructed with negative size") {
+    val prop =
+      forAll(intGen) {
+        case i if i < 0 =>
+          Prop.throws(classOf[IllegalArgumentException]) {
+            UninterpretedConstOracle.create(rewriter, cache, initScope, i)
+          }
+        case i => UninterpretedConstOracle.create(rewriter, cache, initScope, i)._2.size == i
+      }
 
-  //   check(prop, minSuccessful(100), sizeRange(4))
-  // }
+    check(prop, minSuccessful(100), sizeRange(4))
+  }
 
   // test("chosenValueIsEqualToIndexedValue returns an equality, or shorthands") {
   //   val prop =
