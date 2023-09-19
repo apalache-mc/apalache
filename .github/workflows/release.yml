@@ -11,14 +11,15 @@ jobs:
     if: startsWith(github.event.pull_request.title, '[release]') && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           # See https://github.com/actions/checkout/issues/124#issuecomment-606277160
           ref: ${{ github.event.pull_request.head.ref }}
           # We only need the two commits of the release prep branch
           fetch-depth: 2
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
+          distribution: temurin
           java-version: 17
       - name: Cut Release
         env:
