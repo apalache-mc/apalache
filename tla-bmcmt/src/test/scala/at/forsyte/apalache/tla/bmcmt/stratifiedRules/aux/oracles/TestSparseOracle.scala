@@ -3,6 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
+import at.forsyte.apalache.tla.bmcmt.types.CellT
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
@@ -18,38 +20,39 @@ import org.scalatestplus.scalacheck.Checkers
 class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
 
   var initScope: RewriterScope = RewriterScope.initial()
+  var intOracleCell: ArenaCell = PureArena.cellInvalid
+
+  def mkIntOracle(n: Int): Oracle = new IntOracle(intOracleCell, n)
 
   override def beforeEach(): Unit = {
-    initScope = RewriterScope.initial()
+    val scope0 = RewriterScope.initial()
+    initScope = scope0.copy(arena = scope0.arena.appendCell(CellT.fromType1(IntT1)))
+    intOracleCell = initScope.arena.topCell
   }
 
   val intGen: Gen[Int] = Gen.choose(-10, 10)
-  val nonNegIntGen: Gen[Int] = Gen.choose(0, 10)
+  val nonNegIntGen: Gen[Int] = Gen.choose(0, 20)
 
-  val maxSizeAndSetGen: Gen[(Int, Set[Int])] = for {
-    max <- nonNegIntGen
-    elems <- Gen.listOfN(max, Gen.choose(0, max))
-  } yield (max, elems.toSet)
+  val setGen: Gen[Set[Int]] = for {
+    maxSize <- nonNegIntGen
+    elems <- Gen.listOfN(maxSize, nonNegIntGen)
+  } yield elems.toSet
 
-  val maxSizeIndexAndSetGen: Gen[(Int, Int, Set[Int])] = for {
-    max <- Gen.choose(1, 20) // we want size > 0
-    elems <- Gen.listOfN(max, Gen.choose(0, max))
-    set =
-      if (elems.nonEmpty) elems.toSet
-      else Set(0) // we don't want the degenerate case where set is empty, so we just pad it with 0
-    idx <- Gen.choose(0, set.size - 1)
-  } yield (max, idx, set)
+  val nonemptySetAndIdxGen: Gen[(Set[Int], Int)] = for {
+    maxSize <- Gen.choose(1, 20)
+    elems <- Gen.listOfN(maxSize, nonNegIntGen)
+    idx <- Gen.oneOf(elems)
+  } yield (elems.toSet, idx)
 
-  test("chosenValueIsEqualToIndexedValue forwards to the original oracle correctly") {
+  test("chosenValueIsEqualToIndexedValue returns the correct value for any element of the constructor set") {
     val prop =
-      forAll(Gen.zip(maxSizeAndSetGen, intGen)) { case ((size, set), index) =>
-        val (scope, intOracle) = IntOracle.create(initScope, size)
-        val oracle = new SparseOracle(intOracle, set)
-        val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(scope, index)
-        if (index < 0 || index >= oracle.size)
+      forAll(Gen.zip(setGen, intGen)) { case (set, index) =>
+        val oracle = new SparseOracle(mkIntOracle, set)
+        val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(initScope, index)
+        if (!set.contains(index))
           cmp == tla.bool(false).build
         else {
-          cmp == intOracle.chosenValueIsEqualToIndexedValue(scope, oracle.sortedValues(index)).build
+          cmp == oracle.oracle.chosenValueIsEqualToIndexedValue(initScope, oracle.indexMap(index)).build
         }
       }
 
@@ -66,20 +69,23 @@ class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers
   // "caseAssertions" tests ignored, since SparseOracle literally just invokes the underlying oracle's method,
   // which should have its own tests
 
-  // TODO: Enable test after #2743
   // We cannot test getIndexOfChosenValueFromModel without running the solver
-  ignore("getIndexOfChosenValueFromModel recovers the index correctly") {
+  test("getIndexOfChosenValueFromModel recovers the index correctly") {
+    val ctx = new Z3SolverContext(SolverConfig.default)
+    val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
+    val paa2 = paa.appendCell(IntT1) // also declares the cell
+    intOracleCell = paa2.topCell
+    initScope = initScope.copy(arena = paa2.arena)
     val prop =
-      forAll(maxSizeIndexAndSetGen) { case (size, index, set) =>
-        val ctx = new Z3SolverContext(SolverConfig.default)
-        val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
-        val (scope, intOracle) = IntOracle.create(initScope.copy(arena = paa.arena), size)
-        ctx.declareCell(intOracle.intCell)
-        val oracle = new SparseOracle(intOracle, set)
-        val eql = oracle.chosenValueIsEqualToIndexedValue(scope, index)
+      forAll(nonemptySetAndIdxGen) { case (set, index) =>
+        val oracle = new SparseOracle(mkIntOracle, set)
+        val eql = oracle.chosenValueIsEqualToIndexedValue(initScope, index)
+        ctx.push()
         ctx.assertGroundExpr(eql)
         ctx.sat()
-        oracle.getIndexOfChosenValueFromModel(ctx) == index
+        val ret = oracle.getIndexOfChosenValueFromModel(ctx) == index
+        ctx.pop()
+        ret
       }
 
     // 1000 is too many, since each run invokes the solver
