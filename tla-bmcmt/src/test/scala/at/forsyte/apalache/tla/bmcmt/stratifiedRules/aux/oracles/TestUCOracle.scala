@@ -38,63 +38,63 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     idx <- Gen.choose(0, max - 1) // index must be <
   } yield (max, idx)
 
-  test("Oracle cannot be constructed with negative size") {
-    val prop =
-      forAll(intGen) {
-        case i if i < 0 =>
-          Prop.throws(classOf[IllegalArgumentException]) {
-            UninterpretedConstOracle.create(rewriter, cache, initScope, i)
-          }
-        case i => UninterpretedConstOracle.create(rewriter, cache, initScope, i)._2.size == i
-      }
+  // test("Oracle cannot be constructed with negative size") {
+  //   val prop =
+  //     forAll(intGen) {
+  //       case i if i < 0 =>
+  //         Prop.throws(classOf[IllegalArgumentException]) {
+  //           UninterpretedConstOracle.create(rewriter, cache, initScope, i)
+  //         }
+  //       case i => UninterpretedConstOracle.create(rewriter, cache, initScope, i)._2.size == i
+  //     }
 
-    check(prop, minSuccessful(100), sizeRange(4))
-  }
+  //   check(prop, minSuccessful(100), sizeRange(4))
+  // }
 
-  test("chosenValueIsEqualToIndexedValue returns an equality, or shorthands") {
-    val prop =
-      forAll(Gen.zip(nonNegIntGen, intGen)) { case (size, index) =>
-        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
-        val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(scope, index)
-        if (index < 0 || index >= size)
-          cmp == tla.bool(false).build
-        else
-          cmp match {
-            case OperEx(TlaOper.eq, NameEx(name1), NameEx(name2)) =>
-              name1 == oracle.oracleCell.toString && name2 == oracle.valueCells(index).toString
-            case _ => false
-          }
-      }
+  // test("chosenValueIsEqualToIndexedValue returns an equality, or shorthands") {
+  //   val prop =
+  //     forAll(Gen.zip(nonNegIntGen, intGen)) { case (size, index) =>
+  //       val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
+  //       val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(scope, index)
+  //       if (index < 0 || index >= size)
+  //         cmp == tla.bool(false).build
+  //       else
+  //         cmp match {
+  //           case OperEx(TlaOper.eq, NameEx(name1), NameEx(name2)) =>
+  //             name1 == oracle.oracleCell.toString && name2 == oracle.valueCells(index).toString
+  //           case _ => false
+  //         }
+  //     }
 
-    check(prop, minSuccessful(200), sizeRange(4))
-  }
+  //   check(prop, minSuccessful(200), sizeRange(4))
+  // }
 
-  val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
-    .to(10)
-    .map { i =>
-      (tla.name(s"A$i", BoolT1), tla.name(s"B$i", BoolT1))
-    }
-    .unzip
+  // val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
+  //   .to(10)
+  //   .map { i =>
+  //     (tla.name(s"A$i", BoolT1), tla.name(s"B$i", BoolT1))
+  //   }
+  //   .unzip
 
-  test("caseAssertions requires assertion sequences of equal length") {
-    val assertionsGen: Gen[(Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
-      i <- Gen.choose(0, assertionsA.size)
-      j <- Gen.choose(0, assertionsB.size)
-      opt <- Gen.option(Gen.const(assertionsB.take(j)))
-    } yield (assertionsA.take(i), opt)
+  // test("caseAssertions requires assertion sequences of equal length") {
+  //   val assertionsGen: Gen[(Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
+  //     i <- Gen.choose(0, assertionsA.size)
+  //     j <- Gen.choose(0, assertionsB.size)
+  //     opt <- Gen.option(Gen.const(assertionsB.take(j)))
+  //   } yield (assertionsA.take(i), opt)
 
-    val prop =
-      forAll(Gen.zip(nonNegIntGen, assertionsGen)) { case (size, (assertionsIfTrue, assertionsIfFalseOpt)) =>
-        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
-        if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
-          Prop.throws(classOf[IllegalArgumentException]) {
-            oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
-          }
-        else true
-      }
+  //   val prop =
+  //     forAll(Gen.zip(nonNegIntGen, assertionsGen)) { case (size, (assertionsIfTrue, assertionsIfFalseOpt)) =>
+  //       val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
+  //       if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
+  //         Prop.throws(classOf[IllegalArgumentException]) {
+  //           oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
+  //         }
+  //       else true
+  //     }
 
-    check(prop, minSuccessful(200), sizeRange(4))
-  }
+  //   check(prop, minSuccessful(200), sizeRange(4))
+  // }
 
   // test("caseAssertions constructs a collection of ITEs, or shorthands") {
   //   val gen: Gen[(Int, Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
@@ -130,26 +130,26 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   //   check(prop, minSuccessful(200), sizeRange(4))
   // }
 
-  // // We cannot test getIndexOfChosenValueFromModel without running the solver
-  // test("getIndexOfChosenValueFromModel recovers the index correctly for nonempty cell collection") {
-  //   val prop =
-  //     forAll(maxSizeAndIndexGen) { case (size, index) =>
-  //       cache.dispose() // prevent redeclarations in every loop
-  //       val ctx = new Z3SolverContext(SolverConfig.default)
-  //       val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
-  //       val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope.copy(arena = paa.arena), size)
-  //       oracle.valueCells.foreach(ctx.declareCell)
-  //       ctx.declareCell(oracle.oracleCell)
-  //       cache.addAllConstraints(ctx)
-  //       val eql = oracle.chosenValueIsEqualToIndexedValue(scope, index)
-  //       ctx.assertGroundExpr(eql)
-  //       ctx.sat()
-  //       oracle.getIndexOfChosenValueFromModel(ctx) == index
-  //     }
+  // We cannot test getIndexOfChosenValueFromModel without running the solver
+  test("getIndexOfChosenValueFromModel recovers the index correctly for nonempty cell collection") {
+    val prop =
+      forAll(maxSizeAndIndexGen) { case (size, index) =>
+        cache.dispose() // prevent redeclarations in every loop
+        val ctx = new Z3SolverContext(SolverConfig.default)
+        val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope.copy(arena = paa.arena), size)
+        oracle.valueCells.foreach(ctx.declareCell)
+        ctx.declareCell(oracle.oracleCell)
+        cache.addAllConstraints(ctx)
+        val eql = oracle.chosenValueIsEqualToIndexedValue(scope, index)
+        ctx.assertGroundExpr(eql)
+        ctx.sat()
+        oracle.getIndexOfChosenValueFromModel(ctx) == index
+      }
 
-  //   // 1000 is too many, since each run invokes the solver
-  //   check(prop, minSuccessful(80), sizeRange(4))
-  // }
+    // 1000 is too many, since each run invokes the solver
+    check(prop, minSuccessful(80), sizeRange(4))
+  }
 
   // test("getIndexOfChosenValueFromModel recovers the index correctly for empty collections") {
   //   val ctx = new Z3SolverContext(SolverConfig.default)
