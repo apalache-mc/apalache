@@ -69,32 +69,32 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     check(prop, minSuccessful(200), sizeRange(4))
   }
 
-  // val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
-  //   .to(10)
-  //   .map { i =>
-  //     (tla.name(s"A$i", BoolT1), tla.name(s"B$i", BoolT1))
-  //   }
-  //   .unzip
+  val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
+    .to(10)
+    .map { i =>
+      (tla.name(s"A$i", BoolT1), tla.name(s"B$i", BoolT1))
+    }
+    .unzip
 
-  // test("caseAssertions requires assertion sequences of equal length") {
-  //   val assertionsGen: Gen[(Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
-  //     i <- Gen.choose(0, assertionsA.size)
-  //     j <- Gen.choose(0, assertionsB.size)
-  //     opt <- Gen.option(Gen.const(assertionsB.take(j)))
-  //   } yield (assertionsA.take(i), opt)
+  test("caseAssertions requires assertion sequences of equal length") {
+    val assertionsGen: Gen[(Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
+      i <- Gen.choose(0, assertionsA.size)
+      j <- Gen.choose(0, assertionsB.size)
+      opt <- Gen.option(Gen.const(assertionsB.take(j)))
+    } yield (assertionsA.take(i), opt)
 
-  //   val prop =
-  //     forAll(Gen.zip(nonNegIntGen, assertionsGen)) { case (size, (assertionsIfTrue, assertionsIfFalseOpt)) =>
-  //       val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
-  //       if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
-  //         Prop.throws(classOf[IllegalArgumentException]) {
-  //           oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
-  //         }
-  //       else true
-  //     }
+    val prop =
+      forAll(Gen.zip(nonNegIntGen, assertionsGen)) { case (size, (assertionsIfTrue, assertionsIfFalseOpt)) =>
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
+        if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
+          Prop.throws(classOf[IllegalArgumentException]) {
+            oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
+          }
+        else true
+      }
 
-  //   check(prop, minSuccessful(200), sizeRange(4))
-  // }
+    check(prop, minSuccessful(200), sizeRange(4))
+  }
 
   // test("caseAssertions constructs a collection of ITEs, or shorthands") {
   //   val gen: Gen[(Int, Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
