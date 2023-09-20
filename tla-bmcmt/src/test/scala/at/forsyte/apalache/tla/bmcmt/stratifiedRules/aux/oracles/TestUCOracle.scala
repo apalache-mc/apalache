@@ -51,23 +51,23 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     check(prop, minSuccessful(100), sizeRange(4))
   }
 
-  // test("chosenValueIsEqualToIndexedValue returns an equality, or shorthands") {
-  //   val prop =
-  //     forAll(Gen.zip(nonNegIntGen, intGen)) { case (size, index) =>
-  //       val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
-  //       val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(scope, index)
-  //       if (index < 0 || index >= size)
-  //         cmp == tla.bool(false).build
-  //       else
-  //         cmp match {
-  //           case OperEx(TlaOper.eq, NameEx(name1), NameEx(name2)) =>
-  //             name1 == oracle.oracleCell.toString && name2 == oracle.valueCells(index).toString
-  //           case _ => false
-  //         }
-  //     }
+  test("chosenValueIsEqualToIndexedValue returns an equality, or shorthands") {
+    val prop =
+      forAll(Gen.zip(nonNegIntGen, intGen)) { case (size, index) =>
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
+        val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(scope, index)
+        if (index < 0 || index >= size)
+          cmp == tla.bool(false).build
+        else
+          cmp match {
+            case OperEx(TlaOper.eq, NameEx(name1), NameEx(name2)) =>
+              name1 == oracle.oracleCell.toString && name2 == oracle.valueCells(index).toString
+            case _ => false
+          }
+      }
 
-  //   check(prop, minSuccessful(200), sizeRange(4))
-  // }
+    check(prop, minSuccessful(200), sizeRange(4))
+  }
 
   // val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
   //   .to(10)
