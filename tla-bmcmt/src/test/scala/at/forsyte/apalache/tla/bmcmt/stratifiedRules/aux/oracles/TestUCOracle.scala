@@ -132,19 +132,23 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
   test("getIndexOfChosenValueFromModel recovers the index correctly for nonempty cell collection") {
+    val ctx = new Z3SolverContext(SolverConfig.default)
+    val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
+    initScope = initScope.copy(arena = paa.arena)
     val prop =
       forAll(maxSizeAndIndexGen) { case (size, index) =>
         cache.dispose() // prevent redeclarations in every loop
-        val ctx = new Z3SolverContext(SolverConfig.default)
-        val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
-        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope.copy(arena = paa.arena), size)
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
+        ctx.push()
         oracle.valueCells.foreach(ctx.declareCell)
         ctx.declareCell(oracle.oracleCell)
         cache.addAllConstraints(ctx)
         val eql = oracle.chosenValueIsEqualToIndexedValue(scope, index)
         ctx.assertGroundExpr(eql)
         ctx.sat()
-        oracle.getIndexOfChosenValueFromModel(ctx) == index
+        val ret = oracle.getIndexOfChosenValueFromModel(ctx) == index
+        ctx.pop()
+        ret
       }
 
     // 1000 is too many, since each run invokes the solver
@@ -157,7 +161,7 @@ class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     val (_, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope.copy(arena = paa.arena), 0)
     ctx.declareCell(oracle.oracleCell)
     ctx.sat()
-    oracle.getIndexOfChosenValueFromModel(ctx) == -1
+    assert(oracle.getIndexOfChosenValueFromModel(ctx) == -1)
   }
 
 }
