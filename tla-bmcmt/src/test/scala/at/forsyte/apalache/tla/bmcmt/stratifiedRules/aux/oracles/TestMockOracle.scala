@@ -44,7 +44,7 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     check(prop, minSuccessful(100), sizeRange(4))
   }
 
-  test("oracleValueIsEqualToIndexedValue returns a simple boolean") {
+  test("chosenValueIsEqualToIndexedValue returns a simple boolean") {
     val prop =
       forAll(maxSizeAndIndexGen) { case (fixed, index) =>
         val oracle = MockOracle.create(fixed)
