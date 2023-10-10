@@ -124,7 +124,7 @@ StateConstraints ::=
 // that restricts the transitions to be explored.
 // APALACHE IGNORES THIS CONFIGURATION OPTION.
 ActionConstraints ::=
-    ("ACTION-CONSTRAINT" | "ACTION-CONSTRAINTS") ident*
+    ("ACTION_CONSTRAINT" | "ACTION_CONSTRAINTS") ident*
 
 // Set the name of an operator that produces a set of permutations
 // for symmetry reduction.

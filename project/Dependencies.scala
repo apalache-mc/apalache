@@ -21,7 +21,7 @@ object Dependencies {
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
     val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.9.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.13.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.14.0"
     val guice = "com.google.inject" % "guice" % "5.1.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
@@ -36,7 +36,7 @@ object Dependencies {
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "3.1.3"
     val upickle = "com.lihaoyi" %% "upickle" % "3.1.3"
-    val z3 = "tools.aqua" % "z3-turnkey" % "4.12.2"
+    val z3 = "tools.aqua" % "z3-turnkey" % "4.12.2.1"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
