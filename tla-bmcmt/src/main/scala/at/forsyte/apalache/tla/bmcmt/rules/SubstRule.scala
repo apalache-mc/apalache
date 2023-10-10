@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.NameEx
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.TlaInputError
 import com.typesafe.scalalogging.LazyLogging
 
@@ -29,7 +28,7 @@ class SubstRule extends RewritingRule with LazyLogging {
       case NameEx(x) =>
         if (state.binding.contains(x)) {
           val cell = state.binding(x)
-          state.setRex(NameEx(cell.toString))
+          state.setRex(cell.toBuilder)
         } else {
           logger.error("This error may show up when CONSTANTS are not initialized.")
           logger.error("Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html")
