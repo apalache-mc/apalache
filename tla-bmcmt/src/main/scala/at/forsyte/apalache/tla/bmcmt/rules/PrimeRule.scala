@@ -22,10 +22,7 @@ class PrimeRule extends RewritingRule {
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       case OperEx(TlaActionOper.prime, nEx @ NameEx(name)) =>
-        nEx.typeTag match {
-          case Typed(tt1: TlaType1) => state.setRex(tla.name(name + "'", tt1))
-          case _                    => throw new InternalCheckerError("Internal expressions should be Typed", nEx)
-        }
+        state.setRex(tla.name(name + "'", TlaType1.fromTypeTag(nEx.typeTag)))
 
       case _ =>
         throw new RewriterException("Prime operator is only implemented for variables", state.ex)
