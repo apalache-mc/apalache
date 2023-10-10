@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
-import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaType1, Typed}
+import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaType1}
 import at.forsyte.apalache.tla.types.tla
 
 /**
