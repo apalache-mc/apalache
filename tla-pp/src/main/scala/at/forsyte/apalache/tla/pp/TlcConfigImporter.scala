@@ -17,8 +17,6 @@ import com.typesafe.scalalogging.LazyLogging
  *   Andrey Kuprianov
  */
 class TlcConfigImporter(config: TlcConfig) extends TlaModuleTransformation with LazyLogging {
-  OperT1(Seq(), BoolT1)
-
   private def mkBoolName(name: String): TBuilderInstruction = {
     tla.name(name, BoolT1)
   }
