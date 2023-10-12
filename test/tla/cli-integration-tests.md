@@ -2324,6 +2324,13 @@ $ apalache-mc check --config=Bug2750.cfg Bug2750.tla | sed 's/[IEW]@.*//'
 EXITCODE: ERROR (255)
 ```
 
+### check Test2750.tla
+
+```sh
+$ apalache-mc check --config=Test2750.cfg Test2750.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
 
 ### check profiling
 
