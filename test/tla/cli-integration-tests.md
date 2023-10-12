@@ -2316,6 +2316,15 @@ $ apalache-mc check --length=1 --cinit=CInit Bug2268.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug2750.tla
+
+```sh
+$ apalache-mc check --config=Bug2750.cfg Bug2750.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
+
 ### check profiling
 
 Check that the profiler output is produced as explained in
