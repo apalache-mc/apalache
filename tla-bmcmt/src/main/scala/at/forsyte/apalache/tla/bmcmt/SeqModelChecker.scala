@@ -262,8 +262,12 @@ class SeqModelChecker[ExecutorContextT](
               logger.info(s"Step ${trex.stepNo}: Transition #$no is disabled")
 
             case None =>
-              searchState.onResult(RuntimeError())
-              return (Set.empty, Set.empty) // UNKNOWN or timeout
+              if (params.isRandomSimulation) {
+                logger.info(s"Step ${trex.stepNo}: Transition #$no enabledness is UNKNOWN; assuming it is disabled")
+              } else {
+                searchState.onResult(RuntimeError())
+                return (Set.empty, Set.empty) // UNKNOWN or timeout
+              }
           }
           // recover from the snapshot
           trex.recover(snapshot.get)
