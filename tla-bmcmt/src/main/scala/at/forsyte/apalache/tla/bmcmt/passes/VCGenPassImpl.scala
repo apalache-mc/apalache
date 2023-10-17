@@ -7,7 +7,7 @@ import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.DerivedPredicates
+import at.forsyte.apalache.infra.passes.options.OptionGroup.WithCheckerPreds
 
 /**
  * The pass that generates verification conditions.
@@ -16,7 +16,7 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  *   Igor Konnov
  */
 class VCGenPassImpl @Inject() (
-    derivedPreds: DerivedPredicates,
+    checkerPreds: WithCheckerPreds,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {
@@ -25,14 +25,15 @@ class VCGenPassImpl @Inject() (
 
   override def execute(tlaModule: TlaModule): PassResult = {
     val newModule =
-      derivedPreds.invariants match {
+      checkerPreds.predicates.invariants match {
         case List() =>
-          logger.info("  > No invariant given. Only deadlocks will be checked")
+          val deadlockMsg = if (checkerPreds.checker.noDeadlocks) "" else " Only deadlocks will be checked"
+          logger.info(s"  > No invariant given.${deadlockMsg}")
           tlaModule
         case invariants =>
           invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            val optView = derivedPreds.view
+            val optView = checkerPreds.predicates.view
             optView.foreach { viewName => logger.info(s"  > Using state view ${viewName}") }
             new VCGenerator(tracker).gen(mod, invName, optView)
           }
