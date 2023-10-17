@@ -19,6 +19,7 @@ import at.forsyte.apalache.infra.tlc.config.TlcConfig
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.infra.tlc.config.TemporalSpec
 import at.forsyte.apalache.infra.tlc.config.NullSpec
+import at.forsyte.apalache.tla.typecheck.TypingInputException
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions. This pass also
@@ -50,8 +51,33 @@ class ConfigurationPassImpl @Inject() (
       case Some((tlcConfig, tlcConfigFile)) => loadOptionsFromTlcConfig(tlaModule, tlcConfig, tlcConfigFile)
     }
 
-    val constOverrideNames = tlaModule.constDeclarations.map(_.name).map(ConstAndDefRewriter.OVERRIDE_PREFIX + _).toSet
-    val (constOverrides, otherOverrides) = overrides.partition(d => constOverrideNames.contains(d.name))
+    val constOverrideNamesAndTypes =
+      tlaModule.constDeclarations.map { decl =>
+        (ConstAndDefRewriter.OVERRIDE_PREFIX + decl.name) -> decl.typeTag
+      }.toMap
+
+    val (constOverrides, otherOverrides) = overrides.partition(d => constOverrideNamesAndTypes.contains(d.name))
+
+    // Typecheck
+    // Since config files are not typecheckable, blind override substitution can introduce type inconsistencies
+    // see #2750
+    // To circumvent this, we manually perform a type-consistency check, to verify that values overriding constants
+    // have the same type as the constant declaration
+    constOverrides.foreach { decl =>
+      val constDeclTag = constOverrideNamesAndTypes(decl.name)
+      val overrideTag = decl match {
+        case d: TlaOperDecl => d.body.typeTag
+        case _              => decl.typeTag
+      }
+
+      if (overrideTag != constDeclTag) {
+        throw new TypingInputException(
+            s"Constant ${decl.name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)} declared in the specification has the type tag $constDeclTag, while the value defined in the .cfg file has the type tag $overrideTag.\n" +
+              s"Please make sure the values in the .cfg file have types matching those in the specification, or use --cinit instead.",
+            decl.ID,
+        )
+      }
+    }
 
     val newDecls =
       if (constOverrides.nonEmpty) {
