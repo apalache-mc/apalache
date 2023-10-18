@@ -3817,7 +3817,6 @@ checker {
     length=0
     max-error=1
     no-deadlocks=false
-    nworkers=1
     smt-encoding {
         type=oopsla-19
     }

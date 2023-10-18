@@ -36,8 +36,6 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     Read.reads[Algorithm](s"a checking algorithm, either ${Algorithm.Incremental} or ${Algorithm.Offline}")(
         Algorithm.ofString)
 
-  var nworkers: Option[Int] = opt[Option[Int]](name = "nworkers", default = None,
-      description = "the number of workers for the parallel checker (soon), default: 1")
   var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
       description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
@@ -79,7 +77,6 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     super.toConfig().map { cfg =>
       val newCfg = cfg.copy(
           checker = cfg.checker.copy(
-              nworkers = nworkers,
               algo = algo,
               smtEncoding = smtEncoding,
               tuning = Some(combinedTuningOptions),

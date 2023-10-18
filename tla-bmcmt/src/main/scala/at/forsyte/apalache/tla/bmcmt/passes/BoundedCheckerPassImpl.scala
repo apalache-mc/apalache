@@ -60,10 +60,6 @@ class BoundedCheckerPassImpl @Inject() (
       CheckerInputVC(invariantsAndNegations.toList, actionInvariantsAndNegations.toList,
           traceInvariantsAndNegations.toList, optView)
     val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, verificationConditions)
-    /*
-        TODO: uncomment when the parallel checker is transferred from ik/multicore
-    val nworkers = options.getOrElse("checker", "nworkers", 1)
-     */
     val stepsBound = options.checker.length
     val debug = options.common.debug
     val tuning = options.checker.tuning
@@ -81,10 +77,6 @@ class BoundedCheckerPassImpl @Inject() (
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
 
     val result = options.checker.algo match {
-      /*
-        TODO: uncomment when the parallel checker is transferred from ik/multicore
-      case "parallel" => runParallelChecker(params, input, tuning, nworkers)
-       */
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
       case Algorithm.Offline     => runOfflineChecker(params, input, tuning, solverConfig)
     }

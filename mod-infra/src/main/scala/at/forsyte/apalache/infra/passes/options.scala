@@ -164,8 +164,6 @@ object Config {
    *   whether to stop on the first error or to produce up to a given number of counterexamples
    * @param noDeadLocks
    *   do not check for deadlocks
-   * @param nworkers
-   *   the number of workers for the parallel checker (not currently used)
    * @param smtEncoding
    *   the SMT encoding to use
    * @param temporalProps
@@ -185,7 +183,6 @@ object Config {
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       noDeadlocks: Option[Boolean] = Some(false),
-      nworkers: Option[Int] = Some(1),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
@@ -664,7 +661,6 @@ object OptionGroup extends LazyLogging {
       length: Int,
       maxError: Int,
       noDeadlocks: Boolean,
-      nworkers: Int,
       smtEncoding: SMTEncoding,
       tuning: Map[String, String])
       extends OptionGroup
@@ -685,7 +681,6 @@ object OptionGroup extends LazyLogging {
         discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
         length <- checker.length.toTry("checker.length")
         noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
-        nworkers <- checker.nworkers.toTry("checker.nworkers")
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
@@ -695,7 +690,6 @@ object OptionGroup extends LazyLogging {
           length = length,
           maxError = maxError,
           noDeadlocks = noDeadlocks,
-          nworkers = nworkers,
           smtEncoding = smtEncoding,
           tuning = tuning,
       )
