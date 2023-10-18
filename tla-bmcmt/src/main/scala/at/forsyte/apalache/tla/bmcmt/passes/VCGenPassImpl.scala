@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -16,7 +17,7 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup.WithCheckerPreds
  *   Igor Konnov
  */
 class VCGenPassImpl @Inject() (
-    checkerPreds: WithCheckerPreds,
+    options: OptionGroup.HasCheckerPreds,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {
@@ -25,15 +26,15 @@ class VCGenPassImpl @Inject() (
 
   override def execute(tlaModule: TlaModule): PassResult = {
     val newModule =
-      checkerPreds.predicates.invariants match {
+      options.predicates.invariants match {
         case List() =>
-          val deadlockMsg = if (checkerPreds.checker.noDeadlocks) "" else " Only deadlocks will be checked"
+          val deadlockMsg = if (options.checker.noDeadlocks) "" else " Only deadlocks will be checked"
           logger.info(s"  > No invariant given.${deadlockMsg}")
           tlaModule
         case invariants =>
           invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            val optView = checkerPreds.predicates.view
+            val optView = options.predicates.view
             optView.foreach { viewName => logger.info(s"  > Using state view ${viewName}") }
             new VCGenerator(tracker).gen(mod, invName, optView)
           }
