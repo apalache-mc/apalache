@@ -18,7 +18,7 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestUCOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
+class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
 
   var rewriter: Rewriter = TestingRewriter(Map.empty)
   var cache: UninterpretedLiteralCache = new UninterpretedLiteralCache
