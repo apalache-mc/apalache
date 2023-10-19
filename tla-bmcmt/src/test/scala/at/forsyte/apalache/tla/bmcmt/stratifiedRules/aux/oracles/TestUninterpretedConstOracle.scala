@@ -3,26 +3,30 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.lir.{BoolT1, NameEx, OperEx, TlaEx, ValEx}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLiteralCache
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, TestingRewriter}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
-import org.scalacheck.{Gen, Prop}
 import org.scalacheck.Prop.forAll
+import org.scalacheck.{Gen, Prop}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
 
 @RunWith(classOf[JUnitRunner])
-class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
+class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
 
+  var rewriter: Rewriter = TestingRewriter(Map.empty)
+  var cache: UninterpretedLiteralCache = new UninterpretedLiteralCache
   var initScope: RewriterScope = RewriterScope.initial()
 
   override def beforeEach(): Unit = {
+    rewriter = TestingRewriter(Map.empty)
+    cache = new UninterpretedLiteralCache
     initScope = RewriterScope.initial()
   }
 
@@ -30,8 +34,8 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   val nonNegIntGen: Gen[Int] = Gen.choose(0, 10)
 
   val maxSizeAndIndexGen: Gen[(Int, Int)] = for {
-    max <- nonNegIntGen
-    idx <- Gen.choose(0, max)
+    max <- Gen.choose(1, 10) // size 0 is degenerate
+    idx <- Gen.choose(0, max - 1) // index must be <
   } yield (max, idx)
 
   test("Oracle cannot be constructed with negative size") {
@@ -39,27 +43,30 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
       forAll(intGen) {
         case i if i < 0 =>
           Prop.throws(classOf[IllegalArgumentException]) {
-            IntOracle.create(initScope, i)
+            UninterpretedConstOracle.create(rewriter, cache, initScope, i)
           }
-        case i => IntOracle.create(initScope, i)._2.size == i
+        case i => UninterpretedConstOracle.create(rewriter, cache, initScope, i)._2.size == i
       }
 
     check(prop, minSuccessful(100), sizeRange(4))
   }
 
-  test("chosenValueIsEqualToIndexedValue returns an integer comparison") {
+  test("chosenValueIsEqualToIndexedValue returns an equality, or shorthands") {
     val prop =
-      forAll(maxSizeAndIndexGen) { case (size, index) =>
-        val (scope, oracle) = IntOracle.create(initScope, size)
+      forAll(Gen.zip(nonNegIntGen, intGen)) { case (size, index) =>
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
         val cmp: TlaEx = oracle.chosenValueIsEqualToIndexedValue(scope, index)
-        cmp match {
-          case OperEx(TlaOper.eq, NameEx(name), ValEx(TlaInt(i))) => name == oracle.intCell.toString && i == index
-          case _                                                  => false
-        }
+        if (index < 0 || index >= size)
+          cmp == tla.bool(false).build
+        else
+          cmp match {
+            case OperEx(TlaOper.eq, NameEx(name1), NameEx(name2)) =>
+              name1 == oracle.oracleCell.toString && name2 == oracle.valueCells(index).toString
+            case _ => false
+          }
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
-
+    check(prop, minSuccessful(200), sizeRange(4))
   }
 
   val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
@@ -78,7 +85,7 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
 
     val prop =
       forAll(Gen.zip(nonNegIntGen, assertionsGen)) { case (size, (assertionsIfTrue, assertionsIfFalseOpt)) =>
-        val (scope, oracle) = IntOracle.create(initScope, size)
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
         if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
           Prop.throws(classOf[IllegalArgumentException]) {
             oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
@@ -86,8 +93,7 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
         else true
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
-
+    check(prop, minSuccessful(200), sizeRange(4))
   }
 
   test("caseAssertions constructs a collection of ITEs, or shorthands") {
@@ -98,7 +104,7 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
 
     val prop =
       forAll(gen) { case (size, assertionsIfTrue, assertionsIfFalseOpt) =>
-        val (scope, oracle) = IntOracle.create(initScope, size)
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
         val caseEx: TlaEx = oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
         size match {
           case 0 =>
@@ -108,39 +114,55 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
           case _ =>
             assertionsIfFalseOpt match {
               case None =>
-                val ites = assertionsIfTrue.zipWithIndex.map { case (a, i) =>
-                  tla.ite(tla.eql(oracle.intCell.toBuilder, tla.int(i)), a, tla.bool(true))
+                val ites = assertionsIfTrue.zip(oracle.valueCells).map { case (a, c) =>
+                  tla.ite(tla.eql(oracle.oracleCell.toBuilder, c.toBuilder), a, tla.bool(true))
                 }
                 caseEx == tla.and(ites: _*).build
               case Some(assertionsIfFalse) =>
-                val ites = assertionsIfTrue.zip(assertionsIfFalse).zipWithIndex.map { case ((at, af), i) =>
-                  tla.ite(tla.eql(oracle.intCell.toBuilder, tla.int(i)), at, af)
+                val ites = assertionsIfTrue.zip(assertionsIfFalse).zip(oracle.valueCells).map { case ((at, af), c) =>
+                  tla.ite(tla.eql(oracle.oracleCell.toBuilder, c.toBuilder), at, af)
                 }
                 caseEx == tla.and(ites: _*).build
             }
         }
       }
 
-    check(prop, minSuccessful(1000), sizeRange(4))
-
+    check(prop, minSuccessful(200), sizeRange(4))
   }
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
-  test("getIndexOfChosenValueFromModel recovers the index correctly") {
+  // Ignored until we figure out why it's killing GH CLI
+  ignore("getIndexOfChosenValueFromModel recovers the index correctly for nonempty cell collection") {
+    val ctx = new Z3SolverContext(SolverConfig.default)
+    val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
+    initScope = initScope.copy(arena = paa.arena)
     val prop =
-      forAll(Gen.zip(maxSizeAndIndexGen)) { case (size, index) =>
-        val ctx = new Z3SolverContext(SolverConfig.default)
-        val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
-        val (scope, oracle) = IntOracle.create(initScope.copy(arena = paa.arena), size)
-        ctx.declareCell(oracle.intCell)
-
+      forAll(maxSizeAndIndexGen) { case (size, index) =>
+        cache.dispose() // prevent redeclarations in every loop
+        val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
+        ctx.push()
+        oracle.valueCells.foreach(ctx.declareCell)
+        ctx.declareCell(oracle.oracleCell)
+        cache.addAllConstraints(ctx)
         val eql = oracle.chosenValueIsEqualToIndexedValue(scope, index)
         ctx.assertGroundExpr(eql)
         ctx.sat()
-        oracle.getIndexOfChosenValueFromModel(ctx) == index
+        val ret = oracle.getIndexOfChosenValueFromModel(ctx) == index
+        ctx.pop()
+        ret
       }
 
     // 1000 is too many, since each run invokes the solver
-    check(prop, minSuccessful(200), sizeRange(4))
+    check(prop, minSuccessful(80), sizeRange(4))
   }
+
+  test("getIndexOfChosenValueFromModel recovers the index correctly for empty collections") {
+    val ctx = new Z3SolverContext(SolverConfig.default)
+    val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
+    val (_, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope.copy(arena = paa.arena), 0)
+    ctx.declareCell(oracle.oracleCell)
+    ctx.sat()
+    assert(oracle.getIndexOfChosenValueFromModel(ctx) == -1)
+  }
+
 }

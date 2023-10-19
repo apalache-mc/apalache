@@ -47,7 +47,6 @@ class TestCmd
           next = Some(action),
           inv = Some(List(assertion)),
           cinit = cinit,
-          nworkers = Some(1),
           length = Some(1),
           discardDisabled = Some(false),
           noDeadlocks = Some(false),
