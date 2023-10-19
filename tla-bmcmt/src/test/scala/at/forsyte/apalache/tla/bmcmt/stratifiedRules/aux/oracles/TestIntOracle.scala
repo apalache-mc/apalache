@@ -126,7 +126,8 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   }
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
-  test("getIndexOfChosenValueFromModel recovers the index correctly") {
+  // Ignored until we figure out why it's killing GH CLI
+  ignore("getIndexOfChosenValueFromModel recovers the index correctly") {
     val prop =
       forAll(Gen.zip(maxSizeAndIndexGen)) { case (size, index) =>
         val ctx = new Z3SolverContext(SolverConfig.default)
