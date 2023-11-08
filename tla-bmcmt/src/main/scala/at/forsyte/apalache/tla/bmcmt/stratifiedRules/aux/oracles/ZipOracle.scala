@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.types.tla
 /**
  * [[ZipOracle]] is an optimization of [[Oracle]]. It groups several values of the background oracle together, in order
  * to reduce the number of constraints. In this sense, it compresses several oracle values into one. As a consequence,
- * [[CherryPick]] pick constructs significantly fewer constants and constraints. It is up to the user of [[ZipOracle]]
+ * CherryPick constructs significantly fewer constants and constraints. It is up to the user of [[ZipOracle]]
  * to make sure that the grouped values may be treated as equivalent.
  *
  * @param backOracle
