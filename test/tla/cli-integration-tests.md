@@ -2332,6 +2332,22 @@ $ apalache-mc check --config=Test2750.cfg Test2750.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug2772.tla succeeds on supported syntax
+
+```sh
+$ apalache-mc check --inv=OkInv --length=1 Bug2772.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Bug2772.tla errors on unsupported syntax
+
+```sh
+$ apalache-mc check --inv=ErrInv --length=1 Bug2772.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ### check profiling
 
 Check that the profiler output is produced as explained in
