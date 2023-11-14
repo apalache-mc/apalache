@@ -2332,7 +2332,19 @@ $ apalache-mc check --config=Test2750.cfg Test2750.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check Bug2772.tla errors on unsupported syntax
+
+It should not be possible to pass input, which would require function set expansion without triggering an exception.
+
+```sh
+$ apalache-mc check --inv=ErrInv --length=1 Bug2772.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ### check Bug2772.tla succeeds on supported syntax
+
+However, if one uses a semantically equivalent (syntactically different) expression, where the function set is not forced to expand, it should pass.
 
 ```sh
 $ apalache-mc check --inv=OkInv --length=1 Bug2772.tla | sed 's/[IEW]@.*//'
@@ -2340,13 +2352,6 @@ $ apalache-mc check --inv=OkInv --length=1 Bug2772.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### check Bug2772.tla errors on unsupported syntax
-
-```sh
-$ apalache-mc check --inv=ErrInv --length=1 Bug2772.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: ERROR (255)
-```
 
 ### check profiling
 
