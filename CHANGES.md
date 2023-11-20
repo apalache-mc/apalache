@@ -1,6 +1,16 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.0 - 2023-10-23
+
+### Breaking changes
+
+- Removed the (unused) `--nworkers` flag, see #2275
+
+### Bug fixes
+
+- Continue simulation on SMT timeout in enabledness check, see #2758
+
 ## 0.43.0 - 2023-09-18
 
 ### Features
