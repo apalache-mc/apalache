@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.types.Substitution
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 
 /**
  * <p>Apply a type substitution to the types of a subexpression.</p>

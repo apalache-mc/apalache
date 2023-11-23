@@ -14,9 +14,8 @@ import at.forsyte.apalache.tla.lir.{
 }
 import at.forsyte.apalache.tla.pp.{IrrecoverablePreprocessingError, NotInKeraError, OverridingError, TlaInputError}
 import at.forsyte.apalache.tla.typecheck.TypingInputException
+import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
-
-import javax.inject.{Inject, Singleton}
 
 /**
  * The adapter for all exceptions that can be produced when running the model checker.

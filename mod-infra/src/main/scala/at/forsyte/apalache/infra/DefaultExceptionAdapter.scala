@@ -1,6 +1,6 @@
 package at.forsyte.apalache.infra
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 
 /**
  * The default adapter does nothing.
