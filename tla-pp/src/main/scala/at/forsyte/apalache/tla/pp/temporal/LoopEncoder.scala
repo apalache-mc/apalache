@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.temporal
 
 import at.forsyte.apalache.tla.lir._
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.pp.temporal.DeclUtils._

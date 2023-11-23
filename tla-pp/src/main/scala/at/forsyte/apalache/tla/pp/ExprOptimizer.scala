@@ -8,8 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTrans
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import TypedPredefs._
 
-import javax.inject.Singleton
-import scala.math.BigInt
+import com.google.inject.Singleton
 
 /**
  * <p>An optimizer of KerA+ expressions.</p>

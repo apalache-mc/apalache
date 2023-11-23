@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 
 /**
  * <p>A simplifier from TLA+ to KerA+. This transformation assumes that all operator definitions and internal

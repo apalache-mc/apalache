@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 import at.forsyte.apalache.tla.typecomp.ScopedBuilder
 
 /**

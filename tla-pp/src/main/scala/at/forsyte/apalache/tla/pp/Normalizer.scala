@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTrans
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.lir._
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 
 /**
  * This transformation turns subexpressions of a TLA+ expression into negated normal form.
