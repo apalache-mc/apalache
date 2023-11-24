@@ -409,6 +409,15 @@ class Quint(quintOutput: QuintOutput) {
       val applicationBuilder: Seq[QuintEx] => NullaryOpReader[TBuilderInstruction] = opName match {
         // First we check for application of builtin operators
 
+        // Illegal builtins
+        // We expect that these builins will be eliminated in earlier stages
+        // of the translation (e.g., inside special forms like `nondet`) or
+        // via rewrites in quint.
+        case "oneOf" =>
+          // See https://github.com/informalsystems/apalache/issues/2774
+          throw new QuintIRParseError(
+              s"`oneOf` can only occur as the principle operator of a `nondet` declaration: `oneOf` operator with id ${id} applied to ${quintArgs}")
+
         // Booleans
         case "eq"      => binaryApp(opName, tla.eql)
         case "neq"     => binaryApp(opName, tla.neql)
