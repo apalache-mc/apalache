@@ -15,7 +15,7 @@ import scalaz._
 import scalaz.std.list._
 import scalaz.syntax.traverse._
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 // Convert a QuintEx into a TlaEx
 //
@@ -54,15 +54,15 @@ class Quint(quintOutput: QuintOutput) {
   private type NullaryOpReader[A] = Reader[Set[String], A]
 
   // Find the type for an id via the lookup table provided in the quint output
-  private def getTypeFromLookupTable(id: BigInt): QuintType = {
+  private def getTypeFromLookupTable(id: BigInt): Try[QuintType] = {
     table.get(id) match {
-      case None => throw new QuintIRParseError(s"No entry found for id ${id} in lookup table")
+      case None => Failure(new QuintIRParseError(s"No entry found for id ${id} in lookup table"))
       case Some(lookupEntry) =>
         types.get(lookupEntry.id) match {
           case None =>
-            throw new QuintIRParseError(
-                s"No type found for definition ${lookupEntry.name} (${lookupEntry.id}) associated with id ${id}")
-          case Some(t) => t.typ
+            Failure(new QuintIRParseError(
+                    s"No type found for definition ${lookupEntry.name} (${lookupEntry.id}) associated with id ${id}"))
+          case Some(t) => Success(t.typ)
         }
     }
   }
@@ -555,7 +555,12 @@ class Quint(quintOutput: QuintOutput) {
 
         // Otherwise, the applied operator is defined, and not a builtin
         case definedOpName => { args =>
-          val operType = typeConv.convert(getTypeFromLookupTable(id))
+          val quintType = getTypeFromLookupTable(id).recoverWith { case err: QuintIRParseError =>
+            Failure(new QuintIRParseError(
+                    s"While converting operator application of defined operator '${definedOpName}' to arguments ${args}: ${err
+                    .getMessage()}"))
+          }.get
+          val operType = typeConv.convert(quintType)
           val oper = tla.name(definedOpName, operType)
           args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
         }
