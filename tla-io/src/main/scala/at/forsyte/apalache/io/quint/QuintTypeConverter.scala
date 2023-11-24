@@ -112,27 +112,28 @@ private class QuintTypeConverter extends LazyLogging {
   // rows and convert them into a single TlaType1 record, for which all the values
   // are themselves records, and the keys are given by the values of the `tag`
   // field from quint rows.
-  private def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
-    val fieldTypes = variants.map {
-      case UnionRecord(tag, row) => {
-        (tag, RecRowT1(rowToRowT1(row)))
-      }
-    }
-    RowT1(fieldTypes: _*)
-  }
+  // private def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
+  //   val fieldTypes = variants.map {
+  //     case UnionRecord(tag, row) => {
+  //       (tag, RecRowT1(rowToRowT1(row)))
+  //     }
+  //   }
+  //   RowT1(fieldTypes: _*)
+  // }
 
   val convert: QuintType => TlaType1 = {
-    case QuintBoolT()             => BoolT1
-    case QuintIntT()              => IntT1
-    case QuintStrT()              => StrT1
-    case QuintConstT(name)        => ConstT1(name)
-    case QuintVarT(name)          => VarT1(getVarNo(name))
-    case QuintSetT(elem)          => SetT1(convert(elem))
-    case QuintSeqT(elem)          => SeqT1(convert(elem))
-    case QuintFunT(arg, res)      => FunT1(convert(arg), convert(res))
-    case QuintOperT(args, res)    => OperT1(args.map(convert), convert(res))
-    case QuintTupleT(row)         => rowToTupleT1(row)
-    case QuintRecordT(row)        => RecRowT1(rowToRowT1(row))
-    case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
+    case QuintBoolT()          => BoolT1
+    case QuintIntT()           => IntT1
+    case QuintStrT()           => StrT1
+    case QuintConstT(name)     => ConstT1(name)
+    case QuintVarT(name)       => VarT1(getVarNo(name))
+    case QuintSetT(elem)       => SetT1(convert(elem))
+    case QuintSeqT(elem)       => SeqT1(convert(elem))
+    case QuintFunT(arg, res)   => FunT1(convert(arg), convert(res))
+    case QuintOperT(args, res) => OperT1(args.map(convert), convert(res))
+    case QuintTupleT(row)      => rowToTupleT1(row)
+    case QuintRecordT(row)     => RecRowT1(rowToRowT1(row))
+    case QuintSumT(row)        => VariantT1(rowToRowT1(row))
+    // case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
   }
 }
