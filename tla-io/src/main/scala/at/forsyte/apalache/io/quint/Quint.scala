@@ -16,6 +16,7 @@ import scalaz.std.list._
 import scalaz.syntax.traverse._
 
 import scala.util.{Failure, Success, Try}
+import at.forsyte.apalache.tla.lir.values.TlaStr
 
 // Convert a QuintEx into a TlaEx
 //
@@ -393,6 +394,53 @@ class Quint(quintOutput: QuintOutput) {
       }(quintVals)
     }
 
+    // Create a TLA variant
+    // TODO: We fix builder type error when sum type constructors are nested
+    //       See https://github.com/informalsystems/quint/issues/1034#issuecomment-1826894723
+    def variant(quintType: QuintType): Converter = {
+      val tlaType = typeConv.convert(quintType)
+      tlaType match {
+        case variantType: VariantT1 =>
+          binaryApp("variant",
+              (labelInstruction, expr) =>
+                // The builder requires a string literal, rather than a string expression
+                // so we have to build the converted TLA expression and extract its string value.
+                labelInstruction.flatMap {
+                  case ValEx(TlaStr(label)) => tla.variant(label, expr, variantType)
+                  case invalidLabel =>
+                    throw new QuintIRParseError(s"Invalid label found in application of variant ${invalidLabel}")
+                })
+        case _ => throw new QuintIRParseError(s"Invalid type inferred for application of variant ${quintType}")
+      }
+    }
+
+    // the quint builtin operator representing match expressions looks like
+    //
+    // matchVariant(expr, "F1", elim_1, ..., "Fn", elim_n)
+    //
+    // Where each `elim_i` is an operator applying to value wrapped in field `Fi` of a variant.
+    //
+    // This is converted into the following Apalache expression, using Apalache's variant operators:
+    //
+    // CASE VariantTag(expr) = "F1" -> elim_1(VariantGetUnsafe(expr))
+    //   [] ...
+    //   [] VariantTag(expr) = "Fn" -> elim_n(VariantGetUnsafe(expr))
+    //
+    // This ensures that we will apply the proper eliminator to the expected value
+    // associated with whatever tag is carried by the variant `expr`.
+    def matchVariant: Converter = variadicApp { case expr +: cases =>
+      val variantTagCondition = (caseTag) => tla.eql(tla.variantTag(expr), caseTag)
+      val casesInstructions: Seq[(T, T)] =
+        cases.grouped(2).toSeq.map { case Seq(label, elim) =>
+          val appliedElim = label.flatMap {
+            case ValEx(TlaStr(labelLit)) =>
+              tla.appOp(elim, tla.variantGetUnsafe(labelLit, expr))
+            case invalidLabel =>
+              throw new QuintIRParseError(s"Invalid label found in matchVariant case ${invalidLabel}")
+          }
+          variantTagCondition(label) -> appliedElim
+        }
+      tla.caseSplit(casesInstructions: _*)
     }
   }
 
@@ -511,6 +559,10 @@ class Quint(quintOutput: QuintOutput) {
         case "field"      => binaryApp(opName, tla.app)
         case "fieldNames" => unaryApp(opName, tla.dom)
         case "with"       => ternaryApp(opName, tla.except)
+
+        // Sum types
+        case "variant"      => MkTla.variant(types(id).typ)
+        case "matchVariant" => MkTla.matchVariant
 
         // Maps (functions)
         // Map is variadic on n tuples, so build a set of these tuple args
@@ -643,10 +695,10 @@ class Quint(quintOutput: QuintOutput) {
       case app: QuintApp => tlaApplication(app)
     }
 
-  // `tlaDef(quintDef)` is a NullaryOpReader that can be run to obtain a value `Some((tlaDecl, maybeName))`
+  // `tlaDef(quintDef)` is a NullaryOpReader that can be run to obtain a value `Some((maybeName, tlaDecl))`
   // where `tlaDecl` is derived from the given `quintDef`, and `maybeName` is `Some(n)` when the `quintDef`
   // defines a nullary operator named `n`, or  `None` when `quintDef` is not a nullary operator definition.
-  // If the `quintDef` is not convertable (e.g., a quint type definition), it the outer value is `None`.
+  // If the `quintDef` is not convertable (e.g., a quint type definition), then the outer value is `None`.
   def tlaDef(quintDef: QuintDef): NullaryOpReader[Option[(Option[String], TlaDecl)]] = {
     import QuintDef._
     Reader(nullaryOps =>

@@ -113,6 +113,8 @@ class TestQuintEx extends AnyFunSuite {
     val _42 = e(QuintInt(uid, 42), QuintIntT())
     val s = e(QuintStr(uid, "s"), QuintStrT())
     val t = e(QuintStr(uid, "t"), QuintStrT())
+    val labelF1 = e(QuintStr(uid, "F1"), QuintStrT())
+    val labelF2 = e(QuintStr(uid, "F2"), QuintStrT())
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
@@ -577,6 +579,8 @@ class TestQuintEx extends AnyFunSuite {
     assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 
+  /// TUPLES
+
   test("can convert builtin Tup operator application") {
     assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "<<0, 1>>")
   }
@@ -592,6 +596,31 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin tuples operator application") {
     val typ = QuintSetT(QuintTupleT.ofTypes(QuintIntT(), QuintIntT(), QuintIntT()))
     assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)(typ)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
+  }
+
+  /// SUM TYPES
+
+  test("can convert builtin variant operator application") {
+    val typ = QuintSumT.ofVariantTypes("F1" -> QuintIntT(), "F2" -> QuintIntT())
+    assert(convert(Q.app("variant", Q.labelF1, Q._42)(typ)) == """Variants!Variant("F1", 42)""")
+  }
+
+  test("can convert builtin matchVariant operator application") {
+    val typ = QuintSumT.ofVariantTypes("F1" -> QuintIntT(), "F2" -> QuintRecordT.ofFieldTypes())
+    val variant = Q.app("variant", Q.labelF1, Q._42)(typ)
+    val quintMatch = Q.app(
+        "matchVariant",
+        variant,
+        Q.labelF1,
+        Q.lam(Seq("x" -> QuintIntT()), Q._1, QuintIntT()),
+        Q.labelF2,
+        Q.lam(Seq("y" -> QuintRecordT.ofFieldTypes()), Q._2, QuintIntT()),
+    )(typ)
+    val expected =
+      """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42)))
+         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))""".stripMargin
+        .replace('\n', ' ')
+    assert(convert(quintMatch) == expected)
   }
 
   test("can convert builtin assert operator") {
