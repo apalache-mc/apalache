@@ -371,28 +371,27 @@ class Quint(quintOutput: QuintOutput) {
           })
 
     // Create a TLA record
-    def record(rowVar: Option[String]): Converter = {
-      case Seq() => throw new QuintUnsupportedError("Given empty record, but Apalache doesn't support empty records.")
-      case quintArgs =>
-        // The quint Rec operator takes its field and value arguments
-        // via a variadic operator requiring field names passed as strings to
-        // be alternated with values. E.g.,
-        //
-        //    Rec("f1", 1, "f2", 2)
-        //
-        // So we first separate out the field names from the values, so we
-        // can make use of the existing combinator for variadic operators.
-        val (fieldNames, quintVals) = quintArgs
-          .grouped(2)
-          .foldRight((List[String](), List[QuintEx]())) {
-            case (Seq(QuintStr(_, f), v), (fields, values)) => ((f :: fields), v :: values)
-            case (invalidArgs, _) =>
-              throw new QuintIRParseError(s"Invalid argument given to Rec ${invalidArgs}")
-          }
-        variadicApp { tlaVals =>
-          val fieldsAndArgs = fieldNames.zip(tlaVals)
-          tla.rowRec(rowVar, fieldsAndArgs: _*)
-        }(quintVals)
+    def record(rowVar: Option[String]): Converter = { quintArgs =>
+      // The quint Rec operator takes its field and value arguments
+      // via a variadic operator requiring field names passed as strings to
+      // be alternated with values. E.g.,
+      //
+      //    Rec("f1", 1, "f2", 2)
+      //
+      // So we first separate out the field names from the values, so we
+      // can make use of the existing combinator for variadic operators.
+      val (fieldNames, quintVals) = quintArgs
+        .grouped(2)
+        .foldRight((List[String](), List[QuintEx]())) {
+          case (Seq(QuintStr(_, f), v), (fields, values)) => ((f :: fields), v :: values)
+          case (invalidArgs, _) =>
+            throw new QuintIRParseError(s"Invalid argument given to Rec ${invalidArgs}")
+        }
+      variadicApp { tlaVals =>
+        val fieldsAndArgs = fieldNames.zip(tlaVals)
+        tla.rowRec(rowVar, fieldsAndArgs: _*)
+      }(quintVals)
+    }
 
     }
   }

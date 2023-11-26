@@ -518,18 +518,11 @@ class TestQuintEx extends AnyFunSuite {
             QuintSeqT(QuintIntT()))) == "Apalache!MkSeq(42 - 3, LET __QUINT_LAMBDA0(__quint_var0) ≜ (3 + __quint_var0) - 1 IN __QUINT_LAMBDA0)")
   }
 
+  /// RECORDS
+
   test("can convert builtin Rec operator application") {
     val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
     assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
-  }
-
-  test("converting builtin Rec operator constructing empty record fails") {
-    val exn = intercept[QuintUnsupportedError] {
-      val typ = QuintRecordT.ofFieldTypes()
-      convert(Q.app("Rec")(typ))
-    }
-    assert(exn.getMessage.contains(
-            "Unsupported quint input: Given empty record, but Apalache doesn't support empty records."))
   }
 
   test("can convert row-polymorphic record") {

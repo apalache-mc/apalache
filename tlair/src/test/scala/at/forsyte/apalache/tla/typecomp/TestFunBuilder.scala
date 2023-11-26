@@ -47,11 +47,6 @@ class TestFunBuilder extends BuilderTest {
         )
     )
 
-    // test fail on n = 0
-    assertThrows[IllegalArgumentException] {
-      build(builder.recMixed())
-    }
-
     // test fail on n = 1
     assertThrows[IllegalArgumentException] {
       build(builder.recMixed(builder.str("x")))
@@ -107,11 +102,6 @@ class TestFunBuilder extends BuilderTest {
             resultIsExpected2,
         )
     )
-
-    // test fail on n = 0
-    assertThrows[IllegalArgumentException] {
-      build(builder.rec())
-    }
 
     // test fail on repeated key
     assertThrows[IllegalArgumentException] {
