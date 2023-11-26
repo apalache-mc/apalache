@@ -9,83 +9,83 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 @RunWith(classOf[JUnitRunner])
 class TestBuilder extends AnyFunSuite with TestingPredefs {
-    private val bd = new Builder()
+  private val bd = new Builder()
 
-    test("Test direct methods: Names and values") {
-        val nameBuild: TlaEx = bd.name("a")
+  test("Test direct methods: Names and values") {
+    val nameBuild: TlaEx = bd.name("a")
 
-        assert(nameBuild == NameEx("a"))
+    assert(nameBuild == NameEx("a"))
 
-        val vBigInt: BigInt = BigInt("1000000015943534656464398536")
-        val vBigDecimal: BigDecimal = 1.111132454253626474876842798573504607
-        val vBool: Boolean = false
-        val vString: String = "a string val"
+    val vBigInt: BigInt = BigInt("1000000015943534656464398536")
+    val vBigDecimal: BigDecimal = 1.111132454253626474876842798573504607
+    val vBool: Boolean = false
+    val vString: String = "a string val"
 
-        val biBuild = bd.bigInt(vBigInt).untyped()
-        val bdBuild = bd.decimal(vBigDecimal).untyped()
-        val boolBuild = bd.bool(vBool).untyped()
-        val strBuild = bd.str(vString).untyped()
+    val biBuild = bd.bigInt(vBigInt).untyped()
+    val bdBuild = bd.decimal(vBigDecimal).untyped()
+    val boolBuild = bd.bool(vBool).untyped()
+    val strBuild = bd.str(vString).untyped()
 
-        assert(biBuild == ValEx(TlaInt(vBigInt)))
-        assert(bdBuild == ValEx(TlaDecimal(vBigDecimal)))
-        assert(boolBuild == ValEx(TlaBool(vBool)))
-        assert(strBuild == ValEx(TlaStr(vString)))
-    }
+    assert(biBuild == ValEx(TlaInt(vBigInt)))
+    assert(bdBuild == ValEx(TlaDecimal(vBigDecimal)))
+    assert(boolBuild == ValEx(TlaBool(vBool)))
+    assert(strBuild == ValEx(TlaStr(vString)))
+  }
 
-    test("Test direct methods: Declarations") {
-        val decl1 = bd.declOp("A", n_c).untypedOperDecl()
-        val decl2 = bd.declOp("A", n_x, "x").untypedOperDecl()
-        val decl3 = bd.declOp("A", bd.appOp(n_B), ("B", 0)).untypedOperDecl()
-        val decl4 = bd.declOp("A", bd.appOp(n_B, n_x), "x", ("B", 1)).untypedOperDecl()
+  test("Test direct methods: Declarations") {
+    val decl1 = bd.declOp("A", n_c).untypedOperDecl()
+    val decl2 = bd.declOp("A", n_x, "x").untypedOperDecl()
+    val decl3 = bd.declOp("A", bd.appOp(n_B), ("B", 0)).untypedOperDecl()
+    val decl4 = bd.declOp("A", bd.appOp(n_B, n_x), "x", ("B", 1)).untypedOperDecl()
 
-        assert(decl1 == TlaOperDecl("A", List(), n_c))
-        assert(decl2 == TlaOperDecl("A", List(OperParam("x")), n_x))
-        assert(decl3 ==
-                   TlaOperDecl(
-                       "A",
-                       List(OperParam("B", 0)),
-                       OperEx(TlaOper.apply, n_B),
-                   ))
-        assert(decl4 ==
-                   TlaOperDecl(
-                       "A",
-                       List(OperParam("x"), OperParam("B", 1)),
-                       OperEx(TlaOper.apply, n_B, n_x),
-                   ))
+    assert(decl1 == TlaOperDecl("A", List(), n_c))
+    assert(decl2 == TlaOperDecl("A", List(OperParam("x")), n_x))
+    assert(decl3 ==
+      TlaOperDecl(
+          "A",
+          List(OperParam("B", 0)),
+          OperEx(TlaOper.apply, n_B),
+      ))
+    assert(decl4 ==
+      TlaOperDecl(
+          "A",
+          List(OperParam("x"), OperParam("B", 1)),
+          OperEx(TlaOper.apply, n_B, n_x),
+      ))
 
-        val appEx1 = bd.appDecl(decl1).untyped()
-        val appEx2 = bd.appDecl(decl2, n_a).untyped()
-        val appEx3 = bd.appDecl(decl3, n_a).untyped()
-        val appEx4 = bd.appDecl(decl4, n_a, n_b).untyped()
+    val appEx1 = bd.appDecl(decl1).untyped()
+    val appEx2 = bd.appDecl(decl2, n_a).untyped()
+    val appEx3 = bd.appDecl(decl3, n_a).untyped()
+    val appEx4 = bd.appDecl(decl4, n_a, n_b).untyped()
 
-        assert(appEx1 == OperEx(TlaOper.apply, name(decl1.name)))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl1, n_a))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl2))
-        assert(appEx2 == OperEx(TlaOper.apply, name(decl2.name), n_a))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl2, n_a, n_b))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl3))
-        assert(appEx3 == OperEx(TlaOper.apply, name(decl3.name), n_a))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl3, n_a, n_b))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl4))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl4, n_a))
-        assert(appEx4 == OperEx(TlaOper.apply, name(decl4.name), n_a, n_b))
-        assertThrows[IllegalArgumentException](bd.appDecl(decl4, n_a, n_b, n_c))
-    }
+    assert(appEx1 == OperEx(TlaOper.apply, name(decl1.name)))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl1, n_a))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl2))
+    assert(appEx2 == OperEx(TlaOper.apply, name(decl2.name), n_a))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl2, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl3))
+    assert(appEx3 == OperEx(TlaOper.apply, name(decl3.name), n_a))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl3, n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl4))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl4, n_a))
+    assert(appEx4 == OperEx(TlaOper.apply, name(decl4.name), n_a, n_b))
+    assertThrows[IllegalArgumentException](bd.appDecl(decl4, n_a, n_b, n_c))
+  }
 
-    test("Test byName: bad calls") {
-        assertThrows[NoSuchElementException](bd.byName("not an operator name", NullEx, n_b))
+  test("Test byName: bad calls") {
+    assertThrows[NoSuchElementException](bd.byName("not an operator name", NullEx, n_b))
 
-        assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, NullEx).untyped())
-    }
+    assertThrows[IllegalArgumentException](bd.byName(TlaArithOper.plus.name, NullEx).untyped())
+  }
 
-    test("Test byNameOrNull: bad calls") {
-        val nullBadName = bd.byNameOrNull("not an operator name", NullEx, n_b).untyped()
+  test("Test byNameOrNull: bad calls") {
+    val nullBadName = bd.byNameOrNull("not an operator name", NullEx, n_b).untyped()
 
-        assert(nullBadName == NullEx)
+    assert(nullBadName == NullEx)
 
-        val nullBadArity = bd.byNameOrNull(TlaArithOper.plus.name, NullEx).untyped()
+    val nullBadArity = bd.byNameOrNull(TlaArithOper.plus.name, NullEx).untyped()
 
-        assert(nullBadArity == NullEx)
+    assert(nullBadArity == NullEx)
   }
 
   test("Test direct methods: TlaOper") {
