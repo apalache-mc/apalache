@@ -381,6 +381,8 @@ class Quint(quintOutput: QuintOutput) {
       //
       // So we first separate out the field names from the values, so we
       // can make use of the existing combinator for variadic operators.
+      //
+      // Empty records are fine: those are the unit value.
       val (fieldNames, quintVals) = quintArgs
         .grouped(2)
         .foldRight((List[String](), List[QuintEx]())) {

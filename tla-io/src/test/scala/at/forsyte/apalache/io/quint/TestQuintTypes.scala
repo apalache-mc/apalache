@@ -54,13 +54,13 @@ class TestQuintTypes extends AnyFunSuite {
     assert(translate(record) == RecRowT1(RowT1(("f1" -> IntT1), ("f2" -> StrT1))))
   }
 
-  test("Quint unions are converted into TlaType1 variants") {
+  test("Quint sum types are converted into TlaType1 variants") {
     val quintSumType =
       // i.e.: F1(int) | F2(str)
       QuintSumT(Row.Cell(List(RecordField("F1", QuintIntT()), RecordField("F2", QuintStrT())), Row.Nil()))
 
     val expectedVariant =
-      // i.e.: t1({ f1: Int }) | t2({ f2: Str })
+      // i.e.: F1(Int) | F1(Str)
       VariantT1(RowT1("F1" -> IntT1, "F2" -> StrT1))
     assert(translate(quintSumType) == expectedVariant)
   }

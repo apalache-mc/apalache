@@ -527,6 +527,11 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
+  test("can convert builtin Rec operator constructing an empty record -- the unit type") {
+    val typ = QuintRecordT.ofFieldTypes()
+    assert(convert(Q.app("Rec")(typ)) == "[]")
+  }
+
   test("can convert row-polymorphic record") {
     val typ = QuintRecordT.ofFieldTypes("a", ("s", QuintIntT()), ("t", QuintIntT()))
     val quintEx = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
