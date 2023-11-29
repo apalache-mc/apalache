@@ -23,7 +23,7 @@ class TestTransitionExecutorWithIncrementalAndArrays
     try {
       test(exeCtx)
     } finally {
-      rewriter.dispose()
+      exeCtx.dispose()
     }
   }
 }

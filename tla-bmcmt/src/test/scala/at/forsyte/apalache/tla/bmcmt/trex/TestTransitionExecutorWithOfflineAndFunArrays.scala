@@ -24,7 +24,7 @@ class TestTransitionExecutorWithOfflineAndFunArrays
     try {
       test(exeCtx)
     } finally {
-      rewriter.dispose()
+      exeCtx.dispose()
     }
   }
 }

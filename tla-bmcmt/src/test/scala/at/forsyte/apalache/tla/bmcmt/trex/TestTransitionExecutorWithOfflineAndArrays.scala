@@ -23,7 +23,7 @@ class TestTransitionExecutorWithOfflineAndArrays extends TestTransitionExecutorI
     try {
       test(exeCtx)
     } finally {
-      rewriter.dispose()
+      exeCtx.dispose()
     }
   }
 }
