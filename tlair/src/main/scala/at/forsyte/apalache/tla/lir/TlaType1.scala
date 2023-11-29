@@ -107,6 +107,9 @@ case object StrT1 extends TlaType1 {
  *   unique name of the constant type
  */
 case class ConstT1(name: String) extends TlaType1 {
+  require(ConstT1.isUninterpreted(name) || ConstT1.isAliasReference(name),
+      "ConstT1 accepts identifiers in upper case or $aliasReference, found: " + name)
+
   override def toString: String = name
 
   override def usedNames: Set[Int] = Set.empty
