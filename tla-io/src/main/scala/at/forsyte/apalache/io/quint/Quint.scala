@@ -397,8 +397,6 @@ class Quint(quintOutput: QuintOutput) {
     }
 
     // Create a TLA variant
-    // TODO: We fix builder type error when sum type constructors are nested
-    //       See https://github.com/informalsystems/quint/issues/1034#issuecomment-1826894723
     def variant(quintType: QuintType): Converter = {
       val tlaType = typeConv.convert(quintType)
       tlaType match {
