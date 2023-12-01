@@ -416,7 +416,7 @@ class Quint(quintOutput: QuintOutput) {
 
     // the quint builtin operator representing match expressions looks like
     //
-    // matchVariant(expr, "F1", elim_1, ..., "Fn", elim_n, "_", defaultElim)
+    // matchVariant(expr, "F1", elim_1, ..., "Fn", elim_n[, "_", defaultElim])
     //
     // Where each `elim_i` is an operator applying to value wrapped in field `Fi` of a variant.
     //
