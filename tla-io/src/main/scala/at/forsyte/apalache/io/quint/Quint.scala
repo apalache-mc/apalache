@@ -422,9 +422,9 @@ class Quint(quintOutput: QuintOutput) {
     //
     // This is converted into the following Apalache expression, using Apalache's variant operators:
     //
-    // CASE VariantTag(expr) = "F1" -> elim_1(VariantGetUnsafe(expr))
+    // CASE VariantTag(expr) = "F1" -> elim_1(VariantGetUnsafe("F1", expr))
     //   [] ...
-    //   [] VariantTag(expr) = "Fn" -> elim_n(VariantGetUnsafe(expr))
+    //   [] VariantTag(expr) = "Fn" -> elim_n(VariantGetUnsafe("Fn", expr))
     //
     // This ensures that we will apply the proper eliminator to the expected value
     // associated with whatever tag is carried by the variant `expr`.
