@@ -15,7 +15,8 @@ import scalaz._
 import scalaz.std.list._
 import scalaz.syntax.traverse._
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
+import at.forsyte.apalache.tla.lir.values.TlaStr
 
 // Convert a QuintEx into a TlaEx
 //
@@ -54,15 +55,15 @@ class Quint(quintOutput: QuintOutput) {
   private type NullaryOpReader[A] = Reader[Set[String], A]
 
   // Find the type for an id via the lookup table provided in the quint output
-  private def getTypeFromLookupTable(id: BigInt): QuintType = {
+  private def getTypeFromLookupTable(id: BigInt): Try[QuintType] = {
     table.get(id) match {
-      case None => throw new QuintIRParseError(s"No entry found for id ${id} in lookup table")
+      case None => Failure(new QuintIRParseError(s"No entry found for id ${id} in lookup table"))
       case Some(lookupEntry) =>
         types.get(lookupEntry.id) match {
           case None =>
-            throw new QuintIRParseError(
-                s"No type found for definition ${lookupEntry.name} (${lookupEntry.id}) associated with id ${id}")
-          case Some(t) => t.typ
+            Failure(new QuintIRParseError(
+                    s"No type found for definition ${lookupEntry.name} (${lookupEntry.id}) associated with id ${id}"))
+          case Some(t) => Success(t.typ)
         }
     }
   }
@@ -371,29 +372,75 @@ class Quint(quintOutput: QuintOutput) {
           })
 
     // Create a TLA record
-    def record(rowVar: Option[String]): Converter = {
-      case Seq() => throw new QuintUnsupportedError("Given empty record, but Apalache doesn't support empty records.")
-      case quintArgs =>
-        // The quint Rec operator takes its field and value arguments
-        // via a variadic operator requiring field names passed as strings to
-        // be alternated with values. E.g.,
-        //
-        //    Rec("f1", 1, "f2", 2)
-        //
-        // So we first separate out the field names from the values, so we
-        // can make use of the existing combinator for variadic operators.
-        val (fieldNames, quintVals) = quintArgs
-          .grouped(2)
-          .foldRight((List[String](), List[QuintEx]())) {
-            case (Seq(QuintStr(_, f), v), (fields, values)) => ((f :: fields), v :: values)
-            case (invalidArgs, _) =>
-              throw new QuintIRParseError(s"Invalid argument given to Rec ${invalidArgs}")
-          }
-        variadicApp { tlaVals =>
-          val fieldsAndArgs = fieldNames.zip(tlaVals)
-          tla.rowRec(rowVar, fieldsAndArgs: _*)
-        }(quintVals)
+    def record(rowVar: Option[String]): Converter = { quintArgs =>
+      // The quint Rec operator takes its field and value arguments
+      // via a variadic operator requiring field names passed as strings to
+      // be alternated with values. E.g.,
+      //
+      //    Rec("f1", 1, "f2", 2)
+      //
+      // So we first separate out the field names from the values, so we
+      // can make use of the existing combinator for variadic operators.
+      //
+      // Empty records are fine: those are the unit value.
+      val (fieldNames, quintVals) = quintArgs
+        .grouped(2)
+        .foldRight((List[String](), List[QuintEx]())) {
+          case (Seq(QuintStr(_, f), v), (fields, values)) => ((f :: fields), v :: values)
+          case (invalidArgs, _) =>
+            throw new QuintIRParseError(s"Invalid argument given to Rec ${invalidArgs}")
+        }
+      variadicApp { tlaVals =>
+        val fieldsAndArgs = fieldNames.zip(tlaVals)
+        tla.rowRec(rowVar, fieldsAndArgs: _*)
+      }(quintVals)
+    }
 
+    // Create a TLA variant
+    def variant(quintType: QuintType): Converter = {
+      val tlaType = typeConv.convert(quintType)
+      tlaType match {
+        case variantType: VariantT1 =>
+          binaryApp("variant",
+              (labelInstruction, expr) =>
+                // The builder requires a string literal, rather than a string expression
+                // so we have to build the converted TLA expression and extract its string value.
+                labelInstruction.flatMap {
+                  case ValEx(TlaStr(label)) => tla.variant(label, expr, variantType)
+                  case invalidLabel =>
+                    throw new QuintIRParseError(s"Invalid label found in application of variant ${invalidLabel}")
+                })
+        case _ => throw new QuintIRParseError(s"Invalid type inferred for application of variant ${quintType}")
+      }
+    }
+
+    // the quint builtin operator representing match expressions looks like
+    //
+    // matchVariant(expr, "F1", elim_1, ..., "Fn", elim_n)
+    //
+    // Where each `elim_i` is an operator applying to value wrapped in field `Fi` of a variant.
+    //
+    // This is converted into the following Apalache expression, using Apalache's variant operators:
+    //
+    // CASE VariantTag(expr) = "F1" -> elim_1(VariantGetUnsafe("F1", expr))
+    //   [] ...
+    //   [] VariantTag(expr) = "Fn" -> elim_n(VariantGetUnsafe("Fn", expr))
+    //
+    // This ensures that we will apply the proper eliminator to the expected value
+    // associated with whatever tag is carried by the variant `expr`.
+    def matchVariant: Converter = variadicApp { case expr +: cases =>
+      val variantTagCondition = (caseTag) => tla.eql(tla.variantTag(expr), caseTag)
+      val casesInstructions: Seq[(T, T)] =
+        cases.grouped(2).toSeq.map { case Seq(label, elim) =>
+          val appliedElim = label.flatMap {
+            case ValEx(TlaStr(labelLit)) =>
+              tla.appOp(elim, tla.variantGetUnsafe(labelLit, expr))
+            case invalidLabel =>
+              throw new QuintIRParseError(s"Invalid label found in matchVariant case ${invalidLabel}")
+          }
+          variantTagCondition(label) -> appliedElim
+        }
+      tla.caseSplit(casesInstructions: _*)
     }
   }
 
@@ -513,6 +560,10 @@ class Quint(quintOutput: QuintOutput) {
         case "fieldNames" => unaryApp(opName, tla.dom)
         case "with"       => ternaryApp(opName, tla.except)
 
+        // Sum types
+        case "variant"      => MkTla.variant(types(id).typ)
+        case "matchVariant" => MkTla.matchVariant
+
         // Maps (functions)
         // Map is variadic on n tuples, so build a set of these tuple args
         // before converting the resulting set of tuples to a function.
@@ -555,7 +606,12 @@ class Quint(quintOutput: QuintOutput) {
 
         // Otherwise, the applied operator is defined, and not a builtin
         case definedOpName => { args =>
-          val operType = typeConv.convert(getTypeFromLookupTable(id))
+          val quintType = getTypeFromLookupTable(id).recoverWith { case err: QuintIRParseError =>
+            Failure(new QuintIRParseError(
+                    s"While converting operator application of defined operator '${definedOpName}' to arguments ${args}: ${err
+                    .getMessage()}"))
+          }.get
+          val operType = typeConv.convert(quintType)
           val oper = tla.name(definedOpName, operType)
           args.toList.traverse(tlaExpression).map(tlaArgs => tla.appOp(oper, tlaArgs: _*))
         }
@@ -639,10 +695,10 @@ class Quint(quintOutput: QuintOutput) {
       case app: QuintApp => tlaApplication(app)
     }
 
-  // `tlaDef(quintDef)` is a NullaryOpReader that can be run to obtain a value `Some((tlaDecl, maybeName))`
+  // `tlaDef(quintDef)` is a NullaryOpReader that can be run to obtain a value `Some((maybeName, tlaDecl))`
   // where `tlaDecl` is derived from the given `quintDef`, and `maybeName` is `Some(n)` when the `quintDef`
   // defines a nullary operator named `n`, or  `None` when `quintDef` is not a nullary operator definition.
-  // If the `quintDef` is not convertable (e.g., a quint type definition), it the outer value is `None`.
+  // If the `quintDef` is not convertable (e.g., a quint type definition), then the outer value is `None`.
   def tlaDef(quintDef: QuintDef): NullaryOpReader[Option[(Option[String], TlaDecl)]] = {
     import QuintDef._
     Reader(nullaryOps =>

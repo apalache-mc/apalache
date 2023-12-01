@@ -379,7 +379,7 @@ private[quint] object QuintType {
       QuintOperT.rw,
       QuintTupleT.rw,
       QuintRecordT.rw,
-      QuintUnionT.rw,
+      QuintSumT.rw,
   )
 
   // NOTE: Contrary to quint values, for quint types, source IDs are optional.
@@ -500,13 +500,14 @@ private[quint] object QuintType {
     }
   }
 
-  case class UnionRecord(tagValue: String, fields: Row)
-  object UnionRecord {
-    implicit val rw: RW[UnionRecord] = macroRW
-  }
+  @key("sum") case class QuintSumT(fields: Row) extends QuintType
+  object QuintSumT {
+    implicit val rw: RW[QuintSumT] = macroRW
 
-  @key("union") case class QuintUnionT(tag: String, records: Seq[UnionRecord]) extends QuintType
-  object QuintUnionT {
-    implicit val rw: RW[QuintUnionT] = macroRW
+    // Helper for manually constructing record type
+    def ofVariantTypes(variantTypes: (String, QuintType)*): QuintSumT = {
+      val fields = variantTypes.map { case (f, t) => RecordField(f, t) }
+      QuintSumT(Row.Cell(fields, Row.Nil()))
+    }
   }
 }
