@@ -115,6 +115,8 @@ class TestQuintEx extends AnyFunSuite {
     val t = e(QuintStr(uid, "t"), QuintStrT())
     val labelF1 = e(QuintStr(uid, "F1"), QuintStrT())
     val labelF2 = e(QuintStr(uid, "F2"), QuintStrT())
+    val labelF3 = e(QuintStr(uid, "F3"), QuintStrT())
+    val wildLabel = e(QuintStr(uid, "_"), QuintStrT())
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
@@ -611,7 +613,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin matchVariant operator application") {
-    val typ = QuintSumT.ofVariantTypes("F1" -> QuintIntT(), "F2" -> QuintRecordT.ofFieldTypes())
+    val typ = QuintSumT.ofVariantTypes("F1" -> QuintIntT(), "F2" -> QuintRecordT.ofFieldTypes(), "F3" -> QuintIntT())
     val variant = Q.app("variant", Q.labelF1, Q._42)(typ)
     val quintMatch = Q.app(
         "matchVariant",
@@ -620,10 +622,13 @@ class TestQuintEx extends AnyFunSuite {
         Q.lam(Seq("x" -> QuintIntT()), Q._1, QuintIntT()),
         Q.labelF2,
         Q.lam(Seq("y" -> QuintRecordT.ofFieldTypes()), Q._2, QuintIntT()),
+        Q.wildLabel,
+        Q.lam(Seq("_" -> QuintVarT("t")), Q._2, QuintIntT()), // Default case
     )(typ)
     val expected =
       """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42)))
-         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))""".stripMargin
+         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))
+         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2([])""".stripMargin
         .replace('\n', ' ')
     assert(convert(quintMatch) == expected)
   }

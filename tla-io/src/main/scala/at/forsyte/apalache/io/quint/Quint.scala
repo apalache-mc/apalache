@@ -416,7 +416,7 @@ class Quint(quintOutput: QuintOutput) {
 
     // the quint builtin operator representing match expressions looks like
     //
-    // matchVariant(expr, "F1", elim_1, ..., "Fn", elim_n)
+    // matchVariant(expr, "F1", elim_1, ..., "Fn", elim_n, "_", defaultElim)
     //
     // Where each `elim_i` is an operator applying to value wrapped in field `Fi` of a variant.
     //
@@ -425,13 +425,36 @@ class Quint(quintOutput: QuintOutput) {
     // CASE VariantTag(expr) = "F1" -> elim_1(VariantGetUnsafe("F1", expr))
     //   [] ...
     //   [] VariantTag(expr) = "Fn" -> elim_n(VariantGetUnsafe("Fn", expr))
+    //   [] OTHER -> defaultElim([])
     //
     // This ensures that we will apply the proper eliminator to the expected value
     // associated with whatever tag is carried by the variant `expr`.
+    //
+    // The final, default case may not be present, in which case no `OTHER` case is
+    // constructed.
     def matchVariant: Converter = variadicApp { case expr +: cases =>
       val variantTagCondition = (caseTag) => tla.eql(tla.variantTag(expr), caseTag)
+
+      // Check the last case to see if there is a default case, which will need special treatment
+      // If a valid quint match expression has a default case, it will always be the last case
+      // in a match.
+      val (matchCases, defaultCase) = cases.grouped(2).toSeq match {
+        case Seq() =>
+          (Seq(), None) // A match expression with no cases is invalid: we let the builder handle the error
+        case allCases @ (cs :+ Seq(label, defaultElim)) =>
+          build(label) match {
+            case ValEx(TlaStr("_")) =>
+              // We have a default case, which is always paired with an eliminator that
+              // can be applied to the unit value (an empty record).
+              (cs, Some(tla.appOp(defaultElim, tla.rowRec(None))))
+            case _ =>
+              // All cases have match expressions
+              (allCases, None)
+          }
+      }
+
       val casesInstructions: Seq[(T, T)] =
-        cases.grouped(2).toSeq.map { case Seq(label, elim) =>
+        matchCases.map { case Seq(label, elim) =>
           val appliedElim = label.flatMap {
             case ValEx(TlaStr(labelLit)) =>
               tla.appOp(elim, tla.variantGetUnsafe(labelLit, expr))
@@ -440,7 +463,11 @@ class Quint(quintOutput: QuintOutput) {
           }
           variantTagCondition(label) -> appliedElim
         }
-      tla.caseSplit(casesInstructions: _*)
+
+      defaultCase match {
+        case None          => tla.caseSplit(casesInstructions: _*)
+        case Some(default) => tla.caseOther(default, casesInstructions: _*)
+      }
     }
   }
 
