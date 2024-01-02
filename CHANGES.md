@@ -1,6 +1,18 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.2 - 2023-12-01
+
+### Bug fixes
+
+- Fix missing support for default match cases in quint conversion (#2792)
+
+## 0.44.1 - 2023-12-01
+
+### Bug fixes
+
+- Fix truncation of SMT debug logs, see #2785
+
 ## 0.44.0 - 2023-10-23
 
 ### Breaking changes

@@ -1121,7 +1121,6 @@ class TestBuilder extends AnyFunSuite with TestingPredefs {
     val enumBuild1 = bd.byName(TlaFunOper.rec.name, n_a, n_b).untyped()
     val enumBuild2 = bd.byName(TlaFunOper.rec.name, n_a, n_b, n_c, n_d).untyped()
 
-    assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.rec.name).untyped())
     assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.rec.name, n_a).untyped())
     assert(enumBuild1 == OperEx(TlaFunOper.rec, n_a, n_b))
     assertThrows[IllegalArgumentException](bd.byName(TlaFunOper.rec.name, n_a, n_b, n_c).untyped())
@@ -1181,7 +1180,7 @@ class TestBuilder extends AnyFunSuite with TestingPredefs {
     val enumBuild2 = bd.byNameOrNull(TlaFunOper.rec.name, n_a, n_b, n_c, n_d).untyped()
     val enumBuildBad2 = bd.byNameOrNull(TlaFunOper.rec.name, n_a, n_b, n_c, n_d, n_e).untyped()
 
-    assert(enumBuildEmpty == NullEx)
+    assert(enumBuildEmpty == OperEx(TlaFunOper.rec))
     assert(enumBuild1 == OperEx(TlaFunOper.rec, n_a, n_b))
     assert(enumBuildBad1 == NullEx)
     assert(enumBuild2 == OperEx(TlaFunOper.rec, n_a, n_b, n_c, n_d))

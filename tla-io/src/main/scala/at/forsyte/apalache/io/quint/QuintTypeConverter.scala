@@ -78,61 +78,19 @@ private class QuintTypeConverter extends LazyLogging {
     }
   }
 
-  // Convert a quint union to a TlaType1 row (which is used to represent variants)
-  //
-  // NOTE: Union types in quint aren't fully implemented and supported, so this
-  // corner of the transformation is likely to require update soon.
-  // See https://github.com/informalsystems/quint/issues/244
-  //
-  // In quint, unions are currently represented by a list of tagged rows.
-  // E.g., (abstracting rom the concrete type representation):
-  //
-  // ```
-  // type u =
-  //   | ( "Foo", {a: Int, b: String })
-  //   | ( "Bar", {c: Set[Int] })
-  // ```
-  //
-  // But Variant types in Apalache are represented by a single row, in which
-  // the row's keys are the tags, and it's values can be of any type, e.g.:
-  //
-  // ```
-  // type u = { "Foo": { a: Int, b: Str }
-  //          , "Bar": Set[Int]
-  //          }
-  // ```
-  //
-  // Which we parse and represent as
-  //
-  // ```
-  // @typeAlias: u = Foo({a: Int, b: Str}) | Bar(Int);
-  // ```
-  //
-  // As a result, our conversion from quint has to take a list of records of quint
-  // rows and convert them into a single TlaType1 record, for which all the values
-  // are themselves records, and the keys are given by the values of the `tag`
-  // field from quint rows.
-  private def unionToRowT1(variants: Seq[UnionRecord]): RowT1 = {
-    val fieldTypes = variants.map {
-      case UnionRecord(tag, row) => {
-        (tag, RecRowT1(rowToRowT1(row)))
-      }
-    }
-    RowT1(fieldTypes: _*)
-  }
-
   val convert: QuintType => TlaType1 = {
-    case QuintBoolT()             => BoolT1
-    case QuintIntT()              => IntT1
-    case QuintStrT()              => StrT1
-    case QuintConstT(name)        => ConstT1(name)
-    case QuintVarT(name)          => VarT1(getVarNo(name))
-    case QuintSetT(elem)          => SetT1(convert(elem))
-    case QuintSeqT(elem)          => SeqT1(convert(elem))
-    case QuintFunT(arg, res)      => FunT1(convert(arg), convert(res))
-    case QuintOperT(args, res)    => OperT1(args.map(convert), convert(res))
-    case QuintTupleT(row)         => rowToTupleT1(row)
-    case QuintRecordT(row)        => RecRowT1(rowToRowT1(row))
-    case QuintUnionT(_, variants) => VariantT1(unionToRowT1(variants))
+    case QuintBoolT() => BoolT1
+    case QuintIntT()  => IntT1
+    case QuintStrT()  => StrT1
+    case QuintConstT(name) =>
+      ConstT1(name) // TODO: Raise error if we hit this. See https://github.com/informalsystems/apalache/issues/2788
+    case QuintVarT(name)       => VarT1(getVarNo(name))
+    case QuintSetT(elem)       => SetT1(convert(elem))
+    case QuintSeqT(elem)       => SeqT1(convert(elem))
+    case QuintFunT(arg, res)   => FunT1(convert(arg), convert(res))
+    case QuintOperT(args, res) => OperT1(args.map(convert), convert(res))
+    case QuintTupleT(row)      => rowToTupleT1(row)
+    case QuintRecordT(row)     => RecRowT1(rowToRowT1(row))
+    case QuintSumT(row)        => VariantT1(rowToRowT1(row))
   }
 }

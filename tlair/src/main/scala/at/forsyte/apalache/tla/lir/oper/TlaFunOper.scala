@@ -18,7 +18,7 @@ object TlaFunOper {
    * is why we call it "REC_CTOR".</p>
    */
   object rec extends TlaFunOper {
-    override def arity: OperArity = AnyEvenArity() && MinimalArity(2)
+    override def arity: OperArity = AnyEvenArity()
 
     override val name: String = "RECORD"
     override val precedence: (Int, Int) = (16, 16) // as the function application

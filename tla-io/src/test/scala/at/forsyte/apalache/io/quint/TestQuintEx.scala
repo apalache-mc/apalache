@@ -113,6 +113,10 @@ class TestQuintEx extends AnyFunSuite {
     val _42 = e(QuintInt(uid, 42), QuintIntT())
     val s = e(QuintStr(uid, "s"), QuintStrT())
     val t = e(QuintStr(uid, "t"), QuintStrT())
+    val labelF1 = e(QuintStr(uid, "F1"), QuintStrT())
+    val labelF2 = e(QuintStr(uid, "F2"), QuintStrT())
+    val labelF3 = e(QuintStr(uid, "F3"), QuintStrT())
+    val wildLabel = e(QuintStr(uid, "_"), QuintStrT())
 
     // Names and parameters
     val name = e(QuintName(uid, "n"), QuintIntT())
@@ -518,18 +522,16 @@ class TestQuintEx extends AnyFunSuite {
             QuintSeqT(QuintIntT()))) == "Apalache!MkSeq(42 - 3, LET __QUINT_LAMBDA0(__quint_var0) ≜ (3 + __quint_var0) - 1 IN __QUINT_LAMBDA0)")
   }
 
+  /// RECORDS
+
   test("can convert builtin Rec operator application") {
     val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
     assert(convert(Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)) == """["s" ↦ 1, "t" ↦ 2]""")
   }
 
-  test("converting builtin Rec operator constructing empty record fails") {
-    val exn = intercept[QuintUnsupportedError] {
-      val typ = QuintRecordT.ofFieldTypes()
-      convert(Q.app("Rec")(typ))
-    }
-    assert(exn.getMessage.contains(
-            "Unsupported quint input: Given empty record, but Apalache doesn't support empty records."))
+  test("can convert builtin Rec operator constructing an empty record -- the unit type") {
+    val typ = QuintRecordT.ofFieldTypes()
+    assert(convert(Q.app("Rec")(typ)) == "[]")
   }
 
   test("can convert row-polymorphic record") {
@@ -584,6 +586,8 @@ class TestQuintEx extends AnyFunSuite {
     assert(tlaOpDef.typeTag == Typed(expectedTlaType))
   }
 
+  /// TUPLES
+
   test("can convert builtin Tup operator application") {
     assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "<<0, 1>>")
   }
@@ -599,6 +603,34 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin tuples operator application") {
     val typ = QuintSetT(QuintTupleT.ofTypes(QuintIntT(), QuintIntT(), QuintIntT()))
     assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)(typ)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
+  }
+
+  /// SUM TYPES
+
+  test("can convert builtin variant operator application") {
+    val typ = QuintSumT.ofVariantTypes("F1" -> QuintIntT(), "F2" -> QuintIntT())
+    assert(convert(Q.app("variant", Q.labelF1, Q._42)(typ)) == """Variants!Variant("F1", 42)""")
+  }
+
+  test("can convert builtin matchVariant operator application") {
+    val typ = QuintSumT.ofVariantTypes("F1" -> QuintIntT(), "F2" -> QuintRecordT.ofFieldTypes(), "F3" -> QuintIntT())
+    val variant = Q.app("variant", Q.labelF1, Q._42)(typ)
+    val quintMatch = Q.app(
+        "matchVariant",
+        variant,
+        Q.labelF1,
+        Q.lam(Seq("x" -> QuintIntT()), Q._1, QuintIntT()),
+        Q.labelF2,
+        Q.lam(Seq("y" -> QuintRecordT.ofFieldTypes()), Q._2, QuintIntT()),
+        Q.wildLabel,
+        Q.lam(Seq("_" -> QuintVarT("t")), Q._2, QuintIntT()), // Default case
+    )(typ)
+    val expected =
+      """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42)))
+         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))
+         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2([])""".stripMargin
+        .replace('\n', ' ')
+    assert(convert(quintMatch) == expected)
   }
 
   test("can convert builtin assert operator") {
