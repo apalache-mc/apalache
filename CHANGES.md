@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.2 - 2023-12-01
+
+### Bug fixes
+
+- Fix missing support for default match cases in quint conversion (#2792)
+
 ## 0.44.1 - 2023-12-01
 
 ### Bug fixes
