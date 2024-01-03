@@ -1,9 +1,8 @@
----
-authors: Shon Feder
-last revised: 2021-12-06
----
+# ADR-013: Configuration Management Component
 
-# ADR-012: Configuration Management Component
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Shon Feder                             | 2022-08-15      |
 
 **Table of Contents**
 
@@ -51,16 +50,17 @@ The ongoing work for [the server
 mode](https://github.com/informalsystems/apalache/issues/730) is expected to
 require introducing several more configurable paramters.
 
-As discussed in
-[#1069](https://github.com/informalsystems/apalache/issues/1069), we have at
-least 4 different sources from which we need to load configuration paramters,
-and the loading must cascade, with the first listed taking priority:
+As discussed in [#1069](https://github.com/informalsystems/apalache/issues/1069)
+and [#1929](https://github.com/informalsystems/apalache/issues/1929) we have at
+least 5 different sources from which we need to load configuration parameters,
+and the loading must cascade, with the first listed source taking priority:
 
-1. CLI arguments
-2. environment variables
-3. A local configuration file (perhaps with the location overridden by a CLI
-   flag)
-4. A global configuration file
+- CLI arguments **OR** data supplied by RPC
+- environment variables
+- A local configuration files (perhaps with the location overridden by a CLI
+  flag)
+- A global configuration 
+- Predetermined defaults
 
 We are currently managing this configuration in an ad hoc way, with a bespoke
 configuration loading system, and various ad hoc methods for effecting
@@ -77,7 +77,7 @@ The problem can be decomposed into three parts:
 
 1. Reading parameters from CLI and environment variables (currently done through
    our CLI library).
-2. Reading parameters from configuration files (currently done in ad hoc way)
+2. Reading parameters from configuration files (currently done in an ad hoc way)
 3. Cascade loading these paramters in the correct order, to end up with the
    correct intended configuration.
 
@@ -183,8 +183,8 @@ import pureconfig.generic.auto._
 case class Port(number: Int = 8080) extends AnyVal
 
 sealed trait SmtEncoding
-case class ArraysEncoding extends SmtEncoding
-case class Oopsla19Encoding extends SmtEncoding
+case class Arrays extends SmtEncoding
+case class OOPSLA19 extends SmtEncoding
 
 case class ApalacheConfig(
   runDir: Option[Path] = None,
@@ -192,7 +192,7 @@ case class ApalacheConfig(
   writeIntermediate: Boolean = false,
   profiling: Boolean = false,
   outDir: Path = Path("."),
-  smtEncding: SmtEncoding = Oopsla19Encoding,
+  smtEncding: SmtEncoding = OOPSLA19,
 )
 
 case classs ExampleUseOfConfigs() = {
@@ -219,6 +219,9 @@ program that need to read such configurations.
 
 ## Consequences
 
-<!-- Records the results of the decision over the long term.
-     Did it work, not work, was changed, upgraded, etc.
--->
+After utilizing the approach proposed here for nearly a year, we were able to
+introduce several additional configurations easily, and we found the local
+configuration files useful for tweaking program behavior. We subsequently
+decided to further extend the configuration system by integrating the CLI within
+the configuration system and use it as the basis for statically representing all
+program options. See [ADR 022](./022adr-unification-of-configs-and-options.md).

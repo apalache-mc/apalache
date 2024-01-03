@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rewriter
 
-import at.forsyte.apalache.tla.bmcmt.Arena
+import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.pp.ConstSimplifierBase
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * <p>A simplifier of constant TLA+ expressions, e.g., rewriting 1 + 2 to 3. This simplifier is using some knowledge
@@ -19,7 +20,7 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
   def isFalseConst(ex: TlaEx): Boolean = {
     ex match {
       case ValEx(TlaBool(false)) => true
-      case NameEx(name)          => name == Arena.falseName
+      case NameEx(name)          => name == PureArena.falseName
       case _                     => false
     }
   }
@@ -27,7 +28,7 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
   def isTrueConst(ex: TlaEx): Boolean = {
     ex match {
       case ValEx(TlaBool(true)) => true
-      case NameEx(name)         => name == Arena.trueName
+      case NameEx(name)         => name == PureArena.trueName
       case _                    => false
     }
   }
@@ -42,17 +43,18 @@ class ConstSimplifierForSmt extends ConstSimplifierBase {
 
     case ex @ (NameEx(_) | ValEx(_)) =>
       if (isFalseConst(ex)) {
-        ValEx(TlaBool(false))(ex.typeTag)
+        tla.bool(false)
       } else if (isTrueConst(ex)) {
-        ValEx(TlaBool(true))(ex.typeTag)
+        tla.bool(true)
       } else {
         ex
       }
 
     // do not go in tla.in and tla.notin, as it breaks down our SMT encoding
     case ex @ OperEx(op, _*)
-        if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet ||
-          op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+        if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+          op == ApalacheInternalOper.storeInSet || op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet ||
+          op == ApalacheInternalOper.storeNotInFun =>
       ex
 
     // using isTrueConst and isFalseConst that are more precise than those of ConstSimplifierBase

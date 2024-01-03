@@ -1,9 +1,8 @@
----
-authors: Shon Feder
-last revised: 2021-12-05
----
-
 # ADR-012: Adopt an ADR Template
+
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Shon Feder                             | 2021-12-05      |
 
 **Table of Contents**
 

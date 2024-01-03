@@ -1,0 +1,21 @@
+{
+  "name": "highlightjs-tlaplus",
+  "version": "0.0.1",
+  "description": "TLA+ syntax highlighting plugin for highlight.js",
+  "main": "src/tlaplus.js",
+  "keywords": [
+    "tla",
+    "tlaplus",
+    "hljs",
+    "highlightjs",
+    "highlight.js"
+  ],
+  "author": "Thomas Pani <thomas.pani@gmail.com>",
+  "bugs": {
+    "url": "https://github.com/informalsystems/apalache/issues"
+  },
+  "homepage": "https://github.com/informalsystems/apalache/tree/main/docs/highlightjs-tlaplus",
+  "devDependencies": {
+    "highlight.js": "^11.5.1"
+  }
+}

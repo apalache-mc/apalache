@@ -1,3 +1,4 @@
+import scala.util.Failure
 import Dependencies._
 
 import scala.sys.process._
@@ -19,10 +20,11 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.8"
+ThisBuild / scalaVersion := "2.13.12"
 
-// Add resolver for Sonatype OSS Snapshots Maven repository
-ThisBuild / resolvers += Resolver.sonatypeRepo("snapshots")
+// Add resolver for Sonatype OSS Snapshots and Releases Maven repository
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("releases")
 
 // Shared dependencies accross all sub projects
 ThisBuild / libraryDependencies ++= Seq(
@@ -35,6 +37,7 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.slf4j,
     Deps.tla2tools,
     Deps.z3,
+    Deps.shapeless,
     TestDeps.junit,
     TestDeps.easymock,
     TestDeps.scalatest,
@@ -76,16 +79,16 @@ ThisBuild / scalacOptions ++= {
 // scalafmt
 // TODO: Remove if we decide we are happy with allways reformatting all
 // Only check/fix against (tracked) files that have changed relative to the trunk
-// ThisBuild / scalafmtFilter := "diff-ref=origin/unstable"
+// ThisBuild / scalafmtFilter := "diff-ref=origin/main"
 ThisBuild / scalafmtPrintDiff := true
 
 // scalafix
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
-///////////////////////////////
+////////////////////////
 // Test configuration //
-///////////////////////////////
+///////////////////////
 
 lazy val testSettings = Seq(
     // Configure the test reporters for concise but informative output.
@@ -94,13 +97,24 @@ lazy val testSettings = Seq(
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
-lazy val testSanyBugSettings = Seq(
-    // FIXME: https://github.com/informalsystems/apalache/issues/1577
-    // SANY contains a race condition that unpacks temporary module files into
-    // the same directory: https://github.com/tlaplus/tlaplus/issues/688
-    // Tests calling SanyImporter must execute sequentially until fixed.
-    Test / parallelExecution := false
-)
+///////////////////////
+// API Documentation //
+///////////////////////
+
+lazy val browseApiDocs = taskKey[Unit]("Build and browse the API docs")
+browseApiDocs := {
+  val buildDirs = (Compile / unidoc).value
+  require(buildDirs.nonEmpty, "unidoc failed to return build path")
+  val index = buildDirs(0) / "index.html"
+  val operSys = System.getProperty("os.name").toLowerCase();
+  if (operSys.contains("nix") || operSys.contains("nux") || operSys.contains("aix")) {
+    s"xdg-open ${index}" !
+  } else if (operSys.contains("mac")) {
+    s"open ${index}" !
+  } else {
+    println(s"Open you browser to ${index}")
+  }
+}
 
 /////////////////////////////
 // Sub-project definitions //
@@ -118,7 +132,12 @@ lazy val tlair = (project in file("tlair"))
 lazy val infra = (project in file("mod-infra"))
   .dependsOn(tlair)
   .settings(
-      testSettings
+      testSettings,
+      libraryDependencies ++= Seq(
+          Deps.commonsIo,
+          Deps.ujson,
+          Deps.upickle,
+      ),
   )
 
 lazy val tla_io = (project in file("tla-io"))
@@ -131,21 +150,19 @@ lazy val tla_io = (project in file("tla-io"))
   )
   .settings(
       testSettings,
-      testSanyBugSettings,
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.pureConfig,
       ),
   )
 
-lazy val tla_types = (project in file("tla-types"))
+lazy val tla_typechecker = (project in file("tla-typechecker"))
   .dependsOn(tlair, infra,
       // property based tests depend on IR generators defined in the tlair tests
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
       tlair % "test->test", tla_io)
   .settings(
       testSettings,
-      testSanyBugSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
@@ -157,34 +174,73 @@ lazy val tla_pp = (project in file("tla-pp"))
       tlair % "test->test",
       infra,
       tla_io,
-      tla_types,
   )
-  .settings(
-      testSettings,
-      testSanyBugSettings,
-      libraryDependencies += Deps.commonsIo,
-  )
-
-lazy val tla_assignments = (project in file("tla-assignments"))
-  .dependsOn(tlair, infra, tla_io, tla_pp, tla_types)
   .settings(
       testSettings,
       libraryDependencies += Deps.commonsIo,
   )
 
-lazy val tla_bmcmt = (project in file("tla-bmcmt"))
-  .dependsOn(tlair,
-      // property based tests depend on IR generators defined in the tlair tests
-      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
-      tlair % "test->test", infra, tla_io, tla_pp, tla_assignments)
+lazy val tla_assignments = (project in file("tla-assignments"))
+  .dependsOn(tlair, infra, tla_io, tla_pp)
   .settings(
       testSettings,
-      testSanyBugSettings,
+      libraryDependencies += Deps.commonsIo,
+  )
+
+lazy val passes = (project in file("passes"))
+  .dependsOn(
+      tlair,
+      infra,
+      tla_io,
+      tla_pp,
+      tla_assignments,
+      tla_typechecker,
+  )
+  .settings(
+      testSettings,
       libraryDependencies += Deps.scalaCollectionContrib,
   )
 
+lazy val tla_bmcmt = (project in file("tla-bmcmt"))
+  .dependsOn(
+      tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test",
+      infra,
+      tla_io,
+      tla_pp,
+      tla_assignments,
+      passes,
+  )
+  .settings(
+      testSettings,
+      libraryDependencies += Deps.scalaCollectionContrib,
+  )
+
+lazy val shai = (project in file("shai"))
+  .dependsOn(tlair, infra, tla_io, tla_typechecker, tla_bmcmt, passes)
+  .settings(
+      // See https://zio.dev/version-1.x/usecases/usecases_testing/
+      testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
+      libraryDependencies ++= Seq(
+          Deps.zio,
+          Deps.grpcNetty,
+          Deps.scalapbRuntimGrpc,
+          Deps.scalapbRuntime,
+          Deps.zioGrpcCodgen,
+          TestDeps.zioTest,
+          TestDeps.zioTestSbt,
+      ),
+      // See https://scalapb.github.io/zio-grpc/docs/installation
+      Compile / PB.targets := Seq(
+          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
+          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
+      ),
+  )
+
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, hai)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, passes)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -210,23 +266,9 @@ lazy val tool = (project in file("mod-tool"))
   )
 
 lazy val distribution = (project in file("mod-distribution"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, tool)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_bmcmt, passes, tool)
   .settings(
       testSettings
-  )
-
-lazy val hai = (project in file("hai"))
-  .settings(
-      libraryDependencies ++= Seq(
-          Deps.grpcNetty,
-          Deps.scalapbRuntimGrpc,
-          Deps.zioGrpcCodgen,
-      ),
-      // See https://scalapb.github.io/zio-grpc/docs/installation
-      Compile / PB.targets := Seq(
-          scalapb.gen(grpc = true) -> (Compile / sourceManaged).value / "scalapb",
-          scalapb.zio_grpc.ZioCodeGenerator -> (Compile / sourceManaged).value / "scalapb",
-      ),
   )
 
 ///////////////
@@ -237,23 +279,27 @@ lazy val apalacheCurrentPackage = taskKey[File]("Set the current executable apal
 
 // Define the main entrypoint and uber jar package
 lazy val root = (project in file("."))
-  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin)
+  .enablePlugins(UniversalPlugin, sbtdocker.DockerPlugin, ChangelingPlugin, ScalaUnidocPlugin)
   .dependsOn(distribution)
   .aggregate(
       // propagate commands to these sub-projects
       tlair,
       infra,
       tla_io,
-      tla_types,
+      tla_typechecker,
       tla_pp,
       tla_assignments,
       tla_bmcmt,
-      hai,
+      passes,
+      shai,
       tool,
       distribution,
   )
   .settings(
       testSettings,
+      // TODO: uncomment to enable building unidoc for for all test and src code
+      // Generate scaladoc for both test and src code
+      // ScalaUnidoc / unidoc / unidocConfigurationFilter := inConfigurations(Compile, Test),
       // Package definition
       Compile / packageBin / mappings ++= Seq(
           // Include theese assets in the compiled package at the specified locations
@@ -264,39 +310,31 @@ lazy val root = (project in file("."))
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
       assembly / assembledMappings += {
-        val src_dir = (ThisBuild / baseDirectory).value / "src" / "tla"
+        // To make our custom TLA modules available for import in TLA specs, we add them
+        // to the tla2sany/StandardModules directory.
         // See https://github.com/sbt/sbt-assembly/issues/227#issuecomment-283504401
-        sbtassembly.MappingSet(
-            None,
-            Vector(
-                (src_dir / "Apalache.tla") ->
-                  "tla2sany/StandardModules/Apalache.tla",
-                (src_dir / "DummyForIntegrationTests.tla") ->
-                  "tla2sany/StandardModules/DummyForIntegrationTests.tla",
-                (src_dir / "Variants.tla") ->
-                  "tla2sany/StandardModules/Variants.tla",
-                (src_dir / "__rewire_tlc_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_tlc_in_apalache.tla",
-                (src_dir / "__rewire_sequences_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_sequences_in_apalache.tla",
-                (src_dir / "__rewire_bags_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_bags_in_apalache.tla",
-                (src_dir / "__rewire_bags_ext_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_bags_ext_in_apalache.tla",
-                (src_dir / "__apalache_folds.tla") ->
-                  "tla2sany/StandardModules/__apalache_folds.tla",
-                (src_dir / "__apalache_internal.tla") ->
-                  "tla2sany/StandardModules/__apalache_internal.tla",
-                (src_dir / "__rewire_functions_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_functions_in_apalache.tla",
-                (src_dir / "__rewire_finite_sets_ext_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_finite_sets_ext_in_apalache.tla",
-                (src_dir / "__rewire_sequences_ext_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_sequences_ext_in_apalache.tla",
-                (src_dir / "__rewire_folds_in_apalache.tla") ->
-                  "tla2sany/StandardModules/__rewire_folds_in_apalache.tla",
-            ),
-        )
+        val tlaModuleMapping =
+          ((ThisBuild / baseDirectory).value / "src" / "tla")
+            .listFiles()
+            .collect {
+              case f if f.getName.endsWith(".tla") =>
+                f -> s"tla2sany/StandardModules/${f.getName}"
+            }
+            .toVector
+        sbtassembly.MappingSet(None, tlaModuleMapping)
+      },
+      assembly / assemblyMergeStrategy := {
+        // Workaround for conflict with grpc-netty manifest files
+        // See https://github.com/sbt/sbt-assembly/issues/362
+        case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+        // Workaround for conflict between gson and slf4j manifest files:
+        // [error] (assembly) deduplicate: different file contents found in the following:
+        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
+        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
+        // See https://stackoverflow.com/a/67937671/1187277
+        case PathList("module-info.class")         => MergeStrategy.discard
+        case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+        case x                                     => (assembly / assemblyMergeStrategy).value(x)
       },
       // Package the distribution files
       Universal / mappings ++= Seq(

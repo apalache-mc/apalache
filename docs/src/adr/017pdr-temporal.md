@@ -1,9 +1,8 @@
----
-authors: Igor Konnov
-last revised: 2022-04-01
----
-
 # PDR-017: Checking temporal properties
+
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Igor Konnov, Philip Offtermatt         | 2022-04-01      |
 
 **This is a preliminary design document. It will be refined and it will mature
   into an ADR later.**

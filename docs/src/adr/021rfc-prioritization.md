@@ -1,9 +1,8 @@
----
-authors: Shon Feder, Gabriela Moreira
-last revised: 2022-05-24
----
+# RFC-021: Prioritization of Work
 
-# RFC-21: Prioritization of Work
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Shon Feder, Gabriela Moreira           | 2022-05-24      |
 
 **Table of Contents**
 

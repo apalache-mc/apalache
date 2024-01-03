@@ -8,92 +8,98 @@
  * Apalache treats these operators as typed, so it enforces type safety of
  * variants.
  *
- * Igor Konnov, Informal Systems, 2021
+ * Igor Konnov, Informal Systems, 2021-2022
  *)
 
 (**
- * Wrap a record into a variant. The record must contain the field `tag`,
- * and the value of the tag field must be a string literal.
+ * A representation of the unit type.
  *
- * @param rec a record that contains a field `tag`
+ * Useful for defining variants that don't need to wrap any values. E.g., to
+ * define a type of primary colors `Red(UNIT) | Blue(UNIT) | Green(UNIT)`
+ *
+ * @type: UNIT;
+ *)
+UNIT == "U_OF_UNIT"
+
+(**
+ * Wrap a value with a variant.
+ *
+ * @param rec a value
  * @return the record wrapped in the variant type
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type looks like follows, when __tagName == "Tag":
  *
- *   { tag: Str, a } =>
- *     { tag: "$tagValue", a } | b
+ *   (Str, a) => Tag(a) | b
  *)
-Variant(__rec) ==
+Variant(__tagName, __value) ==
     \* default untyped implementation
-    __rec 
+    [ tag |-> __tagName, value |-> __value ]
 
 (**
  * Filter a set of variants with the provided tag value.
  *
  * @param `S` a set of variants that are constructed with `Variant(...)`
- * @param `tagValue` a string literal that is used to filter the set elements
+ * @param `tagValue` a constant string that is used to filter the set elements
  * @return the set of elements of S that are tagged with `tagValue`.
  *
- * The type could look like follows, if we supported string literals in types:
+ * The type looks like follows, when __tagName == "Tag":
  *
- *   (Set({ tag: "$tagValue", a} | b), Str) => Set({ tag: Str, a })
+ *   (Str, Set(Tag(a) | b)) => Set(a)
  *)
-FilterByTag(__S, __tagValue) ==
+VariantFilter(__tagName, __S) ==
     \* default untyped implementation
-    { __e \in S: __e.tag = __tagValue }
+    { __d.value : __d \in { __e \in __S: __e.tag = __tagName } }
+
+(**
+ * Get the tag name that is associated with a variant.
+ *
+ * @param `variant` a variant that is constructed with `Variant(...)`
+ * @return the tag name associated with a variant
+ *
+ * Its type is as follows:
+ *
+ *   Variant(a) => Str
+ *)
+VariantTag(__variant) ==
+    \* default untyped implementation
+    __variant.tag
+
+(**
+ * Return the value associated with the tag, when the tag equals to __tagName.
+ * Otherwise, return __elseValue.
+ *
+ * @param `__tagName` the tag attached to the variant
+ * @param `__variant` a variant that is constructed with `Variant(...)`
+ * @param `__defaultValue` the default value to return, if not tagged with __tagName
+ * @return the value extracted from the variant, or the __defaultValue
+ *
+ * Its type could look like follows:
+ *
+ *   (Str, Tag(a) | b, a) => a
+ *)
+VariantGetOrElse(__tagName, __variant, __defaultValue) ==
+    \* default untyped implementation
+    IF __variant.tag = __tagName
+    THEN __variant.value
+    ELSE __defaultValue
 
 
 (**
- * Test the tag of `variant` against the value `tagValue`.
- * If `variant.tag = tagValue`, then apply `ThenOper(rec)`,
- * where `rec` is a record extracted from `variant`.
- * Otherwise, apply `ElseOper(reducedVariant)`,
- * where `reducedVariant` is a version of `variant` that does allow for
- * the tag `tagValue`.
+ * Unsafely return a value of the type associated with __tagName.
+ * If the variant is tagged with __tagName, then return the associated value.
+ * Otherwise, return some value of the type associated with __tagName.
  *
+ * @param `tagValue` the tag attached to the variant
  * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `tagValue` a string literal that is used to extract a record
- * @param `ThenOper` an operator that is called
- *        when `variant` is tagged with `tagValue`
- * @param `ElseOper` an operator that is called
- *        when `variant` is tagged with a value different from `tagValue`
- * @return the result returned by either `ThenOper`, or `ElseOper`
+ * @return the value extracted from the variant, when tagged __tagName;
+ *         otherwise, return some value
  *
- * The type could look like follows, if we supported string literals in types:
+ * Its type could look like follows:
  *
- *   (
- *     { "$tagValue": { tag: Str, a } | b },
- *     { tag: Str, a } => r,
- *     Variant(b) => r
- *   ) => r
+ *   (Str, Tag(a) | b) => a
  *)
-MatchTag(__variant, __tagValue, __ThenOper(_), __ElseOper(_)) ==
-    \* default untyped implementation
-    IF __variant.tag = __tagValue
-    THEN __ThenOper(__variant)
-    ELSE __ElseOper(__variant)
+VariantGetUnsafe(__tagName, __variant) ==
+    \* the default untyped implementation
+    __variant.value
 
-(**
- * In case when `variant` allows for one record type,
- * apply `ThenOper(rec)`, where `rec` is a record extracted from `variant`.
- * The type checker must enforce that `variant` allows for one record type.
- * The untyped implementation does not perform such a test,
- * as it is impossible to do so without types.
- *
- * @param `variant` a variant that is constructed with `Variant(...)`
- * @param `ThenOper` an operator that is called
- *        when `variant` is tagged with `tagValue`
- * @return the result returned by `ThenOper`
- *
- * The type could look like follows, if we supported string literals in types:
- *
- *   (
- *     { "$tagValue": { tag: Str, a } },
- *     { tag: Str, a } => r
- *   ) => r
- *)
- *)
-MatchOnly(__variant, __ThenOper(_)) ==
-    \* default untyped implementation
-    __ThenOper(__variant)
 ===============================================================================

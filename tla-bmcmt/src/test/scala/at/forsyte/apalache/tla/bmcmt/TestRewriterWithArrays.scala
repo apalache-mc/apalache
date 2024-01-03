@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.rules.aux._
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
@@ -19,9 +21,9 @@ class TestRewriterWithArrays
     with TestSymbStateRewriterApalache with TestSymbStateRewriterMkSeq {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = arraysEncoding)))
-    arena = Arena.create(solverContext)
-    val result = test(arraysEncoding)
+                smtEncoding = SMTEncoding.Arrays)))
+    arena = PureArenaAdapter.create(solverContext)
+    val result = test(SMTEncoding.Arrays)
     solverContext.dispose()
     result
   }

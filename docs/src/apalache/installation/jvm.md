@@ -20,7 +20,7 @@ better, add the `./bin` directory to your `PATH` and run `apalache-mc`.
 
 If you would like to contribute a command-line script for running Apalache in
 Windows, please [open a pull
-request](https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#making-a-pull-request).
+request](https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#making-a-pull-request).
 
 [Eclipse Temurin]: https://adoptium.net/
 [Zulu]: https://www.azul.com/downloads/?version=java-17-lts&package=jdk#download-openjdk

@@ -52,7 +52,7 @@ class TupleOrSeqCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
     val tuple = arena.topCell
 
     // connect the cells to the tuple (or a sequence): the order of edges is important!
-    arena = arena.appendHasNoSmt(tuple, cells: _*)
+    arena = arena.appendHasNoSmt(tuple, cells.map(FixedElemPtr): _*)
     state.setArena(arena).setRex(tuple.toNameEx)
   }
 

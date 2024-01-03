@@ -18,7 +18,7 @@ object TlaFunOper {
    * is why we call it "REC_CTOR".</p>
    */
   object rec extends TlaFunOper {
-    override def arity: OperArity = new OperArity(k => k >= 2 && k % 2 == 0)
+    override def arity: OperArity = AnyEvenArity()
 
     override val name: String = "RECORD"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -62,7 +62,7 @@ object TlaFunOper {
    * <p>The arguments are always an odd-length list of the following structure: body, x_1, S_1, ..., x_k, S_k.</p>
    */
   object funDef extends TlaFunOper {
-    override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
+    override def arity: OperArity = AnyOddArity() && MinimalArity(3)
 
     override val name: String = "FUN_CTOR"
     override val precedence: (Int, Int) = (16, 16) // as the function application
@@ -95,7 +95,7 @@ object TlaFunOper {
    * NameEx(n), ValEx(TlaInt(1))) ) ) ), NameEx("n"), TlaIntSet ) )` </p>
    */
   object recFunDef extends TlaFunOper {
-    override def arity: OperArity = new OperArity(_ >= 3)
+    override def arity: OperArity = MinimalArity(3)
 
     override def name: String = "FUN_REC_CTOR"
 
@@ -134,7 +134,7 @@ object TlaFunOper {
    * write `[f EXCEPT ![1][2] = 3]` in TLA+, expect to deal with `(except f (tuple 1 2) 3)`. </p>
    */
   object except extends TlaFunOper {
-    override def arity: OperArity = new OperArity(k => k >= 3 && k % 2 == 1)
+    override def arity: OperArity = AnyOddArity() && MinimalArity(3)
     override val name: String = "EXCEPT"
     override val precedence: (Int, Int) = (16, 16) // as the function application
   }

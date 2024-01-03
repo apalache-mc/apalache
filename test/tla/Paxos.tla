@@ -7,63 +7,49 @@
 (* This is a specification of the Paxos algorithm without explicit leaders *)
 (* or learners.  It refines the spec in Voting                             *)
 (***************************************************************************)
-EXTENDS Integers
+EXTENDS Integers, Variants
 -----------------------------------------------------------------------------
-(***************************************************************************)
-(* The constant parameters and the set Ballots are the same as in Voting.  *)
-(***************************************************************************)
-
 (*
-CONSTANT Value, Acceptor, Quorum
-
-ASSUME QuorumAssumption == /\ \A Q \in Quorum : Q \subseteq Acceptor
-                           /\ \A Q1, Q2 \in Quorum : Q1 \cap Q2 # {}
-
-Ballot ==  Nat
-
-None == CHOOSE v : v \notin Ballot
-*)
-Value == {0, 1}
-
-
-Acceptor == {"a1", "a2"}
-Quorum == {{"a1", "a2"}}
-
-(*
-Acceptor == {"a1", "a2", "a3"}
-Quorum == {{"a1", "a2"}, {"a2", "a3"}, {"a1", "a3"}}
-*)
-(*
-Acceptor == {"a1", "a2", "a3", "a4"}
-Quorum == {{"a1", "a2", "a3"}, {"a2", "a3", "a4"},
-           {"a1", "a3", "a4"}, {"a1", "a2", "a4"},
-           {"a1", "a2", "a3", "a4"}}
-           
-Acceptor == {"a1", "a2", "a3", "a4", "a5"}
-Quorum == {
-  {"a2", "a3", "a5"},
-  {"a1", "a2", "a3"},
-  {"a1", "a2", "a4"},
-  {"a1", "a2", "a5"},
-  {"a1", "a2", "a3", "a4", "a5"},
-  {"a1", "a2", "a3", "a4"},
-  {"a1", "a4", "a5"},
-  {"a1", "a3", "a5"},
-  {"a2", "a4", "a5"},
-  {"a1", "a3", "a4"},
-  {"a3", "a4", "a5"},
-  {"a2", "a3", "a4"},
-  {"a2", "a3", "a4", "a5"},
-  {"a1", "a2", "a3", "a5"},
-  {"a1", "a3", "a4", "a5"},
-  {"a1", "a2", "a4", "a5"}
- }
+ @typeAlias: MESSAGE =
+        M1a({ bal: Int })
+      | M1b({ acc: A, bal: Int, mbal: Int, mval: V })
+      | M2a({ bal: Int, val: V })
+      | M2b({ acc: A, bal: Int, val: V })
+    ;
  *)
-           
+Paxos_typedefs == TRUE
+
+\* we accompany the MESSAGE type with a constructor for each case
+
+\* @type: Int => MESSAGE;
+M1a(bal) ==
+    Variant("M1a", [ bal |-> bal ])
+
+\* @type: (A, Int, Int, V) => MESSAGE;
+M1b(acc, bal, mbal, mval) ==
+    Variant("M1b", [ acc |-> acc, bal |-> bal, mbal |-> mbal, mval |-> mval ])
+
+\* @type: (Int, V) => MESSAGE;
+M2a(bal, val) ==
+    Variant("M2a", [ bal |-> bal, val |-> val ])
+
+\* @type: (A, Int, V) => MESSAGE;
+M2b(acc, bal, val) ==
+    Variant("M2b", [ acc |-> acc, bal |-> bal, val |-> val ])
+
+
+
+Value == { "0_OF_V", "1_OF_V" }
+
+
+Acceptor == {"a1_OF_A", "a2_OF_A", "a3_OF_A"}
+Quorum == {{"a1_OF_A", "a2_OF_A"}}
            
            
 Ballot == 1..10
-None == 999
+BNone == -1
+
+VNone == "None_OF_V"
 
   (*************************************************************************)
   (* An unspecified value that is not a ballot number.                     *)
@@ -74,22 +60,29 @@ None == 999
 (* Message of all possible messages.  The messages are explained below     *)
 (* with the actions that send them.                                        *)
 (***************************************************************************)
-Message ==        [type : {"1a"}, bal : Ballot]
-           \union [type : {"1b"}, acc : Acceptor, bal : Ballot,
-                   mbal : Ballot \union {-1}, mval : Value \union {None}]
-           \union [type : {"2a"}, bal : Ballot, val : Value]
-           \union [type : {"2b"}, acc : Acceptor, bal : Ballot, val : Value]
+Message ==
+    { M1a(bal): bal \in Ballot }
+            \union
+    { M1b(acc, bal, mbal, mval):
+        acc \in Acceptor,
+        bal \in Ballot,
+        mbal \in Ballot \union {BNone},
+        mval \in Value \union {VNone} }
+            \union
+    { M2a(bal, val): bal \in Ballot, val \in Value }
+            \union
+    { M2b(acc, bal, val): acc \in Acceptor, bal \in Ballot, val \in Value }
+
 -----------------------------------------------------------------------------
 VARIABLE
-    \* @typeAlias: PROC = Str;
-    \* @type: PROC -> Int;
+    \* @type: A -> Int;
     maxBal,
-    \* @type: PROC -> Int;
+    \* @type: A -> Int;
     maxVBal, \* <<maxVBal[a], maxVal[a]>> is the vote with the largest
-    \* @type: PROC -> Int;
+    \* @type: A -> V;
     maxVal,    \* ballot number cast by a; it equals <<-1, None>> if
                     \* a has not cast any vote.
-    \* @type: Set([type: Str, bal: Int, acc: PROC, mbal: Int, mval: Int, val: Int]);
+    \* @type: Set(MESSAGE);
     msgs     \* The set of all messages that have been sent.
 
 (***************************************************************************)
@@ -119,9 +112,9 @@ vars == <<maxBal, maxVBal, maxVal, msgs>>
 (***************************************************************************)
 (* The type invariant and initial predicate.                               *)
 (***************************************************************************)
-TypeOK == /\ maxBal \in [Acceptor -> Ballot \union {-1}]
-          /\ maxVBal \in [Acceptor -> Ballot \union {-1}]
-          /\ maxVal \in [Acceptor -> Value \union {None}]
+TypeOK == /\ maxBal \in [Acceptor -> Ballot \union {BNone}]
+          /\ maxVBal \in [Acceptor -> Ballot \union {BNone}]
+          /\ maxVal \in [Acceptor -> Value \union {VNone}]
           /\ msgs \subseteq Message
 
 (***************************************************************************)
@@ -130,21 +123,16 @@ TypeOK == /\ maxBal \in [Acceptor -> Ballot \union {-1}]
 (* as follows.                                                             *)
 (***************************************************************************)
 
-\* the original specification does not have this definition, we need it for types
-\* @type: (Int, Int) => <<Int, Int>>;
-pair(i, j) == <<i, j>>
-
 votes == [a \in Acceptor |->
-           {pair(m.bal, m.val) : m \in {mm \in msgs: /\ mm.type = "2b"
+           {<<m.bal, m.val>> : m \in {mm \in VariantFilter("M2b", msgs):
                                                    /\ mm.acc = a
-                (* BMCMT check, let's add smth like HASFIELD(mm, "val") *)
                                                    /\ mm.val = mm.val
             }}]
 
 
-Init == /\ maxBal = [a \in Acceptor |-> -1]
-        /\ maxVBal = [a \in Acceptor |-> -1]
-        /\ maxVal = [a \in Acceptor |-> None]
+Init == /\ maxBal = [a \in Acceptor |-> BNone]
+        /\ maxVBal = [a \in Acceptor |-> BNone]
+        /\ maxVal = [a \in Acceptor |-> VNone]
         /\ msgs = {}
 
 (***************************************************************************)
@@ -160,7 +148,7 @@ Send(m) == /\ msgs' = msgs \union {m}
 (* Phase2a(b).  The Phase1a(b) action sends a phase 1a message (a message  *)
 (* m with m.type = "1a") that begins ballot b.                             *)
 (***************************************************************************)
-Phase1a(b) == /\ Send([type |-> "1a", bal |-> b])
+Phase1a(b) == /\ Send(M1a(b))
               /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
 
 (***************************************************************************)
@@ -169,12 +157,10 @@ Phase1a(b) == /\ Send([type |-> "1a", bal |-> b])
 (* b and sends a phase 1b message to the leader containing the values of   *)
 (* maxVBal[a] and maxVal[a].                                               *)
 (***************************************************************************)
-Phase1b(a) == /\ \E m \in msgs :
-                  /\ m.type = "1a"
+Phase1b(a) == /\ \E m \in VariantFilter("M1a", msgs):
                   /\ m.bal > maxBal[a]
                   /\ maxBal' = [maxBal EXCEPT ![a] = m.bal]
-                  /\ Send([type |-> "1b", acc |-> a, bal |-> m.bal,
-                            mbal |-> maxVBal[a], mval |-> maxVal[a]])
+                  /\ Send(M1b(a, m.bal, maxVBal[a], maxVal[a]))
               /\ UNCHANGED <<maxVBal, maxVal>>
 
 (***************************************************************************)
@@ -198,18 +184,18 @@ Phase1b(a) == /\ \E m \in msgs :
 (* greater than b (thereby promising not to vote in ballot b).             *)
 (***************************************************************************)
 Phase2a(b, v) ==
-  /\ ~ \E m \in msgs : m.type = "2a" /\ m.bal = b
+  /\ ~ \E m \in VariantFilter("M2a", msgs): m.bal = b
   /\ \E Q \in Quorum :
-        LET Q1b == {m \in msgs : /\ m.type = "1b"
+        LET Q1b == {m \in VariantFilter("M1b", msgs):
                                  /\ m.acc \in Q
                                  /\ m.bal = b}
-            Q1bv == {m \in Q1b : m.mbal \geq 0}
+            Q1bv == {m \in Q1b : m.mbal /= BNone}
         IN  /\ \A a \in Q : \E m \in Q1b : m.acc = a 
             /\ \/ Q1bv = {}
                \/ \E m \in Q1bv : 
                     /\ m.mval = v
                     /\ \A mm \in Q1bv : m.mbal \geq mm.mbal 
-  /\ Send([type |-> "2a", bal |-> b, val |-> v])
+  /\ Send(M2a(b, v))
   /\ UNCHANGED <<maxBal, maxVBal, maxVal>>
 
 (***************************************************************************)
@@ -221,14 +207,13 @@ Phase2a(b, v) ==
 (* phase 2b message announcing its vote.  It also sets maxBal[a] to the    *)
 (* message's.  ballot number                                               *)
 (***************************************************************************)
-Phase2b(a) == \E m \in msgs:
-  /\ m.type = "2a"
+Phase2b(a) ==
+  \E m \in VariantFilter("M2a", msgs):
   /\ m.bal \geq maxBal[a]
   /\ maxBal' = [maxBal EXCEPT ![a] = m.bal]
   /\ maxVBal' = [maxVBal EXCEPT ![a] = m.bal]
   /\ maxVal' = [maxVal EXCEPT ![a] = m.val]
-  /\ Send([type |-> "2b", acc |-> a,
-           bal |-> m.bal, val |-> m.val])
+  /\ Send(M2b(a, m.bal, m.val))
 
 (***************************************************************************)
 (* In an implementation, there will be learner processes that learn from   *)
@@ -284,18 +269,18 @@ ShowsSafeAt(Q, b, v) ==
 (* theorem.                                                                *)
 (***************************************************************************)
 Inv == (*/\ TypeOK*)
-       /\ \A a \in Acceptor : IF maxVBal[a] = -1
-                                THEN maxVal[a] = None
+       /\ \A a \in Acceptor : IF maxVBal[a] = BNone
+                                THEN maxVal[a] = VNone
                                 ELSE <<maxVBal[a], maxVal[a]>> \in votes[a]
-       /\ \A m \in msgs : 
-             /\ (m.type = "1b") => /\ maxBal[m.acc] \geq m.bal
-                                   /\ (m.mbal \geq 0) =>
-                                       <<m.mbal, m.mval>> \in votes[m.acc]
-             /\ (m.type = "2a") => /\ \E Q \in Quorum :
-                                         ShowsSafeAt(Q, m.bal, m.val)
-                                   /\ \A mm \in msgs : /\ mm.type = "2a"
-                                                       /\ mm.bal = m.bal
-                                                       => mm.val = m.val
+       /\ \A m \in VariantFilter("M1b", msgs):
+             /\ maxBal[m.acc] \geq m.bal
+             /\ (m.mbal /= BNone) =>
+                    <<m.mbal, m.mval>> \in votes[m.acc]
+       /\ \A m \in VariantFilter("M2a", msgs):
+             /\ \E Q \in Quorum :
+                 ShowsSafeAt(Q, m.bal, m.val)
+             /\ \A mm \in VariantFilter("M2a", msgs):
+                 mm.bal = m.bal => mm.val = m.val
 
        (*/\ V!Inv*)
 ============================================================================

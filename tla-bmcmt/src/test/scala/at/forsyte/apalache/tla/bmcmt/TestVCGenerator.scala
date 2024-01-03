@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderDeclAsTyped
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
+import at.forsyte.apalache.tla.types.tla._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -15,6 +15,8 @@ import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
 class TestVCGenerator extends AnyFunSuite {
+  private val parser = DefaultType1Parser
+
   private def mkVCGen(): VCGenerator = {
     new VCGenerator(new IdleTracker)
   }
@@ -52,20 +54,16 @@ class TestVCGenerator extends AnyFunSuite {
   test("trace invariant") {
     // as trace VCGenerator checks the type of a trace invariant, we construct the declaration manually
     // hist[Len(hist)].x > hist[1].x
-    val types = Map("i" -> IntT1, "b" -> BoolT1, "r" -> RecT1("x" -> IntT1), "s" -> SeqT1(RecT1("x" -> IntT1)),
-        "o" -> OperT1(Seq(SeqT1(RecT1("x" -> IntT1))), BoolT1))
-    val hist = name("hist") ? "s"
-    val invBody = gt(
-        appFun(appOp(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        appFun(appOp(hist, int(1)) ? "r", str("x")) ? "i",
-    ) ? "b"
-    val traceInv = declOp("TraceInv", invBody, OperParam("hist", 0)).typed(types, "o")
+    val seqT = parser("Seq({ x: Int })")
+    val hist = name("hist", seqT)
+    val invBody = gt(app(app(hist, len(hist)), str("x")), app(app(hist, int(1)), str("x")))
+    val traceInv = decl("TraceInv", invBody, param("hist", seqT))
     val xDecl = TlaVarDecl("x")(Typed(IntT1))
     val module = TlaModule("mod", Seq(xDecl, traceInv))
 
     val newMod = mkVCGen().gen(module, "TraceInv", None)
-    assertDecl(newMod, "VCTraceInv$0", """(hist(Len(hist)))["x"] > (hist(1))["x"]""")
-    assertDecl(newMod, "VCNotTraceInv$0", """¬((hist(Len(hist)))["x"] > (hist(1))["x"])""")
+    assertDecl(newMod, "VCTraceInv$0", """hist[Len(hist)]["x"] > hist[1]["x"]""")
+    assertDecl(newMod, "VCNotTraceInv$0", """¬(hist[Len(hist)]["x"] > hist[1]["x"])""")
   }
 
   test("state view") {
@@ -127,7 +125,7 @@ class TestVCGenerator extends AnyFunSuite {
   private def loadFromText(moduleName: String, text: String): TlaModule = {
     val locationStore = new SourceStore
     val (_, modules) =
-      new SanyImporter(locationStore, createAnnotationStore()).loadFromSource(moduleName, Source.fromString(text))
+      new SanyImporter(locationStore, createAnnotationStore()).loadFromSource(Source.fromString(text))
     modules(moduleName)
   }
 }

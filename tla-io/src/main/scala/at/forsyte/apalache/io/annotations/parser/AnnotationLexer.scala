@@ -15,7 +15,9 @@ import at.forsyte.apalache.io.annotations.AnnotationParserError
 object AnnotationLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
-  override val whiteSpace: Regex = """([ \t\r\f\n]+)""".r
+  // We cannot throw away new lines, or else we lose the ability to parse out one line comments in annotations
+  // See https://github.com/informalsystems/apalache/issues/2162
+  override val whiteSpace: Regex = """([ \t\f]+)""".r
 
   /**
    * Parse the input stream and return the list of tokens. Although collecting the list of all tokens in memory is not
@@ -44,12 +46,21 @@ object AnnotationLexer extends RegexParsers {
 
   def token: Parser[AnnotationToken] =
     positioned(
-        leftParen | rightParen | comma | dot | boolean | atIdentifier | identifier | number | string | inline_string | unexpected_char
+        leftParen
+          | rightParen
+          | comma
+          | dot
+          | boolean
+          | atIdentifier
+          | identifier
+          | number
+          | string
+          | inline_string
+          | unexpected_char
+          | newline
     ) ///
 
   def skip: Parser[Unit] = rep(whiteSpace) ^^^ ()
-
-  def linefeed: Parser[Unit] = "\n" ^^^ ()
 
   private def identifier: Parser[IDENT] = {
     "[a-zA-Z_][a-zA-Z0-9_]*".r ^^ { name => IDENT(name) }
@@ -65,11 +76,15 @@ object AnnotationLexer extends RegexParsers {
     }
   }
 
+  // All the valid inline string chars `whiteSpace`
+  private val inline_string_chars = """[a-zA-Z0-9_~!#\\$%^&*\-+=|(){}\[\],:`'<>.?/\r\n \t\f]*""".r
+
+  // "inline_strings" are untokenized strings following a ":" and ending with a ";"
   private def inline_string: Parser[INLINE_STRING] = {
-    """:[a-zA-Z0-9_~!#\\$%^&*\-+=|(){}\[\],:`'<>.?/ \t\r\f\n]*;""".r ^^ { text =>
-      val contents = text.substring(1, text.length - 1)
-      // Inline string may contain line feeds and other control characters. Remove them.
-      val cleared = whiteSpace.replaceAllIn(contents, " ")
+    ":" ~> inline_string_chars <~ ";" ^^ { case text =>
+      // Inline string may contain control characters that we can safely replace with a space.
+      // We also trim leading and trailing whitespace, as it creates noise.
+      val cleared = whiteSpace.replaceAllIn(text.trim(), " ")
       INLINE_STRING(cleared)
     }
   }
@@ -100,5 +115,9 @@ object AnnotationLexer extends RegexParsers {
 
   private def dot: Parser[DOT] = {
     "." ^^ (_ => DOT())
+  }
+
+  private def newline: Parser[NL] = {
+    """\r?\n""".r ^^^ NL()
   }
 }

@@ -1,8 +1,8 @@
 ---- MODULE Test1182 ----
 EXTENDS  Integers, FiniteSets, Sequences, TLC, Apalache
 VARIABLES
-    \* @typeAlias: THING = [ cnt: Int ];
-    \* @type: Str -> THING;
+    \* @typeAlias: thing = { cnt: Int };
+    \* @type: Str -> $thing;
     things
 
 \* @type: Int => Int;
@@ -10,7 +10,7 @@ NonNegative(z) == IF 0 < z THEN z ELSE 0
 
 \* @type: () => Bool;
 Init == LET
-    \* @type: () => (Str -> THING);
+    \* @type: () => (Str -> $thing);
     F == 
         "A" :>  [
             cnt          |-> 0
@@ -18,7 +18,7 @@ Init == LET
         "B" :> [
             cnt          |-> 2
         ]
-    \* @type: () => (Str -> THING);
+    \* @type: () => (Str -> $thing);
     G == [
         e \in {"B", "C"} |-> 
             [

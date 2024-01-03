@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TypingException}
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 
 /**
  * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.
@@ -38,20 +39,35 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           }
 
         val sets = Set(nextState.arena.getHas(topSetCell): _*).toList // remove duplicates too
-        val elemsOfSets = sets.map(s => Set(nextState.arena.getHas(s): _*))
+        val elemsOfSets = sets.map { s => s -> nextState.arena.getHasPtr(s) }
 
-        val unionOfSets = elemsOfSets.foldLeft(Set[ArenaCell]())(_.union(_))
+        // We map each cell, which appears in some set, to all of the pointers pointing to it, and
+        // all the sets containing it
+        val (cellMap, pointingSetMap) = PtrUtil.getCellAndPointingSetMaps(elemsOfSets)
+
+        // Fixed pointers dominate, if no pointer is fixed we take the disjunction of the smt constraints
+        val unionElemPtrs: Seq[ElemPtr] = cellMap.toSeq.map { case (cell, ptrs) =>
+          PtrUtil.mergePtrs(cell, ptrs)
+        }
+
         // introduce a set cell
         nextState = nextState.updateArena(_.appendCell(SetT1(elemType)))
         val newSetCell = nextState.arena.topCell
 
-        if (unionOfSets.isEmpty) {
+        if (unionElemPtrs.isEmpty) {
           // just return an empty set
           // TODO: cache empty sets!
           nextState.setRex(newSetCell.toNameEx)
         } else {
           // add all the elements to the arena
-          nextState = nextState.updateArena(_.appendHas(newSetCell, unionOfSets.toSeq: _*))
+          nextState = nextState.updateArena(_.appendHas(newSetCell, unionElemPtrs: _*))
+
+          def inPointingSet(elemCell: ArenaCell, set: ArenaCell): TBuilderInstruction = {
+            // this is sound, because we have generated element equalities
+            // and thus can use congruence of in(...) for free
+            tla.and(tla.selectInSet(set.toBuilder, topSetCell.toBuilder),
+                tla.selectInSet(elemCell.toBuilder, set.toBuilder))
+          }
 
           // Require each cell to be in one of the sets, e.g., consider UNION { {1} \ {1}, {1} }
           // Importantly, when elemCell is pointed by several sets S_1, .., S_k, we require:
@@ -60,26 +76,17 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           //
           // This approach is more expensive at the rewriting phase, but it produces O(n) constraints in SMT,
           // in contrast to the old approach with equalities and uninterpreted functions, which required O(n^2) constraints.
-          def addOneElemCons(elemCell: ArenaCell): Unit = {
-            def isPointedBySet(setElems: Set[ArenaCell]): Boolean = setElems.contains(elemCell)
-            def inPointingSet(set: ArenaCell) = {
-              // this is sound, because we have generated element equalities
-              // and thus can use congruence of in(...) for free
-              tla.and(tla.apalacheSelectInSet(set.toNameEx, topSetCell.toNameEx),
-                  tla.apalacheSelectInSet(elemCell.toNameEx, set.toNameEx))
-            }
-
-            val pointingSets = sets.zip(elemsOfSets).collect { case (set, elems) if isPointedBySet(elems) => set }
+          // TODO: drop assertGroundExpr: #2384
+          unionElemPtrs.foreach { elemPtr =>
+            val elemCell = elemPtr.elem
+            val pointingSets = pointingSetMap.getOrElse(elemCell, Set.empty).toList
             assert(pointingSets.nonEmpty)
-            val existsIncludingSet = tla.or(pointingSets.map(inPointingSet): _*)
-            val inUnionSet = tla.apalacheStoreInSet(elemCell.toNameEx, newSetCell.toNameEx)
-            val notInUnionSet = tla.apalacheStoreNotInSet(elemCell.toNameEx, newSetCell.toNameEx)
+            val existsIncludingSet = tla.or(pointingSets.map(inPointingSet(elemCell, _)): _*)
+            val inUnionSet = tla.storeInSet(elemCell.toBuilder, newSetCell.toBuilder)
+            val notInUnionSet = tla.storeNotInSet(elemCell.toBuilder, newSetCell.toBuilder)
             val ite = tla.ite(existsIncludingSet, inUnionSet, notInUnionSet)
             rewriter.solverContext.assertGroundExpr(ite)
           }
-
-          // add SMT constraints
-          unionOfSets.foreach(addOneElemCons)
 
           // that's it
           nextState.setRex(newSetCell.toNameEx)

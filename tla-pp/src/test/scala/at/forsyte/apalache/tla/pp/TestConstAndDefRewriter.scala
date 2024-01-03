@@ -36,7 +36,7 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
       """.stripMargin
 
     val (rootName, modules) =
-      sanyImporter.loadFromSource("const", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     val root = modules(rootName)
     // we don't want to run a type checker, so we just hack the type of the declaration n
     val newDeclarations =
@@ -71,7 +71,7 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
       """.stripMargin
 
     val (rootName, modules) =
-      sanyImporter.loadFromSource("const", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
@@ -86,7 +86,7 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
       """.stripMargin
 
     val (rootName, modules) =
-      sanyImporter.loadFromSource("const", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }
@@ -100,7 +100,7 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
       """.stripMargin
 
     val (rootName, modules) =
-      sanyImporter.loadFromSource("op", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     val root = modules(rootName)
     val rewritten = new ConstAndDefRewriter(new IdleTracker())(root)
     assert(rewritten.constDeclarations.isEmpty)
@@ -119,7 +119,7 @@ class TestConstAndDefRewriter extends AnyFunSuite with BeforeAndAfterEach {
       """.stripMargin
 
     val (rootName, modules) =
-      sanyImporter.loadFromSource("op", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     val root = modules(rootName)
     assertThrows[OverridingError](new ConstAndDefRewriter(new IdleTracker())(root))
   }

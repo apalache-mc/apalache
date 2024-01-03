@@ -7,12 +7,17 @@ import at.forsyte.apalache.tla.lir.values._
 import convenience.tla
 import UntypedPredefs._
 import at.forsyte.apalache.io.lir.TypeTagReader
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 /**
  * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFactory
  * implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
+ *
+ * @tparam T
+ *   Any class extending JsonRepresentation
  */
-
 class JsonToTla[T <: JsonRepresentation](
     scalaFactory: ScalaFactory[T],
     sourceStoreOpt: Option[SourceStore] = None,
@@ -204,12 +209,19 @@ class JsonToTla[T <: JsonRepresentation](
     val versionField = getOrThrow(rootJson, TlaToJson.versionFieldName)
     val version = scalaFactory.asStr(versionField)
     val current = JsonVersion.current
-    if (version != current)
+    if (version != current) {
       throw new JsonDeserializationError(s"JSON version is $version, expected $current.")
-
-    val modulesField = getOrThrow(rootJson, "modules")
-    val modulesObjSeq = scalaFactory.asSeq(modulesField)
-
-    modulesObjSeq.map(asTlaModule)
+    } else {
+      val modulesField = getOrThrow(rootJson, "modules")
+      scalaFactory.asSeq(modulesField).map(asTlaModule)
+    }
   }
+
+  override def fromSingleModule(json: T): Try[TlaModule] = for {
+    modules <- Try(fromRoot(json))
+    module <- modules match {
+      case m +: Nil => Success(m)
+      case _        => Failure(new JsonDeserializationError(s"JSON included more than one module"))
+    }
+  } yield module
 }

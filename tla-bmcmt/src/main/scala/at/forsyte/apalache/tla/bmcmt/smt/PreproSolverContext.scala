@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.caches.SimpleCache
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
@@ -73,7 +74,8 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+            op == ApalacheInternalOper.storeInSet =>
         // in and not(notin), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(true))
@@ -81,7 +83,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet || op == ApalacheInternalOper.storeNotInFun =>
         // notin and not(in), the latter is transformed by simplifier
         if (ArenaCell.isValidName(left) && ArenaCell.isValidName(right)) {
           cache.put((left, right), PreproInEntry(false))
@@ -124,22 +126,24 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+            op == ApalacheInternalOper.storeInSet =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = false)
           case None         => ex
         }
 
       case OperEx(op, NameEx(left), NameEx(right))
-          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+          if op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet || op == ApalacheInternalOper.storeNotInFun =>
         cache.get((left, right)) match {
           case Some(cached) => cached.asTlaEx(negate = true)
           case None         => ex
         }
 
       case OperEx(op, _*)
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet ||
-            op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+            op == ApalacheInternalOper.storeInSet || op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet ||
+            op == ApalacheInternalOper.storeNotInFun =>
         // do not preprocess these expressions, as we have to find sorts from the names
         ex
 
@@ -181,7 +185,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
    * @param arena
    *   an arena
    */
-  override def checkConsistency(arena: Arena): Unit = context.checkConsistency(arena)
+  override def checkConsistency(arena: PureArenaAdapter): Unit = context.checkConsistency(arena)
 
   /**
    * Write a message to the log file. This is helpful to debug the SMT encoding.
@@ -207,7 +211,7 @@ class PreproSolverContext(context: SolverContext) extends SolverContext {
    * @return
    *   Some(result), if no timeout happened; otherwise, None
    */
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = context.satOrTimeout(timeoutSec)
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = context.satOrTimeout(timeoutSec)
 
   /**
    * Register an SMT listener

@@ -9,13 +9,12 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.{
 }
 import at.forsyte.apalache.tla.bmcmt.rules._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaBoolSet, TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir.values._
 
 import scala.collection.mutable
 
@@ -281,6 +280,17 @@ class SymbStateRewriterImpl(
           -> List(new SeqOpsRule(this)),
         key(tla.apalacheSetAsFun(tla.enumSet()))
           -> List(new SetAsFunRule(this)),
+        // variants
+        key(tla.variant("Tag", tla.int(33)))
+          -> List(new VariantOpsRule(this)),
+        key(tla.variantGetUnsafe("Tag", tla.name("V")))
+          -> List(new VariantOpsRule(this)),
+        key(tla.variantGetOrElse("Tag", tla.name("V"), tla.name("def")))
+          -> List(new VariantOpsRule(this)),
+        key(tla.variantTag(tla.name("V")))
+          -> List(new VariantOpsRule(this)),
+        key(tla.variantFilter("Tag", tla.name("S")))
+          -> List(new VariantOpsRule(this)),
         // FiniteSets
         key(OperEx(ApalacheOper.constCard, tla.ge(tla.card(tla.name("S")), tla.int(3))))
           -> List(new CardinalityConstRule(this)),
@@ -475,8 +485,14 @@ class SymbStateRewriterImpl(
    *   the snapshot
    */
   override def snapshot(): SymbStateRewriterSnapshot = {
-    new SymbStateRewriterSnapshot(intValueCache.snapshot(), intRangeCache.snapshot(), modelValueCache.snapshot(),
-        defaultValueCache.snapshot(), recordDomainCache.snapshot(), exprCache.snapshot())
+    new SymbStateRewriterSnapshot(
+        intValueCache.snapshot(),
+        intRangeCache.snapshot(),
+        modelValueCache.snapshot(),
+        defaultValueCache.snapshot(),
+        recordDomainCache.snapshot(),
+        exprCache.snapshot(),
+    )
   }
 
   /**
@@ -585,7 +601,7 @@ class SymbStateRewriterImpl(
    *   an id of the object, e.g., ArenaCell.id
    * @return
    *   a text message, if exists
-   * @throws NoSuchElementException
+   * @throws java.util.NoSuchElementException
    *   if there is no message associated with the given id
    */
   override def findMessage(id: Int): String = {

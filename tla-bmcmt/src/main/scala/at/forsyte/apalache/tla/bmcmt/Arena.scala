@@ -23,8 +23,15 @@ object Arena {
   val intSetName: String = namePrefix + "4"
 
   def create(solverContext: SolverContext): Arena = {
-    var arena = new Arena(solverContext, 0, new ArenaCell(-1, UnknownT()), HashMap(), new HashMap(), new HashMap(),
-        new HashMap()) /////
+    var arena = new Arena(
+        solverContext,
+        0,
+        new ArenaCell(-1, UnknownT()),
+        HashMap(),
+        new HashMap(),
+        new HashMap(),
+        new HashMap(),
+    ) /////
     // by convention, the first cells have the following semantics:
     //  0 stores FALSE, 1 stores TRUE, 2 stores BOOLEAN, 3 stores Nat, 4 stores Int
     arena = arena
@@ -137,7 +144,7 @@ class Arena private (
    *   the name returned by ArenaCell.toString
    * @return
    *   the cell, if it exists
-   * @throws NoSuchElementException
+   * @throws java.util.NoSuchElementException
    *   when no cell is found
    */
   def findCellByName(name: String): ArenaCell = {
@@ -153,7 +160,7 @@ class Arena private (
    *   the found cell
    * @throws InvalidTlaExException
    *   if the name does not follow the convention
-   * @throws NoSuchElementException
+   * @throws java.util.NoSuchElementException
    *   when no cell is found
    */
   def findCellByNameEx(nameEx: TlaEx): ArenaCell = {
@@ -239,8 +246,15 @@ class Arena private (
   def appendCellNoSmt(cellType: CellT, isUnconstrained: Boolean = false): Arena = {
     val newCell = new ArenaCell(cellCount, cellType, isUnconstrained)
     assert(!cellMap.contains(newCell.toString)) // this might happen, if we messed up arenas
-    new Arena(solverContext, cellCount + 1, newCell, cellMap + (newCell.toString -> newCell), hasEdges, domEdges,
-        cdmEdges)
+    new Arena(
+        solverContext,
+        cellCount + 1,
+        newCell,
+        cellMap + (newCell.toString -> newCell),
+        hasEdges,
+        domEdges,
+        cdmEdges,
+    )
   }
 
   /**
@@ -303,7 +317,15 @@ class Arena private (
           List(elemCell)
       }
 
-    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges + (setCell -> es), domEdges, cdmEdges)
+    new Arena(
+        solverContext,
+        cellCount,
+        topCell,
+        cellMap,
+        hasEdges + (setCell -> es),
+        domEdges,
+        cdmEdges,
+    )
   }
 
   /**
@@ -335,7 +357,15 @@ class Arena private (
     if (domEdges.contains(funCell))
       throw new IllegalStateException("Trying to set function domain, whereas one is already set")
 
-    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges, domEdges + (funCell -> domCell), cdmEdges)
+    new Arena(
+        solverContext,
+        cellCount,
+        topCell,
+        cellMap,
+        hasEdges,
+        domEdges + (funCell -> domCell),
+        cdmEdges,
+    )
   }
 
   /**
@@ -352,7 +382,15 @@ class Arena private (
     if (cdmEdges.contains(funCell))
       throw new IllegalStateException("Trying to set function co-domain, whereas one is already set")
 
-    new Arena(solverContext, cellCount, topCell, cellMap, hasEdges, domEdges, cdmEdges + (funCell -> cdmCell))
+    new Arena(
+        solverContext,
+        cellCount,
+        topCell,
+        cellMap,
+        hasEdges,
+        domEdges,
+        cdmEdges + (funCell -> cdmCell),
+    )
   }
 
   /**

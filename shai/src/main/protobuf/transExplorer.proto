@@ -1,25 +1,59 @@
 // Protobuf specification for the Apalache TransitionExplorer
 
 syntax = "proto3";
+package shai.transExplorer;
 
 option java_multiple_files = true;
 option java_package = "at.forsyte.apalache.shai.v1";
 option java_outer_classname = "TransExplorerProto";
-option objc_class_prefix = "TEP";
-
-package shai;
 
 service TransExplorer {
-  rpc OpenConnection (ConnectRequest) returns (Connection);
-  // rpc Terminate (TerminateRequest) returns (TerminationReply) {}
+  rpc openConnection (ConnectRequest) returns (Connection);
+  // TODO rpc Terminate (TerminateRequest) returns (TerminationReply) {}
+  rpc loadModel(LoadModelRequest) returns (LoadModelResponse);
+
+  // No-op to check service health
+  rpc ping(PingRequest) returns (PongResponse);
 }
+
+message PingRequest {
+};
+
+message PongResponse {
+};
 
 message ConnectRequest {
 }
 
 message Connection {
+  // The UUID identifying the client's connection
   string id = 1;
 }
 
-// service Terminate {
-// }
+message LoadModelRequest {
+  // The client's connextion
+  Connection conn = 1;
+  // The root module of the spec
+  string spec = 2;
+  // Any auxiliary resources needed (e.g., extended modules)
+  repeated string aux = 3;
+}
+
+enum TransExplorerErrorType {
+  PASS_FAILURE = 0;
+  UNEXPECTED = 1;
+}
+
+message TransExplorerError {
+  TransExplorerErrorType errorType = 1;
+  string data = 2;
+}
+
+message LoadModelResponse {
+  oneof result {
+    // A JSON encoded string with the Apalache IR representation of the loaded spec
+    string spec = 1;
+    // A string describing the error, if parsing fails
+    TransExplorerError err = 2;
+  }
+}

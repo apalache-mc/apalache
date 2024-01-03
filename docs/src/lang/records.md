@@ -54,23 +54,64 @@ record set constructor.  See the [Apalache ADR002][] on types.
 _Owing to the type information, records are translated into SMT more efficiently
 by Apalache than the general functions._
 
+Every record is assigned a type in Apalache. For instance, the record
+`[name |-> "A", a |-> 3]` has the type `{ name: Str, a: Int }`. In contrast to
+TLC, the type checker statically flags an error, if a spec is trying to access
+a non-existent field. Consider the following example:
 
-It is quite common to mix records of different shapes into sets. For instance,
-see how the variable `msgs` is updated in [Paxos]. To address this pattern,
-Apalache treats records that do not disagree on field types to be
-type-compatible. For instance, the records `[type |-> "A", a |-> 3]`
-and `[type |-> "B", b |-> TRUE]` have the joint type:
-
-```
-  [type: Str, a: Int, b: Bool]
+```tla
+{{#include ../../../test/tla/TestUnsafeRecord.tla}}
 ```
 
-If your spec tries to access a field on a record without that field, Apalache
-will fail with the following error:
+If we run the type checker, it will immediately find unsafe record access:
 
+```sh
+$ apalache-mc typecheck TestUnsafeRecord.tla
+...
+[TestUnsafeRecord.tla:6:17-6:19]: Cannot apply R() to the argument "b" in R()["b"]
 ```
-Access to non-existent record field ...
+
+Sometimes, record types can get tricky, when operators in a spec only have
+partial type information. For example, consider operator `GetX`:
+
+```tla
+{{#include ../../../test/tla/TestGetX.tla}}
 ```
+
+If we run the type checker, it will complain about not being able to infer
+the type of `r`:
+
+```sh
+$ apalache-mc typecheck TestGetX.tla
+...
+[TestGetX.tla:2:12-2:14]: Cannot apply r to the argument "x" in r["x"].
+```
+
+The reason is simple: The type checker could not decide, whether `r` was a
+record or a function. Even if we knew that `r` was a record, what type should
+it have? Luckily, the Apalache type checker supports [Row polymorphism][].
+Hence, we can specify the type of `r` as follows:
+
+
+```tla
+{{#include ../../../test/tla/TestGetXWithRows.tla}}
+```
+
+In the type annotation, we are saying that `r` is a record that has the field
+`x` of some type `a` (which we don't know), and the rest of the record does not
+matter. This matches our intuition about the behavior of `GetX`. This time the
+type checker does not complain:
+
+```sh
+$ apalache-mc typecheck TestGetXWithRows.tla
+...
+Type checker [OK]
+```
+
+In untyped TLA+, it is common to mix records of different shapes into sets. For
+instance, see how the variable `msgs` is updated in [Paxos][]. It is not
+possible to do so with records in Apalache. To address this pattern, Apalache
+supports [Variants][].
 
 ----------------------------------------------------------------------------
 
@@ -92,7 +133,7 @@ immutable dictionary.
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.
 
-**Apalache type:** `(a_1, ..., a_n) => [field_1: a_1, ..., field_n: a_n]`, for
+**Apalache type:** `(a_1, ..., a_n) => { field_1: a_1, ..., field_n: a_n }`, for
 some types `a_1, ..., a_n`.
 
 **Effect:** The record constructor returns a function `r` that is constructed
@@ -113,6 +154,8 @@ as follows:
     \* field "name" that is equal to "Printer", and field "port" that is equal to 631.
 ```
 
+**Example in Python:**
+
 ```python
 >>> { "name": "Printer", "port": 631 }
 {'name': 'Printer', 'port': 631}
@@ -132,8 +175,8 @@ as follows:
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.
 
-**Apalache type:** `(Set(a_1), ..., Set(a_n)) => Set([field_1: a_1, ...,
-field_n: a_n])`, for some types `a_1, ..., a_n`.
+**Apalache type:** `(Set(a_1), ..., Set(a_n)) => Set({ field_1: a_1, ...,
+field_n: a_n })`, for some types `a_1, ..., a_n`.
 
 **Effect:** The record set constructor `[ field_1: S_1, ..., field_n: S_n]`
 is syntax sugar for the set comprehension:
@@ -179,13 +222,13 @@ is picked with `\E r \in [ field_1: S_1, ..., field_n: S_n]`.
 
 **Arguments:** Two arguments: a record and a field name (as an identifier).
 
-**Apalache type:** `[field_1: a_1, ..., field_i: a_i, ..., field_n: a_n]) =>
-a_i`, for some types `a_1, ..., a_n`. Due to the record unification rule, we
-usually write this type simply as: `[field_i: a_i] => a_i`.
+**Apalache type:** `{ field_i: a, b } => b`, for some types `a` and `b`
+(technically, `b` is a row that captures the other fields).
 
 Note that `r.field_i` is just a syntax sugar for `r["field_i"]` in TLA+.
-Hence, if the type of `r` cannot be inferred, you can see an error message
-about Apalache not knowing, whether `r` is a record, or a function.
+Hence, if the Apalache type checker cannot choose between `r` being a record or
+a function, the type checker fails with a type error. In this case, you have to
+type-annotate the definition that contains `r`.
 
 **Effect:** As records are also functions, this operator works as `r["field_i"]`.
 
@@ -219,3 +262,5 @@ extract the respective field when translating the access expression into SMT.
 [frozendict]: https://pypi.org/project/frozendict/
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
 [Apalache ADR002]: ../adr/002adr-types.md
+[Variants]: ./variants.md
+[Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism

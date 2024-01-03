@@ -38,21 +38,21 @@ View1 ==
 View2 ==
   action
 
-\* @type: Seq([x: Int, y: Int, action: Str]) => Bool;
+\* @type: Seq({ x: Int, y: Int, action: Str }) => Bool;
 TraceInv1(hist) ==
   \/ /\ hist[1].x = 0 /\ hist[1].y = 0
      /\ hist[2].x = 10 /\ hist[2].y = 0
   \/ LET last == hist[Len(hist)] IN
      last.x + last.y < 10
 
-\* @type: Seq([x: Int, y: Int, action: Str]) => Bool;
+\* @type: Seq({ x: Int, y: Int, action: Str }) => Bool;
 TraceInv2(hist) ==
   \/ /\ hist[1].x >= 0 /\ hist[1].y >= 0
      /\ hist[2].x >= 0 /\ hist[2].y >= 0
   \/ LET last == hist[Len(hist)] IN
      last.x + last.y < 10
 
-\* @type: Seq([x: Int, y: Int, action: Str]) => Bool;
+\* @type: Seq({ x: Int, y: Int, action: Str }) => Bool;
 TraceInv3(hist) ==
   \/ /\ hist[1].x >= 0 /\ hist[1].y >= 0
      /\ hist[2].x >= 0 /\ hist[2].y >= 0

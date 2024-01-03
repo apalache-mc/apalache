@@ -5,7 +5,7 @@ VARIABLE
     x,
     \* @type: Set(Str);
     y,
-    \* @type: Set([a: Int, b: Int, c: Int]);
+    \* @type: Set({a: Int, b: Int, c: Int});
     z,
     \* @type: Set(Int -> Int);
     w

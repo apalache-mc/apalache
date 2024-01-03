@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
@@ -101,7 +102,13 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       sized { size =>
         if (size <= 1) genPrimitive
         else
-          oneOf(genPrimitive, genSet, genSeq, genFun, /*genOper,*/ genTup, genRec /*, genRowRec, genVariant, genRow*/ )
+          oneOf(
+              genPrimitive,
+              genSet,
+              genSeq,
+              genFun, /*genOper,*/ genTup,
+              genRec, /*, genRowRec, genVariant, genRow*/
+          )
       }
     }
 
@@ -178,8 +185,9 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val solverContext =
       new Z3SolverContext(new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = smtEncoding))
     val rewriter: SymbStateRewriterImpl = smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming)
-      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, renaming)
+      case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, renaming)
+      case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
+      case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, renaming)
     }
 
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -190,15 +198,15 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     val checker = new SeqModelChecker(checkerParams, checkerInput, trex, Seq(listener))
 
     // check the outcome
-    val outcome = checker.run()
-    if (outcome != Error(1)) {
-      Left(outcome)
-    } else {
-      // extract witness expression from the counterexample
-      assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
-      val cex = listener.counterExamples.head.path
-      val (binding, _) = cex.last // initial state binding
-      Right(binding)
+    checker.run() match {
+      case Error(1, _) =>
+        // extract witness expression from the counterexample
+        assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
+        val cex = listener.counterExamples.head.states
+        val (_, binding) = cex.last // initial state binding
+        Right(binding)
+
+      case outcome => Left(outcome)
     }
   }
 

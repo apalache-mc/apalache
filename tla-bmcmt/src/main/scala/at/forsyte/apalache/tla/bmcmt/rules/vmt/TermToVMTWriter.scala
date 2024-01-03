@@ -26,7 +26,7 @@ object TermToVMTWriter {
         s"($head ${argStrings.mkString(" ")})"
     }
 
-  private def mkQuant(quant: String, boundVars: List[(String, Sort)], p: Term): String = {
+  private def mkQuant(quant: String, boundVars: Seq[(String, Sort)], p: Term): String = {
     val pairs = boundVars.map { case (name, sort) =>
       s"($name ${sortStringForQuant(sort)})"
     }
@@ -36,8 +36,8 @@ object TermToVMTWriter {
   // In quantifiers, complex sorts aren't permitted.
   private def sortStringForQuant(sort: Sort): String =
     sort match {
-      case IntSort()               => "Int"
-      case BoolSort()              => "Bool"
+      case IntSort                 => "Int"
+      case BoolSort                => "Bool"
       case UninterpretedSort(name) => name
       // We should never have function sorts or untyped in quantifiers
       case s => throw new IllegalArgumentException(s"Sort of quantified variable cannot be $s")
@@ -62,7 +62,6 @@ object TermToVMTWriter {
       case False                         => "false"
       case True                          => "true"
       case UninterpretedLiteral(s, sort) => s"${s}_${sort.sortName}"
-      case FunDef(name, _, _)            => name
       case And(args @ _*)                => mkAndOrArgs("and", "true", args)
       case Or(args @ _*)                 => mkAndOrArgs("or", "false", args)
       case Neg(x)                        => s"(not ${tr(x)})"
@@ -103,12 +102,12 @@ object TermToVMTWriter {
   }
 
   // Constructs an SMT function definition from FunDef
-  def mkFunDef(fd: FunDef): String = {
-    val FunDef(name, args, body) = fd
+  def mkFunDef(fd: DefineFun): String = {
+    val DefineFun(name, args, body) = fd
     val pairs = args.map { case (name, argSort) =>
       s"($name ${sortStringForQuant(argSort)})"
     }
-    val toSortString = sortStringForQuant(fd.sort.to)
+    val toSortString = sortStringForQuant(fd.asVar.sort.to)
     s"(define-fun $name (${pairs.mkString(" ")}) $toSortString ${tr(body)})"
   }
 

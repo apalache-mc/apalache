@@ -1,18 +1,20 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
-import org.apache.commons.io.output.NullOutputStream
+import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
@@ -28,21 +30,20 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Igor Konnov, Rodrigo Otoni
  */
-class Z3SolverContext(val config: SolverConfig) extends SolverContext {
+class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
   private val id: Long = Z3SolverContext.createId()
+
+  logger.debug(s"Creating Z3 solver context ${id}")
 
   /**
    * A log writer, for debugging purposes.
    */
-  private val logWriter: PrintWriter = initLog()
+  private val logWriters: Iterable[PrintWriter] = initLogs()
 
-  // dump the configuration parameters in the log
-  // set the global configuration parameters for z3 modules
+  // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
-    logWriter.println(";; %s = %s".format(p, config.randomSeed))
-  //    the following fails with an exception: java.lang.NoSuchFieldError: value
-  //      logWriter.println(";; %s = %s".format(p, Global.getParameter(p)))
+    log(";; %s = %s".format(p, Global.getParameter(p)))
   }
 
   private def encoding: SMTEncoding = config.smtEncoding
@@ -55,11 +56,15 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   private var smtListener: SmtListener = new IdleSmtListener()
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
-  // The parSet set is used to pass parameters to Z3
-  // The list of parameters can be seen by passing the -p flag to Z3
-  val parSet = z3context.mkParams()
-  // parSet.add("array.extensional", false) // disables extensionality for the theory of arrays
-  z3solver.setParameters(parSet)
+  // Set up parameters to Z3; the list of parameters can be seen by passing the -p flag to Z3
+  val params = z3context.mkParams()
+  // Set random seed. We are also setting it via global parameters above, but `Global.setParameter()` says:
+  // "When a Z3 module is initialized it will use the value of these parameters when Z3_params objects are not provided."
+  params.add("seed", config.randomSeed)
+  params.add("random_seed", config.randomSeed)
+  // params.add("array.extensional", false) // disables extensionality for the theory of arrays
+  z3solver.setParameters(params)
+  log(s";; ${params}")
 
   /**
    * Caching one uninterpreted sort for each cell signature. For integers, the integer sort.
@@ -119,8 +124,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * Dispose whatever has to be disposed in the end.
    */
   override def dispose(): Unit = {
+    logger.debug(s"Disposing Z3 solver context ${id}")
     z3context.close()
-    logWriter.close()
+    closeLogs()
     cellCache.clear()
     inCache.clear()
     funDecls.clear()
@@ -155,13 +161,19 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
     // If arrays are used, they are initialized here.
     if (cellSort.isInstanceOf[ArraySort[_, _]] && !cell.isUnconstrained) {
-      val arrayInitializer = constantArrayCache.get(cellSort) match {
-        case Some(emptySet) =>
-          z3context.mkEq(const, emptySet._1)
-        case None =>
-          constantArrayCache += (cellSort -> (const, level))
-          z3context.mkEq(const, getOrMkCellDefaultValue(cellSort))
-      }
+      val arrayInitializer =
+        if (cell.cellType.isInstanceOf[InfSetT]) {
+          // Infinite sets are not cached because they are not empty
+          z3context.mkEq(const, getOrMkCellDefaultValue(cellSort, isInfiniteSet = true))
+        } else {
+          constantArrayCache.get(cellSort) match {
+            case Some(emptySet) =>
+              z3context.mkEq(const, emptySet._1)
+            case None =>
+              constantArrayCache += (cellSort -> (const, level))
+              z3context.mkEq(const, getOrMkCellDefaultValue(cellSort))
+          }
+        }
 
       log(s"(assert $arrayInitializer)")
       z3solver.add(arrayInitializer)
@@ -193,7 +205,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
     if (!inCache.contains((set.id, elem.id))) {
       // The concept of an in-relation is not present in the arrays encoding
-      if (encoding == oopsla19Encoding) {
+      if (encoding == SMTEncoding.OOPSLA19 || encoding == SMTEncoding.FunArrays) {
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
@@ -211,7 +223,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val setT = cellCache(setId).head._2
         val elemT = cellCache(elemId).head._2
         val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-        logWriter.flush() // flush the SMT log
+        flushLogs()
         throw new IllegalStateException(
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
 
@@ -267,7 +279,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       // If arrayId refers to an array with a single SSA representation there is nothing to be done
       z3context.mkTrue().asInstanceOf[ExprSort]
     } else {
-      logWriter.flush() // flush the SMT log
+      flushLogs()
       throw new IllegalStateException(
           s"SMT $id: Corrupted cellCache, $arrayId key is present, but it does not refer to any array.")
     }
@@ -291,7 +303,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    * @param arena
    *   an arena
    */
-  override def checkConsistency(arena: Arena): Unit = {
+  override def checkConsistency(arena: PureArenaAdapter): Unit = {
     val topId = arena.topCell.id
     if (maxCellIdPerContext.head > topId) {
       // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
@@ -333,49 +345,60 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     if (z3expr.isBool) {
       z3expr.getBoolValue match {
         case Z3_lbool.Z3_L_TRUE =>
-          ValEx(TlaBool(true))
+          tla.bool(true)
         case Z3_lbool.Z3_L_FALSE =>
-          ValEx(TlaBool(false))
+          tla.bool(false)
         case _ =>
           // If we cannot get a result from evaluating the model, we query the solver
           z3solver.add(z3expr.asInstanceOf[BoolExpr])
-          ValEx(TlaBool(sat()))
+          tla.bool(sat())
       }
     } else if (z3expr.isIntNum) {
-      ValEx(TlaInt(z3expr.asInstanceOf[IntNum].getBigInteger))
+      tla.int(z3expr.asInstanceOf[IntNum].getBigInteger)
     } else {
       if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
-        NameEx(z3expr.toString)
+        tla.name(z3expr.toString, TlaType1.fromTypeTag(ex.typeTag))
       } else {
         flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
       }
     }
   }
 
-  private def initLog(): PrintWriter =
-    OutputManager.runDirPathOpt match {
-      case None => new PrintWriter(NullOutputStream.NULL_OUTPUT_STREAM)
-      case Some(_) => {
-        val writer = OutputManager.printWriter(OutputManager.runDir, s"log$id.smt")
-        if (!config.debug) {
-          writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
-          writer.flush()
-        }
-        writer
+  /**
+   * Initialize up to two log writers, one in the run directory and one in the custom run directory, if those are set.
+   */
+  private def initLogs(): Iterable[PrintWriter] = {
+    val filePart = s"log$id.smt"
+    val writers =
+      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+
+    if (!config.debug) {
+      writers.foreach { writer =>
+        writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+        writer.flush()
       }
     }
 
+    writers
+  }
+
   /**
-   * Log message to the logging file. This is helpful to debug the SMT encoding.
+   * Log message to the logging file(s). This is helpful to debug the SMT encoding.
    *
    * @param message
    *   message text, called by name, so evaluated only when needed
    */
   def log(message: => String): Unit = {
     if (config.debug) {
-      logWriter.println(message)
+      logWriters.foreach(_.println(message))
     }
   }
+
+  /** Flush all log writers. */
+  private def flushLogs(): Unit = logWriters.foreach(_.flush())
+
+  /** Close all log writers. */
+  private def closeLogs(): Unit = logWriters.foreach(_.close())
 
   /**
    * Introduce an uninterpreted function associated with a cell.
@@ -416,7 +439,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    */
   override def push(): Unit = {
     log("(push) ;; becomes %d".format(level + 1))
-    logWriter.flush() // good time to flush
+    flushLogs() // good time to flush
     z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
@@ -428,7 +451,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   override def pop(): Unit = {
     if (level > 0) {
       log("(pop) ;; becomes %d".format(level - 1))
-      logWriter.flush() // good time to flush
+      flushLogs() // good time to flush
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
@@ -446,7 +469,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   override def pop(n: Int): Unit = {
     if (n > 0) {
       log("(pop %d) ;; becomes %d".format(n, level - n))
-      logWriter.flush() // good time to flush
+      flushLogs() // good time to flush
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
@@ -464,8 +487,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
   override def sat(): Boolean = {
     log("(check-sat)")
     val status = z3solver.check()
-    log(s";; sat = ${status == Status.SATISFIABLE}")
-    logWriter.flush() // good time to flush
+    log(s";; sat = ${status.name()}")
+    flushLogs() // good time to flush
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
       val msg = s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
@@ -474,22 +497,27 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     status == Status.SATISFIABLE
   }
 
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = {
     if (timeoutSec <= 0) {
       Some(sat())
     } else {
-      def setTimeout(tm: Long): Unit = {
-        val params = z3context.mkParams()
-        params.add("timeout", BigInt(tm).toInt)
+      def setTimeout(tm: Int): Unit = {
+        params.add("timeout", tm)
         z3solver.setParameters(params)
+        log(s";; ${params}")
       }
+      // Z3 expects `timeout` to be in milliseconds passed as unsigned int, i.e., with a maximum value of 2^32 - 1.
+      // The Z3 Java API only allows passing it as signed int, i.e., the maximum allowed millisecond value is 2^31 - 1 (`Int.MaxValue`).
+      // Check that `timeoutSec` converted to milliseconds fits without truncation.
+      require(timeoutSec < Int.MaxValue / 1000, s"Expected a timeout of <=${Int.MaxValue / 1000} seconds.")
       // temporarily, change the timeout
       setTimeout(timeoutSec * 1000)
       log("(check-sat)")
       val status = z3solver.check()
-      // set it to the maximum: Z3 is using 2^32 - 1, which is hard to pass in Java, so we can only set it to 2^31-1
+      log(s";; sat = ${status.name()}")
+      // return timeout to maximum
       setTimeout(Int.MaxValue)
-      logWriter.flush() // good time to flush
+      flushLogs() // good time to flush
       status match {
         case Status.SATISFIABLE   => Some(true)
         case Status.UNSATISFIABLE => Some(false)
@@ -534,17 +562,21 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           case CellTFrom(IntT1) =>
             z3context.getIntSort
 
-          case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
+          case CellTFrom(SetT1(elemType)) if encoding == SMTEncoding.Arrays =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(elemType)), z3context.getBoolSort)
 
-          case PowSetT(domType) if encoding == arraysEncoding =>
+          case InfSetT(elemType) if encoding == SMTEncoding.Arrays =>
+            z3context.mkArraySort(getOrMkCellSort(elemType), z3context.getBoolSort)
+
+          case PowSetT(domType) if encoding == SMTEncoding.Arrays =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(domType)), z3context.getBoolSort)
 
-          case FinFunSetT(domType, cdmType) if encoding == arraysEncoding =>
+          case FinFunSetT(domType, cdmType) if encoding == SMTEncoding.Arrays =>
             val funSort = z3context.mkArraySort(mkCellElemSort(domType), mkCellElemSort(cdmType))
             z3context.mkArraySort(funSort, z3context.getBoolSort)
 
-          case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
+          case CellTFrom(FunT1(argType, resType))
+              if encoding == SMTEncoding.Arrays || encoding == SMTEncoding.FunArrays =>
             z3context.mkArraySort(getOrMkCellSort(CellTFrom(argType)), getOrMkCellSort(CellTFrom(resType)))
 
           case _ =>
@@ -560,32 +592,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
     }
   }
 
-  private def mkCellElemSort(cellType: CellT): Sort = {
-    cellType match {
-      case CellTFrom(BoolT1) =>
-        z3context.getBoolSort
-
-      case CellTFrom(IntT1) =>
-        z3context.getIntSort
-
-      case CellTFrom(SetT1(elemType)) if encoding == arraysEncoding =>
-        mkCellElemSort(CellTFrom(elemType))
-
-      case PowSetT(domType) if encoding == arraysEncoding =>
-        mkCellElemSort(CellTFrom(domType))
-
-      case FinFunSetT(argType, cdmType) if encoding == arraysEncoding =>
-        mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
-
-      case CellTFrom(FunT1(argType, resType)) if encoding == arraysEncoding =>
-        z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
-
-      case _ =>
-        z3context.mkUninterpretedSort("Cell_" + cellType.signature)
-    }
-  }
-
-  private def getOrMkCellDefaultValue(cellSort: Sort): ExprSort = {
+  private def getOrMkCellDefaultValue(cellSort: Sort, isInfiniteSet: Boolean = false): ExprSort = {
     val sig = "Cell_" + cellSort
     val sort = cellDefaults.get(sig)
     if (sort.isDefined) {
@@ -596,10 +603,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       val newDefault: Expr[_1] forSome { type _1 <: Sort } = cellSort match {
         case _: BoolSort =>
           z3context.mkFalse()
+
         case _: IntSort =>
           z3context.mkInt(0)
-        case arraySort: ArraySort[_, _] =>
+
+        case arraySort: ArraySort[_, _] if isInfiniteSet =>
+          // Infinite sets are not cached because they are not empty
+          return z3context.mkConstArray(arraySort.getDomain, z3context.mkTrue()).asInstanceOf[ExprSort]
+
+        case arraySort: ArraySort[_, _] if !isInfiniteSet =>
           z3context.mkConstArray(arraySort.getDomain, getOrMkCellDefaultValue(arraySort.getRange))
+
         case _ =>
           log(s"(declare-const $sig $cellSort)")
           z3context.mkConst(sig, cellSort)
@@ -607,6 +621,31 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
 
       cellDefaults += (sig -> (newDefault.asInstanceOf[ExprSort], level))
       newDefault.asInstanceOf[ExprSort]
+    }
+  }
+
+  private def mkCellElemSort(cellType: CellT): Sort = {
+    cellType match {
+      case CellTFrom(BoolT1) =>
+        z3context.getBoolSort
+
+      case CellTFrom(IntT1) =>
+        z3context.getIntSort
+
+      case CellTFrom(SetT1(elemType)) if encoding == SMTEncoding.Arrays =>
+        mkCellElemSort(CellTFrom(elemType))
+
+      case PowSetT(domType) if encoding == SMTEncoding.Arrays =>
+        mkCellElemSort(CellTFrom(domType))
+
+      case FinFunSetT(argType, cdmType) if encoding == SMTEncoding.Arrays =>
+        mkCellElemSort(CellTFrom(FunT1(argType.toTlaType1, cdmType.toTlaType1)))
+
+      case CellTFrom(FunT1(argType, resType)) if encoding == SMTEncoding.Arrays || encoding == SMTEncoding.FunArrays =>
+        z3context.mkArraySort(mkCellElemSort(CellTFrom(argType)), mkCellElemSort(CellTFrom(resType)))
+
+      case _ =>
+        z3context.mkUninterpretedSort("Cell_" + cellType.signature)
     }
   }
 
@@ -634,13 +673,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
           (n.asInstanceOf[ExprSort], 1)
         }
 
-      case OperEx(_: TlaArithOper, _, _) =>
+      case arithEx @ OperEx(_: TlaArithOper, _, _) =>
         // convert to an arithmetic expression
-        toArithExpr(ex)
+        toArithExpr(arithEx)
 
-      case OperEx(_: TlaArithOper, _) =>
+      case arithEx @ OperEx(_: TlaArithOper, _) =>
         // convert to an arithmetic expression
-        toArithExpr(ex)
+        toArithExpr(arithEx)
 
       case OperEx(TlaOper.eq, lhs @ NameEx(lname), rhs @ NameEx(rname)) =>
         if (ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname)) {
@@ -663,7 +702,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (eq.asInstanceOf[ExprSort], 1 + ln + rn)
 
       case OperEx(TlaOper.ne, lhs, rhs) =>
-        val (eq, n) = toExpr(OperEx(TlaOper.eq, lhs, rhs))
+        val (eq, n) = toExpr(tla.eql(tla.unchecked(lhs), tla.unchecked(rhs)))
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
@@ -715,7 +754,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         (not.asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(TlaSetOper.notin, elem, set) =>
-        val (e, n) = toExpr(OperEx(TlaSetOper.in, elem, set))
+        val (e, n) = toExpr(tla.in(tla.unchecked(elem), tla.unchecked(set)))
         val not = z3context.mkNot(e.asInstanceOf[BoolExpr])
         (not.asInstanceOf[ExprSort], 1 + n)
 
@@ -724,22 +763,35 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
         val elemId = ArenaCell.idFromName(elemName)
         (getInPred(setId, elemId), 1)
 
-      case OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.selectInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkSelect(setId, elemId), 1)
-          case `oopsla19Encoding` =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+          case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
+            toExpr(tla.in(tla.unchecked(elemNameEx),
+                    tla.unchecked(setNameEx))) // Set membership in the oopsla19 encoding
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
+
+      case OperEx(ApalacheInternalOper.selectInFun, elemNameEx @ NameEx(elemName), funNameEx @ NameEx(funName)) =>
+        encoding match {
+          case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+            val funId = ArenaCell.idFromName(funName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkSelect(funId, elemId), 1)
+          case SMTEncoding.OOPSLA19 =>
+            toExpr(tla.in(tla.unchecked(elemNameEx), tla.unchecked(funNameEx)))
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       case OperEx(ApalacheInternalOper.selectInSet,
-              OperEx(ApalacheInternalOper.selectInSet, NameEx(elemName), NameEx(funName)), NameEx(setName)) =>
+              OperEx(ApalacheInternalOper.selectInFun, NameEx(elemName), NameEx(funName)), NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // Nested selects are used to check if the result of a function application is in a given set
             val set2Id = ArenaCell.idFromName(setName)
             val set1Id = ArenaCell.idFromName(funName)
@@ -750,21 +802,22 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             val setId = ArenaCell.idFromName(setName)
             val elemId = ArenaCell.idFromName(elemName)
             (mkStore(setId, elemId), 1) // elem is the arg of the SMT store here, since the range is fixed for sets
-          case `oopsla19Encoding` =>
-            toExpr(OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))) // Set membership in the oopsla19 encoding
+          case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
+            toExpr(tla.in(tla.unchecked(elemNameEx),
+                    tla.unchecked(setNameEx))) // Set membership in the oopsla19 encoding
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
       case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(funName), NameEx(argName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
             // Updates a function for a given argument
             val funId = ArenaCell.idFromName(funName)
             val argId = ArenaCell.idFromName(argName)
@@ -775,15 +828,28 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInSet, NameEx(elemName), NameEx(setName)) =>
+      case OperEx(ApalacheInternalOper.storeNotInSet, elemNameEx @ NameEx(_), setNameEx @ NameEx(setName)) =>
         encoding match {
-          case `arraysEncoding` =>
+          case SMTEncoding.Arrays =>
             // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
             val setId = ArenaCell.idFromName(setName)
             (mkUnchangedArray(setId), 1)
-          case `oopsla19Encoding` =>
+          case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
             // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
-            toExpr(OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, NameEx(elemName), NameEx(setName))))
+            toExpr(tla.not(tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx))))
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
+
+      case OperEx(ApalacheInternalOper.storeNotInFun, elemNameEx @ NameEx(_), setNameEx @ NameEx(setName)) =>
+        encoding match {
+          case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+            // In the arrays encoding the sets are initially empty, so elem is not a member of set implicitly
+            val setId = ArenaCell.idFromName(setName)
+            (mkUnchangedArray(setId), 1)
+          case SMTEncoding.OOPSLA19 =>
+            // In the oopsla19 encoding the sets are not initially empty, so membership has to be negated explicitly
+            toExpr(tla.not((tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx)))))
           case oddEncodingType =>
             throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
         }
@@ -811,7 +877,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
       case OperEx(ApalacheInternalOper.unconstrainArray, NameEx(arrayElemName)) =>
         val arrayElemId = ArenaCell.idFromName(arrayElemName)
         updateArrayConst(arrayElemId) // A new array is declared and left unconstrained
-        toExpr(ValEx(TlaBool(true))) // Nothing to assert
+        toExpr(tla.bool(true)) // Nothing to assert
 
       // the old implementation allowed us to do that, but the new one is encoding edges directly
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
@@ -943,7 +1009,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext {
    *   nothing, as an exception is unconditionally thrown
    */
   private def flushAndThrow(e: Exception): Nothing = {
-    logWriter.flush() // flush the SMT log
+    flushLogs()
     throw e
   }
 }
@@ -959,5 +1025,11 @@ object Z3SolverContext {
    * The names of all parameters that are used to set the random seeds in z3.
    */
   val RANDOM_SEED_PARAMS: List[String] =
-    List("sat.random_seed", "smt.random_seed", "fp.spacer.random_seed", "sls.random_seed")
+    List(
+        "fp.spacer.random_seed",
+        "nlsat.seed",
+        "sat.random_seed",
+        "sls.random_seed",
+        "smt.random_seed",
+    )
 }

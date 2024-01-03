@@ -2,12 +2,12 @@
 
 ## [./main.yml](./main.yml)
 
-- Triggered on pull requests into `unstable`.
+- Triggered on pull requests into `main`.
 - Our primary build and test workflow.
 
 ## [./deploy.yml](./deploy.yml)
 
-- Triggered by pull requests into `unstable`.
+- Triggered by pull requests into `main`.
 - Used for any artifacts that we deploy into production environments. Currently,
   this only consists of our website at https://apalache.informal.systems.
 
@@ -35,6 +35,6 @@
 
 ## [./container.yml](./container.yml)
 
-- Triggered by publishing releases or merging into the `unstable` branch
+- Triggered by publishing releases or merging into the `main` branch
 - The workflow builds the docker container defined in the
   [`/Dockerfile`](../../Dockerfile) and publishes it to GitHub Packages.

@@ -3,16 +3,15 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
-import at.forsyte.apalache.tla.bmcmt.trex.{
-  ConstrainedTransitionExecutor, DecodedExecution, ExecutionSnapshot, TransitionExecutor,
-}
+import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaStr}
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
@@ -67,7 +66,7 @@ class SeqModelChecker[ExecutorContextT](
         makeStep(isNext = true, checkerInput.nextTransitions)
       }
 
-      if (params.saveRuns) {
+      if (params.isRandomSimulation && params.saveRuns) {
         outputExampleRun()
       }
 
@@ -82,7 +81,7 @@ class SeqModelChecker[ExecutorContextT](
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
-    } else {
+    } else if (!params.isRandomSimulation && params.saveRuns) {
       // Output an example in the end of the search.
       outputExampleRun()
     }
@@ -90,36 +89,33 @@ class SeqModelChecker[ExecutorContextT](
     searchState.finalResult
   }
 
-  // output an example of a run, if the context is satisfiable
-  def outputExampleRun(): Unit = {
+  /**
+   * Output an example of the current symbolic run, if the context is satisfiable.
+   */
+  private def outputExampleRun(): Unit = {
+    logger.info("Constructing an example run")
     trex.sat(params.smtTimeoutSec) match {
       case Some(true) =>
         listeners.foreach(_.onExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft))
-      case _ => ()
+      case Some(false) =>
+        logger.warn("All executions are shorter than the provided bound")
+      case None =>
+        logger.error("SMT timeout while constructing an example run")
     }
   }
 
   /**
    * Notify all listeners that a counterexample has been found.
    *
-   * @param rootModule
-   *   The checked TLA+ module.
-   * @param trace
-   *   The counterexample trace.
-   * @param invViolated
-   *   The invariant violation to record in the counterexample. Pass
-   *   - for invariant violations: the negated invariant,
-   *   - for deadlocks: `ValEx(TlaBool(true))`,
-   *   - for trace invariants: the applied, negated trace invariant (see [[SeqModelChecker.applyTraceInv]]).
+   * @param counterexample
+   *   The counterexample to record
    * @param errorIndex
    *   Number of found error (likely [[SearchState.nFoundErrors]]).
    */
   private def notifyOnError(
-      rootModule: TlaModule,
-      trace: DecodedExecution,
-      invViolated: TlaEx,
+      counterexample: Counterexample,
       errorIndex: Int): Unit = {
-    listeners.foreach(_.onCounterexample(rootModule, trace, invViolated, errorIndex))
+    listeners.foreach(_.onCounterexample(counterexample, errorIndex))
   }
 
   private def makeStep(isNext: Boolean, transitions: Seq[TlaEx]): Unit = {
@@ -137,14 +133,16 @@ class SeqModelChecker[ExecutorContextT](
         case Some(true) => () // OK
 
         case Some(false) =>
-          if (trex.sat(0).contains(true)) {
-            notifyOnError(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
-                searchState.nFoundErrors)
+          val counterexample = if (trex.sat(0).contains(true)) {
+            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
+            notifyOnError(cx, searchState.nFoundErrors)
             logger.error("Found a deadlock.")
+            Some(cx)
           } else {
             logger.error(s"Found a deadlock. No SMT model.")
+            None
           }
-          searchState.onResult(Deadlock())
+          searchState.onResult(Deadlock(counterexample))
 
         case None =>
           searchState.onResult(RuntimeError())
@@ -156,7 +154,7 @@ class SeqModelChecker[ExecutorContextT](
     }
 
     if (params.invariantMode == InvariantMode.AfterJoin && isNext) {
-      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
+      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, ActionInvariant)
       if (!searchState.canContinue) {
         return
       }
@@ -167,7 +165,7 @@ class SeqModelChecker[ExecutorContextT](
 
     // check the state invariants
     if (params.invariantMode == InvariantMode.AfterJoin) {
-      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
+      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, StateInvariant)
       if (!searchState.canContinue) {
         return
       }
@@ -186,7 +184,7 @@ class SeqModelChecker[ExecutorContextT](
 
     def addMaybeInvariants(trNo: Int): Set[Int] = {
       val indices = notInvariants.zipWithIndex
-        .filter(p => trex.mayChangeAssertion(trNo, p._1))
+        .filter(p => trex.mayChangeAssertion(trNo, StateInvariant, p._2, p._1))
         .map(_._2)
       val newIndices = indices.toSet
       maybeInvariantNos ++= newIndices
@@ -195,7 +193,7 @@ class SeqModelChecker[ExecutorContextT](
 
     def addMaybeActionInvariants(trNo: Int): Set[Int] = {
       val indices = notActionInvariants.zipWithIndex
-        .filter(p => trex.mayChangeAssertion(trNo, p._1))
+        .filter(p => trex.mayChangeAssertion(trNo, ActionInvariant, p._2, p._1))
         .map(_._2)
       val newIndices = indices.toSet
       maybeActionInvariantNos ++= newIndices
@@ -219,10 +217,10 @@ class SeqModelChecker[ExecutorContextT](
 
         if (params.discardDisabled) {
           // check, whether the transition is enabled in SMT
+          logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
           val assumeSnapshot = trex.snapshot()
           // assume that the transition is fired and check, whether the constraints are satisfiable
           trex.assumeTransition(no)
-          logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
               logger.debug(s"Step ${trex.stepNo}: Transition #$no is enabled")
@@ -233,7 +231,7 @@ class SeqModelChecker[ExecutorContextT](
               if (params.invariantMode == InvariantMode.BeforeJoin) {
                 // check the action invariants, unless we process Init
                 if (isNext) {
-                  checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, "action")
+                  checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, ActionInvariant)
                   if (!searchState.canContinue) {
                     // an invariant is violated and we cannot continue the search, return immediately
                     return (maybeInvariantNos, maybeActionInvariantNos)
@@ -242,7 +240,7 @@ class SeqModelChecker[ExecutorContextT](
 
                 // check the state invariants
                 trex.nextState() // advance to the next state
-                checkInvariants(trex.stepNo - 1, notInvariants, transitionInvs, "state")
+                checkInvariants(trex.stepNo - 1, notInvariants, transitionInvs, StateInvariant)
                 if (!searchState.canContinue) {
                   // an invariant is violated and we cannot continue the search, return immediately
                   return (maybeInvariantNos, maybeActionInvariantNos)
@@ -264,17 +262,19 @@ class SeqModelChecker[ExecutorContextT](
               logger.info(s"Step ${trex.stepNo}: Transition #$no is disabled")
 
             case None =>
-              searchState.onResult(RuntimeError())
-              return (Set.empty, Set.empty) // UNKNOWN or timeout
+              if (params.isRandomSimulation) {
+                logger.info(s"Step ${trex.stepNo}: Transition #$no enabledness is UNKNOWN; assuming it is disabled")
+              } else {
+                searchState.onResult(RuntimeError())
+                return (Set.empty, Set.empty) // UNKNOWN or timeout
+              }
           }
           // recover from the snapshot
           trex.recover(snapshot.get)
         } else {
-          // when --all-enabled is on, the transition has not been assumed
+          // Special case: when --discard-disabled=false, the transition has not been assumed
           if (params.invariantMode == InvariantMode.BeforeJoin) {
-            if (isNext) {
-              checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
-            }
+            checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
             if (!searchState.canContinue) {
               return (Set.empty, Set.empty)
             }
@@ -285,14 +285,16 @@ class SeqModelChecker[ExecutorContextT](
 
     if (trex.preparedTransitionNumbers.isEmpty) {
       if (params.checkForDeadlocks) {
-        if (trex.sat(0).contains(true)) {
-          notifyOnError(checkerInput.rootModule, trex.decodedExecution(), ValEx(TlaBool(true)),
-              searchState.nFoundErrors)
+        val counterexample = if (trex.sat(0).contains(true)) {
+          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
+          notifyOnError(cx, searchState.nFoundErrors)
           logger.error("Found a deadlock.")
+          Some(cx)
         } else {
           logger.error(s"Found a deadlock. No SMT model.")
+          None
         }
-        searchState.onResult(Deadlock())
+        searchState.onResult(Deadlock(counterexample))
       } else {
         val msg = "All executions are shorter than the provided bound."
         logger.warn(msg)
@@ -306,7 +308,7 @@ class SeqModelChecker[ExecutorContextT](
     }
   }
 
-  // This is a special case of --all-enabled and search.invariant.mode=before.
+  // This is a special case of --discard-disabled=false and search.invariant.mode=before.
   // A transition has been prepared but not assumed.
   private def checkInvariantsForPreparedTransition(
       isNext: Boolean,
@@ -318,11 +320,11 @@ class SeqModelChecker[ExecutorContextT](
     trex.assumeTransition(transitionNo)
     if (isNext) {
       // check action invariants
-      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, "action")
+      checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, ActionInvariant)
     }
     if (searchState.canContinue) {
       trex.nextState()
-      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, "state")
+      checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, StateInvariant)
     }
     // and recover
     trex.recover(snapshot)
@@ -333,7 +335,7 @@ class SeqModelChecker[ExecutorContextT](
       stateNo: Int,
       notInvs: Seq[TlaEx],
       numbersToCheck: Set[Int],
-      kind: String): Unit = {
+      kind: InvariantKind): Unit = {
     // check the invariants
     if (numbersToCheck.nonEmpty) {
       logger.info(s"State $stateNo: Checking ${numbersToCheck.size} $kind invariants")
@@ -355,15 +357,16 @@ class SeqModelChecker[ExecutorContextT](
 
           trex.sat(params.smtTimeoutSec) match {
             case Some(true) =>
-              searchState.onResult(Error(1))
-              notifyOnError(checkerInput.rootModule, trex.decodedExecution(), notInv, searchState.nFoundErrors)
-              val msg = "State %d: %s invariant %s violated.".format(stateNo, kind, invNo)
-              logger.error(msg)
+              val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), notInv)
+              searchState.onResult(Error(1, Seq(counterexample)))
+              notifyOnError(counterexample, searchState.nFoundErrors)
+              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} violated.")
               excludePathView()
 
             case Some(false) =>
               // no counterexample found, so the invariant holds true
               invariantHolds = true
+              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} holds.")
 
             case None =>
               // UNKNOWN or timeout
@@ -400,8 +403,9 @@ class SeqModelChecker[ExecutorContextT](
 
         trex.sat(params.smtTimeoutSec) match {
           case Some(true) =>
-            searchState.onResult(Error(1))
-            notifyOnError(checkerInput.rootModule, trex.decodedExecution(), traceInvApp, searchState.nFoundErrors)
+            val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
+            searchState.onResult(Error(1, Seq(counterexample)))
+            notifyOnError(counterexample, searchState.nFoundErrors)
             val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)
             logger.error(msg)
             excludePathView()
@@ -426,29 +430,32 @@ class SeqModelChecker[ExecutorContextT](
     val stateType = RecT1(checkerInput.rootModule.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
 
     // convert a variable binding to a record
-    def mkRecord(b: Binding): TlaEx = {
-      val ctorArgs = b.toMap.flatMap { case (key, value) =>
-        List(ValEx(TlaStr(key)), value.toNameEx)
+    def mkRecord(b: Binding): TBuilderInstruction = {
+      val ctorArgs = b.toMap.map { case (key, value) =>
+        (key, tla.name(value.toString, stateType.fieldTypes(key)))
       }
-      OperEx(TlaFunOper.rec, ctorArgs.toList: _*)(Typed(stateType))
+      tla.rec(ctorArgs.toSeq: _*)
     }
 
     // construct a history sequence
     val seqType = SeqT1(stateType)
-    val hist = OperEx(TlaFunOper.tuple, path.map(mkRecord): _*)(Typed(seqType))
+    val hist = tla.seq(path.map(mkRecord): _*)
     // assume that the trace invariant is applied to the history sequence
     notTraceInv match {
       case TlaOperDecl(_, List(OperParam(name, 0)), body) =>
         // LET Call_$param == hist IN notTraceInv(param)
-        val operType = OperT1(Seq(seqType), BoolT1)
+        val operType = OperT1(Seq(), seqType)
         val callName = s"Call_$name"
         // replace param with $callName() in the body
-        val app = OperEx(TlaOper.apply, NameEx(callName)(Typed(operType)))(Typed(seqType))
+        val app = tla.appOp(tla.name(callName, operType))
         val replacedBody =
           ReplaceFixed(new IdleTracker()).whenMatches({
-                _ == NameEx(name)(Typed(seqType))
+                _ == tla.name(name, seqType).build
               }, app)(body)
-        LetInEx(replacedBody, TlaOperDecl(callName, List(), hist)(Typed(operType)))
+        tla.letIn(
+            tla.unchecked(replacedBody),
+            tla.decl(callName, hist),
+        )
 
       case TlaOperDecl(name, _, _) =>
         throw new MalformedTlaError(s"Expected a one-argument trace invariant, found: $name", notTraceInv.body)
@@ -479,7 +486,7 @@ class SeqModelChecker[ExecutorContextT](
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = ValEx(TlaBool(true))(Typed(BoolT1)) :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
+      val pathConstraint = tla.bool(true).build :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
       trex.addPathOrConstraint(pathConstraint)
     }
   }

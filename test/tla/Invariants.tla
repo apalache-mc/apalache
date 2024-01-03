@@ -2,16 +2,16 @@
 EXTENDS Integers, Sequences, FiniteSets
 
 VARIABLES
-    \* @typeAlias: S = Set(Int);
-    \* @typeAlias: STATE = [ In: S, Done: S, Out: S ];
-    \* @type: S;
+    \* @typeAlias: set = Set(Int);
+    \* @typeAlias: state = { In: $set, Done: $set, Out: $set };
+    \* @type: $set;
     In,
-    \* @type: S;
+    \* @type: $set;
     Done,
-    \* @type: S;
+    \* @type: $set;
     Out
 
-\* @type: <<S, S, S>>;
+\* @type: <<$set, $set, $set>>;
 vars == <<In, Done, Out>>
 
 Init ==
@@ -48,13 +48,13 @@ BuggyActionInv ==
 
 \* trace invariants that reason about executions
 
-\* @type: Seq(STATE) => Bool;
+\* @type: Seq($state) => Bool;
 TraceInv(hist) ==
     \/ hist[Len(hist)].In /= {}
     \* note that we are using the last state in the history and the first one
     \/ { 2 * x: x \in hist[1].In } = hist[Len(hist)].Out
 
-\* @type: Seq(STATE) => Bool;
+\* @type: Seq($state) => Bool;
 BuggyTraceInv(hist) ==
     \/ hist[Len(hist)].In /= {}
     \* note that we are using the last state in the history and the first one

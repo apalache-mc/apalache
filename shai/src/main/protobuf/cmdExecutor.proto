@@ -1,0 +1,57 @@
+// Protobuf specification for the Apalache command executor service
+
+syntax = "proto3";
+package shai.cmdExecutor;
+
+option java_multiple_files = true;
+option java_package = "at.forsyte.apalache.shai.v1";
+option java_outer_classname = "CmdExecutorProto";
+option objc_class_prefix = "TEP";
+
+// A stateless serivce exposing Apalache's CLI via RPC calls
+service CmdExecutor {
+  rpc run(CmdRequest) returns (CmdResponse);
+
+  // No-op to check service health
+  rpc ping(PingRequest) returns (PongResponse);
+}
+
+message PingRequest {
+};
+
+message PongResponse {
+};
+
+message CmdRequest {
+  Cmd cmd = 1;
+
+  // A JSON encoded string with the application configuration
+  string config = 2;
+}
+
+// The supported apalache subcommands
+enum Cmd {
+  PARSE = 0;
+  CHECK = 1;
+  TYPECHECK = 3;
+}
+
+enum CmdErrorType {
+  PASS_FAILURE = 0;
+  UNEXPECTED = 1;
+}
+
+message CmdError {
+  CmdErrorType errorType = 1;
+  // A JSON encoded string with data useful for understanding the error
+  string data = 2;
+}
+
+message CmdResponse {
+  oneof result {
+    // A JSON encoded string with data useful on success
+    string success = 1;
+    // Data about the kind of application error resulting from the RPC
+    CmdError failure = 2;
+  }
+}

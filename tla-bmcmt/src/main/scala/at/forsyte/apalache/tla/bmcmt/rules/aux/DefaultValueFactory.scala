@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell, RewriterException, SymbStateRewriter}
-import at.forsyte.apalache.tla.lir.{
-  BoolT1, ConstT1, FunT1, IntT1, NullEx, RecRowT1, RecT1, RowT1, SeqT1, SetT1, StrT1, TlaType1, TupT1,
-}
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
+import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, RewriterException, SymbStateRewriter}
+import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedSet
 
@@ -26,7 +25,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state that contains the new value as the expression
    */
-  def makeUpValue(arena: Arena, valueType: TlaType1): (Arena, ArenaCell) = {
+  def makeUpValue(arena: PureArenaAdapter, valueType: TlaType1): (PureArenaAdapter, ArenaCell) = {
     valueType match {
       case IntT1 =>
         rewriter.intValueCache.getOrCreate(arena, 0)
@@ -45,7 +44,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val tuple = newArena.topCell
         newArena = argTypes.foldLeft(newArena) { (arena, argT) =>
           val (nextArena, valueCell) = makeUpValue(arena, argT)
-          nextArena.appendHasNoSmt(tuple, valueCell)
+          nextArena.appendHasNoSmt(tuple, FixedElemPtr(valueCell))
         }
         (newArena, tuple)
 
@@ -54,7 +53,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val recCell = newArena.topCell
         newArena = recT.fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
-          nextArena.appendHasNoSmt(recCell, valueCell)
+          nextArena.appendHasNoSmt(recCell, FixedElemPtr(valueCell))
         }
         // create the domain and attach it to the record
         val pairOfSets = (recT.fieldTypes.keySet, SortedSet[String]())
@@ -68,7 +67,7 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val recCell = newArena.topCell
         newArena = fieldTypes.values.foldLeft(newArena) { (arena, v) =>
           val (nextArena, valueCell) = makeUpValue(arena, v)
-          nextArena.appendHasNoSmt(recCell, valueCell)
+          nextArena.appendHasNoSmt(recCell, FixedElemPtr(valueCell))
         }
         (newArena, recCell)
 
@@ -89,6 +88,26 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         val (arena2, protoSeq) = protoSeqOps.makeEmptyProtoSeq(arena)
         val (arena3, zero) = rewriter.intValueCache.create(arena2, 0)
         protoSeqOps.mkSeqCell(arena3, tp, protoSeq, zero)
+
+      case variantT @ VariantT1(RowT1(options, None)) if options.nonEmpty =>
+        // it would be better to call RecordAndVariantOps.makeVariant, but that would produce a circular dependency
+        val tagName = options.head._1
+        val (arena2, tagAsCell) = rewriter.modelValueCache.getOrCreate(arena, (StrT1.toString, tagName))
+        var nextArena = arena2
+        // introduce default values for all variant options
+        val variantValues = options.map { case (t, tp) =>
+          val (newArena, defaultValue) = makeUpValue(nextArena, tp)
+          nextArena = newArena
+          (t, defaultValue)
+        }
+        // introduce a cell for the variant and wire the values to it
+        nextArena = nextArena.appendCell(variantT)
+        val variantCell = nextArena.topCell
+        for (fieldCell <- (variantValues + (RecordAndVariantOps.variantTagField -> tagAsCell)).valuesIterator) {
+          nextArena = nextArena.appendHasNoSmt(variantCell, FixedElemPtr(fieldCell))
+        }
+
+        (nextArena, variantCell)
 
       case tp @ _ =>
         throw new RewriterException(s"Unexpected type $tp when generating a default value", NullEx)

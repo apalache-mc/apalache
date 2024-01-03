@@ -6,4 +6,5 @@
 1. [Checking PlusCal specifications](./pluscal-tutorial.md)
 1. [Checking ERC20 with Property-Based Testing and TLA+](./pbt-and-tla.md)
 1. [Symbolic Model Checking](./symbmc.md)
+1. [Specifying temporal properties and understanding counterexamples](./temporal-properties.md)
 

@@ -1,9 +1,8 @@
----
-authors: Igor Konnov
-last revised: 2021-12-12
----
-
 # ADR-014: Precise type inference for records and variants
+
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Igor Konnov                            | 2021-12-12      |
 
 **Table of Contents**
 

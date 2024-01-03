@@ -31,7 +31,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("imports", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -66,7 +66,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("nats", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -163,7 +163,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("ints", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(3 == modules.size) // Integers extends Naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -247,7 +247,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("myreals", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(4 == modules.size) // Reals include Integers that include Naturals
     val root = modules(rootName)
     // the definitions of the standard operators are filtered out
@@ -331,7 +331,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("sequences", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(3 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
     val root = modules(rootName)
@@ -376,7 +376,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("myfinitesets", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(5 == modules.size) // Naturals, Sequences, FiniteSets, and our module
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -422,7 +422,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("tlc", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     // the root module and integers
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -471,7 +471,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    val (_, modules) = sanyImporter.loadFromSource("localSum", Source.fromString(text))
+    val (_, modules) = sanyImporter.loadFromSource(Source.fromString(text))
     assert(6 == modules.size) // Naturals, Sequences, TLC, FiniteSets, Bags, and our module
 
     val root = modules("localSum")
@@ -501,7 +501,7 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     // Apalache source tree.
 
     val (_, modules) = sanyImporter
-      .loadFromSource("root", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(7 == modules.size) // root, Apalache, Integers, FiniteSets, and whatever they import
 
     val root = modules("root")
@@ -557,6 +557,115 @@ class TestSanyImporterStandardModules extends SanyImporterTestBase {
     expectDecl(
         "Seq2to11",
         OperEx(ApalacheOper.mkSeq, ValEx(TlaInt(10)), NameEx("Identity")),
+    )
+  }
+
+  test("EXTENDS Variants") {
+    val text =
+      """---- MODULE root ----
+        |EXTENDS Integers, FiniteSets, Variants
+        |
+        |\* @type: () => T1a({ val: Int, found: Bool });
+        |TestVariant == Variant("T1a", [ val |-> 3, found |-> FALSE ])
+        |
+        |\* @type: Set(T1a({ val: Int, found: Bool) | T2a({ bal: Int })) => Set({ val: Int, found: Bool });
+        |TestVariantFilter == VariantFilter("T1a", { TestVariant })
+        |
+        |\* @type: T1a({ val: Int, found: Bool }) => Str;
+        |TestVariantTag(var) ==
+        |  VariantTag(var)
+        |
+        |\* @type: T1a({ val: Int, found: Bool }) => { val: Int, found: Bool };
+        |TestVariantGetUnsafe(var) ==
+        |  VariantGetUnsafe("T1a", var)
+        |
+        |\* @type: (T1a({ val: Int, found: Bool }), { val: Int, found: Bool }) => { val: Int, found: Bool };
+        |TestVariantGetOrElse(var) ==
+        |  VariantGetOrElse("T1a", var, [ val |-> 0, found |-> FALSE])
+        |================================
+      """.stripMargin
+
+    // If you run this test in an IDE and the test fails, set environment variable `APALACHE_HOME` to the root of the
+    // Apalache source tree.
+
+    val (_, modules) = sanyImporter
+      .loadFromSource(Source.fromString(text))
+
+    val root = modules("root")
+    expectSourceInfoInDefs(root)
+
+    def expectDecl(name: String, body: TlaEx, params: OperParam*): Unit = {
+      findAndExpectOperDecl(root, name, params.toList, body)
+    }
+
+    // TestVariant == Variant("T1a", [ val |-> 3, found |-> FALSE ])
+    expectDecl(
+        "TestVariant",
+        OperEx(
+            VariantOper.variant,
+            ValEx(TlaStr("T1a")),
+            OperEx(
+                TlaFunOper.rec,
+                ValEx(TlaStr("val")),
+                ValEx(TlaInt(3)),
+                ValEx(TlaStr("found")),
+                ValEx(TlaBool(false)),
+            ),
+        ),
+    )
+
+    // TestVariantFilter == VariantFilter("T1a", { Var })
+    expectDecl(
+        "TestVariantFilter",
+        OperEx(
+            VariantOper.variantFilter,
+            ValEx(TlaStr("T1a")),
+            OperEx(TlaSetOper.enumSet, OperEx(TlaOper.apply, NameEx("TestVariant"))),
+        ),
+    )
+
+    // TestVariantTag(var) ==
+    //   VariantTag("T1a", var)
+    val applyMatchOnly =
+      OperEx(
+          VariantOper.variantTag,
+          name("var"),
+      )
+
+    expectDecl(
+        "TestVariantTag",
+        applyMatchOnly,
+        OperParam("var"),
+    )
+
+    // TestVariantGetUnsafe(var) == VariantGetUnsafe("T1a", var)
+    expectDecl(
+        "TestVariantGetUnsafe",
+        OperEx(
+            VariantOper.variantGetUnsafe,
+            ValEx(TlaStr("T1a")),
+            NameEx("var"),
+        ),
+        OperParam("var"),
+    )
+
+    // TestVariantGetOrElse(var) ==
+    //  VariantGetOrElse("T1a", var, [ val |-> 0, found |-> FALSE])
+    expectDecl(
+        "TestVariantGetOrElse",
+        OperEx(
+            VariantOper.variantGetOrElse,
+            ValEx(TlaStr("T1a")),
+            NameEx("var"),
+            OperEx(
+                TlaFunOper.rec,
+                ValEx(TlaStr("val")),
+                ValEx(TlaInt(0)),
+                ValEx(TlaStr("found")),
+                ValEx(TlaBool(false)),
+            ),
+        ),
+        OperParam("var"),
     )
   }
 }

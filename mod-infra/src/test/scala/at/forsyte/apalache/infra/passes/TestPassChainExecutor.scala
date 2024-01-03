@@ -17,21 +17,18 @@ class TestPassChainExecutor extends AnyFunSuite {
       if (result) {
         Right(TlaModule("TestModule", Seq()))
       } else {
-        Left(ExitCodes.ERROR)
+        passFailure(None, ExitCodes.ERROR)
       }
     }
     override def dependencies = deps
     override def transformations = transfs
   }
 
-  private val options = new WriteablePassOptions()
-
   test("""Executes a correctly ordered chain""") {
     val pass1 = new ParametrizedPass(true, Set(), Set(ModuleProperty.Inlined))
     val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
-    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
-    val result = executor.run()
+    val result = PassChainExecutor.runOnPasses(Seq(pass1, pass2))
     assert(result.isRight)
   }
 
@@ -40,12 +37,12 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set())
     val pass2 = new ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 
-    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
     val thrown = intercept[Exception] {
-      executor.run()
+      PassChainExecutor.runOnPasses(Seq(pass1, pass2))
     }
 
     assert(thrown.getMessage === "TestPass cannot run for a module without the properties: Inlined")
+
   }
 
   test("""Returns empty result when an execution is faulty""") {
@@ -53,9 +50,7 @@ class TestPassChainExecutor extends AnyFunSuite {
     val pass1 = new ParametrizedPass(true, Set(), Set())
     val pass2 = new ParametrizedPass(false, Set(), Set())
 
-    val executor = new PassChainExecutor(options, Seq(pass1, pass2))
-
-    val result = executor.run()
+    val result = PassChainExecutor.runOnPasses(Seq(pass1, pass2))
     assert(result.isLeft)
   }
 }

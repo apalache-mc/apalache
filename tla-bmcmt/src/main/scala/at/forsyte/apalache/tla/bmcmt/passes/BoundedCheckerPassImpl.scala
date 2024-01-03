@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
@@ -11,13 +11,16 @@ import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
-import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, KeraLanguagePred}
+import at.forsyte.apalache.tla.lir.transformations.standard.{
+  IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred,
+}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.infra.passes.options.{Algorithm, OptionGroup}
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -26,7 +29,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   Igor Konnov
  */
 class BoundedCheckerPassImpl @Inject() (
-    val options: PassOptions,
+    options: OptionGroup.HasChecker,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
@@ -36,9 +39,8 @@ class BoundedCheckerPassImpl @Inject() (
   override def name: String = "BoundedChecker"
 
   override def execute(module: TlaModule): PassResult = {
-    for (decl <- module.operDeclarations) {
-      LanguageWatchdog(KeraLanguagePred()).check(decl.body)
-    }
+    LanguageWatchdog(KeraLanguagePred()).check(module)
+    LanguageWatchdog(MonotypeLanguagePred()).check(module)
 
     val initTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.INIT_PREFIX)
     val nextTrans = ModuleAdapter.getTransitionsFromSpec(module, NormalizedNames.NEXT_PREFIX)
@@ -58,44 +60,39 @@ class BoundedCheckerPassImpl @Inject() (
       CheckerInputVC(invariantsAndNegations.toList, actionInvariantsAndNegations.toList,
           traceInvariantsAndNegations.toList, optView)
     val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, verificationConditions)
-    /*
-        TODO: uncomment when the parallel checker is transferred from ik/multicore
-    val nworkers = options.getOrElse("checker", "nworkers", 1)
-     */
-    val stepsBound = options.getOrElse[Int]("checker", "length", 10)
-    val debug = options.getOrElse[Boolean]("general", "debug", false)
-    val tuning = options.getOrElse[Map[String, String]]("general", "tuning", Map[String, String]())
+    val stepsBound = options.checker.length
+    val debug = options.common.debug
+    val tuning = options.checker.tuning
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
-    val smtEncoding = options.getOrElse[SMTEncoding]("checker", "smt-encoding", oopsla19Encoding)
+    val smtEncoding = options.checker.smtEncoding
 
     val params = new ModelCheckerParams(input, stepsBound, tuning)
-    params.discardDisabled = options.getOrElse[Boolean]("checker", "discardDisabled", true)
-    params.checkForDeadlocks = !options.getOrElse[Boolean]("checker", "noDeadlocks", false)
-    params.nMaxErrors = options.getOrElse[Int]("checker", "maxError", 1)
+    params.discardDisabled = options.checker.discardDisabled
+    params.checkForDeadlocks = !options.checker.noDeadlocks
+    params.nMaxErrors = options.checker.maxError
     params.smtEncoding = smtEncoding
 
-    val smtProfile = options.getOrElse[Boolean]("smt", "prof", false)
+    val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
 
-    val result = options.getOrElse[String]("checker", "algo", "incremental") match {
-      /*
-        TODO: uncomment when the parallel checker is transferred from ik/multicore
-      case "parallel" => runParallelChecker(params, input, tuning, nworkers)
-       */
-      case "incremental" => runIncrementalChecker(params, input, tuning, solverConfig)
-      case "offline"     => runOfflineChecker(params, input, tuning, solverConfig)
-      case algo          => throw new IllegalArgumentException(s"Unexpected checker.algo=$algo")
+    val result = options.checker.algo match {
+      case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
+      case Algorithm.Offline     => runOfflineChecker(params, input, tuning, solverConfig)
     }
 
-    if (result) Right(module) else Left(ExitCodes.ERROR_COUNTEREXAMPLE)
+    if (result.isOk) {
+      Right(module)
+    } else {
+      passFailure(result, ExitCodes.ERROR_COUNTEREXAMPLE)
+    }
   }
 
   private def runIncrementalChecker(
       params: ModelCheckerParams,
       input: CheckerInput,
       tuning: Map[String, String],
-      solverConfig: SolverConfig): Boolean = {
+      solverConfig: SolverConfig): Checker.CheckerResult = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
     val metricProfilerListener =
@@ -107,10 +104,12 @@ class BoundedCheckerPassImpl @Inject() (
       }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case `oopsla19Encoding` =>
+      case SMTEncoding.OOPSLA19 =>
         new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, metricProfilerListener)
-      case `arraysEncoding` =>
+      case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore, metricProfilerListener)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
@@ -124,18 +123,18 @@ class BoundedCheckerPassImpl @Inject() (
       new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
     val checker =
-      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpCounterexamplesModelCheckerListener))
+      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome.isOk
+    outcome
   }
 
   private def runOfflineChecker(
       params: ModelCheckerParams,
       input: CheckerInput,
       tuning: Map[String, String],
-      solverConfig: SolverConfig): Boolean = {
+      solverConfig: SolverConfig): Checker.CheckerResult = {
     val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
     if (solverConfig.profile) {
@@ -143,9 +142,12 @@ class BoundedCheckerPassImpl @Inject() (
     }
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
-      case `arraysEncoding` =>
+      case SMTEncoding.OOPSLA19 =>
+        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
+      case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.config = RewriterConfig(tuning)
@@ -156,11 +158,11 @@ class BoundedCheckerPassImpl @Inject() (
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
     val checker =
-      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpCounterexamplesModelCheckerListener))
+      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
     val outcome = checker.run()
-    rewriter.dispose()
+    executorContext.dispose()
     logger.info(s"The outcome is: " + outcome)
-    outcome.isOk
+    outcome
   }
 
   /*
@@ -214,9 +216,10 @@ class BoundedCheckerPassImpl @Inject() (
 
     val typeFinder = new TrivialTypeFinder
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case `oopsla19Encoding` => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
-      case `arraysEncoding`   => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
-      case oddEncoding        => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
+      case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
+      case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
+      case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, typeFinder, exprGradeStore)
+      case oddEncoding           => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.formulaHintsStore = hintsStore
     rewriter.config = RewriterConfig(tuning)

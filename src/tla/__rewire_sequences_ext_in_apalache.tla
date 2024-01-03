@@ -326,7 +326,7 @@ FoldSeq(__op(_, _), __base, __seq) ==
  *    LET cons(x,y) == <<x,y>>
  *    IN FoldLeft(cons, 0, <<3, 1, 2>>) = << << <<0, 3>>, 1>>, 2>> 
  *
- * @type: ((b, a) => b, a, Seq(a)) => b;
+ * @type: ((b, a) => b, b, Seq(a)) => b;
  *)
 FoldLeft(__op(_, _), __base, __seq) == 
   LET __map(__x, __y) == __op(__x, __y) IN

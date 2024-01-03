@@ -7,6 +7,6 @@ the [detailed output](./running.md#detailed) produced by the tool.
 
 See the detailed description of the [Apalache operators][].
 
-[Apalache.tla]: https://github.com/informalsystems/apalache/tree/unstable/src/tla/Apalache.tla
+[Apalache.tla]: https://github.com/informalsystems/apalache/tree/main/src/tla/Apalache.tla
 
 [Apalache operators]: https://apalache.informal.systems/docs/lang/apalache-operators.html

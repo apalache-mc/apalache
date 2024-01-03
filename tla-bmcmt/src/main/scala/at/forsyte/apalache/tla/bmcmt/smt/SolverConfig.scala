@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, SMTEncoding}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 
 /**
  * Configuration option to be passed to SolverContext. This class is declared as a case class to enable the concise copy
@@ -30,5 +30,5 @@ object SolverConfig {
    * Get the default configuration.
    */
   val default: SolverConfig =
-    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = oopsla19Encoding)
+    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19)
 }

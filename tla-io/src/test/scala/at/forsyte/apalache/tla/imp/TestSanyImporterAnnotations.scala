@@ -31,9 +31,9 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
     sanyImporter = new SanyImporter(sourceStore, annotationStore)
   }
 
-  private def loadModule(text: String, moduleName: String): TlaModule = {
+  private def loadModule(text: String): TlaModule = {
     val (rootName, modules) =
-      sanyImporter.loadFromSource(moduleName, Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     modules(rootName)
   }
 
@@ -49,7 +49,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "oneconst")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "S") match {
       case Some(d @ TlaConstDecl(_)) =>
@@ -75,7 +75,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "onevar")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "S") match {
       case Some(d @ TlaVarDecl(_)) =>
@@ -100,7 +100,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "oper")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "X") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
@@ -127,7 +127,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "oper")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "Inc") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
@@ -160,7 +160,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "oper")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "A") match {
       // SanyImporter introduces a let-definition before application of a LOCAL operator
@@ -196,7 +196,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "oper")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "A") match {
       case Some(TlaOperDecl(_, _, LetInEx(_, incDecl))) =>
@@ -229,7 +229,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "oper")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "Fact") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
@@ -258,7 +258,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "fun")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "Fact") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
@@ -282,7 +282,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
       """.stripMargin
 
     // as explained in #1292, we are not throwing an exception anymore
-    val module = loadModule(text, "missing")
+    val module = loadModule(text)
 
     val action = module.declarations
       .find(_.name == "action")
@@ -306,7 +306,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
         |================================
       """.stripMargin
 
-    val module = loadModule(text, "corner")
+    val module = loadModule(text)
 
     module.declarations.find(_.name == "Corner") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
@@ -319,6 +319,51 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
 
       case _ =>
         fail("Expected an operator")
+    }
+  }
+
+  test("line breaks are preserved inside type annotations") {
+    // Required to allow identifying and parsing out one-line comments inside of type annotations
+    // See https://github.com/informalsystems/apalache/issues/2162
+    val text =
+      """----- MODULE OneLineComments -----
+        |
+        | CONSTANT
+        | \* @type: {
+        | \*   //  comment in single-line annotation
+        | \*   f : Int
+        | \* };
+        |   singleLine,
+        | (* @type: {
+        |      //  comment in multi-line annotation
+        |      g : Int
+        |   }; *)
+        |   multiLine
+        |=====
+      """.stripMargin
+    val module = loadModule(text)
+
+    val expectedSingleLine =
+      """{
+        | // comment in single-line annotation
+        | f : Int
+        | }""".stripMargin
+    val expectedMultiLine =
+      """{
+        | // comment in multi-line annotation
+        | g : Int
+        | }""".stripMargin
+    module.declarations.filter(_.name.endsWith("Line")).map {
+      case d @ TlaConstDecl(_) =>
+        val annotation :: _ = annotationStore(d.ID)
+        if (d.name == "singleLine") {
+          assert(Annotation("type", mkStr(expectedSingleLine)) == annotation)
+        } else {
+          assert(Annotation("type", mkStr(expectedMultiLine)) == annotation)
+        }
+
+      case _ =>
+        fail("Expected a constant")
     }
   }
 }

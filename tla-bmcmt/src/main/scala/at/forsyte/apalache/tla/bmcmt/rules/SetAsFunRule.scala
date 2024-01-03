@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 
 /**
  * Implements a rule for Apalache!SetAsFun.
@@ -32,26 +33,28 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
             val fun = nextState.arena.topCell
 
             rewriter.solverContext.config.smtEncoding match {
-              case `arraysEncoding` =>
+              case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
                 nextState = nextState.updateArena(_.appendCell(SetT1(keyType)))
                 val domainCell = nextState.arena.topCell
                 nextState = nextState.updateArena(_.appendCellNoSmt(setCell.cellType))
                 val relationCell = nextState.arena.topCell
 
-                val pairs = nextState.arena.getHas(setCell)
+                val pairs = nextState.arena.getHasPtr(setCell)
                 var domainCells: List[ArenaCell] = List()
                 var rangeCells: List[ArenaCell] = List()
 
-                for (pair <- pairs) {
+                for (pairPtr <- pairs) {
+                  val pair = pairPtr.elem
                   assert(nextState.arena.getHas(pair).length == 2)
-                  val domElem = nextState.arena.getHas(pair)(0)
-                  val resElem = nextState.arena.getHas(pair)(1)
+                  val Seq(domElemPtr, resElemPtr) = nextState.arena.getHasPtr(pair)
+                  val domElem = domElemPtr.elem
+                  val resElem = resElemPtr.elem
 
-                  nextState = nextState.updateArena(_.appendHas(domainCell, domElem))
-                  val inExpr = tla.apalacheStoreInSet(domElem.toNameEx, domainCell.toNameEx)
+                  nextState = nextState.updateArena(_.appendHas(domainCell, domElemPtr))
+                  val inExpr = tla.storeInSet(domElem.toBuilder, domainCell.toBuilder)
                   rewriter.solverContext.assertGroundExpr(inExpr)
 
-                  nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pair))
+                  nextState = nextState.updateArena(_.appendHasNoSmt(relationCell, pairPtr))
 
                   domainCells = domainCells :+ domElem
                   rangeCells = rangeCells :+ resElem
@@ -61,21 +64,21 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 nextState = nextState.updateArena(_.setCdm(fun, relationCell))
 
                 def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-                  val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx)
+                  val inDomain = tla.selectInSet(domElem.toBuilder, domainCell.toBuilder)
                   val inRange =
-                    tla.apalacheStoreInFun(rangeElem.toNameEx, fun.toNameEx, domElem.toNameEx)
-                  val notInRange = tla.apalacheStoreNotInFun(domElem.toNameEx, fun.toNameEx)
+                    tla.storeInSet(rangeElem.toBuilder, fun.toBuilder, domElem.toBuilder)
+                  val notInRange = tla.storeNotInFun(domElem.toBuilder, fun.toBuilder)
                   // function updates are guarded by the inDomain predicate
                   val ite = tla.ite(inDomain, inRange, notInRange)
                   rewriter.solverContext.assertGroundExpr(ite)
                 }
 
                 // Here we iterate over the reverse order of the list to have, in case duplicate keys, the first entry
-                // in the list be the value encoded in the function. This is the semantics of oopsla19Encoding.
+                // in the list be the value encoded in the function. This is the semantics of SMTEncoding.OOPSLA19.
                 for ((domElem, rangeElem) <- domainCells.zip(rangeCells).reverse)
                   addCellCons(domElem, rangeElem)
 
-              case `oopsla19Encoding` =>
+              case SMTEncoding.OOPSLA19 =>
                 nextState = translateRelation(setCell, nextState)
                 val rel = nextState.asCell
                 nextState = nextState.updateArena(_.setCdm(fun, rel))
@@ -84,7 +87,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
             }
 
-            nextState.setRex(fun.toNameEx)
+            nextState.setRex(fun.toBuilder)
 
           case tt =>
             throw new RewriterException("Unexpected type in SetAsFunRule: " + tt, state.ex)
@@ -107,33 +110,35 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
     var nextState = state.updateArena(_.appendCellOld(pairsSet.cellType))
     // construct the relation cell `funRel` and add all cells from the original set `setCell`
     val funRel = nextState.arena.topCell
-    val pairs = nextState.arena.getHas(pairsSet)
+    val pairs = nextState.arena.getHasPtr(pairsSet)
     nextState = nextState.updateArena(_.appendHas(funRel, pairs: _*))
     // however, iteratively restrict the membership, to enforce determinism
-    for ((pair1, idx1) <- pairs.zipWithIndex) {
+    for ((pair1Ptr, idx1) <- pairs.zipWithIndex) {
+      val pair1 = pair1Ptr.elem
       val key1 = nextState.arena.getHas(pair1).head
 
       // ensure that a pair with the same key has not been included in the relation yet
-      def keysDifferOrNotIncluded(pair2: ArenaCell): TlaEx = {
+      def keysDifferOrNotIncluded(pair2Ptr: ElemPtr): TBuilderInstruction = {
+        val pair2 = pair2Ptr.elem
         val key2 = nextState.arena.getHas(pair2).head
         // pair2 \notin funRel
-        val notInFunRel = tla.not(tla.apalacheSelectInSet(pair2.toNameEx, funRel.toNameEx))
+        val notInFunRel = tla.not(tla.selectInSet(pair2.toBuilder, funRel.toBuilder))
         // key1 = key2
         nextState = rewriter.lazyEq.cacheOneEqConstraint(nextState, key1, key2)
-        val keysEq = rewriter.lazyEq.cachedEq(key1, key2)
+        val keysEq = tla.unchecked(rewriter.lazyEq.cachedEq(key1, key2))
         // pair2 \notin funRel \/ key1 /= key2
         tla.or(notInFunRel, tla.not(keysEq))
       }
 
       val noDuplicateKeys = tla.and(pairs.slice(0, idx1).map(keysDifferOrNotIncluded): _*)
       // pair1 \in setCell
-      val inSet = tla.apalacheSelectInSet(pair1.toNameEx, pairsSet.toNameEx)
+      val inSet = tla.selectInSet(pair1.toBuilder, pairsSet.toBuilder)
       // pair1 \in funRel <=> pair1 \in setCell /\ notInPrefix
-      val ite = tla.ite(tla.and(inSet, noDuplicateKeys), tla.apalacheStoreInSet(pair1.toNameEx, funRel.toNameEx),
-          tla.apalacheStoreNotInSet(pair1.toNameEx, funRel.toNameEx))
+      val ite = tla.ite(tla.and(inSet, noDuplicateKeys), tla.storeInSet(pair1.toBuilder, funRel.toBuilder),
+          tla.storeNotInSet(pair1.toBuilder, funRel.toBuilder))
       rewriter.solverContext.assertGroundExpr(ite)
     }
 
-    nextState.setRex(funRel.toNameEx)
+    nextState.setRex(funRel.toBuilder)
   }
 }

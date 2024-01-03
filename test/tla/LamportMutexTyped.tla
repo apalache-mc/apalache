@@ -15,23 +15,30 @@ EXTENDS Naturals, Sequences
 (* The parameter maxClock is used only for model checking in order to      *)
 (* keep the state space finite.                                            *)
 (***************************************************************************)
+\* ANCHOR: constants
 CONSTANT
     \* @type: Int;
     N,
     \* @type: Int;
     maxClock
+\* ANCHOR_END: constants
 
+\* ANCHOR: assumes
 ASSUME NType == N \in Nat
 ASSUME maxClockType == maxClock \in Nat
+\* ANCHOR_END: assumes
 
+\* ANCHOR: ProcAndClock
 Proc == 1 .. N
 Clock == Nat \ {0}
+\* ANCHOR_END: ProcAndClock
 (***************************************************************************)
 (* For model checking, add ClockConstraint as a state constraint to ensure *)
 (* a finite state space and override the definition of Clock by            *)
 (* 1 .. maxClock+1 so that TLC can evaluate the definition of Message.     *)
 (***************************************************************************)
 
+\* ANCHOR: vars1
 VARIABLES
   \* @type: Int -> Int;
   clock,    \* local clock of each process
@@ -39,27 +46,33 @@ VARIABLES
   req,      \* requests received from processes (clock transmitted with request)
   \* @type: Int -> Set(Int);
   ack,      \* acknowledgements received from processes
-  \* @typeAlias: MESSAGE = {
+  \* @type: Set(Int);
+  crit,     \* set of processes in critical section
+\* ANCHOR_END: vars1
+\* ANCHOR: vars2
+  \* @typeAlias: message = {
   \*     type: Str,
   \*     clock: Int
   \* };
-  \* @type: Int -> (Int -> Seq(MESSAGE));
-  network,  \* messages sent but not yet received
-  \* @type: Set(Int);
-  crit      \* set of processes in critical section
+  \* @type: Int -> (Int -> Seq($message));
+  network   \* messages sent but not yet received
+\* ANCHOR_END: vars2
 
 (***************************************************************************)
 (* Messages used in the algorithm.                                         *)
 (***************************************************************************)
+\* ANCHOR: Message
 ReqMessage(c) == [type |-> "req", clock |-> c]
 AckMessage == [type |-> "ack", clock |-> 0]
 RelMessage == [type |-> "rel", clock |-> 0]
 
 Message == {AckMessage, RelMessage} \union {ReqMessage(c) : c \in Clock}
+\* ANCHOR_END: Message
 
 (***************************************************************************)
 (* The type correctness predicate.                                         *)
 (***************************************************************************)  
+\* ANCHOR: TypeOK
 TypeOK ==
      (* clock[p] is the local clock of process p *)
   /\ clock \in [Proc -> Clock]
@@ -71,6 +84,7 @@ TypeOK ==
   /\ network \in [Proc -> [Proc -> Seq(Message)]]
      (* set of processes in critical section: should be empty or singleton *)
   /\ crit \in SUBSET Proc
+\* ANCHOR_END: TypeOK
 
 
 (***************************************************************************)

@@ -57,14 +57,14 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
     val expected =
       Annotation(
           "type",
-          AnnotationStr(" (Int, Int) -> Set(Int) "),
+          AnnotationStr("(Int, Int) -> Set(Int)"),
       )
 
     AnnotationParser
       .parse("""  @type: (Int, Int) -> Set(Int) ;""")
       .map(a => assert(expected == a))
       .swap
-      .map(r => "Unexpected parser outcome: " + r)
+      .map(r => fail("Unexpected parser outcome: " + r))
   }
 
   test("test on multiline input") {
@@ -84,7 +84,7 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
       .parse(text)
       .map(a => assert(expected == a))
       .swap
-      .map(r => "Unexpected parser outcome: " + r)
+      .map(r => fail("Unexpected parser outcome: " + r))
   }
 
   test("regression") {
@@ -108,6 +108,27 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
     AnnotationParser
       .parse(text)
       .map(r => fail("Expected a failure. Found: " + r))
+  }
+
+  test("parse variants in type aliases") {
+    val extractedText =
+      """MESSAGE =
+        #  Req({ ask: Int })
+        #  | Ack({ success: Bool })""".stripMargin('#')
+    val text = s"@typeAlias: $extractedText;"
+
+    // Normalize by removing repeated spaces and whitespace
+    val expectedText = """([ \t\f]+)""".r.replaceAllIn(extractedText, " ")
+    val expected =
+      Annotation(
+          "typeAlias",
+          AnnotationStr(expectedText),
+      )
+    AnnotationParser
+      .parse(text)
+      .map(a => assert(expected == a))
+      .swap
+      .map(r => fail("Unexpected parser outcome: " + r))
   }
 
   test("multiple annotations as in unit tests") {
@@ -159,7 +180,7 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
             // To see how testing is different from verification,
             // replace 'passed' with 'falsified' and observe that no error will be found ;-)
             passed
-          // no exceptions
+            // no exceptions
           }
         },
         minSuccessful(300),

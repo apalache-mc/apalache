@@ -24,7 +24,7 @@
  * assignments by hand, you can use this operator.
  *
  * For a further discussion on that matter, see:
- * https://github.com/informalsystems/apalache/blob/unstable/docs/src/idiomatic/001assignments.md
+ * https://github.com/informalsystems/apalache/blob/main/docs/src/idiomatic/001assignments.md
  *)
 __x := __e == __x = __e
 

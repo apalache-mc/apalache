@@ -1,5 +1,5 @@
 # This workflow builds and publishes a docker container to the GitHub registry.
-# It is only triggered on merges into the unstable branch, and we assume that
+# It is only triggered on merges into the main branch, and we assume that
 # any commit merged into the trunk has passed CI is safe to release.
 
 # Adapted from https://docs.github.com/en/actions/publishing-packages/publishing-docker-images#publishing-images-to-github-packages
@@ -12,7 +12,7 @@ on:
       - published
   push:
     branches:
-      - unstable
+      - main
 
 env:
   REGISTRY: ghcr.io
@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -38,7 +38,7 @@ jobs:
 
       # See https://github.com/docker/metadata-action#tags-input for the default
       # tags that are extracted this way. It includes tags for semver releases
-      # and any branches into unstable
+      # and any branches into main
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38

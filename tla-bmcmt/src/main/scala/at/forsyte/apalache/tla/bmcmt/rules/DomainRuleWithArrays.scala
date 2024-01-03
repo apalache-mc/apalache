@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt.{RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.bmcmt.caches.IntRangeCache
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.lir.{FunT1, OperEx, RecT1, SeqT1, TupT1}
+import at.forsyte.apalache.tla.lir.{FunT1, OperEx, RecRowT1, RecT1, SeqT1, TupT1}
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 
 /**
@@ -26,6 +26,9 @@ class DomainRuleWithArrays(rewriter: SymbStateRewriter, intRangeCache: IntRangeC
           case CellTFrom(RecT1(_)) =>
             val dom = funState.arena.getDom(funCell)
             funState.setRex(dom.toNameEx)
+
+          case CellTFrom(RecRowT1(_)) =>
+            recordOps.domain(funState, funCell)
 
           case CellTFrom(tt @ TupT1(_ @_*)) =>
             mkTupleDomain(funState, tt)

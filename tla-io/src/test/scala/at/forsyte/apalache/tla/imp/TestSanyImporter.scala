@@ -29,7 +29,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |================================
       """.stripMargin
 
-    val (rootName, _) = sanyImporter.loadFromSource("justASimpleTest", Source.fromString(text))
+    val (rootName, _) = sanyImporter.loadFromSource(Source.fromString(text))
     assert("justASimpleTest" == rootName)
   }
 
@@ -62,7 +62,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) =
-      sanyImporter.loadFromSource("onevar", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("onevar", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -84,7 +84,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("oneconst", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("oneconst", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -103,7 +103,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -128,7 +128,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -153,7 +153,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -178,7 +178,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -204,7 +204,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -228,7 +228,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -255,7 +255,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("constop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("constop", rootName, modules)
     assert(2 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -277,7 +277,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("builtinop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -304,7 +304,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("localop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("localop", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -328,7 +328,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("localop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("localop", rootName, modules)
     assert(2 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -357,7 +357,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("localop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("localop", rootName, modules)
     assert(2 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -372,7 +372,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("emptyset", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("emptyset", rootName, modules)
     assert(1 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -395,7 +395,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       """.stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("builtinop", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("builtinop", rootName, modules)
     assert(2 == mod.declarations.size)
     expectSourceInfoInDefs(mod)
@@ -490,7 +490,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("builtins", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     expectSingleModule("builtins", rootName, modules)
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -786,7 +786,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("comprehensions", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     expectSingleModule("comprehensions", rootName, modules)
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
@@ -841,7 +841,7 @@ class TestSanyImporter extends SanyImporterTestBase {
       |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("composite", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("composite", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -941,7 +941,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("except", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("except", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1012,7 +1012,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("labels", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("labels", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1062,7 +1062,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("args", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("args", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1098,7 +1098,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("updates", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("updates", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1166,7 +1166,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("selects", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("selects", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1208,7 +1208,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("funCtor", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("funCtor", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1278,7 +1278,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("weird", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("weird", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1307,7 +1307,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("level1Operators", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("level1Operators", rootName, modules)
 
     def expectDecl(n: String, p: List[OperParam], b: TlaEx) =
@@ -1352,7 +1352,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("level2Operators", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("level2Operators", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1388,7 +1388,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin.format("\\union")
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("level2builtin", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = expectSingleModule("level2builtin", rootName, modules)
     expectSourceInfoInDefs(mod)
 
@@ -1436,7 +1436,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("level2library", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     val mod = modules(rootName)
     expectSourceInfoInDefs(mod)
 
@@ -1485,7 +1485,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("let", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -1540,7 +1540,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     assertThrows[SanyImporterException] {
-      sanyImporter.loadFromSource("subformulas", Source.fromString(text))
+      sanyImporter.loadFromSource(Source.fromString(text))
     }
   }
 
@@ -1554,7 +1554,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("lambda", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -1602,7 +1602,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("let", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -1660,7 +1660,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("recOpers", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(2 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -1752,7 +1752,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("globalFuns", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -1818,7 +1818,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("assumptions", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(1 == modules.size)
     // the root module and naturals
     val root = modules(rootName)
@@ -1863,11 +1863,41 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter
-      .loadFromSource("theorems", Source.fromString(text))
+      .loadFromSource(Source.fromString(text))
     assert(1 == modules.size) // Naturals, Sequences, and our module
     // the root module and naturals
     val root = modules(rootName)
     expectSourceInfoInDefs(root)
+  }
+
+  test("can load multiple modules from source") {
+    val auxText =
+      """|---- MODULE B ----
+         |BOp == TRUE
+         |==================
+         |""".stripMargin
+
+    val rootText =
+      """|---- MODULE A ----
+         |EXTENDS B
+         |Foo == BOp
+         |==================
+         |""".stripMargin
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource(Source.fromString(rootText), List(Source.fromString(auxText)))
+    // We've loaded two modules
+    assert(2 == modules.size)
+    // the root module and naturals
+    val root = modules(rootName)
+    // we end up with declarations from both modules
+    assert(2 == root.declarations.size)
+    // the first declaration in the root is from the extended module B
+    root.declarations(0) match {
+      case TlaOperDecl("BOp", _, body) =>
+        assert(ValEx(TlaBool(true)) == body)
+      case d => fail("unexpected declaration: " + d)
+    }
   }
 
   ////////////////////////////////////////////////////////////////////

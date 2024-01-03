@@ -7,12 +7,26 @@
 
  This specification is annotated with the new Apalache types.
  *)
-EXTENDS Integers, FiniteSets
+EXTENDS Integers, FiniteSets, Variants, TwoPhaseTyped_typedefs
 
+\* ANCHOR: constructors
+\* @type: $message;
+MkCommit == Variant("Commit", "0_OF_NIL")
+
+\* @type: $message;
+MkAbort == Variant("Abort", "0_OF_NIL")
+
+\* @type: RM => $message;
+MkPrepared(rm) == Variant("Prepared", rm)
+\* ANCHOR_END: constructors
+
+\* ANCHOR: constants
 CONSTANT
     \* @type: Set(RM);
     RM \* The set of resource managers
+\* ANCHOR_END: constants
 
+\* ANCHOR: vars1
 VARIABLES
   \* @type: RM -> Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
@@ -21,14 +35,17 @@ VARIABLES
   \* @type: Set(RM);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
                  \* messages.
-  \* @type: Set([type: Str, rm: RM]);
-  msgs           
+\* ANCHOR_END: vars1
+\* ANCHOR: vars2
+  \* @type: Set($message);
+  msgs
+\* ANCHOR_END: vars2
 
-\* @type: Set([type: Str, rm: RM]);
+\* @type: Set($message);
 Message ==
-  ({[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
-   \union
-   {[type |-> t] : t \in {"Commit", "Abort"}})
+  { MkPrepared(rm): rm \in RM }
+    \union
+  { MkAbort, MkCommit }
 
  
 TPTypeOK ==
@@ -59,7 +76,7 @@ TMRcvPrepared(rm) ==
   (* The TM receives a $"Prepared"$ message from resource manager $rm$.    *)
   (*************************************************************************)
   /\ tmState = "init"
-  /\ [type |-> "Prepared", rm |-> rm] \in msgs
+  /\ MkPrepared(rm) \in msgs
   /\ tmPrepared' = tmPrepared \union {rm}
   /\ UNCHANGED <<rmState, tmState, msgs>>
 
@@ -71,7 +88,7 @@ TMCommit ==
   /\ tmState = "init"
   /\ tmPrepared = RM
   /\ tmState' = "committed"
-  /\ msgs' = msgs \union {[type |-> "Commit"]}
+  /\ msgs' = msgs \union { MkCommit }
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 TMAbort ==
@@ -80,7 +97,7 @@ TMAbort ==
   (*************************************************************************)
   /\ tmState = "init"
   /\ tmState' = "aborted"
-  /\ msgs' = msgs \union {[type |-> "Abort"]}
+  /\ msgs' = msgs \union { MkAbort }
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 \* @type: (RM) => Bool;
@@ -90,7 +107,7 @@ RMPrepare(rm) ==
   (*************************************************************************)
   /\ rmState[rm] = "working"
   /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
-  /\ msgs' = msgs \union {[type |-> "Prepared", rm |-> rm]}
+  /\ msgs' = msgs \union { MkPrepared(rm) }
   /\ UNCHANGED <<tmState, tmPrepared>>
   
 \* @type: (RM) => Bool;
@@ -108,7 +125,7 @@ RMRcvCommitMsg(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ is told by the TM to commit.                    *)
   (*************************************************************************)
-  /\ [type |-> "Commit"] \in msgs
+  /\ MkCommit \in msgs
   /\ rmState' = [rmState EXCEPT ![rm] = "committed"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 
@@ -117,7 +134,7 @@ RMRcvAbortMsg(rm) ==
   (*************************************************************************)
   (* Resource manager $rm$ is told by the TM to abort.                     *)
   (*************************************************************************)
-  /\ [type |-> "Abort"] \in msgs
+  /\ MkAbort \in msgs
   /\ rmState' = [rmState EXCEPT ![rm] = "aborted"]
   /\ UNCHANGED <<tmState, tmPrepared, msgs>>
 

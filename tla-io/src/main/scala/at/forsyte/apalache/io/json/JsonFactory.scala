@@ -2,6 +2,7 @@ package at.forsyte.apalache.io.json
 
 /**
  * Generates JsonRepresentation objects on demand
+ *
  * @tparam T
  *   Any class extending JsonRepresentation
  */

@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * Encodes the construction of a function f = [x \in S |-> e]. We carry the domain set in a separate set cell. The
@@ -18,17 +18,18 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
   override protected def rewriteFunCtor(
       state: SymbState,
       funT1: FunT1,
-      mapEx: TlaEx,
+      mapExRaw: TlaEx,
       varName: String,
       setEx: TlaEx) = {
     // Rewrite the set expression into a memory cell
     var nextState = rewriter.rewriteUntilDone(state.setRex(setEx))
     val domainCell = nextState.asCell
-    val domainCells = nextState.arena.getHas(domainCell)
+    val domElemPtrs = nextState.arena.getHasPtr(domainCell)
+    val mapEx = tla.unchecked(mapExRaw)
 
     // We calculate and propagate the set of pairs <arg,res> for cex generation
-    val pairEx = tla.tuple(tla.name(varName).typed(funT1.arg), mapEx).typed(TupT1(funT1.arg, funT1.res))
-    val (afterMapPairExState, relationCells) = mapCells(nextState, pairEx, varName, domainCells)
+    val pairEx = tla.tuple(tla.name(varName, funT1.arg), mapEx)
+    val (afterMapPairExState, relationCellPtrs) = mapCellPtrs(nextState, pairEx, varName, domElemPtrs)
     nextState = afterMapPairExState
 
     // A constant SMT array constrained to a default value is used to encode the function
@@ -39,23 +40,33 @@ class FunCtorRuleWithArrays(rewriter: SymbStateRewriter) extends FunCtorRule(rew
     // We construct a set of pairs and have it store the pairs <arg,res> produced
     nextState = nextState.updateArena(_.appendCellNoSmt(CellTFrom(SetT1(TupT1(funT1.arg, funT1.res)))))
     val relation = nextState.arena.topCell
-    nextState = nextState.updateArena(_.appendHasNoSmt(relation, relationCells: _*))
+    nextState = nextState.updateArena(_.appendHasNoSmt(relation, relationCellPtrs: _*))
     nextState = nextState.updateArena(_.setCdm(funCell, relation))
+    // For the decoder to work, the pairs' arguments may need to be equated to the domain elements
+    nextState = constrainRelationArgs(nextState, rewriter, domainCell, relation)
 
     def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-      val inDomain = tla.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
-      val inRange = tla.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
-      val notInRange = tla.apalacheStoreNotInFun(rangeElem.toNameEx, funCell.toNameEx).typed(BoolT1)
+      // Domain membership with lazy equality
+      nextState = rewriter.lazyEq.cacheEqConstraints(nextState, domElemPtrs.map { p => (p.elem, domElem) })
+
+      nextState = nextState.updateArena(_.appendCell(BoolT1))
+      val inDomain = nextState.arena.topCell.toBuilder
+      // inAndEq checks if domElem is in domainCell
+      val elemsInAndEq = domElemPtrs.map { p => inAndEq(rewriter, p.elem, domElem, domainCell, lazyEq = true) }
+      rewriter.solverContext.assertGroundExpr(tla.eql(inDomain, tla.or(elemsInAndEq: _*)))
+
+      val inRange = tla.storeInSet(rangeElem.toBuilder, funCell.toBuilder, domElem.toBuilder)
+      val notInRange = tla.storeNotInFun(domElem.toBuilder, funCell.toBuilder)
       // Function updates are guarded by the inDomain predicate
-      val ite = tla.ite(inDomain, inRange, notInRange).typed(BoolT1)
+      val ite = tla.ite(inDomain, inRange, notInRange)
       rewriter.solverContext.assertGroundExpr(ite)
     }
 
     // Add SMT constraints
-    val rangeCells = relationCells.map(c => nextState.arena.getHas(c)(1))
-    for ((domElem, rangeElem) <- domainCells.zip(rangeCells))
-      addCellCons(domElem, rangeElem)
+    val rangeElems = relationCellPtrs.map(c => nextState.arena.getHas(c.elem)(1))
+    for ((domElem, rangeElem) <- domElemPtrs.zip(rangeElems))
+      addCellCons(domElem.elem, rangeElem)
 
-    nextState.setRex(funCell.toNameEx)
+    nextState.setRex(funCell.toBuilder)
   }
 }

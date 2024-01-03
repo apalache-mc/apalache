@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.SetT1
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g., consider { Q
@@ -16,7 +15,7 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
 
   // Confringo is the explosion curse from Harry Potter. To let you know that your SMT solver will probably explode.
   def confringo(state: SymbState, set: ArenaCell): SymbState = {
-    val elems = state.arena.getHas(set) // S has n elements
+    val elems = state.arena.getHasPtr(set) // S has n elements
     var arena = state.arena // we change the arena a lot
     // Enumerate the bit vectors of length 1..n and construct a set for each vector.
     // Since we do not know statically, which cells belong to S, this method may construct equal sets,
@@ -29,10 +28,11 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
       val subsetCell = arena.topCell
       arena = arena.appendHas(subsetCell, filtered: _*)
       for (e <- filtered) {
-        val inSubset = tla.apalacheStoreInSet(e.toNameEx, subsetCell.toNameEx)
+        val elem = e.elem
+        val inSubset = tla.storeInSet(elem.toBuilder, subsetCell.toBuilder)
         val notInSubset =
-          tla.apalacheStoreNotInSet(e.toNameEx, subsetCell.toNameEx) // This ensures that e is not in subsetCell
-        val inSet = tla.apalacheSelectInSet(e.toNameEx, set.toNameEx)
+          tla.storeNotInSet(elem.toBuilder, subsetCell.toBuilder) // This ensures that e is not in subsetCell
+        val inSet = tla.selectInSet(elem.toBuilder, set.toBuilder)
         rewriter.solverContext.assertGroundExpr(tla.ite(inSet, inSubset, notInSubset))
       }
       subsetCell
@@ -55,9 +55,9 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     // create a cell for the powerset, yeah, it is crazy, but hopefully these subsets are small
     arena = arena.appendCell(SetT1(set.cellType.toTlaType1))
     val powsetCell = arena.topCell
-    arena = arena.appendHas(powsetCell, subsets: _*)
+    arena = arena.appendHas(powsetCell, subsets.map(FixedElemPtr): _*)
     for (subset <- subsets) {
-      rewriter.solverContext.assertGroundExpr(tla.apalacheStoreInSet(subset.toNameEx, powsetCell.toNameEx))
+      rewriter.solverContext.assertGroundExpr(tla.storeInSet(subset.toBuilder, powsetCell.toBuilder))
     }
 
     // that's it!

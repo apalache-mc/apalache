@@ -1,8 +1,8 @@
 # ADR-007: Apalache Package Structure Guidelines
 
-| author       | revision |
-| ------------ | --------:|
-| Jure Kukovec |        1 |
+| author       | revision  |
+| ------------ | --------: |
+| Jure Kukovec | 1         |
 
 This ADR documents the design policies guiding the package and dependency structure of Apalache.
 When introducing new classes, use the guidelines defined below to determine which package to place them in.

@@ -613,7 +613,7 @@ class Builder {
   }
 
   /**
-   * Apply the operator [[ApalacheOper.mkSeq]].
+   * Apply the operator [[oper.ApalacheOper.mkSeq]].
    *
    * @param lenEx
    *   non-negative length of the sequence
@@ -639,7 +639,7 @@ class Builder {
   }
 
   def apalacheSelectInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheInternalOper.selectInSet, elem, fun)
+    BuilderOper(ApalacheInternalOper.selectInFun, elem, fun)
   }
 
   def apalacheStoreInSet(elem: BuilderEx, set: BuilderEx): BuilderEx = {
@@ -655,7 +655,7 @@ class Builder {
   }
 
   def apalacheStoreNotInFun(elem: BuilderEx, fun: BuilderEx): BuilderEx = {
-    BuilderOper(ApalacheInternalOper.storeNotInSet, elem, fun)
+    BuilderOper(ApalacheInternalOper.storeNotInFun, elem, fun)
   }
 
   def apalacheSmtMap(mapOper: TlaOper, inputSet: BuilderEx, resultSet: BuilderEx): BuilderEx = {
@@ -664,6 +664,84 @@ class Builder {
 
   def apalacheUnconstrainArray(arrayElemName: BuilderEx): BuilderEx = {
     BuilderOper(ApalacheInternalOper.unconstrainArray, arrayElemName)
+  }
+
+  // variants
+
+  /**
+   * Construct a variant
+   *
+   * @param tagName
+   *   the tag to be associated with the value
+   * @param valueEx
+   *   the value associated with the tag
+   * @return
+   *   a new variant
+   */
+  def variant(tagName: String, valueEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variant, str(tagName), valueEx)
+  }
+
+  /**
+   * Filter a set of variants by tag name.
+   *
+   * @param tagName
+   *   a tag value to use as a filter
+   * @param setEx
+   *   a set of variants
+   * @return
+   *   a set of the values extracted for the given tag
+   */
+  def variantFilter(tagName: String, setEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantFilter, str(tagName), setEx)
+  }
+
+  /**
+   * Get the tag name associated with a variant.
+   *
+   * @param variantEx
+   *   a variant expression
+   * @return
+   *   the tag name associated with the variant
+   */
+  def variantTag(variantEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantTag, variantEx)
+  }
+
+  /**
+   * Unsafely extract the value associated with a tag. If the tag name is different from the actual tag, return some
+   * value of proper type.
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @return
+   *   the value extracted from the variant, when tagged with tagName; otherwise, return some value
+   */
+  def variantGetUnsafe(
+      tagName: String,
+      variantEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantGetUnsafe, str(tagName), variantEx)
+  }
+
+  /**
+   * Return the value associated with the tag, when the tag equals to __tagName. Otherwise, return __elseValue.
+   *
+   * @param tagName
+   *   a tag value (string)
+   * @param variantEx
+   *   a variant expression
+   * @param defaultEx
+   *   default expression
+   * @return
+   *   the value extracted from the variant
+   */
+  def variantGetOrElse(
+      tagName: String,
+      variantEx: BuilderEx,
+      defaultEx: BuilderEx): BuilderEx = {
+    BuilderOper(VariantOper.variantGetOrElse, str(tagName), variantEx, defaultEx)
   }
 
   private val m_nameMap: Map[String, TlaOper] =
@@ -753,13 +831,20 @@ class Builder {
         ApalacheOper.foldSet.name -> ApalacheOper.foldSet,
         ApalacheOper.foldSeq.name -> ApalacheOper.foldSeq,
         ApalacheInternalOper.selectInSet.name -> ApalacheInternalOper.selectInSet,
+        ApalacheInternalOper.selectInFun.name -> ApalacheInternalOper.selectInFun,
         ApalacheInternalOper.storeInSet.name -> ApalacheInternalOper.storeInSet,
         ApalacheInternalOper.storeNotInSet.name -> ApalacheInternalOper.storeNotInSet,
+        ApalacheInternalOper.storeNotInFun.name -> ApalacheInternalOper.storeNotInFun,
         ApalacheInternalOper.smtMap(TlaBoolOper.and).name -> ApalacheInternalOper.smtMap(TlaBoolOper.and),
         ApalacheInternalOper.smtMap(TlaBoolOper.or).name -> ApalacheInternalOper.smtMap(TlaBoolOper.or),
         ApalacheInternalOper.unconstrainArray.name -> ApalacheInternalOper.unconstrainArray,
         ApalacheOper.setAsFun.name -> ApalacheOper.setAsFun,
         ApalacheOper.guess.name -> ApalacheOper.guess,
+        VariantOper.variant.name -> VariantOper.variant,
+        VariantOper.variantTag.name -> VariantOper.variantTag,
+        VariantOper.variantGetUnsafe.name -> VariantOper.variantGetUnsafe,
+        VariantOper.variantGetOrElse.name -> VariantOper.variantGetOrElse,
+        VariantOper.variantFilter.name -> VariantOper.variantFilter,
     )
 
   def byName(operatorName: String, args: BuilderEx*): BuilderEx = {

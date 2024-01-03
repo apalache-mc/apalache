@@ -18,7 +18,10 @@ import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
 class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging {
   def parseAndSave(uid: UID, node: OpDefOrDeclNode): Unit = {
     val commentText = locateComments(node)
-
+      // Sany for some reason inserts extra line breaks after one-line comments
+      // and removing blank lines in comment scannot break the annotation parsing semantics,
+      // and makes them more regular anyhow.
+      .replace("\n\n", "\n")
     val (freeText, annotationsAsText) = CommentPreprocessor()(commentText)
     val annotations = annotationsAsText.map(AnnotationParser.parse).flatMap {
       case Right(parsed) =>
@@ -30,7 +33,14 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
         // that look like malformed annotations, e.g., CONSTANT definitions @modelParameterConstants:0Foo
         val loc = node.getLocation
         val msg = "[%s:%d:%d-%d:%d]: Syntax error in annotation -- %s"
-          .format(loc.source(), loc.beginLine(), loc.beginColumn(), loc.endLine(), loc.endColumn(), message)
+          .format(
+              loc.source(),
+              loc.beginLine(),
+              loc.beginColumn(),
+              loc.endLine(),
+              loc.endColumn(),
+              message,
+          )
         logger.warn(msg)
         None
     }

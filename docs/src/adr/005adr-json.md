@@ -1,8 +1,8 @@
 # ADR-005: JSON Serialization Format
 
-| author       | revision |
-| ------------ | --------:|
-| Jure Kukovec |        1.1 |
+| author       | revision  |
+| ------------ | --------: |
+| Jure Kukovec | 1.1       |
 
 This ADR documents our decision on serializing the Apalache internal representation (IR) as JSON.
 The purpose of introducing such a serialization is to expose the internal representation in a standardized format, which can be used for persistent storage, or for analysis by third-party tools in the future.
@@ -205,7 +205,7 @@ The implementation of the serialization can be found in the class
 
 [ADR-004]: https://apalache.informal.systems/docs/adr/004adr-annotations.html
 
-[TlaToJson]: https://github.com/informalsystems/apalache/blob/unstable/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54
-[TlaEx]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10
-[TlaDecl]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9
-[TlaModule]: https://github.com/informalsystems/apalache/blob/unstable/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19
+[TlaToJson]: https://github.com/informalsystems/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54
+[TlaEx]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10
+[TlaDecl]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9
+[TlaModule]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19

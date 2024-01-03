@@ -19,23 +19,29 @@ EXTENDS Naturals, Sequences, Apalache
 (* of length \leq N.                                                       *)
 (***************************************************************************)
 
+\* ANCHOR: constants
 CONSTANT
     \* @type: Int;
     N              \** number of queens and size of the board
+\* ANCHOR_END: constants
 ASSUME N \in Nat \ {0}
 
 (* The following predicate determines if queens i and j attack each other
    in a placement of queens (represented by a sequence as above). *)
+\* ANCHOR: Attacks
 \* @type: (Seq(Int), Int, Int) => Bool;
 Attacks(queens,i,j) ==
+\* ANCHOR_END: Attacks
   \/ queens[i] = queens[j]                 \** same column
   \/ queens[i] - queens[j] = i - j         \** first diagonal
   \/ queens[j] - queens[i] = i - j         \** second diagonal
 
 (* A placement represents a (partial) solution if no two different queens
    attack each other in it. *)
+\* ANCHOR: IsSolution
 \* @type: Seq(Int) => Bool;
 IsSolution(queens) ==
+\* ANCHOR_END: IsSolution
   \A i \in 1 .. Len(queens)-1 : \A j \in i+1 .. Len(queens) : 
        ~ Attacks(queens,i,j) 
 
@@ -61,11 +67,13 @@ Solutions ==
 (* to the set todo.                                                        *)
 (***************************************************************************)
 
+\* ANCHOR: variables
 VARIABLES
     \* @type: Set(Seq(Int));
     todo,
     \* @type: Set(Seq(Int));
     sols
+\* ANCHOR_END: variables
 
 Init == /\ todo = { << >> }   \** << >> is a partial (but not full) solution
         /\ sols = {}          \** no full solution found so far
@@ -84,8 +92,10 @@ PlaceQueen == \E queens \in todo :
       ELSE /\ todo' = (todo \ {queens}) \union exts
            /\ sols' = sols
 
+\* ANCHOR: vars
 \* @type: <<Set(Seq(Int)), Set(Seq(Int))>>;
 vars == <<todo,sols>>
+\* ANCHOR_END: vars
 Spec == Init /\ [][PlaceQueen]_vars /\ WF_vars(PlaceQueen)
 
 TypeInvariant ==

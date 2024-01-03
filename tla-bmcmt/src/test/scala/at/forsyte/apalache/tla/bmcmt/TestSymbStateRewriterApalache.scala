@@ -1,9 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 
 trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
   private val parser = DefaultType1Parser
@@ -56,7 +57,7 @@ trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
     def isIn(no: Int): TlaEx = apalacheSelectInSet(relationCells(no).toNameEx, relation.toNameEx).as(BoolT1)
 
     // These checks cannot be applied to the arrays encoding because it does not have constraints for relation
-    if (rewriter.solverContext.config.smtEncoding == oopsla19Encoding) {
+    if (rewriter.solverContext.config.smtEncoding == SMTEncoding.OOPSLA19) {
       assertTlaExAndRestore(rewriter, nextState.setRex(not(isIn(1)).as(BoolT1)))
       assertTlaExAndRestore(rewriter, nextState.setRex(isIn(0)))
     }

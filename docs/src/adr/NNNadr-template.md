@@ -1,9 +1,8 @@
----
-authors: Octavia Buttler, Eduardo Galleano
-last revised: YYYY-MM-DD
----
-
 # ADR-{NNN}: {Decision Subject}
+
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Octavia Buttler, Eduardo Galleano      | YYYY-MM-DD      |
 
 **Table of Contents**
 

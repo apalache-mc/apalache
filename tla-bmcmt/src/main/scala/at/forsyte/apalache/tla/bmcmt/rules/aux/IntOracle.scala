@@ -2,9 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState}
-import at.forsyte.apalache.tla.lir.{IntT1, TlaEx}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.{IntT1, ValEx}
+import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types.tla
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,
@@ -22,11 +23,13 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
 
   override def size: Int = nvalues
 
-  override def whenEqualTo(state: SymbState, position: Int): TlaEx = {
-    tla.eql(intCell.toNameEx, tla.int(position))
-  }
+  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction =
+    tla.eql(intCell.toBuilder, tla.int(position))
 
-  override def caseAssertions(state: SymbState, assertions: Seq[TlaEx], elseAssertions: Seq[TlaEx] = Seq()): TlaEx = {
+  override def caseAssertions(
+      state: SymbState,
+      assertions: Seq[TBuilderInstruction],
+      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
     if (elseAssertions.nonEmpty && assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }
@@ -34,9 +37,11 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
     super.caseAssertions(state, assertions, elseAssertions)
   }
 
-  override def evalPosition(solverContext: SolverContext, state: SymbState): Int = {
-    solverContext.evalGroundExpr(intCell.toNameEx).asInstanceOf[Int]
-  }
+  override def evalPosition(solverContext: SolverContext, state: SymbState): Int =
+    solverContext.evalGroundExpr(intCell.toBuilder) match {
+      case ValEx(TlaInt(i)) => i.toInt
+      case _                => throw new IllegalStateException(s"Invalid call to evalPosition, not an integer.")
+    }
 }
 
 object IntOracle {

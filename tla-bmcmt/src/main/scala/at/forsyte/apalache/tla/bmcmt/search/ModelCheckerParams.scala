@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
-import at.forsyte.apalache.tla.bmcmt.{oopsla19Encoding, CheckerInput, SMTEncoding}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.CheckerInput
 
 object ModelCheckerParams {
 
@@ -18,7 +19,7 @@ object ModelCheckerParams {
  * A collection of model checker parameters that come from the user configuration.
  *
  * @param stepsBound
- *   Step bound for bounded model-checking, excluding the initial transition introduced by [[PrimingPass]]. E.g.,
+ *   Step bound for bounded model-checking, excluding the initial transition introduced by `PrimingPass`. E.g.,
  *   `stepsBound=1` includes one actual application of the transition operator (e.g., `Next`)
  *
  * @author
@@ -95,13 +96,13 @@ class ModelCheckerParams(
    */
   def idleTimeoutMs: Long = idleTimeoutSec * 1000
 
-  val smtTimeoutSec: Long =
-    BigInt(tuningOptions.getOrElse("search.smt.timeout", "0")).toLong
+  val smtTimeoutSec: Int =
+    tuningOptions.getOrElse("search.smt.timeout", "0").toInt
 
   /**
    * The SMT encoding to be used.
    */
-  var smtEncoding: SMTEncoding = oopsla19Encoding
+  var smtEncoding: SMTEncoding = SMTEncoding.OOPSLA19
 
   /**
    * Is random simulation mode enabled.
@@ -116,18 +117,9 @@ class ModelCheckerParams(
     tuningOptions.getOrElse("search.simulation.maxRun", "100").toInt
 
   /**
-   * Whether to save all visited simulation runs.
+   * Whether to save an example trace for each symbolic run.
    */
   val saveRuns: Boolean =
-    tuningOptions.getOrElse("search.simulation.saveRuns", "false").toBoolean
-
-  // does the transition number satisfy the given filter at the given step?
-  def stepMatchesFilter(stepNo: Int, transitionNo: Int): Boolean = {
-    if (transitionFilter.length <= stepNo) {
-      true // no filter applied
-    } else {
-      transitionNo.toString.matches("^%s$".format(transitionFilter(stepNo)))
-    }
-  }
+    tuningOptions.getOrElse("search.outputTraces", "false").toBoolean
 
 }

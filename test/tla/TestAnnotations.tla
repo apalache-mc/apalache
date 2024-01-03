@@ -4,11 +4,11 @@
 VARIABLES
     \* See issue #718
     \*
-    \* @typeAlias: ELEM =
+    \* @typeAlias: elem =
     \*             Int;
     \* @type:
     \*   Set(
-    \*        ELEM
+    \*        $elem
     \*      );
     \*
     \* See issue #757

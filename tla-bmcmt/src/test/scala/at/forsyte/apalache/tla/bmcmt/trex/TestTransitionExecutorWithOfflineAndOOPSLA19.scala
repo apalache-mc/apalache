@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.tla.bmcmt.oopsla19Encoding
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -18,7 +18,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestTransitionExecutorWithOfflineAndOOPSLA19 extends TestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = oopsla19Encoding))
+      .createZ3(None, SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19))
     withFixtureInContext(solver, new OfflineExecutionContext(_, new IncrementalRenaming(new IdleTracker)), test)
   }
 }

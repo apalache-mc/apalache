@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TlaExTransformation, TransformationTracker}
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 
 /**
  * <p>A simplifier from TLA+ to KerA+. This transformation assumes that all operator definitions and internal
@@ -26,7 +26,14 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
    * Partial transformers, applied left-to-right.
    */
   override val partialTransformers =
-    List(transformAssignments, transformLogic, transformSets, transformTuples, transformRecords, transformControl)
+    List(
+        transformAssignments,
+        transformLogic,
+        transformSets,
+        transformTuples,
+        transformRecords,
+        transformControl,
+    )
 
   override def apply(expr: TlaEx): TlaEx = {
     LanguageWatchdog(FlatLanguagePred()).check(expr)

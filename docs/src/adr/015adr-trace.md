@@ -1,14 +1,8 @@
----
-
-**authors:** Igor Konnov
-
-**proposed by:** Vitor Enes, Andrey Kupriyanov
-
-**last revised:** 2022-06-01
-
----
-
 # ADR-015: Informal Trace Format in JSON
+
+| authors                                | proposed by                   | last revised |
+| -------------------------------------- | ----------------------------  |-------------:|
+| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov |   2023-09-14 |
 
 **Table of Contents**
 
@@ -27,6 +21,12 @@ by Apalache. This makes tool integration harder. It also make it hard to
 communicate counterexamples to engineers who are not familiar with TLA+. This
 ADR-015 contains a very simple format that does not require any knowledge of
 TLA+ and can be easily integrated into other tools.
+
+## Revisions
+
+**Rev. 2023-09-14.** Each integer value `num` is now represented as `{ #bigint: "num" }`.
+The use of JSON numbers is not allowed anymore. This simplifies custom parsers for ITF,
+see [Consequences](#consequences).
 
 ## Context
 
@@ -282,11 +282,8 @@ specified in the field `vars`. Each state must define a value for every specifie
 
 1. A JSON string literal, e.g., `"hello"`. TLA+ strings are written as strings in this format.
 
-1. A JSON integer, e.g., 123. According to [RFC7159][], JSON integers must be in the range: `[-(2**53)+1, (2**53)-1]`.
-   Integers in this range *may be* written as JSON integers.
-
 1. A big integer of the following form: `{ "#bigint": "[-][0-9]+" }`. We are using this format, as many JSON parsers
-   impose limits on integer values, see [RFC7159][]. Big and small integers *may be*
+   impose limits on integer values, see [RFC7159][]. Big and small integers *must be*
    written in this format.
 
 1. A list of the form `[ <expr>, ..., <expr> ]`. A list is just a JSON array. TLA+ sequences are written as lists in this format.
@@ -312,14 +309,33 @@ representation>" }`. For instance, the set of all integers is represented with
 should not occur in normal traces. Usually, it indicates some form of an
 error.
 
+### ITF as input to Apalache
+To be able to read ITF traces, Apalache demands the following:
+  - The `#meta` field must be present
+  - The `#meta` field must contain a field `varTypes`, which is an object, the keys of which are the variables declared in `vars`, and the values are string representations of their types (as defined in [ADR002]).
+
+For example:
+```js
+"#meta": {
+  "varTypes": { 
+    "bank_of_boat": "Str", 
+    "who_is_on_bank": "Str -> Set(PERSON)" 
+  }
+}
+```
+
 ### Example
 
 The counterexample to `NoSolution` may be written in the ITF format as follows:
 
-```js
+```json
 {
   "#meta": {
-    "source": "MC_MissionariesAndCannibalsTyped.tla"
+    "source": "MC_MissionariesAndCannibalsTyped.tla",
+    "varTypes": { 
+      "bank_of_boat": "Str", 
+      "who_is_on_bank": "Str -> Set(PERSON)" 
+    }
   },
   "vars": [ "bank_of_boat", "who_is_on_bank" ],
   "states": [
@@ -407,7 +423,7 @@ proposed format in the [PR
 comments](https://github.com/informalsystems/apalache/pull/1190). In a
 regular approach we would treat all expressions uniformly. For example:
 
-```js
+```json
 // proposed form:
 "hello"
 // regular form:
@@ -442,10 +458,17 @@ we should keep it in mind and use schemas, when the need arises.
      Did it work, not work, was changed, upgraded, etc.
 -->
 
-Reserved for the future.
+We have found that the ITF format is easy to produce and relatively easy to parse.
+
+**Ambiguity in the representation of integers**. As it was brought up in the initial
+discussions, the choice between representing integers
+as JSON numbers, e.g., `123` and objects, e.g., `{ #bigint: "123" }`, makes it harder to
+write a parser of custom ITF traces. Hence, we have decided to keep only the object format,
+as the more general of the two representations. 
 
 
 [ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
-[MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/unstable/test/tla/MissionariesAndCannibalsTyped.tla
+[ADR002]: https://apalache.informal.systems/docs/adr/002adr-types.html
+[MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [RFC7159]: https://datatracker.ietf.org/doc/html/rfc7159.html

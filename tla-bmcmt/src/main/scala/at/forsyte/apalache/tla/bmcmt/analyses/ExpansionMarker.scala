@@ -35,7 +35,6 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       if (shallExpand) {
         // Expand the set as well as the underlying set!
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(underlyingSet))(tag))(tag)
       } else {
         // Do not expand the set itself, but expand the underlying set!
@@ -46,7 +45,8 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       if (shallExpand) {
         // Expand everything, including the function set.
-        logger.warn(s"The set $ex will be expanded. This will blow up the solver.")
+        // Expansion of function sets is not implemented yet, see:
+        // https://github.com/informalsystems/apalache/issues/1452
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,
@@ -63,7 +63,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
     case ex @ OperEx(op @ TlaOper.chooseBounded, name, set, pred) =>
       // CHOOSE does not require the set to be expanded
       val tag = ex.typeTag
-      OperEx(op, name, transform(false)(set), transform(false)(pred))(tag)
+      OperEx(op, name, transform(false)(set), transform(shallExpand)(pred))(tag)
 
     case ex @ OperEx(op @ ApalacheOper.guess, set) =>
       // Guess does not require the set to be expanded
@@ -73,11 +73,12 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
     case ex @ OperEx(op, name, set, pred) if op == TlaBoolOper.exists || op == TlaBoolOper.forall =>
       // non-skolemizable quantifiers require their sets to be expanded
       val tag = ex.typeTag
-      OperEx(op, name, transform(true)(set), transform(false)(pred))(tag)
+      OperEx(op, name, transform(true)(set), transform(shallExpand)(pred))(tag)
 
     case ex @ OperEx(op, elem, set)
-        if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.storeInSet ||
-          op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet =>
+        if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet || op == ApalacheInternalOper.selectInFun ||
+          op == ApalacheInternalOper.storeInSet || op == TlaSetOper.notin || op == ApalacheInternalOper.storeNotInSet ||
+          op == ApalacheInternalOper.storeNotInFun =>
       // when checking e \in S or e \notin S, we can keep S unexpanded, but e should be expanded
       val tag = ex.typeTag
       OperEx(op, transform(true)(elem), transform(false)(set))(tag)
@@ -90,11 +91,11 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
     case ex @ OperEx(op @ TlaSetOper.filter, name, set, pred) =>
       // For the moment, we require the set to be expanded. However, we could think of collecting constraints on the way.
       val tag = ex.typeTag
-      OperEx(op, name, transform(true)(set), transform(false)(pred))(tag)
+      OperEx(op, name, transform(true)(set), transform(shallExpand)(pred))(tag)
 
     case ex @ OperEx(op, body, args @ _*)
         if op == TlaSetOper.map || op == TlaFunOper.funDef || op == TlaFunOper.recFunDef =>
-      val tbody: TlaEx = transform(false)(body)
+      val tbody: TlaEx = transform(shallExpand)(body)
       val targs = args.map(transform(true))
       val tag = ex.typeTag
       OperEx(op, tbody +: targs: _*)(tag)

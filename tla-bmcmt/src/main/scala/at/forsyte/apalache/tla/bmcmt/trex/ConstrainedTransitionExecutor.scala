@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.tla.bmcmt.InvariantKind
 import at.forsyte.apalache.tla.bmcmt.rules.aux.Oracle
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
 import at.forsyte.apalache.tla.lir.{BoolT1, NameEx, OperEx, TlaEx, Typed}
@@ -100,12 +101,16 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
 
   override def nextState(): Unit = trex.nextState()
 
-  override def mayChangeAssertion(transitionNo: Int, assertion: TlaEx): Boolean =
-    trex.mayChangeAssertion(transitionNo, assertion)
+  override def mayChangeAssertion(
+      transitionNo: Int,
+      invariantKind: InvariantKind,
+      invariantNo: Int,
+      assertion: TlaEx): Boolean =
+    trex.mayChangeAssertion(transitionNo, invariantKind, invariantNo, assertion)
 
   override def assertState(assertion: TlaEx): Unit = trex.assertState(assertion)
 
-  override def sat(timeoutSec: Long): Option[Boolean] = trex.sat(timeoutSec)
+  override def sat(timeoutSec: Int): Option[Boolean] = trex.sat(timeoutSec)
 
   override def decodedExecution(): DecodedExecution = trex.decodedExecution()
 

@@ -1,6 +1,335 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.2 - 2023-12-01
+
+### Bug fixes
+
+- Fix missing support for default match cases in quint conversion (#2792)
+
+## 0.44.1 - 2023-12-01
+
+### Bug fixes
+
+- Fix truncation of SMT debug logs, see #2785
+
+## 0.44.0 - 2023-10-23
+
+### Breaking changes
+
+- Removed the (unused) `--nworkers` flag, see #2275
+
+### Bug fixes
+
+- Continue simulation on SMT timeout in enabledness check, see #2758
+
+## 0.43.0 - 2023-09-18
+
+### Features
+
+- - Revise the ITF format: Use only `{ "#bigint": "num" }`, even for small integers`
+
+## 0.42.0 - 2023-08-21
+
+### Breaking changes
+
+- Update Quint deserialization for compatibility with version > 0.13.0, see #2696
+
+### Bug fixes
+
+- Fix a bug with decoding unconstrained model values of uninterpreted types.
+
+## 0.41.3 - 2023-08-02
+
+### Bug fixes
+
+- Fixed a bug when decoding certain record types, see #2684
+
+## 0.41.2 - 2023-07-24
+
+## 0.41.1 - 2023-07-24
+
+### Bug fixes
+
+- Fixed deserialization of Quint `bigint`s, see #2661
+
+## 0.41.0 - 2023-07-20
+
+### Breaking changes
+
+- Fixed deserialization of large Quint integer values, see #2654
+
+## 0.40.7 - 2023-07-06
+
+### Bug fixes
+
+- Fix a bug when translating certain Quint tuple types, see #2634
+- Fix a typing issue when translating Quint name expressions, see #2635
+
+## 0.40.6 - 2023-07-04
+
+### Bug fixes
+
+- Fix an issue with translating Quint type variables, see #2629
+
+## 0.40.5 - 2023-06-30
+
+### Bug fixes
+
+- Increase max inbound gRPC message size, see #2623
+- Fix Quint translation of `Nat` and `Int`, see #2621
+
+## 0.40.4 - 2023-06-23
+
+### Bug fixes
+
+- Fixed a bug in pointer propagation, where sets cherrypicked from a powerset would always have the exact same pointers as the base set, instead of some subset thereof (though SMT constraints were added correctly). This broke counterexample reconstruction. See #2606
+- Fix translation of nested/shadowed "_" Quint lambda parameters, see #2608
+
+## 0.40.3 - 2023-06-19
+
+### Bug fixes
+
+- Fix handling of applied polymorphic operators in Quint. This increases the number of quint specs that we can successfully verify. (See #2552)
+
+## 0.40.2 - 2023-06-05
+
+### Bug fixes
+
+- Fix deserialization of Quint type and operator definitions. (See #2588)
+
+## 0.40.1 - 2023-06-02
+
+### Features
+
+- Membership tests between records and type-defining sets in `TypeOk` operators are now simplified to `TRUE`. This uses static type information to reduce the costs of verifying specs containing checks of the form  `TypeOk == rec \in [name_1: S1, ..., name_n: Sn]`. (See #723)
+
+### Bug fixes
+
+- Quint `run` declarations are now ignored, allow verification of quint specs including those definitions. (See #2572)
+
+## 0.40.0 - 2023-05-26
+
+### Breaking changes
+
+- Bump Z3 to v4.12.1, see #2565
+
+### Bug fixes
+
+- - fix pretty printing of `x \div y` and `x / y` (#2562)
+
+## 0.30.9 - 2023-05-08
+
+### Bug fixes
+
+- Fix conversion of quint records. See #2542.
+
+## 0.30.8 - 2023-04-17
+
+### Features
+
+- Add support for converting quint record operators. See #2530.
+
+### Bug fixes
+
+- Fix conversion of quint `setBy` operator. See #2531.
+
+## 0.30.7 - 2023-04-11
+
+### Bug fixes
+
+- Fix conversion of quint binding operators to support operator passed by name. See #2520.
+
+## 0.30.6 - 2023-04-01
+
+### Features
+
+- Add conversion of quint operators `range`, `foldr`, `assert`, `select`, and operators over maps (TLA+ functions). See #2439, #2489, #2492, #2493.
+- Support conversion of Quin't `nondet` bindings. See #2499.
+
+### Bug fixes
+
+- Fix quint list conversion. See #2495, #2509, #2510.
+- Fix conversion of quint let-binding. See #2501.
+
+## 0.30.5 - 2023-03-10
+
+### Breaking changes
+
+- Updated support for quint input, for compatibility with the (forthcoming) Quint v0.8.0. Output from earlier versions of quint will no longer be supported. See #2473 and https://github.com/informalsystems/quint/pull/689.
+
+### Features
+
+- Add support for quint tuples. See #2441.
+- Add support for converting (most) quint list operator. See #2440.
+- Added support for quint's variadic bindings in `forall` and `exists` operators. See #2471.
+
+## 0.30.4 - 2023-03-08
+
+### Bug fixes
+
+- Fix the typing of quint empty sets during conversion (see #2466)
+
+## 0.30.3 - 2023-03-06
+
+### Features
+
+- Added support for transpiling [quint](https://github.com/informalsystems/quint) booleans, integers, and sets (See #2451, #2449, #2445)
+
+### Bug fixes
+
+- Add support for first-order `CONSTANTS`, see #2389.
+- Fixed type checking of specs that use `Print` and `PrintT`, see #2456.
+
+## 0.30.2 - 2023-02-22
+
+### Features
+
+- Added support for inputing a spec written in a small fragment of quint (see #2421).
+
+### Bug fixes
+
+- Fix parsing of lines longer than 999 characters, see #2430
+
+## 0.30.1 - 2022-11-07
+
+### Features
+
+- Server port is now configurable via the `--port` CLI argument or `server.port` configuration key (see #2264).
+
+## 0.30.0 - 2022-10-31
+
+### Breaking changes
+
+- The format of parsing error outputs has been changed. Parsing error messages that used to be prefixed with `Error by TLA+ parser` are now prefixed with `Parsing error` and error messages that used to begin with `Syntax error in annotation:` will now also include the `Parsing error` prefix. This is being recorded as a breaking change since it could break scripts that rely on parsing stdout. (See #2204 and #2242.)
+
+### Features
+
+- Return JSON with success or failure data from RPC calls to the CmdExecutor service (see #2186).
+
+### Bug fixes
+
+- Write the SMT log also to a custom rundir specified with `--run-dir=`, see #2208
+
+## 0.29.2 - 2022-09-26
+
+### Features
+
+- Add [Option.tla](https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla) module providing support for option types (see #2097).
+
+### Bug fixes
+
+- Fix missing support for single-line comments inside of type annotations (see https://github.com/informalsystems/apalache/issues/2162)
+
+## 0.29.1 - 2022-09-12
+
+### Bug fixes
+
+- Report an error, when --max-error > 1 and no --view is provided, see #2144
+- Sort SMT disjuncts generated by `ZipOracle`, see #2149
+- Check invariants at step 0 with --discard-disabled=false, see #2158 and #2161
+
+## 0.29.0 - 2022-09-06
+
+### Breaking changes
+
+- Invalid configuration keys found in configuration sources (e.g., `apalache.cfg` files) will now produce a configuration error on load (see #2125).
+- The structure of the apalache.cfg has changed. All configuration keys that were previously supported have been moved under the `common` key. You can update your config files by prefixing each key from the previous versions with `commong.key-name`. For an example config file, see https://apalache.informal.systems/docs/apalache/config.html#file-format-and-supported-parameters. See #2065.
+- Introduce --features=no-rows for the old record syntax and switch to `--features=rows` by default
+
+### Features
+
+- The application configuration is now dumped into the `run-dir` when the `--debug` flag is supplied (see #2134).
+- All CLI parameters can now be configured via `apalache.cfg` files. See #2065 and documentation to follow.
+- From now on, the type checker reports an error, when the inferred type is more specific than the annotated type, see #2109.
+- The options `--init` and `--temporal` can now be given lists of names separated by commas, enabling users to check multiple invariants and temporal properties via the CLI (see #2074).
+
+## 0.28.0 - 2022-08-15
+
+### Breaking changes
+
+- Make example trace output optional on `check` via the `--output-traces` flag, see #2047
+- Timestamp in `datailed.log` changed to a full ISO 8601 timestamp, see #2064
+- Rename `--save-runs` to `--output-traces`, see #2047
+
+### Features
+
+- Added `funArrays` SMT encoding, see #2011
+
+## 0.27.0 - 2022-08-08
+
+### Breaking changes
+
+- Extended the invariant filter syntax, see #2034
+
+## 0.26.0 - 2022-07-26
+
+### Breaking changes
+
+- Rename base development branch from `unstable` to `main`, this is noted as a breaking change as it could break some CI process or scripts that deploy from source (see #1990)
+
+### Features
+
+- introduce new syntax for type aliases, see #1977
+
+### Documentation
+
+- update the syntax of type aliases in the documentation
+
+## 0.25.10 - 2022-07-18
+
+### Features
+
+- Add RPC to load spec to the experimental Shai server (see #1114)
+
+### Bug fixes
+
+- Add workaround for Sany parsing failures when running parallel instances of Apalache (see #1959)
+
+### Documentation
+
+- Added TLA+ syntax highlighting to the manual, see #1972
+
+## 0.25.9 - 2022-07-11
+
+### Features
+
+- - add generators for variants, see #1900
+- Add `VariantTag` and remove `VariantUnwrap`, see #1936
+
+### Bug fixes
+
+- Fixed `IncrementalRenaming` to rename operator parameters, see #1903
+
+### Documentation
+
+- Update HOWTO on types with new records and variants, see #1940
+- Update the tutorial on the type checker, see #1942
+- Add manual page on new variant types (see #1930)
+- Update ADR002 with the new syntax for variants, see #1922
+
+## 0.25.8 - 2022-07-04
+
+### Features
+
+- Add support for temporal properties, enabled via the `--temporal` flag, see #1815
+- Support variants in the model checker with `--features=rows`, see #1870
+- serialize variants to the ITF format, see #1898
+- Annotate counterexample traces to improve readability of temporal properties, see #1823
+- Replace PostTypeChecker pass with an additional predicate, see #1878
+
+### Bug fixes
+
+- Add support for checking temporal properties with primed expressions inside, see #1879
+- Fixed inlining of nullary polymorphic operators, see #1880
+- Fix crash with infinite sets in the arrays encoding, see #1802
+
+## 0.25.7 - 2022-06-13
+
+### Features
+
+- Add support for variants in the typechecker, see #1847
+
 ## 0.25.6 - 2022-06-06
 
 ### Features
@@ -878,13 +1207,13 @@
 
  * speed up by using constants instead of uninterpreted functions
 
- * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/tuning.md)
+ * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/tuning.md)
 
  * bugfix in logback configuration
 
 ## 0.4.0-pre1
 
- * type annotations and very simple type inference, see the [notes](https://github.com/informalsystems/apalache/blob/unstable/docs/src/apalache/types-and-annotations.md)
+ * type annotations and very simple type inference, see the [notes](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/types-and-annotations.md)
 
  * a dramatic speed up of many operators by using a `QF_NIA` theory and cherry pick
 

@@ -153,7 +153,7 @@ I propose the following high-level architecture:
 *NOTE*: The high-level sketch above assumes the new code organization proposed
 in [ADR 7][].
 
-[ADR 7]: https://github.com/informalsystems/apalache/tree/unstable/docs/src/adr/007adr-restructuring.md
+[ADR 7]: https://github.com/informalsystems/apalache/tree/main/docs/src/adr/007adr-restructuring.md
 
 #### API
 
@@ -170,7 +170,7 @@ with `Example`.
 
 In essence, this proposed API is only a thin wrapper around the
 [TransitionExecutor
-class](https://github.com/informalsystems/apalache/tree/unstable/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala).
+class](https://github.com/informalsystems/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala).
 During previous iterations of the proposed API we discussed exposing a
 higher-level API, targeted at meeting the requirements more directly.  However,
 discussion revealed that the expensive computational costs of SAT solving in

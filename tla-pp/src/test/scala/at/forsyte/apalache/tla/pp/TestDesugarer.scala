@@ -354,8 +354,13 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     // input: [f EXCEPT ![i][j] = e1, ![k][l] = e2]
     val input =
       tla
-        .except(tla.name("f") ? "f2", tla.tuple(tla.name("i") ? "i", tla.name("j") ? "i") ? "i2", tla.name("e1") ? "i",
-            tla.tuple(tla.name("k") ? "i", tla.name("l") ? "i") ? "i2", tla.name("e2") ? "i")
+        .except(
+            tla.name("f") ? "f2",
+            tla.tuple(tla.name("i") ? "i", tla.name("j") ? "i") ? "i2",
+            tla.name("e1") ? "i",
+            tla.tuple(tla.name("k") ? "i", tla.name("l") ? "i") ? "i2",
+            tla.name("e2") ? "i",
+        )
         .typed(exceptTypes, "f2")
     val output = desugarer.transform(input)
     // output: a series of definitions
@@ -704,8 +709,13 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     // input: [ x \in X, y \in Y |-> x + y ]
     val map =
       tla
-        .funDef(tla.plus(tla.name("x") ? "i", tla.name("y") ? "i") ? "i", tla.name("x") ? "i", tla.name("X") ? "I",
-            tla.name("y") ? "i", tla.name("Y") ? "I")
+        .funDef(
+            tla.plus(tla.name("x") ? "i", tla.name("y") ? "i") ? "i",
+            tla.name("x") ? "i",
+            tla.name("X") ? "I",
+            tla.name("y") ? "i",
+            tla.name("Y") ? "I",
+        )
         .typed(tupleTypes, "ii_to_i")
     val sugarFree = desugarer.transform(map)
     // output: [ x_y \in X \X Y |-> x_y[1] + x_y[2] ]
@@ -726,8 +736,13 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     // input: f[x \in S, y \in T] == x + y
     val input =
       tla
-        .recFunDef(tla.plus(tla.name("x") ? "i", tla.name("y") ? "i") ? "i", tla.name("x") ? "i", tla.name("S") ? "I",
-            tla.name("y") ? "i", tla.name("T") ? "I")
+        .recFunDef(
+            tla.plus(tla.name("x") ? "i", tla.name("y") ? "i") ? "i",
+            tla.name("x") ? "i",
+            tla.name("S") ? "I",
+            tla.name("y") ? "i",
+            tla.name("T") ? "I",
+        )
         .typed(tupleTypes, "ii_to_i")
     val output = desugarer.transform(input)
     // output: f[x_y \in S \X T] == x_y[1] + x_y[2]
@@ -803,7 +818,8 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
 
     val expected =
-      tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1)
+      desugarer.transform(
+          tla.or(tla.name("A").typed(BoolT1), tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)).typed(BoolT1))
     assert(expected.eqTyped(output))
   }
 
@@ -814,16 +830,16 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     val output = desugarer.transform(input)
 
     val expected =
-      tla
-        .and(
-            tla.name("A").typed(BoolT1),
-            tla
-              .not(
-                  tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)
-              )
-              .typed(BoolT1),
-        )
-        .typed(BoolT1)
+      desugarer.transform(tla
+            .and(
+                tla.name("A").typed(BoolT1),
+                tla
+                  .not(
+                      tla.unchanged(tla.name("B").typed(IntT1)).typed(BoolT1)
+                  )
+                  .typed(BoolT1),
+            )
+            .typed(BoolT1))
     assert(expected.eqTyped(output))
   }
 }

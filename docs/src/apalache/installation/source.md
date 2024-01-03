@@ -37,4 +37,4 @@ repository, you have three options after running `make`:
 [compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [sbt]: https://www.scala-sbt.org/1.x/docs/Setup.html
 [direnv]: https://direnv.net/
-[shell environment]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md#environment
+[shell environment]: https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#environment

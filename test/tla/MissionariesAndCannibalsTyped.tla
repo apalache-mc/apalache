@@ -28,22 +28,23 @@
 EXTENDS Integers, FiniteSets
 
 (***************************************************************************)
-(* The MCTypeAliases operator lets us group all type aliases together.     *)
-(* This makes it easy to rever to the defined aliases and the unique MC    *)
+(* With operator MissionariesAndCannibalsTyped_typedefs, we group all type *)
+(* in one place.                                                           *)
+(* This makes it easy to refer to the defined aliases and the unique       *)
 (* prefix protects against name clashes if this module is extended or      *)
 (* instantiated.                                                           *)
 (***************************************************************************)
 
-\* @typeAlias: PERSONS = Set(PERSON);
-MCTypeAliases == TRUE
+\* @typeAlias: persons = Set(PERSON);
+MissionariesAndCannibalsTyped_typedefs == TRUE
 
 (***************************************************************************)
 (* Next comes the declaration of the sets of missionaries and cannibals.   *)
 (***************************************************************************)
 CONSTANTS
-    \* @type: PERSONS;
+    \* @type: $persons;
     Missionaries,
-    \* @type: PERSONS;
+    \* @type: $persons;
     Cannibals 
 
 (***************************************************************************)
@@ -85,7 +86,7 @@ CONSTANTS
 VARIABLES
     \* @type: Str;
     bank_of_boat,
-    \* @type: Str -> PERSONS;
+    \* @type: Str -> $persons;
     who_is_on_bank 
 
 (***************************************************************************)
@@ -184,7 +185,7 @@ OtherBank(b) == IF b = "E" THEN "W" ELSE "E"
 (* of the two variables (their values in state t) in terms of their old    *)
 (* values (their values in state s).                                       *)
 (***************************************************************************)
-\* @type: (PERSONS, Str) => Bool;
+\* @type: ($persons, Str) => Bool;
 Move(S,b) ==
              /\ Cardinality(S) \in {1,2}
              /\ LET newThisBank  == who_is_on_bank[b] \ S

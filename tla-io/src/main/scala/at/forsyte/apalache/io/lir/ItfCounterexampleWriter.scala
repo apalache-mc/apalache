@@ -1,9 +1,10 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper}
-import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
+import at.forsyte.apalache.io.itf._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaOper.deinterleave
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSetOper, VariantOper}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
 
 import java.io.PrintWriter
 import java.util.Calendar
@@ -18,16 +19,12 @@ import scala.collection.mutable
  *   Igor Konnov
  */
 class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+    writer.write(ujson.write(ItfCounterexampleWriter.mkJson(rootModule, states), indent = 2))
+  }
+}
 
-  /**
-   * The minimal value that can be reliably represented with Double in JavaScript.
-   */
-  val MIN_JS_INT: BigInt = -BigInt(2).pow(53) + 1
-
-  /**
-   * The maximal value that can be reliably represented with Double in JavaScript.
-   */
-  val MAX_JS_INT: BigInt = BigInt(2).pow(53) - 1
+object ItfCounterexampleWriter {
 
   /**
    * Produce a JSON representation of a counterexample in the ITF format
@@ -49,20 +46,33 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     val mappedStates = state0 :: states.drop(2).map(_._2)
     // construct the root JSON object
     val rootMap: mutable.LinkedHashMap[String, ujson.Value] = mutable.LinkedHashMap()
-    rootMap.put("#meta",
-        ujson.Obj(
-            "format" -> "ITF",
-            "format-description" -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
-            "description" -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
-        ))
-    paramsToJson(rootModule).foreach(params => rootMap.put("params", params))
-    rootMap.put("vars", varsToJson(rootModule))
-    rootMap.put("states", ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
-    ujson.Obj(rootMap)
-  }
 
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-    writer.write(ujson.write(mkJson(rootModule, states), indent = 2))
+    val metaInformation: Map[String, ujson.Value] = {
+      val varTypes = Map[String, ujson.Value](
+          VAR_TYPES_FIELD -> ujson.Obj.from(
+              rootModule.varDeclarations.map { varDecl =>
+                varDecl.name -> TlaType1.fromTypeTag(varDecl.typeTag).toString
+              }
+          )
+      )
+      val descriptions = Map[String, ujson.Value](
+          FORMAT_DESCRIPTION_FIELD -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          DESCRIPTION_FIELD -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
+      )
+
+      varTypes ++ descriptions ++
+        Option.when(NameReplacementMap.store.nonEmpty)(VARIABLES_TO_EXPRESSIONS_FIELD -> NameReplacementMap.store)
+    }
+
+    rootMap.put(META_FIELD,
+        ujson.Obj(
+            FORMAT_FIELD -> "ITF",
+            metaInformation.toSeq: _*
+        ))
+    paramsToJson(rootModule).foreach(params => rootMap.put(PARAMS_FIELD, params))
+    rootMap.put(VARS_FIELD, varsToJson(rootModule))
+    rootMap.put(STATES_FIELD, ujson.Arr(mappedStates.zipWithIndex.map((stateToJson _).tupled): _*))
+    ujson.Obj.from(rootMap)
   }
 
   private def varsToJson(root: TlaModule): ujson.Value = {
@@ -80,18 +90,14 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   }
 
   private def stateToJson(state: Map[String, TlaEx], index: Int): ujson.Value = {
-    val meta = ujson.Obj("index" -> ujson.Num(index))
+    val meta = ujson.Obj(INDEX_FIELD -> ujson.Num(index))
     val map = state.toList.sortBy(_._1).map(p => (p._1, exToJson(p._2)))
-    ujson.Obj("#meta" -> meta, map: _*)
+    ujson.Obj(META_FIELD -> meta, map: _*)
   }
 
   private def exToJson: TlaEx => ujson.Value = {
     case ValEx(TlaInt(num)) =>
-      if (num >= MIN_JS_INT && num <= MAX_JS_INT) {
-        ujson.Num(num.toDouble)
-      } else {
-        ujson.Obj("#bigint" -> ujson.Str(num.toString(10)))
-      }
+      ujson.Obj(BIG_INT_FIELD -> ujson.Str(num.toString(10)))
 
     case ValEx(TlaBool(b)) =>
       ujson.Bool(b)
@@ -105,27 +111,30 @@ class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
           ujson.Arr(args.map(exToJson): _*)
 
         case _ =>
-          ujson.Obj("#tup" -> ujson.Arr(args.map(exToJson): _*))
+          ujson.Obj(TUP_FIELD -> ujson.Arr(args.map(exToJson): _*))
       }
 
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
-      ujson.Obj("#set" -> ujson.Arr(args.map(exToJson): _*))
+      ujson.Obj(SET_FIELD -> ujson.Arr(args.map(exToJson): _*))
 
     case OperEx(TlaFunOper.rec, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
       val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
       val values = valuesEs.map(exToJson)
-      ujson.Obj(mutable.LinkedHashMap(keys.zip(values): _*))
+      ujson.Obj.from(keys.zip(values))
+
+    case OperEx(VariantOper.variant, ValEx(TlaStr(tagName)), valueEx) =>
+      ujson.Obj(TAG_FIELD -> ujson.Str(tagName), VALUE_FIELD -> exToJson(valueEx))
 
     case OperEx(ApalacheOper.setAsFun, OperEx(TlaSetOper.enumSet, args @ _*)) =>
       val keyValueArrays = args.collect { case OperEx(TlaFunOper.tuple, key, value) =>
         ujson.Arr(exToJson(key), exToJson(value))
       }
-      ujson.Obj("#map" -> ujson.Arr(keyValueArrays: _*))
+      ujson.Obj(MAP_FIELD -> ujson.Arr(keyValueArrays: _*))
 
     case e =>
       // We don't know how to serialize this TLA+ expression (e.g., Int, Nat, FunSet, PowSet).
       // Output it as a serialization error.
-      ujson.Obj("#unserializable" -> ujson.Str(e.toString))
+      ujson.Obj(UNSERIALIZABLE_FIELD -> ujson.Str(e.toString))
   }
 }

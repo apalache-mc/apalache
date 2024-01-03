@@ -30,7 +30,9 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
       initTrans: List[TlaEx],
       nextTrans: List[TlaEx],
       inv: TlaEx,
-      maxErrors: Int): (CollectCounterexamplesModelCheckerListener, SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
+      maxErrors: Int): (
+      CollectCounterexamplesModelCheckerListener,
+      SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
     // construct checker input + parameters
     val notInv = not(inv).typed(types, "b")
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
@@ -48,6 +50,11 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     (listener, checker)
   }
 
+  private def assertResultHasNErrors(n: Int, result: Checker.CheckerResult) = assert(result match {
+    case Error(m, _) if m == n => true
+    case _                     => false
+  })
+
   test("finds cex for invariant violation at initial state") {
     // construct TLA+ module
     val initTrans = List(mkAssign("x", 2))
@@ -58,16 +65,15 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
     // check the outcome
     val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 1)
-    val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, checker.run())
 
     // check the counterexample
     assert(listener.counterExamples.length == 1)
-    val cex = listener.counterExamples.head.path
+    val cex = listener.counterExamples.head.states
     assert(cex.length == 2) // () --(init transition)--> initial state
-    assert(cex.forall(_._2 == 0)) // state number
-    assert(cex.head._1.isEmpty) // empty binding on 0th state
-    val (binding, _) = cex.last
+    assert(cex.forall(_._1 == "0")) // state number
+    assert(cex.head._2.isEmpty) // empty binding on 0th state
+    val (_, binding) = cex.last
     assert(binding.contains("x"))
     val valOfX = binding("x")
     assert(valOfX.isInstanceOf[ValEx])
@@ -84,16 +90,15 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
     // check the outcome
     val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 1)
-    val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, checker.run())
 
     // check the counterexample
     assert(listener.counterExamples.length == 1)
-    val cex = listener.counterExamples.head.path
+    val cex = listener.counterExamples.head.states
     assert(cex.length == 3) // () --(init transition)--> initial state
-    assert(cex.forall(_._2 == 0)) // state number
-    assert(cex.head._1.isEmpty) // empty binding on 0th state
-    val (binding, _) = cex.last
+    assert(cex.forall(_._1 == "0")) // state number
+    assert(cex.head._2.isEmpty) // empty binding on 0th state
+    val (_, binding) = cex.last
     assert(binding.contains("x"))
     val valOfX = binding("x")
     assert(valOfX.isInstanceOf[ValEx])
@@ -110,8 +115,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
     // check the outcome
     val (listener, checker) = getChecker(module, initTrans, nextTrans, inv, 3)
-    val outcome = checker.run()
-    assert(Error(3) == outcome)
+    assertResultHasNErrors(3, checker.run())
 
     // check the counterexample
     assert(listener.counterExamples.length == 3)

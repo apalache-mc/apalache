@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.transformations.{
   TlaDeclTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker,
 }
 
-import javax.inject.{Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 import scala.collection.immutable.HashMap
 
 // Igor @ 07.11.2019: refactoring needed
@@ -138,7 +138,7 @@ class IncrementalRenaming @Inject() (tracker: TransformationTracker) extends Tla
    * Incrementally rename all declarations in a module, so every variable is declared only once.
    */
   def renameInModule: TlaModuleTransformation = { mod =>
-    new TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
+    TlaModule(mod.name, syncAndNormalizeDs(mod.declarations).toSeq)
   }
 
   /**

@@ -6,7 +6,7 @@ name: Auto-update
 on:
   push:
     branches:
-      - unstable
+      - main
 
 jobs:
   Auto:

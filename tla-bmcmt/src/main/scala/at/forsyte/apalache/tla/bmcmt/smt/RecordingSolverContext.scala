@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.tla.bmcmt.ArenaCell
+import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
-import at.forsyte.apalache.tla.bmcmt.{Arena, ArenaCell}
 import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
 
@@ -142,7 +143,7 @@ class RecordingSolverContext private (
    * @param arena
    *   an arena
    */
-  override def checkConsistency(arena: Arena): Unit = {
+  override def checkConsistency(arena: PureArenaAdapter): Unit = {
     solverImpl.checkConsistency(arena)
   }
 
@@ -200,7 +201,7 @@ class RecordingSolverContext private (
    * @return
    *   Some(result), if no timeout happened; otherwise, None
    */
-  override def satOrTimeout(timeoutSec: Long): Option[Boolean] = {
+  override def satOrTimeout(timeoutSec: Int): Option[Boolean] = {
     solverImpl.satOrTimeout(timeoutSec)
   }
 

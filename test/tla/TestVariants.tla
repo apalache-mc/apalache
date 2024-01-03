@@ -1,60 +1,54 @@
---------------------------- MODULE TestVariants -------------------------------
-\* A test for the Variants module.
-\* This test should work when ADR-014 is implemented.
+---------------------------- MODULE TestVariants -------------------------------
+(*
+ * Functional tests for operators over variants.
+ * We introduce a trivial state machine and write tests as state invariants.
+ *)
 
-EXTENDS Integers, Sequences, Variants
+EXTENDS Integers, FiniteSets, Apalache, Variants
 
-Amounts == 1..10
+Init == TRUE
+Next == TRUE
 
-VARIABLES
-    \* @type: Int;
-    balance,
-    (*
-      @typeAlias: MESSAGE =
-          { tag: "req", ask: Int }
-        | { tag: "ack", success: Bool };
-      @type: Set(MESSAGE);
-     *)
-    msgs,
-    (*
-      @typeAlias: EVENT =
-          { tag: "withdraw", amount: Int }
-        | { tag: "lacking", amount: Int };
-      @type: Seq(EVENT);  
-     *)
-    log
+(* DEFINITIONS *)
 
-Init ==
-    /\ balance = 100
-    /\ msgs = {}
-    /\ log = << >>
+\* A variant that belongs to a more general type.
+\*
+\* @type: A(Int) | B({ value: Str });
+VarA == Variant("A", 1)
 
-SendRequest(ask) ==
-    /\ ask > 0
-    /\ LET m == Variant([ tag |-> "req", ask |-> ask ]) IN
-       msgs' = msgs \union { m }
-    /\ UNCHANGED <<balance, log>>
+\* A variant that belongs to a more general type.
+\*
+\* @type: A(Int) | B({ value: Str });
+VarB == Variant("B", [ value |-> "hello" ])
 
+\* A singleton variant, e.g., to be used with a filter.
+\*
+\* @type: C({ value: Str });
+VarC == Variant("C", [ value |-> "world" ])
 
-ProcessRequest(m) ==
-    /\  IF balance >= m.ask
-        THEN LET entry == Variant([ tag |-> "withdraw", amount |-> m.ask ]) IN
-             LET ack == Variant([ tag |-> "ack", success |-> TRUE ]) IN
-            /\ balance' = balance - m.ask
-            /\ log' = Append(log, entry)
-            /\ msgs' = (msgs \ { m }) \union { ack }
-        ELSE LET entry ==
-                Variant([ tag |-> "lacking", amount |-> m.ask - balance ]) IN
-             LET ack == Variant([ tag |-> "ack", success |-> FALSE ]) IN
-            /\ log' = Append(log, entry)
-            /\ msgs' = (msgs \ { m }) \union { ack }
-            /\ UNCHANGED balance
+TestVariant ==
+    VarA \in { VarA, VarB }
 
+TestVariantFilter ==
+    \E v \in VariantFilter("B", { VarA, VarB }):
+        v.value = "hello"
 
-Next ==
-    \/ \E ask \in Amounts:
-        SendRequest(ask)
-    \/ \E m \in FilterByTag(msgs, "req"):
-        ProcessRequest(m)
+TestVariantTag ==
+    VariantTag(VarC) = "C"
+
+TestVariantGetUnsafe ==
+    \* The unsafe version gives us only a type guarantee.
+    VariantGetUnsafe("A", VarB) \in Int
+
+TestVariantGetOrElse ==
+    \* When the tag name is different from the actual one, return the default value.
+    VariantGetOrElse("A", VarB, 12) = 12
+
+AllTests ==
+    /\ TestVariant
+    /\ TestVariantFilter
+    /\ TestVariantTag
+    /\ TestVariantGetUnsafe
+    /\ TestVariantGetOrElse
 
 ===============================================================================

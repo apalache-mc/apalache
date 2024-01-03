@@ -76,3 +76,8 @@ case class LPAREN() extends AnnotationToken {}
  * Right parenthesis ")".
  */
 case class RPAREN() extends AnnotationToken {}
+
+/**
+ * New line "\n" (or "\r\n" on windows)
+ */
+case class NL() extends AnnotationToken {}

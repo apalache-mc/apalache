@@ -3,7 +3,9 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run
+.PHONY: default all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run docs docs-view quint-fixtures tla-io/src/test/resources/tictactoe.json test/tla/booleans.qnt.json
+
+default: package
 
 all: apalache
 
@@ -37,6 +39,27 @@ test-coverage:
 integration: package
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
+# Generate fixtures needed to test quint integration
+quint-fixtures: tla-io/src/test/resources/tictactoe.json tla-io/src/test/resources/clockSync3.json test/tla/booleans.qnt.json
+
+TEMP_QNT_TTT_FILE := $(shell mktemp)
+tla-io/src/test/resources/tictactoe.json:
+	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/puzzles/tictactoe/tictactoe.qnt > $(TEMP_QNT_TTT_FILE)
+	quint typecheck --out $@ $(TEMP_QNT_TTT_FILE)
+	rm $(TEMP_QNT_TTT_FILE)
+
+TEMP_QNT_CS_FILE := $(shell mktemp)
+tla-io/src/test/resources/clockSync3.json:
+	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/classic/distributed/ClockSync/clockSync3.qnt > $(TEMP_QNT_CS_FILE)
+	quint typecheck --out $@ $(TEMP_QNT_CS_FILE)
+	rm $(TEMP_QNT_CS_FILE)
+
+TEMP_QNT_BOOL_FILE := $(shell mktemp)
+test/tla/booleans.qnt.json:
+	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/language-features/booleans.qnt > $(TEMP_QNT_BOOL_FILE)
+	quint typecheck --out $@ $(TEMP_QNT_BOOL_FILE)
+	rm $(TEMP_QNT_BOOL_FILE)
+
 # Build the docker image
 docker:
 	sbt docker
@@ -65,6 +88,12 @@ fmt-fix:
 clean:
 	sbt clean
 	rm -rf target/
+
+docs:
+	sbt unidoc
+
+docs-view:
+	sbt "browseApiDocs; ~unidoc"
 
 # Adapted from https://github.com/ocaml/dune/blob/d60cfbc0c78bb8733115d9100a8f7f6cb3dcf85b/Makefile#L121-L127
 # If the first argument is "run"...

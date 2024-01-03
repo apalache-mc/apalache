@@ -1,14 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import scala.collection.mutable
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.util.IntTupleIterator
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{SetT1, TlaEx}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.pp.TlaInputError
+
+import scala.collection.mutable
 
 /**
  * The base rules for a set map {e : x ∈ S}. This class was extracted from SetMapRule, as it was used in other rules
@@ -48,7 +50,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     }
 
     val (setsAsCells, _) = (sets.map(nextState.arena.findCellByNameEx).map(findSetCellAndElemType)).unzip
-    val elemsOfSets = setsAsCells.map(nextState.arena.getHas)
+    val elemsOfSets = setsAsCells.map(nextState.arena.getHasPtr)
     val setLimits = elemsOfSets.map(_.size - 1)
     // find the types of the target expression and of the target set
     val targetMapT = mapEx.typeTag.asTlaType1()
@@ -58,12 +60,12 @@ class MapBase(rewriter: SymbStateRewriter) {
     val resultSetCell = nextState.arena.topCell
 
     // enumerate all possible indices and map the corresponding tuples to cells
-    def byIndex(indices: Seq[Int]): Seq[ArenaCell] =
+    def byIndex(indices: Seq[Int]): Seq[ElemPtr] =
       elemsOfSets
         .zip(indices)
-        .map(Function.tupled { (s, i) =>
+        .map { case (s, i) =>
           s(i)
-        })
+        }
 
     val tupleIter = new IntTupleIterator(setLimits).map(byIndex)
 
@@ -81,7 +83,9 @@ class MapBase(rewriter: SymbStateRewriter) {
       mapEx: TlaEx,
       varNames: Seq[String],
       setsAsCells: Seq[ArenaCell],
-      cellsIter: Iterator[Seq[ArenaCell]]): (SymbState, Iterable[ArenaCell]) = {
+      ptrIter: Iterator[Seq[ElemPtr]]): (
+      SymbState,
+      Iterable[ArenaCell]) = {
     // we could have done it with foldLeft, but that would be even less readable
     var newState = state
 
@@ -92,9 +96,9 @@ class MapBase(rewriter: SymbStateRewriter) {
     // We will replace it with a better one in an array-based SMT encoding:
     // https://github.com/informalsystems/apalache/issues/365
     val resultsToSource = mutable.MultiDict.empty[ArenaCell, TlaEx]
-    for (argCells <- cellsIter) {
+    for (argPtrs <- ptrIter) {
       val (ns, resultCell, memEx) =
-        mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argCells)
+        mapCellsManyArgsOnce(newState, targetSetCell, mapEx, varNames, setsAsCells, argPtrs)
       newState = ns
       resultsToSource.addOne(resultCell -> memEx)
     }
@@ -123,12 +127,19 @@ class MapBase(rewriter: SymbStateRewriter) {
       mapEx: TlaEx,
       varNames: Seq[String],
       setsAsCells: Seq[ArenaCell],
-      valuesAsCells: Seq[ArenaCell]): (SymbState, ArenaCell, TlaEx) = {
+      valueCellPtrs: Seq[ElemPtr]): (
+      SymbState,
+      ArenaCell,
+      TlaEx) = {
+    val valuesAsCells = valueCellPtrs.map(_.elem)
     // bind the variables to the corresponding cells
-    val newBinding: Binding = varNames.zip(valuesAsCells).foldLeft(state.binding)((m, p) => Binding(m.toMap + p))
+    val newBinding: Binding =
+      varNames.zip(valuesAsCells).foldLeft(state.binding) { case (m, p) => Binding(m.toMap + p) }
     val mapState = state.setBinding(newBinding).setRex(mapEx)
     var nextState = rewriter.rewriteUntilDone(mapState)
     val mapResultCell = nextState.asCell
+
+    val tuplePtrCtor = PtrUtil.tuplePtr(valueCellPtrs)
 
     // bug 365: what can happen here is that several tuples are mapped to exactly the same cell, e.g., a record field.
     // We have to collect all source tuples for the same cell and say that the result belongs to the set,
@@ -146,7 +157,8 @@ class MapBase(rewriter: SymbStateRewriter) {
       }
     }
     // add the edge to the resulting set
-    nextState = nextState.updateArena(_.appendHas(targetSetCell, mapResultCell))
+    // the map result has the same pointer-type as the tuple in the product domain.
+    nextState = nextState.updateArena(_.appendHas(targetSetCell, tuplePtrCtor(mapResultCell)))
 
     // reset the binding and return the resulting cell and the source membership expression
     (nextState.setBinding(state.binding), mapResultCell, argsInSourceSets)

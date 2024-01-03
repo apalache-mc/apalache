@@ -31,29 +31,31 @@ CLI argument always takes precedence.
 Local configuration files support JSON and the JSON superset
 [HOCON](https://github.com/lightbend/config/blob/master/HOCON.md).
 
-Here's an example of a valid configuration for the currently 
-supported parameters, along with their default values: 
+Here's an example of a valid configuration for commonly used
+parameters, along with their default values:
 
 ```yaml
-# Directory in which to write all log files and records of each run
-out-dir: "${PWD}/_apalache-out"
+common  {
+    # Directory in which to write all log files and records of each run
+    out-dir = "${PWD}/_apalache-out"
 
-# Whether or not to write additional files, that report on intermediate
-# processing steps
-write-intermediate: false
+    # Whether or not to write additional files, that report on intermediate
+    # processing steps
+    write-intermediate = false
 
-# Whether or not to write the SMT profiling file
-profiling: false
+    # Whether or not to write general profiling data into the `out-dir`
+    profiling = false
 
-# Fixed directory into which generated files are written (absent by default)
-# run-dir: ~/my-run-dir
+    # Fixed directory into which generated files are written (absent by default)
+    # run-dir = ~/my-run-dir
+}
 ```
 
 A `~` found at the beginning of a file path will expanded into the value set for
 the user's home directory.
 
 Details on the effect of these parameters can be found in [Running the
-Too](./running.md).
+Tool](./running.md).
 
 ### Local configuration file
 

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.PassOptions
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -15,26 +16,29 @@ import com.typesafe.scalalogging.LazyLogging
  * @author
  *   Igor Konnov
  */
-class VCGenPassImpl @Inject() (options: PassOptions, tracker: TransformationTracker, writerFactory: TlaWriterFactory)
+class VCGenPassImpl @Inject() (
+    options: OptionGroup.HasChecker,
+    derivedPredicates: DerivedPredicates,
+    tracker: TransformationTracker,
+    writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {
 
   override def name: String = "VCGen"
 
   override def execute(tlaModule: TlaModule): PassResult = {
     val newModule =
-      options.get[List[String]]("checker", "inv") match {
-        case Some(invariants) =>
+      derivedPredicates.invariants match {
+        case List() =>
+          val deadlockMsg = if (options.checker.noDeadlocks) "" else " Only deadlocks will be checked"
+          logger.info(s"  > No invariant given.${deadlockMsg}")
+          tlaModule
+        case invariants =>
           invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            val optViewName = options.get[String]("checker", "view")
-            if (optViewName.isDefined) {
-              logger.info(s"  > Using state view ${optViewName.get}")
-            }
-            new VCGenerator(tracker).gen(mod, invName, optViewName)
+            val optView = derivedPredicates.view
+            optView.foreach { viewName => logger.info(s"  > Using state view ${viewName}") }
+            new VCGenerator(tracker).gen(mod, invName, optView)
           }
-        case None =>
-          logger.info("  > No invariant given. Only deadlocks will be checked")
-          tlaModule
       }
 
     writeOut(writerFactory, newModule)

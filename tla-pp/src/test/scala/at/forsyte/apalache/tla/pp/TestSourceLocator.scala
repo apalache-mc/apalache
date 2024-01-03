@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.aux._
@@ -10,6 +9,7 @@ import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator, Sourc
 import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{decorateWithPrime, TlaExTransformation, TransformationListener}
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -25,9 +25,17 @@ class TestSourceLocator extends AnyFunSuite {
   private val parser = DefaultType1Parser
 
   val types =
-    Map("i" -> parser("Int"), "b" -> parser("Bool"), "iiTOi" -> parser("(Int, Int) => Int"),
-        "iTOi" -> parser("Int => Int"), "X" -> parser("Int => Int"), "D2" -> parser("(Int => Int, Int) => Int"),
-        "TOi" -> parser("() => Int"), "rx" -> parser("[x: Int]"), "ii" -> parser("<<Int, Int>>"))
+    Map(
+        "i" -> parser("Int"),
+        "b" -> parser("Bool"),
+        "iiTOi" -> parser("(Int, Int) => Int"),
+        "iTOi" -> parser("Int => Int"),
+        "X" -> parser("Int => Int"),
+        "D2" -> parser("(Int => Int, Int) => Int"),
+        "TOi" -> parser("() => Int"),
+        "rx" -> parser("[x: Int]"),
+        "ii" -> parser("<<Int, Int>>"),
+    )
 
   // plus(a, b) == a + b
   val decl1: TlaOperDecl =
@@ -109,19 +117,21 @@ class TestSourceLocator extends AnyFunSuite {
     new SourceLocation(
         "filename",
         new SourceRegion(
-            new SourcePosition(uid.id.toInt),
-            new SourcePosition(uid.id.toInt),
+            new SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
+            new SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
         ),
     )
 
   // Arbitrary assignment, all exs get a unique position equal to their UID
   val sourceMap: SourceMap =
     ((exs.map(allUidsBelow) ++ decls.map(_.body).map(allUidsBelow))
-          .foldLeft(Set.empty[UID]) {
+      .foldLeft(Set.empty[UID]) {
         _ ++ _
-      }.map { x =>
-      x -> generateLoc(x)
-    }).toMap
+      }
+      .map { x =>
+        x -> generateLoc(x)
+      })
+      .toMap
 
   val exMap = new mutable.HashMap[UID, TlaEx]()
 

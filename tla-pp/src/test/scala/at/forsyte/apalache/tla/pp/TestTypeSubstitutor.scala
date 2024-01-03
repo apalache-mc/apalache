@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.{OperParam, VarT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.typecheck.etc.{EqClass, Substitution}
+import at.forsyte.apalache.tla.types.{EqClass, Substitution}
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
@@ -19,9 +19,15 @@ class TestTypeSubstitutor extends AnyFunSuite with BeforeAndAfterEach {
   private val parser = DefaultType1Parser
 
   private val types =
-    Map("b" -> parser("Bool"), "F" -> parser("a => <<a, a>>"), "a" -> parser("a"), "ii" -> parser("Int -> Int"),
-        "Fii" -> parser("(Int -> Int) => <<Int -> Int, Int -> Int>>"), "aa" -> parser("<<a, a>>"),
-        "ii2" -> parser("<<Int -> Int, Int -> Int>>"))
+    Map(
+        "b" -> parser("Bool"),
+        "F" -> parser("a => <<a, a>>"),
+        "a" -> parser("a"),
+        "ii" -> parser("Int -> Int"),
+        "Fii" -> parser("(Int -> Int) => <<Int -> Int, Int -> Int>>"),
+        "aa" -> parser("<<a, a>>"),
+        "ii2" -> parser("<<Int -> Int, Int -> Int>>"),
+    )
 
   override def beforeEach(): Unit = {}
 

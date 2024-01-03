@@ -1,11 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.typecheck.parser.DefaultType1Parser
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 
 trait TestSymbStateRewriterRowRecord extends RewriterBase {
   private val parser = DefaultType1Parser

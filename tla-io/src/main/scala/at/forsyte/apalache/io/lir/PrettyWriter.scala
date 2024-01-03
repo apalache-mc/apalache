@@ -1,15 +1,15 @@
 package at.forsyte.apalache.io.lir
 
-import java.io.{File, FileWriter, PrintWriter}
+import at.forsyte.apalache.io.PrettyPrinterError
+import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.lir._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
+import java.io.{File, FileWriter, PrintWriter}
 import scala.collection.immutable.{HashMap, HashSet}
-import at.forsyte.apalache.io.PrettyPrinterError
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -41,12 +41,55 @@ class PrettyWriter(
   private def prettyWriteDoc(doc: Doc): Unit = writer.write(pretty(doc, layout.textWidth).layout)
 
   def write(mod: TlaModule, extendedModuleNames: List[String] = List.empty): Unit =
-    prettyWriteDoc(toDoc(mod, extendedModuleNames))
+    prettyWriteDoc(modToDoc(mod, extendedModuleNames))
+
+  /**
+   * Pretty-prints the given decl twice: Once as valid TLA, and once (before the TLA expression) in a comment, where
+   * names of NameExs are replaced by their mapping in the nameReplacementMap. The output looks, for example, like this:
+   *
+   * {{{
+   *  (* State0 ==
+   *    ♢(x = 11) = FALSE
+   * /\ ♢(x = 11)_unroll = FALSE *)
+   * State0 ==
+   *    __temporal_t_1 = FALSE
+   * /\ __temporal_t_1_unroll = FALSE
+   * }}}
+   *
+   * Here, the NameReplacementMap used was
+   * {{{
+   *  "__temporal_t_1" -> "♢(x = 11)",
+   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
+   * }}}
+   *
+   * Here, the nameReplacementMap used was
+   * {{{
+   *  "__temporal_t_1" -> "♢(x = 11)",
+   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
+   * }}}
+   *
+   * Note that the expression and its comment are the same, but the names for {{{__temporal_t_1}}} and
+   * {{{__temporal_t_1_unroll}}} were substituted.
+   * @see
+   *   NameReplacementMap
+   */
+  def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
+    val declDoc = declToDoc(decl) <> line <> line
+    if (NameReplacementMap.store.isEmpty) {
+      prettyWriteDoc(declDoc)
+    } else {
+      val declComment = toCommentDoc(decl)
+      prettyWriteDoc(declComment <> line <> declDoc)
+    }
+  }
 
   // Declarations have a trailing empty line
-  def write(decl: TlaDecl): Unit = prettyWriteDoc(toDoc(decl) <> line <> line)
+  def write(decl: TlaDecl): Unit = {
+    prettyWriteDoc(declToDoc(decl) <> line <> line)
+  }
 
-  def write(expr: TlaEx): Unit = prettyWriteDoc(toDoc((0, 0), expr))
+  private def identity(x: String): String = x
+  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, identity))
 
   def writeComment(commentStr: String): Unit = {
     prettyWriteDoc(wrapWithComment(commentStr) <> line)
@@ -72,13 +115,21 @@ class PrettyWriter(
   private def moduleTerminalDoc: Doc =
     s"${List.fill(layout.textWidth)("=").mkString}" <> line
 
-  def toDoc(mod: TlaModule, extensionModuleNames: List[String] = List.empty): Doc = {
+  def modToDoc(mod: TlaModule, extensionModuleNames: List[String] = List.empty): Doc = {
     moduleNameDoc(mod.name) <>
       moduleExtendsDoc(extensionModuleNames) <>
-      lsep((mod.declarations.toList.map(toDoc)) :+ moduleTerminalDoc, line)
+      lsep((mod.declarations.toList.map(declToDoc(_))) :+ moduleTerminalDoc, line)
   }
 
-  def toDoc(parentPrecedence: (Int, Int), expr: TlaEx): Doc = {
+  /**
+   * Writes the provided expr as a doc. parentPrecedence determines whether and how to wrap expressions with braces.
+   * nameResolver substitutes NameExs by the value that results from applying it to the name. If no substitution is
+   * wanted, use (x: String) => x.
+   */
+  def exToDoc(
+      parentPrecedence: (Int, Int),
+      expr: TlaEx,
+      nameResolver: String => String): Doc = {
     expr match {
       case NameEx(x) if x == "LAMBDA" =>
         // this is reference to the lambda expression that was introduced ealier
@@ -94,12 +145,11 @@ class PrettyWriter(
                 ssep(top.formalParams.map(toDoc), "," <> softline)
 
             group("LAMBDA" <> space <> paramsDoc <> text(":") <> space <>
-              toDoc((0, 0), top.body))
+              exToDoc((0, 0), top.body, nameResolver))
         }
 
       case NameEx(x) =>
-        text(x)
-
+        text(nameResolver(x))
       case ValEx(TlaStr(str))   => text("\"%s\"".format(str))
       case ValEx(TlaInt(value)) => text(value.toString)
       case ValEx(TlaBool(b))    => text(if (b) "TRUE" else "FALSE")
@@ -112,7 +162,7 @@ class PrettyWriter(
       case NullEx => text("\"NOP\"")
 
       case OperEx(op @ TlaActionOper.prime, e) =>
-        toDoc(op.precedence, e) <> "'"
+        exToDoc(op.precedence, e, nameResolver) <> "'"
 
       case OperEx(TlaSetOper.enumSet) =>
         // an empty set
@@ -120,17 +170,17 @@ class PrettyWriter(
 
       case OperEx(op @ TlaSetOper.enumSet, arg) =>
         // a singleton set
-        group("{" <> toDoc(op.precedence, arg) <> "}")
+        group("{" <> exToDoc(op.precedence, arg, nameResolver) <> "}")
 
       case OperEx(op @ TlaSetOper.enumSet, args @ _*) =>
         // a set enumeration, e.g., { 1, 2, 3 }
-        val argDocs = args.map(toDoc(op.precedence, _))
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver))
         val commaSeparated = folddoc(argDocs.toList, _ <> text(",") <@> _)
         group(braces(group(softline <> nest(commaSeparated, layout.indent)) <> softline))
 
       case OperEx(op @ TlaFunOper.tuple, args @ _*) =>
         // a tuple, e.g., <<1, 2, 3>>
-        val argDocs = args.map(toDoc(op.precedence, _))
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver))
         val commaSeparated = ssep(argDocs.toList, text(",") <> softline)
         group(text("<<") <> nest(linebreak <> commaSeparated, layout.indent) <> linebreak <> ">>")
 
@@ -140,9 +190,9 @@ class PrettyWriter(
 
         if (args.isEmpty) {
           val const = tla.bool(op == TlaBoolOper.and)
-          toDoc(parentPrecedence, const)
+          exToDoc(parentPrecedence, const, nameResolver)
         } else {
-          val argDocs = args.map(toDoc(op.precedence, _)).toList
+          val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
           val grouped =
             if (argDocs.length <= 3) {
               val doc = nest(folddoc(argDocs, _ <> line <> sign <> space <> _))
@@ -161,8 +211,8 @@ class PrettyWriter(
           group(
               group(text(sign) <> space <> text(x.toString) <> space <>
                 text(PrettyWriter.binaryOps(TlaSetOper.in)) <> softline <>
-                toDoc(op.precedence, set) <> text(":")) <>
-                nest(line <> toDoc(op.precedence, pred))
+                exToDoc(op.precedence, set, nameResolver) <> text(":")) <>
+                nest(line <> exToDoc(op.precedence, pred, nameResolver))
           ) ///
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -172,7 +222,7 @@ class PrettyWriter(
         val doc =
           group(
               group(text(sign) <> space <> text(x.toString) <> ":") <>
-                nest(line <> toDoc(op.precedence, pred))
+                nest(line <> exToDoc(op.precedence, pred, nameResolver))
           ) ///
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -183,7 +233,10 @@ class PrettyWriter(
         val (keys, values) = (ks.map(_._1), vs.map(_._1))
         // format each key-value pair (k, v) into k |-> v
         val boxes =
-          keys.zip(values).map(p => group(strNoQuotes(p._1) <> space <> "|->" <> nest(line <> toDoc((0, 0), p._2)))) ///
+          keys
+            .zip(values)
+            .map(p =>
+              group(strNoQuotes(p._1) <> space <> "|->" <> nest(line <> exToDoc((0, 0), p._2, nameResolver)))) ///
 
         group(brackets(nest(ssep(boxes.toList, comma <> line))))
 
@@ -193,7 +246,9 @@ class PrettyWriter(
         val (keys, values) = (ks.map(_._1), vs.map(_._1))
         // format each key-value pair (k, v) into k: v
         val boxes =
-          keys.zip(values).map(p => group(strNoQuotes(p._1) <> ":" <> nest(line <> toDoc((0, 0), p._2)))) ///
+          keys
+            .zip(values)
+            .map(p => group(strNoQuotes(p._1) <> ":" <> nest(line <> exToDoc((0, 0), p._2, nameResolver)))) ///
 
         group(brackets(nest(ssep(boxes.toList, comma <> line))))
 
@@ -204,10 +259,12 @@ class PrettyWriter(
         val boxes =
           keys
             .zip(values)
-            .map(p => group(toDoc((0, 0), p._1) <> space <> "\\in" <> nest(line <> toDoc((0, 0), p._2)))) ///
+            .map(p =>
+              group(exToDoc((0, 0), p._1, nameResolver) <> space <> "\\in" <> nest(line <> exToDoc((0, 0), p._2,
+                  nameResolver)))) ///
 
         val binders = ssep(boxes.toList, comma <> line)
-        val bodyDoc = toDoc((0, 0), body)
+        val bodyDoc = exToDoc((0, 0), body, nameResolver)
         group(
             text("[") <>
               nest(line <> binders <> space <> "|->" <> nest(line <> bodyDoc)) <> line <>
@@ -222,46 +279,47 @@ class PrettyWriter(
           keys
             .zip(values)
             .map(p =>
-              group(toDoc(TlaSetOper.in.precedence, p._1) <> space <>
-                "\\in" <> nest(line <> toDoc(TlaSetOper.in.precedence, p._2)))) ///
+              group(exToDoc(TlaSetOper.in.precedence, p._1, nameResolver) <> space <>
+                "\\in" <> nest(line <> exToDoc(TlaSetOper.in.precedence, p._2, nameResolver)))) ///
 
         val binders = ssep(boxes.toList, comma <> line)
-        val bodyDoc = toDoc((0, 0), body)
+        val bodyDoc = exToDoc((0, 0), body, nameResolver)
         group(braces(nest(line <> bodyDoc <> text(":") <> nest(line <> binders)) <> line))
 
       case OperEx(TlaSetOper.filter, name, set, pred) =>
         val binding = group(
-            toDoc(TlaSetOper.in.precedence, name) <> softline <> "\\in" <>
-              nest(line <> toDoc(TlaSetOper.in.precedence, set))
+            exToDoc(TlaSetOper.in.precedence, name, nameResolver) <> softline <> "\\in" <>
+              nest(line <> exToDoc(TlaSetOper.in.precedence, set, nameResolver))
         ) ///
         // use the precedence (0, 0), as there is no need for parentheses around the predicate
-        val filter = toDoc((0, 0), pred)
+        val filter = exToDoc((0, 0), pred, nameResolver)
         group(
             text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}")
         ) ///
 
       // a function of multiple arguments that are packed into a tuple: don't print the angular brackets <<...>>
       case OperEx(op @ TlaFunOper.app, funEx, OperEx(TlaFunOper.tuple, args @ _*)) =>
-        val argDocs = args.map(toDoc(op.precedence, _))
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver))
         val commaSeparatedArgs = folddoc(argDocs.toList, _ <> text(",") <@> _)
         group(
-            toDoc(TlaFunOper.app.precedence, funEx) <> brackets(commaSeparatedArgs)
+            exToDoc(TlaFunOper.app.precedence, funEx, nameResolver) <> brackets(commaSeparatedArgs)
         ) ///
 
       // a function of a single argument
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         group(
-            toDoc(TlaFunOper.app.precedence, funEx) <>
-              text("[") <> nest(linebreak <> toDoc(TlaFunOper.app.precedence, argEx)) <> linebreak <> text("]")
+            exToDoc(TlaFunOper.app.precedence, funEx, nameResolver) <>
+              text("[") <> nest(linebreak <> exToDoc(TlaFunOper.app.precedence, argEx,
+                  nameResolver)) <> linebreak <> text("]")
         ) ///
 
       case OperEx(TlaControlOper.ifThenElse, pred, thenEx, elseEx) =>
         val prec = TlaControlOper.ifThenElse.precedence
         val doc =
           group(
-              text("IF") <> space <> toDoc(prec, pred) <> line <>
-                text("THEN") <> space <> toDoc(prec, thenEx) <> line <>
-                text("ELSE") <> space <> toDoc(prec, elseEx)
+              text("IF") <> space <> exToDoc(prec, pred, nameResolver) <> line <>
+                text("THEN") <> space <> exToDoc(prec, thenEx, nameResolver) <> line <>
+                text("ELSE") <> space <> exToDoc(prec, elseEx, nameResolver)
           ) ///
 
         wrapWithParen(parentPrecedence, prec, doc)
@@ -275,14 +333,14 @@ class PrettyWriter(
           guards
             .zip(updates)
             .map(p =>
-              group(toDoc(prec, p._1) <>
-                nest(line <> text("->") <> space <> toDoc(prec, p._2)))) ///
+              group(exToDoc(prec, p._1, nameResolver) <>
+                nest(line <> text("->") <> space <> exToDoc(prec, p._2, nameResolver)))) ///
 
         val pairsWithOther =
           if (otherEx == NullEx) {
             pairs
           } else {
-            pairs :+ group("OTHER" <> nest(line <> "->" <> space <> toDoc(prec, otherEx)))
+            pairs :+ group("OTHER" <> nest(line <> "->" <> space <> exToDoc(prec, otherEx, nameResolver)))
           }
 
         val doc = group(text("CASE") <> nest(space <> folddoc(pairsWithOther.toList, _ <> line <> "[]" <> space <> _)))
@@ -290,21 +348,22 @@ class PrettyWriter(
 
       case opex @ OperEx(TlaControlOper.caseNoOther, guardsAndUpdates @ _*) =>
         // delegate this case to CASE with OTHER by passing NullEx
-        toDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*)(opex.typeTag))
+        exToDoc(parentPrecedence, OperEx(TlaControlOper.caseWithOther, NullEx +: guardsAndUpdates: _*)(opex.typeTag),
+            nameResolver)
 
       case OperEx(TlaFunOper.except, funEx, keysAndValues @ _*) =>
         val (ks, vs) = TlaOper.deinterleave(keysAndValues)
 
         val indexDocs = ks.collect {
           case OperEx(TlaFunOper.tuple, indices @ _*) =>
-            val docs = indices.map(toDoc((0, 0), _))
+            val docs = indices.map(exToDoc((0, 0), _, nameResolver))
             ssep(docs.toList, text(",") <> softline)
 
           case _ =>
             throw new MalformedTlaError("Malformed expression", expr)
         }
 
-        val valueDocs = vs.map(v => toDoc((0, 0), v))
+        val valueDocs = vs.map(v => exToDoc((0, 0), v, nameResolver))
 
         // format each key-value pair (k, v) into ![k] = v
         val boxes =
@@ -318,7 +377,7 @@ class PrettyWriter(
         val updates = ssep(boxes.toList, comma <> line)
 
         val doc =
-          text("[") <> nest(line <> toDoc(TlaFunOper.except.precedence, funEx) <>
+          text("[") <> nest(line <> exToDoc(TlaFunOper.except.precedence, funEx, nameResolver) <>
             nest(softline <> text("EXCEPT") <> line <> updates)) <> line <>
             text("]")
 
@@ -327,10 +386,10 @@ class PrettyWriter(
       // a set of functions [S -> T]
       case OperEx(TlaSetOper.funSet, domain, coDomain) =>
         val doc =
-          toDoc(TlaSetOper.funSet.precedence, domain) <>
+          exToDoc(TlaSetOper.funSet.precedence, domain, nameResolver) <>
             nest(line <>
               text("->") <> space <>
-              toDoc(TlaSetOper.funSet.precedence, coDomain))
+              exToDoc(TlaSetOper.funSet.precedence, coDomain, nameResolver))
         group(brackets(doc))
 
       // a labelled expression L3(a, b) :: 42
@@ -347,7 +406,7 @@ class PrettyWriter(
 
         val doc =
           text(name) <> optionalArgs <> space <> "::" <>
-            nest(line <> toDoc(oper.precedence, decoratedExpr))
+            nest(line <> exToDoc(oper.precedence, decoratedExpr, nameResolver))
         group(wrapWithParen(parentPrecedence, oper.precedence, doc))
 
       // [A]_vars or <A>_vars
@@ -355,28 +414,28 @@ class PrettyWriter(
         def wrapper = if (op == TlaActionOper.stutter) brackets _ else angles _
 
         val doc =
-          wrapper(toDoc(op.precedence, action)) <>
-            "_" <> toDoc(op.precedence, vars)
+          wrapper(exToDoc(op.precedence, action, nameResolver)) <>
+            "_" <> exToDoc(op.precedence, vars, nameResolver)
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op, vars, action) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
         val sign = if (op == TlaTempOper.weakFairness) "WF" else "SF"
         val doc =
-          sign <> "_" <> toDoc(op.precedence, vars) <>
-            parens(toDoc(op.precedence, action))
+          sign <> "_" <> exToDoc(op.precedence, vars, nameResolver) <>
+            parens(exToDoc(op.precedence, action, nameResolver))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op, arg @ NameEx(_)) if PrettyWriter.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(op, arg @ ValEx(_)) if PrettyWriter.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(op, arg @ OperEx(_, _)) if PrettyWriter.unaryOps.contains(op) =>
         // a unary operator over unary operator, no parentheses needed
-        val doc = text(PrettyWriter.unaryOps(op)) <> toDoc(op.precedence, arg)
+        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(TlaFunOper.recFunRef) =>
@@ -386,36 +445,36 @@ class PrettyWriter(
       case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
         // in all other cases, introduce parentheses.
         // Yse the minimal precedence, as we are introducing the parentheses in any case.
-        text(PrettyWriter.unaryOps(op)) <> parens(toDoc((0, 0), arg))
+        text(PrettyWriter.unaryOps(op)) <> parens(exToDoc((0, 0), arg, nameResolver))
 
       // a binary infix operator that is mapped to Apalache IR
       case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
         val doc =
-          toDoc(op.precedence, lhs) <>
+          exToDoc(op.precedence, lhs, nameResolver) <>
             nest(line <>
               text(PrettyWriter.binaryOps(op)) <> space <>
-              toDoc(op.precedence, rhs))
+              exToDoc(op.precedence, rhs, nameResolver))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       // a user-defined binary infix operator such as :> or @@
       case OperEx(TlaOper.apply, NameEx(operName), lhs, rhs) if PrettyWriter.userDefinedBinaryOps.contains(operName) =>
         val doc =
-          toDoc((0, 0), lhs) <>
+          exToDoc((0, 0), lhs, nameResolver) <>
             nest(line <>
               text(operName) <> space <>
-              toDoc((0, 0), rhs))
+              exToDoc((0, 0), rhs, nameResolver))
         wrapWithParen(parentPrecedence, (0, 0), group(doc))
 
       // a n-ary operator that is mapped to Apalache IR
       case OperEx(op, args @ _*) if PrettyWriter.naryOps.contains(op) =>
         val sign = PrettyWriter.naryOps(op)
-        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
         val doc = nest(folddoc(argDocs, _ <> line <> sign <> space <> _))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op @ TlaOper.apply, NameEx(name), args @ _*) =>
         // apply an operator by its name, e.g., F(x)
-        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
         val doc =
           if (args.isEmpty) {
@@ -428,14 +487,14 @@ class PrettyWriter(
 
       case OperEx(op @ TlaOper.apply, operEx, args @ _*) =>
         // apply an operator by its definition, e.g., (LAMBDA x: x)(y)
-        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
-        val doc = group(parens(toDoc((0, 0), operEx)) <> parens(commaSeparated))
+        val doc = group(parens(exToDoc((0, 0), operEx, nameResolver)) <> parens(commaSeparated))
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(op, args @ _*) =>
-        val argDocs = args.map(toDoc(op.precedence, _)).toList
+        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
         // The standard operators may contain a '!' that refers to the standard module. Remove it.
         val lastIndexOfBang = op.name.lastIndexOf("!")
@@ -452,23 +511,34 @@ class PrettyWriter(
       case LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) =>
         // save the declaration and unpack it later, when NameEx(LAMBDA) is met
         lambdaStack = d :: lambdaStack // push the lambda definition on the top
-        val doc = toDoc((0, 0), body)
+        val doc = exToDoc((0, 0), body, nameResolver)
         lambdaStack = lambdaStack.tail // pop the lambda definition
         doc
 
       case LetInEx(body, decls @ _*) =>
         def eachDecl(d: TlaOperDecl) = {
-          group("LET" <> space <> toDoc(d) <> line <> "IN")
+          group("LET" <> space <> declToDoc(d) <> line <> "IN")
         }
 
         group(ssep(decls.map(eachDecl).toList, line) <>
-          line <> toDoc((0, 0), body))
+          line <> exToDoc((0, 0), body, nameResolver))
 
       case expr => throw new PrettyPrinterError(s"PrettyPrinter failed toDoc conversion on expression ${expr}")
     }
   }
 
-  def toDoc(decl: TlaDecl): Doc = {
+  /**
+   * Pretty-writes the given decl, while replacing names with the values in the NameReplacementMap. Then, wrap the
+   * result as a comment, since the substituted names might not be valid TLA.
+   */
+  def toCommentDoc(decl: TlaDecl): Doc = {
+    wrapWithComment(declToDoc(decl,
+            nameResolver = (x: String) => {
+              NameReplacementMap.store.getOrElse(x, x)
+            }))
+  }
+
+  def declToDoc(decl: TlaDecl, nameResolver: String => String = (x: String) => x): Doc = {
     val annotations = declAnnotator(layout)(decl)
 
     decl match {
@@ -487,7 +557,7 @@ class PrettyWriter(
         }
 
       case TlaAssumeDecl(body) =>
-        val doc = group("ASSUME" <> parens(toDoc((0, 0), body)))
+        val doc = group("ASSUME" <> parens(exToDoc((0, 0), body, nameResolver)))
         if (annotations.isEmpty) {
           doc
         } else {
@@ -503,7 +573,13 @@ class PrettyWriter(
         val boxes =
           keys
             .zip(values)
-            .map(p => group(toDoc((0, 0), p._1) <> space <> "\\in" <> nest(line <> toDoc((0, 0), p._2)))) ///
+            .map(p =>
+              group(
+                  exToDoc((0, 0), p._1, nameResolver)
+                    <> space
+                    <> "\\in"
+                    <> nest(line <> exToDoc((0, 0), p._2, nameResolver))
+              )) ///
 
         val binders = ssep(boxes.toList, comma <> line)
 
@@ -512,7 +588,8 @@ class PrettyWriter(
         // [x \in S]
         val binding = brackets(binders)
         // f[x \in S] == e
-        val doc = parseableName(name) <> binding <> space <> "==" <> space <> toDoc((0, 0), body)
+        val doc =
+          parseableName(name) <> binding <> space <> "==" <> space <> exToDoc((0, 0), body, nameResolver)
         recFunName = REC_FUN_UNDEFINED
         if (annotations.isEmpty) {
           group(doc)
@@ -536,7 +613,8 @@ class PrettyWriter(
             parens(ssep(params.map(toDoc), "," <> softline))
           }
 
-        val declDoc = group(parseableName(name) <> paramsDoc <> space <> "==" <> nest(line <> toDoc((0, 0), body)))
+        val declDoc =
+          group(parseableName(name) <> paramsDoc <> space <> "==" <> nest(line <> exToDoc((0, 0), body, nameResolver)))
         if (annotations.isEmpty) {
           recPreambule.map(_ <> line <> declDoc).getOrElse(declDoc)
         } else {
@@ -630,9 +708,9 @@ object PrettyWriter {
         TlaArithOper.plus -> "+",
         TlaArithOper.minus -> "-",
         TlaArithOper.mult -> "*",
-        TlaArithOper.div -> "/",
+        TlaArithOper.div -> "\\div",
         TlaArithOper.mod -> "%",
-        TlaArithOper.realDiv -> "/.",
+        TlaArithOper.realDiv -> "/",
         TlaArithOper.exp -> "^",
         TlaArithOper.dotdot -> "..",
         TlaArithOper.lt -> "<",

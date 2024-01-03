@@ -31,13 +31,24 @@ noted here:
 
 ### The effect type `ZIO[Env, Failure, Success]`
 
-Values of type `ZIO[Environment, Failure, Success]` represent concurrent effects
-which execute within the `Environment`, and which may produce either a value of
-type `Failure` or value of type `Success`. The `Environment` supplies
-requirements that the effect may need (e.g., resources to interact with the
-outside world).
+ZIO is a concurrency library that works by lifting effects into typed values,
+and then running a scheduler that can execute the effects concurrently and in
+parallel, as appropriate given the available resources and context.
 
-Common type alias we use in Shai include:
+In order for ZIO to track effects, every effect (i.e. side-effects) must be
+lifted into ZIO values. If we execute side-effects without lifting them into ZIO
+values, they will escape the scheduler, and we lose the ability to reason about
+or manage the effects. The basic combinators for lifting effects into ZIO values
+are `ZIO.effect` and `ZIO.effectTotal`. The former is for effects that may abort
+with some exception. The latter is for effects which are guaranteed to complete.
+
+Values of type `ZIO[Environment, Failure, Success]` represent concurrent effects
+which execute within an environment tracked by a value of type `Environment`,
+and which may produce either a value of type `Failure` or value of type
+`Success`. The `Environment` supplies requirements that the effect may need
+(e.g., resources to interact with the outside world).
+
+Common type aliases we use in Shai include:
 
 - `IO[Failure, Succcess]`: an effect that can operate in any environment.
 - `UIO[Success]`: an effect that always succeeds
@@ -108,6 +119,17 @@ The source code for the sever and services lives in
 Related functionality is grouped into services, defined in supporting files, and
 then the services are registered with the
 [`RpcServer`](src/main/scala/at/forsyte/apalache/shai/rpcServer.scala).
+
+## Tests
+
+We use the `zio-test` library as the principle test harness for this project.
+
+You may find it useful to consult the following documentation:
+
+- [Overview](https://zio.dev/version-1.x/usecases/usecases_testing/)
+- [Documentation](https://zio.dev/version-1.x/howto/test-effects)
+- [Tutorial](https://scala.monster/zio-test/)
+- [Tutorial on shared dependencies](https://hmemcpy.com/2021/11/working-with-shared-dependencies-in-zio-test/)
 
 ## Resources
 

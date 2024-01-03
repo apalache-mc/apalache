@@ -5,7 +5,9 @@ import at.forsyte.apalache.io.json.JsonRepresentation
 /**
  * A JsonRepresentation, using the ujson library. Wraps a ujson.Value
  */
-sealed case class UJsonRep(protected[json] val value: ujson.Value) extends JsonRepresentation {
+sealed case class UJsonRep(val value: ujson.Value) extends JsonRepresentation {
+  type Value = ujson.Value
+
   override def toString: String = ujson.write(value, indent = 2, escapeUnicode = false)
 
   /**
@@ -17,4 +19,11 @@ sealed case class UJsonRep(protected[json] val value: ujson.Value) extends JsonR
     objAsMap <- value.objOpt
     fieldVal <- objAsMap.get(fieldName)
   } yield UJsonRep(fieldVal).asInstanceOf[UJsonRep.this.type]
+
+  override def allFieldsOpt: Option[Set[String]] =
+    value.objOpt.map {
+      // extra toSet because LinkedHashMap.keySet doesn't return the same set type as is required
+      _.keySet.toSet
+    }
+
 }

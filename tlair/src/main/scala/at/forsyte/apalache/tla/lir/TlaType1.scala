@@ -4,10 +4,10 @@ import scala.collection.immutable.SortedMap
 
 /**
  * Trait for a type in Type System 1 as specified in <a
- * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/002adr-types.md">ADR-002</a>.
+ * href="https://github.com/informalsystems/apalache/blob/main/docs/src/adr/002adr-types.md">ADR-002</a>.
  *
  * It also contains experimental extensions that are specified in <a
- * href="https://github.com/informalsystems/apalache/blob/unstable/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
+ * href="https://github.com/informalsystems/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
  */
 sealed trait TlaType1 {
 
@@ -18,6 +18,8 @@ sealed trait TlaType1 {
    *   the set of variable names (actually, integers) that are used in the type.
    */
   def usedNames: Set[Int]
+
+  def isMono: Boolean = TlaType1.isMono(this)
 }
 
 /**
@@ -36,6 +38,22 @@ object TlaType1 {
       case Typed(tt: TlaType1) => tt
       case _ => throw new TypingException("Expected Typed(_: TlaType1), found: " + typeTag, UID.nullId)
     }
+  }
+
+  // returns true iff the type is a monotype, i.e. if it contains no type variables
+  def isMono(tt: TlaType1): Boolean = tt match {
+    case IntT1 | RealT1 | BoolT1 | StrT1 | ConstT1(_) => true
+    case _: VarT1                                     => false
+    case FunT1(arg, res)                              => isMono(arg) && isMono(res)
+    case SetT1(elem)                                  => isMono(elem)
+    case SeqT1(elem)                                  => isMono(elem)
+    case TupT1(elems @ _*)                            => elems.forall(isMono)
+    case SparseTupT1(fieldTypes)                      => fieldTypes.values.forall(isMono)
+    case RecT1(fieldTypes)                            => fieldTypes.values.forall(isMono)
+    case OperT1(args, res)                            => (res +: args).forall(isMono)
+    case RowT1(fieldTypes, other)                     => (other ++ fieldTypes.values).forall(isMono)
+    case RecRowT1(row)                                => isMono(row)
+    case VariantT1(row)                               => isMono(row)
   }
 }
 
@@ -80,24 +98,77 @@ case object StrT1 extends TlaType1 {
 }
 
 /**
- * An uninterpreted type constant.
+ * An uninterpreted type constant such as `PROC_NAME`.
+ *
+ * Inside the type checker, this class may also represent references to type aliases. Do not use this feature outside of
+ * the type checker.
  *
  * @param name
  *   unique name of the constant type
  */
 case class ConstT1(name: String) extends TlaType1 {
-  require(name.forall(c => c.isUpper || c.isDigit || c == '_'),
-      "ConstT1 accepts identifiers in upper case, found: " + name)
+  require(ConstT1.isUninterpreted(name) || ConstT1.isAliasReference(name),
+      "ConstT1 accepts identifiers in upper case or $aliasReference, found: " + name)
 
   override def toString: String = name
 
   override def usedNames: Set[Int] = Set.empty
+}
 
+/**
+ * A companion object for [[ConstT1]].
+ */
+object ConstT1 {
+  // the regular expression that recognizes uninterpreted types
+  private val uninterpretedRegex = "[A-Z_][A-Z0-9_]*".r
+
+  /**
+   * Does this type represent an uninterpreted type, e.g., PROCESS. Outside of the type parser and the type checker,
+   * this method should always return true.
+   *
+   * @param name
+   *   type name
+   * @return
+   *   true iff the type name represents an uninterpreted type.
+   */
+  def isUninterpreted(name: String): Boolean = {
+    uninterpretedRegex.matches(name)
+  }
+
+  /**
+   * Does this type represent a reference to an alias, e.g., `\$aliasReference`. This case is only of relevance to the
+   * type parser and the type checker.
+   *
+   * @param name
+   *   type name
+   * @return
+   *   true iff the type name represents a reference to an alias.
+   */
+  def isAliasReference(name: String): Boolean = {
+    name.startsWith("$")
+  }
+
+  /**
+   * Extract alias name from the reference syntax.
+   *
+   * @param reference
+   *   a reference such as \$aliasRef
+   * @return
+   *   the name without the dollar sign
+   */
+  def aliasNameFromReference(reference: String): String = {
+    if (reference.startsWith("$")) {
+      reference.substring(1)
+    } else {
+      throw new IllegalArgumentException(s"Expected $reference to start with the dollar sign")
+    }
+  }
 }
 
 /**
  * A type variable. Instead of using strings for names, we are just using integers, which makes it easier to process
- * them. To make vars user-friendly, we assign the names a..z to the numbers 0..25. The rest are called a27, a28, etc.
+ * them. To make vars user-friendly, we assign the names a..z to the numbers `0..25`. The rest are called `a27`, `a28`,
+ * etc.
  *
  * @param no
  *   the variable number
@@ -119,11 +190,37 @@ case class VarT1(no: Int) extends TlaType1 {
 
 object VarT1 {
   // human-friendly names of the first 26 variables
-  protected val QNAMES: Vector[String] = Vector("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-      "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z")
+  protected val QNAMES: Vector[String] = Vector(
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g",
+      "h",
+      "i",
+      "j",
+      "k",
+      "l",
+      "m",
+      "n",
+      "o",
+      "p",
+      "q",
+      "r",
+      "s",
+      "t",
+      "u",
+      "v",
+      "w",
+      "x",
+      "y",
+      "z",
+  )
 
   /**
-   * Construct a variable from the human-readable form like 'b' or 'a100'. We use this method to write human-readable
+   * Construct a variable from the human-readable form like `b` or `a100`. We use this method to write human-readable
    * variable names in tests.
    *
    * @param name
@@ -157,7 +254,7 @@ object VarT1 {
   }
 
   /**
-   * Call parse(text).
+   * Call [[parse]] on `text`.
    *
    * @param text
    *   a string representation of a variable
@@ -381,40 +478,16 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
 case class VariantT1(row: RowT1) extends TlaType1 {
   override def toString: String = {
     // the special user-friendly form, e.g.,
-    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a }, or
-    // { tag: "tag1", f: Int } | { tag: "tag2", g: Bool, a } | b
-    val options = row.fieldTypes.map(p => elemToString(p._1, p._2)).mkString(" | ")
+    // tag1(a) | tag2(b), or
+    // tag1(a) | tag2(b) | c
+    val options = row.fieldTypes
+      .map { case (tag, tp) =>
+        s"$tag($tp)"
+      }
+      .mkString(" | ")
     row.other match {
       case None    => options
       case Some(v) => if (options.nonEmpty) s"$options | $v" else s"Variant($v)"
-    }
-  }
-
-  private def elemToString(tag: String, elem: TlaType1): String = {
-    // This syntax is similar to that of a record, but it contains tag: "..." as part of the record.
-    // For example, { tag: "tag1", g: Bool } or { tag: "tag2", g: Bool, a }
-    elem match {
-      case RecRowT1(RowT1(fieldTypes, other)) =>
-        val pairs = fieldTypes.filter(_._1 != "tag").map(p => "%s: %s".format(p._1, p._2)).mkString(", ")
-        other match {
-          case None =>
-            if (pairs.nonEmpty) {
-              s"""{ tag: "$tag", $pairs }"""
-            } else {
-              s"""{ tag: "$tag" }"""
-            }
-
-          case Some(v) =>
-            if (pairs.nonEmpty) {
-              s"""{ tag: "$tag", $pairs, $v }"""
-            } else {
-              s"""{ tag: "$tag", $v }"""
-            }
-        }
-
-      case _ =>
-        // the general case, which is probably never reachable
-        s"{ $row }"
     }
   }
 

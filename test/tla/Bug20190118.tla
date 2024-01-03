@@ -1,50 +1,61 @@
 ------------------------------- MODULE Bug20190118 ------------------------ 
 \* this is a minimal working example that caused a bug
 \* it stems from TwoPhase.tla
+EXTENDS Variants
 
-(* BMCMT extensions *)
-RM == {"r1", "r2"}
+(*
+ @typeAlias: MESSAGE = Commit(NIL) | Abort(NIL) | Prepared(RM);
+ *)
+TwoPhaseTyped_aliases == TRUE
 
-\* new: a message type
-MT == [type |-> STRING, rm |-> STRING]
-(* END OF BMCMT extensions *)
+\* @type: MESSAGE;
+MkCommit == Variant("Commit", "0_OF_NIL")
+
+\* @type: MESSAGE;
+MkAbort == Variant("Abort", "0_OF_NIL")
+
+\* @type: RM => MESSAGE;
+MkPrepared(rm) == Variant("Prepared", rm)
+
+RM == { "1_OF_RM", "2_OF_RM"}
 
 VARIABLES
-  \* @type: Str -> Str;
+  \* @type: RM -> Str;
   rmState,       \* $rmState[rm]$ is the state of resource manager RM.
-  \* @type: Set(Str);
+  \* @type: Set(RM);
   tmPrepared,    \* The set of RMs from which the TM has received $"Prepared"$
                  \* messages.
-  \* @type: Set([type: Str, rm: Str]);
+  \* @type: Set(MESSAGE);
   msgs
 
+\* @type: Set(MESSAGE);
 Message ==
-  {[type |-> t, rm |-> r]: t \in {"Prepared"}, r \in RM }
+  { MkPrepared(rm): rm \in RM }
     \union
-  {[type |-> t] : t \in {"Commit", "Abort"} }
+  { MkAbort, MkCommit }
 
 Init ==  
   /\ rmState \in [RM -> {"working", "prepared"}]
   /\ msgs \in SUBSET Message \* this is a problematic statement
-  /\ rmState["r1"] = "working"
-  /\ rmState["r2"] = "prepared"
-  /\ tmPrepared = {"r2"}
-  /\ msgs = {[type |-> "Prepared", rm |-> "r2"]}
+  /\ rmState["1_OF_RM"] = "working"
+  /\ rmState["2_OF_RM"] = "prepared"
+  /\ tmPrepared = {"2_OF_RM"}
+  /\ msgs = { MkPrepared("2_OF_RM") }
 
 TMCommit ==
   /\ tmPrepared = RM
-  /\ msgs' = msgs \union {[type |-> "Commit"]}
+  /\ msgs' = msgs \union { MkCommit }
   /\ UNCHANGED <<rmState, tmPrepared>>
 
 RMPrepare(rm) == 
   /\ rmState[rm] = "working"
   /\ rmState' = [rmState EXCEPT ![rm] = "prepared"]
-  /\ msgs' = msgs \union {[type |-> "Prepared", rm |-> rm]}
+  /\ msgs' = msgs \union { MkPrepared(rm) }
   /\ UNCHANGED tmPrepared
 
-Next == TMCommit \/ RMPrepare("r1")
+Next == TMCommit \/ RMPrepare("1_OF_RM")
 -----------------------------------------------------------------------------
 \* this invariant cannot be violated in one step
-Inv == [type |-> "Commit"] \notin msgs
+Inv == MkCommit \notin msgs
 
 =============================================================================

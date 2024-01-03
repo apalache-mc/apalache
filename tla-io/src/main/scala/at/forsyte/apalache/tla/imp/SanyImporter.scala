@@ -12,12 +12,41 @@ import java.io._
 import java.nio.file.Files
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
+import java.nio.charset.StandardCharsets
+
+// The SANY parser is not thread safe. This singleton object is used to create a
+// mutex around its execution.
+//
+// We use the `synchronized` method of `AnyRef` to manage our mutex. See
+//
+//  - https://twitter.github.io/scala_school/concurrency.html#danger
+//  - https://www.scala-lang.org/api/current/scala/AnyRef.html#synchronized[T0](x$1:=%3ET0):T0
+//
+// For more context on the SANY concurrency issues see https://github.com/informalsystems/apalache/issues/1963
+//
+// All invocation of SANY should go through a synchronized method in this object.
+object SANYSyncWrapper {
+  def loadSpecObject(specObj: SpecObj, file: File, errBuf: Writer): Int = {
+    this.synchronized {
+      val outStream = WriterOutputStream
+        .builder()
+        .setWriter(errBuf)
+        .setCharset(StandardCharsets.UTF_8)
+        .get()
+      SANY.frontEndMain(
+          specObj,
+          file.getAbsolutePath,
+          new PrintStream(outStream),
+      )
+    }
+  }
+}
 
 /**
  * This is the entry point for parsing TLA+ code with SANY and constructing an intermediate representation.
  *
  * @author
- *   Igor Konnov, Thomas Pani
+ *   Igor Konnov, Thomas Pani, Shon Feder
  */
 class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) extends LazyLogging {
 
@@ -68,13 +97,14 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     // Resolver for filenames, patched for wired modules.
     val filenameResolver = SanyNameToStream(libraryPaths)
 
+    // Set a unique tmpdir to avoid race-condition in SANY
+    // TODO: RM once https://github.com/tlaplus/tlaplus/issues/688 is fixed
+    System.setProperty("java.io.tmpdir", sanyTempDir().toString())
+
     // call SANY
     val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
-    SANY.frontEndMain(
-        specObj,
-        file.getAbsolutePath,
-        new PrintStream(new WriterOutputStream(errBuf, "UTF8")),
-    )
+    SANYSyncWrapper.loadSpecObject(specObj, file, errBuf)
+
     // abort on errors
     throwOnError(specObj)
     // do the translation
@@ -88,38 +118,78 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
   }
 
   /**
-   * Load a TLA+ specification from a text source. This method creates a temporary file and saves the source's contents
-   * into it, in order to call SANY.
+   * Load a TLA+ specification from a text source, possibly including auxiliary modules needed for imports. This method
+   * creates temporary files and saves the sources contents into it, in order to call SANY.
    *
-   * @param moduleName
-   *   the name of the root module (SANY compares it against the filename, so we have to know it)
    * @param source
-   *   the text source
+   *   the text source for the root module
+   * @param aux
+   *   the text sources for any auxiliary modules
    * @return
    *   the pair (the root module name, a map of modules)
    */
-  def loadFromSource(
-      moduleName: String,
-      source: Source): (String, Map[String, TlaModule]) = {
-    val tempDir = Files.createTempDirectory("sanyimp").toFile
-    val temp = new File(tempDir, moduleName + ".tla")
-    try {
-      // write the contents to a temporary file
-      val pw = new PrintWriter(temp)
-      try {
-        Try(source.getLines()) match {
-          case Success(lines) => lines.foreach(line => pw.println(line))
-          case Failure(e)     => throw new FileNotFoundException("Source not found: " + e.getMessage)
-        }
-      } finally {
-        pw.close()
-      }
-      loadFromFile(temp)
-    } finally {
-      temp.delete()
-      tempDir.delete()
+  def loadFromSource(source: Source, aux: Seq[Source] = Seq()): (String, Map[String, TlaModule]) = {
+    val tempDir = sanyTempDir()
+    val nameAndModule = for {
+      (rootName, rootFile) <- saveTlaFile(tempDir, source)
+      // Save the aux modules to files, and get just the module names, if errors are hit, the first one will turn into a `Try`
+      savedModuleNames <- Try(aux.map(saveTlaFile(tempDir, _).map(_._1).get))
+      _ <- ensureModuleNamesAreUnique(rootName +: savedModuleNames)
+      result <- Try(loadFromFile(rootFile))
+    } yield result
+    tempDir.delete()
+    // Raise any errors previously captures in the `Try`
+    nameAndModule.get
+  }
+
+  // Create a unique temp directory for use by the SANY importer
+  private def sanyTempDir() = Files.createTempDirectory("sanyimp").toFile
+
+  private def ensureModuleNamesAreUnique(moduleNames: Seq[String]): Try[Unit] = {
+    val duplicateNames = moduleNames.groupBy(identity).filter(_._2.size > 1)
+    if (duplicateNames.isEmpty) {
+      Success(())
+    } else {
+      Failure(new SanyImporterException(
+              s"Modules with duplicate names were supplied when loading from sources: ${duplicateNames.keySet}"))
     }
   }
+
+  // Regex to match the module line and capture the module name
+  private val MODULE_LINE_RE = """-+ +MODULE +(\w*) -+""".r
+
+  // Try to extract the name of a module from the source specifying the module.
+  //
+  // This function copies the Source [s] and doesn't consume it.
+  private def moduleNameOfSource(s: Source): Try[String] = {
+    // Copy the source so we don't consume iterator
+    val copy = s.reset()
+    for {
+      lines <- Try(copy.getLines()).recoverWith(e =>
+        Failure(new FileNotFoundException("Source not found: " + e.getMessage)))
+      firstLine = lines.nextOption().getOrElse("")
+      moduleName <- (Iterator(firstLine) ++ lines).find(MODULE_LINE_RE.matches(_)) match {
+        case Some(MODULE_LINE_RE(name)) => Success(name)
+        case _ =>
+          Failure(
+              new SanyImporterException(s"No module name found in source for module beginning with line ${firstLine}"))
+      }
+    } yield moduleName
+  }
+
+  private def saveTlaFile(dir: File, source: Source): Try[(String, File)] =
+    for {
+      moduleName <- moduleNameOfSource(source)
+      tempFile = new File(dir, moduleName + ".tla")
+      // write the contents to a tempFileorary file
+      pw = new PrintWriter(tempFile)
+      _ <- {
+        // Stash the try result so we can close the pw before bailing if anything goes wrong
+        val result = Try(source.getLines().foreach(pw.println(_)))
+        pw.close()
+        result
+      }
+    } yield (moduleName, tempFile)
 
   private def throwOnError(specObj: SpecObj): Unit = {
     val initErrors = specObj.getInitErrors

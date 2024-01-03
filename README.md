@@ -9,10 +9,10 @@ alt="Apalache Logo">
 
 </div>
 
-[![unstable badge][]][unstable-ci]
+[![main badge][]][main-ci]
 
-[unstable badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg?branch=unstable
-[unstable-ci]: https://github.com/informalsystems/apalache/actions?query=branch%3Aunstable+workflow%3Abuild
+[main badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg?branch=main
+[main-ci]: https://github.com/informalsystems/apalache/actions?query=branch%3Amain+workflow%3Abuild
 
 Apalache translates [TLA+] into the logic supported by SMT solvers such as
 [Microsoft Z3]. Apalache can check inductive invariants (for fixed or bounded
@@ -28,11 +28,13 @@ course].
 Check the [releases page][] for our latest release.
 
 For a stable release, we recommend that you pull the latest docker image with
-`docker pull ghcr.io/informalsystems/apalache:unstable`, use the jar from the
+`docker pull ghcr.io/informalsystems/apalache:main`, use the jar from the
 most recent release, or checkout the source code from the most recent release
 tag.
 
-To try the latest cool features, check out the head of the [unstable branch][].
+To try the latest cool features, check out the head of the [main branch][].
+
+You can also find Apalache packaged via Nix at [cosmos.nix](https://github.com/informalsystems/cosmos.nix)
 
 For more information on installation options, see [the
 manual][user-manual-installation].
@@ -125,6 +127,8 @@ We are collecting [apalache benchmarks]. See the Apalache performance when
 
 To read an academic paper about the theory behind Apalache,
 check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+For the details of our novel encoding using SMT arrays, check our
+[paper at TACAS23](https://link.springer.com/chapter/10.1007/978-3-031-30823-9_7).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
 
@@ -144,7 +148,7 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [video course]: http://lamport.azurewebsites.net/video/videos.html
 [releases page]: https://github.com/informalsystems/apalache/releases
 [master]: https://github.com/informalsystems/apalache/tree/master
-[unstable branch]: https://github.com/informalsystems/apalache/tree/unstable
+[main branch]: https://github.com/informalsystems/apalache/tree/main
 [apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [tendermint specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/accountability
 [tendermint blockchain]: https://github.com/tendermint

@@ -38,7 +38,9 @@ The model checker can be run as follows:
 
 ```bash
 $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
-    [--next=Next] [--inv=Inv] [--length=10] [--algo=(incremental|offline)] \
+    [--next=Next] [--inv=Inv1,...,Invn] [--length=10] \
+    [--temporal=TemporalProp1,...,TemporalPropn] \
+    [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-encoding=(oopsla19|arrays)] \
@@ -46,6 +48,7 @@ $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
     [--profiling=false] \
+    [--output-traces=false] \
     <myspec>.tla
 ```
 
@@ -56,16 +59,18 @@ The arguments are as follows:
     - `--init` specifies the initialization predicate, *`Init` by default*
     - `--next` specifies the transition predicate, *`Next` by default*
     - `--cinit` specifies the constant initialization predicate, *optional*
-    - `--inv` specifies the invariant to check, *optional*
+    - `--inv` specifies the invariants to check, as a comma separated list, *optional*
     - `--length` specifies the maximal number of `Next` steps, *10 by default*
+    - `--temporal` specifies the temporal properties to check, as a comma
+      separated list, *optional*
 
 * Advanced parameters:
     - `--algo` lets you to choose the search algorithm: `incremental` is using the incremental SMT solver, `offline` is
       using the non-incremental
       (offline) SMT solver
     - `--smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses QF_UFNIA, and
-      `arrays` (experimental) uses arrays with extensionality. This parameter can also be set via the
-      `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
+      `arrays` (experimental) and `funArrays` (experimental) use SMT arrays with extensionality. This parameter can also
+      be set via the `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
@@ -89,6 +94,7 @@ The arguments are as follows:
       used in [profiling](profiling.md). The file is only created if `profiling`
       is set to `True`.  Setting `profiling` to `False` is incompatible with the
       `--smtprof` flag. The default is `False`.
+    - `--output-traces`: save an example trace for each symbolic run, default: `false`
 
 Options passed with `--tuning-options` have priority over options passed with `--tuning-options-file`.
 
@@ -107,7 +113,7 @@ The simulator can be run as follows:
 
 ```bash
 $ apalache-mc simulate
-    [all-checker-options] [--max-run=NUM] [--save-runs] <myspec>.tla
+    [all-checker-options] [--max-run=NUM] <myspec>.tla
 ```
 
 The arguments are as follows:
@@ -115,9 +121,6 @@ The arguments are as follows:
 * Special parameters:
 
   - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
-
-  - `--save-runs`: save an example trace for each simulated run, default:
-    `false`
 
 ### 1.3. Supplying JVM arguments
 

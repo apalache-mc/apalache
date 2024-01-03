@@ -34,6 +34,11 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     TlaModule("root", List(TlaVarDecl("x")(intTag), TlaVarDecl("y")(intTag)))
   }
 
+  private def assertResultHasNErrors(n: Int, result: Checker.CheckerResult) = assert(result match {
+    case Error(m, _) if m == n => true
+    case _                     => false
+  })
+
   test("Init + Inv => OK") { rewriter: SymbStateRewriter =>
     // x' <- 2
     val initTrans = List(mkAssign("x", 2))
@@ -65,7 +70,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("ConstInit + Init => OK") { rewriter: SymbStateRewriter =>
@@ -105,7 +110,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assert(outcome match { case Error(1, _) => true; case _ => false })
   }
 
   test("Init, deadlock") { rewriter: SymbStateRewriter =>
@@ -119,7 +124,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Deadlock() == outcome)
+    assert(outcome match { case Deadlock(_) => true; case _ => false })
   }
 
   test("Init, 2 options, OK") { rewriter: SymbStateRewriter =>
@@ -170,7 +175,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + Inv (before + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -192,7 +197,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -205,7 +210,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
@@ -214,7 +225,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => OK") { rewriter: SymbStateRewriter =>
@@ -227,7 +238,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = false
     params.invariantMode = InvariantMode.BeforeJoin
@@ -258,7 +275,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + Inv (after + no-all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -280,7 +297,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
@@ -293,7 +310,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
@@ -302,7 +325,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => OK") { rewriter: SymbStateRewriter =>
@@ -315,7 +338,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = false
     params.invariantMode = InvariantMode.AfterJoin
@@ -337,7 +366,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
@@ -346,7 +381,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (before) => OK") { rewriter: SymbStateRewriter =>
@@ -359,7 +394,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = true
     params.invariantMode = InvariantMode.BeforeJoin
@@ -381,7 +422,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
@@ -390,7 +437,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 10 + ActionInv (after) => OK") { rewriter: SymbStateRewriter =>
@@ -403,7 +450,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val notInv = not(inv).typed(types, "b")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List(), List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     params.discardDisabled = true
     params.invariantMode = InvariantMode.AfterJoin
@@ -430,8 +483,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val notInvDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), notInv)(Untyped)
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
-          CheckerInputVC(List(), List(), List((invDecl, notInvDecl))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List(), List((invDecl, notInvDecl))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -456,15 +514,20 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
     val notInvDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), notInv)(Untyped)
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
-          CheckerInputVC(List(), List(), List((invDecl, notInvDecl))))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List(), List(), List((invDecl, notInvDecl))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next x 2 (LET-IN) + Inv => ERR") { rewriter: SymbStateRewriter =>
@@ -491,7 +554,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("determinstic Init + 2 steps (regression)") { rewriter: SymbStateRewriter =>
@@ -533,7 +596,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Deadlock() == outcome)
+    assert(outcome match { case Deadlock(_) => true; case _ => false })
   }
 
   test("Init + Next, 10 steps, OK") { rewriter: SymbStateRewriter =>
@@ -565,7 +628,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Deadlock() == outcome)
+    assert(outcome match { case Deadlock(_) => true; case _ => false })
   }
 
   test("Init + Next + Inv x 10 => OK") { rewriter: SymbStateRewriter =>
@@ -609,7 +672,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next + Inv x 2 => OK, edge case") { rewriter: SymbStateRewriter =>
@@ -697,7 +760,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("cInit + Init + Next, 10 steps") { rewriter: SymbStateRewriter =>
@@ -731,7 +794,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    assert(Error(1) == outcome)
+    assertResultHasNErrors(1, outcome)
   }
 
   test("Init + Next, 10 steps and filter") { rewriter: SymbStateRewriter =>
@@ -775,8 +838,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val view = tuple(le(name("x") ? "i", int(0)) ? "b", ge(name("x") ? "i", int(0)) ? "b")
       .typed(types, "bb")
     val checkerInput =
-      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None,
-          CheckerInputVC(List((inv, notInv)), List.empty, List.empty, Some(view)))
+      new CheckerInput(
+          mkModuleWithX(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List((inv, notInv)), List.empty, List.empty, Some(view)),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map())
     // we expect 4 errors, but an upper bound may be larger
     params.nMaxErrors = 10
@@ -787,13 +855,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(params, checkerInput, trex)
     val outcome = checker.run()
-    outcome match {
-      case Error(nerrors) =>
-        assert(4 == nerrors)
-
-      case _ =>
-        fail("Expected 4 errors")
-    }
+    assertResultHasNErrors(4, outcome)
   }
 
   private def mkAssign(varName: String, value: Int): TlaEx = {

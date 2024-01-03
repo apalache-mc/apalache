@@ -56,7 +56,39 @@ Each chapter must link a file: internal links to anchors within files do not
 work. There is an [open issue](https://github.com/rust-lang/mdBook/issues/167)
 to fix this behavior.
 
+### TLA+ syntax highlighting
+
+We provide a custom TLA+ syntax highlighting plugin for [highlight.js][] in `highlightjs-tlaplus`.
+
+#### Building
+
+The plugin is checked in with the source code, and you generally shouldn't need to rebuild it unless you need to make a change or update the plugin.
+
+To build, check out the main highlight.js into a separate directory.
+Symlink the TLA+ language definition into the highlight.js `extra` directory:
+
+```sh
+$ git clone https://github.com/highlightjs/highlight.js.git
+$ cd highlight.js
+$ ln -s path/to/apalache/docs/highlightjs-tlaplus/ ./extra/
+```
+
+Next, fetch the highlight.js dependencies and build:
+
+```sh
+$ npm install
+$ node ./tools/build.js -t cdn
+```
+
+The minified CDN distributable is now available in `highlightjs-tlaplus/dist/`.
+
+For more packaging information, see the highlight.js [packaging instructions][].
+
 ## Internal documentation
 
 Design notes and memos that are part of the documentation of our design process
 or for reference by developers are collected in [./internal](./internal).
+
+
+[highlight.js]: https://highlightjs.org/
+[packaging instructions]: https://github.com/highlightjs/highlight.js/blob/main/extra/3RD_PARTY_QUICK_START.md#packaging

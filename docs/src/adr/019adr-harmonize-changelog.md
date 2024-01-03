@@ -1,9 +1,8 @@
----
-authors: Shon Feder
-last revised: 2022-05-06
----
-
 # ADR-019: Harmonize changelog management
+
+| authors                                | last revised    |
+| -------------------------------------- | --------------: |
+| Shon Feder                             | 2022-05-06      |
 
 **Table of Contents**
 

@@ -31,7 +31,7 @@ class LanguageWatchdog(pred: LanguagePred) {
         () // do nothing
 
       case PredResultFail(failedIds) =>
-        throw new LanguagePredError(s"Some expressions do not fit in the fragment $predName", failedIds)
+        throw new LanguagePredError(s"Some declarations do not fit in the fragment $predName", failedIds)
     }
   }
 }

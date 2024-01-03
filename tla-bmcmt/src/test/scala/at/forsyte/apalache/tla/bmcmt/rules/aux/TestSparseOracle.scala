@@ -1,9 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SMTEncoding, SymbState}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.{BoolT1, TestingPredefs}
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSparseOracle extends RewriterBase with TestingPredefs {
   test("""Sparse Oracle.create""") { rewriterType: SMTEncoding =>
@@ -49,20 +49,20 @@ trait TestSparseOracle extends RewriterBase with TestingPredefs {
     val sparseOracle = new SparseOracle(oracle, Set(1, 5))
     // assert flag == true iff oracle = 1
     rewriter.solverContext
-      .assertGroundExpr(sparseOracle.caseAssertions(nextState, Seq(flag.toNameEx, tla.not(flag.toNameEx))))
+      .assertGroundExpr(sparseOracle.caseAssertions(nextState, Seq(flag.toBuilder, tla.not(flag.toBuilder))))
     // assert oracle = 5
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(sparseOracle.whenEqualTo(nextState, 5))
     assert(solverContext.sat())
-    val expected1 = tla.bool(false).untyped()
-    assert(expected1 == solverContext.evalGroundExpr(flag.toNameEx))
+    val expected1 = tla.bool(false).build
+    assert(expected1 == solverContext.evalGroundExpr(flag.toBuilder))
     rewriter.pop()
     // assert oracle = 1
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(sparseOracle.whenEqualTo(nextState, 1))
     assert(solverContext.sat())
-    val expected2 = tla.bool(true).untyped()
-    assert(expected2 == solverContext.evalGroundExpr(flag.toNameEx))
+    val expected2 = tla.bool(true).build
+    assert(expected2 == solverContext.evalGroundExpr(flag.toBuilder))
     rewriter.pop()
   }
 }

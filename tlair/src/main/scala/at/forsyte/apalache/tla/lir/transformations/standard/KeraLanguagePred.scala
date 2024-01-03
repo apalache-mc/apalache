@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.lir.transformations.standard
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSeqOper, _}
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.{PredResult, PredResultFail, PredResultOk}
 import at.forsyte.apalache.tla.lir.values._
 
@@ -121,6 +121,7 @@ object KeraLanguagePred {
         TlaSeqOper.head,
         TlaSeqOper.tail,
         TlaSeqOper.len,
+        VariantOper.variantTag,
         ApalacheOper.skolem,
         ApalacheOper.gen,
         ApalacheOper.expand,
@@ -156,6 +157,9 @@ object KeraLanguagePred {
         TlaSetOper.cup,
         TlaSeqOper.concat,
         ApalacheOper.assign,
+        VariantOper.variant,
+        VariantOper.variantGetUnsafe,
+        VariantOper.variantFilter,
         // for the future
         //      TlaActionOper.composition,
         //      TlaTempOper.leadsTo,
@@ -172,6 +176,7 @@ object KeraLanguagePred {
         TlaFunOper.rec,
         TlaSeqOper.subseq,
         TlaOper.label,
+        VariantOper.variantGetOrElse,
     ) /////
 
   protected val bindingOps: HashSet[TlaOper] =

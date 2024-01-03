@@ -8,9 +8,9 @@ import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 import java.io.{PrintWriter, StringWriter}
 
@@ -298,6 +298,20 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("~(1 = 2)" == stringWriter.toString)
   }
 
+  test("5 \\div 3") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(div(int(5), int(3)))
+    printWriter.flush()
+    assert("5 \\div 3" == stringWriter.toString)
+  }
+
+  test("5 / 3") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(OperEx(TlaArithOper.realDiv, int(5), int(3)))
+    printWriter.flush()
+    assert("5 / 3" == stringWriter.toString)
+  }
+
   test("[S -> T]") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(funSet(name("S"), name("T")))
@@ -492,8 +506,13 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
 
   test("a multi-line function") {
     val writer = new PrettyWriter(printWriter, layout30)
-    val expr = funDef(plus(name("verylong1"), name("verylong2")), name("verylong1"), name("verylong3"),
-        name("verylong2"), name("verylong4"))
+    val expr = funDef(
+        plus(name("verylong1"), name("verylong2")),
+        name("verylong1"),
+        name("verylong3"),
+        name("verylong2"),
+        name("verylong4"),
+    )
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -517,8 +536,13 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
 
   test("a multi-line map") {
     val writer = new PrettyWriter(printWriter, layout30)
-    val expr = map(plus(name("verylong1"), name("verylong2")), name("verylong1"), name("verylong3"), name("verylong2"),
-        name("verylong4"))
+    val expr = map(
+        plus(name("verylong1"), name("verylong2")),
+        name("verylong1"),
+        name("verylong3"),
+        name("verylong2"),
+        name("verylong4"),
+    )
     writer.write(expr)
     printWriter.flush()
     val expected =
@@ -718,7 +742,13 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
 
   test("a multi-line CASE with OTHER") {
     val writer = new PrettyWriter(printWriter, layout40)
-    val expr = caseOther(name("otherAction"), name("guard1"), name("action1"), name("guard2"), name("action2"))
+    val expr = caseOther(
+        name("otherAction"),
+        name("guard1"),
+        name("action1"),
+        name("guard2"),
+        name("action2"),
+    )
     writer.write(expr)
     printWriter.flush()
     val expected =

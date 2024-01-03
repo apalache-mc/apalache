@@ -1,12 +1,17 @@
 package at.forsyte.apalache.io
 
+import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
+import at.forsyte.apalache.infra.passes.options.SourceOption
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.{File, FileWriter, PrintWriter}
-import java.nio.file.{Files, Path, Paths}
+import java.io.File
+import java.io.FileWriter
+import java.io.PrintWriter
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
 import scala.io.Source
 
 /**
@@ -22,7 +27,7 @@ object OutputManager extends LazyLogging {
   import Names._
 
   // TODO RM once OutputManager isn't a singleton
-  private var cfg: ApalacheConfig = ApalacheConfig()
+  private var config: ApalacheConfig = ApalacheConfig()
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
   // This should only be set if the IntermediateFlag is true
@@ -36,10 +41,13 @@ object OutputManager extends LazyLogging {
   // lines in the original input. This variable stores them.
   private var sourceLinesOpt: Option[IndexedSeq[String]] = None
 
-  // Should be called only if input is a .tla file
-  def initSourceLines(file: File): Unit =
-    if (sourceLinesOpt.isEmpty) {
-      val src = Source.fromFile(file)
+  // Takes effect only when called on a source that is an existing .tla file or
+  // a string representing a .tla spec
+  def initSourceLines(source: SourceOption): Unit =
+    if (sourceLinesOpt.isEmpty && source.exists) {
+      // We currently just ignore possible auxiliary sources for  the source lines,
+      // which is why the second value of the uple is ignored here:
+      val (src, _) = source.toSources
       try sourceLinesOpt = Some(src.getLines().toIndexedSeq)
       finally src.close()
     }
@@ -68,7 +76,7 @@ object OutputManager extends LazyLogging {
   /**
    * Accessor for the configured output directory.
    *
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   if called before OutputManager is configured: this is considered an implementator error
    */
   def outDir: Path = {
@@ -78,7 +86,7 @@ object OutputManager extends LazyLogging {
   /**
    * Accessor for the configured run directory.
    *
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   if called before OutputManager is configured: this is considered an implementator error
    */
   def runDir: Path = {
@@ -112,22 +120,29 @@ object OutputManager extends LazyLogging {
   }
 
   /**
-   * Configure OutputManager, with cli configuration taking precedence over the configuration file
+   * Configure OutputManager
    */
-  def configure(config: ApalacheConfig): Unit = {
-    // Replace the default config used for initialiation with the config loaded on startup
-    cfg = config
+  // TODO replace `ApalacheConfig` with derived options
+  def configure(cfg: ApalacheConfig): Unit = {
+    // Mutable update of the `config` object shared within the singleton
+    config = cfg
 
-    val fileName = cfg.file
-      .getOrElse(throw new IllegalStateException("OutputManager configured without file"))
-      .getName
+    val fileName =
+      config.input.source
+        .flatMap { // Either the name of the file
+          case SourceOption.FileSource(f, _)      => Some(f.getName())
+          case SourceOption.StringSource(_, _, _) => None
+        }
+        .orElse(config.common.command) // Or the name of the command running
+        .get // One of those two will always be available
 
-    setOutDir(cfg.outDir.toPath(), fileName)
+    val _outDir = config.common.outDir.get
+    setOutDir(_outDir.toPath(), fileName)
     ensureDirExists(outDir)
     createRunDirectory()
-    setCustomRunDir(config.runDir)
+    setCustomRunDir(config.common.runDir)
 
-    if (cfg.writeIntermediate) {
+    if (config.common.writeIntermediate.getOrElse(false)) {
       setIntermediateDir()
       intermediateDirOpt.foreach(ensureDirExists)
       customIntermediateRunDir.foreach(ensureDirExists)
@@ -216,7 +231,8 @@ object OutputManager extends LazyLogging {
    * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set
    */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
-    if (cfg.profiling) {
+    // TODO replace config with options
+    if (config.common.profiling.getOrElse(false)) {
       withWriterInRunDir("profile-rules.txt")(f)
       true
     } else {

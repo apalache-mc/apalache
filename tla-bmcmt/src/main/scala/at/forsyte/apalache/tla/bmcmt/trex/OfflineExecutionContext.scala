@@ -38,12 +38,13 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter, renaming: Increme
    *
    * @param snapshot
    *   a snapshot
-   * @throws IllegalStateException
+   * @throws java.lang.IllegalStateException
    *   when recovery is impossible
    */
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
     val solver = RecordingSolverContext.createZ3(Some(snapshot.smtLog), snapshot.solverConfig)
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
+
     val newRewriter = rewriter match {
       case _: SymbStateRewriterImplWithArrays =>
         new SymbStateRewriterImplWithArrays(solver, renaming, rewriter.exprGradeStore)
@@ -54,6 +55,8 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter, renaming: Increme
     newRewriter.config = rewriter.config
     newRewriter.recover(snapshot.rewriterSnapshot)
     newRewriter.solverContext = solver
+
+    rewriter.dispose()
     rewriter = newRewriter
   }
 
