@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.infra.ExceptionAdapter
 import com.typesafe.scalalogging.LazyLogging
 
-import javax.inject.{Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 
 // TODO: This can be removed in theory, but our current architecture requires executable passes
 // include a injectable instance of `ExceptionAdapater`

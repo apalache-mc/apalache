@@ -47,10 +47,11 @@ class TestFunBuilder extends BuilderTest {
         )
     )
 
-    // test fail on n = 0
-    assertThrows[IllegalArgumentException] {
-      build(builder.recMixed())
-    }
+    // test succeed on n = 0, the empty record
+    assert(build(builder.recMixed()).typeTag match {
+      case Typed(RecT1(map)) => map.isEmpty
+      case _                 => false
+    })
 
     // test fail on n = 1
     assertThrows[IllegalArgumentException] {
@@ -108,10 +109,11 @@ class TestFunBuilder extends BuilderTest {
         )
     )
 
-    // test fail on n = 0
-    assertThrows[IllegalArgumentException] {
-      build(builder.rec())
-    }
+    // test succeed on n = 0, the empty record
+    assert(build(builder.rec()).typeTag match {
+      case Typed(RecT1(map)) => map.isEmpty
+      case _                 => false
+    })
 
     // test fail on repeated key
     assertThrows[IllegalArgumentException] {

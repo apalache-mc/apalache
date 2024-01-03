@@ -29,7 +29,7 @@ trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
     val exeCtx = exeCtxFactory(rewriter)
 
     // Tmp file to capture the noisy stdout from these tests
-    // otherwise they pollut stdout on our CI making it hard to see failures
+    // otherwise they pollute stdout on our CI making it hard to see failures
     val tmp = File.createTempFile("tla-bmcmt-test-output-", ".tmp")
     tmp.deleteOnExit()
 
@@ -37,7 +37,7 @@ trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
       System.setOut(new PrintStream(new FileOutputStream(tmp)))
       test(exeCtx)
     } finally {
-      rewriter.dispose()
+      exeCtx.dispose()
       System.setOut(System.out)
     }
   }

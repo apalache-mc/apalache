@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir.transformations.{
   TlaDeclTransformation, TlaExTransformation, TlaModuleTransformation, TransformationTracker,
 }
 
-import javax.inject.{Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 import scala.collection.immutable.HashMap
 
 // Igor @ 07.11.2019: refactoring needed

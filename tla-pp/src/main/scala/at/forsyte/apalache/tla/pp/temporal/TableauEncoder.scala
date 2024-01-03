@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.pp.temporal
 
 import at.forsyte.apalache.tla.lir._
 
-import javax.inject.Singleton
+import com.google.inject.Singleton
 import com.typesafe.scalalogging.LazyLogging
 import scalaz.Scalaz.{init => _}
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
