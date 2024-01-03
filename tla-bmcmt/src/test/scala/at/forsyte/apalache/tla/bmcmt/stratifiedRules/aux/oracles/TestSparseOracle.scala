@@ -88,7 +88,8 @@ class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers
         ret
       }
 
-    // 1000 is too many, since each run invokes the solver
-    check(prop, minSuccessful(80), sizeRange(4))
+    // The default minimum successful runs is 1000, but this is costly
+    // since each run invokes the solver.
+    check(prop, minSuccessful(50), sizeRange(4))
   }
 }
