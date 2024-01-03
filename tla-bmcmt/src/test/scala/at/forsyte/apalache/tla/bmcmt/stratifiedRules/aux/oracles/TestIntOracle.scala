@@ -126,7 +126,6 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   }
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
-  // Ignored until we figure out why it's killing GH CLI
   test("getIndexOfChosenValueFromModel recovers the index correctly") {
     val prop =
       forAll(Gen.zip(maxSizeAndIndexGen)) { case (size, index) =>

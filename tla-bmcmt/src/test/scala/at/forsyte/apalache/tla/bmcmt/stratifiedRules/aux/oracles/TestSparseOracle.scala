@@ -70,8 +70,7 @@ class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers
   // which should have its own tests
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
-  // Ignored until we figure out why it's killing GH CLI
-  ignore("getIndexOfChosenValueFromModel recovers the index correctly") {
+  test("getIndexOfChosenValueFromModel recovers the index correctly") {
     val ctx = new Z3SolverContext(SolverConfig.default)
     val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
     val paa2 = paa.appendCell(IntT1) // also declares the cell
@@ -89,7 +88,8 @@ class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers
         ret
       }
 
-    // 1000 is too many, since each run invokes the solver
-    check(prop, minSuccessful(80), sizeRange(4))
+    // The default minimum successful runs is 1000, but this is costly
+    // since each run invokes the solver.
+    check(prop, minSuccessful(50), sizeRange(4))
   }
 }
