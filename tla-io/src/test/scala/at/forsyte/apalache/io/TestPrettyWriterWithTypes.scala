@@ -97,4 +97,32 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
         |""".stripMargin
     assert(expected == stringWriter.toString)
   }
+
+  test("unnamed assume declaration") {
+    val decl = TlaAssumeDecl(None, tla.eql(tla.name("x"), tla.bool(true)))
+    val store = createAnnotationStore()
+
+    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    writer.write(decl)
+    printWriter.flush()
+    val expected =
+      """ASSUME(x = TRUE)
+        |
+        |""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("named assume declaration") {
+    val decl = TlaAssumeDecl(Some("myAssume"), tla.eql(tla.name("x"), tla.bool(true)))
+    val store = createAnnotationStore()
+
+    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    writer.write(decl)
+    printWriter.flush()
+    val expected =
+      """ASSUME myAssume == (x = TRUE)
+        |
+        |""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
 }

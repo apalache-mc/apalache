@@ -243,8 +243,11 @@ object UTFPrinter extends Printer {
       case TlaVarDecl(name) =>
         "VARIABLE " + name
 
-      case TlaAssumeDecl(body) =>
-        apply(body)
+      case TlaAssumeDecl(definedName, body) =>
+        definedName match {
+          case None       => s"ASSUME " + apply(body)
+          case Some(name) => s"ASSUME $name ${m_defeq} " + apply(body)
+        }
 
       case TlaOperDecl(name, formalParams, body) =>
         val ps =

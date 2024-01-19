@@ -102,7 +102,7 @@ class DeclarationSorter extends TlaModuleTransformation with LazyLogging {
       case (map, d @ TlaVarDecl(_)) =>
         map + (d.ID -> Set.empty[UID])
 
-      case (map, d @ TlaAssumeDecl(body)) =>
+      case (map, d @ TlaAssumeDecl(_, body)) =>
         val uses = findExprUses(nameToId)(body) - d.ID
         updateDependencies(map, d.ID, uses)
 

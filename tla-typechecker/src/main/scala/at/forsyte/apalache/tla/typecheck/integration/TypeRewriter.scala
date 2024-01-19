@@ -74,8 +74,8 @@ class TypeRewriter(tracker: TransformationTracker, defaultTag: UID => TypeTag)(t
       case d @ TlaVarDecl(_) =>
         decl.withTag(getOrDefault(d.ID))
 
-      case d @ TlaAssumeDecl(body) =>
-        TlaAssumeDecl(this(body))(getOrDefault(d.ID))
+      case d @ TlaAssumeDecl(definedName, body) =>
+        TlaAssumeDecl(definedName, this(body))(getOrDefault(d.ID))
 
       case d @ TlaTheoremDecl(name, body) =>
         TlaTheoremDecl(name, this(body))(getOrDefault(d.ID))

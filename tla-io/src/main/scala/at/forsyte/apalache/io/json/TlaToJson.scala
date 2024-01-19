@@ -188,13 +188,20 @@ class TlaToJson[T <: JsonRepresentation](
             "body" -> bodyJson,
         )
 
-      case TlaAssumeDecl(body) =>
+      case TlaAssumeDecl(definedName, body) =>
         val bodyJson = apply(body)
-        withLoc(
+        val fields = Array[(String, T)](
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaAssumeDecl",
             "body" -> bodyJson,
         )
+
+        val f = definedName match {
+          case None       => fields
+          case Some(name) => fields :+ ("name" -> name: (String, T))
+        }
+
+        withLoc(f.toIndexedSeq: _*)
     }
   }
 
