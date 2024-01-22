@@ -314,9 +314,9 @@ private[quint] object QuintDef {
 
     /**
      * @return
-     *   true if this ASSUME clause has no user-defined name, false otherwise
+     *   `true` if this assume declaration has no user-defined name, `false` otherwise
      *
-     * unnamed ASSUME clauses use `_` as a name
+     * anonymous assume declarations are named with the "hole", `_`
      */
     def isUnnamed: Boolean = name == "_"
   }

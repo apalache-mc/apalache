@@ -47,7 +47,7 @@ class ToEtcExpr(
         // We have to introduce a lambda abstraction, as the type checker is expecting this form.
         mkLet(
             BlameRef(d.ID),
-            "__Assume_" + d.definedName.getOrElse(d.ID.toString),
+            d.name,
             mkAbs(ExactRef(d.ID), application),
             inScopeEx,
         )

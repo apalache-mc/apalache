@@ -117,7 +117,7 @@ class TestToEtcExprDecls extends AnyFunSuite with ToEtcExprBase with BeforeAndAf
     // This allows us to check that the assumption has Boolean type.
     val application = mkUniqApp(Seq(parser("Bool => Bool")), assumption)
     val expected =
-      mkUniqLet("__Assume_" + assume.definedName.getOrElse(assume.ID.toString), mkUniqAbs(application), terminal)
+      mkUniqLet(assume.name, mkUniqAbs(application), terminal)
     // Translate the declaration of positive.
     // We have to pass the next expression in scope, which is just TRUE in this case.
     assert(expected == mkToEtcExpr(Map())(assume, terminal))
