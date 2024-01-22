@@ -2812,6 +2812,18 @@ $ apalache-mc check --inv=Sanity FunExcept3.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check FunInInfiniteSubset (array-encoding)
+
+A regression test for function membership in the presence of infinite sets.
+
+See https://github.com/informalsystems/apalache/issues/2810
+
+```sh
+$ apalache-mc check --init=TypeOkay_ --inv=TypeOkay --length=1 FunInInfiniteSubset.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check ERC20.tla
 
 ```sh
