@@ -1,11 +1,15 @@
 package at.forsyte.apalache.io.quint
 
-import at.forsyte.apalache.tla.lir.{IntT1, OperT1, RecRowT1, RowT1, SetT1, TlaEx, TlaType1, Typed, VarT1}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, IntT1, OperT1, RecRowT1, RowT1, SetT1, TlaAssumeDecl, TlaEx, TlaType1, Typed, ValEx, VarT1,
+}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import QuintType._
 import QuintEx._
+import at.forsyte.apalache.io.quint.QuintDef.QuintAssume
+import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.typecomp.build
 
 // You can run all these tests in watch mode in the
@@ -788,5 +792,19 @@ class TestQuintEx extends AnyFunSuite {
     // See https://github.com/informalsystems/apalache/issues/2774
     val err = intercept[QuintIRParseError](convert(Q.oneOfSet))
     assert(err.getMessage().contains("`oneOf` can only occur as the principle operator of a `nondet` declaration"))
+  }
+
+  test("can convert ASSUME declaration") {
+    val translator = new Quint(Q.quintOutput)
+    val nullaryOps = Set[String]()
+
+    val name = "myAssume"
+    val namedAssume = QuintAssume(1, name, QuintBool(2, true))
+    val tlaNamedAssumeDef = translator.tlaDef(namedAssume).run(nullaryOps).get._2
+    assert(tlaNamedAssumeDef == TlaAssumeDecl(Some(name), ValEx(TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1)))
+
+    val unnamedAssume = QuintAssume(1, "_", QuintBool(2, true))
+    val tlaUnnamedAssumeDef = translator.tlaDef(unnamedAssume).run(nullaryOps).get._2
+    assert(tlaUnnamedAssumeDef == TlaAssumeDecl(None, ValEx(TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1)))
   }
 }

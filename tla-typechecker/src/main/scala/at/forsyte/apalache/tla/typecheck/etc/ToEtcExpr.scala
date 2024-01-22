@@ -45,7 +45,12 @@ class ToEtcExpr(
         val operType = OperT1(Seq(BoolT1), BoolT1)
         val application = mkUniqApp(Seq(operType), this(d.body))
         // We have to introduce a lambda abstraction, as the type checker is expecting this form.
-        mkLet(BlameRef(d.ID), "__Assume_" + d.ID, mkAbs(ExactRef(d.ID), application), inScopeEx)
+        mkLet(
+            BlameRef(d.ID),
+            d.name,
+            mkAbs(ExactRef(d.ID), application),
+            inScopeEx,
+        )
 
       case d: TlaOperDecl =>
         // Foo(x) == ...
@@ -131,7 +136,7 @@ class ToEtcExpr(
     OperT1(nBools, BoolT1)
   }
 
-  // Valid when the input seq has two items, the first of which is a VlaEx(TlaStr(_))
+  // Valid when the input seq has two items, the first of which is a ValEx(TlaStr(_))
   private val validateRecordPair: Seq[TlaEx] => (String, TlaEx) = {
     // Only pairs coordinating pairs and sets are valid. See TlaSetOper.recSet
     case Seq(ValEx(TlaStr(name)), set) =>

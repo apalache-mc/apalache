@@ -23,12 +23,12 @@ class ModuleByExTransformer(
           d.copy(body = newBody)
         }
 
-      case d @ TlaAssumeDecl(body) =>
+      case d @ TlaAssumeDecl(definedName, body) =>
         val newBody = exTrans(body)
         if (newBody.ID == body.ID) {
           d
         } else {
-          TlaAssumeDecl(newBody)(d.typeTag)
+          TlaAssumeDecl(definedName, newBody)(d.typeTag)
         }
 
       case d => d

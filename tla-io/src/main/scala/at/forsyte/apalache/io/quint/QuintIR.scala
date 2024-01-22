@@ -310,7 +310,16 @@ private[quint] object QuintDef {
       name: String,
       /** an expression to associate with the name */
       assumption: QuintEx)
-      extends QuintDef {}
+      extends QuintDef {
+
+    /**
+     * @return
+     *   `true` if this assume declaration has no user-defined name, `false` otherwise
+     *
+     * anonymous assume declarations are named with the "hole", `_`
+     */
+    def isUnnamed: Boolean = name == "_"
+  }
   object QuintAssume {
     implicit val rw: RW[QuintAssume] = macroRW
   }

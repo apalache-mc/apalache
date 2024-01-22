@@ -47,8 +47,8 @@ class TestDeepCopy extends AnyFunSuite with BeforeAndAfter with Checkers {
     case (l @ TlaVarDecl(lname), r @ TlaVarDecl(rname)) =>
       l.ID != r.ID && lname == rname && l.typeTag == r.typeTag
 
-    case (l @ TlaAssumeDecl(lbody), r @ TlaAssumeDecl(rbody)) =>
-      l.ID != r.ID && equalExCopies(lbody, rbody) && l.typeTag == r.typeTag
+    case (l @ TlaAssumeDecl(lname, lbody), r @ TlaAssumeDecl(rname, rbody)) =>
+      l.ID != r.ID && lname == rname && equalExCopies(lbody, rbody) && l.typeTag == r.typeTag
 
     case (l @ TlaTheoremDecl(lname, lbody), r @ TlaTheoremDecl(rname, rbody)) =>
       l.ID != r.ID &&

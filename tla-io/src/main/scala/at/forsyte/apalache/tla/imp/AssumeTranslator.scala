@@ -17,7 +17,8 @@ class AssumeTranslator(
           context,
           OutsideRecursion(),
       ).translate(node.getAssume)
-    TlaAssumeDecl(body)(Untyped)
+    val name = Option(node.getDef).map(_.getName.toString)
+    TlaAssumeDecl(name, body)(Untyped)
   }
 }
 

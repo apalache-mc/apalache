@@ -1808,12 +1808,14 @@ class TestSanyImporter extends SanyImporterTestBase {
 
   test("assumptions") {
     // checking that the assumptions are imported properly
+    val assumptionName = "nonZero"
     val text =
-      """
+      s"""
         |---- MODULE assumptions ----
         |CONSTANT N
         |ASSUME N = 4
         |ASSUME N /= 10
+        |ASSUME $assumptionName == N /= 0
         |================================
         |""".stripMargin
 
@@ -1825,20 +1827,28 @@ class TestSanyImporter extends SanyImporterTestBase {
     expectSourceInfoInDefs(root)
 
     modules(rootName).declarations(1) match {
-      case TlaAssumeDecl(e) => assert(eql(name("N"), int(4)).untyped() == e)
+      case TlaAssumeDecl(_, e) => assert(eql(name("N"), int(4)).untyped() == e)
 
       case e @ _ => fail("expected an assumption, found: " + e)
     }
 
     modules(rootName).declarations(2) match {
-      case TlaAssumeDecl(e) => assert(neql(name("N"), int(10)).untyped() == e)
+      case TlaAssumeDecl(_, e) => assert(neql(name("N"), int(10)).untyped() == e)
+
+      case e @ _ => fail("expected an assumption, found: " + e)
+    }
+
+    modules(rootName).declarations(3) match {
+      case TlaAssumeDecl(definedName, e) =>
+        assert(neql(name("N"), int(0)).untyped() == e)
+        assert(definedName contains assumptionName)
 
       case e @ _ => fail("expected an assumption, found: " + e)
     }
 
     // regression test for issue #25
     val names = HashSet(modules(rootName).assumeDeclarations.map(_.name): _*)
-    assert(2 == names.size) // all assumptions must have unique names
+    assert(3 == names.size) // all assumptions must have unique names
   }
 
   test("ignore theorems") {

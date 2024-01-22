@@ -45,7 +45,7 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
 
     val decls: Seq[TlaDecl] = Seq(
         tla.declOp("X", tla.eql(tla.name("a"), tla.int(1)), OperParam("a")),
-        TlaAssumeDecl(tla.eql(tla.int(1), tla.int(0))),
+        TlaAssumeDecl(None, tla.eql(tla.int(1), tla.int(0))),
         TlaConstDecl("c"),
         TlaVarDecl("v"),
     )

@@ -1,5 +1,7 @@
 package at.forsyte.apalache.io.quint
 
+import at.forsyte.apalache.io.quint.QuintDef.QuintAssume
+import at.forsyte.apalache.io.quint.QuintEx.QuintBool
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -35,6 +37,14 @@ class TestQuintIR extends AnyFunSuite {
     assert(QuintDeserializer.write[BigInt](BigInt(-1)) == "-1")
     assert(QuintDeserializer.write[BigInt](BigInt(someBigIntStr)) == someBigIntStr)
     assert(QuintDeserializer.write[BigInt](BigInt(s"-${someBigIntStr}")) == s"-${someBigIntStr}")
+  }
+
+  test("QuintAssume#isUnnamed works correctly") {
+    val namedAssume = QuintAssume(1, "myAssume", QuintBool(2, true))
+    assert(!namedAssume.isUnnamed)
+
+    val unnamedAssume = QuintAssume(1, "_", QuintBool(2, true))
+    assert(unnamedAssume.isUnnamed)
   }
 
   // tictactoe.json is located in tla-io/src/test/resources/tictactoe.json

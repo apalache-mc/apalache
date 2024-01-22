@@ -737,10 +737,11 @@ class Quint(quintOutput: QuintOutput) {
         // no methods for them are provided by the ScopedBuilder.
         case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
         case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
-        case QuintAssume(_, _, quintEx) =>
+        case d @ QuintAssume(_, name, quintEx) =>
           val tlaEx = build(tlaExpression(quintEx).run(nullaryOps))
+          val definedName = Option.unless(d.isUnnamed)(name)
           // assume declarations have no entry in the type map, and are always typed bool
-          Some(None, TlaAssumeDecl(tlaEx)(Typed(BoolT1)))
+          Some(None, TlaAssumeDecl(definedName, tlaEx)(Typed(BoolT1)))
         case op: QuintOpDef if op.qualifier == "run" =>
           // We don't currently support run definitions
           None
