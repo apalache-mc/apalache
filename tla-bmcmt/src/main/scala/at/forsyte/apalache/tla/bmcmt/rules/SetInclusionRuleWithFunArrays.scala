@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, InfSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1}
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
@@ -29,6 +29,9 @@ class SetInclusionRuleWithFunArrays(rewriter: SymbStateRewriter) extends Rewriti
         val rightCell = rightState.asCell
         (leftCell.cellType, rightCell.cellType) match {
           case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
+            rewriter.lazyEq.subsetEq(rightState, leftCell, rightCell)
+
+          case (CellTFrom(SetT1(_)), InfSetT(_)) =>
             rewriter.lazyEq.subsetEq(rightState, leftCell, rightCell)
 
           case (CellTFrom(SetT1(SetT1(t1))), PowSetT(SetT1(t2))) =>

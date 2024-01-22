@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.implicitConversions.Crossable
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT, UnknownT}
+import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, InfSetT, PowSetT, UnknownT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, RewritingRule, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, RecT1, SetT1, TlaEx, TupT1}
 import at.forsyte.apalache.tla.lir.convenience._
@@ -33,6 +33,9 @@ class SetInclusionRuleWithArrays(rewriter: SymbStateRewriter) extends RewritingR
         val rightCell = rightState.arena.findCellByNameEx(rightState.ex)
         (leftCell.cellType, rightCell.cellType) match {
           case (CellTFrom(SetT1(_)), CellTFrom(SetT1(_))) =>
+            subset(rightState, leftCell, rightCell, false)
+
+          case (CellTFrom(SetT1(_)), InfSetT(_)) =>
             subset(rightState, leftCell, rightCell, false)
 
           case (CellTFrom(SetT1(SetT1(t1))), PowSetT(SetT1(t2))) =>
