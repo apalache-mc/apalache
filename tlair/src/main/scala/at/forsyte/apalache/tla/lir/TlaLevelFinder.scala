@@ -74,7 +74,7 @@ class TlaLevelFinder(module: TlaModule) {
       case TlaVarDecl(_) =>
         TlaLevelState
 
-      case TlaAssumeDecl(_) =>
+      case TlaAssumeDecl(_, _) =>
         TlaLevelConst
 
       case TlaOperDecl(name, _, body) =>

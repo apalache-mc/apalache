@@ -1,7 +1,7 @@
 package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.io.json.impl.TlaToUJson
-import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaConstDecl, TlaDecl, TlaEx, TlaVarDecl, TypeTag}
+import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaAssumeDecl, TlaConstDecl, TlaDecl, TlaEx, TlaVarDecl, TypeTag}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import org.junit.runner.RunWith
@@ -89,15 +89,25 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
   test("Non-operator declarations") {
     val constDecl = TlaConstDecl("C")
     val varDecl = TlaVarDecl("x")
+    val namedAssumeDecl = TlaAssumeDecl(Some("myAssume"), tla.eql(tla.name("x"), tla.bool(true)))
+    val unnamedAssumeDecl = TlaAssumeDecl(None, tla.eql(tla.name("x"), tla.bool(true)))
 
     val constJson = getEncVal(constDecl)
     val varJson = getEncVal(varDecl)
+    val namedAssumeJson = getEncVal(namedAssumeDecl)
+    val unnamedAssumeJson = getEncVal(unnamedAssumeDecl)
 
     assert(constJson(kindField).str == "TlaConstDecl")
     assert(constJson("name").str == constDecl.name)
 
     assert(varJson(kindField).str == "TlaVarDecl")
     assert(varJson("name").str == varDecl.name)
+
+    assert(namedAssumeJson(kindField).str == "TlaAssumeDecl")
+    assert(namedAssumeJson("name").str == namedAssumeDecl.name)
+
+    assert(unnamedAssumeJson(kindField).str == "TlaAssumeDecl")
+    assert(!unnamedAssumeJson.obj.contains("name"))
   }
 
   test("Operator declarations") {

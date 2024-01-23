@@ -195,6 +195,14 @@ class TestPrinter extends AnyFunSuite with TestingPredefs {
     }
   }
 
+  test("Test UTF8: TlaAssumeDecl") {
+    val namedAssume: String = toUtf(TlaAssumeDecl(Some("myAssume"), tla.eql(tla.name("x"), tla.bool(true))))
+    assert(namedAssume == s"ASSUME myAssume ≜ x = TRUE")
+
+    val unnamedAssume: String = toUtf(TlaAssumeDecl(None, tla.eql(tla.name("x"), tla.bool(true))))
+    assert(unnamedAssume == s"ASSUME x = TRUE")
+  }
+
   // regression
   test("Test UTF8: OperFormalParam") {
     val d = TlaOperDecl("Foo", List(OperParam("Bar", 1)), ValEx(TlaInt(1)))

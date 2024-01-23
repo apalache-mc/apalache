@@ -102,9 +102,9 @@ class TestDeclarationSorter extends AnyFunSuite with BeforeAndAfterEach {
 
   test("Assume uses Foo out of order") {
     val foo = tla.declOp("Foo", tla.int(1))
-    val assume = TlaAssumeDecl(tla.appOp(tla.name("Foo")))
-    val input = new TlaModule("test", List(assume, foo))
-    val expected = new TlaModule("test", List(foo, assume))
+    val assume = TlaAssumeDecl(None, tla.appOp(tla.name("Foo")))
+    val input = TlaModule("test", List(assume, foo))
+    val expected = TlaModule("test", List(foo, assume))
     assert(expected == DeclarationSorter.instance(input))
   }
 }

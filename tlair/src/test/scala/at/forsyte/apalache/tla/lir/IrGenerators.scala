@@ -348,7 +348,7 @@ trait IrGenerators extends TlaType1Gen {
     for {
       ex <- exGen
       tt <- genTypeTag
-    } yield TlaAssumeDecl(ex).withTag(tt)
+    } yield TlaAssumeDecl(None, ex).withTag(tt)
   }
 
   /**

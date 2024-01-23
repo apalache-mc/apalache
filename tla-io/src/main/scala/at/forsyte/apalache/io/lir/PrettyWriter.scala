@@ -556,8 +556,12 @@ class PrettyWriter(
           "VARIABLE" <> nest(line <> wrapWithComment(annotations.get) <> line <> parseableName(name))
         }
 
-      case TlaAssumeDecl(body) =>
-        val doc = group("ASSUME" <> parens(exToDoc((0, 0), body, nameResolver)))
+      case TlaAssumeDecl(definedName, body) =>
+        val doc = definedName match {
+          case None       => group("ASSUME" <> parens(exToDoc((0, 0), body, nameResolver)))
+          case Some(name) => group("ASSUME" <+> name <+> "==" <+> parens(exToDoc((0, 0), body, nameResolver)))
+        }
+
         if (annotations.isEmpty) {
           doc
         } else {

@@ -157,9 +157,10 @@ class JsonToTla[T <: JsonRepresentation](
         opDecl
 
       case "TlaAssumeDecl" =>
+        val definedName = declJson.getFieldOpt("name").map(scalaFactory.asStr)
         val bodyField = getOrThrow(declJson, "body")
         val body = asTlaEx(bodyField)
-        TlaAssumeDecl(body)(typeTag)
+        TlaAssumeDecl(definedName, body)(typeTag)
       case _ => throw new JsonDeserializationError(s"$kind is not a valid TlaDecl kind")
     }
     setLoc(decl, getSourceLocationOpt(declJson))

@@ -60,13 +60,16 @@ case class TlaVarDecl(name: String)(implicit typeTag: TypeTag) extends TlaDecl w
 /**
  * An assumption defined by ASSUME(...)
  *
+ * @param definedName
+ *   optional assumption name, like name in `ASSUME name == x = 4`, or none, like in `ASSUME x = 4`
  * @param body
  *   the assumption body
  */
-case class TlaAssumeDecl(body: TlaEx)(implicit typeTag: TypeTag) extends TlaDecl with Serializable {
-  val name: String = "ASSUME" + body.ID
+case class TlaAssumeDecl(definedName: Option[String], body: TlaEx)(implicit typeTag: TypeTag)
+    extends TlaDecl with Serializable {
+  override val name: String = definedName.getOrElse("ASSUME" + body.ID)
 
-  override def withTag(newTypeTag: TypeTag): TlaAssumeDecl = TlaAssumeDecl(body)(newTypeTag)
+  override def withTag(newTypeTag: TypeTag): TlaAssumeDecl = TlaAssumeDecl(definedName, body)(newTypeTag)
 }
 
 /**
