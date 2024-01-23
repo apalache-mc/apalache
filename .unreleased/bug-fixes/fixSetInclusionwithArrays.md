@@ -1,1 +1,0 @@
-fix crash on the arrays encoding when having a subset relation containing infinite sets, see #2810
