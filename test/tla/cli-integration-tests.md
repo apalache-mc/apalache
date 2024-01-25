@@ -3978,6 +3978,31 @@ The Apalache server is running on port 8888. Press Ctrl-C to stop.
 ...
 ```
 
+### server mode: error is nicely reported when port is already in use
+
+Start socat in the background to occupy the port, save its pid and wait a second to let binding happen
+```sh
+$ socat TCP-L:8888,fork,reuseaddr - & echo $! > pid.pid && sleep 1
+```
+
+Try to start the Apalache server on the occupied port,
+redirect its output to the file,
+save its exit code,
+strip logger prompt 
+and exit with status code of the server
+```sh
+$ apalache-mc server --port=8888 1>out 2>out; ext=$? && cat out | sed -E 's/E@.*$//' && exit $ext
+...
+Error while starting Apalache server: Failed to bind to address 0.0.0.0/0.0.0.0:8888: Address already in use
+[1]
+```
+
+Cleanup: kill socat and delete temporary files
+```sh
+$ cat pid.pid | xargs kill -9
+$ rm pid.pid out
+```
+
 ## quint input
 
 ### quint input: quint spec can be checked
