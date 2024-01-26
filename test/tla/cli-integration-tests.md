@@ -198,6 +198,27 @@ EXITCODE: ERROR (255)
 
 This command parses a TLA+ specification with the SANY parser.
 
+### parse blank file fails nicely
+
+Create an empty file
+```sh
+$ touch blank.tla
+```
+
+Try to parse a blank file
+```sh
+$ apalache-mc parse blank.tla | sed 's/E@.*//'
+...
+Parsing error: No root module defined in file
+...
+EXITCODE: ERROR (255)
+```
+
+Cleanup
+```sh
+$ rm blank.tla
+```
+
 ### parse Empty succeeds
 
 ```sh
