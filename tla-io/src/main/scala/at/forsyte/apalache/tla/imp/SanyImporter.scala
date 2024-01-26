@@ -114,7 +114,10 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
           ModuleTranslator(sourceStore, annotationStore).translate(node))
       }
 
-    (specObj.getName, modmap)
+    specObj.getName match {
+      case null => throw new SanyImporterException("No root module defined in file")
+      case name => (name, modmap)
+    }
   }
 
   /**
