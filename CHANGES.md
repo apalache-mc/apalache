@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.4 - 2024-01-29
+
+### Bug fixes
+
+- When given an empty `.tla` file, report a clean user error instead of crashing with an exception (#2821).
+
 ## 0.44.3 - 2024-01-23
 
 ### Features
