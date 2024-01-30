@@ -268,7 +268,7 @@ Additionally, if we do isolate inlining to a separate pass, we can choose whethe
 <li>
 <p>Perform no inlining in preprocessing and inline only as needed in the rewriting rules.</p>
 <ul>
-<li>Pros: Spec intermediate output remains small, since inlining increases the size of the specificaiton</li>
+<li>Pros: Spec intermediate output remains small, since inlining increases the size of the specification</li>
 <li>Cons: 
 <ul>
 <li>Fewer optimizations can be applied, as some are only applicable to the syntactic forms obtained after inlining (e.g. <code>ConstSimplifier</code> can simplify <code>IF TRUE THEN a ELSE b</code>, but not <code>IF p THEN a ELSE b</code>)</li>
