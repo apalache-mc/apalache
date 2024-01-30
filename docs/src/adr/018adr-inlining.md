@@ -122,7 +122,7 @@ Knowing that we must perform (1) at some point, what remains is to decide whethe
 Additionally, if we do isolate inlining to a separate pass, we can choose whether or not to perform (2).
 
 1. Perform no inlining in preprocessing and inline only as needed in the rewriting rules.
-    - Pros: Spec intermediate output remains small, since inlining increases the size of the specificaiton
+    - Pros: Spec intermediate output remains small, since inlining increases the size of the specification
     - Cons: 
       - Fewer optimizations can be applied, as some are only applicable to the syntactic forms obtained after inlining (e.g. `ConstSimplifier` can simplify `IF TRUE THEN a ELSE b`, but not `IF p THEN a ELSE b`)
       - Rewriting rules for different encodings have to deal with operators in their generality.
