@@ -4001,7 +4001,12 @@ The Apalache server is running on port 8888. Press Ctrl-C to stop.
 
 ### server mode: error is nicely reported when port is already in use
 
+NOTE: These tests are skipped because the would complicate our CI process
+more than is warranted by the functionality they test. To enable these tests,
+remove the `$MDX skip` annotations.
+
 Start socat in the background to occupy the port, save its pid and wait a second to let binding happen
+<!-- $MDX skip -->
 ```sh
 $ socat TCP-L:8888,fork,reuseaddr - & echo $! > pid.pid && sleep 1
 ```
@@ -4011,6 +4016,7 @@ redirect its output to the file,
 save its exit code,
 strip logger prompt 
 and exit with status code of the server
+<!-- $MDX skip -->
 ```sh
 $ apalache-mc server --port=8888 1>out 2>out; ext=$? && cat out | sed -E 's/E@.*$//' && exit $ext
 ...
@@ -4019,6 +4025,7 @@ Error while starting Apalache server: Failed to bind to address 0.0.0.0/0.0.0.0:
 ```
 
 Cleanup: kill socat and delete temporary files
+<!-- $MDX skip -->
 ```sh
 $ cat pid.pid | xargs kill -9
 $ rm pid.pid out
