@@ -402,7 +402,7 @@ are evaluated to integer values, and these values fall into one of the several
 cases:
 
  1. `b > 0`,
- 1. `b = 0` and `a /= 0`.
+ 2. `b = 0` and `a /= 0`.
 
 **Apalache type:** `(Int, Int) => Int`.
 

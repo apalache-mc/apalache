@@ -11,8 +11,8 @@ In this document, we collect specification idioms that aid us in writing TLA+
 specifications that are:
 
 1. understood by distributed system engineers,
-1. understood by verification engineers, and
-1. understood by automatic analysis tools such as the Apalache model checker.
+2. understood by verification engineers, and
+3. understood by automatic analysis tools such as the Apalache model checker.
 
 If you believe, that the above points are contradictory when put together, it is
 to some extent true. TLA+ is an extremely general specification language. As a

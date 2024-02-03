@@ -5,9 +5,9 @@
 Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules) or functional programming. Those operators are `ApaFoldSet` and `ApaFoldSeqLeft`. This brief introduction to fold operators highlights the following:
 
   1. What are the semantics of fold operators?
-  1. How do I use these operators in Apalache?
-  1. Should I use folding or recursion?
-  1. Examples of common operators defined with folds
+  2. How do I use these operators in Apalache?
+  3. Should I use folding or recursion?
+  4. Examples of common operators defined with folds
 
 ### Syntax
 
@@ -30,14 +30,17 @@ Folding refers to iterative application of a binary operator over a collection. 
 In the case of folding over sequences, `C` is a sequence `<<a_1, ..., a_n>>`. Then, `ApaFoldSeqLeft( Op, b, C )` is defined as follows:
 
   1. If `C` is empty, then `ApaFoldSeqLeft( Op, b, <<>> ) = b`, regardless of `Op`
-  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over `Tail(C)` in the following way: `ApaFoldSeqLeft( Op, b, C ) = ApaFoldSeqLeft( Op, Op(b, Head(C)), Tail(C) )`.
+  2. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over `Tail(C)` in the following way:
+     `ApaFoldSeqLeft( Op, b, C ) = ApaFoldSeqLeft( Op, Op(b, Head(C)), Tail(C) )`.
 
 #### Semantics of `ApaFoldSet`
 
 In the case of folding over sets, `C` is a set `{a_1, ..., a_n}`. Then, `ApaFoldSet( Op, b, C )` is defined as follows:
 
   1. If `C` is empty, then `ApaFoldSet( Op, b, {} ) = b`, regardless of `Op`
-  1. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over some subset of `C` in the following way: `ApaFoldSet( Op, b, C ) = ApaFoldSet( Op, Op(b, x), C \ {x} )`, where `x` is some arbitrary member of `C` (e.g. `x = CHOOSE y \in C: TRUE`). Note that Apalache does not guarantee a deterministic choice of `x`, unlike what using  `CHOOSE` would imply.
+  2. If `C` is nonempty, we establish a recursive relation between folding over `C` and folding over some subset of `C` in the following way:
+     `ApaFoldSet( Op, b, C ) = ApaFoldSet( Op, Op(b, x), C \ {x} )`, where `x` is some arbitrary member of `C` (e.g. `x = CHOOSE y \in C: TRUE`).
+     Note that Apalache does not guarantee a deterministic choice of `x`, unlike what using  `CHOOSE` would imply.
 
 Note that the above are definitions of a _left fold_ in the literature. Apalache does not implement a right fold.
 

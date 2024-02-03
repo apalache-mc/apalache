@@ -277,9 +277,9 @@ Apalache uses [the SANY parser](https://lamport.azurewebsites.net/tla/tools.html
 and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in
 
 1. The current working directory.
-1. The directory containing the main TLA+ file passed on the CLI.
-1. A small Apalache standard library (bundled from `$APALACHE_HOME/src/tla`).
-1. The Java package `tla2sany.StandardModules` (usually provided by the `tla2tools.jar` that is included in the Java
+2. The directory containing the main TLA+ file passed on the CLI.
+3. A small Apalache standard library (bundled from `$APALACHE_HOME/src/tla`).
+4. The Java package `tla2sany.StandardModules` (usually provided by the `tla2tools.jar` that is included in the Java
    classpath).
 
 __Note:__ To let TLA+ Toolbox and TLC know about the Apalache modules, include
@@ -352,11 +352,11 @@ In this case, Apalache performs the following steps:
 
 1. It parses the specification with [SANY](https://lamport.azurewebsites.net/tla/tools.html).
 
-1. It translates SANY semantic nodes
+2. It translates SANY semantic nodes
    into [Apalache IR](https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala)
    .
 
-1. If the `--write-intermediate` flag is given, it pretty-prints the IR into
+3. If the `--write-intermediate` flag is given, it pretty-prints the IR into
    the output directory (see [Detailed output](#detailed)).
 
 You can also write output to a specified location by using the `--output` flag.

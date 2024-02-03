@@ -25,7 +25,7 @@ As you can see, the model checker did two things:
 1. It has translated several expressions that look like `x' = e` into `x' := e`.
    For instance, you can see `year' := 80` and `hasLicense' := FALSE` in
    `Init_si_0000`. We call these expressions **assignments**.
-1. It has factored the operator `Next` into two operators `Next_si_0000` and `Next_si_0001`.
+2. It has factored the operator `Next` into two operators `Next_si_0000` and `Next_si_0001`.
    We call these operators **symbolic transitions**.
 
 Pure TLA+ does not have the notions of assignments and symbolic

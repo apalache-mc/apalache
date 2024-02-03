@@ -43,18 +43,18 @@ user-defined operators that you would probably find unexpected:
   1. Some operators are used as predicates and some are used to compute
   values (*à la pure*).
 
-  1. Operators may accept other operators as parameters. Such operators are
+  2. Operators may accept other operators as parameters. Such operators are
   called [Higher-order operator definitions].
 
-  1. Although operators may be passed as parameters, they are not first-class
+  3. Although operators may be passed as parameters, they are not first-class
   citizens in TLA+. For instance, an operator cannot be returned as a result of
   another operator. Nor can an operator be assigned to a variable (only the result
   of its application may be assigned to a variable).
 
-  1. Operators do not support [Currying]. That is, you can only apply an operator
+  4. Operators do not support [Currying]. That is, you can only apply an operator
   by providing values for all of its expected arguments.
 
-  1. Operators can be nested. However, nested operators require a slightly
+  5. Operators can be nested. However, nested operators require a slightly
   different syntax. They are defined with LET-IN definitions.
 
 **Details about operators.** We go in detail about the different kinds of operators

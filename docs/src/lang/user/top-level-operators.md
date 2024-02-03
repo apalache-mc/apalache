@@ -170,7 +170,7 @@ in `B`:
   1. Substitute the expression `A(e_1, ..., e_n)` in the definition of `B` with
   `body_of_uniq_A`.
 
-  1. Substitute the names `uniq_p_1, ..., uniq_p_n` with the expressions `e_1,
+  2. Substitute the names `uniq_p_1, ..., uniq_p_n` with the expressions `e_1,
   ..., e_n`, respectively.
 
 The above transformation is usually called [Beta reduction].

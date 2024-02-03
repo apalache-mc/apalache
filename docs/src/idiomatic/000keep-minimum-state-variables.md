@@ -15,8 +15,8 @@ intermediate result of a complex computation.
 In programming languages, we introduce temporary variables for several reasons:
 
   1. To avoid repetitive computations of the same expression,
-  1. To break down a large expression into a series of smaller expressions,
-  1. To make the code concise.
+  2. To break down a large expression into a series of smaller expressions,
+  3. To make the code concise.
 
 Point 1 is a non-issue in TLA+, as it is mostly executed in the reader's brain,
 and people are probably less efficient in caching expressions than computers.

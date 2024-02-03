@@ -25,7 +25,7 @@ An implementation of ``TI`` _must_ support two main phases of operation:
    1. Resolving operator overloading, e.g., the expressions ``<<1, 2>>`` and ``f[e]``
     can be treated as expressions either over tuples, or sequences.
 
-   1. Finding signatures for operator definitions, e.g., ``F(x) == x + 1`` should have
+   2. Finding signatures for operator definitions, e.g., ``F(x) == x + 1`` should have
     the signature ``Int => Int``.
 
    If successful, the results of this analysis should be stored somewhere for the subsequent use
@@ -34,7 +34,7 @@ An implementation of ``TI`` _must_ support two main phases of operation:
    be deterministically computed in the next phase such as resolved operator signatures and types of the variables.
    ``TIE`` _may_ use expression identifiers to save the type information in some storage.
 
-1. **Type computation**. In this phase, the client queries ``TIE`` by giving a ``TLA+`` expression
+2. **Type computation**. In this phase, the client queries ``TIE`` by giving a ``TLA+`` expression
     and the types of its arguments. ``TIE`` computes and returns the resulting type of the expression.
     For instance, given the expression ``F(e)`` and the type ``Int`` of ``e``, ``TIE`` finds the signature
     ``F: 'a -> 'a`` in its internal storage and returns the type ``Int``. Given the expression ``{x, y}``

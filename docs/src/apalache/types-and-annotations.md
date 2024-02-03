@@ -49,24 +49,24 @@ inference algorithm for every computation step:
  1. It assumes that all operator definitions have been replaced with their
 bodies. (This is done automatically by Apalache.)
 
- 1. It assumes that non-primed variables have been assigned types already.
+ 2. It assumes that non-primed variables have been assigned types already.
  As expected, the non-primed variables get their initial types by running
  type inference on ``Init``.
 
- 1. It recursively computes the types of subexpressions in a TLA+ expression in
+ 3. It recursively computes the types of subexpressions in a TLA+ expression in
  a bottom-up way as follows:
 
     1. A literal is assigned the respective basic type. That is, an integer,
      a Boolean, or a string gets assigned the integer, Boolean, or the constant
      type respectively.
-    1. An assignment-like expression ``x' = e`` or ``x' \in S`` assigns to ``x'``
+    2. An assignment-like expression ``x' = e`` or ``x' \in S`` assigns to ``x'``
      the type of ``e`` and the type of ``S`` elements respectively. The type
      checker requires that ``x'`` is assigned the same type across all formula
      branches. However, variables _may_ have different types at different steps.
      For instance, the definitions ``Init == x = 1`` and ``Next == x' = {x}``
      will be processed perfectly fine: ``x`` is assigned the type ``Int`` in the initial
      states, and the type ``Set(...(Set(Int)))`` of _n_ nested sets at the _n_-th step, ``n >= 0``.
-    1. The expressions that introduce bound variables, e.g., ``{e: x \in S}``,
+    3. The expressions that introduce bound variables, e.g., ``{e: x \in S}``,
     are treated as usual: first, the type of ``S`` is computed and ``x`` is assigned
     the element type, and then the type of ``e`` is computed, which immediately
     gives us the type of the set expression.
@@ -79,10 +79,10 @@ However, there are a few problematic cases that require type annotations:
  reports a type error. In this case, the user has to write a type annotation.
  For instance, the above-mentioned problematic expression can be fixed as follows:
  ``({} <: {Int}) \union {1}``.
- 1. Similar to an empty set, an empty sequence ``<<>>`` gets assigned the type
+ 2. Similar to an empty set, an empty sequence ``<<>>`` gets assigned the type
   ``Seq[Unknown]``. Hence ``<<>> \o <<1>>`` produces a type error. To resolve this,
   the user has to write a type annotation ``(<<>> <: Seq(Int)) \o <<1>>``.
- 1. It is common to mix records that have different sets of fields, e.g.,
+ 3. It is common to mix records that have different sets of fields, e.g.,
   see [Paxos](https://github.com/tlaplus/Examples/tree/master/specifications/Paxos).
   However, our type checker will report a type error on the following expression:
   ``{[type |-> "1a", bal |-> 1]} \union {[type |-> "2a", bal |-> 2, val |-> 3]}``.
@@ -119,27 +119,27 @@ The syntax of type annotations is as follows:
 
   1. ``Int`` specifies the integer type. For instance, ``x <: Int`` specifies that ``x``
   is an integer, but not a set of integers.
-  1. ``BOOLEAN`` specifies the Boolean type. Again, although we are using a set here,
+  2. ``BOOLEAN`` specifies the Boolean type. Again, although we are using a set here,
   its purpose is to say that an expression is a Boolean, not a set of Booleans.
-  1. ``STRING`` specifies the type of constants, e.g., ``"a"`` and ``"hello"``
+  3. ``STRING`` specifies the type of constants, e.g., ``"a"`` and ``"hello"``
   are such constants.
-  1. ``{T}`` specifies the set whose elements have type ``T``. For instance,
+  4. ``{T}`` specifies the set whose elements have type ``T``. For instance,
   ``{Int}`` specifies a set of integers, whereas ``{{BOOLEAN}}`` specifies
   a set of sets of Booleans. Note that you should always use singleton sets in
   type annotations. For instance, ``{Int, BOOLEAN}`` would be immediately rejected.
   Hence, sets should contain the elements of the same type (there is some flexibility
   for records, see Section 1)
-  1. ``[T_1 -> T_2]`` specifies the type of a function whose arguments have type ``T_1``,
+  5. ``[T_1 -> T_2]`` specifies the type of a function whose arguments have type ``T_1``,
   and the results are of type ``T_2``. Hence, a function should return the values
   of the same type.
-  1. ``<<T_1, ..., T_k>>`` specifies the type of a _k_-element tuple whose
+  6. ``<<T_1, ..., T_k>>`` specifies the type of a _k_-element tuple whose
   elements have types ``T_1, ..., T_k`` respectively. Note that different fields
   of a tuple are allowed to have different types. In this sense, we differentiate them
   from the general functions.
-  1. ``[f_1 |-> T_1, ..., f_k |-> T_k]`` specifies the type of a _k_-field record,
+  7. ``[f_1 |-> T_1, ..., f_k |-> T_k]`` specifies the type of a _k_-field record,
   whose field ``f_i`` is of the type ``T_i``. The types ``T_1, ..., T_k`` may differ. Again,
   that makes them different from the general functions.
-  1. ``Seq(T)`` specifies the type of finite sequences, whose elements are of type ``T``.
+  8. ``Seq(T)`` specifies the type of finite sequences, whose elements are of type ``T``.
   There are no restrictions on the sequence length, except finiteness. In theory,
   a sequence of type ``Seq[T]`` is no different from a function of type ``[Int -> T]``.
   In practice, we use different encodings for the general functions and sequences.

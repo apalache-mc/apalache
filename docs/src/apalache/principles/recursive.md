@@ -22,7 +22,7 @@ This obviously cannot be done for recursive operators, since the process would n
  1. A recursive operator may be non-terminating (although a non-terminating
     operator is useless in TLA+);
 
- 1. A terminating call to an operator may take an unpredictable number of iterations.
+ 2. A terminating call to an operator may take an unpredictable number of iterations.
 
 A note on (2): In practice, when one fixes specification parameters (that is,
 `CONSTANTS`), it is sometimes possible to find a bound on the number of operator iterations. For instance, consider the following specification:

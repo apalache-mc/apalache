@@ -255,8 +255,8 @@ has the following properties:
 
  1. For a non-empty set `S`, a call `GUESS S` returns
     some value `v \in S`.
- 1. A call `GUESS {}` halts the evaluation.
- 1. There are no assumptions about fairness of `GUESS`. It is free to return
+ 2. A call `GUESS {}` halts the evaluation.
+ 3. There are no assumptions about fairness of `GUESS`. It is free to return
    elements in any order, produce duplicates and ignore some elements.
 
 Why do we call it a device? We cannot call it a function, as functions are
@@ -280,13 +280,13 @@ we can think of `GUESS S` as being one of the following implementations:
  we have centralized control over the distributed system, the returned value of
  RPC may be non-deterministic.
 
- 1. `GUESS S` can be simply the user input. In this case, the user resolves
+ 2. `GUESS S` can be simply the user input. In this case, the user resolves
  non-determinism.
 
- 1. `GUESS S` can be controlled by an adversary, who is trying to break the
+ 3. `GUESS S` can be controlled by an adversary, who is trying to break the
  system.
 
- 1. `GUESS S` can pick an element by calling a pseudo-random number generator.
+ 4. `GUESS S` can pick an element by calling a pseudo-random number generator.
  However, note that RNG is a very special way of resolving non-determinism: It
  assumes probabilistic distribution of elements (usually, it is close to the
  [uniform
@@ -341,10 +341,10 @@ evaluated. There are three possible outcomes:
  In this case, `P` assigns the value of an expression `e` to `y'` as soon as
  the evaluator meets the expression `y' = e`.
  The evaluation may continue.
- 1. Predicate `P` evaluates to `FALSE` when using the provided value of `x`.
+ 2. Predicate `P` evaluates to `FALSE` when using the provided value of `x`.
  Well, that was a wrong guess. According to our semantics, the evaluation
  halts. See the above discussion on "halting".
- 1. The set `S` is empty, and `GUESS S` halts.  See the above discussion on
+ 3. The set `S` is empty, and `GUESS S` halts. See the above discussion on
  "halting".
 
 **Example.** Consider the following specification:

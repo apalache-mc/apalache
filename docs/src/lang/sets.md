@@ -54,10 +54,10 @@ TLC restricts set elements to comparable values. See Section 14.7.2 of
 kinds of values in a single set, TLC would not complain about your sets:
 
  1. Booleans,
- 1. integers,
- 1. strings,
- 1. sets,
- 1. functions, tuples, records, sequences.
+ 2. integers,
+ 3. strings,
+ 4. sets,
+ 5. functions, tuples, records, sequences.
 
 
 

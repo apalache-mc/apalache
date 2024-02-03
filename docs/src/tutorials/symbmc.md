@@ -3,9 +3,9 @@
 This brief introduction to symbolic model checking discusses the following:
 
   1. State-spaces and transition systems
-  1. What is a symbolic state?
-  1. What are symbolic traces?
-  1. How do I interpret Apalache counterexamples?
+  2. What is a symbolic state?
+  3. What are symbolic traces?
+  4. How do I interpret Apalache counterexamples?
 
 A glossary of notations and definitions can be found [below](#notation-and-definitions)
 
@@ -170,9 +170,11 @@ Next == x' = (x + 1) % 7
 ```
 has a finite diameter (more specifically, a diameter of 6), because:
   
-  1. \\(R = \\{0,1,\dots,6\\}\\) (the set of remainders modulo 7), since those are the only values `x'`, which is defined as a `% 7` expression, can take. 
-  1. for any \\(k = 0,\dots,5\\), it is the case that \\(r(k) = \\{0,\dots,k\\} \ne R\\), so the diameter is not in \\(\\{1,\dots,5\\}\\)
-  1. for any \\(k \ge 6\\), \\(r(k) = r(6) = R\\)
+  1. \\(R = \\{0,1,\dots,6\\}\\) (the set of remainders modulo 7), since those are the only values `x'`,
+     which is defined as a `% 7` expression, can take. 
+  2. for any \\(k = 0,\dots,5\\), it is the case that \\(r(k) = \\{0,\dots,k\\} \ne R\\),
+     so the diameter is not in \\(\\{1,\dots,5\\}\\)
+  3. for any \\(k \ge 6\\), \\(r(k) = r(6) = R\\)
 
 ### Invariants
 Much like `Init`, an invariant operator `Inv` defines a predicate. However, it is not, in general, the case that `Inv` defines a predicate over `S`. There are different cases we can consider, discussed in more detail [here](../apalache/principles/invariants.md). For the purposes of this document, we focus on _state invariants_, i.e. operators which use only unprimed variables and no temporal- or trace- operators. A state invariant operator `Inv` defines a predicate \\(I\\) over \\(S\\).
@@ -197,7 +199,7 @@ The idea behind explicit-state model checking is to simply perform the following
       ToVisit &\leftarrow (ToVisit \cup Successors(s)) \setminus Visited
       \end{align}
 
-  1. If \\(ToVisit = \emptyset\\) terminate. \\(R = Visited\\) and \\(I\\) is an invariant.
+  2. If \\(ToVisit = \emptyset\\) terminate. \\(R = Visited\\) and \\(I\\) is an invariant.
 
 While simple to describe, there are several limitations of this approach in practice.
 The first limitation is the absence of a termination guarantee. More specifically, this algorithm terminates if and only if \\(R\\) is finite. For example:
@@ -294,14 +296,15 @@ Adapting the general explicit-state approach to bounded model checking is trivia
 
   1. While \\(ToVisit \ne \emptyset\\), pick some \\((s,j) \in ToVisit\\): 
       1. If \\(\neg I(s)\\) then terminate, since a witness is found.
-      1. If \\(I(s)\\) then:
+      2. If \\(I(s)\\) then:
           \begin{align}
           Visited &\leftarrow Visited \cup \\{(s,j)\\} \\\\
           ToVisit &\leftarrow (ToVisit \cup T) \setminus Visited
           \end{align}
       where \\( T \\) equals \\(\\{(t,j+1)\mid t \in Successors(s)\\}\\) if \\(j < k\\) and \\(\emptyset\\) otherwise
 
-  1. If \\(ToVisit = \emptyset\\) terminate. \\(r(k) = \\{v \mid \exists j \in \mathbb{N} \ .\ (v,j) \in Visited\\}\\) and \\(I\\) holds in all states reachable in at most \\(k\\) steps.
+  2. If \\(ToVisit = \emptyset\\) terminate. \\(r(k) = \\{v \mid \exists j \in \mathbb{N} \ .\ (v,j) \in Visited\\}\\)
+     and \\(I\\) holds in all states reachable in at most \\(k\\) steps.
 
 A real implementation would, for efficiency reasons, avoid entering the same state via traces of different length, but the basic idea would remain unchanged.
 Bounding the execution length guarantees termination of the algorithm if \\(S_0\\) is finite and each state has finitely many successors w.r.t. \\(\to\\), even if the state space is unbounded in general.
