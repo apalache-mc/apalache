@@ -504,7 +504,7 @@ truth table for the Boolean connectives, which are no different from the
 Boolean logic in TLA+:
 
 | `A`     | `B`     | `~A`    | `A \/ B` | `A /\ B` | `A => B` |
-| ------- | ------- | ------- | -------- | -------- | -------- |
+|---------|---------|---------|----------|----------|----------|
 | `FALSE` | `FALSE` | `TRUE`  | `FALSE`  | `FALSE`  | `TRUE`   |
 | `FALSE` | `TRUE`  | `TRUE`  | `TRUE`   | `FALSE`  | `TRUE`   |
 | `TRUE`  | `FALSE` | `FALSE` | `TRUE`   | `FALSE`  | `FALSE`  |

@@ -13,7 +13,7 @@ functions are more often used like tables or dictionaries: they are simple maps 
 each process:
 
 | argument   | rmState[argument] |
-| ---------- | ----------------- |
+|------------|-------------------|
 | "process1" | "working"         |
 | "process2" | "aborted"         |
 | "process3" | "prepared"        |

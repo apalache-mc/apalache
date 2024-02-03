@@ -604,24 +604,24 @@ so the partial trace, corresponding to the sequence of actions `Init,A1,A2` is
 
 In fact, we can draw a table, representing partial traces corresponding to sequences of actions:
 
-| Sequence of actions (after `Init`) | Partial trace (without \\(Y_0\\)) |
-|---|---|
-| A1, A1 | \\(\\{4, \dots, 9\\}, \\{4, \dots, 8\\}\\) |
-| A1, A2 | \\(\\{4, \dots, 9\\}, \\{5, \dots, 7\\}\\) |
-| A1, A3 | \\(\\{4, \dots, 9\\}, \\{4, \dots, 9\\}\\) |
-| A1, A4 | \\(\\{4, \dots, 9\\}, \emptyset\\) |
-| A2, A1 | \\(\\{2, \dots, 7\\}, \\{4, \dots, 6\\}\\) |
-| A2, A2 | \\(\\{2, \dots, 7\\}, \\{3, \dots, 7\\}\\) |
-| A2, A3 | \\(\\{2, \dots, 7\\}, \\{2, \dots, 7\\}\\) |
-| A2, A4 | \\(\\{2, \dots, 7\\}, \emptyset\\) |
-| A3, A1 | \\(\\{1, \dots, 10\\}, \\{4, \dots, 9\\}\\) |
-| A3, A2 | \\(\\{1, \dots, 10\\}, \\{2, \dots, 7\\}\\) |
-| A3, A3 | \\(\\{1, \dots, 10\\}, \\{1, \dots, 10\\}\\) |
-| A3, A4 | \\(\\{1, \dots, 10\\}, \\{10\\}\\) |
-| A4, A1 | \\(\\{10\\}, \\{9\\}\\) |
-| A4, A2 | \\(\\{10\\}, \emptyset\\) |
-| A4, A3 | \\(\\{10\\}, \\{10\\}\\) |
-| A4, A4 | \\(\\{10\\}, \emptyset\\) |
+| Sequence of actions (after `Init`) | Partial trace (without \\(Y_0\\))            |
+|------------------------------------|----------------------------------------------|
+| A1, A1                             | \\(\\{4, \dots, 9\\}, \\{4, \dots, 8\\}\\)   |
+| A1, A2                             | \\(\\{4, \dots, 9\\}, \\{5, \dots, 7\\}\\)   |
+| A1, A3                             | \\(\\{4, \dots, 9\\}, \\{4, \dots, 9\\}\\)   |
+| A1, A4                             | \\(\\{4, \dots, 9\\}, \emptyset\\)           |
+| A2, A1                             | \\(\\{2, \dots, 7\\}, \\{4, \dots, 6\\}\\)   |
+| A2, A2                             | \\(\\{2, \dots, 7\\}, \\{3, \dots, 7\\}\\)   |
+| A2, A3                             | \\(\\{2, \dots, 7\\}, \\{2, \dots, 7\\}\\)   |
+| A2, A4                             | \\(\\{2, \dots, 7\\}, \emptyset\\)           |
+| A3, A1                             | \\(\\{1, \dots, 10\\}, \\{4, \dots, 9\\}\\)  |
+| A3, A2                             | \\(\\{1, \dots, 10\\}, \\{2, \dots, 7\\}\\)  |
+| A3, A3                             | \\(\\{1, \dots, 10\\}, \\{1, \dots, 10\\}\\) |
+| A3, A4                             | \\(\\{1, \dots, 10\\}, \\{10\\}\\)           |
+| A4, A1                             | \\(\\{10\\}, \\{9\\}\\)                      |
+| A4, A2                             | \\(\\{10\\}, \emptyset\\)                    |
+| A4, A3                             | \\(\\{10\\}, \\{10\\}\\)                     |
+| A4, A4                             | \\(\\{10\\}, \emptyset\\)                    |
 
 Clearly, the elements in every column (representing the various \\(Y_i(\tau)\\)), add up to \\(X_i = \\{1,\dots,10\\}\\). Also noticeable is the fact that some actions disable others, represented by the fact that some \\(Y_2(\tau)\\) sets are empty. For example, the action `A2` disables `A4`, because after `A2`, `x` cannot hold the value \\(1\\), which is a precondition for `A4`.
 

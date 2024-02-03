@@ -49,14 +49,14 @@ For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op(
 For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutative, and the set `S = {1,2,3}`. The value of `ApaFoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
 
 
-| Order | ApaFoldSet value |
-| --- | --- |
-| 1 -> 2 -> 3 | 11 | 
-| 1 -> 3 -> 2 | 12 | 
-| 2 -> 1 -> 3 | 13 | 
-| 2 -> 3 -> 1 | 15 | 
-| 3 -> 1 -> 2 | 16 | 
-| 3 -> 2 -> 1 | 17 | 
+| Order       | ApaFoldSet value |
+|-------------|------------------|
+| 1 -> 2 -> 3 | 11               | 
+| 1 -> 3 -> 2 | 12               | 
+| 2 -> 1 -> 3 | 13               | 
+| 2 -> 3 -> 1 | 15               | 
+| 3 -> 1 -> 2 | 16               | 
+| 3 -> 2 -> 1 | 17               | 
 
 Because Apalache does not guarantee deterministic choice in the order of iteration, users should treat all of the above results as possible outcomes.
 
