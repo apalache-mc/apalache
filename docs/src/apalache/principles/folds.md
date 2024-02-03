@@ -46,7 +46,8 @@ Note that the above are definitions of a _left fold_ in the literature. Apalache
 
 For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op( Op(b, x), y), z)`. If `C = {x,y}`, the result is either `Op( Op(b, x), y)` or `Op( Op(b, y), x)`. Because the order of elements selected from a set is not predefined, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (`Op(Op(a,b),c) = Op(a,Op(b,c))`) and commutative (`Op(a,b) = Op(b,a)`). 
 
-For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutative, and the set `S = {1,2,3}`. The value of `ApaFoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
+For example, consider the operator `Op(p,q) == 2 * p + q`, which is non-commutative, and the set `S = {1,2,3}`.
+The value of `ApaFoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
 
 
 | Order       | ApaFoldSet value |
@@ -58,7 +59,8 @@ For example, consider the operator `Op(p,q) == 2 * p + q`, which is noncommutati
 | 3 -> 1 -> 2 | 16               | 
 | 3 -> 2 -> 1 | 17               | 
 
-Because Apalache does not guarantee deterministic choice in the order of iteration, users should treat all of the above results as possible outcomes.
+Because Apalache does not guarantee deterministic choice in the order of iteration,
+users should treat all the above results as possible outcomes.
 
 ### Using fold operators in Apalache
 
@@ -144,8 +146,12 @@ CardinalityFold(set) == LET Count(p,q) == p + 1 \* the value of q, the set eleme
                         IN ApaFoldSet( Count, 0, set )
 ```
 
-Notice that, in the case of sets, picking an arbitrary element `x`, to remove from the set at each step, utilizes the `CHOOSE` operator. This is a common trait shared by many operators that implement recursion over sets. 
-Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily discouraged as it is both inefficient, as well as nondeterministic (unlike how `CHOOSE` is defined in TLA+ literature). For details, see the discussion in [issue 841](https://github.com/informalsystems/apalache/issues/841).
+Notice that, in the case of sets, picking an arbitrary element `x`,
+to remove from the set at each step, utilizes the `CHOOSE` operator.
+This is a common trait shared by many operators that implement recursion over sets. 
+Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily discouraged as it is both inefficient,
+and nondeterministic (unlike how `CHOOSE` is defined in TLA+ literature).
+For details, see the discussion in [issue 841](https://github.com/informalsystems/apalache/issues/841).
 
 So the third advantage of using folds is the  ability to, almost always, avoid using the `CHOOSE` operator.
 

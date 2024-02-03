@@ -98,7 +98,7 @@ see Chapter 5 and pages 312-313 of [Specifying Systems].
 
 ## Disadvantages
 
- - Sometimes, the operator "prime" helps us in avoiding code duplication.
+ - Sometimes, the operator "prime" helps us to avoid code duplication.
    For instance, you can write a state invariant `Inv` and later evaluate it
    against a next state by simply writing `Inv'`. However, you have to be
    careful about propagation of primes in `Inv`.

@@ -71,7 +71,7 @@ Binary Searches and Mergesorts are Broken][]:
 ```
 
 As was found by Joshua Bloch, the addition in line 6 may throw
-an out of bounds exception at line 7, due to an integer overflow. This is because `low`
+an out-of-bounds exception at line 7, due to an integer overflow. This is because `low`
 and `high` are signed integers, with a maximum value of `2^31 - 1`. 
 However, the sum of two values, each smaller than `2^31-1`, may be greater than `2^31 -1`. If this  is the case, `low + high` can wrap into a negative number.
 
@@ -269,7 +269,7 @@ the variable `returnValue` right away. The downside is that we have to do
 bookkeeping for this variable.
 
 **Initialize variables.** Having introduced the variables, we have to
-initialize them. That is, we want to specify lines 2-3 of the Java code:
+initialize them. That is, we want to specify lines 2–3 of the Java code:
 
 ```java
 1:     public static int binarySearch(int[] a, int key) {
@@ -1164,7 +1164,7 @@ of a TLA+ specification, as we were writing it and checking it with Apalache.
 There are many different styles of writing TLA+ specifications. One of our
 goals was to demonstrate the incremental approach to specification writing. In
 fact, this approach is not very different from incremental development of
-programs in the spirit of [Test-driven development][]. It took us 2-3 hours to
+programs in the spirit of [Test-driven development][]. It took us 2–3 hours to
 iteratively develop a specification that is similar to the one demonstrated in
 this tutorial.
 

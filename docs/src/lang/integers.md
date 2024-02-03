@@ -299,9 +299,9 @@ table below._
 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 // (-3) == 33 | ((-100) \div (-3)) = 33 | (assert (= 34 (div (- 0 100) (- 0 3)))) |
 
 _Unfortunately, [Specifying Systems][] only gives us the definition for the case
-`b > 0` (that is, cases 1-2 in our description). The implementation in SMT and
-TLC produce incompatible results for `b < 0`. See [issue #331 in
-Apalache](https://github.com/informalsystems/apalache/issues/331)._
+`b > 0` (that is, cases 1–2 in our description).
+The implementation in SMT and TLC produce incompatible results for `b < 0`.
+See [issue #331 in Apalache](https://github.com/informalsystems/apalache/issues/331)._
 
 **Determinism:** Deterministic.
 

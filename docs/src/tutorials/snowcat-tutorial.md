@@ -4,8 +4,8 @@
 
 **Revision:** August 24, 2022
 
-In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.  We
-give concrete steps on running the type checker and annotating a specification
+In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.
+We give concrete steps to running the type checker and annotating a specification
 with types.
 
 This tutorial uses Type System 1.2, which guarantees safe record access. To see

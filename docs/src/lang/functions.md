@@ -440,9 +440,9 @@ the type is `((<<a_1, ..., a_n>> -> b), a_1, ..., a_n) => b`.
 When `e` has a type incompatible with the type of `DOMAIN f`, Apalache flags
 a type error. When `e \notin DOMAIN f`, Apalache assigns some type-compatible
 value to `f[e]`, but does not report any error. This is not a bug in Apalache,
-but a feature of the SMT encoding. Usually, an illegal access surfaces
-somewhere, when checking a specification.  If you want to detect an access
-outside of the function domain, instrument your code with an additional state
+but a feature of the SMT encoding. Usually, illegal access surfaces
+somewhere when checking a specification. If you want to detect access
+outside the function domain, instrument your code with an additional state
 variable.
 
 **Example in TLA+:**

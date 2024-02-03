@@ -3,7 +3,9 @@
 This HOWTO explains what uninterpreted types are in the context of Apalache's type system, outlined in [ADR002][], and where/how to use them.
 
 ## What are uninterpreted types?
-It is often the case, when writing specifications, that inputs (`CONSTANTS`) describe a collection of values, where the only relevant property is that all of the values are considered unique. For instance, [TwoPhase.tla][] defines 
+It is often the case, when writing specifications, that inputs (`CONSTANTS`) describe a collection of values,
+where the only relevant property is that all the values are considered unique.
+For instance, [TwoPhase.tla][] defines 
 ```tla
 CONSTANT RM \* The set of resource managers
 ```

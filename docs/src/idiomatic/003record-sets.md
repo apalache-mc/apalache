@@ -4,7 +4,9 @@ Message sets are canonically modeled as sets of records with mixed types. While 
 This document aims to provide instructions for users to migrate their specs to maintain type compatibility in the future (and improve the performance and robustness of current specs in the present).
 
 ## The common approach
-Apalache allows mixed sets of records, by defining the type of the set to be `Set(r)`, where `r` is the record type which contains all of the fields, which are held by at least one set member. For example:
+Apalache allows mixed sets of records, by defining the type of the set to be `Set(r)`,
+where `r` is the record type which contains all the fields, which are held by at least one set member.
+For example:
 
 ```tla
 { [x: Int], [y: Str] }
