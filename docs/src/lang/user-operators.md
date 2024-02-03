@@ -12,7 +12,8 @@ programming languages: They are computing values over the system state but pose
 no constraints over the system states. 
 
 Recently, Leslie Lamport has extended the syntax of TLA+ operators in [TLA+
-version 2], which supports recursive operators and lambda operators. We explain why Apalache does not support those in [Recursive operators and functions]. 
+version 2], which supports recursive operators and lambda operators.
+We explain why Apalache does not support those in [Recursive operators and functions]. 
 
 The operator syntax that is described in [Specifying Systems] describes TLA+
 version 1. This page summarizes the syntax of user-defined operators in
@@ -21,9 +22,9 @@ versions 1 and 2.
 **Short digression**. The most important thing to understand about user-defined
 operators is that they are normally used inside `Init` and `Next`. While the
 operator `Init` describes the initial states, the operator `Next` describes a
-single step of the system.  That is, these two operators are describing the
+single step of the system. That is, these two operators are describing the
 initial states and the possible transitions of the system, respectively. They
-do not describe the whole system computation.  Most of the time, we are writing
+do not describe the whole system computation. Most of the time, we are writing
 *canonical specifications*, which are written in temporal logic as `Init /\
 [][Next]_vars`. Actually, you do not have to understand temporal logic, in
 order to write canonical specifications. A canonical specification is saying:
@@ -33,7 +34,7 @@ belongs to [Advanced topics].
 
 After the digression, you should now see that user-defined operators in TLA+
 are (normally) describing a single step of the system. Hence, they should be
-terminating. That is why user operators are often understood as macros.  The
+terminating. That is why user operators are often understood as macros. The
 same applies to [Recursive operator definitions]. They have to
 terminate within a single system step.
 

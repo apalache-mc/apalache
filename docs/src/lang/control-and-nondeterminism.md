@@ -360,7 +360,7 @@ Next ==
 It is easy to evaluate `Init`: It does not contain non-determinism, and it
 produces the binding `(x -> 0)` and the state `[x |-> 0]`, respectively. When
 evaluating `Next` against the binding `(x -> 0)`, we have plenty of choices.
-Actually, we have infinitely many choices, as the set `Int` is infinite.  TLC
+Actually, we have infinitely many choices, as the set `Int` is infinite. TLC
 would immediately fail here. But there is no reason for our evaluation to fail.
 Simply ask the oracle. Below, we give three examples of how the evaluation works:
 

@@ -30,7 +30,7 @@ non-linear integer arithmetic, which is harder to solve than linear arithmetic.
 
 When your specification is using only integer literals, e.g., `1`, `2`, `42`,
 but none of the operators from the `Integers` module, the integers can
-be avoided altogether.  For instance, you can replace the integer constants
+be avoided altogether. For instance, you can replace the integer constants
 with string constants, e.g., `"1"`, `"2"`, `"42"`. The string constants are
 translated as constants in the SMT constraints. This simple trick may bring
 your specification into a much simpler theory. Sometimes, this trick allows z3

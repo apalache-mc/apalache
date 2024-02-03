@@ -1,6 +1,10 @@
 # Apalache operators
 
-In addition to the standard TLA+ operators described in the previous section, Apalache defines a number of operators, which do not belong to the core language of TLA+, but which Apalache uses to provide clarity, efficiency, or special functionality. These operators belong to the module `Apalache`, and can be used in any specification by declaring `EXTENDS Apalache`.
+In addition to the standard TLA+ operators described in the previous section,
+Apalache defines a number of operators, which do not belong to the core language of TLA+,
+but which Apalache uses to provide clarity, efficiency, or special functionality.
+These operators belong to the module `Apalache`,
+and can be used in any specification by declaring `EXTENDS Apalache`.
 
 <a name="Assignment"></a>
 ## Assignment
@@ -13,12 +17,17 @@ In addition to the standard TLA+ operators described in the previous section, Ap
 
 **Apalache type:** `(a, a) => Bool`, for some type `a`
 
-**Effect:** The expression `v' := e` evaluates to `v' = e`. At the level of Apalache static analysis, such expressions indicate parts of an action, where the value of a state-variable in a successor state is determined. See [here](../idiomatic/001assignments.md) for more details about assignments in Apalache.
+**Effect:** The expression `v' := e` evaluates to `v' = e`.
+At the level of Apalache static analysis, such expressions indicate parts of an action,
+where the value of a state-variable in a successor state is determined.
+See [here](../idiomatic/001assignments.md) for more details about assignments in Apalache.
 
 **Determinism:** Deterministic.
 
 **Errors:** 
-If the first argument is not a primed variable name, or if the assignment operator is used where assignments are prohibited, Apalache statically reports an error.
+If the first argument is not a primed variable name,
+or if the assignment operator is used where assignments are prohibited,
+Apalache statically reports an error.
 
 **Example in TLA+:**
 
@@ -146,8 +155,8 @@ The operators `ApaFoldSet` and `ApaFoldSeqLeft` are explained in more detail in 
 
 **Apalache type:** `Set(<<a, b>>) => (a -> b)`, for some types `a` and `b`.
 
-**Effect:** Convert a set of pairs `S` to a function `F`, with the property that `F(x) = y => <<x,y>> \in S`. Note that if `S`
-contains at least two pairs `<<x, y>>` and `<<x, z>>`, such that `y /= z`, then `F` is not uniquely defined.
+**Effect:** Convert a set of pairs `S` to a function `F`, with the property that `F(x) = y => <<x,y>> \in S`.
+Note that if `S` contains at least two pairs `<<x, y>>` and `<<x, z>>`, such that `y /= z`, then `F` is not uniquely defined.
 We use `CHOOSE` to resolve this ambiguity. The operator `SetAsFun` can be defined as follows:
 
 ```tla
@@ -220,8 +229,9 @@ MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 **Arguments:** Three arguments:
 
 * A function `fn` that should be interpreted as a sequence.
-* An integer `len`, denoting the length of the sequence, with the property
-  `1..len \subseteq DOMAIN fn`. Apalache does not check this requirement. It is up to the user to ensure that it holds. This expression is not necessarily constant.
+* An integer `len`, denoting the length of the sequence, with the property `1..len \subseteq DOMAIN fn`.
+  Apalache does not check this requirement.
+  It is up to the user to ensure that it holds. This expression is not necessarily constant.
 * An integer constant `maxLen`, which is an upper bound on `len`, that is, `len <= maxLen`.
 
 **Apalache type:** `(Int -> a, Int, Int) => Seq(a)`, for some type `a`
@@ -231,8 +241,9 @@ sequence `<< fn[1], ..., fn[Min(len, maxLen)] >>`.
 
 **Determinism:** Deterministic.
 
-**Errors:** If the types of `fn`, `len` or `maxLen` do not match the expected types, Apalache statically reports a
-type error. Additionally, if it is not the case that `1..len \subseteq DOMAIN fn`, the result is undefined.
+**Errors:** If the types of `fn`, `len` or `maxLen` do not match the expected types,
+Apalache statically reports a type error.
+Additionally, if it is not the case that `1..len \subseteq DOMAIN fn`, the result is undefined.
 
 **Example in TLA+:**
 
@@ -280,15 +291,20 @@ g = boundedFn(lambda x: x * x, {0, 42})
 
 **Apalache type:** `(Bool) => Bool`
 
-**Effect:** The expression `Skolem(\E x \in S: P)` provides a hint to Apalache, that the existential quantification may be skolemized. It evaluates to the same value as `\E x \in S: P`.
+**Effect:** The expression `Skolem(\E x \in S: P)` provides a hint to Apalache,
+that the existential quantification may be skolemized.
+It evaluates to the same value as `\E x \in S: P`.
 
 **Determinism:** Deterministic.
 
 **Errors:** 
-If `e` is not a Boolean expression, throws a type error. If it is Boolean, but not an existentially quantified expression, throws a `StaticAnalysisException`.
+If `e` is not a Boolean expression, throws a type error.
+If it is Boolean, but not an existentially quantified expression, throws a `StaticAnalysisException`.
 
 **Note:**
-This is an operator produced internally by Apalache. You may see instances of this operator, when reading the `.tla` side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.
+This is an operator produced internally by Apalache.
+You may see instances of this operator, when reading the `.tla` side-outputs of various passes.
+Manual use of this operator is discouraged and, in many cases, not supported.
 
 **Example in TLA+:**
 
@@ -309,15 +325,21 @@ Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 
 **Apalache type:** `(Set(a)) => Set(a)`, for some `a`.
 
-**Effect:** The expression `Expand(S)` provides instructions to Apalache, that the large set `S` (powerset or set of functions) should be explicitly constructed as a finite set, overriding Apalache's optimizations for dealing with such collections. It evaluates to the same value as `S`.
+**Effect:** The expression `Expand(S)` provides instructions to Apalache,
+that the large set `S` (powerset or set of functions) should be explicitly constructed as a finite set,
+overriding Apalache's optimizations for dealing with such collections.
+It evaluates to the same value as `S`.
 
 **Determinism:** Deterministic.
 
 **Errors:** 
-If `e` is not a set, throws a type error. If the expression is a set, but is not of the form `SUBSET SS` or `[T1 -> T2]`, throws a `StaticAnalysisException`.
+If `e` is not a set, throws a type error. If the expression is a set,
+but is not of the form `SUBSET SS` or `[T1 -> T2]`, throws a `StaticAnalysisException`.
 
 **Note:**
-This is an operator produced internally by Apalache. You may see instances of this operator, when reading the `.tla` side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.
+This is an operator produced internally by Apalache.
+You may see instances of this operator, when reading the `.tla` side-outputs of various passes.
+Manual use of this operator is discouraged and, in many cases, not supported.
 
 **Example in TLA+:**
 
@@ -343,10 +365,13 @@ Expand( 1 )            \* 1 in TLC, type error in Apalache
 **Determinism:** Deterministic.
 
 **Errors:** 
-If `S` is not a Boolean expression, throws a type error. If it is Boolean, but not an existentially quantified expression, throws a `StaticAnalysisException`.
+If `S` is not a Boolean expression, throws a type error.
+If it is Boolean, but not an existentially quantified expression, throws a `StaticAnalysisException`.
 
 **Note:**
-This is an operator produced internally by Apalache. You may see instances of this operator, when reading the `.tla` side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.
+This is an operator produced internally by Apalache.
+You may see instances of this operator, when reading the `.tla` side-outputs of various passes.
+Manual use of this operator is discouraged and, in many cases, not supported.
 
 **Example in TLA+:**
 
@@ -355,4 +380,3 @@ Skolem( \E x \in {1,2}: x = 1 ) \* TRUE
 Skolem( 1 )                     \* 1 in TLC, type error in Apalache
 Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 ```
-

@@ -5,7 +5,9 @@
 [Variants][] (also called *tagged unions* or *sum types*) are useful, when you want to combine
 values of different shapes in a single set or a sequence.
 
-**Idiomatic tagged unions in untyped TLA+.** In untyped TLA+, one can construct sets, which contain records with different fields, where one filed is typically used as a disambiguation tag. 
+**Idiomatic tagged unions in untyped TLA+.**
+In untyped TLA+, one can construct sets, which contain records with different fields,
+where one filed is typically used as a disambiguation tag. 
 For instance, we could create a set that contains two records of different shapes:
 
 ```tla

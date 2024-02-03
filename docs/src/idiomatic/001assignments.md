@@ -2,15 +2,15 @@
 
 ## Description
 
-The idiom "[Keep state variables to the
-minimum](000keep-minimum-state-variables.md)" tells us to store the minimum
-necessary state variables. By following this idiom, we develop
-the specification by writing constraints over the primed variables.
+The idiom "[Keep state variables to the minimum](000keep-minimum-state-variables.md)"
+tells us to store the minimum necessary state variables.
+By following this idiom, we develop the specification by writing constraints over the primed variables.
 
 TLA+ comes with a great freedom of expressing constraints over variables.
 While we love TLA+ for that freedom, we believe that constraints over primed
 variables are sometimes confusing.
-TLA+ uses the same glyph, `=` for three separate purposes: assignment, asserting equality, and binding variables. But these are very different operations and have different semantics.
+TLA+ uses the same glyph, `=` for three separate purposes: assignment, asserting equality, and binding variables.
+But these are very different operations and have different semantics.
 ### Issue 1
 
 **tl;dr:** Use `:=` (supplied by the `Apalache.tla` module) instead of `=` for assignment.

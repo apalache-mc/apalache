@@ -21,8 +21,7 @@
    were removed in version 0.23.1.
 
  - Version 0.15.0: This HOWTO discusses how to write type annotations for the type checker
-   [Snowcat][], which is used in Apalache since version 0.15.0 (introduced in
-   2021).
+   [Snowcat][], which is used in Apalache since version 0.15.0 (introduced in 2021).
 
 This HOWTO gives you concrete steps to extend TLA+ specifications with type
 annotations. You can find the detailed syntax of type annotations in
@@ -128,10 +127,10 @@ Have a look at the type of `chan`:
 ```
 
 The type of `chan` is a record that has three fields: field `val` of type
-`DATUM`, field `rdy` of type `Int`, field `ack` of type `Int`. The record type syntax is similar to dictionary syntax from programming languages (e.g. Python). We made it different
-from TLA+'s syntax for records `[ val |-> v, rdy |-> r, ack |-> a ]`
-and record sets `[ val: V, rdy: R, ack: A ]`, to avoid confusion between
-types and values.
+`DATUM`, field `rdy` of type `Int`, field `ack` of type `Int`.
+The record type syntax is similar to dictionary syntax from programming languages (e.g. Python).
+We made it different from TLA+'s syntax for records `[ val |-> v, rdy |-> r, ack |-> a ]`
+and record sets `[ val: V, rdy: R, ack: A ]`, to avoid confusion between types and values.
 
 Run the type checker again. You should see the following message:
 
@@ -441,9 +440,9 @@ For more details on the design and usage, see [Type Aliases][] in ADR-002.
 
 ## Recipe 7: Multi-line annotations
 
-A type annotation may span over multiple lines. You may use both the `(* ...
-*)` syntax as well as the single-line syntax `\* ...`. All three examples below
-are accepted by the parser:
+A type annotation may span over multiple lines. You may use both the `(* ... *)`
+syntax as well as the single-line syntax `\* ...`.
+All three examples below are accepted by the parser:
 
 ```tla
 VARIABLES
@@ -467,8 +466,8 @@ similar to how multi-line strings are treated in modern programming languages.
 
 ## Recipe 8: Comments in annotations
 
-Sometimes, it helps to document the meaning of type components. Consider the following
-example from [Recipe 5](#funAsSeq):
+Sometimes, it helps to document the meaning of type components.
+Consider the following example from [Recipe 5](#funAsSeq):
 
 ```tla
 \* @type: (Seq(Int), Int, Int) => Bool;

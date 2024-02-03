@@ -1,6 +1,9 @@
 # Idiom 0: Keep state variables to the minimum
 
-In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.
+In imperative programming, it is common to use mutable variable assignments liberally,
+but to exercise caution whenever mutable variables have a global scope.
+In TLA+, mutable variables are always global, so it is important to use them carefully and in a way
+that accurately reflects the global state of the system you are specifying.
 
 ## Description
 
@@ -40,7 +43,10 @@ Sometimes, we have to expose the internals of the computation. For instance,
 if we want to closely monitor the values of the computed expressions, when using
 the specification for model-based testing.
 
-Sometimes, we have to break this idiom to make the specification more readable. Here is an example by Markus Kuppe. The specification of [BlockingQueue](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51) that has one more variable is easier to read than [the original specification](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla) with a minimal number of variables.
+Sometimes, we have to break this idiom to make the specification more readable.
+Here is an example by Markus Kuppe.
+The specification of [BlockingQueue](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51)
+that has one more variable is easier to read than [the original specification](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla) with a minimal number of variables.
 ## Example
 
 Consider the following implementation of [Bubble sort] in Python:

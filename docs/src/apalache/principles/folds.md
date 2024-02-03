@@ -2,7 +2,10 @@
 
 **Folds are an efficient replacement for recursive operators and functions.**
 
-Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules) or functional programming. Those operators are `ApaFoldSet` and `ApaFoldSeqLeft`. This brief introduction to fold operators highlights the following:
+Apalache natively implements two operators users might be familiar with from the [community modules](https://github.com/tlaplus/CommunityModules)
+or functional programming.
+Those operators are `ApaFoldSet` and `ApaFoldSeqLeft`.
+This brief introduction to fold operators highlights the following:
 
   1. What are the semantics of fold operators?
   2. How do I use these operators in Apalache?
@@ -23,7 +26,9 @@ ApaFoldSeqLeft( operator, base, seq )
 
 ### Semantics of fold operators
 
-Folding refers to iterative application of a binary operator over a collection. Given an operator `Op`, a base value `b` and a collection of values `C`, the definition of folding `Op` over `C` starting with `b` depends on the type of the collection `C`.
+Folding refers to iterative application of a binary operator over a collection.
+Given an operator `Op`, a base value `b` and a collection of values `C`,
+the definition of folding `Op` over `C` starting with `b` depends on the type of the collection `C`.
 
 #### Semantics of `ApaFoldSeqLeft`
 
@@ -44,7 +49,12 @@ In the case of folding over sets, `C` is a set `{a_1, ..., a_n}`. Then, `ApaFold
 
 Note that the above are definitions of a _left fold_ in the literature. Apalache does not implement a right fold.
 
-For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op( Op(b, x), y), z)`. If `C = {x,y}`, the result is either `Op( Op(b, x), y)` or `Op( Op(b, y), x)`. Because the order of elements selected from a set is not predefined, users should be careful, as the result is only uniquely defined in the case that the operator is both associative (`Op(Op(a,b),c) = Op(a,Op(b,c))`) and commutative (`Op(a,b) = Op(b,a)`). 
+For example, if `C` is the sequence `<<x,y,z>>`, the result is equal to `Op( Op( Op(b, x), y), z)`.
+If `C = {x,y}`, the result is either `Op( Op(b, x), y)` or `Op( Op(b, y), x)`.
+Because the order of elements selected from a set is not predefined, users should be careful,
+as the result is only uniquely defined in the case that the operator is both associative
+(`Op(Op(a,b),c) = Op(a,Op(b,c))`) and commutative
+(`Op(a,b) = Op(b,a)`). 
 
 For example, consider the operator `Op(p,q) == 2 * p + q`, which is non-commutative, and the set `S = {1,2,3}`.
 The value of `ApaFoldSet(Op, 0, S)` depends on the order in which Apalache selects elements from S:
@@ -64,9 +74,15 @@ users should treat all the above results as possible outcomes.
 
 ### Using fold operators in Apalache
 
-As shown by the type signature, Apalache permits a very general form of folding, where the types of the collection elements and the type of the base element/return-type of the operator do not have to match. Again, we urge users to exercise caution when using `ApaFoldSet` with an operator, for which the types `a` and `b` are different, as such operators cannot be commutative or associative, and therefore the result is not guaranteed to be unique and predictable. 
+As shown by the type signature, Apalache permits a very general form of folding,
+where the types of the collection elements and the type of the base element/return-type of the operator do not have to match.
+Again, we urge users to exercise caution when using `ApaFoldSet` with an operator,
+for which the types `a` and `b` are different,
+as such operators cannot be commutative or associative,
+and therefore the result is not guaranteed to be unique and predictable. 
 
-The other component of note is `operator`, the _name_ (not definition) of some binary operator, which is available in this context. The following are examples of valid uses of folds:
+The other component of note is `operator`, the _name_ (not definition) of some binary operator, which is available in this context.
+The following are examples of valid uses of folds:
 
 ```tla
 PlusOne(p,q) == p + q + 1
@@ -97,7 +113,8 @@ X == A(1) \* X = 9
 
 ### Folding VS recursion
 
-While TLA+ allows users to write arbitrary recursive operators, they are, in our experience, mostly used to implement collection traversals. Consider the following implementations of a `Max` operator, which returns the largest element of a sequence:
+While TLA+ allows users to write arbitrary recursive operators, they are, in our experience, mostly used to implement collection traversals.
+Consider the following implementations of a `Max` operator, which returns the largest element of a sequence:
 
 ```tla
 \* Max(<<>>) = -inf, but integers are unbounded in TLA+, 
@@ -116,10 +133,15 @@ MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
                 IN ApaFoldSeqLeft( Max, negInf, seq )
 ```
 
-The first advantage of the fold implementation, we feel, is that it is much more clear and concise. It also does not require a termination condition, unlike the recursive case.
+The first advantage of the fold implementation, we feel, is that it is much more clear and concise.
+It also does not require a termination condition, unlike the recursive case.
 One inherent problem of using recursive operators with a symbolic encoding, is the inability to estimate termination.
-While it may be immediately obvious to a human, that `MaxRec` terminates after no more than `Len(seq)` steps, automatic termination analysis is, in general, a rather complex and incomplete form of static analysis.
-Apalache addresses this by finitely unrolling recursive operators and requires users to provide unroll limits (`UNROLL_LIMIT_MaxRec == ...`), which serve as a static upper bound to the number of recursive re-entries, because in general, recursive operators may take an unpredictable number of steps (e.g. computing the [Collatz sequence](https://en.wikipedia.org/wiki/Collatz_conjecture)) or never terminate at all.
+While it may be immediately obvious to a human, that `MaxRec` terminates after no more than `Len(seq)` steps,
+automatic termination analysis is, in general, a rather complex and incomplete form of static analysis.
+Apalache addresses this by finitely unrolling recursive operators and requires users to provide unroll limits (`UNROLL_LIMIT_MaxRec == ...`),
+which serve as a static upper bound to the number of recursive re-entries, because in general,
+recursive operators may take an unpredictable number of steps
+(e.g. computing the [Collatz sequence](https://en.wikipedia.org/wiki/Collatz_conjecture)) or never terminate at all.
 Consider a minor adaptation of the above example, where the author made a mistake in implementing the operator:
 
 ```tla
@@ -132,7 +154,10 @@ MaxRec(seq) == IF seq = <<>>
                        ELSE Head(seq)
 ```
 
-Now, `MaxRec` never terminates, but spotting this error might not be trivial at a glance. This is where we believe folds hold the second advantage: `ApaFoldSet` and `ApaFoldSeqLeft` *always terminate* in `Cardinality(set)` or `Len(seq)` steps, and each step is simple to describe, as it consists of a single operator application.
+Now, `MaxRec` never terminates, but spotting this error might not be trivial at a glance.
+This is where we believe folds hold the second advantage:
+`ApaFoldSet` and `ApaFoldSeqLeft` *always terminate* in `Cardinality(set)` or `Len(seq)` steps,
+and each step is simple to describe, as it consists of a single operator application.
 
 In fact, the vast majority of the traditionally recursive operators can be equivalently rewritten as folds, for example:
 ```tla
@@ -153,14 +178,18 @@ Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily disc
 and nondeterministic (unlike how `CHOOSE` is defined in TLA+ literature).
 For details, see the discussion in [issue 841](https://github.com/informalsystems/apalache/issues/841).
 
-So the third advantage of using folds is the  ability to, almost always, avoid using the `CHOOSE` operator.
+So the third advantage of using folds is the ability to, almost always, avoid using the `CHOOSE` operator.
 
 The downside of folding, compared to general recursion, is the inability to express non-primitively recursive functions.
-For instance, one cannot define the [Ackermann function](https://en.wikipedia.org/wiki/Ackermann_function), as a fold. We find that in most specifications, this is not something the users would want to implement anyway, so in practice, we believe it is almost always better to use fold over recursive functions.
+For instance, one cannot define the [Ackermann function](https://en.wikipedia.org/wiki/Ackermann_function), as a fold.
+We find that in most specifications, this is not something the users would want to implement anyway,
+so in practice, we believe it is almost always better to use fold over recursive functions.
 
 ### Folding VS quantification and `CHOOSE`
 
-Often, folding can be used to select a value from a collection, which could alternatively be described by a predicate and selected with `CHOOSE`. Let us revisit the `MaxFold` example:
+Often, folding can be used to select a value from a collection,
+which could alternatively be described by a predicate and selected with `CHOOSE`.
+Let us revisit the `MaxFold` example:
 
 ```tla
 MaxFold(seq) == LET Max(p,q) == IF p > q THEN p ELSE q
@@ -184,9 +213,14 @@ The reason is that _evaluating_ `CHOOSE x \in S : \A y \in S: P(x,y)` is quadrat
 For each candidate `x`, the entire set `S` must be tested for `P(x,_)`.
 On the other hand, the fold approach is linear in the size of `S`, since each element is visited exactly once. 
 
-In addition, the fold approach admits no undefined behavior. If, in the above example, `seq` was an empty sequence, the value of the computed maximum depends on the value of `CHOOSE x \in {}: TRUE`, which is undefined in TLA+, while the fold-based approach allows the user to determine behavior in that scenario (via the initial value).
+In addition, the fold approach admits no undefined behavior.
+If, in the above example, `seq` was an empty sequence,
+the value of the computed maximum depends on the value of `CHOOSE x \in {}: TRUE`, which is undefined in TLA+,
+while the fold-based approach allows the user to determine behavior in that scenario (via the initial value).
 
-Our general advice is to use folds over `CHOOSE` with quantified predicates wherever possible, if you're willing accept a very minor increase in specification size in exchange for a decrease in Apalache execution time, or, if you wish to avoid `CHOOSE` over empty sets resulting in undefined behavior.
+Our general advice is to use folds over `CHOOSE` with quantified predicates wherever possible,
+if you're willing accept a very minor increase in specification size in exchange for a decrease in Apalache execution time,
+or, if you wish to avoid `CHOOSE` over empty sets resulting in undefined behavior.
 
 ### Examples: The versatility of folds
 
@@ -202,6 +236,12 @@ For the sake of comparison, we rewrite the above operators using recursion, `CHO
 {{#include ../../../../test/tla/NonFoldDefined.tla::}}
 ```
 
-In most cases, recursive operators are much more verbose, and the operators using `CHOOSE` and/or quantification mask double iteration (and thus have quadratic complexity). 
-For instance, the evaluation of the fold-less `IsInjective` operator actually requires the traversal of all domain pairs, instead of the single domain traversal with fold.
-In particular, `Mode`, the most verbose among the fold-defined operators, is still very readable (most LET-IN operators are introduced to improve readability, at the cost of verbosity) and quite efficient, as its complexity is linear w.r.t. the length of the sequence (the mode could also be computed directly, without a sub-call to `Range`, but the example would be more difficult to read), unlike the variant with `CHOOSE` and `\A`, which is quadratic.
+In most cases, recursive operators are much more verbose,
+and the operators using `CHOOSE` and/or quantification mask double iteration (and thus have quadratic complexity). 
+For instance, the evaluation of the fold-less `IsInjective` operator actually requires the traversal of all domain pairs,
+instead of the single domain traversal with fold.
+In particular, `Mode`, the most verbose among the fold-defined operators,
+is still very readable (most LET-IN operators are introduced to improve readability, at the cost of verbosity) and quite efficient,
+as its complexity is linear w.r.t. the length of the sequence
+(the mode could also be computed directly, without a sub-call to `Range`, but the example would be more difficult to read),
+unlike the variant with `CHOOSE` and `\A`, which is quadratic.

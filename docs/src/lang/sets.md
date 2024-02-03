@@ -509,7 +509,7 @@ set()
 
 **Arguments:** At least three arguments: a mapping expression,
     a variable name (or a tuple of names, see **Advanced syntax**),
-    a set. Additional arguments are variables names and sets, interleaved.
+    a set. Additional arguments are variables' names and sets, interleaved.
 
 **Apalache type:** The formal type of this operator is a bit complex.
 Hence, we give an informal description for the one-argument case:
@@ -526,8 +526,8 @@ For every element `e_1` of `S` and every element `e_2` of `T`:
 
  1. Bind the element `e_1` to variable `x`,
  2. Bind the element `e_2` to variable `y`,
- 2. Compute the value of `e` under the binding `[x |-> e_1, y |-> e_2]`,
- 3. Insert the value `e` into the set `M`.
+ 3. Compute the value of `e` under the binding `[x |-> e_1, y |-> e_2]`,
+ 4. Insert the value `e` into the set `M`.
 
 **Determinism:** Deterministic.
 
@@ -681,7 +681,7 @@ the result is undefined.
 
 **Determinism:** Deterministic.
 
-**Errors:** Pure TLA+ does not restrict the operator argument.  TLC flags a
+**Errors:** Pure TLA+ does not restrict the operator argument. TLC flags a
 model checking error, when it discovers that `S` is not a set, or when it is an
 infinite set.  Apalache produces a static type error, if the type of `S` is
 different from a finite set.

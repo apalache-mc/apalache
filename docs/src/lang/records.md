@@ -49,7 +49,7 @@ distinguishes between general functions and records. When Apalache processes a
 record constructor, it assigns the record type to the result. This record type
 carries the information about the names of the record fields and their types.
 Similarly, Apalache assigns the type of a set of records, when it processes a
-record set constructor.  See the [Apalache ADR002][] on types.
+record set constructor. See the [Apalache ADR002][] on types.
 
 _Owing to the type information, records are translated into SMT more efficiently
 by Apalache than the general functions._

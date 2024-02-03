@@ -248,9 +248,8 @@ $ cd test/tla
 apalache-mc check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 ```
 
-This command checks, whether `Safety` can be violated in 20 specification steps. The constants are initialized with the
-predicate
-`ConstInit`, defined in `y2k_cinit.tla` as:
+This command checks, whether `Safety` can be violated in 20 specification steps.
+The constants are initialized with the predicate `ConstInit`, defined in `y2k_cinit.tla` as:
 
 ```tla
 ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99

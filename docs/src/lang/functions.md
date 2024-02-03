@@ -8,9 +8,10 @@ Functions are probably the second most used TLA+ data structure after sets. TLA+
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
 technically possible to use functions when constructing a function in TLA+,
-functions are more often used like tables or dictionaries: they are simple maps from a set of inputs to a set of outputs. For instance, in
-[Two-phase commit], the function `rmState` stores the transaction state for
-each process:
+functions are more often used like tables or dictionaries: they are simple maps
+from a set of inputs to a set of outputs.
+For instance, in [Two-phase commit], the function `rmState`
+stores the transaction state for each process:
 
 | argument   | rmState[argument] |
 |------------|-------------------|
@@ -235,8 +236,7 @@ TypeError: unhashable type: 'dict'
 Of course, this is an implementation detail of Python, and it has nothing to do
 with TLA+. This example probably demonstrates that the built-in primitives of
 TLA+ are more powerful than the standard primitives of many programming
-languages (see [this
-discussion](https://github.com/informalsystems/apalache/discussions/551)).
+languages (see [this discussion](https://github.com/informalsystems/apalache/discussions/551)).
 
 Alternatively, we could represent a TLA+ function in Python as a set
 of pairs `(key, value)` and implement TLA+ function operators over such a
@@ -583,7 +583,7 @@ function domain is not known in advance. Additionally, given a Python
 dictionary `f`, we write `f.items()` to quickly iterate over the pairs of keys
 and values. Had we wanted to follow the TLA+ semantics more precisely, we would
 have to enumerate over the keys in the function domain and apply the function to
-each key, in order to obtain the value that is associated with the key.  This
+each key, in order to obtain the value that is associated with the key. This
 code would be less efficient than the idiomatic Python code.
 
 ```python
