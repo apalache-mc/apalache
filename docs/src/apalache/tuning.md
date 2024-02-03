@@ -34,7 +34,7 @@ reports 'UNKNOWN', and the model checker reports a runtime error.
 
 `search.invariant.mode=(before|after)` defines the moment when the invariant is
 checked. In the `after` mode, all transitions are first translated, one of them
-is picked non-deterministically and then the invariant is checked. Although this
+is picked non-deterministically, and then the invariant is checked. Although this
 mode reduces the number of SMT queries, it usually requires more memory than the
 `before` mode. In the `before` mode, the invariant is checked for every enabled
 transition independently. The `before` mode may drastically reduce memory

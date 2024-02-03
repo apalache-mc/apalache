@@ -14,19 +14,23 @@ $ apalache-mc --help
 The most important commands are as follows:
 
  - `parse` reads a TLA+ specification with the SANY parser and flattens it by
-   instantiating all modules. It terminates successfully, if there are no parse
+   instantiating all modules. It terminates successfully if there are no parse
    errors. The input specification to `parse` may be given in standard TLA+ format, or in the [JSON serialization
    format][], while the outputs are produced in both formats.
 
  - `typecheck` performs all of the operations of `parse` and additionally runs the type checker Snowcat to infer
-   the types of all expressions in the parsed specification. It terminates successfully, if there are no type errors.
+   the types of all expressions in the parsed specification. It terminates successfully if there are no type errors.
 
- - `simulate` performs all of the operations of `typecheck` and additionally runs the model checker in simulation mode, which *randomly* picks a sequence of [actions](https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices) and checks the invariants for the subset of all executions which only admit actions in the selected order. 
- It terminates successfully, if there are no invariant violations. 
- This command usually checks randomized symbolic runs much faster than the `check` command.
+ - `simulate` performs all of the operations of `typecheck` and additionally runs the model checker in simulation mode,
+   which *randomly* picks a sequence of [actions](https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices)
+   and checks the invariants for the subset of all executions which only admit actions in the selected order. 
+   It terminates successfully if there are no invariant violations. 
+   This command usually checks randomized symbolic runs much faster than the `check` command.
 
- - `check` performs all of the operations of `typecheck` and then runs the model checker in bounded model checking mode, which checks invariants for *all executions*, the length of which does not exceed the value specified by the `--length` parameter. 
-   It terminates successfully, if there are no invariant violations.
+ - `check` performs all of the operations of `typecheck` and then runs the model checker in bounded model checking mode,
+   which checks invariants for *all executions*,
+   the length of which does not exceed the value specified by the `--length` parameter. 
+   It terminates successfully if there are no invariant violations.
 
  - `test` performs all of the operations of `check` in a mode that is designed to [test a single action](https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions).
 

@@ -571,7 +571,7 @@ a type annotation before the keyword `LOCAL`, not after it. For example:
 LOCAL LocalInc(x) == x + 1
 ```
 
-This may change later, when the tlaplus [Issue 578][] is resolved.
+This may change later when the tlaplus [Issue 578][] is resolved.
 
 
 [old type annotations]: ../apalache/types-and-annotations.md

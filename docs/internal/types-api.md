@@ -5,7 +5,7 @@ Type reconstruction API
 
 In this note, we focus on the client interface of a type inference engine for TLA+.
 In the following, we refer to this interface as ``TI``.
-By fixing this interface we give the users the freedom of choosing from several
+By fixing this interface, we give the users the freedom of choosing from several
 type inference engines.
 
 Given a TLA+ expression ``ex``, the ultimate goal of type inference is to assign a type
@@ -30,7 +30,7 @@ An implementation of ``TI`` _must_ support two main phases of operation:
 
    If successful, the results of this analysis should be stored somewhere for the subsequent use
    in the _Type computation_ mode. Note that it is not necessary to store the types of all the intermediate
-   subexpressions -- that would be wasteful. This analysis should store only the results that cannot
+   subexpressions - that would be wasteful. This analysis should store only the results that cannot
    be deterministically computed in the next phase such as resolved operator signatures and types of the variables.
    ``TIE`` _may_ use expression identifiers to save the type information in some storage.
 

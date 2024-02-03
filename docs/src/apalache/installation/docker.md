@@ -34,7 +34,7 @@ The following docker parameters are used:
   extends.**
   From the user perspective, it works as if Apalache was
   executing in `<your-spec-directory>`.
-  In particular the tool logs are written in that directory.
+  In particular, the tool logs are written in that directory.
 
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
@@ -76,7 +76,7 @@ $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystem
 
 ## Using the development branch of Apalache
 
-The development of Apalache proceeds at a quick pace and we cut releases weekly.
+The development of Apalache proceeds at a quick pace, and we cut releases weekly.
 Please refer to the [changelog][] and the [manual][] on the `main` development
 branch for a report of the newest features. Since we cut releases weekly, you
 should have access to all the latest features in the last week by using the
@@ -109,7 +109,7 @@ $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystem
 
 ## Building an image
 
-For an end user there is no need to build an Apalache image. If you like to
+For an end user, there is no need to build an Apalache image. If you like to
 produce a modified docker image, take into account that it will take about 30
 minutes for the image to get built, due to compilation times of Microsoft Z3. To
 build a docker image of Apalache, issue the following command in

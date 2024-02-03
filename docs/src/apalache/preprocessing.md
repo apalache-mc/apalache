@@ -16,9 +16,10 @@ preprocessing steps:
 
  ## Keramelizer
 
- Keramelizer rewrites TLA+ expressions into [KerA](./kera.md). For many TLA+ expressions
- this translation is clear, however, some expressions cannot be easily translated. Below
- we discuss such expressions and the decisions that we have made.
+ Keramelizer rewrites TLA+ expressions into [KerA](./kera.md).
+ For many TLA+ expressions, this translation is clear;
+ however, some expressions cannot be easily translated.
+ Below, we discuss such expressions and the decisions that we have made.
 
 
 # References

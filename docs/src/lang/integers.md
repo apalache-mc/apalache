@@ -640,7 +640,7 @@ True
 <a name="eq"></a>
 ### Equality and inequality
 
-The operators `a = b` and `a /= b` are core operators of TLA+ and thus they are
+The operators `a = b` and `a /= b` are core operators of TLA+, and thus they are
 not defined in the module `Integers`, see [Logic](./logic.md).
 
 

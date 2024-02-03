@@ -14,7 +14,7 @@ specifications that are:
 2. understood by verification engineers, and
 3. understood by automatic analysis tools such as the Apalache model checker.
 
-If you believe, that the above points are contradictory when put together, it is
+If you believe that the above points are contradictory when put together, it is
 to some extent true. TLA+ is an extremely general specification language. As a
 result, it is easy to write a short specification that leaves a human reader
 puzzled . It is even easier to write a (syntactically correct) specification that

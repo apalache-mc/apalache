@@ -16,15 +16,15 @@ If you opt in for the programme and later remove the file, then the statistics
 will not be submitted either.
 
 
-## Why do we ask you to help us
+## Why do we ask you to help us?
 
 There are several reasons:
 
   - Although our project is open source, developing Apalache is our main job.
     We are grateful to [Informal Systems] for supporting us and to [TU Wien],
     [Vienna Science and Technology Fund], and [Inria Nancy/LORIA], who
-    supported us in the past.  It is easier to convince our decision makers to
-    continue the development, if we have clear feedback on how many people
+    supported us in the past. It is easier to convince our decision makers to
+    continue the development if we have clear feedback on how many people
     **use and need Apalache**.
 
   - We would like to know which features you are using most, so we can focus on
@@ -55,7 +55,7 @@ To opt out from the statistics collection, execute the following command:
 
 You can check the daily log at [exec-stats.tlapl.us](https://exec-stats.tlapl.us/).
 
-The following data is submitted for each run, if you have opted in:
+The following data is submitted for each run if you have opted in:
 
   - The total number of CPU cores and cores assigned
   (the latter is 1 for now, but will change soon)

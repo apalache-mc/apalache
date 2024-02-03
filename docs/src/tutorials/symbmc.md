@@ -155,8 +155,12 @@ and so on. We can express this compactly as:
 ### Finite diameters
 We say that a transition system has a _finite diameter_, if there exists a \\(k \in N\\), such that \\(R = r(k)\\).
 
-If such an integer exists then the smallest integer \\(k\\), for which this holds true, is the _diameter_ of the transition system.
-In other words, if the transition system \\((S,S_0,\to)\\) has a finite diameter of \\(k\\), any state that is reachable from a state in \\(S_0\\), is reachable in at most \\(k\\) transitions. The example above clearly does not have a finite diameter, since \\(R\\) is infinite, but \\(r(k)\\) is finite for each \\(k\\).
+If such an integer exists then the smallest integer \\(k\\), for which this holds true,
+is the _diameter_ of the transition system.
+In other words, if the transition system \\((S,S_0,\to)\\) has a finite diameter of \\(k\\),
+any state that is reachable from a state in \\(S_0\\) is reachable in at most \\(k\\) transitions.
+The example above clearly does not have a finite diameter, since \\(R\\) is infinite,
+but \\(r(k)\\) is finite for each \\(k\\).
 
 However, the spec
 ```tla
@@ -212,8 +216,9 @@ Init == x = 0
 Next == x' = x + 1
 ```
 
-defines a states space, for which \\(R = \mathbb{N}\\), so the above algorithm never terminates.
-Further, in the general case it is difficult or impossible to compute \\(S_0\\) or the set \\(Successors(s)\\) defined in the algorithm. 
+defines a state space, for which \\(R = \mathbb{N}\\), so the above algorithm never terminates.
+Further, in the general case, it is difficult or impossible to compute \\(S_0\\)
+or the set \\(Successors(s)\\) defined in the algorithm. 
 As an example, consider the following specification:
 ```tla
 VARIABLE x

@@ -230,7 +230,7 @@ values of `e_1` and `e_2`. Let `e_1` and `e_2` evaluate to the values
     ```
 
  - In other cases, `e_1 = e_2` evaluates to `FALSE` if the values have comparable types.
- - TLC and Apalache report an error, if the values have incomparable types.
+ - TLC and Apalache report an error if the values have incomparable types.
 
 **Determinism:** Deterministic, unless `e_1` has the form `x'`, which can be
 interpreted as an assignment to the variable `x'`.  For the non-deterministic

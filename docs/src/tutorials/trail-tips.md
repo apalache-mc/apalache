@@ -55,7 +55,7 @@ invariant](../apalache/principles/invariants.md#action-invariants):
 ```
 
 Our version of `NextFast` is quite concise and it uses the good parts of
-TLA+. However, new TLA+ users would probably write it differently. Below you
+TLA+. However, new TLA+ users would probably write it differently. Below, you
 can see the version that is more likely to be written by a specification
 writer who has good experience in software engineering:
 

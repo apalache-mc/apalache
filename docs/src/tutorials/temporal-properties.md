@@ -170,7 +170,7 @@ For example, there is a variable called `☐(requestedGreen ⇒ ♢isGreen)` in 
 which is called `__temporal_t_1` in TLA+.
 In the following, let's focus on the content of the comment, since it's easier to understand what's going on.
 
-There are many additional variables in the counterexample because to check temporal formulas, Apalache uses an
+There are many additional variables in the counterexample, because to check temporal formulas, Apalache uses an
 encoding that transforms temporal properties to invariants.
 If you are interested in the technical details, the encoding is described in sections 3.2 and 4 of [Biere et al.][].
 However, to understand the counterexample, you don't need to go into the technical details of the encoding.

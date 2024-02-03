@@ -320,8 +320,8 @@ conditions:
     value for the name `y'`.
 
 If the above assumptions do not hold true, the expression `\E x \in S: P` does
-not have non-determinism and it can be evaluated by following the standard
-deterministic semantics of exists, see [Logic](./logic.md).
+not have non-determinism, and it can be evaluated by following the standard
+deterministic semantics of `exists`, see [Logic](./logic.md).
 
 **Note:** We do not consider action operators like `UNCHANGED y`. They can be
 translated into an equivalent form, e.g., `UNCHANGED x` is equivalent to `x' =
@@ -357,13 +357,12 @@ Next ==
     i > x /\ x' = i
 ```
 
-It is easy to evaluate `Init`: It does not contain non-determinism and it
+It is easy to evaluate `Init`: It does not contain non-determinism, and it
 produces the binding `(x -> 0)` and the state `[x |-> 0]`, respectively. When
 evaluating `Next` against the binding `(x -> 0)`, we have plenty of choices.
 Actually, we have infinitely many choices, as the set `Int` is infinite.  TLC
 would immediately fail here. But there is no reason for our evaluation to fail.
-Simply ask the oracle. Below we give three examples of how the evaluation
-works:
+Simply ask the oracle. Below, we give three examples of how the evaluation works:
 
 ```
 1. (GUESS Int) returns 10. (LET i == 10 IN i > x /\ x' = i) is TRUE, x' is assigned 10.

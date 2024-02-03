@@ -80,7 +80,7 @@ choice to the user.
 Usually, the specification author has a good idea of how to partition states
 into interesting equivalence classes. We let you specify this partitioning by declaring
 a view abstraction, similar to the `VIEW` configuration option in TLC.
-Basically, two states are considered to be similar, if they have the same view.
+Basically, two states are considered to be similar if they have the same view.
 
 In our example, we compute the state view with the operator `View1`:
 

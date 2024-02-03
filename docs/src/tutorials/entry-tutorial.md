@@ -239,9 +239,10 @@ how we do it:
 {{#include ../../../test/tla/bin-search/BinSearch2.tla:32:38}}
 ```
 
-The variables `low` and `high` are called *state variables*. They define a state of our state machine. That is, they are never introduced and
-never removed. Remember, TLA+ is not tuned towards any particular computer
-architecture and thus it does not even have the notion of an execution stack.
+The variables `low` and `high` are called *state variables*. They define a state of our state machine.
+That is, they are never introduced and never removed.
+Remember, TLA+ is not tuned towards any particular computer
+architecture, and thus it does not even have the notion of an execution stack.
 You can think of `low` and `high` as being global variables. Yes, global
 variables are generally frowned upon in programming languages. However, when dealing with a
 specification, they are much easier to reason about than the execution stack.
@@ -411,7 +412,7 @@ definitions from `BinSearch2.tla`.
 Since we are fixing the parameters with concrete values, `MC2_8.tla` looks very
 much like a unit test. It's a good start for debugging a few things, but since
 our program is entirely sequential, our specification is as good as a unit
-test. Later in this tutorial we will show how to leverage Apalache to check
+test. Later in this tutorial, we will show how to leverage Apalache to check
 properties for all possible inputs (up to some bound).
 
 Let us check `MC2_8.tla`:
@@ -1135,7 +1136,7 @@ The final specifications can be found in
 and
 [MC10_8.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla).
 
-In this tutorial we have shown how to:
+In this tutorial, we have shown how to:
 
  - Specify the behavior of a sequential algorithm (binary search).
  - Specify invariants that check safety and termination.

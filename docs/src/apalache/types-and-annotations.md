@@ -23,7 +23,7 @@ Simply, search for the following declaration:
 a <: b == a
 ```
 
-If your specification contains such a declaration and it is used somewhere,
+If your specification contains such a declaration, and it is used somewhere,
 then you are using the old type annotations. You have to remove them and write
 the new ones.  The old and new type annotations are conceptually different, so there is
 no automatic upgrade process.
@@ -32,7 +32,7 @@ no automatic upgrade process.
 
 Our model checker assigns types to variables, in order to encode TLA+ expressions
 in [Z3](https://github.com/Z3Prover/z3). Hence, the expressions that are ill-typed
-(from the point of view of our type system), will be rejected right away. Some
+(from the point of view of our type system) will be rejected right away. Some
 expressions, such as ``{}`` and ``<<>>`` require an advanced type inference algorithm,
 so the model checker will ask the user to provide the tool with a type annotation.
 To get an idea of our type system, check Section 2. In a nutshell,

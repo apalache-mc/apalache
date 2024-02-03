@@ -29,7 +29,7 @@ Note that the above set is equal to the sets `{ 1, 2, 3, 4 }` and `{ 4, 3, 2, 1
 }`. They are actually the same set, though they are constructed by passing
 various number of arguments in different orders.
 
-The most basic set operation is the set membership that checks, whether a set
+The most basic set operation is the set membership that checks whether a set
 contains a value:
 
 ```tla

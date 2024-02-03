@@ -62,7 +62,7 @@ Init ==
         rmState = f
 ```
 
-In the above example we are not talking about one function that is somehow
+In the above example, we are not talking about one function that is somehow
 initialized "by default". Rather, we say that `rmState` can be set to an
 arbitrary function that receives arguments from the set `{ "process1",
 "process2", "process3" }` and returns values that belong to the set `{
@@ -232,7 +232,7 @@ TypeError: unhashable type: 'dict'
 
 ```
 
-Of course, this is an implementation detail of Python and it has nothing to do
+Of course, this is an implementation detail of Python, and it has nothing to do
 with TLA+. This example probably demonstrates that the built-in primitives of
 TLA+ are more powerful than the standard primitives of many programming
 languages (see [this

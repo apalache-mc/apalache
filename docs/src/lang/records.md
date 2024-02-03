@@ -56,7 +56,7 @@ by Apalache than the general functions._
 
 Every record is assigned a type in Apalache. For instance, the record
 `[name |-> "A", a |-> 3]` has the type `{ name: Str, a: Int }`. In contrast to
-TLC, the type checker statically flags an error, if a spec is trying to access
+TLC, the type checker statically flags an error if a spec is trying to access
 a non-existent field. Consider the following example:
 
 ```tla
