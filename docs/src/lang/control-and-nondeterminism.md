@@ -165,7 +165,7 @@ After all, people are much better at solving certain logical puzzles than
 computers, though people get bored much faster than computers.
 
 To understand how TLC enumerates states, check Chapter 14 of [Specifying
-Systems][]. In the rest of this document, we focus on treatment of
+Systems][]. In the rest of this document, we focus on the treatment of
 non-determinism that is close to the approach in Apalache.
 
 ## Explaining non-determinism to computers

@@ -7,7 +7,7 @@ functions in programming languages. (Recall that [TLA+
 functions](./functions.md) are more like dictionaries or hash maps, not
 functions in PL.) Then you realize that operators such as `Init` and `Next` are
 used as logic predicates. However, large specifications often contain operators
-that are not predicates, but in fact are similar to pure functions in
+that are not predicates, but in fact similar to pure functions in
 programming languages: They are computing values over the system state but pose
 no constraints over the system states. 
 
@@ -57,7 +57,7 @@ user-defined operators that you would probably find unexpected:
   1. Operators can be nested. However, nested operators require a slightly
   different syntax. They are defined with LET-IN definitions.
 
-**Details about operators.** We go in detail about different kinds of operators
+**Details about operators.** We go in detail about the different kinds of operators
 and recursive functions below:
 
  - [Top-level operator definitions]

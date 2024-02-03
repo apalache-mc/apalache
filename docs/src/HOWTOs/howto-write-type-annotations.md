@@ -28,7 +28,7 @@ This HOWTO gives you concrete steps to extend TLA+ specifications with type
 annotations. You can find the detailed syntax of type annotations in
 [ADR002][]. The first rule of writing type annotations:
 
-*Do not to write any annotations at all, until the type checker [Snowcat][] is
+*Do not write any annotations at all, until the type checker [Snowcat][] is
 asking you to write a type annotation.*
 
 Of course, there must be an exception to this rule. You have to write type

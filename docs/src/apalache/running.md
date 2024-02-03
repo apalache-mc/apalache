@@ -1,7 +1,7 @@
 # Running the Tool
 
-**Opt-in statistics programme**: if you opt-in for statistics collection (off by default), then every run of Apalache
-will submit anonymized statistics to
+**Opt in statistics programme**: if you opt in for statistics collection (off by default),
+then every run of Apalache will submit anonymized statistics to
 `tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
 Apalache supports several modes of execution. You can run it with the `--help` option,
@@ -79,8 +79,8 @@ The arguments are as follows:
     - `--no-deadlock` disables deadlock-checking, when `--discard-disabled=false` is on. When `--discard-disabled=true`,
       deadlocks are found in any case.
     - `--tuning-options-file` specifies a properties file that stores options for
-      [fine tuning](tuning.md)
-    - `--tuning-options` can pass and/or override these [fine tuning](tuning.md)
+      [fine-tuning](tuning.md)
+    - `--tuning-options` can pass and/or override these [fine-tuning](tuning.md)
       options on the command line
     - `--out-dir` set location for outputting any generated logs or artifacts,
       *`./_apalache-out` by default*
@@ -177,13 +177,13 @@ To check executions of arbitrary lengths, one usually finds a formula that satis
 /\ TypeOK /\ IndInv /\ Next => TypeOK' /\ IndInv'
 ```
 
-In normal words: (1) The initial states satisfy the constraint `TypeOK /\
-IndInv`, and (2) whenever the specification makes a step when starting in a state that satisfies `TypeOK /\ IndInv`, it
-ends up in a state that again satisfies `TypeOK /\ IndInv`.
+In normal words: (1) The initial states satisfy the constraint `TypeOK /\ IndInv`,
+and (2) whenever the specification makes a step when starting in a state that satisfies `TypeOK /\ IndInv`,
+it ends up in a state that again satisfies `TypeOK /\ IndInv`.
 
-Note that we usually check `IndInv` in conjunction with `TypeOK`, as we have to constrain the variable values. In
-the `y2k` example, our inductive invariant is actually constraing the variables. In fact, such an inductive invariant is
-usually called `TypeOK`.
+Note that we usually check `IndInv` in conjunction with `TypeOK`, as we have to constrain the variable values.
+In the `y2k` example, our inductive invariant is actually constraining the variables.
+In fact, such an inductive invariant is usually called `TypeOK`.
 
 To check an inductive invariant ``IndInv`` in Apalache, you run two commands that check the above two formulas:
 
@@ -298,8 +298,8 @@ Each run will produce a unique subdirectory inside its "namespace", derived from
 the file name of the specification, using the following convention
 `yyyy-MM-ddTHH-mm-ss_<UNIQUEID>`.
 
-For an example, consider using the default location of the `run-dir` for a run of
-Apalache on a spec named `test.tla`. This will create a directory structuring matching following pattern:
+For an example, consider using the default location of the `run-dir` for a run of Apalache on a spec named `test.tla`.
+This will create a directory structuring matching the following pattern:
 
 ```
 ./_apalache-out/

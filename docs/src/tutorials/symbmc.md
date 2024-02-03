@@ -7,7 +7,7 @@ This brief introduction to symbolic model checking discusses the following:
   1. What are symbolic traces?
   1. How do I interpret Apalache counterexamples?
 
-A glossary of notation and definitions can be found [below](#notation-and-definitions)
+A glossary of notations and definitions can be found [below](#notation-and-definitions)
 
 ## On state-spaces and transition systems
 A TLA+ specification defines a triple \\((S,S_0,\to)\\), called a _transition system_. \\(S\\) is the _state space_, \\(S_0\\) is the set of initial states \\(\left(S_0 \subseteq S\right)\\), and \\(\to\\) is the transition relation, a subset of \\(S^2\\).
@@ -226,8 +226,11 @@ ReachesOne(a) == \E n \in Nat: kIter(a,n) = 1
 Init == x \in { n \in Nat: ~ReachesOne(n) }
 ```
 
-The specification encodes the [Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture), so computing \\(S_0\\) is equivalent to proving or disproving the conjecture, which remains an open problem at present. 
-It is therefore unreasonable to expect any model checker to be able to accept such input, despite the fact that the condition is easily describable in first-order logic.
+The specification encodes the [Collatz conjecture](https://en.wikipedia.org/wiki/Collatz_conjecture),
+so computing \\(S_0\\) is equivalent to proving or disproving the conjecture,
+which remains an open problem at present. 
+It is therefore unreasonable to expect any model checker to be able to accept such an input,
+despite the fact that the condition is easily describable in first-order logic.
 
 A similar problem can occur in computing \\(Successors(s)\\); the relation between variables `Ai` (\\(s(A_i)\\)) and `Ai'` (\\(s_2(A_i)\\)) may be given by means of an implicit function or uncomputable expression.
 Therefore, most tools impose the following constraints, which make computing \\(S_0\\) and \\(Successors(s)\\) possible without any sort of specialized solver:
@@ -369,7 +372,8 @@ Then, the formula describing invariant violation in exactly \\(k\\) steps, \\(\e
 \exists s_0,\dots,s_k \in S \ .\ P_{S_0}(s_0) \land \neg I(s_k) \land \bigwedge_{i=0}^{k-1} s_i \to s_{i+1}
 \\]
 
-The challenge in designing a symbolic model checker is determining, given TLA+ operators `Init`, `Next` and `Inv`, the encodings of \\(P_{S_0}, \to, I\\) as formulas in logcis supported by external solvers, for example SMT.
+The challenge in designing a symbolic model checker is determining, given TLA+ operators `Init`, `Next` and `Inv`,
+the encodings of \\(P_{S_0}, \to, I\\) as formulas in logics supported by external solvers, for example SMT.
 
 ### Symbolic states
 In an explicit approach, the basic unit of computation is a single state \\(s \in S\\). However, as demonstrated above, symbolic approaches deal with logical formulas. Recall that a state formula, such as `Init` is actually a predicate over \\(S\\), and a predicate is equivalent to a subset of \\(S\\).

@@ -64,7 +64,7 @@ non-empty. If `S` is empty, return some value of the proper type.
 calls to `Guess(S)` may return `x, y \in S` that can differ (`x /= y`) or may
 be equal (`x = y`). Moreover, Apalache considers all possible combinations of
 elements of `S` in the model checking mode. If `S` is empty, `Guess(S)`
-produces the same value of proper type.
+produces the same value of a proper type.
 
 **Errors:**
 If `S` is not a set, Apalache reports an error.

@@ -41,7 +41,7 @@ Our CI uses the [emojitsu](https://github.com/shonfeder/emojitsu#emojitsu) CLI
 utility. You can also use this tool to lookup the name for an emoji if you have
 the unicode on hand or to see how a name will render.
 
-Note that GitHub cheats in it's rendering: it replaces emojinames with pngs, and
+Note that GitHub cheats in its rendering: it replaces emoji names with pngs, and
 includes some emojis which are not supported by the unicode standard. We don't
 stand for this standardless stuff at the moment, because it would be too tedious
 to implement.

@@ -44,7 +44,7 @@ An implementation of ``TI`` _must_ support two main phases of operation:
     ``TIE`` _must_ return the resulting type. **Importantly**, ``TIE`` _must_ assume that it can be given expressions
     that have not been analyzed in the first stage. Such expressions may originate from the rewriting techniques
     used by the client. In this case, ``TIE`` _must_ try to compute the resulting type. Only if the resulting type
-    cannot be deterministically computed (e.g., there is not relevant type information in the storage),
+    cannot be deterministically computed (e.g., there is no relevant type information in the storage),
     should ``TIE`` fail.
 
 

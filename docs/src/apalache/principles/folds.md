@@ -166,7 +166,14 @@ MaxChoose(seq) ==
   IN CHOOSE m \in Range : \A n \in Range : m >= n
 ```
 
-The predicate-based approach might result in a more compact specification, but that is because specifications have no notion of execution or complexity. Automatic verification tools, such as Apalache, the job of which includes finding witnesses to predicates, can work much faster with the fold approach. The reason is that _evaluating_ `CHOOSE x \in S : \A y \in S: P(x,y)` is quadratic in the size of `S` (in a symbolic approach this is w.r.t. the number of constraints). For each candidate `x`, the entire set `S` must be tested for `P(x,_)`. On the other hand, the fold approach is linear in the size of `S`, since each element is visited exactly once. 
+The predicate-based approach might result in a more compact specification,
+but that is because specifications have no notion of execution or complexity.
+Automatic verification tools, such as Apalache,
+the job of which includes finding witnesses to the predicates, can work much faster with the fold approach.
+The reason is that _evaluating_ `CHOOSE x \in S : \A y \in S: P(x,y)` is quadratic in the size of `S`
+(in a symbolic approach this is w.r.t. the number of constraints).
+For each candidate `x`, the entire set `S` must be tested for `P(x,_)`.
+On the other hand, the fold approach is linear in the size of `S`, since each element is visited exactly once. 
 
 In addition, the fold approach admits no undefined behavior. If, in the above example, `seq` was an empty sequence, the value of the computed maximum depends on the value of `CHOOSE x \in {}: TRUE`, which is undefined in TLA+, while the fold-based approach allows the user to determine behavior in that scenario (via the initial value).
 

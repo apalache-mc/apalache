@@ -335,9 +335,9 @@ type variable that captures other options in the variant type.
 **Effect:** The operator `VariantGetUnsafe` unconditionally returns some value
 that is compatible with the type of values tagged with `tagName`. If `variant`
 is tagged with `tagName`, the returned value is the value that was wrapped via
-the `Variant` constructor. Otherwise, it is some arbitrary value of proper type. As such,
-this operator does not guarantee that the retrieved value is always constructed
-via `Variant`, unless the operator is used with the right tag.
+the `Variant` constructor. Otherwise, it is some arbitrary value of a proper type.
+As such, this operator does not guarantee that the retrieved value
+is always constructed via `Variant`, unless the operator is used with the right tag.
 
 **Determinism:** Deterministic.
 

@@ -124,7 +124,7 @@ Alternatively, we could use the multi-line comment:
  *)
 ```
 
-**Note**: Importantly, every type annotation must end with a semi-colon `;`.
+**Note**: Importantly, every type annotation must end with a semicolon `;`.
 
 Let's run the type checker again:
 

@@ -51,7 +51,7 @@ common  {
 }
 ```
 
-A `~` found at the beginning of a file path will expanded into the value set for
+A `~` found at the beginning of a file path will be expanded into the value set for
 the user's home directory.
 
 Details on the effect of these parameters can be found in [Running the

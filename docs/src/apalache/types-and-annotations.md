@@ -72,7 +72,7 @@ bodies. (This is done automatically by Apalache.)
     gives us the type of the set expression.
 
 This approach manages to automatically compute types of many TLA+ expressions.
-However, there a few problematic cases that require type annotations:
+However, there are a few problematic cases that require type annotations:
 
  1. An empty set ``{}`` gets assigned the type ``Set[Unknown]``. When it is later
  combined with a more precise type, e.g., as in ``{} \union {1}``, the type finder
@@ -103,7 +103,7 @@ As a preliminary step, the user has to introduce the operator ``<:`` as follows:
 a <: b == a
 ```
 
-This operator does not nothing else but returns its first argument, so the standard TLA+
+This operator does nothing else but returns its first argument, so the standard TLA+
 tools will ignore the second argument, which contains a type annotation. Our model checker
 interprets the second argument of the operator ``<:`` as a type annotation.
 (This also means that you should not assign any other meaning to ``<:`` in your specifications.)
@@ -112,8 +112,8 @@ Further, the user may use ``<:`` to define types of problematic expressions, see
 examples in Section 1.
 
 The syntax for type annotations is given below. Note that these expressions should not be
-understood as sets of values, as one would expects from type invariants such as ``TypeOK``. Rather,
-they are TLA+ expressions that are parsed by the model checker, in order to construct types.
+understood as sets of values, as one would expect from type invariants such as ``TypeOK``.
+Rather, they are TLA+ expressions that are parsed by the model checker, in order to construct types.
 
 The syntax of type annotations is as follows:
 
@@ -134,7 +134,7 @@ The syntax of type annotations is as follows:
   of the same type.
   1. ``<<T_1, ..., T_k>>`` specifies the type of a _k_-element tuple whose
   elements have types ``T_1, ..., T_k`` respectively. Note that different fields
-  of a tuple are allowed to have different types. In these sense, we differentiate them
+  of a tuple are allowed to have different types. In this sense, we differentiate them
   from the general functions.
   1. ``[f_1 |-> T_1, ..., f_k |-> T_k]`` specifies the type of a _k_-field record,
   whose field ``f_i`` is of the type ``T_i``. The types ``T_1, ..., T_k`` may differ. Again,

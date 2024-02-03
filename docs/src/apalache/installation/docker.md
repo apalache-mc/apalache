@@ -6,8 +6,8 @@
 configuration of the tool considerably. Unless you have a pressing need to use
 the docker image, we recommend using one of our [prebuilt releases](./jvm.md).
 
-[Docker](https://www.docker.com/) lets you to run the Apalache tool from inside
-an isolated container.  The only dependency required to run Apalache is the a
+[Docker](https://www.docker.com/) lets you run the Apalache tool from inside
+an isolated container. The only dependency required to run Apalache is a
 suitable JVM, and the container supplies this. However, you must already have
 [docker installed](https://docs.docker.com/get-docker/).
 
@@ -59,7 +59,7 @@ $ APALACHE_TAG=foo $APALACHE_HOME/script/run-docker.sh <args>
 
 ## Setting an alias
 
-If you are running Apalache on Linux :penguin: or MacOS
+If you are running Apalache on Linux :penguin: or macOS
 :green_apple:, you can define this handy alias in your rc file, which runs
 Apalache in docker while sharing the working directory:
 

@@ -203,7 +203,7 @@ By collecting the constraints in this section, `[DefCin]` and `[Repr]`, we have
 a complete set of constraints for computing `k_n = Cardinality(S)`. As one can
 see, the number of literals in this encoding is **linear**, that is, `O(n)`.
 
-**NOTE:** Although the number of constraints is linear, we have to analyze complexity
+**NOTE:** Although the number of constraints is linear, we have to analyze the complexity 
 of the underlying SMT problem, which may happen to be as hard as the SMT problem
 that is constructed in v0.6.0.
 

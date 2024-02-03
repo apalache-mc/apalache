@@ -30,5 +30,5 @@ Here, `[[_]]` is the translator from TLA+ to SMT. Importantly, the values for
 the states `s_0`, ..., `s_k` are not enumerated as in TLC, but have to be found
 by the SMT solver.
 
-If you would like to learn more about theory behind Apalache, check the [paper
-delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
+If you would like to learn more about the theory behind Apalache,
+check the [paper delivered at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).

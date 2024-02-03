@@ -73,7 +73,10 @@ Y ==
 
 TLC likes these sorts of operations, because it manipulates programming-language objects in its own implementation.
 This makes it easy to construct temporary mutable objects, manipulate them (e.g. via for-loops) and garbage-collect them after they stop being useful.
-For constraint-based approaches, like Apalache, the story is different. Not only are these intermediate steps not directly useful (since Apalache is not modeling TLA+ expressions as objects in Sacala), they actually hurt performance, since they can generate a significant amount of constraints, which are all about describing data structures (e.g. two functions being almost equal, except at one point).
+For constraint-based approaches, like Apalache, the story is different.
+Not only are these intermediate steps not directly useful (since Apalache is not modeling TLA+ expressions as objects in Scala),
+they actually hurt performance, since they can generate a significant amount of constraints,
+which are all about describing data structures (e.g. two functions being almost equal, except at one point).
 Essentially, Apalache is spending its resources not on state-space exploration, but on in-state value computation, which is not its strong suit.
 Below we show how to rewrite these APs.
 

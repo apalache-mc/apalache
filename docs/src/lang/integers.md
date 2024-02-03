@@ -21,12 +21,12 @@ EXTENDS Integers
 
 Although you can write arbitrary expressions over integers in TLA+, Apalache
 translates these expressions as constraints in
-[SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories).  Some
-expressions are easier to solve than the others. For instance, the expression
-`2 * x > 5` belongs to linear integer arithmetic, which can be solved more
-efficiently than general arithmetic.  For state variables `x` and `y`, the
-expression `x * y > 5` belongs to non-linear integer arithmetic, which is
-harder to solve than linear arithmetic.
+[SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories).
+Some expressions are easier to solve than others.
+For instance, the expression `2 * x > 5` belongs to linear integer arithmetic,
+which can be solved more efficiently than general arithmetic.
+For state variables `x` and `y`, the expression `x * y > 5` belongs to
+non-linear integer arithmetic, which is harder to solve than linear arithmetic.
 
 When your specification is using only integer literals, e.g., `1`, `2`, `42`,
 but none of the operators from the `Integers` module, the integers can

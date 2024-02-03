@@ -1,7 +1,7 @@
 # Developing with bloop
 
 [Bloop](https://scalacenter.github.io/bloop/) is a build server that can yield
-lightening fast incremental builds of Scala projects.
+lightning fast incremental builds of Scala projects.
 
 It is used by [Scala Metals](https://scalameta.org/metals/), but is also very
 useful as a standalone to save devs from the pain of `mvn`.
