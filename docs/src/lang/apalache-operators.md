@@ -360,7 +360,10 @@ Expand( 1 )            \* 1 in TLC, type error in Apalache
 
 **Apalache type:** `(Bool) => Bool`
 
-**Effect:** The expression `ConstCardinality(Cardinality(S) >= k)` provides a hint to Apalache, that `Cardinality(S)` is a constant, allowing Apalache to encode the constraint `e` without attempting to dynamically encode `Cardinality(S). It evaluates to the same value as `e`.
+**Effect:** The expression `ConstCardinality(Cardinality(S) >= k)` provides a hint to Apalache,
+that `Cardinality(S)` is a constant, allowing Apalache to encode the constraint `e`
+without attempting to dynamically encode `Cardinality(S)`.
+It evaluates to the same value as `e`.
 
 **Determinism:** Deterministic.
 
