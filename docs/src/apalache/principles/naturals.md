@@ -1,8 +1,7 @@
 
 ### Naturals
 
-If you look carefully at the [HOWTO on
-annotations](../HOWTOs/howto-write-type-annotations.md), you will find that
+If you look carefully at the [HOWTO on annotations](../../HOWTOs/howto-write-type-annotations.md), you will find that
 there is no designated type for naturals. Indeed, one can just use the type
 `Int`, whenever a natural number is required. If we introduced a special type
 for naturals, that would cause a lot of confusion for the type checker. What

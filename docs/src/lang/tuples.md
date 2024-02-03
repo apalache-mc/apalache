@@ -195,4 +195,4 @@ a_n>>, Int) => a_i`, for some types `a_1, ..., a_n`.
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
 [Apalache ADR002]: ../adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
-[HOWTO write type annotations]: ../../HOWTOs/howto-write-type-annotations.md
+[HOWTO write type annotations]: ../HOWTOs/howto-write-type-annotations.md

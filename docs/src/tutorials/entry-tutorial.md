@@ -1179,7 +1179,7 @@ or drop us a message on [Zulip chat].
 [Apalache installation]: ../apalache/installation/index.md
 [Leslie Lamport]: https://lamport.azurewebsites.net/
 [open an issue]: https://github.com/informalsystems/apalache/issues
-[TLC Configuration Files]: ../apalache/parameters.html#tlc-configuration-file
+[TLC Configuration Files]: ../apalache/parameters.md#tlc-configuration-file
 [Tutorial on Snowcat]: ./snowcat-tutorial.md
 [Nearly All Binary Searches and Mergesorts are Broken]: https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html
 [Binary search in ProB]: https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ
@@ -1193,9 +1193,9 @@ or drop us a message on [Zulip chat].
 [Summary of TLA+]: https://lamport.azurewebsites.net/tla/summary-standalone.pdf
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
 [Classical implication]: https://en.wikipedia.org/wiki/Material_conditional
-[Assignments in Apalache]: ../apalache/assignments-in-depth.html
-[ConstInit predicate]: ../apalache/parameters.html#constinit-predicate
-[Value generators]: ../lang/apalache-operators.html#value-generators
+[Assignments in Apalache]: ../apalache/assignments-in-depth.md
+[ConstInit predicate]: ../apalache/parameters.md#constinit-predicate
+[Value generators]: ../lang/apalache-operators.md#value-generators
 [QuickCheck]: https://en.wikipedia.org/wiki/QuickCheck
 [Arrays.java in OpenJDK]: https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698
 [Two's complement]: https://en.wikipedia.org/wiki/Two%27s_complement

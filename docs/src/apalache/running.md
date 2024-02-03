@@ -370,5 +370,5 @@ will write the IR to the file `result.json`.
 
 [alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
 [Enumeration of counterexamples]: ./principles/enumeration.md
-[JSON serialization format]: ../adr/005adr-json.html
+[JSON serialization format]: ../adr/005adr-json.md
 reads a TLA+ specification with the SANY parser and flattens it by

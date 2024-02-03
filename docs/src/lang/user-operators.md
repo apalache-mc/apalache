@@ -82,5 +82,5 @@ and recursive functions below:
 [Higher-order operator definitions]: ./user/higher-order-operators.md
 [Anonymous operator definitions]: ./user/lambdas.md
 [Local operator definitions]: ./user/local-operators.md
-[Recursive operators and functions]: ./principles/recursive.md
+[Recursive operators and functions]: ../apalache/principles/recursive.md
 

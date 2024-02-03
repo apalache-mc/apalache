@@ -177,7 +177,7 @@ However, to understand the counterexample, you don't need to go into the technic
 We'll go explain the counterexample in the following.
 
 We will talk about traces in the following.
-You can find more information about (symbolic) traces [here](/tutorials/symbmc.html?highlight=trace#symbolic-traces).
+You can find more information about (symbolic) traces [here](../tutorials/symbmc.md?highlight=trace#symbolic-traces).
 For the purpose of this tutorial, however, it will be enough to think of a trace as a sequence of states
 that were encountered by Apalache, and that demonstrate a violation of the property that is checked.
 

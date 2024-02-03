@@ -295,8 +295,8 @@ If you are experiencing a problem with Snowcat, feel free to [open an issue][]
 or drop us a message on [Zulip chat][].
 
 
-[ADR002]: ../adr/002adr-types.html
-[ADR004]: ../adr/004adr-annotations.html
+[ADR002]: ../adr/002adr-types.md
+[ADR004]: ../adr/004adr-annotations.md
 [HOWTO on writing type annotations]: ../HOWTOs/howto-write-type-annotations.md
 [Migrating to Type System 1.2]: ../HOWTOs/howto-write-type-annotations.md#recipe9
 [Apalache installation]: ../apalache/installation/index.md

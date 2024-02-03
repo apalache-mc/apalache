@@ -280,7 +280,7 @@ or drop us a message on [Zulip chat].
 [TLA+ Cheatsheet in HTML]: https://mbt.informal.systems/docs/tla_basics_tutorials/tla+cheatsheet.html
 [Summary of TLA+]: https://lamport.azurewebsites.net/tla/summary-standalone.pdf
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
-[ConstInit predicate]: ../apalache/parameters.html#constinit-predicate
+[ConstInit predicate]: ../apalache/parameters.md#constinit-predicate
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [TLC]: https://github.com/tlaplus/tlaplus/
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html

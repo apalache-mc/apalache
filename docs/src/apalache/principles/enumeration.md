@@ -1,9 +1,8 @@
 # Enumerating counterexamples
 
-By default, Apalache stops whenever it finds a property violation. This is true
-for the commands that are explained in the Section on [Running the
-Tool](./running.md). Sometimes, we want to produce multiple counterexamples;
-for instance, to generate multiple tests.
+By default, Apalache stops whenever it finds a property violation.
+This is true for the commands that are explained in the Section on [Running the Tool](../running.md).
+Sometimes, we want to produce multiple counterexamples; for instance, to generate multiple tests.
 
 Consider the following TLA+ specification:
 
