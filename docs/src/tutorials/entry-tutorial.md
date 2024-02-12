@@ -1166,7 +1166,7 @@ of a TLA+ specification, as we were writing it and checking it with Apalache.
 There are many different styles of writing TLA+ specifications. One of our
 goals was to demonstrate the incremental approach to specification writing. In
 fact, this approach is not very different from incremental development of
-programs in the spirit of [Test-driven development][]. It took us 2–3 hours to
+programs in the spirit of [Test-driven development][]. It took us 2 to 3 hours to
 iteratively develop a specification that is similar to the one demonstrated in
 this tutorial.
 
