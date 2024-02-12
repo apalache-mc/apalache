@@ -81,7 +81,7 @@ introduce a new module called `BakeryTyped.tla` with the following contents:
 
 Due to the semantics of `INSTANCE`, the constants and variables declared in
 `BakeryTyped.tla` substitute the constants and variables of
-`BakeryWoTlaps.tla`. By doing so we effectively introduce type annotations.
+`BakeryWoTlaps.tla`. By doing so, we effectively introduce type annotations.
 Since we introduce a separate module, any changes in the PlusCal code do not
 affect our type annotations.
 
@@ -247,7 +247,7 @@ The final specifications can be found in
 and
 [BakeryWoTlaps.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla).
 
-In this tutorial we have shown how to:
+In this tutorial, we have shown how to:
 
  - Annotate a PlusCal spec with types by introducing an additional TLA+ module.
  - Check safety of Bakery for bounded executions by bounded model checking (for
@@ -280,7 +280,7 @@ or drop us a message on [Zulip chat].
 [TLA+ Cheatsheet in HTML]: https://mbt.informal.systems/docs/tla_basics_tutorials/tla+cheatsheet.html
 [Summary of TLA+]: https://lamport.azurewebsites.net/tla/summary-standalone.pdf
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
-[ConstInit predicate]: ../apalache/parameters.html#constinit-predicate
+[ConstInit predicate]: ../apalache/parameters.md#constinit-predicate
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [TLC]: https://github.com/tlaplus/tlaplus/
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html

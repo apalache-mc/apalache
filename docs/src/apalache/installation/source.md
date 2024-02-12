@@ -28,7 +28,7 @@ repository, you have three options after running `make`:
 - Add the `./bin` directory in the source repository to your `PATH`, which will
   make `apalche-mc` available.
 - Install [direnv][] and run `direnv allow`, which will put `apalche-mc` in your
-  path when you are inside of the Apalache repo directory.
+  path when you are inside the Apalache repo directory.
 - Run `./bin/apalache-mc` directly.
 
 

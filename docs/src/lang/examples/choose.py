@@ -9,8 +9,8 @@ def choose(s):
 
 
 if __name__ == "__main__":
-    s = frozenset({ 1, 2, 3})
+    s = frozenset({1, 2, 3})
     print("CHOOSE {} = {}".format(s, choose(s)))
-    s2 = frozenset({ frozenset({1}), frozenset({2}), frozenset({3})})
+    s2 = frozenset({frozenset({1}), frozenset({2}), frozenset({3})})
     print("CHOOSE {} = {}".format(s2, choose(s2)))
 

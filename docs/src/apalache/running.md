@@ -1,7 +1,7 @@
 # Running the Tool
 
-**Opt-in statistics programme**: if you opt-in for statistics collection (off by default), then every run of Apalache
-will submit anonymized statistics to
+**Opt-in statistics programme**: if you opt in for statistics collection (off by default),
+then every run of Apalache will submit anonymized statistics to
 `tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
 Apalache supports several modes of execution. You can run it with the `--help` option,
@@ -14,19 +14,23 @@ $ apalache-mc --help
 The most important commands are as follows:
 
  - `parse` reads a TLA+ specification with the SANY parser and flattens it by
-   instantiating all modules. It terminates successfully, if there are no parse
+   instantiating all modules. It terminates successfully if there are no parse
    errors. The input specification to `parse` may be given in standard TLA+ format, or in the [JSON serialization
    format][], while the outputs are produced in both formats.
 
  - `typecheck` performs all of the operations of `parse` and additionally runs the type checker Snowcat to infer
-   the types of all expressions in the parsed specification. It terminates successfully, if there are no type errors.
+   the types of all expressions in the parsed specification. It terminates successfully if there are no type errors.
 
- - `simulate` performs all of the operations of `typecheck` and additionally runs the model checker in simulation mode, which *randomly* picks a sequence of [actions](https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices) and checks the invariants for the subset of all executions which only admit actions in the selected order. 
- It terminates successfully, if there are no invariant violations. 
- This command usually checks randomized symbolic runs much faster than the `check` command.
+ - `simulate` performs all of the operations of `typecheck` and additionally runs the model checker in simulation mode,
+   which *randomly* picks a sequence of [actions](https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices)
+   and checks the invariants for the subset of all executions which only admit actions in the selected order. 
+   It terminates successfully if there are no invariant violations. 
+   This command usually checks randomized symbolic runs much faster than the `check` command.
 
- - `check` performs all of the operations of `typecheck` and then runs the model checker in bounded model checking mode, which checks invariants for *all executions*, the length of which does not exceed the value specified by the `--length` parameter. 
-   It terminates successfully, if there are no invariant violations.
+ - `check` performs all of the operations of `typecheck` and then runs the model checker in bounded model checking mode,
+   which checks invariants for *all executions*,
+   the length of which does not exceed the value specified by the `--length` parameter. 
+   It terminates successfully if there are no invariant violations.
 
  - `test` performs all of the operations of `check` in a mode that is designed to [test a single action](https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions).
 
@@ -79,8 +83,8 @@ The arguments are as follows:
     - `--no-deadlock` disables deadlock-checking, when `--discard-disabled=false` is on. When `--discard-disabled=true`,
       deadlocks are found in any case.
     - `--tuning-options-file` specifies a properties file that stores options for
-      [fine tuning](tuning.md)
-    - `--tuning-options` can pass and/or override these [fine tuning](tuning.md)
+      [fine-tuning](tuning.md)
+    - `--tuning-options` can pass and/or override these [fine-tuning](tuning.md)
       options on the command line
     - `--out-dir` set location for outputting any generated logs or artifacts,
       *`./_apalache-out` by default*
@@ -177,13 +181,13 @@ To check executions of arbitrary lengths, one usually finds a formula that satis
 /\ TypeOK /\ IndInv /\ Next => TypeOK' /\ IndInv'
 ```
 
-In normal words: (1) The initial states satisfy the constraint `TypeOK /\
-IndInv`, and (2) whenever the specification makes a step when starting in a state that satisfies `TypeOK /\ IndInv`, it
-ends up in a state that again satisfies `TypeOK /\ IndInv`.
+In normal words: (1) The initial states satisfy the constraint `TypeOK /\ IndInv`,
+and (2) whenever the specification makes a step when starting in a state that satisfies `TypeOK /\ IndInv`,
+it ends up in a state that again satisfies `TypeOK /\ IndInv`.
 
-Note that we usually check `IndInv` in conjunction with `TypeOK`, as we have to constrain the variable values. In
-the `y2k` example, our inductive invariant is actually constraing the variables. In fact, such an inductive invariant is
-usually called `TypeOK`.
+Note that we usually check `IndInv` in conjunction with `TypeOK`, as we have to constrain the variable values.
+In the `y2k` example, our inductive invariant is actually constraining the variables.
+In fact, such an inductive invariant is usually called `TypeOK`.
 
 To check an inductive invariant ``IndInv`` in Apalache, you run two commands that check the above two formulas:
 
@@ -244,9 +248,8 @@ $ cd test/tla
 apalache-mc check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 ```
 
-This command checks, whether `Safety` can be violated in 20 specification steps. The constants are initialized with the
-predicate
-`ConstInit`, defined in `y2k_cinit.tla` as:
+This command checks, whether `Safety` can be violated in 20 specification steps.
+The constants are initialized with the predicate `ConstInit`, defined in `y2k_cinit.tla` as:
 
 ```tla
 ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
@@ -277,9 +280,9 @@ Apalache uses [the SANY parser](https://lamport.azurewebsites.net/tla/tools.html
 and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in
 
 1. The current working directory.
-1. The directory containing the main TLA+ file passed on the CLI.
-1. A small Apalache standard library (bundled from `$APALACHE_HOME/src/tla`).
-1. The Java package `tla2sany.StandardModules` (usually provided by the `tla2tools.jar` that is included in the Java
+2. The directory containing the main TLA+ file passed on the CLI.
+3. A small Apalache standard library (bundled from `$APALACHE_HOME/src/tla`).
+4. The Java package `tla2sany.StandardModules` (usually provided by the `tla2tools.jar` that is included in the Java
    classpath).
 
 __Note:__ To let TLA+ Toolbox and TLC know about the Apalache modules, include
@@ -298,8 +301,8 @@ Each run will produce a unique subdirectory inside its "namespace", derived from
 the file name of the specification, using the following convention
 `yyyy-MM-ddTHH-mm-ss_<UNIQUEID>`.
 
-For an example, consider using the default location of the `run-dir` for a run of
-Apalache on a spec named `test.tla`. This will create a directory structuring matching following pattern:
+For an example, consider using the default location of the `run-dir` for a run of Apalache on a spec named `test.tla`.
+This will create a directory structuring matching the following pattern:
 
 ```
 ./_apalache-out/
@@ -352,11 +355,11 @@ In this case, Apalache performs the following steps:
 
 1. It parses the specification with [SANY](https://lamport.azurewebsites.net/tla/tools.html).
 
-1. It translates SANY semantic nodes
+2. It translates SANY semantic nodes
    into [Apalache IR](https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala)
    .
 
-1. If the `--write-intermediate` flag is given, it pretty-prints the IR into
+3. If the `--write-intermediate` flag is given, it pretty-prints the IR into
    the output directory (see [Detailed output](#detailed)).
 
 You can also write output to a specified location by using the `--output` flag.
@@ -370,5 +373,5 @@ will write the IR to the file `result.json`.
 
 [alternative SMT encoding using arrays]: ../adr/011adr-smt-arrays.md
 [Enumeration of counterexamples]: ./principles/enumeration.md
-[JSON serialization format]: ../adr/005adr-json.html
+[JSON serialization format]: ../adr/005adr-json.md
 reads a TLA+ specification with the SANY parser and flattens it by

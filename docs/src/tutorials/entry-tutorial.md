@@ -71,9 +71,10 @@ Binary Searches and Mergesorts are Broken][]:
 ```
 
 As was found by Joshua Bloch, the addition in line 6 may throw
-an out of bounds exception at line 7, due to an integer overflow. This is because `low`
+an out-of-bounds exception at line 7, due to an integer overflow. This is because `low`
 and `high` are signed integers, with a maximum value of `2^31 - 1`. 
-However, the sum of two values, each smaller than `2^31-1`, may be greater than `2^31 -1`. If this  is the case, `low + high` can wrap into a negative number.
+However, the sum of two values, each smaller than `2^31-1`, may be greater than `2^31 -1`.
+If this is the case, `low + high` can wrap into a negative number.
 
 This bug was
 [discussed](https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ)
@@ -122,7 +123,8 @@ definition:
 {{#include ../../../test/tla/bin-search/BinSearch0.tla:1:8}}
 ```
 
-This module does not yet specify any part of the binary search implementation. However, it contains a few important things:
+This module does not yet specify any part of the binary search implementation.
+However, it contains a few important things:
 
  - It imports constants and operators from three standard modules: `Integers`,
    `Sequences`, and `Apalache`.
@@ -191,7 +193,7 @@ annotations in the comments:
  - `INPUT_KEY` has the type `Int`, that is, it is an integer.
 
 Recall that we wanted to specify signed and unsigned Java integers, which are
-32 bit long. *TLA+ is not tuned towards any computer architecture.* Its integers
+32 bits long. *TLA+ is not tuned towards any computer architecture.* Its integers
 are mathematical integers: always signed and arbitrarily large (unbounded).
 To model fixed bit-width integers, we introduce another constant `INT_WIDTH` of
 type `Int`:
@@ -239,9 +241,10 @@ how we do it:
 {{#include ../../../test/tla/bin-search/BinSearch2.tla:32:38}}
 ```
 
-The variables `low` and `high` are called *state variables*. They define a state of our state machine. That is, they are never introduced and
-never removed. Remember, TLA+ is not tuned towards any particular computer
-architecture and thus it does not even have the notion of an execution stack.
+The variables `low` and `high` are called *state variables*. They define a state of our state machine.
+That is, they are never introduced and never removed.
+Remember, TLA+ is not tuned towards any particular computer
+architecture, and thus it does not even have the notion of an execution stack.
 You can think of `low` and `high` as being global variables. Yes, global
 variables are generally frowned upon in programming languages. However, when dealing with a
 specification, they are much easier to reason about than the execution stack.
@@ -265,10 +268,10 @@ understand what it means for them to terminate?
 The variable `returnValue` will contain the result of the binary search, when
 the search terminates. Recall, there is no execution stack. Hence, we introduce
 the variable `returnValue` right away. The downside is that we have to do
-book-keeping for this variable.
+bookkeeping for this variable.
 
 **Initialize variables.** Having introduced the variables, we have to
-initialize them. That is, we want to specify lines 2-3 of the Java code:
+initialize them. That is, we want to specify lines 2–3 of the Java code:
 
 ```java
 1:     public static int binarySearch(int[] a, int key) {
@@ -411,7 +414,7 @@ definitions from `BinSearch2.tla`.
 Since we are fixing the parameters with concrete values, `MC2_8.tla` looks very
 much like a unit test. It's a good start for debugging a few things, but since
 our program is entirely sequential, our specification is as good as a unit
-test. Later in this tutorial we will show how to leverage Apalache to check
+test. Later in this tutorial, we will show how to leverage Apalache to check
 properties for all possible inputs (up to some bound).
 
 Let us check `MC2_8.tla`:
@@ -503,7 +506,7 @@ truth table for the Boolean connectives, which are no different from the
 Boolean logic in TLA+:
 
 | `A`     | `B`     | `~A`    | `A \/ B` | `A /\ B` | `A => B` |
-| ------- | ------- | ------- | -------- | -------- | -------- |
+|---------|---------|---------|----------|----------|----------|
 | `FALSE` | `FALSE` | `TRUE`  | `FALSE`  | `FALSE`  | `TRUE`   |
 | `FALSE` | `TRUE`  | `TRUE`  | `TRUE`   | `FALSE`  | `TRUE`   |
 | `TRUE`  | `FALSE` | `FALSE` | `TRUE`   | `FALSE`  | `FALSE`  |
@@ -657,7 +660,7 @@ ConstInit ==
     /\ INPUT_SEQ \in Seq(Int) 
 ```
 
-This is straightforward definition. However, it does not work in Apalache:
+This is a straightforward definition. However, it does not work in Apalache:
 
 ```sh
 $ apalache-mc check --cinit=ConstInit --inv=Postcondition MC5_8.tla
@@ -693,7 +696,7 @@ In this new version, we use the Apalache operator `Gen` to:
     sequence is unrestricted, except its length is bounded with `MAX_INT`,
     which is exactly what we need in our case study.
 
-The operator `Gen` introduces a data structure of proper type whose size is
+The operator `Gen` introduces a data structure of a proper type whose size is
 bounded with the argument of `Gen`. For instance, the type of `INPUT_SEQ` is
 the sequence of integers, and thus `Gen(MAX_INT)` produces an unrestricted
 sequence of up to `MAX_INT` elements. This sequence is bound to the name
@@ -877,8 +880,8 @@ Checker reports no error up to computation length 10
 It took me 0 days  0 hours  0 min 19 sec
 ```
 
-Even if did not know precisely complexity of the binary search, we could
-write a simpler property, which demonstrates progress of the search:
+Even if we did not know the precise complexity of the binary search, we could
+write a simpler property, which demonstrates the progress of the search:
 
 ```tla
 Progress ==
@@ -1135,7 +1138,7 @@ The final specifications can be found in
 and
 [MC10_8.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla).
 
-In this tutorial we have shown how to:
+In this tutorial, we have shown how to:
 
  - Specify the behavior of a sequential algorithm (binary search).
  - Specify invariants that check safety and termination.
@@ -1147,7 +1150,7 @@ In this tutorial we have shown how to:
 We have written our specification for parameterized bit width. This lets us
 check the invariants relatively quickly and get fast feedback from the model
 checker. We chose a bit width of 8, a non-trivial value for which
-Apalache terminates within reasonable time. Importantly, the specification
+Apalache terminates within a reasonable time. Importantly, the specification
 for the bit width of 32 stays the same; we only have to change `INT_WIDTH`. Of
 course, Apalache reaches its limits when we set `INT_WIDTH` to 16 or 32. In
 these cases, it has to reason about all sequences of length up to 32,767
@@ -1163,7 +1166,7 @@ of a TLA+ specification, as we were writing it and checking it with Apalache.
 There are many different styles of writing TLA+ specifications. One of our
 goals was to demonstrate the incremental approach to specification writing. In
 fact, this approach is not very different from incremental development of
-programs in the spirit of [Test-driven development][]. It took us 2-3 hours to
+programs in the spirit of [Test-driven development][]. It took us 2 to 3 hours to
 iteratively develop a specification that is similar to the one demonstrated in
 this tutorial.
 
@@ -1179,7 +1182,7 @@ or drop us a message on [Zulip chat].
 [Apalache installation]: ../apalache/installation/index.md
 [Leslie Lamport]: https://lamport.azurewebsites.net/
 [open an issue]: https://github.com/informalsystems/apalache/issues
-[TLC Configuration Files]: ../apalache/parameters.html#tlc-configuration-file
+[TLC Configuration Files]: ../apalache/parameters.md#tlc-configuration-file
 [Tutorial on Snowcat]: ./snowcat-tutorial.md
 [Nearly All Binary Searches and Mergesorts are Broken]: https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html
 [Binary search in ProB]: https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ
@@ -1193,9 +1196,9 @@ or drop us a message on [Zulip chat].
 [Summary of TLA+]: https://lamport.azurewebsites.net/tla/summary-standalone.pdf
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html
 [Classical implication]: https://en.wikipedia.org/wiki/Material_conditional
-[Assignments in Apalache]: ../apalache/assignments-in-depth.html
-[ConstInit predicate]: ../apalache/parameters.html#constinit-predicate
-[Value generators]: ../lang/apalache-operators.html#value-generators
+[Assignments in Apalache]: ../apalache/assignments-in-depth.md
+[ConstInit predicate]: ../apalache/parameters.md#constinit-predicate
+[Value generators]: ../lang/apalache-operators.md#value-generators
 [QuickCheck]: https://en.wikipedia.org/wiki/QuickCheck
 [Arrays.java in OpenJDK]: https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698
 [Two's complement]: https://en.wikipedia.org/wiki/Two%27s_complement

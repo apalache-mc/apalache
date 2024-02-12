@@ -3,7 +3,7 @@
 The Apalache documentation is written in markdown files in the [./src](./src)
 directory and compiled using [mdbook](https://github.com/rust-lang/mdBook).
 
-To view the documentation, visit https://apalache.informal.systems/docs/ .
+To view the documentation, visit https://apalache.informal.systems/docs/.
 
 ## Building and previewing the documentation
 
@@ -41,7 +41,7 @@ Our CI uses the [emojitsu](https://github.com/shonfeder/emojitsu#emojitsu) CLI
 utility. You can also use this tool to lookup the name for an emoji if you have
 the unicode on hand or to see how a name will render.
 
-Note that GitHub cheats in it's rendering: it replaces emojinames with pngs, and
+Note that GitHub cheats in its rendering: it replaces emoji names with pngs, and
 includes some emojis which are not supported by the unicode standard. We don't
 stand for this standardless stuff at the moment, because it would be too tedious
 to implement.
@@ -62,7 +62,9 @@ We provide a custom TLA+ syntax highlighting plugin for [highlight.js][] in `hig
 
 #### Building
 
-The plugin is checked in with the source code, and you generally shouldn't need to rebuild it unless you need to make a change or update the plugin.
+The plugin is checked in with the source code,
+and you generally shouldn't need to rebuild it
+unless you need to make a change or update the plugin.
 
 To build, check out the main highlight.js into a separate directory.
 Symlink the TLA+ language definition into the highlight.js `extra` directory:

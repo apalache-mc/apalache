@@ -346,7 +346,7 @@ Lastly, while `E` looks almost identical to `A`, the key difference is that
 expressions under universal quantifiers may not contain assignments. Therefore,
 `y' = s` is *not* an assignment to `y` and thus violates assignment-before-use.
 
-<a name='manual' /> 
+<a name='manual'></a>
 ## Manual Assignments
 
 Users may choose, but aren't required, to use manual assignments `x' := e` in

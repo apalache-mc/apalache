@@ -59,7 +59,9 @@ Next ==
 
 ## Integer ranges with non-constant bounds
 
-When using an integer range `a..b`, where `a` or `b` aren't constant (or cannot be simplified to a constant), the current encoding fails (see [Issue 425][]):
+When using an integer range `a..b`, where `a` or `b` aren't constant
+(or cannot be simplified to a constant),
+the current encoding fails (see [Issue 425][]):
 
 ```tla
 ---------- MODULE Example ----------
@@ -97,7 +99,8 @@ instead of `a..b`.
 
 ## Using Seq(S)
 
-The operator `Seq(S)` produces an infinite set of unbounded sequences. Hence, Apalache is not able to do anything about
+The operator `Seq(S)` produces an infinite set of unbounded sequences.
+Hence, Apalache is not able to do anything about
 this set. Consider the following snippet:
 
 ```tla
@@ -111,7 +114,8 @@ this set. Consider the following snippet:
 
 ### Workaround
 
-If you know an upper bound on the length of sequences you need, which is often the case when checking one model, you can
+If you know an upper bound on the length of sequences you need,
+which is often the case when checking one model, you can
 work around this issue by using
 [Apalache.Gen](https://github.com/informalsystems/apalache/blob/0bf827c521d3992f39e085cc98ff114bfa0b1721/src/tla/Apalache.tla#L31-L39):
 
@@ -124,8 +128,9 @@ EXTENDS Apalache
   /\ seq' = s
 ```
 
-In the above example, we instruct Apalache to introduce an unrestricted sequence that contains up to 10 elements; this
-is done with `Gen`. We further restrict the sequence to contain the elements of `{ 1, 2, 3 }`.
+In the above example, we instruct Apalache to introduce an unrestricted sequence
+that contains up to 10 elements; this is done with `Gen`.
+We further restrict the sequence to contain the elements of `{ 1, 2, 3 }`.
 
 However, note that our workaround only works for bounded sequences, whereas
 `Seq({ 1, 2, 3 })` is the set of all sequences whose elements come from `{ 1, 2, 3 }`.

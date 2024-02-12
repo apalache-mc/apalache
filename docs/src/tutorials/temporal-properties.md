@@ -99,8 +99,8 @@ stuttering like this:
 {{#include TrafficLight.tla:stutternext}}
 ```
 
-Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED vars`. Now, let us try to verify the property once again,
-using the modified next predicate:
+Recall that `[Next]_vars` is shorthand for `Next \/ UNCHANGED vars`.
+Now, let us try to verify the property once again, using the modified next predicate:
 
 ```
 apalache-mc check --next=StutteringNext \
@@ -164,20 +164,20 @@ Two things are notable:
 1. The initial state formula appears twice, once as a comment and once in TLA+.
 2. There are way more variables than the two variables we specified.
 
-The comment and the TLA+ specification express the same state, but in the comment, some variable names from the encoding have been replaced
-with more human-readable names.
+The comment and the TLA+ specification express the same state, but in the comment,
+some variable names from the encoding have been replaced with more human-readable names.
 For example, there is a variable called `☐(requestedGreen ⇒ ♢isGreen)` in the comment,
 which is called `__temporal_t_1` in TLA+.
 In the following, let's focus on the content of the comment, since it's easier to understand what's going on.
 
-There are many additional variables in the counterexample because to check temporal formulas, Apalache uses an
+There are many additional variables in the counterexample, because to check temporal formulas, Apalache uses an
 encoding that transforms temporal properties to invariants.
 If you are interested in the technical details, the encoding is described in sections 3.2 and 4 of [Biere et al.][].
 However, to understand the counterexample, you don't need to go into the technical details of the encoding.
 We'll go explain the counterexample in the following.
 
 We will talk about traces in the following.
-You can find more information about (symbolic) traces [here](/tutorials/symbmc.html?highlight=trace#symbolic-traces).
+You can find more information about (symbolic) traces [here](../tutorials/symbmc.md?highlight=trace#symbolic-traces).
 For the purpose of this tutorial, however, it will be enough to think of a trace as a sequence of states
 that were encountered by Apalache, and that demonstrate a violation of the property that is checked.
 
@@ -334,7 +334,8 @@ leading box operator.
 To illustrate why these are necessary, consider the formula
 `[]isGreen`. To decide whether this formula holds in the last state of the loop, the algorithm needs to know whether
 `isGreen` holds in all states of the loop. So it needs to store this information when it traverses the loop.
-That's why there is an extra variable, which stores whether `isGreen` holds on all states of the loop, and Apalache can access this information when it explores the last state of the loop.
+That's why there is an extra variable, which stores whether `isGreen` holds on all states of the loop,
+and Apalache can access this information when it explores the last state of the loop.
 Similarly, the unroll-variable `♢isGreen_unroll` holds true
 if there is a state on the loop such that `isGreen` is true.
 
@@ -379,7 +380,8 @@ is not true, since `☐(requestedGreen ⇒ ♢isGreen)`
 does not hold in state 2, which is on the loop.
 
 Similar to the `__loop_` copies for model variables,
-we also introduce copies for all (temporal) subformulas, e.g., `__loop_☐(requestedGreen ⇒ ♢isGreen)` for `☐(requestedGreen ⇒ ♢isGreen)`.
+we also introduce copies for all (temporal) subformulas,
+e.g., `__loop_☐(requestedGreen ⇒ ♢isGreen)` for `☐(requestedGreen ⇒ ♢isGreen)`.
 These fulfill the same function as the `__loop_` copies for the
 original variables of the model, i.e., retaining the state of variables from the first state of the loop, e.g.,
 
@@ -397,8 +399,8 @@ Finally, let's discuss `RequestWillBeFulfilled_init`.
 This variable is an artifact of the translation for temporal properties.
 Intuitively, in any state, the variable will be true if the variable encoding the formula `RequestWillBeFulfilled`
 is true in the first state.
-A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state, so `RequestWillBeFulfilled_init` is false,
-and a loop satisfying requirements on the auxiliary variables is found.
+A trace is a counterexample if `RequestWillBeFulfilled` is false in the first state,
+so `RequestWillBeFulfilled_init` is false, and a loop satisfying requirements on the auxiliary variables is found.
 
 ## Further reading
 

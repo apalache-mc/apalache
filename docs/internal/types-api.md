@@ -5,7 +5,7 @@ Type reconstruction API
 
 In this note, we focus on the client interface of a type inference engine for TLA+.
 In the following, we refer to this interface as ``TI``.
-By fixing this interface we give the users the freedom of choosing from several
+By fixing this interface, we give the users the freedom of choosing from several
 type inference engines.
 
 Given a TLA+ expression ``ex``, the ultimate goal of type inference is to assign a type
@@ -25,16 +25,16 @@ An implementation of ``TI`` _must_ support two main phases of operation:
    1. Resolving operator overloading, e.g., the expressions ``<<1, 2>>`` and ``f[e]``
     can be treated as expressions either over tuples, or sequences.
 
-   1. Finding signatures for operator definitions, e.g., ``F(x) == x + 1`` should have
+   2. Finding signatures for operator definitions, e.g., ``F(x) == x + 1`` should have
     the signature ``Int => Int``.
 
    If successful, the results of this analysis should be stored somewhere for the subsequent use
    in the _Type computation_ mode. Note that it is not necessary to store the types of all the intermediate
-   subexpressions -- that would be wasteful. This analysis should store only the results that cannot
+   subexpressions - that would be wasteful. This analysis should store only the results that cannot
    be deterministically computed in the next phase such as resolved operator signatures and types of the variables.
    ``TIE`` _may_ use expression identifiers to save the type information in some storage.
 
-1. **Type computation**. In this phase, the client queries ``TIE`` by giving a ``TLA+`` expression
+2. **Type computation**. In this phase, the client queries ``TIE`` by giving a ``TLA+`` expression
     and the types of its arguments. ``TIE`` computes and returns the resulting type of the expression.
     For instance, given the expression ``F(e)`` and the type ``Int`` of ``e``, ``TIE`` finds the signature
     ``F: 'a -> 'a`` in its internal storage and returns the type ``Int``. Given the expression ``{x, y}``
@@ -44,7 +44,7 @@ An implementation of ``TI`` _must_ support two main phases of operation:
     ``TIE`` _must_ return the resulting type. **Importantly**, ``TIE`` _must_ assume that it can be given expressions
     that have not been analyzed in the first stage. Such expressions may originate from the rewriting techniques
     used by the client. In this case, ``TIE`` _must_ try to compute the resulting type. Only if the resulting type
-    cannot be deterministically computed (e.g., there is not relevant type information in the storage),
+    cannot be deterministically computed (e.g., there is no relevant type information in the storage),
     should ``TIE`` fail.
 
 

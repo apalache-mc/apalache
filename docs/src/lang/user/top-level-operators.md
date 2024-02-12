@@ -1,6 +1,6 @@
 # Top-level operator definitions
 
-[[Back to user operators]](./user-operators.md)
+[[Back to user operators]](../user-operators.md)
 
 ## Quick example
 
@@ -108,7 +108,7 @@ In the above example, you see examples of four operator applications:
 
 Technically, there are more than four operator applications in our example.
 However, all other operators are the [standard
-operators](./standard-operators.md). We do not focus on them here.
+operators](../standard-operators.md). We do not focus on them here.
 
 **Note on the operator order.** As you can see, we are applying operators after
 they have been defined in a module. This is a general rule in TLA+: A name can
@@ -170,7 +170,7 @@ in `B`:
   1. Substitute the expression `A(e_1, ..., e_n)` in the definition of `B` with
   `body_of_uniq_A`.
 
-  1. Substitute the names `uniq_p_1, ..., uniq_p_n` with the expressions `e_1,
+  2. Substitute the names `uniq_p_1, ..., uniq_p_n` with the expressions `e_1,
   ..., e_n`, respectively.
 
 The above transformation is usually called [Beta reduction].

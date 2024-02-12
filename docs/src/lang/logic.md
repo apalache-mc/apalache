@@ -105,7 +105,7 @@ True
 
 **Arguments:** At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
-undefined.You can also use multiple variables and tuples, see **Advanced
+undefined. You can also use multiple variables and tuples, see **Advanced
 syntax**.
 
 **Apalache type:** The formal type of this operator is a bit complex.
@@ -230,7 +230,7 @@ values of `e_1` and `e_2`. Let `e_1` and `e_2` evaluate to the values
     ```
 
  - In other cases, `e_1 = e_2` evaluates to `FALSE` if the values have comparable types.
- - TLC and Apalache report an error, if the values have incomparable types.
+ - TLC and Apalache report an error if the values have incomparable types.
 
 **Determinism:** Deterministic, unless `e_1` has the form `x'`, which can be
 interpreted as an assignment to the variable `x'`.  For the non-deterministic
@@ -353,10 +353,9 @@ Hence, we give an informal description:
 
 **Effect:** This operator implements a black-box algorithm that _somehow_ picks
 one element from the set `{x \in S: P}`.  Is it an algorithm? Yes! `CHOOSE x
-\in S: P` is deterministic.  When you give it two equal sets and two equivalent
+\in S: P` is deterministic. When you give it two equal sets and two equivalent
 predicates, `CHOOSE` produces the same value. Formally, the only known property
-of `CHOOSE` is as follows (which is slightly more general than what we wrote
-above):
+of `CHOOSE` is as follows (which is slightly more general than what we wrote above):
 
 ```tla
   {x \in S: P} = {y \in T: Q} =>
@@ -384,8 +383,7 @@ There are two common use cases, where the use of `CHOOSE` is well justified:
     For instance, see: [ReduceSet in FiniteSetsExt][].
 
 In other cases, we believe that `CHOOSE` is bound to do [Program synthesis].
-So TLC does some form of synthesis by brute force when it has to evaluate
-`CHOOSE`.
+So TLC does some form of synthesis by brute force when it has to evaluate `CHOOSE`.
 
 **Determinism:** Deterministic. Very much deterministic. Don't try to model
 non-determinism with `CHOOSE`. For non-determinism, see:
@@ -398,7 +396,7 @@ difference for the use cases 1 and 2. If you believe that this causes a problem
 in your specification, [open an issue...]
 
 **Errors:** Pure TLA+ does not restrict the operator arguments.  TLC flags a
-model checking error, if `S` is infinite.  Apalache produces a static type
+model checking error, if `S` is infinite. Apalache produces a static type
 error, if the type of elements of `S` is not compatible with the type of `x`
 as expected in `P`.
 

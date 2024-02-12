@@ -1,8 +1,13 @@
 # Antipatterns
 
-This page collects known antipaterns (APs) when writing TLA+ for Apalache. In this context, APs are syntactic forms or specification approaches that, for one reason or another, have particularly slow/complex encodings for the target model checker. For a pattern to be an AP, there must exist a known, equivalent, efficient pattern. 
+This page collects known antipaterns (APs) when writing TLA+ for Apalache.
+In this context, APs are syntactic forms or specification approaches that,
+for one reason or another, have particularly slow/complex encodings for the target model checker.
+For a pattern to be an AP, there must exist a known, equivalent, efficient pattern. 
 
-Often, APs arise from a user's past experiences with writing TLA+ for TLC, or from a direct translation of imperative OOP code into TLA+, as those follow a different paradigm, and therefore entail different cost evaluation of which expressions are slow/complex and which are not.
+Often, APs arise from a user's past experiences with writing TLA+ for TLC,
+or from a direct translation of imperative OOP code into TLA+, as those follow a different paradigm,
+and therefore entail different cost evaluation of which expressions are slow/complex and which are not.
 
 ## `CHOOSE`-based recursion
 
@@ -29,9 +34,11 @@ min(S) ==
     IN IF e < minOther THEN e ELSE minOther 
 ```
 
-Apalache dislikes the use of the above, for several reasons. Firstly, since the operator is `RECURSIVE`, Apalache does not support it after version 0.23.1. In earlier versions Apalache requires a predefined upper bound on unrolling, which means that the user must know, ahead of time, what the largest `|S|` is, for any set `S`, to which this operator is ever applied. 
+Apalache dislikes the use of the above, for several reasons. Firstly, since the operator is `RECURSIVE`,
+Apalache does not support it after version 0.23.1. In earlier versions Apalache requires a predefined upper bound on unrolling,
+which means that the user must know, ahead of time, what the largest `|S|` is, for any set `S`, to which this operator is ever applied. 
 In addition, computing `F` for a set `S` of size `n = |S|` requires `n` encodings of a `CHOOSE` operation, which can be considerably expensive in Apalache.
-Lastly, Apalache also needs to encode all of the the `n` intermediate sets, `S \ {e1}`, `(S \ {e1}) \ {e2}`, `((S \ {e1}) \ {e2}) \ {e3}`, and so on.
+Lastly, Apalache also needs to encode all the the `n` intermediate sets, `S \ {e1}`, `(S \ {e1}) \ {e2}`, `((S \ {e1}) \ {e2}) \ {e3}`, and so on.
 
 The AP above can be replaced by a very simple pattern:
 ```tla
@@ -41,7 +48,10 @@ F(S) == ApaFoldSet( G, v, S )
 `ApaFoldSet` (and `ApaFoldSeqLeft`) were introduced precisely for these scenarios, and should be used over `RECURSIVE + CHOOSE` in most cases.
 
 ## Incremental computation
-Often, users introduce an expression `Y`, which is derived from another expression `X` (`Y == F(X)`, for some `F`). Instead of defining `Y` directly, in terms of the properties it possesses,  it is possible to define all the intermediate steps of transforming `X` into `Y`: "`X` is slightly changed into `X1` (e.g. by adding one element to a set, or via `EXCEPT`), which is changed into `X2`, etc. until `Xn = Y`". Doing this in Apalache is almost always a bad idea, if a direct characterization of `Y` exists.
+Often, users introduce an expression `Y`, which is derived from another expression `X` (`Y == F(X)`, for some `F`).
+Instead of defining `Y` directly, in terms of the properties it possesses, it is possible to define all the intermediate
+steps of transforming `X` into `Y`: "`X` is slightly changed into `X1` (e.g. by adding one element to a set, or via `EXCEPT`),
+which is changed into `X2`, etc. until `Xn = Y`". Doing this in Apalache is almost always a bad idea, if a direct characterization of `Y` exists.
 
 Concretely, the following constructs are APs:
 1. Incremental `EXCEPT`
@@ -73,7 +83,10 @@ Y ==
 
 TLC likes these sorts of operations, because it manipulates programming-language objects in its own implementation.
 This makes it easy to construct temporary mutable objects, manipulate them (e.g. via for-loops) and garbage-collect them after they stop being useful.
-For constraint-based approaches, like Apalache, the story is different. Not only are these intermediate steps not directly useful (since Apalache is not modeling TLA+ expressions as objects in Sacala), they actually hurt performance, since they can generate a significant amount of constraints, which are all about describing data structures (e.g. two functions being almost equal, except at one point).
+For constraint-based approaches, like Apalache, the story is different.
+Not only are these intermediate steps not directly useful (since Apalache is not modeling TLA+ expressions as objects in Scala),
+they actually hurt performance, since they can generate a significant amount of constraints,
+which are all about describing data structures (e.g. two functions being almost equal, except at one point).
 Essentially, Apalache is spending its resources not on state-space exploration, but on in-state value computation, which is not its strong suit.
 Below we show how to rewrite these APs.
 
@@ -112,4 +125,3 @@ with
 ```tla
 f == [ k \in {k1,...,kn} |-> A(k) ]
 ```
-

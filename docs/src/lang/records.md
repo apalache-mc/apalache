@@ -49,14 +49,14 @@ distinguishes between general functions and records. When Apalache processes a
 record constructor, it assigns the record type to the result. This record type
 carries the information about the names of the record fields and their types.
 Similarly, Apalache assigns the type of a set of records, when it processes a
-record set constructor.  See the [Apalache ADR002][] on types.
+record set constructor. See the [Apalache ADR002][] on types.
 
 _Owing to the type information, records are translated into SMT more efficiently
 by Apalache than the general functions._
 
 Every record is assigned a type in Apalache. For instance, the record
 `[name |-> "A", a |-> 3]` has the type `{ name: Str, a: Int }`. In contrast to
-TLC, the type checker statically flags an error, if a spec is trying to access
+TLC, the type checker statically flags an error if a spec is trying to access
 a non-existent field. Consider the following example:
 
 ```tla

@@ -1,13 +1,16 @@
 # Idiom 0: Keep state variables to the minimum
 
-In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.
+In imperative programming, it is common to use mutable variable assignments liberally,
+but to exercise caution whenever mutable variables have a global scope.
+In TLA+, mutable variables are always global, so it is important to use them carefully and in a way
+that accurately reflects the global state of the system you are specifying.
 
 ## Description
 
 _A good TLA+ specification minimizes the computation state and makes it visible_.
 
-TLA+ does not have special syntax for variable assignment.  For a good
-reason. The power of TLA+ is in writing constraints on variables rather than in
+TLA+ does not have a special syntax for variable assignment. For a good reason.
+The power of TLA+ is in writing constraints on variables rather than in
 writing detailed commands. If you have been writing in languages such as C, C++,
 Java, Python, your first reflex would be to define a variable to store the
 intermediate result of a complex computation.
@@ -15,8 +18,8 @@ intermediate result of a complex computation.
 In programming languages, we introduce temporary variables for several reasons:
 
   1. To avoid repetitive computations of the same expression,
-  1. To break down a large expression into a series of smaller expressions,
-  1. To make the code concise.
+  2. To break down a large expression into a series of smaller expressions,
+  3. To make the code concise.
 
 Point 1 is a non-issue in TLA+, as it is mostly executed in the reader's brain,
 and people are probably less efficient in caching expressions than computers.
@@ -40,7 +43,10 @@ Sometimes, we have to expose the internals of the computation. For instance,
 if we want to closely monitor the values of the computed expressions, when using
 the specification for model-based testing.
 
-Sometimes, we have to break this idiom to make the specification more readable. Here is an example by Markus Kuppe. The specification of [BlockingQueue](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51) that has one more variable is easier to read than [the original specification](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla) with a minimal number of variables.
+Sometimes, we have to break this idiom to make the specification more readable.
+Here is an example by Markus Kuppe.
+The specification of [BlockingQueue](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51)
+that has one more variable is easier to read than [the original specification](https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla) with a minimal number of variables.
 ## Example
 
 Consider the following implementation of [Bubble sort] in Python:

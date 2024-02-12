@@ -580,4 +580,4 @@ till the end of the universe.
 [Apalache ADR002]: https://github.com/informalsystems/apalache/blob/main/docs/src/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
 [Overriding Seq in TLC]: https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ
-[HOWTO write type annotations]: ../../HOWTOs/howto-write-type-annotations.md
+[HOWTO write type annotations]: ../HOWTOs/howto-write-type-annotations.md

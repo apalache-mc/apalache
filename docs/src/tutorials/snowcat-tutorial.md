@@ -4,8 +4,8 @@
 
 **Revision:** August 24, 2022
 
-In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.  We
-give concrete steps on running the type checker and annotating a specification
+In this tutorial, we introduce the Snowcat :snowflake: :cat: type checker.
+We give concrete steps to running the type checker and annotating a specification
 with types.
 
 This tutorial uses Type System 1.2, which guarantees safe record access. To see
@@ -124,7 +124,7 @@ Alternatively, we could use the multi-line comment:
  *)
 ```
 
-**Note**: Importantly, every type annotation must end with a semi-colon `;`.
+**Note**: Importantly, every type annotation must end with a semicolon `;`.
 
 Let's run the type checker again:
 
@@ -295,8 +295,8 @@ If you are experiencing a problem with Snowcat, feel free to [open an issue][]
 or drop us a message on [Zulip chat][].
 
 
-[ADR002]: ../adr/002adr-types.html
-[ADR004]: ../adr/004adr-annotations.html
+[ADR002]: ../adr/002adr-types.md
+[ADR004]: ../adr/004adr-annotations.md
 [HOWTO on writing type annotations]: ../HOWTOs/howto-write-type-annotations.md
 [Migrating to Type System 1.2]: ../HOWTOs/howto-write-type-annotations.md#recipe9
 [Apalache installation]: ../apalache/installation/index.md

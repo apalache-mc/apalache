@@ -7,7 +7,7 @@ an excellent starting point, if you are new to TLA+. For a comprehensive
 description and philosophy of the language, check [Specifying Systems] and the
 [TLA+ Home Page]. There are plenty of interesting talks on TLA+ at [TLA
 Channel] of Markus Kuppe. This manual completely ignores Pluscal -- a
-higher-level language on top of TLA+.  If you are interested in learning
+higher-level language on top of TLA+. If you are interested in learning
 Pluscal, check [LearnTla.com] by Hillel Wayne.
 
 ## Contents

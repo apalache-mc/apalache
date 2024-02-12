@@ -25,9 +25,9 @@ The module defines a type alias `$option` as
 
 However, due to the current lack of support for polymorphic aliases, this alias
 has limited utility, and parametric option types can only be properly expressed
-by writing out the full variant type `Some(a) | None(UNIT)`. Nonetheless, in this manual
-page, we will sometimes write `$option(a)` as a shorthand for the type `Some(a)
-| None(UNIT)`.
+by writing out the full variant type `Some(a) | None(UNIT)`.
+Nonetheless, in this manual page, we will sometimes write `$option(a)`
+as a shorthand for the type `Some(a) | None(UNIT)`.
 
 In the context of TLA+, our encoding of option types is generalized over
 "partial operators", meaning operators which return a value of type
@@ -115,8 +115,8 @@ TRUE = IsSome(Some(5)) /\ IsNone(None)
 
 **LaTeX notation:** same
 
-**Apalache type:** `(Some(a) | None(UNIT), a => b, UNIT => b) => b`, for some types `a`
-and `b`. 
+**Apalache type:** `(Some(a) | None(UNIT), a => b, UNIT => b) => b`,
+for some types `a` and `b`. 
 
 **Arguments:**
 
@@ -161,8 +161,9 @@ Some(v)`, or else `caseNone(UNIT)`. This is a way of eliminating a value of type
 
 **LaTeX notation:** same
 
-**Apalache type:** `(a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT)`, for some types `a`
-and `b`. 
+**Apalache type:**
+`(a => Some(b) | None(UNIT), Some(a) | None(UNIT)) => Some(b) | None(UNIT)`,
+for some types `a` and `b`. 
 
 **Arguments:**
 
@@ -202,7 +203,8 @@ LET s == OptionFlatMap(fail, r) IN
 - `o` an optional value
 - `default` is a default value to return
 
-**Effect:** `OptionGetOrElse(o, default)` is `v` iff `o = Some(v)`, or else `default`.
+**Effect:**
+`OptionGetOrElse(o, default)` is `v` iff `o = Some(v)`, or else `default`.
 
 **Determinism:** Deterministic.
 
@@ -331,7 +333,8 @@ IN
 - `f` is a function
 - `o` is an optional value
 
-**Effect:** `OptionFunApp(f, o)` is `Some(f[v])` if `o = Some(v)` or else `None`.
+**Effect:**
+`OptionFunApp(f, o)` is `Some(f[v])` if `o = Some(v)` or else `None`.
 
 **Determinism:** Deterministic.
 
@@ -363,8 +366,8 @@ LET f == [x \in 1..3 |-> x + 1] IN
 
 **Effect:** `OptionPartialFun(f, undef)` is a function mapping each value in
 `undef` to `None`, and each value `x \in (DOMAIN f \ undef)` to `Some(f[x])`.
-This can be used to extend a total function into a "partial function" whose domain is
-extended to include the values in 'undef'.
+This can be used to extend a total function into a "partial function"
+whose domain is extended to include the values in 'undef'.
 
 **Determinism:** Deterministic.
 

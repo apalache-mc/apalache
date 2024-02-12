@@ -11,19 +11,19 @@ In this document, we collect specification idioms that aid us in writing TLA+
 specifications that are:
 
 1. understood by distributed system engineers,
-1. understood by verification engineers, and
-1. understood by automatic analysis tools such as the Apalache model checker.
+2. understood by verification engineers, and
+3. understood by automatic analysis tools such as the Apalache model checker.
 
-If you believe, that the above points are contradictory when put together, it is
+If you believe that the above points are contradictory when put together, it is
 to some extent true. TLA+ is an extremely general specification language. As a
 result, it is easy to write a short specification that leaves a human reader
-puzzled . It is even easier to write a (syntactically correct) specification that
+puzzled. It is even easier to write a (syntactically correct) specification that
 turns any program trying to reason about TLA+ to dust.
 
 Nevertheless, we find TLA+ quite useful when writing concise specifications of
 distributed protocols at [Informal Systems]. Other specification languages --
 especially, those designed for software verification -- would require us to
-introduce unnecessary book-keeping details that would both obfuscate the
+introduce unnecessary bookkeeping details that would both obfuscate the
 protocols and make their verification harder. However, we do not always need
 _"all the power of mathematics"_, so we find it useful to introduce additional
 structure in TLA+ specifications.

@@ -2,22 +2,22 @@
 
 In this document, we summarize the standard TLA+ operators in a form that is
 similar to manuals on programming languages. The purpose of this document is to
-provide you with a quick reference, whenever you are looking at the [Summary of
-TLA]. The [TLA+ Video
-Course](http://lamport.azurewebsites.net/video/videos.html) by Leslie Lamport
-is an excellent starting point, if you are new to TLA+.  For a comprehensive
-description and philosophy of the language, check [Specifying Systems] and the
-[TLA+ Home Page]. You can find handy extensions of the standard library in
-[Community Modules].
+provide you with a quick reference, whenever you are looking at the [Summary of TLA].
+The [TLA+ Video Course](http://lamport.azurewebsites.net/video/videos.html)
+by Leslie Lamport is an excellent starting point, if you are new to TLA+.
+For a comprehensive description and philosophy of the language,
+check [Specifying Systems] and the [TLA+ Home Page].
+You can find handy extensions of the standard library in [Community Modules].
 
-We explain the semantics of the operators under the lenses of the [Apalache
-model checker].  Traditionally, the emphasis was put on the temporal operators
-and action operators, as they build the foundation of TLA. We focus on the "+"
-aspect of the language, which provides you with a language for writing a single
-step by a state machine.  This part of the language is absolutely necessary for
-writing and reading system specifications.  Moreover, we treat equally the
-"core" operators of TLA+ and the "library" operators: This distinction is less
-important to the language users than to the tool developers.
+We explain the semantics of the operators under the lenses of the [Apalache model checker].
+Traditionally, the emphasis was put on the temporal operators and action operators,
+as they build the foundation of TLA.
+We focus on the "+" aspect of the language, which provides you with a language
+for writing a single step by a state machine.
+This part of the language is absolutely necessary
+for writing and reading system specifications.
+Moreover, we treat equally the "core" operators of TLA+ and the "library" operators:
+This distinction is less important to the language users than to the tool developers.
 
 In this document, we present the semantics of TLA+, as if it was executed on a
 computer that is equipped with an additional device that we call an _oracle_.
@@ -25,7 +25,7 @@ Most of the TLA+ operators are understood as deterministic operators, so they
 can be executed on your computer. A few operators are non-deterministic, so
 they require the oracle to resolve non-determinism, see [Control Flow and
 Non-determinism]. This is one of the most important features that makes TLA+
-distinct from programming languages.  Wherever possible, we complement the
+distinct from programming languages. Wherever possible, we complement the
 English semantics with code in [Python](https://www.python.org/). Although our
 semantics are more restrictive than the denotational semantics in Chapter 16 of
 [Specifying Systems], they are very close to the treatment of TLA+ by the model

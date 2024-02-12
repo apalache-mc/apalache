@@ -1,7 +1,7 @@
 Parameters for fine tuning
 ==========================
 
-The parameters for fine tuning can be passed to the checker in a properties
+The parameters for fine-tuning can be passed to the checker in a properties
 file.  Its name is given with the command-line option `--tuning-options-file=my.properties`.
 This file supports variable substitution, e.g., `${x}` is replaced with the
 value of `x`, if it was previously declared.
@@ -34,7 +34,7 @@ reports 'UNKNOWN', and the model checker reports a runtime error.
 
 `search.invariant.mode=(before|after)` defines the moment when the invariant is
 checked. In the `after` mode, all transitions are first translated, one of them
-is picked non-deterministically and then the invariant is checked. Although this
+is picked non-deterministically, and then the invariant is checked. Although this
 mode reduces the number of SMT queries, it usually requires more memory than the
 `before` mode. In the `before` mode, the invariant is checked for every enabled
 transition independently. The `before` mode may drastically reduce memory
@@ -85,7 +85,7 @@ model checker to check
 
 Note that there is no direct correspondence between invariant numbers and the
 operators in a TLA+ spec. Rather, the numbers refer to *verification conditions*
-(i.e., broken up parts of a TLA+ invariant operator). To find these numbers, run
+(i.e., broken-up parts of a TLA+ invariant operator). To find these numbers, run
 Apalache with `--write-intermediate=true` and check the invariant numbers in
 `_apalache-out/<MySpec>.tla/*/intermediate/XX_OutVCGen.tla`. The 0th state
 invariant is called `VCInv_si_0`, the 1st state invariant is called
@@ -101,7 +101,7 @@ different machines to speed up turnaround time.
 
 ## Translation to SMT
 
-### Short circuiting
+### Short-circuiting
 
 `rewriter.shortCircuit=(false|true)`. When `rewriter.shortCircuit=true`, `A \/
 B` and `A /\ B` are translated to SMT as if-then-else expressions, e.g., `(ite A

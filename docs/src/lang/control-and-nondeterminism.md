@@ -165,7 +165,7 @@ After all, people are much better at solving certain logical puzzles than
 computers, though people get bored much faster than computers.
 
 To understand how TLC enumerates states, check Chapter 14 of [Specifying
-Systems][]. In the rest of this document, we focus on treatment of
+Systems][]. In the rest of this document, we focus on the treatment of
 non-determinism that is close to the approach in Apalache.
 
 ## Explaining non-determinism to computers
@@ -255,8 +255,8 @@ has the following properties:
 
  1. For a non-empty set `S`, a call `GUESS S` returns
     some value `v \in S`.
- 1. A call `GUESS {}` halts the evaluation.
- 1. There are no assumptions about fairness of `GUESS`. It is free to return
+ 2. A call `GUESS {}` halts the evaluation.
+ 3. There are no assumptions about fairness of `GUESS`. It is free to return
    elements in any order, produce duplicates and ignore some elements.
 
 Why do we call it a device? We cannot call it a function, as functions are
@@ -280,13 +280,13 @@ we can think of `GUESS S` as being one of the following implementations:
  we have centralized control over the distributed system, the returned value of
  RPC may be non-deterministic.
 
- 1. `GUESS S` can be simply the user input. In this case, the user resolves
+ 2. `GUESS S` can be simply the user input. In this case, the user resolves
  non-determinism.
 
- 1. `GUESS S` can be controlled by an adversary, who is trying to break the
+ 3. `GUESS S` can be controlled by an adversary, who is trying to break the
  system.
 
- 1. `GUESS S` can pick an element by calling a pseudo-random number generator.
+ 4. `GUESS S` can pick an element by calling a pseudo-random number generator.
  However, note that RNG is a very special way of resolving non-determinism: It
  assumes probabilistic distribution of elements (usually, it is close to the
  [uniform
@@ -320,8 +320,8 @@ conditions:
     value for the name `y'`.
 
 If the above assumptions do not hold true, the expression `\E x \in S: P` does
-not have non-determinism and it can be evaluated by following the standard
-deterministic semantics of exists, see [Logic](./logic.md).
+not have non-determinism, and it can be evaluated by following the standard
+deterministic semantics of `exists`, see [Logic](./logic.md).
 
 **Note:** We do not consider action operators like `UNCHANGED y`. They can be
 translated into an equivalent form, e.g., `UNCHANGED x` is equivalent to `x' =
@@ -341,10 +341,10 @@ evaluated. There are three possible outcomes:
  In this case, `P` assigns the value of an expression `e` to `y'` as soon as
  the evaluator meets the expression `y' = e`.
  The evaluation may continue.
- 1. Predicate `P` evaluates to `FALSE` when using the provided value of `x`.
+ 2. Predicate `P` evaluates to `FALSE` when using the provided value of `x`.
  Well, that was a wrong guess. According to our semantics, the evaluation
  halts. See the above discussion on "halting".
- 1. The set `S` is empty, and `GUESS S` halts.  See the above discussion on
+ 3. The set `S` is empty, and `GUESS S` halts. See the above discussion on
  "halting".
 
 **Example.** Consider the following specification:
@@ -357,13 +357,12 @@ Next ==
     i > x /\ x' = i
 ```
 
-It is easy to evaluate `Init`: It does not contain non-determinism and it
+It is easy to evaluate `Init`: It does not contain non-determinism, and it
 produces the binding `(x -> 0)` and the state `[x |-> 0]`, respectively. When
 evaluating `Next` against the binding `(x -> 0)`, we have plenty of choices.
-Actually, we have infinitely many choices, as the set `Int` is infinite.  TLC
+Actually, we have infinitely many choices, as the set `Int` is infinite. TLC
 would immediately fail here. But there is no reason for our evaluation to fail.
-Simply ask the oracle. Below we give three examples of how the evaluation
-works:
+Simply ask the oracle. Below, we give three examples of how the evaluation works:
 
 ```
 1. (GUESS Int) returns 10. (LET i == 10 IN i > x /\ x' = i) is TRUE, x' is assigned 10.

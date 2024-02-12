@@ -21,16 +21,16 @@ EXTENDS Integers
 
 Although you can write arbitrary expressions over integers in TLA+, Apalache
 translates these expressions as constraints in
-[SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories).  Some
-expressions are easier to solve than the others. For instance, the expression
-`2 * x > 5` belongs to linear integer arithmetic, which can be solved more
-efficiently than general arithmetic.  For state variables `x` and `y`, the
-expression `x * y > 5` belongs to non-linear integer arithmetic, which is
-harder to solve than linear arithmetic.
+[SMT](https://en.wikipedia.org/wiki/Satisfiability_modulo_theories).
+Some expressions are easier to solve than others.
+For instance, the expression `2 * x > 5` belongs to linear integer arithmetic,
+which can be solved more efficiently than general arithmetic.
+For state variables `x` and `y`, the expression `x * y > 5` belongs to
+non-linear integer arithmetic, which is harder to solve than linear arithmetic.
 
 When your specification is using only integer literals, e.g., `1`, `2`, `42`,
 but none of the operators from the `Integers` module, the integers can
-be avoided altogether.  For instance, you can replace the integer constants
+be avoided altogether. For instance, you can replace the integer constants
 with string constants, e.g., `"1"`, `"2"`, `"42"`. The string constants are
 translated as constants in the SMT constraints. This simple trick may bring
 your specification into a much simpler theory. Sometimes, this trick allows z3
@@ -291,17 +291,17 @@ b` according to the TLA+ definition is different from the integer division `a /
 b` in the programming languages (C, Java, Scala, Rust).  See the
 table below._
 
-   C (clang 12) | Scala 2.13 | Rust | Python 3.8.6 | TLA+ (TLC) | SMT (z3 4.8.8)
- -- | -- | -- | -- | -- | --
- 100 / 3 == 33 | 100 / 3 == 33 | 100 / 3 == 33 | 100 // 3 == 33 | (100 \div 3) = 33 | (assert (= 33 (div 100 3)))
- -100 / 3 == -33 | -100 / 3 == -33 | -100 / 3 == -33 | -100 // 3 == -34 | ((-100) \div 3) = -34 | (assert (= (- 0 34) (div (- 0 100) 3)))
- 100 / (-3) == -33 | 100 / (-3) == -33 | 100 / (-3) == -33 | 100 // (-3) == -34 | (100 \div (-3)) = -34 | (assert (= (- 0 33) (div 100 (- 0 3))))
- -100 / (-3) == 33 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 // (-3) == 33 | ((-100) \div (-3)) = 33 | (assert (= 34 (div (- 0 100) (- 0 3))))
+| C (clang 12)      | Scala 2.13        | Rust              | Python 3.8.6       | TLA+ (TLC)              | SMT (z3 4.8.8)                          |
+|-------------------|-------------------|-------------------|--------------------|-------------------------|-----------------------------------------|
+| 100 / 3 == 33     | 100 / 3 == 33     | 100 / 3 == 33     | 100 // 3 == 33     | (100 \div 3) = 33       | (assert (= 33 (div 100 3)))             |
+| -100 / 3 == -33   | -100 / 3 == -33   | -100 / 3 == -33   | -100 // 3 == -34   | ((-100) \div 3) = -34   | (assert (= (- 0 34) (div (- 0 100) 3))) |
+| 100 / (-3) == -33 | 100 / (-3) == -33 | 100 / (-3) == -33 | 100 // (-3) == -34 | (100 \div (-3)) = -34   | (assert (= (- 0 33) (div 100 (- 0 3)))) |
+| -100 / (-3) == 33 | -100 / (-3) == 33 | -100 / (-3) == 33 | -100 // (-3) == 33 | ((-100) \div (-3)) = 33 | (assert (= 34 (div (- 0 100) (- 0 3)))) |
 
 _Unfortunately, [Specifying Systems][] only gives us the definition for the case
-`b > 0` (that is, cases 1-2 in our description). The implementation in SMT and
-TLC produce incompatible results for `b < 0`. See [issue #331 in
-Apalache](https://github.com/informalsystems/apalache/issues/331)._
+`b > 0` (that is, cases 1–2 in our description).
+The implementation in SMT and TLC produce incompatible results for `b < 0`.
+See [issue #331 in Apalache](https://github.com/informalsystems/apalache/issues/331)._
 
 **Determinism:** Deterministic.
 
@@ -402,7 +402,7 @@ are evaluated to integer values, and these values fall into one of the several
 cases:
 
  1. `b > 0`,
- 1. `b = 0` and `a /= 0`.
+ 2. `b = 0` and `a /= 0`.
 
 **Apalache type:** `(Int, Int) => Int`.
 
@@ -640,7 +640,7 @@ True
 <a name="eq"></a>
 ### Equality and inequality
 
-The operators `a = b` and `a /= b` are core operators of TLA+ and thus they are
+The operators `a = b` and `a /= b` are core operators of TLA+, and thus they are
 not defined in the module `Integers`, see [Logic](./logic.md).
 
 

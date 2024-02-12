@@ -2,14 +2,15 @@
 
 import functools
 
+
 def subset(s):
     """construct the set of all subsets, that is, SUBSET S"""
-    sets = []           # sets to be constructed
+    sets = []  # sets to be constructed
     carrier = list(s)
     nelems = len(carrier)
-    bits = [0] * nelems # the binary vector encodes a set under construction
-    current = set()     # a set under cosntruction
-    sets.append(frozenset(current))     # add {}
+    bits = [0] * nelems  # the binary vector encodes a set under construction
+    current = set()  # a set under construction
+    sets.append(frozenset(current))  # add {}
 
     while True:
         # turn leading 1s into 0s, add elements until 0 is found
@@ -36,8 +37,9 @@ def subset(s):
 
 def union(s):
     """Flatten the set, that is, implement UNION S"""
-        
+
     return functools.reduce(lambda x, y: x | y, s, frozenset())
+
 
 if __name__ == "__main__":
     carrier = frozenset({"a", "b", "c", "d"})
@@ -48,4 +50,3 @@ if __name__ == "__main__":
 
     print("UNION (SUBSET {})".format(carrier))
     print(union(powerset))
-
