@@ -1,6 +1,6 @@
 # Running the Tool
 
-**Opt in statistics programme**: if you opt in for statistics collection (off by default),
+**Opt-in statistics programme**: if you opt in for statistics collection (off by default),
 then every run of Apalache will submit anonymized statistics to
 `tlapl.us`. See the details in [TLA+ Anonymized Execution Statistics](./statistics.md).
 
