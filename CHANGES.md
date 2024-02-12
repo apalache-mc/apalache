@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.5 - 2024-02-05
+
+### Bug fixes
+
+- When expected server port is already bound, report clean user error instead of crashing with a traceback  (#2676).
+
 ## 0.44.4 - 2024-01-29
 
 ### Bug fixes
