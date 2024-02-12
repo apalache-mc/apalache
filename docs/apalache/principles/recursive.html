@@ -172,7 +172,8 @@
                     <main>
                         <p><a name="recursion"></a></p>
 <h2><a class="header" href="#recursive-operators-and-functions" id="recursive-operators-and-functions">Recursive operators and functions</a></h2>
-<p>While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache from version <code>0.23.1</code> onward, and suggest the use of fold operators, described in <a href="./folds.html">Folding sets and sequences</a> instead: </p>
+<p>While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache from version <code>0.23.1</code> onward,
+and suggest the use of fold operators, described in <a href="./folds.html">Folding sets and sequences</a> instead: </p>
 <pre><code class="language-tla"> * Similar to Skolem, this has to be done carefully. Apalache automatically
  * places this hint by static analysis.
  *)
@@ -189,8 +190,11 @@ ConstCardinality(__cardExpr) == __cardExpr
 recursive operators. They always take at most <code>|S|</code> or <code>Len(seq)</code> steps to evaluate and require no additional annotations.</p>
 <p>Note that the remainder of this section discusses only recursive operators, for brevity. Recursive functions share the same issues.</p>
 <h3><a class="header" href="#the-problem-with-recursive-operators" id="the-problem-with-recursive-operators">The problem with recursive operators</a></h3>
-<p>In the preprocessing phase, Apalache replaces every application of a user-defined operator with its body. We call this process &quot;operator inlining&quot;.
-This obviously cannot be done for recursive operators, since the process would never terminate. Additionally, even if inlining wasn't problematic, we would still face the following issues when attempting to construct a symbolic encoding: </p>
+<p>In the preprocessing phase, Apalache replaces every application of a user-defined operator with its body.
+We call this process &quot;operator inlining&quot;.
+This obviously cannot be done for recursive operators, since the process would never terminate.
+Additionally, even if inlining wasn't problematic,
+we would still face the following issues when attempting to construct a symbolic encoding: </p>
 <ol>
 <li>
 <p>A recursive operator may be non-terminating (although a non-terminating
@@ -200,8 +204,9 @@ operator is useless in TLA+);</p>
 <p>A terminating call to an operator may take an unpredictable number of iterations.</p>
 </li>
 </ol>
-<p>A note on (2): In practice, when one fixes specification parameters (that is,
-<code>CONSTANTS</code>), it is sometimes possible to find a bound on the number of operator iterations. For instance, consider the following specification:</p>
+<p>A note on (2): In practice, when one fixes specification parameters (that is, <code>CONSTANTS</code>),
+it is sometimes possible to find a bound on the number of operator iterations.
+For instance, consider the following specification:</p>
 <pre><code class="language-tla">--------- MODULE Rec6 -----------------
 EXTENDS Integers
 
@@ -237,9 +242,12 @@ Inv == count = Sum(set)
 =======================================    
 
 </code></pre>
-<p>It is clear that the expression <code>Sum(S)</code> requires <code>Cardinality(S)</code> steps of recursive computation. Moreover, as the unspecified invariant <code>set \subseteq 1..N</code> always holds for this specification, every call <code>Sum(set)</code> requires up to <code>N</code> recursive steps.</p>
+<p>It is clear that the expression <code>Sum(S)</code> requires <code>Cardinality(S)</code> steps of recursive computation.
+Moreover, as the unspecified invariant <code>set \subseteq 1..N</code> always holds for this specification,
+every call <code>Sum(set)</code> requires up to <code>N</code> recursive steps.</p>
 <h3><a class="header" href="#the-previously-supported-approach" id="the-previously-supported-approach">The previously supported approach</a></h3>
-<p>Previously, when it was possible to find an upper bound on the number of iterations of an operator <code>Op</code>, such as <code>N</code> for <code>Sum</code> in the example above, Apalache would unroll the recursive operator up to this bound. 
+<p>Previously, when it was possible to find an upper bound on the number of iterations of an operator <code>Op</code>,
+such as <code>N</code> for <code>Sum</code> in the example above, Apalache would unroll the recursive operator up to this bound. 
 Two additional operators, <code>UNROLL_DEFAULT_Op</code> and <code>UNROLL_TIMES_Op</code>, were required, for instance:</p>
 <pre><code class="language-tla">UNROLL_DEFAULT_Sum == 0
 UNROLL_TIMES_Sum == N
@@ -249,9 +257,12 @@ Apalache would internally replace the definition of <code>Op</code> with an oper
 <ol>
 <li><code>OpInternal</code> was non-recursive</li>
 <li>If computing <code>Op(x)</code> required a recursion stack of depth at most <code>UNROLL_TIMES_Op</code>, then <code>OpInternal(x) = Op(x)</code></li>
-<li>Otherwise, <code>OpInternal(x)</code> would return the value, which would have been produced by the computation of <code>Op(x)</code>, if all applications of <code>Op</code> while the recursion stack height was <code>UNROLL_TIMES_Op</code> returned <code>UNROLL_DEFAULT_Op</code> instead of the value produced by another recursive call to <code>Op</code></li>
+<li>Otherwise, <code>OpInternal(x)</code> would return the value, which would have been produced by the computation of <code>Op(x)</code>,
+if all applications of <code>Op</code> while the recursion stack height was <code>UNROLL_TIMES_Op</code> returned <code>UNROLL_DEFAULT_Op</code>
+instead of the value produced by another recursive call to <code>Op</code></li>
 </ol>
-<p>Unsurprisingly, (3) caused a lot of confusion, particularly w.r.t. the meaning of the value <code>UNROLL_DEFAULT_Op</code>. Consider the following example:</p>
+<p>Unsurprisingly, (3) caused a lot of confusion, particularly w.r.t. the meaning of the value <code>UNROLL_DEFAULT_Op</code>.
+Consider the following example:</p>
 <pre><code class="language-tla">RECURSIVE Max(_)
 Max(S) == 
   IF S = {}
@@ -262,7 +273,9 @@ Max(S) ==
     IN IF x &lt; maxRest THEN maxRest ELSE x
 
 </code></pre>
-<p>As computing <code>Max(S)</code> requires <code>|S|</code> recursive calls, there is no static upper bound to the recursion stack height that works for all set sizes. Therefore, if one wanted to use this operator in Apalache, one would have to guess (or externally compute) a value <code>N</code>, such that, <em>in the particular specification</em>, <code>Max</code> would never be called on an argument, the cardinality of which exceeded <code>N</code>, e.g.</p>
+<p>As computing <code>Max(S)</code> requires <code>|S|</code> recursive calls, there is no static upper bound to the recursion stack height that works for all set sizes.
+Therefore, if one wanted to use this operator in Apalache, one would have to guess (or externally compute) a value <code>N</code>,
+such that, <em>in the particular specification</em>, <code>Max</code> would never be called on an argument, the cardinality of which exceeded <code>N</code>, e.g.</p>
 <pre><code class="language-tla">UNROLL_TIMES_Max = 2
 </code></pre>
 <p>In this case, Apalache would produce something equivalent to</p>
@@ -290,9 +303,13 @@ Max(S) ==
 <code>3..10 \union {UNROLL_DEFAULT_Max}</code> (depending on the value of 
 <code>UNROLL_DEFAULT_Max</code> and the order in which elements are selected by <code>CHOOSE</code>), by property (3).</p>
 <p>So how does one select a sensible value for <code>UNROLL_DEFAULT_Op</code>? The problem is, one generally cannot. 
-In the <code>Max</code> case, one could pick a &quot;very large&quot; <code>N</code> and then assume that <code>Max</code> computation has &quot;failed&quot; (exceeded the <code>UNROLL_TIMES_Max</code> recursion limit) if the result was ever equal to <code>N</code>, though &quot;very large&quot; is of course subjective and gives absolutely no guarantees that <code>Max</code> won't be called on a set containing some element <code>M &gt; N</code>.</p>
-<p>As the recursion becomes more complex (e.g. non-primitive or non-tail), attempting to implement a sort of &quot;monitor&quot; via default values quickly becomes impractical, if not impossible.</p>
-<p>Fundamentally though, it is very easy to accidentally either introduce spurious invariant violations, or hide actual invariant violations by doing this. For instance, in a specification with </p>
+In the <code>Max</code> case, one could pick a &quot;very large&quot; <code>N</code> and then assume that <code>Max</code> computation has &quot;failed&quot;
+(exceeded the <code>UNROLL_TIMES_Max</code> recursion limit) if the result was ever equal to <code>N</code>,
+though &quot;very large&quot; is of course subjective and gives absolutely no guarantees that <code>Max</code> won't be called on a set containing some element <code>M &gt; N</code>.</p>
+<p>As the recursion becomes more complex (e.g. non-primitive or non-tail),
+attempting to implement a sort of &quot;monitor&quot; via default values quickly becomes impractical, if not impossible.</p>
+<p>Fundamentally though, it is very easy to accidentally either introduce spurious invariant violations,
+or hide actual invariant violations by doing this. For instance, in a specification with </p>
 <pre><code class="language-tla">UNROLL_DEFAULT_Max = 42
 UNROLL_TIMES_Max = 2
 
@@ -301,19 +318,22 @@ Inv == \A n \in 10..20: Max(1..n) = 42
 <p>Apalache could &quot;prove&quot; <code>Inv</code> holds, as it would rewrite this <code>Inv</code> to </p>
 <pre><code>\A n \in 10..20: MaxInternal(1..n) = 99
 </code></pre>
-<p>and <code>MaxInternal(1..n)</code> evaluates to <code>99</code> for all <code>n \in 3..99</code> (and might still evaluate to <code>99</code> for <code>n &gt; 99</code>, based on the <code>CHOOSE</code> order), despite the fact that <code>Max(1..n) = n</code> in the mathematical sense.</p>
+<p>and <code>MaxInternal(1..n)</code> evaluates to <code>99</code> for all <code>n \in 3..99</code> (and might still evaluate to <code>99</code> for <code>n &gt; 99</code>,
+based on the <code>CHOOSE</code> order), despite the fact that <code>Max(1..n) = n</code> in the mathematical sense.</p>
 <p>Consider now the much simpler alternative:</p>
 <pre><code class="language-tla">NonRecursiveMax(S) == 
   LET Max2(a,b) == IF a &lt; b THEN b ELSE a IN
   ApaFoldSet(Max2, 0, S) 
 </code></pre>
-<p>In this case, the user doesn't have to think about defaults (aside from the empty-set case), or recursion, as <code>ApaFoldSet</code> ensures <code>|S|</code>-step &quot;iteration&quot;. As an additional benefit, one also doesn't need to use <code>CHOOSE</code> to select elements this way.</p>
+<p>In this case, the user doesn't have to think about defaults (aside from the empty-set case), or recursion,
+as <code>ApaFoldSet</code> ensures <code>|S|</code>-step &quot;iteration&quot;. As an additional benefit, one also doesn't need to use <code>CHOOSE</code> to select elements this way.</p>
 <p>So ultimately, the reasons for abandoning support for recursive operators boils down to the following:</p>
 <ul>
 <li><strong>In the vast majority of cases, equivalent functionality can be achieved by using <code>ApaFoldSet</code> or <code>ApaFoldSeqLeft</code></strong></li>
 <li><code>UNROLL_TIMES_Op</code> is hard to determine, or doesn't exist statically,</li>
 <li><code>UNROLL_DEFAULT_Op</code> is hard to determine,</li>
-<li>Apalache doesn't have runtime evaluation of recursion, so it can't natively determine when a call to a recursive <code>Op</code> would have required more than <code>UNROLL_TIMES_Op</code> steps</li>
+<li>Apalache doesn't have runtime evaluation of recursion, so it can't natively determine when a call to a recursive <code>Op</code>
+would have required more than <code>UNROLL_TIMES_Op</code> steps</li>
 <li>The use of recursive operators produces unpredictable results, particularly when used in invariants</li>
 </ul>
 

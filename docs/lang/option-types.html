@@ -188,8 +188,9 @@ polymorphic option type along with some common utility functions in the module
 </code></pre>
 <p>However, due to the current lack of support for polymorphic aliases, this alias
 has limited utility, and parametric option types can only be properly expressed
-by writing out the full variant type <code>Some(a) | None(UNIT)</code>. Nonetheless, in this manual
-page, we will sometimes write <code>$option(a)</code> as a shorthand for the type <code>Some(a) | None(UNIT)</code>.</p>
+by writing out the full variant type <code>Some(a) | None(UNIT)</code>.
+Nonetheless, in this manual page, we will sometimes write <code>$option(a)</code>
+as a shorthand for the type <code>Some(a) | None(UNIT)</code>.</p>
 <p>In the context of TLA+, our encoding of option types is generalized over
 &quot;partial operators&quot;, meaning operators which return a value of type
 <code>$option(a)</code>. Support for partial functions is supplied by two operators,
@@ -237,8 +238,8 @@ optional value is present or absent, in the expected way.</p>
 <h3><a class="header" href="#case-analysis-and-elimination-of-optional-values" id="case-analysis-and-elimination-of-optional-values">Case analysis and elimination of optional values</a></h3>
 <p><strong>Notation:</strong> <code>OptionCase(o, caseSome, caseNone)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
-<p><strong>Apalache type:</strong> <code>(Some(a) | None(UNIT), a =&gt; b, UNIT =&gt; b) =&gt; b</code>, for some types <code>a</code>
-and <code>b</code>. </p>
+<p><strong>Apalache type:</strong> <code>(Some(a) | None(UNIT), a =&gt; b, UNIT =&gt; b) =&gt; b</code>,
+for some types <code>a</code> and <code>b</code>. </p>
 <p><strong>Arguments:</strong></p>
 <ul>
 <li><code>o</code> an optional value</li>
@@ -271,8 +272,9 @@ and <code>b</code>. </p>
 <h3><a class="header" href="#sequencing-application-of-partial-operators" id="sequencing-application-of-partial-operators">Sequencing application of partial operators</a></h3>
 <p><strong>Notation:</strong> <code>OptionFlatMap(f, o)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
-<p><strong>Apalache type:</strong> <code>(a =&gt; Some(b) | None(UNIT), Some(a) | None(UNIT)) =&gt; Some(b) | None(UNIT)</code>, for some types <code>a</code>
-and <code>b</code>. </p>
+<p><strong>Apalache type:</strong>
+<code>(a =&gt; Some(b) | None(UNIT), Some(a) | None(UNIT)) =&gt; Some(b) | None(UNIT)</code>,
+for some types <code>a</code> and <code>b</code>. </p>
 <p><strong>Arguments:</strong></p>
 <ul>
 <li><code>f</code> is a partial operator</li>
@@ -300,7 +302,8 @@ LET s == OptionFlatMap(fail, r) IN
 <li><code>o</code> an optional value</li>
 <li><code>default</code> is a default value to return</li>
 </ul>
-<p><strong>Effect:</strong> <code>OptionGetOrElse(o, default)</code> is <code>v</code> iff <code>o = Some(v)</code>, or else <code>default</code>.</p>
+<p><strong>Effect:</strong>
+<code>OptionGetOrElse(o, default)</code> is <code>v</code> iff <code>o = Some(v)</code>, or else <code>default</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -385,7 +388,8 @@ IN
 <li><code>f</code> is a function</li>
 <li><code>o</code> is an optional value</li>
 </ul>
-<p><strong>Effect:</strong> <code>OptionFunApp(f, o)</code> is <code>Some(f[v])</code> if <code>o = Some(v)</code> or else <code>None</code>.</p>
+<p><strong>Effect:</strong>
+<code>OptionFunApp(f, o)</code> is <code>Some(f[v])</code> if <code>o = Some(v)</code> or else <code>None</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -406,8 +410,8 @@ IN
 </ul>
 <p><strong>Effect:</strong> <code>OptionPartialFun(f, undef)</code> is a function mapping each value in
 <code>undef</code> to <code>None</code>, and each value <code>x \in (DOMAIN f \ undef)</code> to <code>Some(f[x])</code>.
-This can be used to extend a total function into a &quot;partial function&quot; whose domain is
-extended to include the values in 'undef'.</p>
+This can be used to extend a total function into a &quot;partial function&quot;
+whose domain is extended to include the values in 'undef'.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>

@@ -171,10 +171,9 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#enumerating-counterexamples" id="enumerating-counterexamples">Enumerating counterexamples</a></h1>
-<p>By default, Apalache stops whenever it finds a property violation. This is true
-for the commands that are explained in the Section on <a href="./running.html">Running the
-Tool</a>. Sometimes, we want to produce multiple counterexamples;
-for instance, to generate multiple tests.</p>
+<p>By default, Apalache stops whenever it finds a property violation.
+This is true for the commands that are explained in the Section on <a href="../running.html">Running the Tool</a>.
+Sometimes, we want to produce multiple counterexamples; for instance, to generate multiple tests.</p>
 <p>Consider the following TLA+ specification:</p>
 <pre><code class="language-tla">---- MODULE View2 ----
 EXTENDS Integers
@@ -254,9 +253,9 @@ the invariant holds true in the intermediate states. As invariants usually
 produce complex constraints and slow down the model checker, we leave the
 choice to the user.</p>
 <p>Usually, the specification author has a good idea of how to partition states
-into interesting equivalence classes. We let you specify this partitiong by declaring
+into interesting equivalence classes. We let you specify this partitioning by declaring
 a view abstraction, similar to the <code>VIEW</code> configuration option in TLC.
-Basically, two states are considered to be similar, if they have the same view.</p>
+Basically, two states are considered to be similar if they have the same view.</p>
 <p>In our example, we compute the state view with the operator <code>View1</code>:</p>
 <pre><code class="language-tla">\* @type: &lt;&lt;Bool, Bool&gt;&gt;;
 View1 ==

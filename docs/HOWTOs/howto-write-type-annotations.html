@@ -196,14 +196,13 @@ were removed in version 0.23.1.</p>
 </li>
 <li>
 <p>Version 0.15.0: This HOWTO discusses how to write type annotations for the type checker
-<a href="../apalache/typechecker-snowcat.html">Snowcat</a>, which is used in Apalache since version 0.15.0 (introduced in
-2021).</p>
+<a href="../apalache/typechecker-snowcat.html">Snowcat</a>, which is used in Apalache since version 0.15.0 (introduced in 2021).</p>
 </li>
 </ul>
 <p>This HOWTO gives you concrete steps to extend TLA+ specifications with type
 annotations. You can find the detailed syntax of type annotations in
 <a href="../adr/002adr-types.html">ADR002</a>. The first rule of writing type annotations:</p>
-<p><em>Do not to write any annotations at all, until the type checker <a href="../apalache/typechecker-snowcat.html">Snowcat</a> is
+<p><em>Do not write any annotations at all, until the type checker <a href="../apalache/typechecker-snowcat.html">Snowcat</a> is
 asking you to write a type annotation.</em></p>
 <p>Of course, there must be an exception to this rule. You have to write type
 annotations for CONSTANTS and VARIABLES. This is because Snowcat infers types
@@ -311,10 +310,10 @@ annotation per name.</p>
 <pre><code>\* @type: { val: DATUM, rdy: Int, ack: Int };
 </code></pre>
 <p>The type of <code>chan</code> is a record that has three fields: field <code>val</code> of type
-<code>DATUM</code>, field <code>rdy</code> of type <code>Int</code>, field <code>ack</code> of type <code>Int</code>. The record type syntax is similar to dictionary syntax from programming languages (e.g. Python). We made it different
-from TLA+'s syntax for records <code>[ val |-&gt; v, rdy |-&gt; r, ack |-&gt; a ]</code>
-and record sets <code>[ val: V, rdy: R, ack: A ]</code>, to avoid confusion between
-types and values.</p>
+<code>DATUM</code>, field <code>rdy</code> of type <code>Int</code>, field <code>ack</code> of type <code>Int</code>.
+The record type syntax is similar to dictionary syntax from programming languages (e.g. Python).
+We made it different from TLA+'s syntax for records <code>[ val |-&gt; v, rdy |-&gt; r, ack |-&gt; a ]</code>
+and record sets <code>[ val: V, rdy: R, ack: A ]</code>, to avoid confusion between types and values.</p>
 <p>Run the type checker again. You should see the following message:</p>
 <pre><code>$ apalache-mc typecheck ChannelTyped.tla
 ...
@@ -571,8 +570,9 @@ more field to the record type, it suffices to change the definition of the type
 alias, instead of changing the record type everywhere.</p>
 <p>For more details on the design and usage, see <a href="../adr/002adr-types.html#defTypeAlias">Type Aliases</a> in ADR-002.</p>
 <h2><a class="header" href="#recipe-7-multi-line-annotations" id="recipe-7-multi-line-annotations">Recipe 7: Multi-line annotations</a></h2>
-<p>A type annotation may span over multiple lines. You may use both the <code>(* ... *)</code> syntax as well as the single-line syntax <code>\* ...</code>. All three examples below
-are accepted by the parser:</p>
+<p>A type annotation may span over multiple lines. You may use both the <code>(* ... *)</code>
+syntax as well as the single-line syntax <code>\* ...</code>.
+All three examples below are accepted by the parser:</p>
 <pre><code class="language-tla">VARIABLES
    (*
     @type: Int
@@ -591,8 +591,8 @@ are accepted by the parser:</p>
 <p>Note that the parser removes the leading strings <code>&quot;    \*&quot;</code> from the annotations,
 similar to how multi-line strings are treated in modern programming languages.</p>
 <h2><a class="header" href="#recipe-8-comments-in-annotations" id="recipe-8-comments-in-annotations">Recipe 8: Comments in annotations</a></h2>
-<p>Sometimes, it helps to document the meaning of type components. Consider the following
-example from <a href="#funAsSeq">Recipe 5</a>:</p>
+<p>Sometimes, it helps to document the meaning of type components.
+Consider the following example from <a href="#funAsSeq">Recipe 5</a>:</p>
 <pre><code class="language-tla">\* @type: (Seq(Int), Int, Int) =&gt; Bool;
 Attacks(queens,i,j)
 </code></pre>
@@ -679,7 +679,7 @@ a type annotation before the keyword <code>LOCAL</code>, not after it. For examp
 <pre><code class="language-tla">\* @type: Int =&gt; Int;
 LOCAL LocalInc(x) == x + 1
 </code></pre>
-<p>This may change later, when the tlaplus <a href="https://github.com/tlaplus/tlaplus/issues/578">Issue 578</a> is resolved.</p>
+<p>This may change later when the tlaplus <a href="https://github.com/tlaplus/tlaplus/issues/578">Issue 578</a> is resolved.</p>
 
                     </main>
 

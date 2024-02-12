@@ -171,17 +171,26 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#apalache-operators" id="apalache-operators">Apalache operators</a></h1>
-<p>In addition to the standard TLA+ operators described in the previous section, Apalache defines a number of operators, which do not belong to the core language of TLA+, but which Apalache uses to provide clarity, efficiency, or special functionality. These operators belong to the module <code>Apalache</code>, and can be used in any specification by declaring <code>EXTENDS Apalache</code>.</p>
+<p>In addition to the standard TLA+ operators described in the previous section,
+Apalache defines a number of operators, which do not belong to the core language of TLA+,
+but which Apalache uses to provide clarity, efficiency, or special functionality.
+These operators belong to the module <code>Apalache</code>,
+and can be used in any specification by declaring <code>EXTENDS Apalache</code>.</p>
 <p><a name="Assignment"></a></p>
 <h2><a class="header" href="#assignment" id="assignment">Assignment</a></h2>
 <p><strong>Notation:</strong> <code>v' := e</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/coloneq.png" alt="coloneq" /></p>
 <p><strong>Arguments:</strong> Two arguments. The first is a primed variable name, the second is arbitrary.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code></p>
-<p><strong>Effect:</strong> The expression <code>v' := e</code> evaluates to <code>v' = e</code>. At the level of Apalache static analysis, such expressions indicate parts of an action, where the value of a state-variable in a successor state is determined. See <a href="../idiomatic/001assignments.html">here</a> for more details about assignments in Apalache.</p>
+<p><strong>Effect:</strong> The expression <code>v' := e</code> evaluates to <code>v' = e</code>.
+At the level of Apalache static analysis, such expressions indicate parts of an action,
+where the value of a state-variable in a successor state is determined.
+See <a href="../idiomatic/001assignments.html">here</a> for more details about assignments in Apalache.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> 
-If the first argument is not a primed variable name, or if the assignment operator is used where assignments are prohibited, Apalache statically reports an error.</p>
+If the first argument is not a primed variable name,
+or if the assignment operator is used where assignments are prohibited,
+Apalache statically reports an error.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">x' := 1                   \* x' = 1 
 x' := (y = z)             \* x' = (y = z) 
@@ -212,7 +221,7 @@ non-empty. If <code>S</code> is empty, return some value of the proper type.</p>
 calls to <code>Guess(S)</code> may return <code>x, y \in S</code> that can differ (<code>x /= y</code>) or may
 be equal (<code>x = y</code>). Moreover, Apalache considers all possible combinations of
 elements of <code>S</code> in the model checking mode. If <code>S</code> is empty, <code>Guess(S)</code>
-produces the same value of proper type.</p>
+produces the same value of a proper type.</p>
 <p><strong>Errors:</strong>
 If <code>S</code> is not a set, Apalache reports an error.</p>
 <p><strong>Example in TLA+:</strong></p>
@@ -265,8 +274,8 @@ IN
 <p><strong>LaTeX notation:</strong> <code>SetAsFun(S)</code></p>
 <p><strong>Arguments:</strong> One argument: A set of pairs <code>S</code>, which may be empty.</p>
 <p><strong>Apalache type:</strong> <code>Set(&lt;&lt;a, b&gt;&gt;) =&gt; (a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>.</p>
-<p><strong>Effect:</strong> Convert a set of pairs <code>S</code> to a function <code>F</code>, with the property that <code>F(x) = y =&gt; &lt;&lt;x,y&gt;&gt; \in S</code>. Note that if <code>S</code>
-contains at least two pairs <code>&lt;&lt;x, y&gt;&gt;</code> and <code>&lt;&lt;x, z&gt;&gt;</code>, such that <code>y /= z</code>, then <code>F</code> is not uniquely defined.
+<p><strong>Effect:</strong> Convert a set of pairs <code>S</code> to a function <code>F</code>, with the property that <code>F(x) = y =&gt; &lt;&lt;x,y&gt;&gt; \in S</code>.
+Note that if <code>S</code> contains at least two pairs <code>&lt;&lt;x, y&gt;&gt;</code> and <code>&lt;&lt;x, z&gt;&gt;</code>, such that <code>y /= z</code>, then <code>F</code> is not uniquely defined.
 We use <code>CHOOSE</code> to resolve this ambiguity. The operator <code>SetAsFun</code> can be defined as follows:</p>
 <pre><code class="language-tla">SetAsFun(S) ==
     LET Dom == { x: &lt;&lt;x, y&gt;&gt; \in S }
@@ -311,16 +320,18 @@ MkSeq(3, Double) = &lt;&lt;2, 4, 6&gt;&gt;   \* TRUE
 <p><strong>Arguments:</strong> Three arguments:</p>
 <ul>
 <li>A function <code>fn</code> that should be interpreted as a sequence.</li>
-<li>An integer <code>len</code>, denoting the length of the sequence, with the property
-<code>1..len \subseteq DOMAIN fn</code>. Apalache does not check this requirement. It is up to the user to ensure that it holds. This expression is not necessarily constant.</li>
+<li>An integer <code>len</code>, denoting the length of the sequence, with the property <code>1..len \subseteq DOMAIN fn</code>.
+Apalache does not check this requirement.
+It is up to the user to ensure that it holds. This expression is not necessarily constant.</li>
 <li>An integer constant <code>maxLen</code>, which is an upper bound on <code>len</code>, that is, <code>len &lt;= maxLen</code>.</li>
 </ul>
 <p><strong>Apalache type:</strong> <code>(Int -&gt; a, Int, Int) =&gt; Seq(a)</code>, for some type <code>a</code></p>
 <p><strong>Effect:</strong> The expression <code>FunAsSeq(fn, len, maxLen)</code> evaluates to the
 sequence <code>&lt;&lt; fn[1], ..., fn[Min(len, maxLen)] &gt;&gt;</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> If the types of <code>fn</code>, <code>len</code> or <code>maxLen</code> do not match the expected types, Apalache statically reports a
-type error. Additionally, if it is not the case that <code>1..len \subseteq DOMAIN fn</code>, the result is undefined.</p>
+<p><strong>Errors:</strong> If the types of <code>fn</code>, <code>len</code> or <code>maxLen</code> do not match the expected types,
+Apalache statically reports a type error.
+Additionally, if it is not the case that <code>1..len \subseteq DOMAIN fn</code>, the result is undefined.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">Head([ x \in 1..5 |-&gt; x * x ])                \* 1 in TLC, type error in Apalache
 FunAsSeq([ x \in 1..5 |-&gt; x * x ], 3, 3)      \* &lt;&lt;1,4,9&gt;&gt;
@@ -356,12 +367,17 @@ g = boundedFn(lambda x: x * x, {0, 42})
 <p><strong>LaTeX notation:</strong> <code>Skolem(e)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be an expression of the form <code>\E x \in S: P</code>.</p>
 <p><strong>Apalache type:</strong> <code>(Bool) =&gt; Bool</code></p>
-<p><strong>Effect:</strong> The expression <code>Skolem(\E x \in S: P)</code> provides a hint to Apalache, that the existential quantification may be skolemized. It evaluates to the same value as <code>\E x \in S: P</code>.</p>
+<p><strong>Effect:</strong> The expression <code>Skolem(\E x \in S: P)</code> provides a hint to Apalache,
+that the existential quantification may be skolemized.
+It evaluates to the same value as <code>\E x \in S: P</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> 
-If <code>e</code> is not a Boolean expression, throws a type error. If it is Boolean, but not an existentially quantified expression, throws a <code>StaticAnalysisException</code>.</p>
+If <code>e</code> is not a Boolean expression, throws a type error.
+If it is Boolean, but not an existentially quantified expression, throws a <code>StaticAnalysisException</code>.</p>
 <p><strong>Note:</strong>
-This is an operator produced internally by Apalache. You may see instances of this operator, when reading the <code>.tla</code> side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.</p>
+This is an operator produced internally by Apalache.
+You may see instances of this operator, when reading the <code>.tla</code> side-outputs of various passes.
+Manual use of this operator is discouraged and, in many cases, not supported.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">Skolem( \E x \in {1,2}: x = 1 ) \* TRUE
 Skolem( 1 )                     \* 1 in TLC, type error in Apalache
@@ -373,12 +389,18 @@ Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 <p><strong>LaTeX notation:</strong> <code>Expand(S)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be either <code>SUBSET SS</code> or <code>[T1 -&gt; T2]</code>.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a)) =&gt; Set(a)</code>, for some <code>a</code>.</p>
-<p><strong>Effect:</strong> The expression <code>Expand(S)</code> provides instructions to Apalache, that the large set <code>S</code> (powerset or set of functions) should be explicitly constructed as a finite set, overriding Apalache's optimizations for dealing with such collections. It evaluates to the same value as <code>S</code>.</p>
+<p><strong>Effect:</strong> The expression <code>Expand(S)</code> provides instructions to Apalache,
+that the large set <code>S</code> (powerset or set of functions) should be explicitly constructed as a finite set,
+overriding Apalache's optimizations for dealing with such collections.
+It evaluates to the same value as <code>S</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> 
-If <code>e</code> is not a set, throws a type error. If the expression is a set, but is not of the form <code>SUBSET SS</code> or <code>[T1 -&gt; T2]</code>, throws a <code>StaticAnalysisException</code>.</p>
+If <code>e</code> is not a set, throws a type error. If the expression is a set,
+but is not of the form <code>SUBSET SS</code> or <code>[T1 -&gt; T2]</code>, throws a <code>StaticAnalysisException</code>.</p>
 <p><strong>Note:</strong>
-This is an operator produced internally by Apalache. You may see instances of this operator, when reading the <code>.tla</code> side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.</p>
+This is an operator produced internally by Apalache.
+You may see instances of this operator, when reading the <code>.tla</code> side-outputs of various passes.
+Manual use of this operator is discouraged and, in many cases, not supported.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">Expand( SUBSET {1,2} ) \* {{},{1},{2},{1,2}}
 Expand( {1,2} )        \* {1,2} in TLC, error in Apalache
@@ -390,12 +412,18 @@ Expand( 1 )            \* 1 in TLC, type error in Apalache
 <p><strong>LaTeX notation:</strong> <code>ConstCardinality(e)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be an expression of the form <code>Cardinality(S) &gt;= k</code>.</p>
 <p><strong>Apalache type:</strong> <code>(Bool) =&gt; Bool</code></p>
-<p><strong>Effect:</strong> The expression <code>ConstCardinality(Cardinality(S) &gt;= k)</code> provides a hint to Apalache, that <code>Cardinality(S)</code> is a constant, allowing Apalache to encode the constraint <code>e</code> without attempting to dynamically encode <code>Cardinality(S). It evaluates to the same value as </code>e`.</p>
+<p><strong>Effect:</strong> The expression <code>ConstCardinality(Cardinality(S) &gt;= k)</code> provides a hint to Apalache,
+that <code>Cardinality(S)</code> is a constant, allowing Apalache to encode the constraint <code>e</code>
+without attempting to dynamically encode <code>Cardinality(S)</code>.
+It evaluates to the same value as <code>e</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> 
-If <code>S</code> is not a Boolean expression, throws a type error. If it is Boolean, but not an existentially quantified expression, throws a <code>StaticAnalysisException</code>.</p>
+If <code>S</code> is not a Boolean expression, throws a type error.
+If it is Boolean, but not an existentially quantified expression, throws a <code>StaticAnalysisException</code>.</p>
 <p><strong>Note:</strong>
-This is an operator produced internally by Apalache. You may see instances of this operator, when reading the <code>.tla</code> side-outputs of various passes. Manual use of this operator is discouraged and, in many cases, not supported.</p>
+This is an operator produced internally by Apalache.
+You may see instances of this operator, when reading the <code>.tla</code> side-outputs of various passes.
+Manual use of this operator is discouraged and, in many cases, not supported.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">Skolem( \E x \in {1,2}: x = 1 ) \* TRUE
 Skolem( 1 )                     \* 1 in TLC, type error in Apalache

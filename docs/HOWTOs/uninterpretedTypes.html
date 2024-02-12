@@ -171,18 +171,27 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#how-to-use-uninterpreted-types" id="how-to-use-uninterpreted-types">How to use uninterpreted types</a></h1>
-<p>This HOWTO explains what uninterpreted types are in the context of Apalache's type system, outlined in <a href="../adr/002adr-types.html">ADR002</a>, and where/how to use them.</p>
+<p>This HOWTO explains what uninterpreted types are in the context of Apalache's type system,
+outlined in <a href="../adr/002adr-types.html">ADR002</a>, and where/how to use them.</p>
 <h2><a class="header" href="#what-are-uninterpreted-types" id="what-are-uninterpreted-types">What are uninterpreted types?</a></h2>
-<p>It is often the case, when writing specifications, that inputs (<code>CONSTANTS</code>) describe a collection of values, where the only relevant property is that all of the values are considered unique. For instance, <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> defines </p>
+<p>It is often the case, when writing specifications, that inputs (<code>CONSTANTS</code>) describe a collection of values,
+where the only relevant property is that all the values are considered unique.
+For instance, <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> defines </p>
 <pre><code class="language-tla">CONSTANT RM \* The set of resource managers
 </code></pre>
-<p>however, for the purposes of specification analysis, it does not matter if we instantiate 
-<code>RM = 1..3</code> or <code>RM = {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}</code>, because the only operators applied to elements of <code>RM</code> are polymorphic in the type of the elements of <code>RM</code>.</p>
+<p>however, for the purposes of specification analysis,
+it does not matter if we instantiate <code>RM = 1..3</code> or <code>RM = {&quot;a&quot;,&quot;b&quot;,&quot;c&quot;}</code>,
+because the only operators applied to elements of <code>RM</code> are polymorphic in the type of the elements of <code>RM</code>.</p>
 <p>For this reason, Apalache supports a special kind of type annotation: uninterpreted types. 
-The type checker <a href="../apalache/typechecker-snowcat.html">Snowcat</a> makes sure that a value belonging to an uninterpreted type is only ever passed to polymorphic operators, and, importantly, that it is never compared to a value of any other type. </p>
+The type checker <a href="../apalache/typechecker-snowcat.html">Snowcat</a> makes sure that a value belonging to an uninterpreted type
+is only ever passed to polymorphic operators, and, importantly, that it is never compared to a value of any other type. </p>
 <h2><a class="header" href="#when-to-use-uninterpreted-types" id="when-to-use-uninterpreted-types">When to use uninterpreted types?</a></h2>
-<p>For efficiency reasons, you should use uninterpreted types whenever a <code>CONSTANT</code> or value represents (an element of) a collection of unique identifiers, the precise value of which does not influence the properties of the specification.</p>
-<p>On the other hand, if, for example, the order of values matters, identifiers should likely be <code>1..N</code> and hold type <code>Int</code> instead of an uninterpreted type, since <code>Int</code> values can be passed to the non-polymorphic <code>&lt;,&gt;,&gt;=,&lt;=</code> operators.</p>
+<p>For efficiency reasons, you should use uninterpreted types whenever a <code>CONSTANT</code> or value
+represents (an element of) a collection of unique identifiers,
+the precise value of which does not influence the properties of the specification.</p>
+<p>On the other hand, if, for example, the order of values matters,
+identifiers should likely be <code>1..N</code> and hold type <code>Int</code> instead of an uninterpreted type,
+since <code>Int</code> values can be passed to the non-polymorphic <code>&lt;,&gt;,&gt;=,&lt;=</code> operators.</p>
 <h2><a class="header" href="#how-to-annotate-uninterpreted-types" id="how-to-annotate-uninterpreted-types">How to annotate uninterpreted types</a></h2>
 <p>Following <a href="../adr/002adr-types.html">ADR002</a>, an annotation with an uninterpreted type looks exactly like an annotation with a type alias:</p>
 <pre><code class="language-tla">\* @type: UTNAME;
@@ -197,11 +206,15 @@ The type checker <a href="../apalache/typechecker-snowcat.html">Snowcat</a> make
 <li><code>TYPENAME</code> is the uninterpreted type to which this value belongs, matching the pattern <code>[A-Z_][A-Z0-9_]*</code>, and</li>
 <li><code>identifier</code> is a unique identifier within the uninterpreted type, matching the pattern <code>[a-zA-Z0-9_]+</code>.</li>
 </ul>
-<p>Example: <code>&quot;1_OF_UT&quot;</code> is a value belonging to the uninterpreted type <code>UT</code>, as is <code>&quot;2_OF_UT&quot;</code>. These two values are distinct by definition. On the contrary,
-<code>&quot;1_OF_ut&quot;</code> does <em>not</em> meet the criteria for a value belonging to an uninterpreted type ( lowercase <code>ut</code> is not a valid identifier for an uninterpreted type), so it is treated as a string value.</p>
-<p><strong>Note</strong>: Values matching the pattern <code>&quot;FRESH[0-9]+_OF_TYPENAME&quot;</code> are reserved for internal use, to allow Apalache to construct fresh values.</p>
+<p>Example: <code>&quot;1_OF_UT&quot;</code> is a value belonging to the uninterpreted type <code>UT</code>, as is <code>&quot;2_OF_UT&quot;</code>.
+These two values are distinct by definition.
+On the contrary, <code>&quot;1_OF_ut&quot;</code> does <em>not</em> meet the criteria for a value belonging to an uninterpreted type
+(lowercase <code>ut</code> is not a valid identifier for an uninterpreted type), so it is treated as a string value.</p>
+<p><strong>Note</strong>: Values matching the pattern <code>&quot;FRESH[0-9]+_OF_TYPENAME&quot;</code> are reserved for internal use,
+to allow Apalache to construct fresh values.</p>
 <h2><a class="header" href="#uninterpreted-types-str-and-comparisons" id="uninterpreted-types-str-and-comparisons">Uninterpreted types, <code>Str</code>, and comparisons</a></h2>
-<p>Importantly, while both strings and values belonging to uninterpreted types are introduced using the <code>&quot;...&quot;</code> notation, they are treated as having distinct, incomparable types.
+<p>Importantly, while both strings and values belonging to uninterpreted types are introduced using the <code>&quot;...&quot;</code> notation,
+they are treated as having distinct, incomparable types.
 Examples:</p>
 <ul>
 <li>The following expression is type-incorrect:

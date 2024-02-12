@@ -186,15 +186,15 @@ EXTENDS Integers
 <h2><a class="header" href="#integers-in-apalache-and-smt" id="integers-in-apalache-and-smt">Integers in Apalache and SMT</a></h2>
 <p>Although you can write arbitrary expressions over integers in TLA+, Apalache
 translates these expressions as constraints in
-<a href="https://en.wikipedia.org/wiki/Satisfiability_modulo_theories">SMT</a>.  Some
-expressions are easier to solve than the others. For instance, the expression
-<code>2 * x &gt; 5</code> belongs to linear integer arithmetic, which can be solved more
-efficiently than general arithmetic.  For state variables <code>x</code> and <code>y</code>, the
-expression <code>x * y &gt; 5</code> belongs to non-linear integer arithmetic, which is
-harder to solve than linear arithmetic.</p>
+<a href="https://en.wikipedia.org/wiki/Satisfiability_modulo_theories">SMT</a>.
+Some expressions are easier to solve than others.
+For instance, the expression <code>2 * x &gt; 5</code> belongs to linear integer arithmetic,
+which can be solved more efficiently than general arithmetic.
+For state variables <code>x</code> and <code>y</code>, the expression <code>x * y &gt; 5</code> belongs to
+non-linear integer arithmetic, which is harder to solve than linear arithmetic.</p>
 <p>When your specification is using only integer literals, e.g., <code>1</code>, <code>2</code>, <code>42</code>,
 but none of the operators from the <code>Integers</code> module, the integers can
-be avoided altogether.  For instance, you can replace the integer constants
+be avoided altogether. For instance, you can replace the integer constants
 with string constants, e.g., <code>&quot;1&quot;</code>, <code>&quot;2&quot;</code>, <code>&quot;42&quot;</code>. The string constants are
 translated as constants in the SMT constraints. This simple trick may bring
 your specification into a much simpler theory. Sometimes, this trick allows z3
@@ -368,16 +368,16 @@ for some <code>d</code> in <code>0..(-b-1)</code>.</li>
 </ol>
 <p><em>When <code>a &lt; 0</code> or <code>b &lt; 0</code>, the result of the integer division <code>a \div b</code> according to the TLA+ definition is different from the integer division <code>a / b</code> in the programming languages (C, Java, Scala, Rust).  See the
 table below.</em></p>
-<table><thead><tr><th>   C (clang 12)</th><th>Scala 2.13</th><th>Rust</th><th>Python 3.8.6</th><th>TLA+ (TLC)</th><th>SMT (z3 4.8.8)</th></tr></thead><tbody>
+<table><thead><tr><th>C (clang 12)</th><th>Scala 2.13</th><th>Rust</th><th>Python 3.8.6</th><th>TLA+ (TLC)</th><th>SMT (z3 4.8.8)</th></tr></thead><tbody>
 <tr><td>100 / 3 == 33</td><td>100 / 3 == 33</td><td>100 / 3 == 33</td><td>100 // 3 == 33</td><td>(100 \div 3) = 33</td><td>(assert (= 33 (div 100 3)))</td></tr>
 <tr><td>-100 / 3 == -33</td><td>-100 / 3 == -33</td><td>-100 / 3 == -33</td><td>-100 // 3 == -34</td><td>((-100) \div 3) = -34</td><td>(assert (= (- 0 34) (div (- 0 100) 3)))</td></tr>
 <tr><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 / (-3) == -33</td><td>100 // (-3) == -34</td><td>(100 \div (-3)) = -34</td><td>(assert (= (- 0 33) (div 100 (- 0 3))))</td></tr>
 <tr><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 / (-3) == 33</td><td>-100 // (-3) == 33</td><td>((-100) \div (-3)) = 33</td><td>(assert (= 34 (div (- 0 100) (- 0 3))))</td></tr>
 </tbody></table>
 <p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> only gives us the definition for the case
-<code>b &gt; 0</code> (that is, cases 1-2 in our description). The implementation in SMT and
-TLC produce incompatible results for <code>b &lt; 0</code>. See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in
-Apalache</a>.</em></p>
+<code>b &gt; 0</code> (that is, cases 1–2 in our description).
+The implementation in SMT and TLC produce incompatible results for <code>b &lt; 0</code>.
+See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in Apalache</a>.</em></p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
@@ -618,7 +618,7 @@ True
 <hr />
 <p><a name="eq"></a></p>
 <h3><a class="header" href="#equality-and-inequality" id="equality-and-inequality">Equality and inequality</a></h3>
-<p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+ and thus they are
+<p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+, and thus they are
 not defined in the module <code>Integers</code>, see <a href="./logic.html">Logic</a>.</p>
 
                     </main>

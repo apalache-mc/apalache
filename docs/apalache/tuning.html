@@ -171,7 +171,7 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#parameters-for-fine-tuning" id="parameters-for-fine-tuning">Parameters for fine tuning</a></h1>
-<p>The parameters for fine tuning can be passed to the checker in a properties
+<p>The parameters for fine-tuning can be passed to the checker in a properties
 file.  Its name is given with the command-line option <code>--tuning-options-file=my.properties</code>.
 This file supports variable substitution, e.g., <code>${x}</code> is replaced with the
 value of <code>x</code>, if it was previously declared.</p>
@@ -196,7 +196,7 @@ reports 'UNKNOWN', and the model checker reports a runtime error.</p>
 <h2><a class="header" href="#invariant-mode" id="invariant-mode">Invariant mode</a></h2>
 <p><code>search.invariant.mode=(before|after)</code> defines the moment when the invariant is
 checked. In the <code>after</code> mode, all transitions are first translated, one of them
-is picked non-deterministically and then the invariant is checked. Although this
+is picked non-deterministically, and then the invariant is checked. Although this
 mode reduces the number of SMT queries, it usually requires more memory than the
 <code>before</code> mode. In the <code>before</code> mode, the invariant is checked for every enabled
 transition independently. The <code>before</code> mode may drastically reduce memory
@@ -236,7 +236,7 @@ model checker to check</p>
 <p><a href="../apalache/principles/invariants.html#trace-invariants">Trace invariants</a> are checked regardless of this filter.</p>
 <p>Note that there is no direct correspondence between invariant numbers and the
 operators in a TLA+ spec. Rather, the numbers refer to <em>verification conditions</em>
-(i.e., broken up parts of a TLA+ invariant operator). To find these numbers, run
+(i.e., broken-up parts of a TLA+ invariant operator). To find these numbers, run
 Apalache with <code>--write-intermediate=true</code> and check the invariant numbers in
 <code>_apalache-out/&lt;MySpec&gt;.tla/*/intermediate/XX_OutVCGen.tla</code>. The 0th state
 invariant is called <code>VCInv_si_0</code>, the 1st state invariant is called
@@ -249,7 +249,7 @@ steps.
 You can also use this option to check different parts of an invariant on
 different machines to speed up turnaround time.</p>
 <h2><a class="header" href="#translation-to-smt" id="translation-to-smt">Translation to SMT</a></h2>
-<h3><a class="header" href="#short-circuiting" id="short-circuiting">Short circuiting</a></h3>
+<h3><a class="header" href="#short-circuiting" id="short-circuiting">Short-circuiting</a></h3>
 <p><code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to
 <code>(or ...)</code> and <code>(and ...)</code> respectively. By default,
 <code>rewriter.shortCircuit=false</code>.</p>

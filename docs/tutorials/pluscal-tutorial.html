@@ -258,7 +258,7 @@ INSTANCE BakeryWoTlaps
 </code></pre>
 <p>Due to the semantics of <code>INSTANCE</code>, the constants and variables declared in
 <code>BakeryTyped.tla</code> substitute the constants and variables of
-<code>BakeryWoTlaps.tla</code>. By doing so we effectively introduce type annotations.
+<code>BakeryWoTlaps.tla</code>. By doing so, we effectively introduce type annotations.
 Since we introduce a separate module, any changes in the PlusCal code do not
 affect our type annotations.</p>
 <p>Additionally, we add a constant initializer <code>ConstInit4</code>, which we will use
@@ -401,7 +401,7 @@ IsPositive(x) == x &gt; 0
 <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla">BakeryTyped.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a>.</p>
-<p>In this tutorial we have shown how to:</p>
+<p>In this tutorial, we have shown how to:</p>
 <ul>
 <li>Annotate a PlusCal spec with types by introducing an additional TLA+ module.</li>
 <li>Check safety of Bakery for bounded executions by bounded model checking (for

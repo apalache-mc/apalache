@@ -173,15 +173,32 @@
                         <h1><a class="header" href="#idiom-7-use-boolean-operators-in-actions-not-if-then-else" id="idiom-7-use-boolean-operators-in-actions-not-if-then-else">Idiom 7: Use Boolean operators in actions, not <code>IF-THEN-ELSE</code></a></h1>
 <p><strong>author:</strong> Gabriela Moreira</p>
 <h2><a class="header" href="#description" id="description">Description</a></h2>
-<p>TLA+ provides an <code>IF-THEN-ELSE</code> operator, and it can be pretty tempting to use it for flow control, as it's done in procedural programming. However, TLA+ is about transitions over a state machine, and a transition-defining action declared with <code>IF-THEN-ELSE</code> can be more complex than 2 actions declared without it. Considering that any expression of the form <code>IF b THEN x ELSE y</code>, where <code>x</code> and <code>y</code> are Booleans, can be rewritten as <code>(b /\ x) \/ (~b /\ y)</code>, there's a pattern we can apply to get rid of some potentially troublesome <code>IF-THEN-ELSE</code> definitions.</p>
-<p>The <code>IF-THEN-ELSE</code> operator can be used either to define a value, or to branch some action as a sort of flow control. Defining values with <code>IF-THEN-ELSE</code> is common practice and is similar to the use of <code>IF</code> expressions in declarative programming languages. However, flow control in TLA+ can be done naturally by behavior definition through actions, making the use of <code>IF-THEN-ELSE</code> for flow control unnecessary. This idiom aims to clarify different usages of <code>IF-THEN-ELSE</code> expressions, keeping in mind the TLA+ essence of declaring actions to define transitions. </p>
+<p>TLA+ provides an <code>IF-THEN-ELSE</code> operator, and it can be pretty tempting to use it for flow control,
+as it's done in procedural programming.
+However, TLA+ is about transitions over a state machine,
+and a transition-defining action declared with <code>IF-THEN-ELSE</code> can be more complex than 2 actions declared without it.
+Considering that any expression of the form <code>IF b THEN x ELSE y</code>, where <code>x</code> and <code>y</code> are Booleans,
+can be rewritten as <code>(b /\ x) \/ (~b /\ y)</code>,
+there's a pattern we can apply to get rid of some potentially troublesome <code>IF-THEN-ELSE</code> definitions.</p>
+<p>The <code>IF-THEN-ELSE</code> operator can be used either to define a value, or to branch some action as a sort of flow control.
+Defining values with <code>IF-THEN-ELSE</code> is common practice
+and is similar to the use of <code>IF</code> expressions in declarative programming languages.
+However, flow control in TLA+ can be done naturally by behavior definition through actions,
+making the use of <code>IF-THEN-ELSE</code> for flow control unnecessary.
+This idiom aims to clarify different usages of <code>IF-THEN-ELSE</code> expressions,
+keeping in mind the TLA+ essence of declaring actions to define transitions. </p>
 <h2><a class="header" href="#when-to-use-if-then-else" id="when-to-use-if-then-else">When to use <code>IF-THEN-ELSE</code></a></h2>
 <h3><a class="header" href="#when-the-result-is-not-boolean" id="when-the-result-is-not-boolean">When the result is not Boolean</a></h3>
-<p>When the <code>IF-THEN-ELSE</code> expression doesn't evaluate to a Boolean value, it cannot be rewritten using Boolean operators, so this idiom doesn't apply. For example:</p>
+<p>When the <code>IF-THEN-ELSE</code> expression doesn't evaluate to a Boolean value,
+it cannot be rewritten using Boolean operators, so this idiom doesn't apply.
+For example:</p>
 <pre><code class="language-tla">SafeDiv(x, y) == IF y /= 0 THEN x/y ELSE 0
 </code></pre>
 <h3><a class="header" href="#when-the-result-is-a-state-formula" id="when-the-result-is-a-state-formula">When the result is a state formula</a></h3>
-<p>State formulas are formulas that don't contain any action operator (e.g. primed variables, <code>UNCHANGED</code>). Using <code>IF-THEN-ELSE</code> on this type of formula can make it easier to read in some situations, and don't come with any disadvantage. This example state formula uses <code>IF-THEN-ELSE</code> to return a Boolean value: </p>
+<p>State formulas are formulas that don't contain any action operator (e.g. primed variables, <code>UNCHANGED</code>).
+Using <code>IF-THEN-ELSE</code> on this type of formula can make it easier to read in some situations,
+and don't come with any disadvantage.
+This example state formula uses <code>IF-THEN-ELSE</code> to return a Boolean value: </p>
 <pre><code class="language-tla">ValidIdentity(person) == IF Nationalized(person) THEN ValidId(person) ELSE ValidPassport(person)
 </code></pre>
 <p>Although it could be rewritten with Boolean operators, it doesn't read as nicely:</p>
@@ -191,7 +208,10 @@
                             /\ ValidPassport(person)
 </code></pre>
 <h2><a class="header" href="#when-there-are-dependent-conditions" id="when-there-are-dependent-conditions">When there are dependent conditions</a></h2>
-<p>Nesting <code>IF-THEN-ELSE</code> expressions can be useful when there is a dependency between the conditions where some conditions are only relevant if other conditions are met. This is an example where using an <code>IF-THEN-ELSE</code> expressions is clearer than the Boolean operator form. Consider the following:</p>
+<p>Nesting <code>IF-THEN-ELSE</code> expressions can be useful when there is a dependency between the conditions
+where some conditions are only relevant if other conditions are met.
+This is an example where using an <code>IF-THEN-ELSE</code> expressions is clearer than the Boolean operator form.
+Consider the following:</p>
 <pre><code class="language-tla">IF c1
 THEN a1
 ELSE IF c2
@@ -210,14 +230,16 @@ ELSE a
 \/ ~c1 /\ ... /\ ~c_{n-1} /\ ~cn /\ a
 </code></pre>
 <h2><a class="header" href="#when-and-how-not-to-use-if-then-else" id="when-and-how-not-to-use-if-then-else">When (and how) <em>not</em> to use <code>IF-THEN-ELSE</code></a></h2>
-<p>Mixing <code>IF-THEN-ELSE</code> expressions with action operators introduces unnecessary branching to definitions that could be self-contained and look more like a transition definition. </p>
+<p>Mixing <code>IF-THEN-ELSE</code> expressions with action operators introduces unnecessary branching to definitions
+that could be self-contained and look more like a transition definition. </p>
 <pre><code class="language-tla">Withdraw(amount) == IF balance &gt;= amount 
                      THEN /\ balance' = balance - amount
                           /\ response' = &quot;SUCCESS&quot;
                      ELSE /\ UNCHANGED balance
                           /\ response' = &quot;FAILURE&quot;
 </code></pre>
-<p>We could separate the two branches into their own actions with clarifying names and explicit conditions, and use a disjunction between the two actions instead of the <code>IF-THEN-ELSE</code> block:</p>
+<p>We could separate the two branches into their own actions with clarifying names and explicit conditions,
+and use a disjunction between the two actions instead of the <code>IF-THEN-ELSE</code> block:</p>
 <pre><code class="language-tla">WithdrawSuccess(amount) == /\ balance &gt;= amount 
                            /\ balance' = balance - amount
                            /\ response' = &quot;SUCCESS&quot;
@@ -232,7 +254,10 @@ Withdraw(amount) == WithdrawSuccess(amount) \/ WithdrawFailure(amount)
 <ul>
 <li>Each action declares fewer transitions, so it's easier to reason about it</li>
 <li>A disjunction of actions is closer to a union of transition relations than an <code>IF-THEN-ELSE</code> expression is</li>
-<li>Nested <code>IF-THEN-ELSE</code> expressions are an extrapolation of these problems and can over-constrain some branches if not done carefully. Using different actions defining its conditions explicitly leaves less room for implicit wrong constraints that an <code>ELSE</code> branch allows. See the example below.</li>
+<li>Nested <code>IF-THEN-ELSE</code> expressions are an extrapolation of these problems and can over-constrain some branches if not done carefully.
+Using different actions defining its conditions explicitly leaves less room for implicit wrong constraints
+that an <code>ELSE</code> branch allows.
+See the example below.</li>
 </ul>
 <p>Assuming <code>C1()</code> is a condition for <code>A1()</code> and <code>C2()</code> is a condition for <code>A2()</code>:</p>
 <pre><code class="language-tla">Next == IF C1() 
@@ -250,9 +275,12 @@ Withdraw(amount) == WithdrawSuccess(amount) \/ WithdrawFailure(amount)
         \/ A3()
            
 </code></pre>
-<p>This second definition can allow more behaviors than the first one (depending on whether <code>C1()</code> and <code>C2()</code> overlap), and these additional behaviors can be unintentionally left out when <code>IF-THEN-ELSE</code> is used without attention.</p>
+<p>This second definition can allow more behaviors than the first one (depending on whether <code>C1()</code> and <code>C2()</code> overlap),
+and these additional behaviors can be unintentionally left out when <code>IF-THEN-ELSE</code> is used without attention.</p>
 <h2><a class="header" href="#disadvantages" id="disadvantages">Disadvantages</a></h2>
-<p>A disjunction in TLA+ may or may not represent non-determinism, while an <code>IF-THEN-ELSE</code> is incapable of introducing non-determinism. If it's important that readers can easily differentiate deterministic and non-deterministic definitions, using <code>IF-THEN-ELSE</code> expressions can help to make determinism explicit.</p>
+<p>A disjunction in TLA+ may or may not represent non-determinism, while an <code>IF-THEN-ELSE</code> is incapable of introducing non-determinism.
+If it's important that readers can easily differentiate deterministic and non-deterministic definitions,
+using <code>IF-THEN-ELSE</code> expressions can help to make determinism explicit.</p>
 
                     </main>
 

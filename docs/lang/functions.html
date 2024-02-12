@@ -177,9 +177,10 @@
 functions are not like functions in programming languages. In programming
 languages, functions contain code that calls other functions. Although it is
 technically possible to use functions when constructing a function in TLA+,
-functions are more often used like tables or dictionaries: they are simple maps from a set of inputs to a set of outputs. For instance, in
-<a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">Two-phase commit</a>, the function <code>rmState</code> stores the transaction state for
-each process:</p>
+functions are more often used like tables or dictionaries: they are simple maps
+from a set of inputs to a set of outputs.
+For instance, in <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">Two-phase commit</a>, the function <code>rmState</code>
+stores the transaction state for each process:</p>
 <table><thead><tr><th>argument</th><th>rmState[argument]</th></tr></thead><tbody>
 <tr><td>&quot;process1&quot;</td><td>&quot;working&quot;</td></tr>
 <tr><td>&quot;process2&quot;</td><td>&quot;aborted&quot;</td></tr>
@@ -216,7 +217,7 @@ from a set of functions by using the <a href="#funSetCtor">function set construc
                     { &quot;working&quot;, &quot;prepared&quot;, &quot;committed&quot;, &quot;aborted&quot; } ]:
         rmState = f
 </code></pre>
-<p>In the above example we are not talking about one function that is somehow
+<p>In the above example, we are not talking about one function that is somehow
 initialized &quot;by default&quot;. Rather, we say that <code>rmState</code> can be set to an
 arbitrary function that receives arguments from the set <code>{ &quot;process1&quot;, &quot;process2&quot;, &quot;process3&quot; }</code> and returns values that belong to the set <code>{ &quot;working&quot;, &quot;prepared&quot;, &quot;committed&quot;, &quot;aborted&quot; }</code>. As a result, TLC has to
 enumerate all possible functions that match this constraint. On the contrary,
@@ -339,11 +340,10 @@ Traceback (most recent call last):
 TypeError: unhashable type: 'dict'
 
 </code></pre>
-<p>Of course, this is an implementation detail of Python and it has nothing to do
+<p>Of course, this is an implementation detail of Python, and it has nothing to do
 with TLA+. This example probably demonstrates that the built-in primitives of
 TLA+ are more powerful than the standard primitives of many programming
-languages (see <a href="https://github.com/informalsystems/apalache/discussions/551">this
-discussion</a>).</p>
+languages (see <a href="https://github.com/informalsystems/apalache/discussions/551">this discussion</a>).</p>
 <p>Alternatively, we could represent a TLA+ function in Python as a set
 of pairs <code>(key, value)</code> and implement TLA+ function operators over such a
 set. Surely, this implementation would be inefficient, but this is not
@@ -495,9 +495,9 @@ the type is <code>((&lt;&lt;a_1, ..., a_n&gt;&gt; -&gt; b), a_1, ..., a_n) =&gt;
 <p>When <code>e</code> has a type incompatible with the type of <code>DOMAIN f</code>, Apalache flags
 a type error. When <code>e \notin DOMAIN f</code>, Apalache assigns some type-compatible
 value to <code>f[e]</code>, but does not report any error. This is not a bug in Apalache,
-but a feature of the SMT encoding. Usually, an illegal access surfaces
-somewhere, when checking a specification.  If you want to detect an access
-outside of the function domain, instrument your code with an additional state
+but a feature of the SMT encoding. Usually, illegal access surfaces
+somewhere when checking a specification. If you want to detect access
+outside the function domain, instrument your code with an additional state
 variable.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  [x \in 1..10 |-&gt; x * x][5]                \* 25
@@ -601,7 +601,7 @@ function domain is not known in advance. Additionally, given a Python
 dictionary <code>f</code>, we write <code>f.items()</code> to quickly iterate over the pairs of keys
 and values. Had we wanted to follow the TLA+ semantics more precisely, we would
 have to enumerate over the keys in the function domain and apply the function to
-each key, in order to obtain the value that is associated with the key.  This
+each key, in order to obtain the value that is associated with the key. This
 code would be less efficient than the idiomatic Python code.</p>
 <pre><code class="language-python">&gt;&gt;&gt; # TLA: LET f1 == [ p \in 1..3 |-&gt; &quot;working&quot; ] IN
 &gt;&gt;&gt; f1 = {i: &quot;working&quot; for i in range(1, 4)}

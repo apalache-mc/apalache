@@ -171,8 +171,8 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#running-the-tool" id="running-the-tool">Running the Tool</a></h1>
-<p><strong>Opt-in statistics programme</strong>: if you opt-in for statistics collection (off by default), then every run of Apalache
-will submit anonymized statistics to
+<p><strong>Opt-in statistics programme</strong>: if you opt in for statistics collection (off by default),
+then every run of Apalache will submit anonymized statistics to
 <code>tlapl.us</code>. See the details in <a href="./statistics.html">TLA+ Anonymized Execution Statistics</a>.</p>
 <p>Apalache supports several modes of execution. You can run it with the <code>--help</code> option,
 to see the complete list of modes and their invocation commands:</p>
@@ -182,22 +182,26 @@ to see the complete list of modes and their invocation commands:</p>
 <ul>
 <li>
 <p><code>parse</code> reads a TLA+ specification with the SANY parser and flattens it by
-instantiating all modules. It terminates successfully, if there are no parse
+instantiating all modules. It terminates successfully if there are no parse
 errors. The input specification to <code>parse</code> may be given in standard TLA+ format, or in the <a href="../adr/005adr-json.html">JSON serialization
 format</a>, while the outputs are produced in both formats.</p>
 </li>
 <li>
 <p><code>typecheck</code> performs all of the operations of <code>parse</code> and additionally runs the type checker Snowcat to infer
-the types of all expressions in the parsed specification. It terminates successfully, if there are no type errors.</p>
+the types of all expressions in the parsed specification. It terminates successfully if there are no type errors.</p>
 </li>
 <li>
-<p><code>simulate</code> performs all of the operations of <code>typecheck</code> and additionally runs the model checker in simulation mode, which <em>randomly</em> picks a sequence of <a href="https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices">actions</a> and checks the invariants for the subset of all executions which only admit actions in the selected order. 
-It terminates successfully, if there are no invariant violations. 
+<p><code>simulate</code> performs all of the operations of <code>typecheck</code> and additionally runs the model checker in simulation mode,
+which <em>randomly</em> picks a sequence of <a href="https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices">actions</a>
+and checks the invariants for the subset of all executions which only admit actions in the selected order. 
+It terminates successfully if there are no invariant violations. 
 This command usually checks randomized symbolic runs much faster than the <code>check</code> command.</p>
 </li>
 <li>
-<p><code>check</code> performs all of the operations of <code>typecheck</code> and then runs the model checker in bounded model checking mode, which checks invariants for <em>all executions</em>, the length of which does not exceed the value specified by the <code>--length</code> parameter. 
-It terminates successfully, if there are no invariant violations.</p>
+<p><code>check</code> performs all of the operations of <code>typecheck</code> and then runs the model checker in bounded model checking mode,
+which checks invariants for <em>all executions</em>,
+the length of which does not exceed the value specified by the <code>--length</code> parameter. 
+It terminates successfully if there are no invariant violations.</p>
 </li>
 <li>
 <p><code>test</code> performs all of the operations of <code>check</code> in a mode that is designed to <a href="https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions">test a single action</a>.</p>
@@ -252,8 +256,8 @@ invariant. Default: true.</li>
 <li><code>--no-deadlock</code> disables deadlock-checking, when <code>--discard-disabled=false</code> is on. When <code>--discard-disabled=true</code>,
 deadlocks are found in any case.</li>
 <li><code>--tuning-options-file</code> specifies a properties file that stores options for
-<a href="tuning.html">fine tuning</a></li>
-<li><code>--tuning-options</code> can pass and/or override these <a href="tuning.html">fine tuning</a>
+<a href="tuning.html">fine-tuning</a></li>
+<li><code>--tuning-options</code> can pass and/or override these <a href="tuning.html">fine-tuning</a>
 options on the command line</li>
 <li><code>--out-dir</code> set location for outputting any generated logs or artifacts,
 <em><code>./_apalache-out</code> by default</em></li>
@@ -329,11 +333,12 @@ needs a long execution to get revealed, bounded model checking may miss it!</p>
 <pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
 /\ TypeOK /\ IndInv /\ Next =&gt; TypeOK' /\ IndInv'
 </code></pre>
-<p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>, and (2) whenever the specification makes a step when starting in a state that satisfies <code>TypeOK /\ IndInv</code>, it
-ends up in a state that again satisfies <code>TypeOK /\ IndInv</code>.</p>
-<p>Note that we usually check <code>IndInv</code> in conjunction with <code>TypeOK</code>, as we have to constrain the variable values. In
-the <code>y2k</code> example, our inductive invariant is actually constraing the variables. In fact, such an inductive invariant is
-usually called <code>TypeOK</code>.</p>
+<p>In normal words: (1) The initial states satisfy the constraint <code>TypeOK /\ IndInv</code>,
+and (2) whenever the specification makes a step when starting in a state that satisfies <code>TypeOK /\ IndInv</code>,
+it ends up in a state that again satisfies <code>TypeOK /\ IndInv</code>.</p>
+<p>Note that we usually check <code>IndInv</code> in conjunction with <code>TypeOK</code>, as we have to constrain the variable values.
+In the <code>y2k</code> example, our inductive invariant is actually constraining the variables.
+In fact, such an inductive invariant is usually called <code>TypeOK</code>.</p>
 <p>To check an inductive invariant <code>IndInv</code> in Apalache, you run two commands that check the above two formulas:</p>
 <ul>
 <li>
@@ -379,9 +384,8 @@ That is why these invariants are called inductive.)</p>
 <pre><code class="language-bash">$ cd test/tla
 apalache-mc check --cinit=ConstInit --length=20 --inv=Safety y2k_cinit.tla
 </code></pre>
-<p>This command checks, whether <code>Safety</code> can be violated in 20 specification steps. The constants are initialized with the
-predicate
-<code>ConstInit</code>, defined in <code>y2k_cinit.tla</code> as:</p>
+<p>This command checks, whether <code>Safety</code> can be violated in 20 specification steps.
+The constants are initialized with the predicate <code>ConstInit</code>, defined in <code>y2k_cinit.tla</code> as:</p>
 <pre><code class="language-tla">ConstInit == BIRTH_YEAR \in 0..99 /\ LICENSE_AGE \in 10..99
 </code></pre>
 <p>In this case, Apalache finds a safety violation, e.g., for
@@ -419,8 +423,8 @@ runs write their outputs (see <a href="config.html">configuration instructions</
 <p>Each run will produce a unique subdirectory inside its &quot;namespace&quot;, derived from
 the file name of the specification, using the following convention
 <code>yyyy-MM-ddTHH-mm-ss_&lt;UNIQUEID&gt;</code>.</p>
-<p>For an example, consider using the default location of the <code>run-dir</code> for a run of
-Apalache on a spec named <code>test.tla</code>. This will create a directory structuring matching following pattern:</p>
+<p>For an example, consider using the default location of the <code>run-dir</code> for a run of Apalache on a spec named <code>test.tla</code>.
+This will create a directory structuring matching the following pattern:</p>
 <pre><code>./_apalache-out/
 └── test.tla
     └── 2021-11-05T22-54-55_810261790529975561

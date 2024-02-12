@@ -175,8 +175,8 @@
 <p><strong>NOTE</strong>: Running Apalache through a docker application image complicates
 configuration of the tool considerably. Unless you have a pressing need to use
 the docker image, we recommend using one of our <a href="./jvm.html">prebuilt releases</a>.</p>
-<p><a href="https://www.docker.com/">Docker</a> lets you to run the Apalache tool from inside
-an isolated container.  The only dependency required to run Apalache is the a
+<p><a href="https://www.docker.com/">Docker</a> lets you run the Apalache tool from inside
+an isolated container. The only dependency required to run Apalache is a
 suitable JVM, and the container supplies this. However, you must already have
 <a href="https://docs.docker.com/get-docker/">docker installed</a>.</p>
 <p>To get the latest Apalache image, issue the command:</p>
@@ -198,7 +198,7 @@ Apalache to access your specification and the modules it
 extends.</strong>
 From the user perspective, it works as if Apalache was
 executing in <code>&lt;your-spec-directory&gt;</code>.
-In particular the tool logs are written in that directory.</p>
+In particular, the tool logs are written in that directory.</p>
 <p>When using SELinux, you might have to use the modified form of <code>-v</code> option:
 <code>-v &lt;your-spec-directory&gt;:/var/apalache:z</code></p>
 </li>
@@ -220,7 +220,7 @@ script by running:</p>
 <pre><code class="language-bash">$ APALACHE_TAG=foo $APALACHE_HOME/script/run-docker.sh &lt;args&gt;
 </code></pre>
 <h2><a class="header" href="#setting-an-alias" id="setting-an-alias">Setting an alias</a></h2>
-<p>If you are running Apalache on Linux 🐧 or MacOS
+<p>If you are running Apalache on Linux 🐧 or macOS
 🍏, you can define this handy alias in your rc file, which runs
 Apalache in docker while sharing the working directory:</p>
 <pre><code class="language-bash">
@@ -233,7 +233,7 @@ $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystem
 $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 </code></pre>
 <h2><a class="header" href="#using-the-development-branch-of-apalache" id="using-the-development-branch-of-apalache">Using the development branch of Apalache</a></h2>
-<p>The development of Apalache proceeds at a quick pace and we cut releases weekly.
+<p>The development of Apalache proceeds at a quick pace, and we cut releases weekly.
 Please refer to the <a href="https://github.com/informalsystems/apalache/blob/main/CHANGES.md">changelog</a> and the <a href="https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md">manual</a> on the <code>main</code> development
 branch for a report of the newest features. Since we cut releases weekly, you
 should have access to all the latest features in the last week by using the
@@ -251,7 +251,7 @@ type <code>ghcr.io/informalsystems/apalache:main</code> instead of
 <pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
 </code></pre>
 <h2><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h2>
-<p>For an end user there is no need to build an Apalache image. If you like to
+<p>For an end user, there is no need to build an Apalache image. If you like to
 produce a modified docker image, take into account that it will take about 30
 minutes for the image to get built, due to compilation times of Microsoft Z3. To
 build a docker image of Apalache, issue the following command in

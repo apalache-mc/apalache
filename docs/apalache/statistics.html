@@ -174,24 +174,24 @@
 <p>Apalache participates in the optional <a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.md">anonymized statistics programme</a> along
 with <a href="http://lamport.azurewebsites.net/tla/toolbox.html">TLA+ Toolbox</a>, TLC (which is part of the Toolbox), and <a href="https://marketplace.visualstudio.com/items?itemName=alygin.vscode-tlaplus">Visual Studio
 Code Plugin for TLA+</a>.</p>
-<p>The statistics collection is <strong>never enabled by default</strong>. You have to <strong>opt-in</strong>
+<p>The statistics collection is <strong>never enabled by default</strong>. You have to <strong>opt in</strong>
 for the programme either in TLA+ Toolbox, or in Apalache. When statistics
 collection is enabled by the user, it is submitted to <code>tlapl.us</code> via the
 util.<a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.java">ExecutionStatisticsCollector</a>, which is part of <code>tla2tools.jar</code>. Apalache
 accesses this class in at.forsyte.apalache.tla.<a href="https://github.com/informalsystems/apalache/blob/main/mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala">Tool</a>.</p>
 <p>As explained in <a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.md">anonymized statistics programme</a>, if you never create the file
 <code>$HOME/.tlaplus/esc.txt</code>, then the statistics is not submitted to <code>tlapl.us</code>.
-If you opt-in for the programme and later remove the file, then the statistics
-will not be submitted too.</p>
-<h2><a class="header" href="#why-do-we-ask-you-to-help-us" id="why-do-we-ask-you-to-help-us">Why do we ask you to help us</a></h2>
+If you opt in for the programme and later remove the file, then the statistics
+will not be submitted either.</p>
+<h2><a class="header" href="#why-do-we-ask-you-to-help-us" id="why-do-we-ask-you-to-help-us">Why do we ask you to help us?</a></h2>
 <p>There are several reasons:</p>
 <ul>
 <li>
 <p>Although our project is open source, developing Apalache is our main job.
 We are grateful to <a href="https://informal.systems">Informal Systems</a> for supporting us and to <a href="https://www.tuwien.at/">TU Wien</a>,
 <a href="https://www.wwtf.at/index.php?lang=EN">Vienna Science and Technology Fund</a>, and <a href="https://www.inria.fr/en/centre-inria-nancy-grand-est">Inria Nancy/LORIA</a>, who
-supported us in the past.  It is easier to convince our decision makers to
-continue the development, if we have clear feedback on how many people
+supported us in the past. It is easier to convince our decision makers to
+continue the development if we have clear feedback on how many people
 <strong>use and need Apalache</strong>.</p>
 </li>
 <li>
@@ -204,20 +204,20 @@ and better be included in automated test suites.</p>
 </li>
 </ul>
 <h2><a class="header" href="#how-to-opt-in-and-opt-out" id="how-to-opt-in-and-opt-out">How to opt-in and opt-out</a></h2>
-<p>To opt-in in the statistics collection, execute the following command:</p>
+<p>To opt in the statistics collection, execute the following command:</p>
 <pre><code class="language-sh">./apalache-mc config --enable-stats=true
 </code></pre>
 <p>As a result of this command, a random identifier is written in
 <code>$HOME/.tlaplus/esc.txt</code>. This identifier is used by the execution statistics
 code.</p>
-<p>To opt-out from the statistics collection, execute the following command:</p>
+<p>To opt out from the statistics collection, execute the following command:</p>
 <pre><code class="language-sh">./apalache-mc config --enable-stats=false
 </code></pre>
 <h2><a class="header" href="#what-exactly-is-submitted-to-tlaplus" id="what-exactly-is-submitted-to-tlaplus">What exactly is submitted to tlapl.us</a></h2>
 <p>You can check the daily log at <a href="https://exec-stats.tlapl.us/">exec-stats.tlapl.us</a>.</p>
-<p>The following data is submitted for each run, if you have opted in:</p>
+<p>The following data is submitted for each run if you have opted in:</p>
 <ul>
-<li>Total number of CPU cores and cores assigned
+<li>The total number of CPU cores and cores assigned
 (the latter is 1 for now, but will change soon)</li>
 <li>Java heap memory size (in Megabytes)</li>
 <li>Apalache version (semantic version + build)</li>

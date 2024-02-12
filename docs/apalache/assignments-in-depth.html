@@ -435,8 +435,8 @@ E == /\ x' = 2
 <p>Lastly, while <code>E</code> looks almost identical to <code>A</code>, the key difference is that
 expressions under universal quantifiers may not contain assignments. Therefore,
 <code>y' = s</code> is <em>not</em> an assignment to <code>y</code> and thus violates assignment-before-use.</p>
-<a name='manual' /> 
-## Manual Assignments
+<p><a name='manual'></a></p>
+<h2><a class="header" href="#manual-assignments" id="manual-assignments">Manual Assignments</a></h2>
 <p>Users may choose, but aren't required, to use manual assignments <code>x' := e</code> in
 place of <code>x' = e</code>.  While the use of this operator does not change Apalache's
 internal search for assignments (in particular, using manual assignment

@@ -230,7 +230,7 @@ type checker. For instance, it can immediately figure out that <code>&lt;&lt;1, 
 is a tuple, as Apalache does not allow sequences to carry elements of different
 types. However, there is no way to say, whether <code>&lt;&lt;1, 2, 3&gt;&gt;</code> should be treated
 as a tuple or a sequence.  Usually, this problem is resolved by annotating the
-type of a variable or the type of a user operator. See <a href="../../HOWTOs/howto-write-type-annotations.html">HOWTO write type
+type of a variable or the type of a user operator. See <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO write type
 annotations</a>.</p>
 <p><em>The current SMT encoding of sequences in Apalache is not optimized,
 so operations on sequences are often significantly slower than operations

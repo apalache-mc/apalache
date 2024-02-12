@@ -171,8 +171,13 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#antipatterns" id="antipatterns">Antipatterns</a></h1>
-<p>This page collects known antipaterns (APs) when writing TLA+ for Apalache. In this context, APs are syntactic forms or specification approaches that, for one reason or another, have particularly slow/complex encodings for the target model checker. For a pattern to be an AP, there must exist a known, equivalent, efficient pattern. </p>
-<p>Often, APs arise from a user's past experiences with writing TLA+ for TLC, or from a direct translation of imperative OOP code into TLA+, as those follow a different paradigm, and therefore entail different cost evaluation of which expressions are slow/complex and which are not.</p>
+<p>This page collects known antipaterns (APs) when writing TLA+ for Apalache.
+In this context, APs are syntactic forms or specification approaches that,
+for one reason or another, have particularly slow/complex encodings for the target model checker.
+For a pattern to be an AP, there must exist a known, equivalent, efficient pattern. </p>
+<p>Often, APs arise from a user's past experiences with writing TLA+ for TLC,
+or from a direct translation of imperative OOP code into TLA+, as those follow a different paradigm,
+and therefore entail different cost evaluation of which expressions are slow/complex and which are not.</p>
 <h2><a class="header" href="#choose-based-recursion" id="choose-based-recursion"><code>CHOOSE</code>-based recursion</a></h2>
 <p>Often, operators that represent operations over sets have the following shape:</p>
 <pre><code class="language-tla">RECURSIVE F(_)
@@ -193,15 +198,20 @@ min(S) ==
     IN LET minOther == min( S \ {e} )
     IN IF e &lt; minOther THEN e ELSE minOther 
 </code></pre>
-<p>Apalache dislikes the use of the above, for several reasons. Firstly, since the operator is <code>RECURSIVE</code>, Apalache does not support it after version 0.23.1. In earlier versions Apalache requires a predefined upper bound on unrolling, which means that the user must know, ahead of time, what the largest <code>|S|</code> is, for any set <code>S</code>, to which this operator is ever applied. 
+<p>Apalache dislikes the use of the above, for several reasons. Firstly, since the operator is <code>RECURSIVE</code>,
+Apalache does not support it after version 0.23.1. In earlier versions Apalache requires a predefined upper bound on unrolling,
+which means that the user must know, ahead of time, what the largest <code>|S|</code> is, for any set <code>S</code>, to which this operator is ever applied. 
 In addition, computing <code>F</code> for a set <code>S</code> of size <code>n = |S|</code> requires <code>n</code> encodings of a <code>CHOOSE</code> operation, which can be considerably expensive in Apalache.
-Lastly, Apalache also needs to encode all of the the <code>n</code> intermediate sets, <code>S \ {e1}</code>, <code>(S \ {e1}) \ {e2}</code>, <code>((S \ {e1}) \ {e2}) \ {e3}</code>, and so on.</p>
+Lastly, Apalache also needs to encode all the the <code>n</code> intermediate sets, <code>S \ {e1}</code>, <code>(S \ {e1}) \ {e2}</code>, <code>((S \ {e1}) \ {e2}) \ {e3}</code>, and so on.</p>
 <p>The AP above can be replaced by a very simple pattern:</p>
 <pre><code class="language-tla">F(S) == ApaFoldSet( G, v, S )
 </code></pre>
 <p><code>ApaFoldSet</code> (and <code>ApaFoldSeqLeft</code>) were introduced precisely for these scenarios, and should be used over <code>RECURSIVE + CHOOSE</code> in most cases.</p>
 <h2><a class="header" href="#incremental-computation" id="incremental-computation">Incremental computation</a></h2>
-<p>Often, users introduce an expression <code>Y</code>, which is derived from another expression <code>X</code> (<code>Y == F(X)</code>, for some <code>F</code>). Instead of defining <code>Y</code> directly, in terms of the properties it possesses,  it is possible to define all the intermediate steps of transforming <code>X</code> into <code>Y</code>: &quot;<code>X</code> is slightly changed into <code>X1</code> (e.g. by adding one element to a set, or via <code>EXCEPT</code>), which is changed into <code>X2</code>, etc. until <code>Xn = Y</code>&quot;. Doing this in Apalache is almost always a bad idea, if a direct characterization of <code>Y</code> exists.</p>
+<p>Often, users introduce an expression <code>Y</code>, which is derived from another expression <code>X</code> (<code>Y == F(X)</code>, for some <code>F</code>).
+Instead of defining <code>Y</code> directly, in terms of the properties it possesses, it is possible to define all the intermediate
+steps of transforming <code>X</code> into <code>Y</code>: &quot;<code>X</code> is slightly changed into <code>X1</code> (e.g. by adding one element to a set, or via <code>EXCEPT</code>),
+which is changed into <code>X2</code>, etc. until <code>Xn = Y</code>&quot;. Doing this in Apalache is almost always a bad idea, if a direct characterization of <code>Y</code> exists.</p>
 <p>Concretely, the following constructs are APs:</p>
 <ol>
 <li>Incremental <code>EXCEPT</code></li>
@@ -230,7 +240,10 @@ Y ==
 </code></pre>
 <p>TLC likes these sorts of operations, because it manipulates programming-language objects in its own implementation.
 This makes it easy to construct temporary mutable objects, manipulate them (e.g. via for-loops) and garbage-collect them after they stop being useful.
-For constraint-based approaches, like Apalache, the story is different. Not only are these intermediate steps not directly useful (since Apalache is not modeling TLA+ expressions as objects in Sacala), they actually hurt performance, since they can generate a significant amount of constraints, which are all about describing data structures (e.g. two functions being almost equal, except at one point).
+For constraint-based approaches, like Apalache, the story is different.
+Not only are these intermediate steps not directly useful (since Apalache is not modeling TLA+ expressions as objects in Scala),
+they actually hurt performance, since they can generate a significant amount of constraints,
+which are all about describing data structures (e.g. two functions being almost equal, except at one point).
 Essentially, Apalache is spending its resources not on state-space exploration, but on in-state value computation, which is not its strong suit.
 Below we show how to rewrite these APs.</p>
 <ol>

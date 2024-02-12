@@ -192,7 +192,7 @@ duplicates:</p>
 </code></pre>
 <p>Note that the above set is equal to the sets <code>{ 1, 2, 3, 4 }</code> and <code>{ 4, 3, 2, 1 }</code>. They are actually the same set, though they are constructed by passing
 various number of arguments in different orders.</p>
-<p>The most basic set operation is the set membership that checks, whether a set
+<p>The most basic set operation is the set membership that checks whether a set
 contains a value:</p>
 <pre><code class="language-tla">  3 \in S
 </code></pre>
@@ -532,7 +532,7 @@ set()
 <p><strong>LaTeX notation:</strong> <img src="./img/map.png" alt="map" /></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
-a set. Additional arguments are variables names and sets, interleaved.</p>
+a set. Additional arguments are variables' names and sets, interleaved.</p>
 <p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
 Hence, we give an informal description for the one-argument case:</p>
 <ul>
@@ -655,7 +655,7 @@ the result is undefined.</p>
 <p><strong>Effect:</strong> <code>Cardinality(S)</code> evaluates to the number of (unique) elements in
 <code>S</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
-<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument.  TLC flags a
+<p><strong>Errors:</strong> Pure TLA+ does not restrict the operator argument. TLC flags a
 model checking error, when it discovers that <code>S</code> is not a set, or when it is an
 infinite set.  Apalache produces a static type error, if the type of <code>S</code> is
 different from a finite set.</p>

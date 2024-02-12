@@ -174,7 +174,9 @@
 <p><a href="./apalache-extensions.html">[Back to Apalache extensions]</a></p>
 <p><a href="https://en.wikipedia.org/wiki/Tagged_union">Variants</a> (also called <em>tagged unions</em> or <em>sum types</em>) are useful, when you want to combine
 values of different shapes in a single set or a sequence.</p>
-<p><strong>Idiomatic tagged unions in untyped TLA+.</strong> In untyped TLA+, one can construct sets, which contain records with different fields, where one filed is typically used as a disambiguation tag. 
+<p><strong>Idiomatic tagged unions in untyped TLA+.</strong>
+In untyped TLA+, one can construct sets, which contain records with different fields,
+where one filed is typically used as a disambiguation tag. 
 For instance, we could create a set that contains two records of different shapes:</p>
 <pre><code class="language-tla">ApplesAndOranges == {
     [ tag |-&gt; &quot;Apple&quot;, color |-&gt; &quot;red&quot; ],
@@ -402,9 +404,9 @@ type variable that captures other options in the variant type.</p>
 <p><strong>Effect:</strong> The operator <code>VariantGetUnsafe</code> unconditionally returns some value
 that is compatible with the type of values tagged with <code>tagName</code>. If <code>variant</code>
 is tagged with <code>tagName</code>, the returned value is the value that was wrapped via
-the <code>Variant</code> constructor. Otherwise, it is some arbitrary value of proper type. As such,
-this operator does not guarantee that the retrieved value is always constructed
-via <code>Variant</code>, unless the operator is used with the right tag.</p>
+the <code>Variant</code> constructor. Otherwise, it is some arbitrary value of a proper type.
+As such, this operator does not guarantee that the retrieved value
+is always constructed via <code>Variant</code>, unless the operator is used with the right tag.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>

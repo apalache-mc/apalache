@@ -171,11 +171,14 @@
                 <div id="content" class="content">
                     <main>
                         <h1><a class="header" href="#idiom-0-keep-state-variables-to-the-minimum" id="idiom-0-keep-state-variables-to-the-minimum">Idiom 0: Keep state variables to the minimum</a></h1>
-<p>In imperative programming, it is common to use mutable variable assignments liberally, but to exercise caution whenever mutable variables have a global scope. In TLA+, mutable variables are always global, so it is important to use them carefully and in a way that accurately reflects the global state of the system you are specifying.</p>
+<p>In imperative programming, it is common to use mutable variable assignments liberally,
+but to exercise caution whenever mutable variables have a global scope.
+In TLA+, mutable variables are always global, so it is important to use them carefully and in a way
+that accurately reflects the global state of the system you are specifying.</p>
 <h2><a class="header" href="#description" id="description">Description</a></h2>
 <p><em>A good TLA+ specification minimizes the computation state and makes it visible</em>.</p>
-<p>TLA+ does not have special syntax for variable assignment.  For a good
-reason. The power of TLA+ is in writing constraints on variables rather than in
+<p>TLA+ does not have a special syntax for variable assignment. For a good reason.
+The power of TLA+ is in writing constraints on variables rather than in
 writing detailed commands. If you have been writing in languages such as C, C++,
 Java, Python, your first reflex would be to define a variable to store the
 intermediate result of a complex computation.</p>
@@ -201,7 +204,10 @@ of the specification become deterministic.</p>
 <p>Sometimes, we have to expose the internals of the computation. For instance,
 if we want to closely monitor the values of the computed expressions, when using
 the specification for model-based testing.</p>
-<p>Sometimes, we have to break this idiom to make the specification more readable. Here is an example by Markus Kuppe. The specification of <a href="https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51">BlockingQueue</a> that has one more variable is easier to read than <a href="https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla">the original specification</a> with a minimal number of variables.</p>
+<p>Sometimes, we have to break this idiom to make the specification more readable.
+Here is an example by Markus Kuppe.
+The specification of <a href="https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueueSplit.tla#L16-L51">BlockingQueue</a>
+that has one more variable is easier to read than <a href="https://github.com/lemmy/BlockingQueue/blob/3a66f46f6f5703f2863f71baaf0aedaaee58836f/BlockingQueue.tla">the original specification</a> with a minimal number of variables.</p>
 <h2><a class="header" href="#example" id="example">Example</a></h2>
 <p>Consider the following implementation of <a href="https://en.wikipedia.org/wiki/Bubble_sort">Bubble sort</a> in Python:</p>
 <pre><code class="language-python">    my_list = [5, 4, 3, 8, 1]

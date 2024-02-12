@@ -173,8 +173,8 @@
                         <h1><a class="header" href="#tutorial-on-the-snowcat-type-checker" id="tutorial-on-the-snowcat-type-checker">Tutorial on the Snowcat❄🐱 Type Checker</a></h1>
 <p><strong>Difficulty: Blue trail – Easy</strong></p>
 <p><strong>Revision:</strong> August 24, 2022</p>
-<p>In this tutorial, we introduce the Snowcat ❄ 🐱 type checker.  We
-give concrete steps on running the type checker and annotating a specification
+<p>In this tutorial, we introduce the Snowcat ❄ 🐱 type checker.
+We give concrete steps to running the type checker and annotating a specification
 with types.</p>
 <p>This tutorial uses Type System 1.2, which guarantees safe record access. To see
 how to upgrade to Type System 1.2, check <a href="../HOWTOs/howto-write-type-annotations.html#recipe9">Migrating to Type System 1.2</a>.</p>
@@ -281,7 +281,7 @@ annotation immediately above every other variable name.</p>
  @type: Int -&gt; Int;
  *)
 </code></pre>
-<p><strong>Note</strong>: Importantly, every type annotation must end with a semi-colon <code>;</code>.</p>
+<p><strong>Note</strong>: Importantly, every type annotation must end with a semicolon <code>;</code>.</p>
 <p>Let's run the type checker again:</p>
 <pre><code class="language-sh">$ apalache-mc typecheck LamportMutexTyped.tla
 ...

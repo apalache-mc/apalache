@@ -182,16 +182,17 @@ preprocessing steps:</p>
 </li>
 <li><code>PrimingPass</code>: adds primes to variables in <code>Init</code> and <code>ConstInit</code> (required by <code>TransitionPass</code>)</li>
 <li><code>VCGen</code>: extracts verification conditions from the invariant candidate.</li>
-<li><code>Desugarer</code>: removes syntactic sugar like short-hand expressions in <code>EXCEPT</code>.</li>
+<li><code>Desugarer</code>: removes syntactic sugar like shorthand expressions in <code>EXCEPT</code>.</li>
 <li><code>Normalizer</code>: rewrites all expressions in <a href="https://en.wikipedia.org/wiki/Negation_normal_form">negation-normal form</a>.</li>
 <li><code>Keramelizer</code>: translates TLA+ expressions into the kernel language <a href="./kera.html">KerA</a>.</li>
 <li><code>ExprOptimizer</code>: statically computes select expressions (e.g. record field access from a known record)</li>
 <li><code>ConstSimplifier</code>: propagates constants</li>
 </ul>
 <h2><a class="header" href="#keramelizer" id="keramelizer">Keramelizer</a></h2>
-<p>Keramelizer rewrites TLA+ expressions into <a href="./kera.html">KerA</a>. For many TLA+ expressions
-this translation is clear, however, some expressions cannot be easily translated. Below
-we discuss such expressions and the decisions that we have made.</p>
+<p>Keramelizer rewrites TLA+ expressions into <a href="./kera.html">KerA</a>.
+For many TLA+ expressions, this translation is clear;
+however, some expressions cannot be easily translated.
+Below, we discuss such expressions and the decisions that we have made.</p>
 <h1><a class="header" href="#references" id="references">References</a></h1>
 <ul>
 <li>Leslie Lamport. Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers.

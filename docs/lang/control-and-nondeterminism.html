@@ -298,7 +298,7 @@ Of course, this comes with constraints on the structure of the specifications.
 After all, people are much better at solving certain logical puzzles than
 computers, though people get bored much faster than computers.</p>
 <p>To understand how TLC enumerates states, check Chapter 14 of <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying
-Systems</a>. In the rest of this document, we focus on treatment of
+Systems</a>. In the rest of this document, we focus on the treatment of
 non-determinism that is close to the approach in Apalache.</p>
 <h2><a class="header" href="#explaining-non-determinism-to-computers" id="explaining-non-determinism-to-computers">Explaining non-determinism to computers</a></h2>
 <p>To see how a program could evaluate a TLA+ expression, we need two more
@@ -429,8 +429,8 @@ conditions:</p>
 value for the name <code>y'</code>.</li>
 </ol>
 <p>If the above assumptions do not hold true, the expression <code>\E x \in S: P</code> does
-not have non-determinism and it can be evaluated by following the standard
-deterministic semantics of exists, see <a href="./logic.html">Logic</a>.</p>
+not have non-determinism, and it can be evaluated by following the standard
+deterministic semantics of <code>exists</code>, see <a href="./logic.html">Logic</a>.</p>
 <p><strong>Note:</strong> We do not consider action operators like <code>UNCHANGED y</code>. They can be
 translated into an equivalent form, e.g., <code>UNCHANGED x</code> is equivalent to <code>x' = x</code>.</p>
 <p>Now it is very easy to evaluate <code>\E x \in S: P</code>. We simply evaluate the
@@ -447,7 +447,7 @@ The evaluation may continue.</li>
 <li>Predicate <code>P</code> evaluates to <code>FALSE</code> when using the provided value of <code>x</code>.
 Well, that was a wrong guess. According to our semantics, the evaluation
 halts. See the above discussion on &quot;halting&quot;.</li>
-<li>The set <code>S</code> is empty, and <code>GUESS S</code> halts.  See the above discussion on
+<li>The set <code>S</code> is empty, and <code>GUESS S</code> halts. See the above discussion on
 &quot;halting&quot;.</li>
 </ol>
 <p><strong>Example.</strong> Consider the following specification:</p>
@@ -457,13 +457,12 @@ Next ==
   \E i \in Int:
     i &gt; x /\ x' = i
 </code></pre>
-<p>It is easy to evaluate <code>Init</code>: It does not contain non-determinism and it
+<p>It is easy to evaluate <code>Init</code>: It does not contain non-determinism, and it
 produces the binding <code>(x -&gt; 0)</code> and the state <code>[x |-&gt; 0]</code>, respectively. When
 evaluating <code>Next</code> against the binding <code>(x -&gt; 0)</code>, we have plenty of choices.
-Actually, we have infinitely many choices, as the set <code>Int</code> is infinite.  TLC
+Actually, we have infinitely many choices, as the set <code>Int</code> is infinite. TLC
 would immediately fail here. But there is no reason for our evaluation to fail.
-Simply ask the oracle. Below we give three examples of how the evaluation
-works:</p>
+Simply ask the oracle. Below, we give three examples of how the evaluation works:</p>
 <pre><code>1. (GUESS Int) returns 10. (LET i == 10 IN i &gt; x /\ x' = i) is TRUE, x' is assigned 10.
 2. (GUESS Int) returns 0. (LET i == 0 IN i &gt; x /\ x' = i) is FALSE. Halt.
 3. (GUESS Int) returns -20. (LET i == -20 IN i &gt; x /\ x' = i) is FALSE. Halt.

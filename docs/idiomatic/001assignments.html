@@ -172,14 +172,14 @@
                     <main>
                         <h1><a class="header" href="#idiom-1-update-state-variables-with-assignments" id="idiom-1-update-state-variables-with-assignments">Idiom 1: Update state variables with assignments</a></h1>
 <h2><a class="header" href="#description" id="description">Description</a></h2>
-<p>The idiom &quot;<a href="000keep-minimum-state-variables.html">Keep state variables to the
-minimum</a>&quot; tells us to store the minimum
-necessary state variables. By following this idiom, we develop
-the specification by writing constraints over the primed variables.</p>
+<p>The idiom &quot;<a href="000keep-minimum-state-variables.html">Keep state variables to the minimum</a>&quot;
+tells us to store the minimum necessary state variables.
+By following this idiom, we develop the specification by writing constraints over the primed variables.</p>
 <p>TLA+ comes with a great freedom of expressing constraints over variables.
 While we love TLA+ for that freedom, we believe that constraints over primed
 variables are sometimes confusing.
-TLA+ uses the same glyph, <code>=</code> for three separate purposes: assignment, asserting equality, and binding variables. But these are very different operations and have different semantics.</p>
+TLA+ uses the same glyph, <code>=</code> for three separate purposes: assignment, asserting equality, and binding variables.
+But these are very different operations and have different semantics.</p>
 <h3><a class="header" href="#issue-1" id="issue-1">Issue 1</a></h3>
 <p><strong>tl;dr:</strong> Use <code>:=</code> (supplied by the <code>Apalache.tla</code> module) instead of <code>=</code> for assignment.</p>
 <p>Consider the expression:</p>

@@ -231,9 +231,10 @@ Binary Searches and Mergesorts are Broken</a>:</p>
 17:     }
 </code></pre>
 <p>As was found by Joshua Bloch, the addition in line 6 may throw
-an out of bounds exception at line 7, due to an integer overflow. This is because <code>low</code>
+an out-of-bounds exception at line 7, due to an integer overflow. This is because <code>low</code>
 and <code>high</code> are signed integers, with a maximum value of <code>2^31 - 1</code>. 
-However, the sum of two values, each smaller than <code>2^31-1</code>, may be greater than <code>2^31 -1</code>. If this  is the case, <code>low + high</code> can wrap into a negative number.</p>
+However, the sum of two values, each smaller than <code>2^31-1</code>, may be greater than <code>2^31 -1</code>.
+If this is the case, <code>low + high</code> can wrap into a negative number.</p>
 <p>This bug was
 <a href="https://groups.google.com/g/tlaplus/c/msLltIcexF4/m/qnABiKJmDgAJ">discussed</a>
 in the TLA+ User Group in 2015. Let's see how TLA+ and Apalache can help us
@@ -285,7 +286,8 @@ Next == TRUE
 
 ===============================================================================
 </code></pre>
-<p>This module does not yet specify any part of the binary search implementation. However, it contains a few important things:</p>
+<p>This module does not yet specify any part of the binary search implementation.
+However, it contains a few important things:</p>
 <ul>
 <li>
 <p>It imports constants and operators from three standard modules: <code>Integers</code>,
@@ -354,7 +356,7 @@ annotations in the comments:</p>
 <li><code>INPUT_KEY</code> has the type <code>Int</code>, that is, it is an integer.</li>
 </ul>
 <p>Recall that we wanted to specify signed and unsigned Java integers, which are
-32 bit long. <em>TLA+ is not tuned towards any computer architecture.</em> Its integers
+32 bits long. <em>TLA+ is not tuned towards any computer architecture.</em> Its integers
 are mathematical integers: always signed and arbitrarily large (unbounded).
 To model fixed bit-width integers, we introduce another constant <code>INT_WIDTH</code> of
 type <code>Int</code>:</p>
@@ -400,9 +402,10 @@ how we do it:</p>
     \* @type: Int;
     high,
 </code></pre>
-<p>The variables <code>low</code> and <code>high</code> are called <em>state variables</em>. They define a state of our state machine. That is, they are never introduced and
-never removed. Remember, TLA+ is not tuned towards any particular computer
-architecture and thus it does not even have the notion of an execution stack.
+<p>The variables <code>low</code> and <code>high</code> are called <em>state variables</em>. They define a state of our state machine.
+That is, they are never introduced and never removed.
+Remember, TLA+ is not tuned towards any particular computer
+architecture, and thus it does not even have the notion of an execution stack.
 You can think of <code>low</code> and <code>high</code> as being global variables. Yes, global
 variables are generally frowned upon in programming languages. However, when dealing with a
 specification, they are much easier to reason about than the execution stack.
@@ -425,9 +428,9 @@ understand what it means for them to terminate?</p>
 <p>The variable <code>returnValue</code> will contain the result of the binary search, when
 the search terminates. Recall, there is no execution stack. Hence, we introduce
 the variable <code>returnValue</code> right away. The downside is that we have to do
-book-keeping for this variable.</p>
+bookkeeping for this variable.</p>
 <p><strong>Initialize variables.</strong> Having introduced the variables, we have to
-initialize them. That is, we want to specify lines 2-3 of the Java code:</p>
+initialize them. That is, we want to specify lines 2–3 of the Java code:</p>
 <pre><code class="language-java">1:     public static int binarySearch(int[] a, int key) {
 2:         int low = 0;
 3:         int high = a.length - 1;
@@ -572,7 +575,7 @@ definitions from <code>BinSearch2.tla</code>.</p>
 <p>Since we are fixing the parameters with concrete values, <code>MC2_8.tla</code> looks very
 much like a unit test. It's a good start for debugging a few things, but since
 our program is entirely sequential, our specification is as good as a unit
-test. Later in this tutorial we will show how to leverage Apalache to check
+test. Later in this tutorial, we will show how to leverage Apalache to check
 properties for all possible inputs (up to some bound).</p>
 <p>Let us check <code>MC2_8.tla</code>:</p>
 <pre><code class="language-sh">$ apalache-mc check MC2_8.tla
@@ -830,7 +833,7 @@ formula. Let us introduce the following operator definition in <code>MC5_8.tla</
     \* Seq(Int) is a set of all sequences that have integers as elements
     /\ INPUT_SEQ \in Seq(Int) 
 </code></pre>
-<p>This is straightforward definition. However, it does not work in Apalache:</p>
+<p>This is a straightforward definition. However, it does not work in Apalache:</p>
 <pre><code class="language-sh">$ apalache-mc check --cinit=ConstInit --inv=Postcondition MC5_8.tla
 ...
 MC5_8.tla:39:22-39:29: unsupported expression: Seq(_) produces an infinite set of unbounded sequences.
@@ -857,7 +860,7 @@ using Apalache <a href="../lang/apalache-operators.html#value-generators">Value 
 sequence is unrestricted, except its length is bounded with <code>MAX_INT</code>,
 which is exactly what we need in our case study.</li>
 </ul>
-<p>The operator <code>Gen</code> introduces a data structure of proper type whose size is
+<p>The operator <code>Gen</code> introduces a data structure of a proper type whose size is
 bounded with the argument of <code>Gen</code>. For instance, the type of <code>INPUT_SEQ</code> is
 the sequence of integers, and thus <code>Gen(MAX_INT)</code> produces an unrestricted
 sequence of up to <code>MAX_INT</code> elements. This sequence is bound to the name
@@ -1017,8 +1020,8 @@ Termination ==
 Checker reports no error up to computation length 10
 It took me 0 days  0 hours  0 min 19 sec
 </code></pre>
-<p>Even if did not know precisely complexity of the binary search, we could
-write a simpler property, which demonstrates progress of the search:</p>
+<p>Even if we did not know the precise complexity of the binary search, we could
+write a simpler property, which demonstrates the progress of the search:</p>
 <pre><code class="language-tla">Progress ==
     ~isTerminated' =&gt; (low' &gt; low \/ high' &lt; high)
 </code></pre>
@@ -1310,7 +1313,7 @@ variables.</p>
 <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
 and
 <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
-<p>In this tutorial we have shown how to:</p>
+<p>In this tutorial, we have shown how to:</p>
 <ul>
 <li>Specify the behavior of a sequential algorithm (binary search).</li>
 <li>Specify invariants that check safety and termination.</li>
@@ -1322,7 +1325,7 @@ width).</li>
 <p>We have written our specification for parameterized bit width. This lets us
 check the invariants relatively quickly and get fast feedback from the model
 checker. We chose a bit width of 8, a non-trivial value for which
-Apalache terminates within reasonable time. Importantly, the specification
+Apalache terminates within a reasonable time. Importantly, the specification
 for the bit width of 32 stays the same; we only have to change <code>INT_WIDTH</code>. Of
 course, Apalache reaches its limits when we set <code>INT_WIDTH</code> to 16 or 32. In
 these cases, it has to reason about all sequences of length up to 32,767
@@ -1336,7 +1339,7 @@ of a TLA+ specification, as we were writing it and checking it with Apalache.
 There are many different styles of writing TLA+ specifications. One of our
 goals was to demonstrate the incremental approach to specification writing. In
 fact, this approach is not very different from incremental development of
-programs in the spirit of <a href="https://en.wikipedia.org/wiki/Test-driven_development">Test-driven development</a>. It took us 2-3 hours to
+programs in the spirit of <a href="https://en.wikipedia.org/wiki/Test-driven_development">Test-driven development</a>. It took us 2 to 3 hours to
 iteratively develop a specification that is similar to the one demonstrated in
 this tutorial.</p>
 <p>This tutorial touches upon the basics of TLA+ and Apalache. For instance, we
