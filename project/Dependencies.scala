@@ -36,11 +36,11 @@ object Dependencies {
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "3.1.4"
     val upickle = "com.lihaoyi" %% "upickle" % "3.1.4"
-    val z3 = "tools.aqua" % "z3-turnkey" % "4.12.4"
+    val z3 = "tools.aqua" % "z3-turnkey" % "4.12.5"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
-    val grpcNetty = "io.grpc" % "grpc-netty" % "1.61.0"
+    val grpcNetty = "io.grpc" % "grpc-netty" % "1.61.1"
     val scalapbRuntimGrpc =
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     // Ensures we have access to commonly used protocol buffers (e.g., google.protobuf.Struct)
