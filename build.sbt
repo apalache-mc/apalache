@@ -20,7 +20,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalaVersion := "2.13.13"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
