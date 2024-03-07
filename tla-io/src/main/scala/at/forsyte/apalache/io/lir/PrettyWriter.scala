@@ -10,6 +10,7 @@ import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 
 import java.io.{File, FileWriter, PrintWriter}
 import scala.collection.immutable.{HashMap, HashSet}
+import java.io.StringWriter
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -689,6 +690,13 @@ object PrettyWriter {
     } finally {
       writer.close()
     }
+  }
+
+  def writeAsString(module: TlaModule, extendedModules: List[String] = TlaWriter.STANDARD_MODULES): String = {
+    val buf = new StringWriter()
+    val prettyWriter = new PrettyWriter(new PrintWriter(buf))
+    prettyWriter.write(module, extendedModules)
+    buf.toString()
   }
 
   protected val unaryOps = HashMap(

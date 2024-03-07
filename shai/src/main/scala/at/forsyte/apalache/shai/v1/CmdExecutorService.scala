@@ -15,6 +15,8 @@ import at.forsyte.apalache.shai.v1.cmdExecutor.{
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.passes.imp.ParserModule
 import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
+import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.io.lir.PrettyWriter
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -77,9 +79,9 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       toolModule <- {
         import OptionGroup._
         cmd match {
-          case Cmd.PARSE     => WithIO(cfg).map(new ParserModule(_)).toCmdResult
-          case Cmd.CHECK     => WithCheckerPreds(cfg).map(new CheckerModule(_)).toCmdResult
-          case Cmd.TYPECHECK => WithTypechecker(cfg).map(new TypeCheckerModule(_)).toCmdResult
+          case Cmd.PARSE | Cmd.TLA => WithIO(cfg).map(new ParserModule(_)).toCmdResult
+          case Cmd.CHECK           => WithCheckerPreds(cfg).map(new CheckerModule(_)).toCmdResult
+          case Cmd.TYPECHECK       => WithTypechecker(cfg).map(new TypeCheckerModule(_)).toCmdResult
           case Cmd.Unrecognized(_) =>
             throw new IllegalArgumentException("programmer error: executeCmd applied before validateCmd")
         }
@@ -90,7 +92,14 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
         catch {
           case err: Throwable => Left(throwableErr(err))
         }
-    } yield TlaToUJson(tlaModule)
+    } yield cmd match {
+      case Cmd.TLA => tlaModuleToJsonString(tlaModule)
+      case _       => TlaToUJson(tlaModule)
+    }
+  }
+
+  private def tlaModuleToJsonString(module: TlaModule): ujson.Value = {
+    ujson.Str(PrettyWriter.writeAsString(module))
   }
 
   // Allows us to handle invalid protobuf messages on the ZIO level, before
