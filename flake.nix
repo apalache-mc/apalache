@@ -12,8 +12,8 @@
   # dependencies.
   inputs = {
     # Nix Inputs
-    nixpkgs.url = github:nixos/nixpkgs/nixpkgs-unstable;
-    flake-utils.url = github:numtide/flake-utils;
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
   # Outputs define the result of a flake. I use the term result to be intentionally vague since flakes
@@ -30,11 +30,11 @@
         # FIXME(#2565): pin old nixpkgs, to pull in mdx 2.1.0, need to workaround this regression:
         # https://github.com/realworldocaml/mdx/issues/428
         pkgsOldMdx = import (builtins.fetchTarball {
-          url = https://github.com/NixOS/nixpkgs/archive/76be8d2d04a00e5e2df6fa147dfc4797874edc97.tar.gz;
+          url =
+            "https://github.com/NixOS/nixpkgs/archive/76be8d2d04a00e5e2df6fa147dfc4797874edc97.tar.gz";
           sha256 = "Nw1lgrAQG++uzYQc1SilzGdeoy9RZ/HwcKlbaAp1rTE=";
         }) { inherit system; };
-      in
-      {
+      in {
         # Nix Build
         # Command: `nix build .#<attr-name>`
         # Reference documentation: https://nixos.org/manual/nix/unstable/command-ref/new-cli/nix3-build.html
@@ -45,37 +45,57 @@
         # The reason we use packages, instead of the devShell attribute directly, is so that we can potentially
         # provide multiple shells in the future.
         packages = {
-          dev-shell =
-            pkgs.mkShell {
+          dev-shell = pkgs.mkShell {
 
-              # Commands that run when the shell starts
-              shellHook = ''
-                # Add common project environment variables
-                source ./.envrc
+            # Commands that run when the shell starts
+            shellHook = ''
+              # This is a copy from the .envrc file contents. We do this instead of sourcing the .envrc
+              # to avoid circular dependencies when using direnv with nix ("use flake").
 
-                # Required to avoid polluting the dev-shell's ocaml environment with
-                # dynamically liked libs from the host environment
-                unset CAML_LD_LIBRARY_PATH
-              '';
+              # This function is to protect local variables from polluting downstream scripts
+              # that source this one.
+              exports () {
+                  # The directory of this file
+                  local DIR="$( cd "$( dirname "$\{
+                    BASH_SOURCE [ 0 ]
+                  }" )" >/dev/null 2>&1 && pwd )"
 
+                  # Provide reference to the target directory
+                  export TARGET_DIR=$DIR/target
 
-              # Built inputs are the packages that we provide in the PATH in the nix shell
-              buildInputs = with pkgs; [
-                # Java / Scala
-                jdk17_headless
-                scala_2_12
+                  # Add executables to path
+                  export PATH=$DIR/bin:$PATH
 
-                # Build
-                sbt
+                  # Base path for looking up the Apalache standard library, see
+                  # https://github.com/informalsystems/apalache/pull/1553
+                  export APALACHE_HOME=$DIR
+              }
 
-                # Development
-                metals
+              exports
+              # .envrc contents end here
 
-                # Testing
-                pkgsOldMdx.ocamlPackages.mdx
-                python39Full
-              ];
-            };
+              # Required to avoid polluting the dev-shell's ocaml environment with
+              # dynamically liked libs from the host environment
+              unset CAML_LD_LIBRARY_PATH
+            '';
+
+            # Built inputs are the packages that we provide in the PATH in the nix shell
+            buildInputs = with pkgs; [
+              # Java / Scala
+              jdk17_headless
+              scala_2_13
+
+              # Build
+              sbt
+
+              # Development
+              metals
+
+              # Testing
+              pkgsOldMdx.ocamlPackages.mdx
+              python39Full
+            ];
+          };
         };
 
         # Nix Develop
