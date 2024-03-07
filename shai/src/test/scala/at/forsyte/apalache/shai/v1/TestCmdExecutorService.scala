@@ -122,6 +122,22 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
           assert(data("error_data").arr)(isNonEmpty)
         }
       },
+      testM("can use TLA command to receive formatted TLA") {
+        val expectedPayload =
+          """|----------------------------------- MODULE M -----------------------------------
+             |
+             |EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+             |
+             |Foo == TRUE
+             |
+             |================================================================================
+             |""".stripMargin
+        for {
+          s <- ZIO.service[CmdExecutorService]
+          resp <- s.run(runCmd(Cmd.TLA, trivialSpec))
+          actualPayload = ujson.read(resp.result.success.get).str
+        } yield assert(actualPayload)(equalTo(expectedPayload))
+      },
   )
     // Create the single shared service for use in our tests, allowing us to run
     // all tests as if they were against the same service this accurately

@@ -34,6 +34,7 @@ enum Cmd {
   PARSE = 0;
   CHECK = 1;
   TYPECHECK = 3;
+  TLA = 4; // Parse input and reply with a TLA+ string
 }
 
 enum CmdErrorType {
