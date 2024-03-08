@@ -184,7 +184,8 @@ it here!
 We provide a nix shell in case you want to use nix to manage your development
 environment and dependencies. The primary benefits of using the nix shell is
 that it allows us to keep environments consistent, and distribute updates to
-environment dependencies.
+environment dependencies. Alternatively, you can also use `direnv` to load
+dependencies from nix.
 
 #### Getting Nix
 
@@ -201,6 +202,19 @@ Once you have `nix` installed, build and enter the clean development shell with:
 ```sh
 $ nix develop
 ```
+
+#### Loading nix dependencies with direnv
+
+If you want to use direnv to setup your environment with nix (instead of using a
+shell), you will need to add `use flake;` to your `.local-envrc`, and then
+running `direnv allow`:
+
+```sh
+echo "use flake;" >> .local-envrc && direnv allow
+```
+
+You can also add a `direnv` extension/package to your IDE of choice to have
+those dependencies set up for the IDE to use.
 
 #### Updating nix dependencies
 
