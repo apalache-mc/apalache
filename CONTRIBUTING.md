@@ -206,11 +206,11 @@ $ nix develop
 #### Loading nix dependencies with direnv
 
 If you want to use direnv to setup your environment with nix (instead of using a
-shell), you will need to add `use flake;` to your `.envrc`, and then running
-`direnv allow`:
+shell), you will need to add `use flake;` to your `.local-envrc`, and then
+running `direnv allow`:
 
 ```sh
-echo "use flake;" >> .envrc && direnv allow
+echo "use flake;" >> .local-envrc && direnv allow
 ```
 
 You can also add a `direnv` extension/package to your IDE of choice to have
