@@ -299,6 +299,21 @@ class ScopedBuilder(val strict: Boolean = true)
     } yield ex
   }
 
+  /** Alternative to lambda, which accepts an explicit result type */
+  def lambda(
+      uniqueName: String,
+      body: TBuilderInstruction,
+      resultType: TlaType1,
+      params: TypedParam*): TBuilderInstruction = {
+    params.foreach(validateParamType)
+    for {
+      bodyEx <- body
+      paramTypes = params.map(_._2)
+      operType = OperT1(paramTypes, resultType) // use given type instead of type tag
+      ex <- letIn(name(uniqueName, operType), decl(uniqueName, body, params: _*))
+    } yield ex
+  }
+
   /** {{{LET decl(...) = ... IN body}}} */
   def letIn(body: TBuilderInstruction, decl: TBuilderOperDeclInstruction): TBuilderInstruction = for {
     usedBeforeDecl <- getAllUsed // decl name may not appear in decl body

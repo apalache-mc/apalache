@@ -637,6 +637,12 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(quintMatch) == expected)
   }
 
+  test("prefers quint types over inferred types") {
+    // Regression on https://github.com/informalsystems/quint/issues/1393
+    val expr = Q.lam(Seq("x" -> QuintBoolT()), Q.nam("x", QuintVarT("t0")), QuintBoolT())
+    assert(translate(expr).typeTag == Typed(OperT1(Seq(BoolT1), BoolT1)))
+  }
+
   test("can convert builtin assert operator") {
     assert(convert(Q.app("assert", Q.nIsGreaterThan0)(QuintBoolT())) == "n > 0")
   }
