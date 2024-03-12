@@ -126,7 +126,7 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
         val expectedPayload =
           """|----------------------------------- MODULE M -----------------------------------
              |
-             |EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+             |EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache, Variants
              |
              |Foo == TRUE
              |
