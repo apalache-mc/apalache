@@ -37,6 +37,13 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("awesome" == stringWriter.toString)
   }
 
+  test("name with invalid characters") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(name("__123awesome::possom::pie-for-all"))
+    printWriter.flush()
+    assert("id__123awesome_possom_pie_for_all" == stringWriter.toString)
+  }
+
   test("apply A") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(OperEx(TlaOper.apply, name("A")))
@@ -781,6 +788,28 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
         |  param1 + param2
         |IN
         |AVeryLongName(1, 2)""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a LET-IN with a parameters with invalid characters") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    val decl = TlaOperDecl("A", List(OperParam("a::b::c")), name("a::b::c"))
+    val expr = letIn(appDecl(decl, int(1)), decl)
+    writer.write(expr)
+    printWriter.flush()
+    val expected = """LET A(a_b_c) == a_b_c IN A(1)"""
+    assert(expected == stringWriter.toString)
+  }
+
+  test("a LET-IN using a name with invalid characters") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    val aDecl = TlaOperDecl("__12-3::A::B::C", List(), int(1))
+    val expr = letIn(appDecl(aDecl), aDecl)
+    writer.write(expr)
+    printWriter.flush()
+    val expected =
+      """|LET id__12_3_A_B_C == 1 IN
+         |id__12_3_A_B_C""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
