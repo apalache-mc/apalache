@@ -339,7 +339,7 @@ EXITCODE: OK
 $ cat output.tla | head
 -------------------------------- MODULE output --------------------------------
 
-EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache, Variants
 
 CONSTANT
   (*
@@ -414,7 +414,7 @@ EXITCODE: OK
 $ cat output.tla | head
 -------------------------------- MODULE output --------------------------------
 
-EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache, Variants
 
 CONSTANT
   (*
@@ -3920,7 +3920,7 @@ EXITCODE: OK
 $ cat module-lookup/subdir-no-dummy/output.tla
 -------------------------------- MODULE output --------------------------------
 
-EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache
+EXTENDS Integers, Sequences, FiniteSets, TLC, Apalache, Variants
 
 Init == TRUE
 
