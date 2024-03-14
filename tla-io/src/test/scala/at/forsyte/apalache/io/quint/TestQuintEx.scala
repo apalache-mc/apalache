@@ -190,8 +190,7 @@ class TestQuintEx extends AnyFunSuite {
 
   def translate(qex: QuintEx): TlaEx = {
     val translator = new Quint(Q.quintOutput)
-    val nullaryOps = Set[String]()
-    val tlaEx = build(translator.tlaExpression(qex).run(nullaryOps))
+    val tlaEx = build(translator.tlaExpression(qex).run(translator.Context.empty))
     tlaEx
   }
 
@@ -581,8 +580,7 @@ class TestQuintEx extends AnyFunSuite {
     val opDef = Q.opDef("updateF1", abs)
 
     val translator = new Quint(Q.quintOutput)
-    val nullaryOps = Set[String]()
-    val tlaOpDef = translator.tlaDef(opDef).run(nullaryOps).get._2
+    val tlaOpDef = translator.tlaDef(opDef).run(translator.Context.empty).get._2
 
     val tlaRecTyp = RecRowT1(RowT1(VarT1("a"), ("s", IntT1)))
     val expectedTlaType = OperT1(Seq(tlaRecTyp), tlaRecTyp)
@@ -802,15 +800,15 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert ASSUME declaration") {
     val translator = new Quint(Q.quintOutput)
-    val nullaryOps = Set[String]()
+    val ctx = translator.Context.empty
 
     val name = "myAssume"
     val namedAssume = QuintAssume(1, name, QuintBool(2, true))
-    val tlaNamedAssumeDef = translator.tlaDef(namedAssume).run(nullaryOps).get._2
+    val tlaNamedAssumeDef = translator.tlaDef(namedAssume).run(ctx).get._2
     assert(tlaNamedAssumeDef == TlaAssumeDecl(Some(name), ValEx(TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1)))
 
     val unnamedAssume = QuintAssume(1, "_", QuintBool(2, true))
-    val tlaUnnamedAssumeDef = translator.tlaDef(unnamedAssume).run(nullaryOps).get._2
+    val tlaUnnamedAssumeDef = translator.tlaDef(unnamedAssume).run(ctx).get._2
     assert(tlaUnnamedAssumeDef == TlaAssumeDecl(None, ValEx(TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1)))
   }
 }
