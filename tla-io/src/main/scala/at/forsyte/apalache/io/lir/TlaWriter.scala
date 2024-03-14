@@ -41,6 +41,6 @@ object TlaWriter {
   /**
    * The names of all standard modules that are supported by Apalache IR.
    */
-  val STANDARD_MODULES = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache")
+  val STANDARD_MODULES = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache", "Variants")
 
 }
