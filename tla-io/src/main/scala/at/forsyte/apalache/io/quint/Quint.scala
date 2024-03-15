@@ -34,6 +34,9 @@ class Quint(quintOutput: QuintOutput) {
   private val table = quintOutput.table
   private val types = quintOutput.types
 
+  // The special name used by compiled quint specs for the initialization predicate
+  private val quintInitName = "q::init"
+
   // Stores contextual data needed while performing the conversion
   //
   // `nullarOps`:
@@ -56,9 +59,10 @@ class Quint(quintOutput: QuintOutput) {
   //
   // `isInit`:
   //
-  // This is true if the declaration being converted is the init predicate of the
-  // quint spec. We need to track this so we can construct proper assignments in
-  // the init: assignments in init should not be primed, but all others should.
+  // This is true if the declaration being converted is the init predicate of
+  // the quint spec. We need to track this so we can construct proper equalities
+  // for state variables in the init: init setting state variables should be an
+  // equality, but in any other operator it should be an assignment.
   case class Context(
       nullaryOps: Set[String],
       isInit: Boolean) {
@@ -489,6 +493,24 @@ class Quint(quintOutput: QuintOutput) {
         case Some(default) => tla.caseOther(default, casesInstructions: _*)
       }
     }
+
+    def assign: Converter = {
+      case Seq(variable, value) =>
+        // Read from the context to see if we are in the init predicate
+        Reader((ctx: Context) => ctx.isInit).flatMap(isInit =>
+          for {
+            tlaVariable <- tlaExpression(variable)
+            tlaValue <- tlaExpression(value)
+          } yield
+            if (isInit) {
+              // If we are in the init predicate, we just have an equality
+              tla.eql(tlaVariable, tlaValue)
+            } else {
+              // Otherwise, we have an assignment
+              tla.assign(tla.prime(tlaVariable), tlaValue)
+            })
+      case tooManyArgs => throwOperatorArityError("assign", "binary", tooManyArgs)
+    }
   }
 
   // Increments the TLA expression (as a TBuilderInstruction), which is assumed
@@ -630,7 +652,7 @@ class Quint(quintOutput: QuintOutput) {
       case "put"       => MkTla.extendFunction(opName)
 
       // Action operators
-      case "assign"     => binaryApp(opName, (lhs, rhs) => tla.assign(tla.prime(lhs), rhs))
+      case "assign"     => MkTla.assign
       case "actionAll"  => variadicApp(args => tla.and(args: _*))
       case "actionAny"  => variadicApp(args => tla.or(args: _*))
       case "assert"     => unaryApp(opName, identity) // `assert` does not have side-effects in Apalache
@@ -757,7 +779,7 @@ class Quint(quintOutput: QuintOutput) {
         case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
         case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
         case d @ QuintAssume(_, name, quintEx) =>
-          val tlaEx = build(tlaExpression(quintEx).run(nullaryOps))
+          val tlaEx = build(tlaExpression(quintEx).run(ctx))
           val definedName = Option.unless(d.isUnnamed)(name)
           // assume declarations have no entry in the type map, and are always typed bool
           Some(None, TlaAssumeDecl(definedName, tlaEx)(Typed(BoolT1)))
@@ -765,7 +787,9 @@ class Quint(quintOutput: QuintOutput) {
           // We don't currently support run definitions
           None
         case op: QuintOpDef =>
-          val (tlaInstruction, maybeName) = opDefConverter(op).run(ctx)
+          // If we are entering into the init predicate, mark that in the context
+          val ctx0 = ctx.copy(isInit = (op.name == quintInitName))
+          val (tlaInstruction, maybeName) = opDefConverter(op).run(ctx0)
           val tlaDecl =
             try {
               build(tlaInstruction)

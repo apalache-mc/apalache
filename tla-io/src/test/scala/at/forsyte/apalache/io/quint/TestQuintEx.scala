@@ -8,9 +8,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import QuintType._
 import QuintEx._
-import at.forsyte.apalache.io.quint.QuintDef.QuintAssume
+import at.forsyte.apalache.io.quint.QuintDef.{QuintAssume, QuintOpDef}
 import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.typecomp.build
+import at.forsyte.apalache.tla.lir.TlaOperDecl
 
 // You can run all these tests in watch mode in the
 // sbt console with
@@ -810,5 +811,29 @@ class TestQuintEx extends AnyFunSuite {
     val unnamedAssume = QuintAssume(1, "_", QuintBool(2, true))
     val tlaUnnamedAssumeDef = translator.tlaDef(unnamedAssume).run(ctx).get._2
     assert(tlaUnnamedAssumeDef == TlaAssumeDecl(None, ValEx(TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1)))
+  }
+
+  test("uses equality instead of assignment in q::init") {
+    val translator = new Quint(Q.quintOutput)
+    val ctx = translator.Context.empty
+
+    val name = "q::init"
+    val initOperator = QuintOpDef(1, name, "def", QuintApp(2, "assign", Seq(QuintName(3, "x"), QuintInt(4, 0))))
+    translator.tlaDef(initOperator).run(ctx).get._2 match {
+      case TlaOperDecl(_, _, body) => assert(body.toString() == "x = 0")
+      case _                       => fail("invalid translation")
+    }
+  }
+
+  test("uses assignment when not in q::init") {
+    val translator = new Quint(Q.quintOutput)
+    val ctx = translator.Context.empty
+
+    val name = "notInInit"
+    val initOperator = QuintOpDef(1, name, "def", QuintApp(2, "assign", Seq(QuintName(3, "x"), QuintInt(4, 0))))
+    translator.tlaDef(initOperator).run(ctx).get._2 match {
+      case TlaOperDecl(_, _, body) => assert(body.toString() == "Apalache!:=(x', 0)")
+      case _                       => fail("invalid translation")
+    }
   }
 }
