@@ -89,8 +89,7 @@ class PrettyWriter(
     prettyWriteDoc(declToDoc(decl) <> line <> line)
   }
 
-  private def identity(x: String): String = x
-  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, identity))
+  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, sanatizeID))
 
   def writeComment(commentStr: String): Unit = {
     prettyWriteDoc(wrapWithComment(commentStr) <> line)
@@ -104,14 +103,14 @@ class PrettyWriter(
   def writeFooter(): Unit = prettyWriteDoc(moduleTerminalDoc)
 
   private def moduleNameDoc(name: String): Doc = {
-    val middle = s" MODULE $name "
+    val middle = s" MODULE ${sanatizeID(name)} "
     val nDashes = math.max(5, (layout.textWidth - middle.length) / 2) // int div rounds down
     s"${List.fill(nDashes)("-").mkString}$middle${List.fill(nDashes)("-").mkString}" <> line
   }
 
   private def moduleExtendsDoc(moduleNames: List[String]): Doc =
     if (moduleNames.isEmpty) emptyDoc
-    else line <> text("EXTENDS") <> space <> hsep(moduleNames.map(text), comma) <> line
+    else line <> text("EXTENDS") <> space <> hsep(moduleNames.map(n => text(sanatizeID(n))), comma) <> line
 
   private def moduleTerminalDoc: Doc =
     s"${List.fill(layout.textWidth)("=").mkString}" <> line
@@ -539,7 +538,7 @@ class PrettyWriter(
             }))
   }
 
-  def declToDoc(decl: TlaDecl, nameResolver: String => String = (x: String) => x): Doc = {
+  def declToDoc(decl: TlaDecl, nameResolver: String => String = sanatizeID): Doc = {
     val annotations = declAnnotator(layout)(decl)
 
     decl match {
@@ -664,10 +663,32 @@ class PrettyWriter(
     }
   }
 
+  // A precompiled regex of patterns that are invalid in a TLA identifier
+  // Matches:
+  //
+  // - `::`, Used by apalache for "namespacing" and module imports
+  // - Anything that is not a TLA+2 "NameChar".
+  //   See https://github.com/tlaplus/tlaplus-standard/blob/main/grammar/TLAPlus2Grammar.tla#L26
+  //
+  // We treat `::` special so that it will be replaced with a single `_`
+  private val invalidIdentifierParts = """(::|[^a-zA-Z0-9_])""".r
+
+  // In our tests, TLC will only accept identifiers that start with a prefix
+  // matching this pattern, even tho the spec of the grammar says numerals should
+  // also be valid following an underscore.
+  // See https://github.com/tlaplus/tlaplus-standard/blob/main/grammar/TLAPlus2Grammar.tla#L26
+  private val validIdentifierPrefix = """_*[a-zA-Z]""".r
+
+  // Sanitize an identifier to ensure it can be read by TLC
+  private def sanatizeID(s: String): String = {
+    val s0 = if (validIdentifierPrefix.findPrefixOf(s).isDefined) s else "id" + s
+    invalidIdentifierParts.replaceAllIn(s0, "_")
+  }
+
   private def parseableName(name: String): String = {
     // An operator name may contain '!' if it comes from an instance. Replace '!' with "_i_".
     // Additionally, the name may contain '$', which is produced during preprocessing. Replace '$' with "_si_".
-    name.replaceAll("!", "_i_").replaceAll("\\$", "_si_")
+    sanatizeID(name.replaceAll("!", "_i_").replaceAll("\\$", "_si_"))
   }
 
   def close(): Unit = writer.close()
