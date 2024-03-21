@@ -5,7 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.io.quint.QuintType._
 import at.forsyte.apalache.tla.lir.{
-  FunT1, IntT1, RecRowT1, RowT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1, VariantT1,
+  ConstT1, FunT1, IntT1, RecRowT1, RowT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1, VariantT1,
 }
 
 /**
@@ -31,6 +31,11 @@ class TestQuintTypes extends AnyFunSuite {
       // i.e.: (int, string)
       QuintTupleT(Row.Cell(List(RecordField("0", QuintIntT()), RecordField("1", QuintStrT())), Row.Nil()))
     assert(translate(tuple) == TupT1(IntT1, StrT1))
+  }
+
+  test("empty Quint tuple types are converted to the UNIT uninterpreted type") {
+    val tuple = QuintTupleT(Row.Nil())
+    assert(translate(tuple) == ConstT1("UNIT"))
   }
 
   test("Polymorphic Quint tuples types are converted to sparse tuples") {

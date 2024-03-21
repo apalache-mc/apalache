@@ -570,7 +570,14 @@ class Quint(quintOutput: QuintOutput) {
               })
 
         // Tuples
-        case "Tup" => variadicApp(args => tla.tuple(args: _*))
+        case "Tup" =>
+          if (quintArgs.isEmpty) {
+            // Translate empty tuples to values of type UNIT
+            (_) => Reader((_) => tla.const("U", ConstT1(("UNIT"))))
+          } else {
+            variadicApp(args => tla.tuple(args: _*))
+          }
+
         // product projection is just function application on TLA
         case "item"   => binaryApp(opName, tla.app)
         case "tuples" => variadicApp(tla.times)

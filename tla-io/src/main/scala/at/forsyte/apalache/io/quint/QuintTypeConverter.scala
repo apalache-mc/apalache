@@ -89,8 +89,10 @@ private class QuintTypeConverter extends LazyLogging {
     case QuintSeqT(elem)       => SeqT1(convert(elem))
     case QuintFunT(arg, res)   => FunT1(convert(arg), convert(res))
     case QuintOperT(args, res) => OperT1(args.map(convert), convert(res))
-    case QuintTupleT(row)      => rowToTupleT1(row)
-    case QuintRecordT(row)     => RecRowT1(rowToRowT1(row))
-    case QuintSumT(row)        => VariantT1(rowToRowT1(row))
+    case QuintTupleT(Row.Nil() | Row.Cell(Seq(), _)) =>
+      ConstT1("UNIT") // Use the Unit type for empty tuples, since they are the unit type in Quint
+    case QuintTupleT(row)  => rowToTupleT1(row)
+    case QuintRecordT(row) => RecRowT1(rowToRowT1(row))
+    case QuintSumT(row)    => VariantT1(rowToRowT1(row))
   }
 }

@@ -609,6 +609,10 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)(typ)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
   }
 
+  test("can convert builtin empty Tup operator application to uninterpreted value") {
+    assert(convert(Q.app("Tup")(QuintTupleT.ofTypes())) == "\"U_OF_UNIT\"")
+  }
+
   /// SUM TYPES
 
   test("can convert builtin variant operator application") {
