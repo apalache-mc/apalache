@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.9 - 2024-03-21
+
+### Bug fixes
+
+- Convert Quint empty tuples as uninterpreted types/values (#2869)
+
 ## 0.44.8 - 2024-03-20
 
 ### Bug fixes
