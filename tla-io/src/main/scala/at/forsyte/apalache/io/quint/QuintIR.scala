@@ -131,8 +131,7 @@ private[quint] object QuintModule {
 private[quint] case class QuintTypeScheme(
     @key("type") typ: QuintType,
     typeVariables: List[String],
-    rowVariables: List[String]
-  )
+    rowVariables: List[String])
 private[quint] object QuintTypeScheme {
   implicit val rw: RW[QuintTypeScheme] = macroRW
 }
