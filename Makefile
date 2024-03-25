@@ -44,20 +44,20 @@ quint-fixtures: tla-io/src/test/resources/tictactoe.json tla-io/src/test/resourc
 
 TEMP_QNT_TTT_FILE := $(shell mktemp)
 tla-io/src/test/resources/tictactoe.json:
-	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/puzzles/tictactoe/tictactoe.qnt > $(TEMP_QNT_TTT_FILE)
-	quint typecheck --out $@ $(TEMP_QNT_TTT_FILE)
+	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/games/tictactoe/tictactoe.qnt > $(TEMP_QNT_TTT_FILE)
+	quint compile $(TEMP_QNT_TTT_FILE) --main=tictactoe > $@
 	rm $(TEMP_QNT_TTT_FILE)
 
 TEMP_QNT_CS_FILE := $(shell mktemp)
 tla-io/src/test/resources/clockSync3.json:
 	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/classic/distributed/ClockSync/clockSync3.qnt > $(TEMP_QNT_CS_FILE)
-	quint typecheck --out $@ $(TEMP_QNT_CS_FILE)
+	quint compile $(TEMP_QNT_CS_FILE) --main=clockSync3 > $@
 	rm $(TEMP_QNT_CS_FILE)
 
 TEMP_QNT_BOOL_FILE := $(shell mktemp)
 test/tla/booleans.qnt.json:
 	curl https://raw.githubusercontent.com/informalsystems/quint/main/examples/language-features/booleans.qnt > $(TEMP_QNT_BOOL_FILE)
-	quint typecheck --out $@ $(TEMP_QNT_BOOL_FILE)
+	quint compile $(TEMP_QNT_BOOL_FILE) --main=booleans > $@
 	rm $(TEMP_QNT_BOOL_FILE)
 
 # Build the docker image
