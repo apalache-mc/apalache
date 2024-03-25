@@ -129,10 +129,9 @@ private[quint] object QuintModule {
 
 /** The representation of types in the type map */
 private[quint] case class QuintTypeScheme(
-    @key("type") typ: QuintType
-    // TODO Will we need these for anything?
-    // typeVariables: List[String],
-    // rowVariables: List[String]
+    @key("type") typ: QuintType,
+    typeVariables: List[String],
+    rowVariables: List[String]
   )
 private[quint] object QuintTypeScheme {
   implicit val rw: RW[QuintTypeScheme] = macroRW

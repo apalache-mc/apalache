@@ -52,6 +52,14 @@ class TestQuintEx extends AnyFunSuite {
       exp
     }
 
+    // Register the type of a defintion in the typeMap.
+    // Think of this as a type annotation.
+    def d[D <: QuintDef](definition: D, typ: QuintType): D = {
+      typeMap += (definition.id -> typ)
+      definition
+    }
+
+
     // Operator application
     //
     // The optional `refId` is the id of the declaration defining
@@ -133,7 +141,7 @@ class TestQuintEx extends AnyFunSuite {
     val namedInt2ToBoolOp = e(QuintName(uid, "int2ToBoolOp"), QuintOperT(Seq(QuintIntT(), QuintIntT()), QuintBoolT()))
 
     // Definitions and compound data types
-    val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
+    val fooDef = d(QuintDef.QuintOpDef(uid, "foo", "val", tt), QuintBoolT())
     val letFooBeTrueIn42 = e(QuintLet(uid, fooDef, _42), QuintIntT())
     val lambda = e(QuintLambda(uid, List(xParam), "def", s), QuintOperT(List(QuintIntT()), QuintStrT()))
     // Applications can only be by name (lambdas are not first class)
@@ -141,7 +149,7 @@ class TestQuintEx extends AnyFunSuite {
     val appBar = app("bar", _42)(QuintStrT(), barDef.id)
     val letBarBeLambdaInAppBar = e(QuintLet(uid, barDef, appBar), QuintStrT())
     val nIsGreaterThan0 = app("igt", name, _0)(QuintBoolT())
-    val nDefindedAs42 = QuintDef.QuintOpDef(uid, "n", "val", _42)
+    val nDefindedAs42 = d(QuintDef.QuintOpDef(uid, "n", "val", _42), QuintIntT())
     val letNbe42inNisGreaterThan0 = e(QuintLet(uid, nDefindedAs42, nIsGreaterThan0), QuintBoolT())
     // A predicate on ints
     val intIsGreaterThanZero =
@@ -165,7 +173,7 @@ class TestQuintEx extends AnyFunSuite {
     val chooseSomeFromIntSet = app("chooseSome", intSet)(QuintIntT())
     val oneOfSet = app("oneOf", intSet)(QuintIntT())
     val nondetBinding =
-      e(QuintLet(uid, QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), nIsGreaterThan0), QuintIntT())
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintIntT())
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)(QuintSeqT(QuintIntT()))
     val addOne = app("iadd", name, _1)(QuintIntT())
@@ -180,7 +188,7 @@ class TestQuintEx extends AnyFunSuite {
         modules = List(QuintModule(0, "MockedModule", List())),
         types = typeMap.map { case (id, typ) =>
           // Wrap each type in the TypeScheme required by the Quint IR
-          id -> QuintTypeScheme(typ)
+          id -> QuintTypeScheme(typ, List(), List())
         }.toMap,
         table = lookupMap.toMap,
     )

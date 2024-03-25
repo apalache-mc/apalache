@@ -671,7 +671,7 @@ class Quint(quintOutput: QuintOutput) {
   }
 
   private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[(TBuilderOperDeclInstruction, Option[String])] = {
-    case QuintDef.QuintOpDef(_, name, _, expr) =>
+    case QuintDef.QuintOpDef(id, name, _, expr) =>
       (expr match {
         // Parameterized operators are defined in Quint using Lambdas
         case lam: QuintLambda =>
@@ -680,6 +680,13 @@ class Quint(quintOutput: QuintOutput) {
         case other => tlaExpression(other).map(b => (b, List()))
       }).map {
         case (body, params) => {
+          // Quint quantifies types at the opdef level, so here is where we need
+          // to account for quantified variables. The only thing we need to do
+          // is to clear those names from the var number generator memory, so if
+          // they ever appear again, we get fresh TlaType1 var numbers (and not
+          // the same ones).
+          typeConv.clearNames(types(id))
+
           val nullaryName = if (params.isEmpty) Some(name) else None
           (tla.decl(name, body, params: _*), nullaryName)
         }
