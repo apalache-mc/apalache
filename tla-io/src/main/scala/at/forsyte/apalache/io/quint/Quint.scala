@@ -82,18 +82,18 @@ class Quint(quintOutput: QuintOutput) {
   // operators that take parameters, but these require different constructs
   // in Apalache's IR. Thus, we need to decompose the parts of a QuintLambda
   // for two different purposes.
-  private val lambdaBodyAndParams: QuintLambda => NullaryOpReader[(TBuilderInstruction, Seq[(OperParam, TlaType1)], TlaType1)] = {
+  private val lambdaBodyAndParams: QuintLambda => NullaryOpReader[(TBuilderInstruction, Seq[(OperParam, TlaType1)])] = {
     case ex @ QuintLambda(id, paramNames, _, body) =>
-      val (quintParamTypes, quintResType) = types(id).typ match {
-        case QuintOperT(types, resType) => (types, resType)
-        case invalidType                => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
+      val quintParamTypes = types(id).typ match {
+        case QuintOperT(types, _) => types
+        case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
       }
       val operParams = paramNames.zip(quintParamTypes).map(operParam)
       val paramTypes = quintParamTypes.map(typeConv.convert(_))
       val typedParams = operParams.zip(paramTypes)
       for {
         tlaBody <- tlaExpression(body)
-      } yield (tlaBody, typedParams, typeConv.convert(quintResType))
+      } yield (tlaBody, typedParams)
   }
 
   private def typeTagOfId(id: BigInt): TypeTag = {
@@ -675,7 +675,7 @@ class Quint(quintOutput: QuintOutput) {
       (expr match {
         // Parameterized operators are defined in Quint using Lambdas
         case lam: QuintLambda =>
-          lambdaBodyAndParams(lam).map { case (body, params, _) => (body, params) }
+          lambdaBodyAndParams(lam)
         // Otherwise it's an operator with no params
         case other => tlaExpression(other).map(b => (b, List()))
       }).map {
@@ -730,8 +730,8 @@ class Quint(quintOutput: QuintOutput) {
             .map(tlaExpr => tla.letIn(tlaExpr, tlaOpDef))
         }
       case lam: QuintLambda =>
-        lambdaBodyAndParams(lam).map { case (body, typedParams, resultType) =>
-          tla.lambda(nameGen.uniqueLambdaName(), body, resultType, typedParams: _*)
+        lambdaBodyAndParams(lam).map { case (body, typedParams) =>
+          tla.lambda(nameGen.uniqueLambdaName(), body, typedParams: _*)
         }
       case app: QuintApp => tlaApplication(app)
     }
