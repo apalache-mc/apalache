@@ -59,7 +59,6 @@ class TestQuintEx extends AnyFunSuite {
       definition
     }
 
-
     // Operator application
     //
     // The optional `refId` is the id of the declaration defining
