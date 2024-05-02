@@ -558,7 +558,7 @@ class Quint(quintOutput: QuintOutput) {
         case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
         case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
         case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
-        case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
+        case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), to))
         case "select"    => MkTla.selectSeq(opName, typeConv.convert(types(id).typ))
         case "range" =>
           binaryApp(opName,

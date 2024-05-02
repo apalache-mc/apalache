@@ -506,7 +506,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin slice operator application") {
     assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)(
-            QuintSeqT(QuintIntT()))) == "Sequences!SubSeq(<<1, 2, 3>>, 0 + 1, 1 + 1)")
+            QuintSeqT(QuintIntT()))) == "Sequences!SubSeq(<<1, 2, 3>>, 0 + 1, 1)")
   }
 
   test("can convert builtin select operator application") {
