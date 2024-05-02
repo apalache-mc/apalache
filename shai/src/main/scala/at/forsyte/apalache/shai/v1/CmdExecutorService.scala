@@ -1,5 +1,6 @@
 package at.forsyte.apalache.shai.v1
 
+import java.io.{PrintWriter, StringWriter}
 import scala.util.Try
 import com.typesafe.scalalogging.Logger
 import io.grpc.Status
@@ -16,7 +17,8 @@ import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.passes.imp.ParserModule
 import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.io.lir.PrettyWriter
+import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
+import at.forsyte.apalache.io.annotations.store._
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -99,7 +101,13 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   }
 
   private def tlaModuleToJsonString(module: TlaModule): ujson.Value = {
-    ujson.Str(PrettyWriter.writeAsString(module))
+    val annotationStore = createAnnotationStore()
+
+    val buf = new StringWriter()
+    val prettyWriter = new PrettyWriterWithAnnotations(annotationStore, new PrintWriter(buf))
+    prettyWriter.write(module, List())
+
+    ujson.Str(buf.toString())
   }
 
   // Allows us to handle invalid protobuf messages on the ZIO level, before
