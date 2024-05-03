@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.10 - 2024-03-25
+
+### Bug fixes
+
+- Fix a problem where different quantified variables from Quint received the same TlaType1 var number (#2873).
+
 ## 0.44.9 - 2024-03-21
 
 ### Bug fixes

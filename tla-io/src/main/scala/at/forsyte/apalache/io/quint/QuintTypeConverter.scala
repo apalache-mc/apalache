@@ -35,6 +35,13 @@ private class QuintTypeConverter extends LazyLogging {
     }
   }
 
+  // Clear the variable names from the state so when the same quantified Quint
+  // variable is used again, we generate a fresh TlaType1 var number for it.
+  def clearNames(typ: QuintTypeScheme): Unit = {
+    typ.typeVariables.foreach(vars.remove)
+    typ.rowVariables.foreach(vars.remove)
+  }
+
   import QuintType._
 
   private def rowToTupleT1(row: Row): TlaType1 = {
