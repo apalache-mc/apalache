@@ -209,7 +209,7 @@ class PrettyWriter(
         val sign = PrettyWriter.bindingOps(op)
         val doc =
           group(
-              group(text(sign) <> space <> text(x.toString) <> space <>
+              group(text(sign) <> space <> text(sanatizeID(x.toString)) <> space <>
                 text(PrettyWriter.binaryOps(TlaSetOper.in)) <> softline <>
                 exToDoc(op.precedence, set, nameResolver) <> text(":")) <>
                 nest(line <> exToDoc(op.precedence, pred, nameResolver))
