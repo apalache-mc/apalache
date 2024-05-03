@@ -105,9 +105,28 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
     val buf = new StringWriter()
     val prettyWriter = new PrettyWriterWithAnnotations(annotationStore, new PrintWriter(buf))
-    prettyWriter.write(module, List())
+    val modules_to_extend = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache", "Variants")
+    prettyWriter.write(module, modules_to_extend)
+    val moduleString = buf.toString()
 
-    ujson.Str(buf.toString())
+    val modifiedModule = extractLetFromFolds(moduleString)
+    ujson.Str(modifiedModule)
+  }
+
+  // Apalache inlines fold operator arguments as LET .. IN expressions, but this
+  // is not valid for SANY. In order to produce a valid TLA+ module from Quint
+  // files, we transform expressions like:
+  // ```
+  // ApaFoldSet(LET __QUINT_LAMBDAn(a, b) == c IN __QUINT_LAMBDAn, init, set)
+  // ```
+  //
+  // into:
+  // ```
+  // LET __QUINT_LAMBDAn(a, b) == c IN ApaFoldSet(__QUINT_LAMBDAn, init, set)
+  // ```
+  private def extractLetFromFolds(module: String): String = {
+    val regex = """(?s)(ApaFold[\w]*\()\s*(LET\s.*?\sIN\s+)(__QUINT_LAMBDA)"""
+    return module.replaceAll(regex, "$2 $1$3")
   }
 
   // Allows us to handle invalid protobuf messages on the ZIO level, before
