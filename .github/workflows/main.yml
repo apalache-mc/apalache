@@ -90,13 +90,13 @@ jobs:
         operating-system: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 17
       - name: Coursier cache
         uses: coursier/cache-action@v6
+      - name: Coursier setup
+        uses: coursier/setup-action@v1
+        with:
+          jvm: temurin:1.17
+          apps: sbt
       - name: Set APALACHE_HOME env
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
