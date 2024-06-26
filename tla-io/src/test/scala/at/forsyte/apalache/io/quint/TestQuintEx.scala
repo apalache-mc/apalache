@@ -172,7 +172,10 @@ class TestQuintEx extends AnyFunSuite {
     val chooseSomeFromIntSet = app("chooseSome", intSet)(QuintIntT())
     val oneOfSet = app("oneOf", intSet)(QuintIntT())
     val nondetBinding =
-      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintIntT())
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
+    val generateSet = app("generate", _42)(QuintSetT(QuintIntT()))
+    val nondetGenerate =
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", generateSet), QuintIntT()), tt), QuintBoolT())
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)(QuintSeqT(QuintIntT()))
     val addOne = app("iadd", name, _1)(QuintIntT())
@@ -710,8 +713,12 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)(intMapT)) == expected)
   }
 
-  test("can convert nondet bindings") {
+  test("can convert nondet...oneOf") {
     assert(convert(Q.nondetBinding) == "∃n ∈ {1, 2, 3}: (n > 0)")
+  }
+
+  test("can convert nondet...generate") {
+    assert(convert(Q.nondetGenerate) == "LET n ≜ Apalache!Gen(42) IN TRUE")
   }
 
   test("can convert let binding with reference to name in scope") {

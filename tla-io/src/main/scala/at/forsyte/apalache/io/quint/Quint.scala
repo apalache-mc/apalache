@@ -666,6 +666,17 @@ class Quint(quintOutput: QuintOutput) {
         tlaDomain <- tlaExpression(domain)
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, tlaDomain, tlaScope)
+
+    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "generate", Seq(bound))), scope) =>
+      val elemType = typeConv.convert(types(id).typ)
+      val boundIntConst = intFromExpr(bound)
+      if (boundIntConst.isEmpty) {
+        throw new QuintIRParseError(s"nondet $name = generate($bound) ... expects an integer constant")
+      }
+      for {
+        tlaScope <- tlaExpression(scope)
+      } yield tla.letIn(tlaScope, tla.decl(name, tla.gen(boundIntConst.get, elemType)))
+
     case invalidValue =>
       throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
   }
@@ -804,4 +815,14 @@ class Quint(quintOutput: QuintOutput) {
         .reverse // Return the declarations to their original order
     }
   } yield TlaModule(module.name, declarations)
+
+  private def intFromExpr(expr: QuintEx): Option[BigInt] = {
+    expr match {
+      case QuintInt(_, value) =>
+        Some(value)
+
+      case _ =>
+        None
+    }
+  }
 }
