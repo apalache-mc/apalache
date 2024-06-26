@@ -667,15 +667,15 @@ class Quint(quintOutput: QuintOutput) {
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, tlaDomain, tlaScope)
 
-    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "generate", Seq(bound))), scope) =>
-      val elemType = typeConv.convert(types(id).typ)
+    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "generate", Seq(_, bound))), scope) =>
+      val setType = typeConv.convert(types(id).typ)
       val boundIntConst = intFromExpr(bound)
       if (boundIntConst.isEmpty) {
         throw new QuintIRParseError(s"nondet $name = generate($bound) ... expects an integer constant")
       }
       for {
         tlaScope <- tlaExpression(scope)
-      } yield tla.letIn(tlaScope, tla.decl(name, tla.gen(boundIntConst.get, elemType)))
+      } yield tla.letIn(tlaScope, tla.decl(name, tla.gen(boundIntConst.get, setType)))
 
     case invalidValue =>
       throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")

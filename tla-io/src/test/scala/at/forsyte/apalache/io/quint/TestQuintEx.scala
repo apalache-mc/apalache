@@ -173,7 +173,7 @@ class TestQuintEx extends AnyFunSuite {
     val oneOfSet = app("oneOf", intSet)(QuintIntT())
     val nondetBinding =
       e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
-    val generateSet = app("generate", _42)(QuintSetT(QuintIntT()))
+    val generateSet = app("generate", _42, _42)(QuintSetT(QuintIntT()))
     val nondetGenerate =
       e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", generateSet), QuintIntT()), tt), QuintBoolT())
     // Requires ID registered with type
