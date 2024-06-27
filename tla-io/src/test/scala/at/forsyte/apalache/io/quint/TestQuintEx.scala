@@ -175,11 +175,12 @@ class TestQuintEx extends AnyFunSuite {
       e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
     val generateSet = app("generate", _42, app("Set", _42)(QuintSetT(QuintIntT())))(QuintSetT(QuintIntT()))
     val nondetGenerateId = uid
-    val appGenSet = app("eq", e(QuintName(uid, "S"), QuintSetT(QuintIntT())), app("Set")(QuintSetT(QuintIntT())))(QuintBoolT())
+    val appGenSet =
+      app("eq", e(QuintName(uid, "S"), QuintSetT(QuintIntT())), app("Set")(QuintSetT(QuintIntT())))(QuintBoolT())
     val nondetGenerate =
       e(QuintLet(uid,
-        d(QuintDef.QuintOpDef(nondetGenerateId, "S", "nondet", generateSet), QuintOperT(Seq(), QuintSetT(QuintIntT()))), appGenSet),
-        QuintBoolT())
+              d(QuintDef.QuintOpDef(nondetGenerateId, "S", "nondet", generateSet),
+                  QuintOperT(Seq(), QuintSetT(QuintIntT()))), appGenSet), QuintBoolT())
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)(QuintSeqT(QuintIntT()))
     val addOne = app("iadd", name, _1)(QuintIntT())
