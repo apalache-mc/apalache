@@ -17,4 +17,3 @@ the project Apalache for significant duration of time in the past:
 [Interchain Foundation]: https://interchain.io/
 [Informal Systems]: https://informal.systems/
 [Vienna Business Agency]: https://viennabusinessagency.at/
-[Igor Konnov]: https://konnov.phd/
