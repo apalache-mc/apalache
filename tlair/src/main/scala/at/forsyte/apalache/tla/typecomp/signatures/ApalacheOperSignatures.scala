@@ -47,9 +47,10 @@ object ApalacheOperSignatures {
     val mkSeqSig = signatureMapEntry(mkSeq, { case Seq(IntT1, OperT1(Seq(IntT1), t)) => SeqT1(t) })
 
     // ((t, Int) => t, Int, t) => t
-    val repeatSig = signatureMapEntry(repeat, {
-      case Seq(OperT1(Seq(IntT1, t), t1), IntT1, t2) if compatible(t, t1)  && compatible(t, t2) => t
-    })
+    val repeatSig = signatureMapEntry(repeat,
+        {
+          case Seq(OperT1(Seq(IntT1, t), t1), IntT1, t2) if compatible(t, t1) && compatible(t, t2) => t
+        })
 
     // ((a,b) => a, a, Set(b)) => a
     val foldSetSig = signatureMapEntry(foldSet,

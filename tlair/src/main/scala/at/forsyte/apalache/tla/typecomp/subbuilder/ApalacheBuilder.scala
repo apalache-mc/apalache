@@ -32,7 +32,7 @@ trait ApalacheBuilder {
    * argument.
    *
    * @param n
-   * must be positive
+   *   must be positive
    */
   def gen(n: BigInt, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
 

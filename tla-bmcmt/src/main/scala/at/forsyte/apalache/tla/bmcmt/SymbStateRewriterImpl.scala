@@ -309,7 +309,7 @@ class SymbStateRewriterImpl(
         key(OperEx(ApalacheOper.foldSeq, tla.name("A"), tla.name("v"), tla.name("s")))
           -> List(new FoldSeqRule(this, renaming)),
         key(OperEx(ApalacheOper.repeat, tla.name("Op"), tla.int(10), tla.name("s")))
-        -> List(new RepeatRule(this, renaming)),
+          -> List(new RepeatRule(this, renaming)),
         key(OperEx(ApalacheOper.mkSeq, tla.int(10), tla.name("A")))
           -> List(new MkSeqRule(this, renaming)),
     )

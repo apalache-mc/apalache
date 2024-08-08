@@ -27,7 +27,8 @@ class RepeatRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ext
 
   override def apply(state: SymbState): SymbState = state.ex match {
     // assume isApplicable
-    case ex @ OperEx(ApalacheOper.repeat, LetInEx(NameEx(_), opDecl), boundEx, baseEx) => boundEx match {
+    case ex @ OperEx(ApalacheOper.repeat, LetInEx(NameEx(_), opDecl), boundEx, baseEx) =>
+      boundEx match {
         case ValEx(TlaInt(n)) if n.isValidInt && n.toInt >= 0 =>
           // rewrite baseEx to its final cell form
           val baseState = rewriter.rewriteUntilDone(state.setRex(baseEx))
@@ -54,23 +55,22 @@ class RepeatRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ext
           // At each step, we perform one application of the operator
           // defined by `opDecl` to the previous partial result,
           // and pass the iteration index as the second parameter
-          (1 to n.toInt).foldLeft(baseState) {
-            case (partialState, i) =>
-              // partialState currently holds the cell representing the previous application step
-              val oldResultCell = partialState.asCell
+          (1 to n.toInt).foldLeft(baseState) { case (partialState, i) =>
+            // partialState currently holds the cell representing the previous application step
+            val oldResultCell = partialState.asCell
 
-              // First, we inline the operator application, with cell names as parameters
-              val appEx = tla.appOp(
+            // First, we inline the operator application, with cell names as parameters
+            val appEx = tla.appOp(
                 tla.name(opDecl.name, opT),
                 oldResultCell.toBuilder,
-                tla.int(i)
-              )
+                tla.int(i),
+            )
 
-              val inlinedEx = inliner.transform(seededScope)(appEx)
-              rewriter.rewriteUntilDone(partialState.setRex(inlinedEx))
+            val inlinedEx = inliner.transform(seededScope)(appEx)
+            rewriter.rewriteUntilDone(partialState.setRex(inlinedEx))
           }
         case _ =>
-            throw new RewriterException("Apalache!Repeat expects a constant positive integer. Found: " + boundEx, ex)
+          throw new RewriterException("Apalache!Repeat expects a constant positive integer. Found: " + boundEx, ex)
       }
     case _ =>
       throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
