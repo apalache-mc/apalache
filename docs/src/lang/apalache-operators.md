@@ -142,7 +142,44 @@ IN
 The operators `ApaFoldSet` and `ApaFoldSeqLeft` are explained in more detail in a dedicated section [here](../apalache/principles/folds.md).
 
 ----------------------------------------------------------------------------
+<a name="Repeat"></a>
+## Operator iteration
 
+**Notation:** `Repeat(Op, N, x)`
+
+**LaTeX notation:** `Repeat(Op, N, x)`
+
+**Arguments:** Three arguments: An operator `Op`, an iteration counter `N` (a nonnegative constant integer expression), and an
+initial value `x`.
+
+**Apalache type:** `((a, Int), Int, a) => a`, for some type `a`.
+
+**Effect:** For a given constant bound `N`, computes the value
+`F(F(F(F(x,1), 2), ...), N)`. If `N=0` it evaluates to `x`.
+
+```tla
+Repeat(Op, N, x) ==
+    ApaFoldSeqLeft(Op, x, MkSeq(N, LAMBDA i:i))
+```
+
+Apalache implements a more efficient encoding of this operator than the default one.
+
+**Determinism:** Deterministic.
+
+**Errors:**
+If any argument is ill-typed, or `N` is not a nonnegative constant integer expression, Apalache reports an error.
+
+**Example in TLA+:**
+
+```tla
+Op(a) == a + 1
+LET OpModified(a,i) == Op(i)
+IN Repeat(OpModified, 0, 5) = 5     \* TRUE
+
+Op2(a,i) == a + i
+Repeat(Op2, 0, 5) = 15              \* TRUE
+```
+----------------------------------------------------------------------------
 <a name="SetAsFun"></a>
 
 ## Convert a set of pairs to a function

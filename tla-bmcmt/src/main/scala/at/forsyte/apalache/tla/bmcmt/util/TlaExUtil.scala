@@ -33,6 +33,11 @@ object TlaExUtil {
         baseExAndCollectionEx.foreach(findRec)
 
       // ignore the names in the auxiliary let-in definition
+      case OperEx(ApalacheOper.repeat, LetInEx(_, TlaOperDecl(_, _, localBody)), boundAndBaseEx @ _*) =>
+        findRec(localBody)
+        boundAndBaseEx.foreach(findRec)
+
+      // ignore the names in the auxiliary let-in definition
       case OperEx(ApalacheOper.mkSeq, len, LetInEx(_, TlaOperDecl(_, _, localBody))) =>
         findRec(localBody)
         findRec(len)

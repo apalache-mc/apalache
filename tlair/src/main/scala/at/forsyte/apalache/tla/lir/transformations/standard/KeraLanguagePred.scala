@@ -59,6 +59,11 @@ class KeraLanguagePred extends ContextualLanguagePred {
         isOkInContext(letDefs, opName)
           .and(isOkInContext(letDefs, len))
 
+      case OperEx(ApalacheOper.repeat, opName, bound, base) =>
+        isOkInContext(letDefs, opName)
+          .and(isOkInContext(letDefs, bound))
+          .and(isOkInContext(letDefs, base))
+
       case OperEx(oper, args @ _*)
           if oper == TlaSetOper.map || oper == TlaFunOper.funDef || oper == TlaFunOper.recFunDef =>
         val evenArgs = args.zipWithIndex.filter { p => p._2 % 2 == 0 }.map {

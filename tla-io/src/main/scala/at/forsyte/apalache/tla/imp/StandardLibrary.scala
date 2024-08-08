@@ -67,6 +67,7 @@ object StandardLibrary {
         ("Apalache", "ApaFoldSet") -> ApalacheOper.foldSet,
         ("__apalache_folds", "__ApalacheFoldSet") -> ApalacheOper.foldSet,
         ("Apalache", "ApaFoldSeqLeft") -> ApalacheOper.foldSeq,
+        ("Apalache", "Repeat") -> ApalacheOper.repeat,
         // Variants
         ("Variants", "Variant") -> VariantOper.variant,
         ("Variants", "VariantFilter") -> VariantOper.variantFilter,

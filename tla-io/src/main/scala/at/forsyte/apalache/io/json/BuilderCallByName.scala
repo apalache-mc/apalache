@@ -103,6 +103,7 @@ object BuilderCallByName {
       ApalacheOper.mkSeq.name -> ApalacheOper.mkSeq,
       ApalacheOper.foldSet.name -> ApalacheOper.foldSet,
       ApalacheOper.foldSeq.name -> ApalacheOper.foldSeq,
+      ApalacheOper.repeat.name -> ApalacheOper.repeat,
       ApalacheInternalOper.selectInSet.name -> ApalacheInternalOper.selectInSet,
       ApalacheInternalOper.selectInFun.name -> ApalacheInternalOper.selectInFun,
       ApalacheInternalOper.storeInSet.name -> ApalacheInternalOper.storeInSet,
@@ -375,6 +376,15 @@ object BuilderCallByName {
       case ApalacheOper.foldSeq =>
         val Seq(f, v, s) = args
         tla.foldSeq(f, v, s)
+      case ApalacheOper.repeat =>
+        val Seq(f, n, x) = args
+        val nEx: TlaEx = n
+        nEx match {
+          case ValEx(TlaInt(n)) =>
+            tla.repeat(f, n, x)
+          // should never happen, for case-completeness
+          case _ => throw new JsonDeserializationError(s"${oper.name} requires an integer argument.")
+        }
       case ApalacheInternalOper.selectInSet =>
         val Seq(x, s) = args
         tla.selectInSet(x, s)
