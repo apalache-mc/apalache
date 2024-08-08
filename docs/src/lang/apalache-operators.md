@@ -159,7 +159,7 @@ initial value `x`.
 
 ```tla
 Repeat(Op, N, x) ==
-    ApaFoldLeft(Op, x, MkSeq(N, LAMBDA i:i))
+    ApaFoldSeqLeft(Op, x, MkSeq(N, LAMBDA i:i))
 ```
 
 Apalache implements a more efficient encoding of this operator than the default one.
