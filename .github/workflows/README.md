@@ -13,7 +13,7 @@
 
 ## [./prepare-release.yml](./prepare-release.yml)
 
-- Triggered manually, or by a cron-job every Monday.
+- Triggered manually.
 - The workflow prepares a release and opens a `[release]` PR.
 - **Requirements**:
   - A personal API token is required to authenticate the API call that opens the

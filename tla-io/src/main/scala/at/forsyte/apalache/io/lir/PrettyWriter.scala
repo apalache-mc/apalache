@@ -89,7 +89,7 @@ class PrettyWriter(
     prettyWriteDoc(declToDoc(decl) <> line <> line)
   }
 
-  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, sanatizeID))
+  def write(expr: TlaEx): Unit = prettyWriteDoc(exToDoc((0, 0), expr, sanitizeID))
 
   def writeComment(commentStr: String): Unit = {
     prettyWriteDoc(wrapWithComment(commentStr) <> line)
@@ -103,14 +103,14 @@ class PrettyWriter(
   def writeFooter(): Unit = prettyWriteDoc(moduleTerminalDoc)
 
   private def moduleNameDoc(name: String): Doc = {
-    val middle = s" MODULE ${sanatizeID(name)} "
+    val middle = s" MODULE ${sanitizeID(name)} "
     val nDashes = math.max(5, (layout.textWidth - middle.length) / 2) // int div rounds down
     s"${List.fill(nDashes)("-").mkString}$middle${List.fill(nDashes)("-").mkString}" <> line
   }
 
   private def moduleExtendsDoc(moduleNames: List[String]): Doc =
     if (moduleNames.isEmpty) emptyDoc
-    else line <> text("EXTENDS") <> space <> hsep(moduleNames.map(n => text(sanatizeID(n))), comma) <> line
+    else line <> text("EXTENDS") <> space <> hsep(moduleNames.map(n => text(sanitizeID(n))), comma) <> line
 
   private def moduleTerminalDoc: Doc =
     s"${List.fill(layout.textWidth)("=").mkString}" <> line
@@ -209,7 +209,7 @@ class PrettyWriter(
         val sign = PrettyWriter.bindingOps(op)
         val doc =
           group(
-              group(text(sign) <> space <> text(x.toString) <> space <>
+              group(text(sign) <> space <> text(sanitizeID(x.toString)) <> space <>
                 text(PrettyWriter.binaryOps(TlaSetOper.in)) <> softline <>
                 exToDoc(op.precedence, set, nameResolver) <> text(":")) <>
                 nest(line <> exToDoc(op.precedence, pred, nameResolver))
@@ -538,7 +538,7 @@ class PrettyWriter(
             }))
   }
 
-  def declToDoc(decl: TlaDecl, nameResolver: String => String = sanatizeID): Doc = {
+  def declToDoc(decl: TlaDecl, nameResolver: String => String = sanitizeID): Doc = {
     val annotations = declAnnotator(layout)(decl)
 
     decl match {
@@ -680,7 +680,7 @@ class PrettyWriter(
   private val validIdentifierPrefix = """_*[a-zA-Z]""".r
 
   // Sanitize an identifier to ensure it can be read by TLC
-  private def sanatizeID(s: String): String = {
+  private def sanitizeID(s: String): String = {
     val s0 = if (validIdentifierPrefix.findPrefixOf(s).isDefined) s else "id" + s
     invalidIdentifierParts.replaceAllIn(s0, "_")
   }
@@ -688,7 +688,7 @@ class PrettyWriter(
   private def parseableName(name: String): String = {
     // An operator name may contain '!' if it comes from an instance. Replace '!' with "_i_".
     // Additionally, the name may contain '$', which is produced during preprocessing. Replace '$' with "_si_".
-    sanatizeID(name.replaceAll("!", "_i_").replaceAll("\\$", "_si_"))
+    sanitizeID(name.replaceAll("!", "_i_").replaceAll("\\$", "_si_"))
   }
 
   def close(): Unit = writer.close()
