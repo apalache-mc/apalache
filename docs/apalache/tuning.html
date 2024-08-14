@@ -187,12 +187,6 @@ passing the option <code>--tuning-options</code> that has the following format:<
 <h2><a class="header" href="#randomization" id="randomization">Randomization</a></h2>
 <p><code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via <code>z3</code>'s parameters
 <code>sat.random_seed</code> and <code>smt.random_seed</code>).</p>
-<h2><a class="header" href="#timeouts" id="timeouts">Timeouts</a></h2>
-<p><code>search.smt.timeout=&lt;seconds&gt;</code> defines the timeout to the SMT solver in seconds.
-The default value is <code>0</code>, which stands for the unbounded timeout.  For instance,
-the timeout is used in the following cases: checking if a transition is enabled,
-checking an invariant, checking for deadlocks. If the solver times out, it
-reports 'UNKNOWN', and the model checker reports a runtime error.</p>
 <h2><a class="header" href="#invariant-mode" id="invariant-mode">Invariant mode</a></h2>
 <p><code>search.invariant.mode=(before|after)</code> defines the moment when the invariant is
 checked. In the <code>after</code> mode, all transitions are first translated, one of them
