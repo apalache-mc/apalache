@@ -22,10 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.APALACHE_BOT_TOKEN }}
-          push-to-fork: coffeeinprogress/apalache
       - uses: actions/setup-java@v3
         with:
           distribution: temurin
