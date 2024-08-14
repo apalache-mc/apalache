@@ -82,18 +82,18 @@ class Quint(quintOutput: QuintOutput) {
   // operators that take parameters, but these require different constructs
   // in Apalache's IR. Thus, we need to decompose the parts of a QuintLambda
   // for two different purposes.
-  private val lambdaBodyAndParams: QuintLambda => NullaryOpReader[(TBuilderInstruction, Seq[(OperParam, TlaType1)], TlaType1)] = {
+  private val lambdaBodyAndParams: QuintLambda => NullaryOpReader[(TBuilderInstruction, Seq[(OperParam, TlaType1)])] = {
     case ex @ QuintLambda(id, paramNames, _, body) =>
-      val (quintParamTypes, quintResType) = types(id).typ match {
-        case QuintOperT(types, resType) => (types, resType)
-        case invalidType                => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
+      val quintParamTypes = types(id).typ match {
+        case QuintOperT(types, _) => types
+        case invalidType          => throw new QuintIRParseError(s"lambda ${ex} has invalid type ${invalidType}")
       }
       val operParams = paramNames.zip(quintParamTypes).map(operParam)
       val paramTypes = quintParamTypes.map(typeConv.convert(_))
       val typedParams = operParams.zip(paramTypes)
       for {
         tlaBody <- tlaExpression(body)
-      } yield (tlaBody, typedParams, typeConv.convert(quintResType))
+      } yield (tlaBody, typedParams)
   }
 
   private def typeTagOfId(id: BigInt): TypeTag = {
@@ -558,7 +558,7 @@ class Quint(quintOutput: QuintOutput) {
         case "foldl"     => ternaryApp(opName, (seq, init, op) => tla.foldSeq(op, init, seq))
         case "nth"       => binaryApp(opName, (seq, idx) => tla.app(seq, incrTla(idx)))
         case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
-        case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), incrTla(to)))
+        case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), to))
         case "select"    => MkTla.selectSeq(opName, typeConv.convert(types(id).typ))
         case "range" =>
           binaryApp(opName,
@@ -570,7 +570,14 @@ class Quint(quintOutput: QuintOutput) {
               })
 
         // Tuples
-        case "Tup" => variadicApp(args => tla.tuple(args: _*))
+        case "Tup" =>
+          if (quintArgs.isEmpty) {
+            // Translate empty tuples to values of type UNIT
+            (_) => Reader((_) => tla.const("U", ConstT1(("UNIT"))))
+          } else {
+            variadicApp(args => tla.tuple(args: _*))
+          }
+
         // product projection is just function application on TLA
         case "item"   => binaryApp(opName, tla.app)
         case "tuples" => variadicApp(tla.times)
@@ -648,9 +655,13 @@ class Quint(quintOutput: QuintOutput) {
 
   // Convert Quint's nondet variable binding
   //
-  //   val nondet name = oneOf(domain); scope
+  //   nondet name = oneOf(domain); scope
   //   ~~>
   //   \E name \in domain: scope
+  //
+  //   nondet name = generate(sz, typeSet); scope
+  //   ~~>
+  //   \E name \in { Apalache!Gen(sz) }: scope
   private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => NullaryOpReader[TBuilderInstruction] = {
     case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "oneOf", Seq(domain))), scope) =>
       val elemType = typeConv.convert(types(id).typ)
@@ -659,20 +670,40 @@ class Quint(quintOutput: QuintOutput) {
         tlaDomain <- tlaExpression(domain)
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, tlaDomain, tlaScope)
+
+    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "generate", Seq(bound, _))), scope) =>
+      val elemType = typeConv.convert(types(id).typ)
+      val boundIntConst = intFromExpr(bound)
+      if (boundIntConst.isEmpty) {
+        throw new QuintIRParseError(s"nondet $name = generate($bound) ... expects an integer constant")
+      }
+      val genExpr = tla.enumSet(tla.gen(boundIntConst.get, elemType))
+      val tlaName = tla.name(name, elemType)
+      for {
+        tlaScope <- tlaExpression(scope)
+      } yield tla.exists(tlaName, genExpr, tlaScope)
+
     case invalidValue =>
       throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
   }
 
   private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[(TBuilderOperDeclInstruction, Option[String])] = {
-    case QuintDef.QuintOpDef(_, name, _, expr) =>
+    case QuintDef.QuintOpDef(id, name, _, expr) =>
       (expr match {
         // Parameterized operators are defined in Quint using Lambdas
         case lam: QuintLambda =>
-          lambdaBodyAndParams(lam).map { case (body, params, _) => (body, params) }
+          lambdaBodyAndParams(lam)
         // Otherwise it's an operator with no params
         case other => tlaExpression(other).map(b => (b, List()))
       }).map {
         case (body, params) => {
+          // Quint quantifies types at the opdef level, so here is where we need
+          // to account for quantified variables. The only thing we need to do
+          // is to clear those names from the var number generator memory, so if
+          // they ever appear again, we get fresh TlaType1 var numbers (and not
+          // the same ones).
+          typeConv.clearNames(types(id))
+
           val nullaryName = if (params.isEmpty) Some(name) else None
           (tla.decl(name, body, params: _*), nullaryName)
         }
@@ -716,8 +747,8 @@ class Quint(quintOutput: QuintOutput) {
             .map(tlaExpr => tla.letIn(tlaExpr, tlaOpDef))
         }
       case lam: QuintLambda =>
-        lambdaBodyAndParams(lam).map { case (body, typedParams, resultType) =>
-          tla.lambda(nameGen.uniqueLambdaName(), body, resultType, typedParams: _*)
+        lambdaBodyAndParams(lam).map { case (body, typedParams) =>
+          tla.lambda(nameGen.uniqueLambdaName(), body, typedParams: _*)
         }
       case app: QuintApp => tlaApplication(app)
     }
@@ -790,4 +821,14 @@ class Quint(quintOutput: QuintOutput) {
         .reverse // Return the declarations to their original order
     }
   } yield TlaModule(module.name, declarations)
+
+  private def intFromExpr(expr: QuintEx): Option[BigInt] = {
+    expr match {
+      case QuintInt(_, value) =>
+        Some(value)
+
+      case _ =>
+        None
+    }
+  }
 }

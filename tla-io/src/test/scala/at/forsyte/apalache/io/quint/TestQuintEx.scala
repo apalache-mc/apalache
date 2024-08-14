@@ -52,6 +52,13 @@ class TestQuintEx extends AnyFunSuite {
       exp
     }
 
+    // Register the type of a defintion in the typeMap.
+    // Think of this as a type annotation.
+    def d[D <: QuintDef](definition: D, typ: QuintType): D = {
+      typeMap += (definition.id -> typ)
+      definition
+    }
+
     // Operator application
     //
     // The optional `refId` is the id of the declaration defining
@@ -133,7 +140,7 @@ class TestQuintEx extends AnyFunSuite {
     val namedInt2ToBoolOp = e(QuintName(uid, "int2ToBoolOp"), QuintOperT(Seq(QuintIntT(), QuintIntT()), QuintBoolT()))
 
     // Definitions and compound data types
-    val fooDef = QuintDef.QuintOpDef(uid, "foo", "val", tt)
+    val fooDef = d(QuintDef.QuintOpDef(uid, "foo", "val", tt), QuintBoolT())
     val letFooBeTrueIn42 = e(QuintLet(uid, fooDef, _42), QuintIntT())
     val lambda = e(QuintLambda(uid, List(xParam), "def", s), QuintOperT(List(QuintIntT()), QuintStrT()))
     // Applications can only be by name (lambdas are not first class)
@@ -141,7 +148,7 @@ class TestQuintEx extends AnyFunSuite {
     val appBar = app("bar", _42)(QuintStrT(), barDef.id)
     val letBarBeLambdaInAppBar = e(QuintLet(uid, barDef, appBar), QuintStrT())
     val nIsGreaterThan0 = app("igt", name, _0)(QuintBoolT())
-    val nDefindedAs42 = QuintDef.QuintOpDef(uid, "n", "val", _42)
+    val nDefindedAs42 = d(QuintDef.QuintOpDef(uid, "n", "val", _42), QuintIntT())
     val letNbe42inNisGreaterThan0 = e(QuintLet(uid, nDefindedAs42, nIsGreaterThan0), QuintBoolT())
     // A predicate on ints
     val intIsGreaterThanZero =
@@ -165,7 +172,15 @@ class TestQuintEx extends AnyFunSuite {
     val chooseSomeFromIntSet = app("chooseSome", intSet)(QuintIntT())
     val oneOfSet = app("oneOf", intSet)(QuintIntT())
     val nondetBinding =
-      e(QuintLet(uid, QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), nIsGreaterThan0), QuintIntT())
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
+    val generateSet = app("generate", _42, app("Set", _42)(QuintSetT(QuintIntT())))(QuintSetT(QuintIntT()))
+    val nondetGenerateId = uid
+    val appGenSet =
+      app("eq", e(QuintName(uid, "S"), QuintSetT(QuintIntT())), app("Set")(QuintSetT(QuintIntT())))(QuintBoolT())
+    val nondetGenerate =
+      e(QuintLet(uid,
+              d(QuintDef.QuintOpDef(nondetGenerateId, "S", "nondet", generateSet),
+                  QuintOperT(Seq(), QuintSetT(QuintIntT()))), appGenSet), QuintBoolT())
     // Requires ID registered with type
     val selectGreaterThanZero = app("select", intList, intIsGreaterThanZero)(QuintSeqT(QuintIntT()))
     val addOne = app("iadd", name, _1)(QuintIntT())
@@ -180,7 +195,7 @@ class TestQuintEx extends AnyFunSuite {
         modules = List(QuintModule(0, "MockedModule", List())),
         types = typeMap.map { case (id, typ) =>
           // Wrap each type in the TypeScheme required by the Quint IR
-          id -> QuintTypeScheme(typ)
+          id -> QuintTypeScheme(typ, List(), List())
         }.toMap,
         table = lookupMap.toMap,
     )
@@ -506,7 +521,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin slice operator application") {
     assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)(
-            QuintSeqT(QuintIntT()))) == "Sequences!SubSeq(<<1, 2, 3>>, 0 + 1, 1 + 1)")
+            QuintSeqT(QuintIntT()))) == "Sequences!SubSeq(<<1, 2, 3>>, 0 + 1, 1)")
   }
 
   test("can convert builtin select operator application") {
@@ -609,6 +624,10 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("tuples", Q.intSet, Q.intSet, Q.intSet)(typ)) == "{1, 2, 3} × {1, 2, 3} × {1, 2, 3}")
   }
 
+  test("can convert builtin empty Tup operator application to uninterpreted value") {
+    assert(convert(Q.app("Tup")(QuintTupleT.ofTypes())) == "\"U_OF_UNIT\"")
+  }
+
   /// SUM TYPES
 
   test("can convert builtin variant operator application") {
@@ -635,12 +654,6 @@ class TestQuintEx extends AnyFunSuite {
          |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2([])""".stripMargin
         .replace('\n', ' ')
     assert(convert(quintMatch) == expected)
-  }
-
-  test("prefers quint types over inferred types") {
-    // Regression on https://github.com/informalsystems/quint/issues/1393
-    val expr = Q.lam(Seq("x" -> QuintBoolT()), Q.nam("x", QuintVarT("t0")), QuintBoolT())
-    assert(translate(expr).typeTag == Typed(OperT1(Seq(BoolT1), BoolT1)))
   }
 
   test("can convert builtin assert operator") {
@@ -705,8 +718,12 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("put", Q.intMap, Q._3, Q._42)(intMapT)) == expected)
   }
 
-  test("can convert nondet bindings") {
+  test("can convert nondet...oneOf") {
     assert(convert(Q.nondetBinding) == "∃n ∈ {1, 2, 3}: (n > 0)")
+  }
+
+  test("can convert nondet...generate") {
+    assert(convert(Q.nondetGenerate) == "∃S ∈ {Apalache!Gen(42)}: (S = {})")
   }
 
   test("can convert let binding with reference to name in scope") {
