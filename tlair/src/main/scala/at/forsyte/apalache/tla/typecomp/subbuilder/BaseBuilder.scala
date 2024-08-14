@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeBaseBuilder
  *   Jure Kukovec
  */
 trait BaseBuilder {
-  private val unsafeBuilder = new UnsafeBaseBuilder
+  private val unsafeBuilder = new UnsafeBaseBuilder {}
 
   /** {{{lhs = rhs}}} */
   def eql(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction =

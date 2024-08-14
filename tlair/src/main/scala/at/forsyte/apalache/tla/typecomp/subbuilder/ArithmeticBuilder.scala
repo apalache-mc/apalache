@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
  *   Jure Kukovec
  */
 trait ArithmeticBuilder {
-  private val unsafeBuilder = new UnsafeArithmeticBuilder
+  private val unsafeBuilder = new UnsafeArithmeticBuilder {}
 
   /** {{{x + y}}} */
   def plus(x: TBuilderInstruction, y: TBuilderInstruction): TBuilderInstruction =

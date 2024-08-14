@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.types.ModelValueHandler
  * @author
  *   Jure Kukovec
  */
-class UnsafeLiteralAndNameBuilder {
+trait UnsafeLiteralAndNameBuilder {
 
   /** {{{i : Int}}} */
   def int(i: BigInt): TlaEx = ValEx(TlaInt(i))(Typed(IntT1))

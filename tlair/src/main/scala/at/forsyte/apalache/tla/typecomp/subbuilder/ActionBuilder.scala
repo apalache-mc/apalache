@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil.binaryFromUnsafe
  *   Jure Kukovec
  */
 trait ActionBuilder {
-  private val unsafeBuilder = new UnsafeActionBuilder
+  private val unsafeBuilder = new UnsafeActionBuilder {}
 
   /** {{{e'}}} */
   def prime(e: TBuilderInstruction): TBuilderInstruction = e.map(unsafeBuilder.prime)

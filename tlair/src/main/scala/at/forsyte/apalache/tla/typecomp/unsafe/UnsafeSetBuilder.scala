@@ -14,11 +14,8 @@ import scala.collection.immutable.SortedMap
  * @author
  *   Jure Kukovec
  */
-class UnsafeSetBuilder extends ProtoBuilder {
-
-  // We borrow the LiteralBuilder to make TLA strings from Scala strings
-  private val strBuilder = new UnsafeLiteralAndNameBuilder
-  private def mkTlaStr: String => TlaEx = strBuilder.str
+trait UnsafeSetBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
+  // We extend the LiteralBuilder to make TLA strings from Scala strings
 
   /**
    * {{{
@@ -109,7 +106,7 @@ class UnsafeSetBuilder extends ProtoBuilder {
   def recSet(kvs: (String, TlaEx)*): TlaEx = {
     // _recSetMixed does all the require checks
     val args = kvs.flatMap { case (k, v) =>
-      Seq(mkTlaStr(k), v)
+      Seq(str(k), v)
     }
     recSetMixed(args: _*)
   }

@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.lir.VarT1
  *   Jure Kukovec
  */
 trait FunBuilder {
-  private val unsafeBuilder = new UnsafeFunBuilder
+  private val unsafeBuilder = new UnsafeFunBuilder {}
 
   /**
    * {{{[ args[0]._1 |-> args[0]._2, ..., args[n]._1 |-> args[n]._2 ]}}}

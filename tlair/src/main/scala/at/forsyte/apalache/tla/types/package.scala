@@ -150,4 +150,5 @@ package object types {
    *   [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]] for implementation details.
    */
   val tla: ScopedBuilder = new ScopedBuilder(strict = true)
+  val tlaU: ScopeUnsafeBuilder = new ScopeUnsafeBuilder(strict = true)
 }
