@@ -23,7 +23,7 @@
       this repo itself.
     - Secrets are configured [here][secret-config].
 
-[@apalache-bot]: https://github.com/coffeeinprogress
+[@@coffeeinprogress]: https://github.com/coffeeinprogress
 [secret-config]: https://github.com/apalache-mc/apalache/settings/secrets/actions
 
 ## [./release.yml](./release.yml)
