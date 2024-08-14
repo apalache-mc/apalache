@@ -894,6 +894,24 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Repeat succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=0 Repeat.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check RepeatBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=0 RepeatBad.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ### check Counter.tla errors (array-encoding)
 
 ```sh
