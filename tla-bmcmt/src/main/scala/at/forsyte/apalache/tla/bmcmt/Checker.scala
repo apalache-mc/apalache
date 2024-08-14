@@ -23,6 +23,8 @@ object Checker {
         Obj("checking_result" -> "Error", "counterexamples" -> counterexamples, "nerrors" -> nerrors)
       case Deadlock(counterexample) =>
         Obj("checking_result" -> "Deadlock", "counterexamples" -> counterexample.toList)
+      case SmtTimeout(nTimeouts) =>
+        Obj("checking_result" -> "SmtTimeout", "ntimeouts" -> nTimeouts)
       case other =>
         Obj("checking_result" -> other.toString())
     }
@@ -57,6 +59,20 @@ object Checker {
   case class ExecutionsTooShort() extends CheckerResult {
     override def toString: String = "ExecutionsTooShort"
 
+    override val isOk: Boolean = true
+  }
+
+  /**
+   * The SMT solver reported a timeout. It should still be possible to check other verification conditions.
+   * @param nTimeouts
+   *   the number of timeouts, normally, just 1.
+   */
+  case class SmtTimeout(nTimeouts: Int) extends CheckerResult {
+    override def toString: String = "SmtTimeout"
+
+    /**
+     * Whether this result shall be reported as success (`true`) or error (`false`).
+     */
     override val isOk: Boolean = true
   }
 

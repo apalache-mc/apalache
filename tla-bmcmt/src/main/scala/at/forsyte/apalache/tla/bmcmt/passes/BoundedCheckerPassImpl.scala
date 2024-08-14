@@ -70,6 +70,7 @@ class BoundedCheckerPassImpl @Inject() (
     params.discardDisabled = options.checker.discardDisabled
     params.checkForDeadlocks = !options.checker.noDeadlocks
     params.nMaxErrors = options.checker.maxError
+    params.timeoutSmtSec = options.checker.timeoutSmtSec
     params.smtEncoding = smtEncoding
 
     val smtProfile = options.common.smtprof
