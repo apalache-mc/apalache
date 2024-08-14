@@ -64,7 +64,8 @@ object Checker {
 
   /**
    * The SMT solver reported a timeout. It should still be possible to check other verification conditions.
-   * @param nTimeouts the number of timeouts, normally, just 1.
+   * @param nTimeouts
+   *   the number of timeouts, normally, just 1.
    */
   case class SmtTimeout(nTimeouts: Int) extends CheckerResult {
     override def toString: String = "SmtTimeout"

@@ -71,9 +71,8 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   var timeoutSmtSec: Option[Int] =
     opt[Option[Int]](name = "timeout-smt",
-      description =
-        "limit the duration of a single SMT check query with `n` seconds, default: 0 (unlimited)",
-      default = None)
+        description = "limit the duration of a single SMT check query with `n` seconds, default: 0 (unlimited)",
+        default = None)
 
   override def toConfig(): Try[Config.ApalacheConfig] = {
     val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
