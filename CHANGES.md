@@ -1,6 +1,37 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.11 - 2024-05-06
+
+### Features
+
+- TLA+ modules produced by the Shai command `TLA` now include type annotations (#2891)
+
+### Bug fixes
+
+- Fixed a problem where folds produced by the Shai command `TLA` had an invalid form and could not be parsed back (#2891)
+- Fixed a problem where bindings from exists and forall operators where not properly sanitized before printing (#2891)
+- Fixed a problem where translation from `slice` to `replaceAt` added an incorrect increment to the last argument (#2891)
+
+## 0.44.10 - 2024-03-25
+
+### Bug fixes
+
+- Fix a problem where different quantified variables from Quint received the same TlaType1 var number (#2873).
+
+## 0.44.9 - 2024-03-21
+
+### Bug fixes
+
+- Convert Quint empty tuples as uninterpreted types/values (#2869)
+
+## 0.44.8 - 2024-03-20
+
+### Bug fixes
+
+- Sanitize names while pretty printing to avoid invalid names (#2860)
+- When converting Quint lambdas, derive the return type from the Quint type inferred for  the lambda, rather the type inferred for the body expression, avoiding mismatches with Apalache type variables. (#2856)
+
 ## 0.44.7 - 2024-03-07
 
 ### Features

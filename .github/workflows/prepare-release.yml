@@ -9,11 +9,6 @@ on:
         description: "Version (leave empty to increment patch version)"
         required: false
         default: ""
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    # Automatically prepare a minor version release every Monday
-    # See https://crontab.guru/#0_0_*_*_1
-    - cron: "0 0 * * 1"
 
 jobs:
   prepare-release:
