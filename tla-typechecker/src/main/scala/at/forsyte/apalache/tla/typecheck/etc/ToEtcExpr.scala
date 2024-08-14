@@ -810,6 +810,12 @@ class ToEtcExpr(
         mkExRefApp(opsig, Seq(v, variantEx, defaultEx))
 
       // ******************************************** Apalache **************************************************
+      case OperEx(ApalacheOper.repeat, op, bound, base) =>
+        val a = varPool.fresh
+        // ((a, Int) => a, Int, a) => a
+        val opsig = OperT1(Seq(OperT1(Seq(a, IntT1), a), IntT1, a), a)
+        mkExRefApp(opsig, Seq(op, bound, base))
+
       case OperEx(ApalacheOper.mkSeq, len, ctor) =>
         val a = varPool.fresh
         // (Int, (Int => a)) => Seq(a)
