@@ -268,6 +268,31 @@ IN
 <h2><a class="header" href="#folding" id="folding">Folding</a></h2>
 <p>The operators <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code> are explained in more detail in a dedicated section <a href="../apalache/principles/folds.html">here</a>.</p>
 <hr />
+<p><a name="Repeat"></a></p>
+<h2><a class="header" href="#operator-iteration" id="operator-iteration">Operator iteration</a></h2>
+<p><strong>Notation:</strong> <code>Repeat(Op, N, x)</code></p>
+<p><strong>LaTeX notation:</strong> <code>Repeat(Op, N, x)</code></p>
+<p><strong>Arguments:</strong> Three arguments: An operator <code>Op</code>, an iteration counter <code>N</code> (a nonnegative constant integer expression), and an
+initial value <code>x</code>.</p>
+<p><strong>Apalache type:</strong> <code>((a, Int), Int, a) =&gt; a</code>, for some type <code>a</code>.</p>
+<p><strong>Effect:</strong> For a given constant bound <code>N</code>, computes the value
+<code>F(F(F(F(x,1), 2), ...), N)</code>. If <code>N=0</code> it evaluates to <code>x</code>.</p>
+<pre><code class="language-tla">Repeat(Op, N, x) ==
+    ApaFoldSeqLeft(Op, x, MkSeq(N, LAMBDA i:i))
+</code></pre>
+<p>Apalache implements a more efficient encoding of this operator than the default one.</p>
+<p><strong>Determinism:</strong> Deterministic.</p>
+<p><strong>Errors:</strong>
+If any argument is ill-typed, or <code>N</code> is not a nonnegative constant integer expression, Apalache reports an error.</p>
+<p><strong>Example in TLA+:</strong></p>
+<pre><code class="language-tla">Op(a) == a + 1
+LET OpModified(a,i) == Op(i)
+IN Repeat(OpModified, 0, 5) = 5     \* TRUE
+
+Op2(a,i) == a + i
+Repeat(Op2, 0, 5) = 15              \* TRUE
+</code></pre>
+<hr />
 <p><a name="SetAsFun"></a></p>
 <h2><a class="header" href="#convert-a-set-of-pairs-to-a-function" id="convert-a-set-of-pairs-to-a-function">Convert a set of pairs to a function</a></h2>
 <p><strong>Notation:</strong> <code>SetAsFun(S)</code></p>
