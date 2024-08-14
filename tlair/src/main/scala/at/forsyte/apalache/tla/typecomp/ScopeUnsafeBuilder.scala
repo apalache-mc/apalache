@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.{
 }
 
 /**
- * Scope-unsafe Builder for TLA+ (TNT) IR expressions.
+ * Scope-unsafe Builder for TLA+ (Quint) IR expressions.
  *
  * The following guarantees hold for any IR tree successfully generated exclusively via ScopeUnsafeBuilder methods:
  *   - Typed-ness: All subexpressions will have a `Typed(_)` tag
