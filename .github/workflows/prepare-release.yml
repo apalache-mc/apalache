@@ -3,7 +3,7 @@ name: prepare-release
 on:
   workflow_dispatch:
     # Allows manually triggering release via
-    # https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
+    # https://github.com/apalache-mc/apalache/actions?query=workflow%3A%22Prepare+Release%22
     inputs:
       release_version:
         description: "Version (leave empty to increment patch version)"
@@ -12,7 +12,7 @@ on:
 
 jobs:
   prepare-release:
-    if: github.repository_owner == 'informalsystems'
+    if: github.repository_owner == 'apalache-mc'
     env:
       RELEASE_VERSION: ${{ github.event.inputs.release_version }}
       # NOTE: We must not use the default GITHUB_TOKEN for auth here,
@@ -22,6 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.APALACHE_BOT_TOKEN }}
+          push-to-fork: coffeeinprogress/apalache
       - uses: actions/setup-java@v3
         with:
           distribution: temurin
