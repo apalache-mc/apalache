@@ -69,6 +69,11 @@ class ModelCheckerParams(
   var nMaxErrors: Int = 1
 
   /**
+   * The limit on a single SMT query. The default value is 0 (unlimited).
+   */
+  var timeoutSmtSec: Int = 0
+
+  /**
    * A timeout upon which a transition is split in its own group. This is the minimal timeout. The actual timeout is
    * updated at every step using `search.split.timeout.factor`. In our experiments, small timeouts lead to explosion of
    * the search tree.
@@ -95,9 +100,6 @@ class ModelCheckerParams(
    * node into two.
    */
   def idleTimeoutMs: Long = idleTimeoutSec * 1000
-
-  val smtTimeoutSec: Int =
-    tuningOptions.getOrElse("search.smt.timeout", "0").toInt
 
   /**
    * The SMT encoding to be used.
