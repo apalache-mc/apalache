@@ -12,6 +12,11 @@ import at.forsyte.apalache.tla.types.tla
 /**
  * Rewriting rule for Repeat. This rule is similar to [[FoldSeqRule]].
  *
+ * This rule is more efficient than the fold- rules, because it does not require an underlying data structure
+ * (Seq or Set). In particular, folding over 1..N, despite the overapproximation being tight by construction,
+ * still introduces O(N*N) constraints, since the SMT solver must assert element uniqueness (i /= j for all i,j \in 1..N).
+ * OTOH, RepeatRule consumes 1..N in the canonical order natively as a 1.to(N) in Scala.
+ *
  * @author
  *   Jure Kukovec
  */
