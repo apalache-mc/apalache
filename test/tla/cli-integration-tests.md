@@ -1770,6 +1770,18 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### simulate Paxos.tla with timeout succeeds
+
+While we cannot rely on an actual timeout happening or not, we can make sure that the option is properly parsed. 
+
+```sh
+$ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh
@@ -3892,6 +3904,7 @@ checker {
     smt-encoding {
         type=oopsla-19
     }
+    timeout-smt-sec=0
     tuning {
         "search.outputTraces"="false"
     }
