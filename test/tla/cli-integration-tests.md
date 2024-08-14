@@ -3904,6 +3904,7 @@ checker {
     smt-encoding {
         type=oopsla-19
     }
+    timeout-smt-sec=0
     tuning {
         "search.outputTraces"="false"
     }
