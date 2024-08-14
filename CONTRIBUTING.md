@@ -474,8 +474,7 @@ are configured in [./.github/workflows/prepare-release.yml][] and
 The process proceeds in two steps:
 
 1. CI prepares a release, and opens a PR with the version changes and release
-   notes. These are triggered every Monday by a cron job or [manually via the
-   GitHub UI][github-ui].
+   notes. These are [manually via the GitHub UI][github-ui].
    - The scheduled releases increment the patch number.
    - Use the _Version_ input field to manually specify the version to release.
 
