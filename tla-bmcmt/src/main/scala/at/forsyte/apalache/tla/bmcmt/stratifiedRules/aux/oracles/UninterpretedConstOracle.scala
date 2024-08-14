@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLit
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope}
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.ConstT1
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 
 /**
  * An oracle that uses a fixed collection of potential cells.
@@ -24,7 +24,7 @@ class UninterpretedConstOracle(val valueCells: Seq[ArenaCell], val oracleCell: A
    */
   override def size: Int = valueCells.size
 
-  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction =
+  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): BuilderT =
     if (valueCells.indices.contains(index)) tla.eql(oracleCell.toBuilder, valueCells(index.toInt).toBuilder)
     else tla.bool(false)
 

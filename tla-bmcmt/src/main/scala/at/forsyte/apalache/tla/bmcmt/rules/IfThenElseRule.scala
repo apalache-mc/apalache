@@ -6,8 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, OperEx}
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Rewriting rule for IF A THEN B ELSE C.
@@ -63,7 +62,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private def iteBasic(
       state: SymbState,
       commonType: CellT,
-      pred: TBuilderInstruction,
+      pred: BuilderT,
       thenCell: ArenaCell,
       elseCell: ArenaCell) = {
     val newArena = state.arena.appendCellOld(commonType)
@@ -78,7 +77,7 @@ class IfThenElseRule(rewriter: SymbStateRewriter) extends RewritingRule {
   // The cool thing is that we do not have to compare the results anymore. It is all defined by the oracle.
   private def iteGeneral(
       state: SymbState,
-      pred: TBuilderInstruction,
+      pred: BuilderT,
       thenCell: ArenaCell,
       elseCell: ArenaCell) = {
     def solverAssert = rewriter.solverContext.assertGroundExpr _

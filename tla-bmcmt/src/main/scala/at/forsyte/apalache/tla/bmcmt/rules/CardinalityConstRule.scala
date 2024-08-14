@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.CherryPick
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaArithOper, TlaFiniteSetOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, ValEx}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Optimization for Cardinality(S) >= k, where k is constant. See [docs/smt/Cardinality.md].

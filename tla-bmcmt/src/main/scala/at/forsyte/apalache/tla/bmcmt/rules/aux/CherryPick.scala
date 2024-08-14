@@ -6,8 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types._
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT, _}
 
 import scala.collection.immutable.SortedMap
 
@@ -39,7 +38,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
    * @return
    *   a new symbolic state whose expression stores a fresh cell that corresponds to the picked element.
    */
-  def pick(set: ArenaCell, state: SymbState, elseAssert: TBuilderInstruction): SymbState = {
+  def pick(set: ArenaCell, state: SymbState, elseAssert: BuilderT): SymbState = {
     set.cellType match {
       // all kinds of sets that should be kept unexpanded
       case PowSetT(t @ SetT1(_)) =>
@@ -110,7 +109,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       elems: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     assert(elems.nonEmpty) // this is an advanced operator -- you should know what you are doing
     val targetType = elems.head.cellType
 
@@ -181,7 +180,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       elems: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, elems.map(_.toString).mkString(", ")))
     val arena = state.arena.appendCell(cellType)
     val resultCell = arena.topCell
@@ -214,7 +213,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       tuples: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(cellType, tuples.map(_.toString).mkString(", ")))
     var newState = state
 
@@ -262,7 +261,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     // the records do not always have the same type, but they do have compatible types
     val commonRecordT = findCommonRecordType(records)
     rewriter.solverContext
@@ -353,7 +352,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       records: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     // new row records always have the same type
     val (fieldTypes, recordT) = records.head.cellType match {
       case CellTFrom(rt @ RecRowT1(RowT1(fieldTypes, None))) => (fieldTypes, rt)
@@ -400,7 +399,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       variants: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     // variants should always have the same type
     val (optionTypes, variantT) = variants.head.cellType match {
       case CellTFrom(rt @ VariantT1(RowT1(opts, None))) => (opts, rt)
@@ -580,7 +579,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSets: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction,
+      elseAssert: BuilderT,
       noSmt: Boolean = false): SymbState = {
     if (memberSets.isEmpty) {
       throw new RuntimeException("Picking from a statically empty set")
@@ -602,7 +601,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSets: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction,
+      elseAssert: BuilderT,
       noSMT: Boolean): SymbState = {
     def solverAssert(e: TlaEx): Unit = rewriter.solverContext.assertGroundExpr(e)
 
@@ -658,7 +657,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       // The awesome property of the oracle is that we do not have to compare the sets directly!
       // Instead, we compare the oracle values.
       // (chosen = 1 /\ in(z_i, R) <=> in(c_i, S_1)) \/ (chosen = 2 /\ in(z_i, R) <=> in(d_i, S_2)) \/ (chosen = N <=> elseAssert)
-      def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (TBuilderInstruction, TBuilderInstruction) = {
+      def nthIn(elemAndSet: (ArenaCell, ArenaCell), no: Int): (BuilderT, BuilderT) = {
         if (elemsOfMemberSets(no).nonEmpty) {
           val inSet = tla.ite(tla.selectInSet(elemAndSet._1.toBuilder, elemAndSet._2.toBuilder), membershipEx,
               tla.storeNotInSet(picked.toBuilder, resultCell.toBuilder))
@@ -715,7 +714,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSeqs: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     if (memberSeqs.isEmpty) {
       throw new RuntimeException("Picking a sequence from a statically empty set")
     } else if (memberSeqs.length == 1) {
@@ -738,7 +737,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       memberSeqs: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     rewriter.solverContext
       .log("; CHERRY-PICK %s FROM [%s] {".format(seqType, memberSeqs.map(_.toString).mkString(", ")))
 
@@ -829,7 +828,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       state: SymbState,
       oracle: Oracle,
       funs: Seq[ArenaCell],
-      elseAssert: TBuilderInstruction): SymbState = {
+      elseAssert: BuilderT): SymbState = {
     rewriter.solverContext.log("; CHERRY-PICK %s FROM [%s] {".format(funType, funs.map(_.toString).mkString(", ")))
     var nextState = state
     rewriter.solverContext.config.smtEncoding match {

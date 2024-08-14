@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLiteralCache
 import at.forsyte.apalache.tla.lir.{StrT1, TlaType1}
-import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
+import at.forsyte.apalache.tla.types.{tlaU => tla, ModelValueHandler}
+import at.forsyte.apalache.tla.typecomp._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite

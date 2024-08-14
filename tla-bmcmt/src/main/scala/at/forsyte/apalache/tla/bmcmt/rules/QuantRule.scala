@@ -4,10 +4,10 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -139,16 +139,16 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       val (predState: SymbState, predEsRaw: Seq[TlaEx]) =
         rewriter.rewriteBoundSeqUntilDone(setState, setCells.map(mkPair))
 
-      val predEs: Seq[TBuilderInstruction] = predEsRaw.map(tla.unchecked)
+      val predEs: Seq[BuilderT] = predEsRaw.map(tla.unchecked)
 
       val nonEmpty = tla.or(setCells.map(c => tla.selectInSet(c.toBuilder, set.toBuilder)): _*)
       val empty = tla.and(setCells.map(c => tla.not(tla.selectInSet(c.toBuilder, set.toBuilder))): _*)
 
-      def elemWitnesses(elemAndPred: (ArenaCell, TBuilderInstruction)): TBuilderInstruction = {
+      def elemWitnesses(elemAndPred: (ArenaCell, BuilderT)): BuilderT = {
         tla.and(tla.selectInSet(elemAndPred._1.toBuilder, set.toBuilder), elemAndPred._2)
       }
 
-      def elemSatisfies(elemAndPred: (ArenaCell, TBuilderInstruction)): TBuilderInstruction = {
+      def elemSatisfies(elemAndPred: (ArenaCell, BuilderT)): BuilderT = {
         tla.or(tla.not(tla.selectInSet(elemAndPred._1.toBuilder, set.toBuilder)), elemAndPred._2)
       }
 

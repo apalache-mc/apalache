@@ -1,6 +1,9 @@
 package at.forsyte.apalache.tla.typecomp
 
-import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, FunT1, IntT1, OperParam, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1, VariantT1}
+import at.forsyte.apalache.tla.lir.{
+  BoolT1, ConstT1, FunT1, IntT1, OperParam, OperT1, RealT1, RecRowT1, RecT1, RowT1, SeqT1, SetT1, SparseTupT1, StrT1,
+  TlaType1, TupT1, VarT1, VariantT1,
+}
 
 object ParamUtil {
 
@@ -25,8 +28,8 @@ object ParamUtil {
     case OperT1(args, res) =>
       if (canContainOper)
         args.nonEmpty &&
-          args.forall(isAcceptableParamType(false)) &&
-          isAcceptableParamType(false)(res)
+        args.forall(isAcceptableParamType(false)) &&
+        isAcceptableParamType(false)(res)
       else false
     case RowT1(fieldTypes, _) => fieldTypes.values.forall(isAcceptableParamType(false))
     case RecRowT1(row)        => isAcceptableParamType(false)(row)
@@ -42,7 +45,7 @@ object ParamUtil {
     val (OperParam(name, arity), tt) = tp
     if (!isAcceptableParamType(canContainOper = arity > 0)(tt))
       throw new TBuilderTypeException(
-        s"Parameter $name type $tt and arity $arity are inconsistent. Parameters have operator types iff their arity is positive."
+          s"Parameter $name type $tt and arity $arity are inconsistent. Parameters have operator types iff their arity is positive."
       )
   }
 

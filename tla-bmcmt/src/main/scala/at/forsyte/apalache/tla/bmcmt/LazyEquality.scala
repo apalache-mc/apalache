@@ -8,8 +8,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import scalaz.unused
 
 import scala.collection.immutable.SortedMap
@@ -41,7 +40,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
    * @return
    *   tla.eql(left, right), provided that left and right can be compared
    */
-  def safeEq(left: ArenaCell, right: ArenaCell): TBuilderInstruction = {
+  def safeEq(left: ArenaCell, right: ArenaCell): BuilderT = {
     if (left == right) {
       tla.bool(true) // this is just true
     } else {
@@ -319,14 +318,14 @@ class LazyEquality(rewriter: SymbStateRewriter)
         // inAndEq checks if lelem is in right
         val inAndEqList = rightElems.map(inAndEq(rewriter, _, lelem, right, lazyEq = true))
         // There are plenty of valid subformulas. Simplify!
-        tla.or(inAndEqList: _*).map(simplifier.simplifyShallow)
+        simplifier.applySimplifyShallowToBuilderEx(tla.or(inAndEqList: _*))
       }
 
       def notInOrExists(lelem: ArenaCell) = {
         val notInOrExists =
-          tla
-            .or(tla.not(tla.selectInSet(lelem.toBuilder, left.toBuilder)), exists(lelem))
-            .map(simplifier.simplifyShallow)
+          simplifier.applySimplifyShallowToBuilderEx(
+              tla.or(tla.not(tla.selectInSet(lelem.toBuilder, left.toBuilder)), exists(lelem))
+          )
 
         if (simplifier.isBoolConst(notInOrExists)) {
           notInOrExists // just return the constant
@@ -340,7 +339,8 @@ class LazyEquality(rewriter: SymbStateRewriter)
         }
       }
 
-      val forEachNotInOrExists = tla.and(leftElems.map(notInOrExists): _*).map(simplifier.simplifyShallow)
+      val forEachNotInOrExists =
+        simplifier.applySimplifyShallowToBuilderEx(tla.and(leftElems.map(notInOrExists): _*))
       newState = newState.updateArena(_.appendCell(BoolT1))
       val pred = newState.arena.topCell
       rewriter.solverContext.assertGroundExpr(tla.eql(pred.toBuilder, forEachNotInOrExists))
@@ -471,7 +471,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val commonKeys = leftType.fieldTypes.keySet.intersect(rightType.fieldTypes.keySet)
     var newState = state
 
-    def keyEq(key: String): TBuilderInstruction = {
+    def keyEq(key: String): BuilderT = {
       val leftIndex = leftType.fieldTypes.keySet.toList.indexOf(key)
       val rightIndex = rightType.fieldTypes.keySet.toList.indexOf(key)
 
@@ -522,7 +522,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
       leftRec: ArenaCell,
       rightRec: ArenaCell): SymbState = {
     var nextState = state
-    def fieldsEq(name: String): TBuilderInstruction = {
+    def fieldsEq(name: String): BuilderT = {
       val leftField = recordOps.getField(nextState.arena, leftRec, name)
       val rightField = recordOps.getField(nextState.arena, rightRec, name)
       // The field values may be non-basic expressions. Use lazy equality over them too.
@@ -545,7 +545,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val leftTag = recordOps.getVariantTag(nextState.arena, leftVar)
     val rightTag = recordOps.getVariantTag(nextState.arena, rightVar)
 
-    def valuesEq(tagName: String): TBuilderInstruction = {
+    def valuesEq(tagName: String): BuilderT = {
       val leftValue = recordOps.getUnsafeVariantValue(nextState.arena, leftVar, tagName)
       val rightValue = recordOps.getUnsafeVariantValue(nextState.arena, rightVar, tagName)
       // The field values may be non-basic expressions. Use lazy equality over them too.
@@ -569,7 +569,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
   private def mkTupleEq(state: SymbState, left: ArenaCell, right: ArenaCell): SymbState = {
     var newState = state
 
-    def elemEq(lelem: ArenaCell, relem: ArenaCell): TBuilderInstruction = {
+    def elemEq(lelem: ArenaCell, relem: ArenaCell): BuilderT = {
       newState = cacheOneEqConstraint(newState, lelem, relem)
       safeEq(lelem, relem)
     }
@@ -602,7 +602,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val len1Ex = len1.toBuilder
     val len2Ex = len2.toBuilder
 
-    def eqPairwise(indexBase1: Int, cells: (ArenaCell, ArenaCell)): TBuilderInstruction = {
+    def eqPairwise(indexBase1: Int, cells: (ArenaCell, ArenaCell)): BuilderT = {
       nextState = cacheOneEqConstraint(nextState, cells._1, cells._2)
       // Either (1) one of the lengths is below the index, or (2) the elements are equal.
       // The case (1) is compensated with the constraint sizesEq below.

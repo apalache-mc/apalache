@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla
 
+import at.forsyte.apalache.tla.lir.TlaEx
+
 /**
  * Defines a premade instance of [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]], named [[tla]].
  *
@@ -131,6 +133,9 @@ package at.forsyte.apalache.tla
 package object types {
 
   import at.forsyte.apalache.tla.typecomp._
+
+  type BuilderT = TBuilderInstruction
+  type BuilderUT = TlaEx
 
   /**
    * A short-hand to the instance of the typed builder, so one can easily construct expressions.

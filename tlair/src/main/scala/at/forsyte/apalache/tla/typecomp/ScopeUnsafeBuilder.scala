@@ -2,10 +2,11 @@ package at.forsyte.apalache.tla.typecomp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.BuilderUtil.{getAllBound, getAllUsed, markAsBound}
-import at.forsyte.apalache.tla.typecomp.subbuilder._
-import at.forsyte.apalache.tla.typecomp.unsafe.{UnsafeActionBuilder, UnsafeApalacheBuilder, UnsafeApalacheInternalBuilder, UnsafeArithmeticBuilder, UnsafeBaseBuilder, UnsafeBoolBuilder, UnsafeControlBuilder, UnsafeFiniteSetBuilder, UnsafeFunBuilder, UnsafeLiteralAndNameBuilder, UnsafeSeqBuilder, UnsafeSetBuilder, UnsafeTemporalBuilder, UnsafeVariantBuilder}
-import scalaz.Scalaz._
+import at.forsyte.apalache.tla.typecomp.unsafe.{
+  UnsafeActionBuilder, UnsafeApalacheBuilder, UnsafeApalacheInternalBuilder, UnsafeArithmeticBuilder, UnsafeBaseBuilder,
+  UnsafeBoolBuilder, UnsafeControlBuilder, UnsafeFiniteSetBuilder, UnsafeFunBuilder, UnsafeLiteralAndNameBuilder,
+  UnsafeSeqBuilder, UnsafeSetBuilder, UnsafeTemporalBuilder, UnsafeVariantBuilder,
+}
 
 /**
  * Scope-unsafe Builder for TLA+ (TNT) IR expressions.
@@ -33,10 +34,15 @@ import scalaz.Scalaz._
  *   If true, performs method requirement checks
  */
 class ScopeUnsafeBuilder(val strict: Boolean = true)
-  extends UnsafeBaseBuilder with UnsafeBoolBuilder with UnsafeArithmeticBuilder with UnsafeSetBuilder
+    extends UnsafeBaseBuilder with UnsafeBoolBuilder with UnsafeArithmeticBuilder with UnsafeSetBuilder
     with UnsafeFiniteSetBuilder with UnsafeSeqBuilder with UnsafeActionBuilder with UnsafeFunBuilder
-    with UnsafeControlBuilder with UnsafeTemporalBuilder with UnsafeApalacheInternalBuilder
-    with UnsafeApalacheBuilder with UnsafeVariantBuilder with UnsafeLiteralAndNameBuilder {
+    with UnsafeControlBuilder with UnsafeTemporalBuilder with UnsafeApalacheInternalBuilder with UnsafeApalacheBuilder
+    with UnsafeVariantBuilder with UnsafeLiteralAndNameBuilder {
+
+  // The following two methods are included in the unsafe builder for interface compatibility with the
+  // scope-safe builder. They are both no-ops
+  def unchecked(ex: TlaEx): TlaEx = ex
+  def uncheckedDecl(decl: TlaOperDecl): TlaOperDecl = decl
 
   ////////////////////
   // HYBRID METHODS //
@@ -53,9 +59,9 @@ class ScopeUnsafeBuilder(val strict: Boolean = true)
   def decl(opName: String, body: TlaEx, params: TypedParam*): TlaOperDecl = {
     params.foreach(validateParamType)
     TlaOperDecl(opName, params.map(_._1).toList, body)(
-      Typed(
-        OperT1(params.map { _._2 }, body.typeTag.asTlaType1())
-      )
+        Typed(
+            OperT1(params.map { _._2 }, body.typeTag.asTlaType1())
+        )
     )
   }
 
@@ -107,8 +113,8 @@ class ScopeUnsafeBuilder(val strict: Boolean = true)
    * Is equivalent to {{{[[f EXCEPT ![a1] = e1] EXCEPT ![a2] = e2] EXCEPT ... ![an] = en]}}}
    */
   def exceptMany(
-                  f: TlaEx,
-                  args: (TlaEx, TlaEx)*): TlaEx = {
+      f: TlaEx,
+      args: (TlaEx, TlaEx)*): TlaEx = {
     require(args.nonEmpty, s"args must be nonempty.")
     args.foldLeft(f) { case (fn, (ai, ei)) =>
       except(fn, ai, ei)

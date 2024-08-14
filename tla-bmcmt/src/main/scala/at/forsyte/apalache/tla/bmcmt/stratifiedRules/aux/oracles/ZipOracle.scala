@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * [[ZipOracle]] is an optimization of [[Oracle]]. It groups several values of the background oracle together, in order
@@ -21,7 +20,7 @@ import at.forsyte.apalache.tla.types.tla
 class ZipOracle(backOracle: Oracle, groups: Seq[Seq[Int]]) extends Oracle {
   override def size: Int = groups.size
 
-  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction =
+  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): BuilderT =
     if (groups.indices.contains(index)) {
       val conds = groups(index.toInt).map(i => backOracle.chosenValueIsEqualToIndexedValue(scope, i))
       tla.or(conds: _*)

@@ -3,10 +3,9 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, Oracle, OracleFactory}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.tlaU._
 
 trait TestCherryPick extends RewriterBase {
   private val parser = DefaultType1Parser
@@ -171,7 +170,7 @@ trait TestCherryPick extends RewriterBase {
     state = oracleState
 
     def mkRecord(i: Int, j: Int): ArenaCell = {
-      val rec = tla.rec("a" -> int(i), "b" -> int(j)).map(_.withTag(Typed(recordT)))
+      val rec = tla.rec("a" -> int(i), "b" -> int(j)).withTag(Typed(recordT))
       state = rewriter.rewriteUntilDone(state.setRex(rec))
       state.asCell
     }
@@ -351,7 +350,7 @@ trait TestCherryPick extends RewriterBase {
     val (oracleState, oracle) = new OracleFactory(rewriter).newConstOracle(state, 2)
     state = oracleState
 
-    def mkFun(dom: TBuilderInstruction, map: TBuilderInstruction): ArenaCell = {
+    def mkFun(dom: BuilderT, map: BuilderT): ArenaCell = {
       val fun = funDef(map, name("x", IntT1) -> dom)
       state = rewriter.rewriteUntilDone(state.setRex(fun))
       state.asCell
