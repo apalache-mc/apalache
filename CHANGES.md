@@ -1,6 +1,13 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.44.17 - 2024-08-14
+
+### Features
+
+- Translate Quint's generate into `Apalache!Gen` (#2916)
+- Add `--timeout-smt` to limit SMT queries (#2936)
+
 ## 0.44.11 - 2024-05-06
 
 ### Features
