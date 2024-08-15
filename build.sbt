@@ -8,11 +8,11 @@ import scala.sys.process._
 ///////////////////////////
 
 name := "apalache"
-maintainer := "apalache@informal.org"
+maintainer := "apalache@konnov.phd"
 
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
-ThisBuild / organizationName := "Informal Systems Inc."
-ThisBuild / organizationHomepage := Some(url("https://informal.systems"))
+ThisBuild / organizationName := "Apalache Development Team"
+ThisBuild / organizationHomepage := Some(url("https://apalache-mc.org"))
 ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
 
 // We store the version in a bare file to make accessing and updating the version trivial
@@ -351,7 +351,7 @@ lazy val root = (project in file("."))
         log.info(s"Unpacking package ${pkg} to ${target_dir}")
         // send outputs directly to std{err,out} instead of logging here
         // to avoid misleading logging output from tar
-        // See https://github.com/informalsystems/apalache/pull/1382
+        // See https://github.com/apalache-mc/apalache/pull/1382
         (s"tar zxvf ${pkg} -C ${target_dir}" !)
         log.info(s"Symlinking ${current_pkg} -> ${unzipped}")
         if (current_pkg.exists) {
@@ -369,7 +369,7 @@ lazy val root = (project in file("."))
 docker / imageNames := {
   val img: String => ImageName = s =>
     ImageName(
-        namespace = Some("ghcr.io/informalsystems"),
+        namespace = Some("ghcr.io/apalache-mc"),
         repository = name.value,
         tag = Some(s),
     )
@@ -425,7 +425,7 @@ lazy val versionFile = settingKey[File]("Location of the file tracking the proje
 // These tasks are used in our bespoke release pipeline
 // TODO(shon): Once we've changed our packaging to conform to more standard SBT structures and practices,
 // we should consider moving to a release pipeline based around sbt-release.
-// See https://github.com/informalsystems/apalache/issues/1248
+// See https://github.com/apalache-mc/apalache/issues/1248
 
 lazy val printVersion = taskKey[Unit]("Print the current version")
 printVersion := {
