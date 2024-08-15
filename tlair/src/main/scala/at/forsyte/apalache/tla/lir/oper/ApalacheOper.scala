@@ -168,6 +168,19 @@ object ApalacheOper {
   }
 
   /**
+   * Repeated applicaiton of an operator.
+   *
+   * The type signature is: `\forall T: Repeat: ((T, Int) => T, Int, T) => T`
+   */
+  object repeat extends ApalacheOper {
+    override def name: String = "Apalache!Repeat"
+
+    override def arity: OperArity = FixedArity(3)
+
+    override val precedence: (Int, Int) = (100, 100)
+  }
+
+  /**
    * <p>The operator SetAsFun converts a set of pairs `R` to a function `F`. The function `F` could be expressed as
    * follows:</p>
    *
