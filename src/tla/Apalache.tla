@@ -152,4 +152,17 @@ ApaFoldSeqLeft(__Op(_,_), __v, __seq) ==
     THEN __v
     ELSE ApaFoldSeqLeft(__Op, __Op(__v, Head(__seq)), Tail(__seq))
 
+(**
+ * The repetition operator, used to consecutively apply an operator, starting from
+ * an initial value.
+ *
+ * @type: ((a, Int) => a, Int, a) => a;
+ *)
+RECURSIVE Repeat(_,_,_)
+Repeat(__F(_,_), __N, __x) ==
+        \* This is the TLC implementation. Apalache does it differently.
+        IF __N <= 0
+        THEN __x
+        ELSE __F(Repeat(__F, __N - 1, __x), __N)
+
 ===============================================================================
