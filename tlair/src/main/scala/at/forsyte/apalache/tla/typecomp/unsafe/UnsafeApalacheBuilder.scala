@@ -44,6 +44,19 @@ class UnsafeApalacheBuilder(private val strict: Boolean = true) extends ProtoBui
   }
 
   /**
+   * {{{Repeat(F, N, x): t}}}
+   * @param n
+   *   must be a nonnegative constant expression
+   * @param F
+   *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
+   */
+  def repeat(F: TlaEx, n: BigInt, x: TlaEx): TlaEx = {
+    if (strict) require(n > 0, s"Expected n to be positive, found $n.")
+    if (strict) require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
+    buildBySignatureLookup(ApalacheOper.repeat, F, mkTlaInt(n), x)
+  }
+
+  /**
    * {{{Skolem(ex)}}}
    * @param ex
    *   must be an expression of the shape {{{\E x \in S: P}}}

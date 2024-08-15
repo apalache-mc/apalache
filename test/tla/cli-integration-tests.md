@@ -894,6 +894,24 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Repeat succeeds
+
+```sh
+$ apalache-mc check --inv=Inv --length=0 Repeat.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check RepeatBad fails
+
+```sh
+$ apalache-mc check --inv=Inv --length=0 RepeatBad.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (255)
+```
+
 ### check Counter.tla errors (array-encoding)
 
 ```sh
@@ -1746,6 +1764,18 @@ Regression test for https://github.com/informalsystems/apalache/issues/2388
 
 ```sh
 $ apalache-mc check --length=0 --inv=Inv ConstantOperatorImpl.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### simulate Paxos.tla with timeout succeeds
+
+While we cannot rely on an actual timeout happening or not, we can make sure that the option is properly parsed. 
+
+```sh
+$ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -3874,6 +3904,7 @@ checker {
     smt-encoding {
         type=oopsla-19
     }
+    timeout-smt-sec=0
     tuning {
         "search.outputTraces"="false"
     }
