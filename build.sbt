@@ -391,7 +391,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:17")
+    from("azul/zulu-openjdk:17-latest")
 
     workDir(dwd)
 
