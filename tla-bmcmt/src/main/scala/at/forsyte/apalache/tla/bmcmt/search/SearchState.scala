@@ -18,6 +18,7 @@ class SearchState(params: ModelCheckerParams) {
 
   private var _result: CheckerResult = NoError()
   private var _nFoundErrors: Int = 0
+  private var _nTimeouts: Int = 0
   private val _counterexamples: ListBuffer[Counterexample] = ListBuffer.empty
   private var _nRunsLeft: Int =
     if (params.isRandomSimulation) params.nSimulationRuns else 1
@@ -29,6 +30,14 @@ class SearchState(params: ModelCheckerParams) {
    *   number of found errors
    */
   def nFoundErrors: Int = _nFoundErrors
+
+  /**
+   * Get the number of SMT timeouts that occurred in the search.
+   *
+   * @return
+   *   number of timeouts
+   */
+  def nTimeouts: Int = _nTimeouts
 
   /**
    * Get the number of simulation runs to explore.
@@ -49,6 +58,8 @@ class SearchState(params: ModelCheckerParams) {
       case NoError() =>
         if (_nFoundErrors > 0) {
           Error(_nFoundErrors, _counterexamples.toList)
+        } else if (_nTimeouts > 0) {
+          SmtTimeout(_nTimeouts)
         } else {
           NoError()
         }
@@ -97,6 +108,11 @@ class SearchState(params: ModelCheckerParams) {
         } else {
           _result = Deadlock(counterexample)
         }
+
+      case SmtTimeout(nTimeouts) =>
+        // we still continue the search, but report incompleteness in [[this.finalResult]].
+        _nTimeouts += nTimeouts
+        _result = NoError()
 
       case _ =>
         _result = result

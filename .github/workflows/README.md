@@ -16,15 +16,15 @@
 - Triggered manually.
 - The workflow prepares a release and opens a `[release]` PR.
 - **Requirements**:
-  - A personal API token is required to authenticate the API call that opens the
-    PR.
-    - We use a token belonging to our machine user [@apalache-bot][]. apalache-bot
+  - A personal API token called `APALACHE_BOT_TOKEN` is required to authenticate the API
+    call that opens the PR.
+    - We use a token belonging to our machine user [@coffeeinprogress][]. coffeeinprogress
       creates the PR from their fork of the repo, and they have no permissions in
       this repo itself.
     - Secrets are configured [here][secret-config].
 
-[@apalache-bot]: https://github.com/apalache-bot
-[secret-config]: https://github.com/informalsystems/apalache/settings/secrets/actions
+[@@coffeeinprogress]: https://github.com/coffeeinprogress
+[secret-config]: https://github.com/apalache-mc/apalache/settings/secrets/actions
 
 ## [./release.yml](./release.yml)
 

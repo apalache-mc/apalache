@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.3"
+    lazy val logbackVersion = "1.5.6"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -20,15 +20,15 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.9.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.15.1"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.11.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.16.1"
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
     val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.6"
-    val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0"
+    val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "2.0.16"
@@ -36,7 +36,7 @@ object Dependencies {
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "3.2.0"
     val upickle = "com.lihaoyi" %% "upickle" % "3.2.0"
-    val z3 = "tools.aqua" % "z3-turnkey" % "4.12.5"
+    val z3 = "tools.aqua" % "z3-turnkey" % "4.12.6"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
@@ -53,7 +53,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.17.0" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.17.1" % Test
     val easymock = "org.easymock" % "easymock" % "5.4.0" % Test
 
     val scalaTestVersion = "3.2.15"
