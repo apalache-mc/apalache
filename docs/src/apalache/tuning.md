@@ -22,14 +22,6 @@ The following options are supported:
 `smt.randomSeed=<int>` passes the random seed to `z3` (via `z3`'s parameters
 `sat.random_seed` and `smt.random_seed`).
 
-##  Timeouts
-
-`search.smt.timeout=<seconds>` defines the timeout to the SMT solver in seconds.
-The default value is `0`, which stands for the unbounded timeout.  For instance,
-the timeout is used in the following cases: checking if a transition is enabled,
-checking an invariant, checking for deadlocks. If the solver times out, it
-reports 'UNKNOWN', and the model checker reports a runtime error.
-
 ## Invariant mode
 
 `search.invariant.mode=(before|after)` defines the moment when the invariant is
