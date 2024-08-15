@@ -69,6 +69,11 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     opt[Boolean](name = "output-traces", description = "save an example trace for each symbolic run, default: false",
         default = false)
 
+  var timeoutSmtSec: Option[Int] =
+    opt[Option[Int]](name = "timeout-smt",
+        description = "limit the duration of a single SMT check query with `n` seconds, default: 0 (unlimited)",
+        default = None)
+
   override def toConfig(): Try[Config.ApalacheConfig] = {
     val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
     val combinedTuningOptions = overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ Map(
@@ -83,6 +88,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
               discardDisabled = discardDisabled,
               noDeadlocks = noDeadlocks,
               maxError = maxError,
+              timeoutSmtSec = timeoutSmtSec,
               view = view,
           ),
           typechecker = cfg.typechecker.copy(

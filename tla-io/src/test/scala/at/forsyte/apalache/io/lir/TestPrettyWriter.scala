@@ -379,6 +379,16 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("an exists with a binding with invalid characters") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    val expr = exists(name("a::x"), name("a::y"), name("a::z"))
+    writer.write(expr)
+    printWriter.flush()
+    // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
+    val expected = "\\E a_x \\in a_y: a_z"
+    assert(expected == stringWriter.toString)
+  }
+
   test("nested \\EE and \\AA") {
     val writer = new PrettyWriter(printWriter, layout10)
     val ex1 =

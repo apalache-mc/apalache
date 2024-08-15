@@ -3,21 +3,16 @@ name: prepare-release
 on:
   workflow_dispatch:
     # Allows manually triggering release via
-    # https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
+    # https://github.com/apalache-mc/apalache/actions?query=workflow%3A%22Prepare+Release%22
     inputs:
       release_version:
         description: "Version (leave empty to increment patch version)"
         required: false
         default: ""
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    # Automatically prepare a minor version release every Monday
-    # See https://crontab.guru/#0_0_*_*_1
-    - cron: "0 0 * * 1"
 
 jobs:
   prepare-release:
-    if: github.repository_owner == 'informalsystems'
+    if: github.repository_owner == 'apalache-mc'
     env:
       RELEASE_VERSION: ${{ github.event.inputs.release_version }}
       # NOTE: We must not use the default GITHUB_TOKEN for auth here,
