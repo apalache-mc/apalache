@@ -1,0 +1,1 @@
+Handle expressions such as  S \in SUBSET [ a : Int ]  by rewriting the expression into  \A r \in S: DOMAIN r = {"a"} /\ r.a \in Int
