@@ -166,8 +166,6 @@ jobs:
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
   docker-tests:
-    # provisionally disable docker tests until we repair them
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
