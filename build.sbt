@@ -391,7 +391,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("azul/zulu-openjdk:17-latest")
+    from("eclipse-temurin:17")
 
     workDir(dwd)
 
@@ -406,7 +406,7 @@ docker / dockerfile := {
 
     // We need sudo to run apalache using the user (created in the entrypoint script)
     run("apt", "update")
-    run("apt", "install", "sudo")
+    run("apt", "install", "-y", "sudo")
 
     entryPoint("/opt/apalache/bin/run-in-docker-container")
   }
