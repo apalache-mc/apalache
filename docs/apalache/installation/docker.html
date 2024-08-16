@@ -180,11 +180,11 @@ an isolated container. The only dependency required to run Apalache is a
 suitable JVM, and the container supplies this. However, you must already have
 <a href="https://docs.docker.com/get-docker/">docker installed</a>.</p>
 <p>To get the latest Apalache image, issue the command:</p>
-<pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache
+<pre><code class="language-bash">docker pull ghcr.io/apalache-mc/apalache
 </code></pre>
 <h2><a class="header" href="#running-the-docker-image" id="running-the-docker-image">Running the docker image</a></h2>
 <p>To run an Apalache image, issue the command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/informalsystems/apalache &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/apalache-mc/apalache &lt;args&gt;
 </code></pre>
 <p>The following docker parameters are used:</p>
 <ul>
@@ -203,8 +203,8 @@ In particular, the tool logs are written in that directory.</p>
 <code>-v &lt;your-spec-directory&gt;:/var/apalache:z</code></p>
 </li>
 <li>
-<p><code>informalsystems/apalache</code> is the APALACHE docker image name. By default, the <code>latest</code> stable
-version is used; you can also refer to a specific tool version, e.g., <code>informalsystems/apalache:0.6.0</code> or <code>informalsystems/apalache:main</code></p>
+<p><code>apalache-mc/apalache</code> is the APALACHE docker image name. By default, the <code>latest</code> stable
+version is used; you can also refer to a specific tool version, e.g., <code>apalache-mc/apalache:0.6.0</code> or <code>apalache-mc/apalache:main</code></p>
 </li>
 <li>
 <p><code>&lt;args&gt;</code> are the tool arguments as described in <a href="../running.html">Running the Tool</a>.</p>
@@ -226,11 +226,11 @@ Apalache in docker while sharing the working directory:</p>
 <pre><code class="language-bash">
 ###### using the latest stable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache'
 
 ###### using the latest main
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache:main'
 </code></pre>
 <h2><a class="header" href="#using-the-development-branch-of-apalache" id="using-the-development-branch-of-apalache">Using the development branch of Apalache</a></h2>
 <p>The development of Apalache proceeds at a quick pace, and we cut releases weekly.
@@ -239,16 +239,16 @@ branch for a report of the newest features. Since we cut releases weekly, you
 should have access to all the latest features in the last week by using the
 <code>latest</code> tag. However, if you wish to use the very latest developments as they
 are added throughout the week, you can run the image with the <code>main</code> tag: just
-type <code>ghcr.io/informalsystems/apalache:main</code> instead of
-<code>ghcr.io/informalsystems/apalache</code> everywhere.</p>
+type <code>ghcr.io/apalache-mc/apalache:main</code> instead of
+<code>ghcr.io/apalache-mc/apalache</code> everywhere.</p>
 <p>Do not forget to pull the docker image from time to time:</p>
-<pre><code class="language-bash">docker pull ghcr.io/informalsystems/apalache:main
+<pre><code class="language-bash">docker pull ghcr.io/apalache-mc/apalache:main
 </code></pre>
 <p>Run it with the following command:</p>
-<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/informalsystems/apalache:main &lt;args&gt;
+<pre><code class="language-bash">$ docker run --rm -v &lt;your-spec-directory&gt;:/var/apalache ghcr.io/apalache-mc/apalache:main &lt;args&gt;
 </code></pre>
 <p>To create an alias pointing to the <code>main</code> version:</p>
-<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
+<pre><code class="language-bash">$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache:main'
 </code></pre>
 <h2><a class="header" href="#building-an-image" id="building-an-image">Building an image</a></h2>
 <p>For an end user, there is no need to build an Apalache image. If you like to
