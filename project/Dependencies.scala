@@ -20,7 +20,7 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.9.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.11.0"
     val commonsIo = "commons-io" % "commons-io" % "2.16.1"
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
@@ -28,7 +28,7 @@ object Dependencies {
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
     val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.6"
-    val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.3.0"
+    val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
     val slf4j = "org.slf4j" % "slf4j-api" % "2.0.16"
