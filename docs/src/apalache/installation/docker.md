@@ -14,7 +14,7 @@ suitable JVM, and the container supplies this. However, you must already have
 To get the latest Apalache image, issue the command:
 
 ```bash
-docker pull ghcr.io/informalsystems/apalache
+docker pull ghcr.io/apalache-mc/apalache
 ```
 
 ## Running the docker image
@@ -22,7 +22,7 @@ docker pull ghcr.io/informalsystems/apalache
 To run an Apalache image, issue the command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/apalache-mc/apalache <args>
 ```
 
 The following docker parameters are used:
@@ -38,8 +38,8 @@ The following docker parameters are used:
 
   When using SELinux, you might have to use the modified form of `-v` option:
     `-v <your-spec-directory>:/var/apalache:z`
-- `informalsystems/apalache` is the APALACHE docker image name. By default, the `latest` stable
-  version is used; you can also refer to a specific tool version, e.g., `informalsystems/apalache:0.6.0` or `informalsystems/apalache:main`
+- `apalache-mc/apalache` is the APALACHE docker image name. By default, the `latest` stable
+  version is used; you can also refer to a specific tool version, e.g., `apalache-mc/apalache:0.6.0` or `apalache-mc/apalache:main`
 - `<args>` are the tool arguments as described in [Running the Tool](../running.md).
 
 We provide a convenience wrapper for this docker command in
@@ -67,11 +67,11 @@ Apalache in docker while sharing the working directory:
 
 ###### using the latest stable
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache'
 
 ###### using the latest main
 
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache:main'
 ```
 
 ## Using the development branch of Apalache
@@ -82,25 +82,25 @@ branch for a report of the newest features. Since we cut releases weekly, you
 should have access to all the latest features in the last week by using the
 `latest` tag. However, if you wish to use the very latest developments as they
 are added throughout the week, you can run the image with the `main` tag: just
-type `ghcr.io/informalsystems/apalache:main` instead of
-`ghcr.io/informalsystems/apalache` everywhere.
+type `ghcr.io/apalache-mc/apalache:main` instead of
+`ghcr.io/apalache-mc/apalache` everywhere.
 
 Do not forget to pull the docker image from time to time:
 
 ```bash
-docker pull ghcr.io/informalsystems/apalache:main
+docker pull ghcr.io/apalache-mc/apalache:main
 ```
 
 Run it with the following command:
 
 ```bash
-$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/informalsystems/apalache:main <args>
+$ docker run --rm -v <your-spec-directory>:/var/apalache ghcr.io/apalache-mc/apalache:main <args>
 ```
 
 To create an alias pointing to the `main` version:
 
 ```bash
-$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/informalsystems/apalache:main'
+$ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache:main'
 ```
 
 [changelog]: https://github.com/informalsystems/apalache/blob/main/CHANGES.md
