@@ -97,6 +97,34 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         }
         apply(tla.and(domEq +: fieldsEq: _*).as(b))
       }
+
+    // S ∈ SUBSET { ["a" ↦ x] : x ∈ T }
+    case memEx @ OperEx(TlaSetOper.in, setRec,
+            OperEx(TlaSetOper.powerset,
+                OperEx(TlaSetOper.map, OperEx(TlaFunOper.rec, fieldsAndValues @ _*), varsAndSets @ _*)))
+        if fieldsAndValues.length == varsAndSets.length =>
+      val (fields, values) = TlaOper.deinterleave(fieldsAndValues)
+      val (vars, sets) = TlaOper.deinterleave(varsAndSets)
+      assert(fields.length == vars.length)
+      if (values.zip(vars).exists(p => p._1 != p._2)) {
+        // The set has a more general form: { [f_1 |-> e_1, ..., f_k |-> e_k]: x_1 \in S_1, ..., x_k \in S_k }, where
+        //   e_1, ..., e_k are expressions over x_1, ..., x_k.
+        // We do not know how to optimize it.
+        memEx
+      } else {
+        val strSetT = SetT1(StrT1)
+        val b = BoolT1
+
+        val domType = getElemType(setRec)
+        val r = tla.name(nameGen.newName()).as(domType)
+
+        val domEq = tla.eql(tla.dom(r).as(SetT1(domType)), tla.enumSet(fields: _*).as(strSetT)).as(b)
+
+        val fieldsEq = fields.zip(values.zip(sets)).map { case (key, (value, set)) =>
+          tla.in(tla.appFun(r, key).as(value.typeTag.asTlaType1()), set).as(b)
+        }
+        apply(tla.forall(r, setRec, tla.and(domEq +: fieldsEq: _*).as(b)).as(b))
+      }
   }
 
   /**
