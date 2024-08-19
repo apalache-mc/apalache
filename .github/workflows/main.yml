@@ -101,12 +101,7 @@ jobs:
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
       - name: Build and Unit Test
-        run: make test-coverage
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          # See https://app.codecov.io/gh/informalsystems/apalache/
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+        run: make test
       - name: Cleanup before cache
         # See https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
         shell: bash
@@ -166,8 +161,6 @@ jobs:
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
   docker-tests:
-    # provisionally disable docker tests until we repair them
-    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
