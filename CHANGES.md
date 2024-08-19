@@ -3,6 +3,8 @@
  
 ## 0.46.0 - 2024-08-19
 
+- Technical bump to make the release process work
+
 ## 0.45.0 - 2024-08-17
 
 ### Features
