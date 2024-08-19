@@ -5,7 +5,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
 // https://github.com/marcuslonnberg/sbt-docker
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.11.0")
 // https://github.com/scoverage/sbt-scoverage
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.11")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.0.12")
 // https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.12.0")
 // https://github.com/sbt/sbt-native-packager
@@ -21,7 +21,7 @@ addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 val zioGrpcVersion = "0.5.3"
 libraryDependencies ++= Seq(
     "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % zioGrpcVersion,
-    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.15",
+    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.17",
 )
 
 // Add the locally defined plugins
