@@ -162,6 +162,8 @@ object Config {
    *   maximal number of Next steps
    * @param maxError
    *   whether to stop on the first error or to produce up to a given number of counterexamples
+   * @param timeoutSmtSec
+   *   the time limit on SMT queries in seconds
    * @param noDeadLocks
    *   do not check for deadlocks
    * @param smtEncoding
@@ -182,6 +184,7 @@ object Config {
       next: Option[String] = None,
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
+      timeoutSmtSec: Option[Int] = Some(0),
       noDeadlocks: Option[Boolean] = Some(false),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporalProps: Option[List[String]] = None,
@@ -660,6 +663,7 @@ object OptionGroup extends LazyLogging {
       discardDisabled: Boolean,
       length: Int,
       maxError: Int,
+      timeoutSmtSec: Int,
       noDeadlocks: Boolean,
       smtEncoding: SMTEncoding,
       tuning: Map[String, String])
@@ -684,11 +688,13 @@ object OptionGroup extends LazyLogging {
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
+        timeoutSmtSec <- checker.timeoutSmtSec.toTry("checker.timeoutSmtSec")
       } yield Checker(
           algo = algo,
           discardDisabled = discardDisabled,
           length = length,
           maxError = maxError,
+          timeoutSmtSec = timeoutSmtSec,
           noDeadlocks = noDeadlocks,
           smtEncoding = smtEncoding,
           tuning = tuning,

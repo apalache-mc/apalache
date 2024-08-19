@@ -37,6 +37,16 @@ trait ApalacheBuilder {
   def gen(n: BigInt, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
 
   /**
+   * {{{Repeat(F, N, x): t}}}
+   * @param n
+   *   must be a nonnegative constant expression
+   * @param F
+   *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
+   */
+  def repeat(F: TBuilderInstruction, n: BigInt, x: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(F, x)(unsafeBuilder.repeat(_, n, _))
+
+  /**
    * {{{Skolem(ex)}}}
    * @param ex
    *   must be an expression of the shape {{{\E x \in S: P}}}
