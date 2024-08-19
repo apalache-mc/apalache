@@ -9,7 +9,7 @@
 
 - Triggered by pull requests into `main`.
 - Used for any artifacts that we deploy into production environments. Currently,
-  this only consists of our website at https://apalache.informal.systems.
+  this only consists of our website at https://apalache-mc.org.
 
 ## [./prepare-release.yml](./prepare-release.yml)
 
