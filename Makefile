@@ -31,7 +31,8 @@ compile-strict: export APALACHE_FATAL_WARNINGS=true
 compile-strict:
 	sbt Test/compile compile
 
-# Run tests with scoverage report
+# Run tests with scoverage report.
+# This target is not used in the CI anymore. It needs additional devops work to re-enable it.
 test-coverage:
 	sbt coverage test coverageAggregate
 
