@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TlaEx, TypingException}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Rewrites the set constructor {e_1, ..., e_k}.

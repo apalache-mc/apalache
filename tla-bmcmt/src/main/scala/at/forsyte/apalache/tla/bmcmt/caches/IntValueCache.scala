@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * A cache for integer constants that maps an integer to an integer constant in SMT.

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.arena
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, ElemPtr, FixedElemPtr, SmtExprElemPtr}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Contains miscellaneous methods related to [[ElemPtr]]s.

@@ -10,8 +10,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
@@ -442,7 +442,7 @@ class SeqModelChecker[ExecutorContextT](
     val stateType = RecT1(checkerInput.rootModule.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
 
     // convert a variable binding to a record
-    def mkRecord(b: Binding): TBuilderInstruction = {
+    def mkRecord(b: Binding): BuilderT = {
       val ctorArgs = b.toMap.map { case (key, value) =>
         (key, tla.name(value.toString, stateType.fieldTypes(key)))
       }

@@ -11,11 +11,8 @@ import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
  * @author
  *   Jure Kukovec
  */
-class UnsafeBaseBuilder extends ProtoBuilder {
-
-  // We borrow the LiteralBuilder to make TLA strings from Scala strings
-  private val strBuilder = new UnsafeLiteralAndNameBuilder
-  private def mkTlaStr: String => TlaEx = strBuilder.str
+trait UnsafeBaseBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
+  // We extend the LiteralBuilder to make TLA strings from Scala strings
 
   /** {{{lhs = rhs}}} */
   def eql(lhs: TlaEx, rhs: TlaEx): TlaEx = buildBySignatureLookup(TlaOper.eq, lhs, rhs)
@@ -84,7 +81,7 @@ class UnsafeBaseBuilder extends ProtoBuilder {
    */
   def label(ex: TlaEx, args: String*): TlaEx = {
     require(args.nonEmpty, s"args must be nonempty.")
-    val argsAsStringExs = args.map { mkTlaStr }
+    val argsAsStringExs = args.map { str }
     buildBySignatureLookup(TlaOper.label, ex +: argsAsStringExs: _*)
   }
 }

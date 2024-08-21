@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, PureArena}
 import at.forsyte.apalache.tla.lir.{IntT1, SetT1}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Cache ranges a..b and, as a special case, tuple domains.

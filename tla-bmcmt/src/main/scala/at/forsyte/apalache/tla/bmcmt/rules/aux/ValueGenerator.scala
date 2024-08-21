@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.{tla => tlaLegacy}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 import scalaz.unused
 
 import scala.collection.immutable.{SortedMap, SortedSet}

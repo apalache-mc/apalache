@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -114,7 +113,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     // In the new implementation, a function is a relation { <<x, f[x]>> : x \in U }.
     // Check that \A t \in f: t[1] \in S /\ t[2] \in T, and
     // `DOMAIN f = S`, since the above only implies `DOMAIN f \subseteq S`
-    def onPair(pair: ArenaCell): TBuilderInstruction = {
+    def onPair(pair: ArenaCell): BuilderT = {
       val tupleElems = nextState.arena.getHas(pair)
       val (arg, res) = (tupleElems.head, tupleElems.tail.head)
       nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.selectInSet(arg.toBuilder, funsetDom.toBuilder)))

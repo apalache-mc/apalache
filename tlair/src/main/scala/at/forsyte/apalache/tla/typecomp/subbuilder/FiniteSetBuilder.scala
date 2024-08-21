@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeFiniteSetBuilder
  *   Jure Kukovec
  */
 trait FiniteSetBuilder {
-  private val unsafeBuilder = new UnsafeFiniteSetBuilder
+  private val unsafeBuilder = new UnsafeFiniteSetBuilder {}
 
   /** {{{IsFiniteSet(set)}}} */
   def isFiniteSet(set: TBuilderInstruction): TBuilderInstruction = set.map(unsafeBuilder.isFiniteSet)

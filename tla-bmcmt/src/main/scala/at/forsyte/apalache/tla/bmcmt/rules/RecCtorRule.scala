@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.RecordAndVariantOps
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaStr
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 import scala.collection.immutable.{SortedMap, SortedSet}
 

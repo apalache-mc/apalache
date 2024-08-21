@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{addCell, Rewriter, Rewrite
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Rewrites a set comprehension { x \in S: P }.

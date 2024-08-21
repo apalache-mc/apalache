@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * An abstract version of an oracle that is used e.g. in CherryPick.
@@ -30,7 +29,7 @@ trait Oracle extends Serializable {
    * @param position
    *   a position the oracle should be equal to
    */
-  def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction
+  def whenEqualTo(state: SymbState, position: Int): BuilderT
 
   /**
    * Produce a ground expression that contains assertions for the possible oracle values.
@@ -46,8 +45,8 @@ trait Oracle extends Serializable {
    */
   def caseAssertions(
       state: SymbState,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
+      assertions: Seq[BuilderT],
+      elseAssertions: Seq[BuilderT] = Seq.empty): BuilderT = {
     size match {
       // If the oracle has no candidate values, then caseAssertions should return a no-op for SMT, i.e. TRUE.
       case 0 => state.arena.cellTrue().toBuilder

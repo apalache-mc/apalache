@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.pp.Inliner
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Rewriting rule for Repeat. This rule is similar to [[FoldSeqRule]].

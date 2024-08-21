@@ -8,8 +8,8 @@ import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
@@ -24,16 +24,21 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   private val protoSeqOps = new ProtoSeqOps(rewriter)
   private val recordOps = new RecordAndVariantOps(rewriter)
 
+  def evalGroundExprForBuilderEx(ex: TBuilderInstruction): TBuilderInstruction =
+    ex.map(solverContext.evalGroundExpr) // when using TBuilderInstruction
+  def evalGroundExprForBuilderEx(ex: TlaEx): TlaEx =
+    solverContext.evalGroundExpr(ex) // when using TlaEx
+
   def decodeStateVariables(state: SymbState): Map[String, TlaEx] = {
     state.binding.toMap.map(p => (p._1, reverseMapVar(decodeCellToTlaEx(state.arena, p._2), p._1, p._2)))
   }
 
-  def decodeCellToTlaEx(arena: PureArenaAdapter, cell: ArenaCell): TBuilderInstruction = cell.cellType match {
+  def decodeCellToTlaEx(arena: PureArenaAdapter, cell: ArenaCell): BuilderT = cell.cellType match {
     case CellTFrom(BoolT1) =>
-      cell.toBuilder.map(solverContext.evalGroundExpr)
+      evalGroundExprForBuilderEx(cell.toBuilder)
 
     case CellTFrom(IntT1) =>
-      cell.toBuilder.map(solverContext.evalGroundExpr)
+      evalGroundExprForBuilderEx(cell.toBuilder)
 
     case ct @ CellTFrom(StrT1 | ConstT1(_)) =>
       // First, attempt to check the cache
@@ -128,7 +133,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       throw new RewriterException("Don't know how to decode the cell %s of type %s".format(cell, cell.cellType), NullEx)
   }
 
-  private def decodeOldRecordToTlaEx(arena: PureArenaAdapter, cell: ArenaCell, recordT: RecT1): TBuilderInstruction = {
+  private def decodeOldRecordToTlaEx(arena: PureArenaAdapter, cell: ArenaCell, recordT: RecT1): BuilderT = {
     def exToStr(ex: TlaEx): TlaStr = ex match {
       case ValEx(s @ TlaStr(_)) => s
       case _                    => throw new RewriterException("Expected a string, found: " + ex, ex)
@@ -141,7 +146,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     val fieldValues = arena.getHas(cell)
     val keyList = recordT.fieldTypes.keySet.toList
 
-    def eachField(es: List[TBuilderInstruction], key: String): List[TBuilderInstruction] = {
+    def eachField(es: List[BuilderT], key: String): List[BuilderT] = {
       if (!dom.contains(TlaStr(key))) {
         es // skip
       } else {
@@ -151,7 +156,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       }
     }
 
-    val keysAndValues = keyList.reverse.foldLeft(List.empty[TBuilderInstruction])(eachField)
+    val keysAndValues = keyList.reverse.foldLeft(List.empty[BuilderT])(eachField)
     if (keysAndValues.nonEmpty) {
       tla.recMixed(keysAndValues: _*)
     } else {
@@ -165,7 +170,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   private def decodeRecordToTlaEx(
       arena: PureArenaAdapter,
       cell: ArenaCell,
-      fieldTypes: SortedMap[String, TlaType1]): TBuilderInstruction =
+      fieldTypes: SortedMap[String, TlaType1]): BuilderT =
     tla.rowRec(None,
         fieldTypes.keySet.toList.map { k =>
           k -> decodeCellToTlaEx(arena, recordOps.getField(arena, cell, k))
@@ -174,7 +179,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
   private def decodeVariantToTlaEx(
       arena: PureArenaAdapter,
       cell: ArenaCell,
-      options: SortedMap[String, TlaType1]): TBuilderInstruction = {
+      options: SortedMap[String, TlaType1]): BuilderT = {
     val tagName = decodeCellToTlaEx(arena, recordOps.getVariantTag(arena, cell)).build match {
       case ValEx(TlaStr(name)) => name
 
@@ -184,7 +189,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     tla.variant(tagName, value, VariantT1(RowT1(options, None)))
   }
 
-  private def decodeFunToTlaEx(arena: PureArenaAdapter, cell: ArenaCell): TBuilderInstruction = {
+  private def decodeFunToTlaEx(arena: PureArenaAdapter, cell: ArenaCell): BuilderT = {
     // a function is represented with the relation {(x, f[x]) : x \in S}
     val relation = arena.getCdm(cell)
 
@@ -195,7 +200,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
           // given this, we query the solver about the function's domain instead
           val domain = arena.getDom(cell)
 
-          def inDom(elem: ArenaCell): TBuilderInstruction = {
+          def inDom(elem: ArenaCell): BuilderT = {
             val elemEx = elem.toBuilder
             val domEx = domain.toBuilder
             tla.selectInSet(elemEx, domEx)
@@ -257,7 +262,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
     }
   }
 
-  private def findCellInSet(cells: Seq[ArenaCell], ex: TBuilderInstruction): Option[ArenaCell] = {
+  private def findCellInSet(cells: Seq[ArenaCell], ex: BuilderT): Option[ArenaCell] = {
     def isEq(c: ArenaCell): Boolean = {
       val query = tla.and(tla.eql(c.toBuilder, ex))
       tla.bool(true).build == solverContext.evalGroundExpr(query)

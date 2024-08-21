@@ -12,11 +12,8 @@ import at.forsyte.apalache.tla.typecomp.{BuilderUtil, PartialSignature}
  * @author
  *   Jure Kukovec
  */
-class UnsafeVariantBuilder extends ProtoBuilder {
-
-  // We borrow the LiteralBuilder to make TLA strings from name tags (Scala strings)
-  private val strBuilder = new UnsafeLiteralAndNameBuilder
-  private def mkTlaStr: String => TlaEx = strBuilder.str
+trait UnsafeVariantBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
+  // We extend the LiteralBuilder to make TLA strings from name tags (Scala strings)
 
   /**
    * {{{Variant(tagName, value): targetVariantType}}}
@@ -35,7 +32,7 @@ class UnsafeVariantBuilder extends ProtoBuilder {
     }
     val sig = completePartial(VariantOper.variant.name, partialSig)
 
-    BuilderUtil.composeAndValidateTypes(VariantOper.variant, sig, mkTlaStr(tagName), value)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variant, sig, str(tagName), value)
   }
 
   /** {{{VariantFilter(tagName, set)}}} */
@@ -46,7 +43,7 @@ class UnsafeVariantBuilder extends ProtoBuilder {
     }
     val sig = completePartial(VariantOper.variantFilter.name, partialSig)
 
-    BuilderUtil.composeAndValidateTypes(VariantOper.variantFilter, sig, mkTlaStr(tagName), set)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variantFilter, sig, str(tagName), set)
   }
 
   /** {{{VariantTag(variant)}}} */
@@ -59,7 +56,7 @@ class UnsafeVariantBuilder extends ProtoBuilder {
       case Seq(StrT1, VariantT1(RowT1(fields, _)), a) if fields.get(tagName).contains(a) => a
     }
     val sig = completePartial(VariantOper.variantGetOrElse.name, partialSig)
-    BuilderUtil.composeAndValidateTypes(VariantOper.variantGetOrElse, sig, mkTlaStr(tagName), variant, defaultValue)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variantGetOrElse, sig, str(tagName), variant, defaultValue)
   }
 
   /** {{{VariantGetUnsafe(tagName, variant)}}} */
@@ -69,6 +66,6 @@ class UnsafeVariantBuilder extends ProtoBuilder {
       case Seq(StrT1, VariantT1(RowT1(fields, _))) if fields.contains(tagName) => fields(tagName)
     }
     val sig = completePartial(VariantOper.variantGetUnsafe.name, partialSig)
-    BuilderUtil.composeAndValidateTypes(VariantOper.variantGetUnsafe, sig, mkTlaStr(tagName), variant)
+    BuilderUtil.composeAndValidateTypes(VariantOper.variantGetUnsafe, sig, str(tagName), variant)
   }
 }

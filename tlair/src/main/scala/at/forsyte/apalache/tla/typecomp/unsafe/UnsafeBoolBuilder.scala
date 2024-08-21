@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil
  * @author
  *   Jure Kukovec
  */
-class UnsafeBoolBuilder extends ProtoBuilder {
+trait UnsafeBoolBuilder extends ProtoBuilder {
 
   /** {{{args[0] /\ ... /\ args[n]}}} */
   def and(args: TlaEx*): TlaEx = buildBySignatureLookup(TlaBoolOper.and, args: _*)

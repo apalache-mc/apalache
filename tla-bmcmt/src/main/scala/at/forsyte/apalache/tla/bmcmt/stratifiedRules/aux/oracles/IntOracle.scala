@@ -5,8 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.{IntT1, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,
@@ -27,7 +26,7 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
    * Produce an expression that states that the chosen value equals to the value `v_{index}`. The actual implementation
    * may be different from an integer comparison.
    */
-  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction =
+  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): BuilderT =
     tla.eql(intCell.toBuilder, tla.int(index))
 
   override def getIndexOfChosenValueFromModel(solverContext: SolverContext): BigInt =

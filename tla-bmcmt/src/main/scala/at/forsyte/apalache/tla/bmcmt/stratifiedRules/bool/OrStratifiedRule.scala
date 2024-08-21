@@ -6,8 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{addCell, StratifiedRule}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope}
 import at.forsyte.apalache.tla.lir.{BoolT1, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Implements the rule for disjunction.
@@ -20,8 +19,7 @@ import at.forsyte.apalache.tla.types.tla
  * @author
  *   Jure Kukovec
  */
-class OrStratifiedRule(rewriter: Rewriter, shortCircuit: Boolean = false)
-    extends StratifiedRule[Option[TBuilderInstruction]] {
+class OrStratifiedRule(rewriter: Rewriter, shortCircuit: Boolean = false) extends StratifiedRule[Option[BuilderT]] {
   private val simplifier = new ConstSimplifierForSmt()
 
   override def isApplicable(ex: TlaEx, scope: RewriterScope): Boolean = ex match {
@@ -32,7 +30,7 @@ class OrStratifiedRule(rewriter: Rewriter, shortCircuit: Boolean = false)
   override def buildArena(ex: TlaEx)(startingScope: RewriterScope): (
       RewriterScope,
       ArenaCell,
-      Option[TBuilderInstruction]) = simplifier.simplifyShallow(ex) match {
+      Option[BuilderT]) = simplifier.simplifyShallow(ex) match {
     case OperEx(TlaBoolOper.or, args @ _*) =>
       if (args.isEmpty) {
         // empty disjunction is always false
@@ -40,9 +38,9 @@ class OrStratifiedRule(rewriter: Rewriter, shortCircuit: Boolean = false)
       } else {
         // use short-circuiting on state-level expressions (like in TLC)
 
-        def toIte(es: Seq[TlaEx]): TBuilderInstruction = {
+        def toIte(es: Seq[TlaEx]): BuilderT = {
           // assume es is nonempty
-          es.map(tla.unchecked).reduceRight[TBuilderInstruction] { case (elem, partial) =>
+          es.map(tla.unchecked).reduceRight[BuilderT] { case (elem, partial) =>
             tla.ite(elem, PureArena.cellTrue(startingScope.arena).toBuilder, partial)
           }
         }
@@ -71,7 +69,7 @@ class OrStratifiedRule(rewriter: Rewriter, shortCircuit: Boolean = false)
       (scope, cell, None)
   }
 
-  override def addConstraints(scope: RewriterScope, cell: ArenaCell, auxData: Option[TBuilderInstruction]): Unit = {
+  override def addConstraints(scope: RewriterScope, cell: ArenaCell, auxData: Option[BuilderT]): Unit = {
     // Only add constraints, if ITE rewriting didn't fire (in that case, the ITE rule does it for us)
     auxData.foreach { disjunction =>
       rewriter.assert(tla.eql(cell.toBuilder, disjunction))

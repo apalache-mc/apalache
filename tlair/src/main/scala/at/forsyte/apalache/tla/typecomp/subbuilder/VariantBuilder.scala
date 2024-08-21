@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeVariantBuilder
  *   Jure Kukovec
  */
 trait VariantBuilder {
-  private val unsafeBuilder = new UnsafeVariantBuilder
+  private val unsafeBuilder = new UnsafeVariantBuilder {}
 
   /**
    * {{{Variant(tagName, value): targetVariantType}}}

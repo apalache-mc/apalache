@@ -3,19 +3,19 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.types.tla._
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tlaU._
 
 trait TestSymbStateDecoder extends RewriterBase {
   private val parser = DefaultType1Parser
   private val int2 = parser("<<Int, Int>>")
 
-  private def pair(i: Int, j: Int): TBuilderInstruction = tuple(int(i), int(j))
+  private def pair(i: Int, j: Int): BuilderT = tuple(int(i), int(j))
 
   test("decode bool") { rewriterType: SMTEncoding =>
-    val originalEx: TBuilderInstruction = bool(true)
+    val originalEx: BuilderT = bool(true)
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -45,7 +45,7 @@ trait TestSymbStateDecoder extends RewriterBase {
   }
 
   test("decode str") { rewriterType: SMTEncoding =>
-    val originalEx: TBuilderInstruction = str("hello")
+    val originalEx: BuilderT = str("hello")
     val state = new SymbState(originalEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -141,7 +141,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val decoder = new SymbStateDecoder(solverContext, rewriter)
     val decodedEx = decoder.decodeCellToTlaEx(nextState.arena, cell)
 
-    val expectedOutcome: TBuilderInstruction = setAsFun(enumSet(pair(1, 2), pair(2, 3)))
+    val expectedOutcome: BuilderT = setAsFun(enumSet(pair(1, 2), pair(2, 3)))
     assertBuildEqual(expectedOutcome, decodedEx)
   }
 
@@ -180,7 +180,7 @@ trait TestSymbStateDecoder extends RewriterBase {
 
   test("decode dynamically empty fun") { rewriterType: SMTEncoding =>
     // this domain is not empty at the arena level, but it is in every SMT model
-    def dynEmpty(left: TBuilderInstruction): TBuilderInstruction =
+    def dynEmpty(left: BuilderT): BuilderT =
       filter(name("t", IntT1), left, bool(false))
 
     val domEx = dynEmpty(enumSet(int(1)))
@@ -246,7 +246,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     val recEx = rec(
         "a" -> int(1),
         "b" -> bool(true),
-    ).map(_.withTag(Typed(parser("{ a: Int, b: Bool }"))))
+    ).withTag(Typed(parser("{ a: Int, b: Bool }")))
     val state = new SymbState(recEx, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)

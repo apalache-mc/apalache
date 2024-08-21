@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * An oracle provides a means of choosing a single value, out of a finite collection of candidate values. It can
@@ -29,7 +28,7 @@ trait Oracle {
    * Produce an expression that states that the chosen value equals to the value `v_{index}`. The actual implementation
    * may be different from an integer comparison.
    */
-  def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction
+  def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): BuilderT
 
   /**
    * Produce a ground expression that contains assertions for the possible oracle values.
@@ -45,8 +44,8 @@ trait Oracle {
    */
   def caseAssertions(
       scope: RewriterScope,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertionsOpt: Option[Seq[TBuilderInstruction]] = None): TBuilderInstruction = {
+      assertions: Seq[BuilderT],
+      elseAssertionsOpt: Option[Seq[BuilderT]] = None): BuilderT = {
     require(assertions.size == this.size && elseAssertionsOpt.forall { _.size == this.size },
         s"Invalid call to Oracle, assertion sequences must have length $size.")
     size match {

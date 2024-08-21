@@ -3,20 +3,20 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.ConstT1
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 
 class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
 
   override def size: Int = nvalues
 
-  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction =
+  override def whenEqualTo(state: SymbState, position: Int): BuilderT =
     tla.eql(oracleCell.toBuilder, valueCells(position).toBuilder)
 
   override def caseAssertions(
       state: SymbState,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
+      assertions: Seq[BuilderT],
+      elseAssertions: Seq[BuilderT] = Seq.empty): BuilderT = {
     if (elseAssertions.nonEmpty && assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }

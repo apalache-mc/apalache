@@ -6,8 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -33,16 +32,18 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
     // TODO: Inlining this method is pointless. We should consider handling tuples and other structures natively in SMT.
     var newState = rewriter.lazyEq.cacheEqConstraints(state, setElems.cross(powsetDomainElems))
 
-    def isInPowset(setElem: ArenaCell): TBuilderInstruction = {
+    def isInPowset(setElem: ArenaCell): BuilderT = {
       newState = newState.updateArena(_.appendCell(BoolT1))
       val pred = newState.arena.topCell
 
-      def isInAndEqSetElem(powsetDomainElem: ArenaCell): TBuilderInstruction = {
+      def isInAndEqSetElem(powsetDomainElem: ArenaCell): BuilderT = {
         // powsetDomainElem \in powsetDomain /\ powsetDomainElem = setElem
-        tla
-          .and(tla.selectInSet(powsetDomainElem.toBuilder, powsetDomain.toBuilder),
-              tla.eql(powsetDomainElem.toBuilder, setElem.toBuilder))
-          .map(simplifier.simplifyShallow)
+        simplifier.applySimplifyShallowToBuilderEx(
+            tla.and(
+                tla.selectInSet(powsetDomainElem.toBuilder, powsetDomain.toBuilder),
+                tla.eql(powsetDomainElem.toBuilder, setElem.toBuilder),
+            )
+        )
       }
 
       val elemsInAndEqSetElem = powsetDomainElems.map(isInAndEqSetElem)
@@ -53,7 +54,8 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
       pred.toBuilder
     }
 
-    val isSubset = tla.and(setElems.map(isInPowset): _*).map(simplifier.simplifyShallow)
+    val isSubset =
+      simplifier.applySimplifyShallowToBuilderEx(tla.and(setElems.map(isInPowset): _*))
     newState = newState.updateArena(_.appendCell(BoolT1))
     val pred = newState.arena.topCell.toBuilder
     rewriter.solverContext.assertGroundExpr(tla.eql(pred, isSubset))
@@ -88,7 +90,7 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
 
     // This method checks if f(x) \in T, for a given x
     // The goal is to ensure that \forall x \in DOMAIN f : f(x) \in T, by applying it to every arg \in DOMAIN f
-    def onFun(funsetDomElem: ArenaCell): TBuilderInstruction = {
+    def onFun(funsetDomElem: ArenaCell): BuilderT = {
       funsetCdm.cellType match {
         case _: PowSetT =>
           nextState = rewriter

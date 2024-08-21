@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaControlOper
  * @author
  *   Jure Kukovec
  */
-class UnsafeControlBuilder extends ProtoBuilder {
+trait UnsafeControlBuilder extends ProtoBuilder {
 
   /** {{{IF p THEN A ELSE B}}} */
   def ite(p: TlaEx, A: TlaEx, B: TlaEx): TlaEx = buildBySignatureLookup(TlaControlOper.ifThenElse, p, A, B)

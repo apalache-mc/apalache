@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * [[ZipOracle]] is an optimization of [[Oracle]]. It groups several values of the background oracle together, in order
@@ -21,7 +20,7 @@ import at.forsyte.apalache.tla.types.tla
 class ZipOracle(backOracle: Oracle, groups: Seq[Seq[Int]]) extends Oracle {
   override def size: Int = groups.size
 
-  override def whenEqualTo(state: SymbState, index: Int): TBuilderInstruction = {
+  override def whenEqualTo(state: SymbState, index: Int): BuilderT = {
     assert(index < groups.size)
     val conds = groups(index).map(i => backOracle.whenEqualTo(state, i))
     tla.or(conds: _*)

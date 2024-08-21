@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla._
+import at.forsyte.apalache.tla.types.tlaU._
 
 import scala.collection.immutable.{SortedMap, SortedSet, TreeMap}
 
@@ -82,7 +82,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
     val record = rec(
         "a" -> int(1),
         "b" -> bool(false),
-    ).map { _.withTag(Typed(ribs)) }
+    ).withTag(Typed(ribs))
     // We assume that record has the type RecT1("a" -> IntT1, "b" -> BoolT1, "c" -> StrT1).
     // This can happen due to type unification. The record access should still work,
     // though the access is expected to produce an arbitrary value (of proper type).
@@ -130,7 +130,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
     val record1 = rec(
         "a" -> int(1),
         "b" -> bool(false),
-    ).map { _.withTag(Typed(ribs)) }
+    ).withTag(Typed(ribs))
     val record2 = rec(
         "a" -> int(2),
         "b" -> bool(true),
@@ -165,7 +165,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
       // and then -- when knowing the type of the filtered records -- map them somewhere.
       // Although, it is not easy to do in a symbolic encoding, we support this idiom.
       // We require though that all the records have type-compatible fields.
-      val record1 = rec("a" -> int(1)).map { _.withTag(Typed(rii)) }
+      val record1 = rec("a" -> int(1)).withTag(Typed(rii))
       val record2 = rec("a" -> int(2), "c" -> int(3))
       // Records in a set can have different sets of keys. This requires a type annotation.
       val setEx = enumSet(record1, record2)
@@ -207,7 +207,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
         "b" -> bool(false),
         "c" -> str("d"),
     )
-    val record2 = rec("a" -> int(1)).map { _.withTag(Typed(ribs)) }
+    val record2 = rec("a" -> int(1)).withTag(Typed(ribs))
     val eq = not(eql(record1, record2))
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create(rewriterType)
@@ -229,7 +229,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
   }
 
   test("""DOMAIN [a |-> 1] = {"a"} under type annotations!""") { rewriterType: SMTEncoding =>
-    val record = rec("a" -> int(1)).map(_.withTag(Typed(ribs)))
+    val record = rec("a" -> int(1)).withTag(Typed(ribs))
     val domain = dom(record)
     val eq = eql(domain, enumSet(str("a")))
     val state = new SymbState(eq, arena, Binding())

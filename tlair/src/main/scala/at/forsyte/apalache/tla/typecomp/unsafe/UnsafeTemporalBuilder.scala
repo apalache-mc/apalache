@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
  * @author
  *   Jure Kukovec
  */
-class UnsafeTemporalBuilder extends ProtoBuilder {
+trait UnsafeTemporalBuilder extends ProtoBuilder {
 
   /** {{{[]P}}} */
   def box(P: TlaEx): TlaEx = buildBySignatureLookup(TlaTempOper.box, P)
