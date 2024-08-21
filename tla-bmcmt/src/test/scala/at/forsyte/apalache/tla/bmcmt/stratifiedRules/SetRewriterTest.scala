@@ -4,7 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetFilterStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
+import at.forsyte.apalache.tla.typecomp._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite

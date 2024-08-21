@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaActionOper
  * @author
  *   Jure Kukovec
  */
-class UnsafeActionBuilder extends ProtoBuilder {
+trait UnsafeActionBuilder extends ProtoBuilder {
 
   /** {{{e'}}} */
   def prime(e: TlaEx): TlaEx = buildBySignatureLookup(TlaActionOper.prime, e)

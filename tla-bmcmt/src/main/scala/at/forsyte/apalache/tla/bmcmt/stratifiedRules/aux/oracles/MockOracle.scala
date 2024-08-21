@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * An oracle that always has the same value. This class specializes all methods to the case oracle == fixedValue.
@@ -17,13 +16,13 @@ class MockOracle(fixedValue: Int) extends Oracle {
 
   override def size: Int = fixedValue + 1
 
-  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction =
+  override def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): BuilderT =
     tla.bool(index == fixedValue)
 
   override def caseAssertions(
       scope: RewriterScope,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertionsOpt: Option[Seq[TBuilderInstruction]] = None): TBuilderInstruction = {
+      assertions: Seq[BuilderT],
+      elseAssertionsOpt: Option[Seq[BuilderT]] = None): BuilderT = {
     require(assertions.size == this.size && elseAssertionsOpt.forall { _.size == this.size },
         s"Invalid call to Oracle, assertion sequences must have length $size.")
     assertions(fixedValue)

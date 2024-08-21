@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
@@ -13,7 +13,7 @@ import org.scalatest.funsuite.AnyFunSuite
 trait TestRecordingSolverContext extends AnyFunSuite {
   protected var solverConfig: SolverConfig = _
 
-  private val int42: TBuilderInstruction = tla.int(42)
+  private val int42: BuilderT = tla.int(42)
 
   test("operations proxied") {
     val solver = RecordingSolverContext.createZ3(None, solverConfig)

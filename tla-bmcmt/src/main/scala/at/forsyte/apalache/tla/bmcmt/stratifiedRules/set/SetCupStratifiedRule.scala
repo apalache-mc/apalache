@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, S
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
+import at.forsyte.apalache.tla.typecomp._
 
 /**
  * Rewrites X \cup Y, that is, a union of two sets (not UNION).

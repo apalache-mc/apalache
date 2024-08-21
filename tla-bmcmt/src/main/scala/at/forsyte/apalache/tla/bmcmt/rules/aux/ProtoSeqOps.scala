@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 import scala.collection.immutable.ArraySeq
 

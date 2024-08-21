@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.{IntRangeCache, IntValueCache}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
+import at.forsyte.apalache.tla.typecomp._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite

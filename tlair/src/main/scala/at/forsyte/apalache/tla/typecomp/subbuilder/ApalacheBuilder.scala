@@ -15,7 +15,9 @@ import scalaz._
  */
 trait ApalacheBuilder {
   val strict: Boolean
-  private val unsafeBuilder = new UnsafeApalacheBuilder(strict)
+  // UnsafeApalacheBuilder is a trait with a parameter `strict`, so we create a class here to instantiate it
+  private case class ApalacheBuilderU(strict: Boolean) extends UnsafeApalacheBuilder
+  private val unsafeBuilder = ApalacheBuilderU(strict)
 
   /**
    * {{{lhs := rhs}}}

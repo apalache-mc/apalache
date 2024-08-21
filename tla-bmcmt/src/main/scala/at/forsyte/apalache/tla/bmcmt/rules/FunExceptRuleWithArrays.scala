@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
@@ -31,7 +30,7 @@ class FunExceptRuleWithArrays(rewriter: SymbStateRewriter) extends FunExceptRule
     nextState = nextState.updateArena(_.setDom(resultFunCell, domainCell))
 
     // Make pair <arg,res> to propagate metadata
-    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TBuilderInstruction =
+    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): BuilderT =
       tla.tuple(indexCell.toBuilder, resCell.toBuilder)
 
     nextState = rewriter.rewriteUntilDone(nextState.setRex(mkPair(indexCell, valueCell)))

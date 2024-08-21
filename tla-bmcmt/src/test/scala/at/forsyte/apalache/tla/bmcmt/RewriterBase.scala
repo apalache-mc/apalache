@@ -3,10 +3,10 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 import org.scalatest.funsuite.FixtureAnyFunSuite
 
 import java.io.StringWriter
@@ -19,7 +19,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected val renaming = new IncrementalRenaming(new IdleTracker)
 
-  protected def assertBuildEqual(a: TBuilderInstruction, b: TBuilderInstruction): Unit =
+  protected def assertBuildEqual(a: BuilderT, b: BuilderT): Unit =
     assert(a.build == b.build)
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {

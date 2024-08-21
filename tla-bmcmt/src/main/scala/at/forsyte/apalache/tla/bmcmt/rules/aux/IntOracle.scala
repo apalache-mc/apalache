@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState}
 import at.forsyte.apalache.tla.lir.{IntT1, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,
@@ -23,13 +22,13 @@ class IntOracle(val intCell: ArenaCell, nvalues: Int) extends Oracle {
 
   override def size: Int = nvalues
 
-  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction =
+  override def whenEqualTo(state: SymbState, position: Int): BuilderT =
     tla.eql(intCell.toBuilder, tla.int(position))
 
   override def caseAssertions(
       state: SymbState,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
+      assertions: Seq[BuilderT],
+      elseAssertions: Seq[BuilderT] = Seq.empty): BuilderT = {
     if (elseAssertions.nonEmpty && assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }

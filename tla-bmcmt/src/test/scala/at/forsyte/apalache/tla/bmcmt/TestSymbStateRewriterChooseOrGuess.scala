@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.types.tla._
+import at.forsyte.apalache.tla.types.tlaU._
 
 trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   test("""CHOOSE x \in { 1, 2, 3 }: x > 1""") { rewriterType: SMTEncoding =>

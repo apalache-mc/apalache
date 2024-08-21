@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla._
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.tlaU._
 
 /**
  * Tests for assignments. The assignments were at the core of Apalache 0.5.x. In Apalache 0.6.x, they are preprocessed
@@ -12,19 +12,19 @@ import at.forsyte.apalache.tla.types.tla._
 trait TestSymbStateRewriterAssignment extends RewriterBase {
   val ibI: TlaType1 = TupT1(IntT1, BoolT1, SetT1(IntT1))
 
-  private val set12: TBuilderInstruction = enumSet(int(1), int(2))
-  private val x_prime: TBuilderInstruction = prime(name("x", IntT1))
-  private val x_primeS: TBuilderInstruction = prime(name("x", SetT1(IntT1)))
-  private val x_primeFbi: TBuilderInstruction = prime(name("x", FunT1(BoolT1, IntT1)))
-  private val x_primeFii: TBuilderInstruction = prime(name("x", FunT1(IntT1, IntT1)))
-  private val x_primeFib: TBuilderInstruction = prime(name("x", FunT1(IntT1, BoolT1)))
-  private val y_prime: TBuilderInstruction = prime(name("y", IntT1))
-  private val boundName: TBuilderInstruction = name("t", IntT1)
-  private val boundNameS: TBuilderInstruction = name("t", SetT1(IntT1))
-  private val boundNameFbi: TBuilderInstruction = name("t", FunT1(BoolT1, IntT1))
-  private val boundNameFii: TBuilderInstruction = name("t", FunT1(IntT1, IntT1))
-  private val boundNameFib: TBuilderInstruction = name("t", FunT1(IntT1, BoolT1))
-  private val boolset: TBuilderInstruction = enumSet(bool(false), bool(true))
+  private val set12: BuilderT = enumSet(int(1), int(2))
+  private val x_prime: BuilderT = prime(name("x", IntT1))
+  private val x_primeS: BuilderT = prime(name("x", SetT1(IntT1)))
+  private val x_primeFbi: BuilderT = prime(name("x", FunT1(BoolT1, IntT1)))
+  private val x_primeFii: BuilderT = prime(name("x", FunT1(IntT1, IntT1)))
+  private val x_primeFib: BuilderT = prime(name("x", FunT1(IntT1, BoolT1)))
+  private val y_prime: BuilderT = prime(name("y", IntT1))
+  private val boundName: BuilderT = name("t", IntT1)
+  private val boundNameS: BuilderT = name("t", SetT1(IntT1))
+  private val boundNameFbi: BuilderT = name("t", FunT1(BoolT1, IntT1))
+  private val boundNameFii: BuilderT = name("t", FunT1(IntT1, IntT1))
+  private val boundNameFib: BuilderT = name("t", FunT1(IntT1, BoolT1))
+  private val boolset: BuilderT = enumSet(bool(false), bool(true))
 
   test("""\E t \in {1, 2}: x' \in {t} ~~> TRUE and [x -> $C$k]""") { rewriterType: SMTEncoding =>
     val asgn = skolem(exists(boundName, set12, assign(x_prime, boundName)))
@@ -98,7 +98,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
 
   test("""\E t \in \in {t_2 \in {1}: FALSE}: x' \in {t} ~~> FALSE""") { rewriterType: SMTEncoding =>
     // a regression test
-    def empty(set: TBuilderInstruction): TBuilderInstruction = {
+    def empty(set: BuilderT): BuilderT = {
       filter(name("t_2", IntT1), set, bool(false))
     }
 
@@ -181,7 +181,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
   test("""\E t \in {{1, 2}, {1+1, 2, 3}} \ {{2, 3}}: x' \in {t} ~~> TRUE and [x -> $C$k]""") {
     rewriterType: SMTEncoding =>
       // equal elements in different sets mess up picking from a set
-      def setminus(left: TBuilderInstruction, right: TBuilderInstruction): TBuilderInstruction = {
+      def setminus(left: BuilderT, right: BuilderT): BuilderT = {
         // this is how Keramelizer translates setminus
         filter(name("t_2", SetT1(IntT1)), left, not(eql(name("t_2", SetT1(IntT1)), right)))
 

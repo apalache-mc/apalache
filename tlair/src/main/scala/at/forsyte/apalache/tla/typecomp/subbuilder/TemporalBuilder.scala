@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeTemporalBuilder
  *   Jure Kukovec
  */
 trait TemporalBuilder {
-  private val unsafeBuilder = new UnsafeTemporalBuilder
+  private val unsafeBuilder = new UnsafeTemporalBuilder {}
 
   /** {{{[]P}}} */
   def box(P: TBuilderInstruction): TBuilderInstruction = P.map(unsafeBuilder.box)

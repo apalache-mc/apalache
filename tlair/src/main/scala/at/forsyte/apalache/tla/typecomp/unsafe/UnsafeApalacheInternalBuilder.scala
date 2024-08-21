@@ -9,11 +9,8 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheInternalOper, TlaOper}
  * @author
  *   Jure Kukovec
  */
-class UnsafeApalacheInternalBuilder extends ProtoBuilder {
-
-  // We borrow the LiteralBuilder to make TLA strings from Scala strings
-  private val strBuilder = new UnsafeLiteralAndNameBuilder
-  private def mkTlaStr: String => TlaEx = strBuilder.str
+trait UnsafeApalacheInternalBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
+  // We extend LiteralBuilder to make TLA strings from Scala strings
 
   /**
    * {{{__NotSupportedByModelChecker(msg): t}}}
@@ -22,7 +19,7 @@ class UnsafeApalacheInternalBuilder extends ProtoBuilder {
    * argument.
    */
   def notSupportedByModelChecker(msg: String, tt: TlaType1): TlaEx =
-    OperEx(ApalacheInternalOper.notSupportedByModelChecker, mkTlaStr(msg))(Typed(tt))
+    OperEx(ApalacheInternalOper.notSupportedByModelChecker, str(msg))(Typed(tt))
 
   /**
    * distinct

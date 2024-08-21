@@ -263,6 +263,11 @@ package object typecomp {
     def build: T = builderState
   }
 
+  // Included to facilitate seamless swapping between the scope-safe and unsafe builders
+  implicit class NoOpBuild(ex: TlaEx) {
+    def build: TlaEx = ex
+  }
+
   /**
    * Apply the `build` method to a sequence.
    *

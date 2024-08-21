@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla._
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.tlaU._
 
 trait TestSymbStateRewriterFunSet extends RewriterBase {
   val i_to_B: TlaType1 = FunT1(IntT1, SetT1(BoolT1))
@@ -172,7 +172,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   // this should be redundant in the presence of #91
   test("""[x \in {0, 1, 2} \ {0} |-> 3] \in [{1, 2} -> {3, 4}]""") { rewriterType: SMTEncoding =>
     // although 0 is in the function domain at the arena level, it does not belong to the set difference
-    def setminus(set: TBuilderInstruction, intVal: BigInt): TBuilderInstruction = {
+    def setminus(set: BuilderT, intVal: BigInt): BuilderT = {
       filter(name("t", IntT1), set, not(eql(name("t", IntT1), int(intVal))))
 
     }

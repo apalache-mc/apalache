@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
  * @author
  *   Jure Kukovec
  */
-class UnsafeFiniteSetBuilder extends ProtoBuilder {
+trait UnsafeFiniteSetBuilder extends ProtoBuilder {
 
   /** {{{IsFiniteSet(set)}}} */
   def isFiniteSet(set: TlaEx): TlaEx = buildBySignatureLookup(TlaFiniteSetOper.isFiniteSet, set)

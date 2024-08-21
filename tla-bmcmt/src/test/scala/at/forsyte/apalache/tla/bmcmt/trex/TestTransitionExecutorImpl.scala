@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt.{Binding, StateInvariant}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 
 /**
  * An abstract test suite that is parameterized by the snapshot type.
@@ -16,8 +16,8 @@ import at.forsyte.apalache.tla.types.tla
  */
 trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
 
-  def nX: TBuilderInstruction = tla.name("x", IntT1)
-  def nY: TBuilderInstruction = tla.name("y", IntT1)
+  def nX: BuilderT = tla.name("x", IntT1)
+  def nY: BuilderT = tla.name("y", IntT1)
 
   test("constant initialization") { exeCtx: ExecutorContextT =>
     // N' <- 1
@@ -129,7 +129,7 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // state 1 is produced by transition 1
     assert(1 == decPath(1)._2)
 
-    def mapWithBuild(pairs: (String, TBuilderInstruction)*): Map[String, TlaEx] =
+    def mapWithBuild(pairs: (String, BuilderT)*): Map[String, TlaEx] =
       pairs.map { case (a, b) => a -> b.build }.toMap
 
     assert(mapWithBuild("x" -> tla.int(1), "y" -> tla.int(1)) == decPath(1)._1)
@@ -225,9 +225,9 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     assert(!mayChange2)
   }
 
-  private def mkAssign(name: String, value: Int): TBuilderInstruction =
+  private def mkAssign(name: String, value: Int): BuilderT =
     tla.assign(tla.prime(tla.name(name, IntT1)), tla.int(value))
 
-  private def mkAssignInt(name: String, rhs: TBuilderInstruction) =
+  private def mkAssignInt(name: String, rhs: BuilderT) =
     tla.assign(tla.prime(tla.name(name, IntT1)), rhs)
 }

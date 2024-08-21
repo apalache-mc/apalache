@@ -4,8 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1}
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Rewrites set membership tests: x \in S, x \in SUBSET S, and x \in [S -> T].
@@ -38,7 +37,7 @@ class SetInRuleWithFunArrays(rewriter: SymbStateRewriter) extends SetInRule(rewr
 
     // This method checks if there is a pair (x,y) \in RELATION f s.t. x = arg \land arg \in DOMAIN f
     // The goal is to ensure that f's range is a subset of T, by applying it to every arg \in DOMAIN f
-    def onPair(arg: ArenaCell): TBuilderInstruction = {
+    def onPair(arg: ArenaCell): BuilderT = {
       val funApp = tla.app(funCell.toBuilder, arg.toBuilder)
       nextState = rewriter.rewriteUntilDone(nextState.setRex(funApp))
       val funAppRes = nextState.asCell

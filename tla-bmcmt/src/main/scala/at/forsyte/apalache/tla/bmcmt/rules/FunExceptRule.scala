@@ -6,8 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import scalaz.unused
 
 /**
@@ -66,7 +65,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
       indexCell: ArenaCell,
       valueCell: ArenaCell): SymbState = {
     // rewrite tuples <<j_i, e_i>> to cells
-    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): TBuilderInstruction =
+    def mkPair(indexCell: ArenaCell, resCell: ArenaCell): BuilderT =
       tla.tuple(indexCell.toBuilder, resCell.toBuilder)
 
     var nextState = rewriter.rewriteUntilDone(state.setRex(mkPair(indexCell, valueCell)))

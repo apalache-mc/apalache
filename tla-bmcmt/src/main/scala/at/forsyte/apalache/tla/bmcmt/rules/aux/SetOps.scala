@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * <p>A small collection of operations on sets that can be reused by rewriting rules.</p>
@@ -57,7 +56,7 @@ class SetOps(rewriter: SymbStateRewriter) {
       //   /\ c[i] \in S
       //   /\ \A j \in 0..(i - 1):
       //      ~b[j] \/ c[j] /= c[i]
-      def notSeen(j: Int): TBuilderInstruction = {
+      def notSeen(j: Int): BuilderT = {
         tla.or(tla.not(predicates(j).toBuilder), tla.not(tla.eql(c_i.toBuilder, elems(j).toBuilder)))
       }
 

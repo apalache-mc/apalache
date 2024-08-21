@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeSeqBuilder
  *   Jure Kukovec
  */
 trait SeqBuilder {
-  private val unsafeBuilder = new UnsafeSeqBuilder
+  private val unsafeBuilder = new UnsafeSeqBuilder {}
 
   /** {{{Append(seq,elem)}}} */
   def append(seq: TBuilderInstruction, elem: TBuilderInstruction): TBuilderInstruction =

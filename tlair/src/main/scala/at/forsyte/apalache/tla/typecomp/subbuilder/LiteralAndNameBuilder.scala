@@ -14,7 +14,7 @@ import scalaz._
  *   Jure Kukovec
  */
 trait LiteralAndNameBuilder {
-  private val unsafeBuilder = new UnsafeLiteralAndNameBuilder
+  private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}
 
   /** {{{i : Int}}} */
   def int(i: BigInt): TBuilderInstruction = unsafeBuilder.int(i).point[TBuilderInternalState]

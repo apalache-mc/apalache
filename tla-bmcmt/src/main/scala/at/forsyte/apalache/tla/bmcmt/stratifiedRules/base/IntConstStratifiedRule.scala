@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.IntValueCache
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, StratifiedRule}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.lir.{TlaEx, ValEx}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Rewrites integer constants.

@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderT, BuilderUT}
 
 /**
  * <p>A base class for constant simplification that is shared by more specialized simplifiers.</p>
@@ -239,4 +239,9 @@ abstract class ConstSimplifierBase {
     case ex =>
       ex
   }
+
+  def applySimplifyShallowToBuilderEx(ex: BuilderUT): BuilderUT =
+    simplifyShallow(ex) // when using TlaEx
+  def applySimplifyShallowToBuilderEx(ex: BuilderT): BuilderT =
+    ex.map(simplifyShallow) // when using TBuilderInstruction
 }

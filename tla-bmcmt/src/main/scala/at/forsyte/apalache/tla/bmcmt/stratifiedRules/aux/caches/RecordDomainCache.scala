@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, PureArena}
 import at.forsyte.apalache.tla.lir.{SetT1, StrT1}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 import scala.collection.immutable.SortedSet
 
