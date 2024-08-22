@@ -87,7 +87,7 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
         // x \in TDS  ~>  TRUE
         case set if isTypeDefining(set) => trueVal
 
-        // n \in Nat  ~>  x >= 0
+        // x \in Nat  ~>  x >= 0
         case ValEx(TlaNatSet) => OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
 
         // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom    (fun \in [TDS1 -> TDS2] is handled above)
