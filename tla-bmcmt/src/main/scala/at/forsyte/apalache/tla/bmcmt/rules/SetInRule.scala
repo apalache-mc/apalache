@@ -55,7 +55,11 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
               if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
             intOrNatSetIn(setState, setCell, elemCell, CellTFrom(IntT1))
 
-          case PowSetT(SetT1(_)) =>
+          case PowSetT(SetT1(_))
+              // at.forsyte.apalache.tla.bmcmt.types.PowSetT does not handle an infinite set T in the expr ... \in SUBSET T.
+              // Moreover, it also does not handle an infinite set S in the expr S \in SUBSET ....
+              if setState.arena.getDom(setCell).cellType != InfSetT(CellTFrom(IntT1)) && elemCell.cellType != InfSetT(
+                  CellTFrom(IntT1)) =>
             powSetIn(setState, setCell, elemCell)
 
           case FinFunSetT(_, _) =>
