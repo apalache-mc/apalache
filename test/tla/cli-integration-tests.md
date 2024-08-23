@@ -362,7 +362,7 @@ $ cat output.json | head
 {
   "name": "ApalacheIR",
   "version": "1.0",
-  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+  "description": "https://apalache-mc.org/docs/adr/005adr-json.html",
   "modules": [
     {
       "kind": "TlaModule",
@@ -437,7 +437,7 @@ $ cat output.json | head
 {
   "name": "ApalacheIR",
   "version": "1.0",
-  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+  "description": "https://apalache-mc.org/docs/adr/005adr-json.html",
   "modules": [
     {
       "kind": "TlaModule",
@@ -1484,7 +1484,7 @@ An occurence of `Seq(S)` should point to an explanation.
 ```sh
 $ apalache-mc check Bug1126.tla | sed 's/[IE]@.*//'
 ...
-Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set of unbounded sequences. See: https://apalache.informal.systems/docs/apalache/known-issues.html#using-seqs
+Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set of unbounded sequences. See: https://apalache-mc.org/docs/apalache/known-issues.html#using-seqs
 ...
 EXITCODE: ERROR (75)
 ```
@@ -2407,7 +2407,7 @@ EXITCODE: OK
 ### check profiling
 
 Check that the profiler output is produced as explained in
-[Profiling](https://apalache.informal.systems/docs/apalache/profiling.html).
+[Profiling](https://apalache-mc.org/docs/apalache/profiling.html).
 
 ```sh
 $ apalache-mc check --run-dir=./profile-run-dir --smtprof schroedinger_cat.tla | sed 's/[IEW]@.*//'
@@ -2508,7 +2508,7 @@ EXITCODE: OK
 $ apalache-mc check Test669.tla | sed 's/[IEW]@.*//'
 ...
 This error may show up when CONSTANTS are not initialized.
-Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html
+Check the manual: https://apalache-mc.org/docs/apalache/parameters.html
 Input error (see the manual): SubstRule: Variable N is not assigned a value
 ...
 EXITCODE: ERROR (255)

@@ -4,7 +4,7 @@ Here is the list of the TLA+ language features that are currently supported by A
 
 At the moment, Apalache is able to check state invariants, action invariants,
 temporal properties, trace invariants, as well as inductive invariants. (See the [page on
-invariants](https://apalache.informal.systems/docs/apalache/principles/invariants.html) in
+invariants](https://apalache-mc.org/docs/apalache/principles/invariants.html) in
 the manual.) To check liveness/temporal properties, we employ a [liveness-to-safety][] transformation.
 
 ## Language
@@ -66,7 +66,7 @@ replaced with a constant.
 #### Records
 
 *Use [type
-annotations](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
+annotations](https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html)
 to help the model checker in finding the right types.* Note that our type
 system distinguishes records from general functions.
 
@@ -81,14 +81,14 @@ system distinguishes records from general functions.
 #### Tuples
 
 *Use [type
-annotations](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
+annotations](https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html)
 to help the model checker in finding the right types.* Note that our type
 system distinguishes records from general functions.
 
 | Operator               | Supported? | Milestone | Comment                                                                                                                                        |
 |------------------------|:----------:|:---------:|------------------------------------------------------------------------------------------------------------------------------------------------|
 | `e[i]`                 |   ✔ / ✖    |     -     | Provided that `i` is a constant expression                                                                                                     |
-| `<< e1, ..., e_n >>`   |     ✔      |     -     | Use a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html) to distinguish between a tuple and a sequence. |
+| `<< e1, ..., e_n >>`   |     ✔      |     -     | Use a [type annotation](https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html) to distinguish between a tuple and a sequence. |
 | `S1 \X ... \X S_n`     |     ✔      |     -     |                                                                                                                                                |
 | `[ t EXCEPT ![i] = e]` |    ✔/✖     |     -     | Provided that `i` is a constant expression                                                                                                     |
 
@@ -158,7 +158,7 @@ For the moment, the model checker does not differentiate between integers and na
 
 | Operator                                                 | Supported? | Milestone | Comment                                                                                                  |
 |----------------------------------------------------------|:----------:|:---------:|----------------------------------------------------------------------------------------------------------|
-| `<<...>>`                                                |     ✔      |           | Often needs a [type annotation](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html). |
+| `<<...>>`                                                |     ✔      |           | Often needs a [type annotation](https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html). |
 | `Head`, `Tail`, `Len``, `SubSeq`, `Append`, `\o`, `f[e]` |     ✔      |     -     |                                                                                                          |
 | `EXCEPT`                                                 |     ✔      |           |                                                                                                          |
 | `SelectSeq`                                              |     ✔      |     -     | Not as efficient, as it could be, see [#1350](https://github.com/informalsystems/apalache/issues/1350).  |

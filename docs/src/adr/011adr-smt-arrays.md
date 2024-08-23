@@ -308,7 +308,7 @@ The following changes will be made to implement the new encoding of functions:
 The use of SMT arrays will be restricted to TLA+ sets and functions for the moment. The encoding of
 additional features using SMT arrays, or potentially ADTs, will be left for the future.
 
-[KerA+]: https://apalache.informal.systems/docs/apalache/kera.html
+[KerA+]: https://apalache-mc.org/docs/apalache/kera.html
 [core theory]: http://smtlib.cs.uiowa.edu/theories-Core.shtml
 [arrays with extensionality]: http://smtlib.cs.uiowa.edu/theories-ArraysEx.shtml
 [Z3]: https://github.com/Z3Prover/z3
@@ -316,6 +316,6 @@ additional features using SMT arrays, or potentially ADTs, will be left for the 
 [Version 2.6]: https://smtlib.cs.uiowa.edu/papers/smt-lib-reference-v2.6-r2017-07-18.pdf
 [TLA+ Model Checking Made Symbolic]: https://dl.acm.org/doi/10.1145/3360549
 [Symbolic Model Checking for TLA+ Made Faster]: https://doi.org/10.1007/978-3-031-30823-9_7
-[model checking parameters]: https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters
+[model checking parameters]: https://apalache-mc.org/docs/apalache/running.html#model-checker-command-line-parameters
 [represented internally in Z3]: https://theory.stanford.edu/~nikolaj/programmingz3.html#sec-arrays
 [PR 2027]: https://github.com/informalsystems/apalache/pull/2027

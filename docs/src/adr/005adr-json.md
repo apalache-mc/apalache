@@ -201,9 +201,9 @@ In general, for any given `oper: TlaOper` of `OperEx`, the value of the `oper` f
 The implementation of the serialization can be found in the class
 `at.forsyte.apalache.io.json.TlaToJson` of the module `tla-import`, see [TlaToJson][].
 
-[ADR-002]: https://apalache.informal.systems/docs/adr/002adr-types.html
+[ADR-002]: https://apalache-mc.org/docs/adr/002adr-types.html
 
-[ADR-004]: https://apalache.informal.systems/docs/adr/004adr-annotations.html
+[ADR-004]: https://apalache-mc.org/docs/adr/004adr-annotations.html
 
 [TlaToJson]: https://github.com/informalsystems/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54
 [TlaEx]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10
