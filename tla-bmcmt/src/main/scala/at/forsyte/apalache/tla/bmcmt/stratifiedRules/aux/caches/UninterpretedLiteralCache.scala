@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
 import at.forsyte.apalache.tla.lir.{ConstT1, StrT1, TlaType1}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * A cache for uninterpreted literals, that are translated to uninterpreted SMT constants, with a unique sort per

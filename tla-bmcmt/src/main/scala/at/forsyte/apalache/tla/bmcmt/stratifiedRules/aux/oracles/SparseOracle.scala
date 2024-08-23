@@ -2,8 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Given a set `indices` of size `N`, sparse oracle is able to answer {{{chosenValueIsEqualToIndexedValue(_, i),}}} for
@@ -30,7 +29,7 @@ class SparseOracle(mkOracle: Int => Oracle, val values: Set[Int]) extends Oracle
 
   override def size: Int = values.size
 
-  def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): TBuilderInstruction =
+  def chosenValueIsEqualToIndexedValue(scope: RewriterScope, index: BigInt): BuilderT =
     indexMap
       .get(index.toInt)
       .map {
@@ -40,8 +39,8 @@ class SparseOracle(mkOracle: Int => Oracle, val values: Set[Int]) extends Oracle
 
   override def caseAssertions(
       scope: RewriterScope,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertionsOpt: Option[Seq[TBuilderInstruction]] = None): TBuilderInstruction =
+      assertions: Seq[BuilderT],
+      elseAssertionsOpt: Option[Seq[BuilderT]] = None): BuilderT =
     oracle.caseAssertions(scope, assertions, elseAssertionsOpt)
 
   override def getIndexOfChosenValueFromModel(solverContext: SolverContext): BigInt = {

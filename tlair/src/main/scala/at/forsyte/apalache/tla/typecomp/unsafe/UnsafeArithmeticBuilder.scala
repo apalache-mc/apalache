@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaArithOper
  * @author
  *   Jure Kukovec
  */
-class UnsafeArithmeticBuilder extends ProtoBuilder {
+trait UnsafeArithmeticBuilder extends ProtoBuilder {
 
   /** {{{x + y}}} */
   def plus(x: TlaEx, y: TlaEx): TlaEx = buildBySignatureLookup(TlaArithOper.plus, x, y)

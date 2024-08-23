@@ -15,7 +15,9 @@ import scalaz._
  */
 trait ApalacheBuilder {
   val strict: Boolean
-  private val unsafeBuilder = new UnsafeApalacheBuilder(strict)
+  // UnsafeApalacheBuilder is a trait with a parameter `strict`, so we create a class here to instantiate it
+  private case class ApalacheBuilderU(strict: Boolean) extends UnsafeApalacheBuilder
+  private val unsafeBuilder = ApalacheBuilderU(strict)
 
   /**
    * {{{lhs := rhs}}}
@@ -35,6 +37,16 @@ trait ApalacheBuilder {
    *   must be positive
    */
   def gen(n: BigInt, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
+
+  /**
+   * {{{Repeat(F, N, x): t}}}
+   * @param n
+   *   must be a nonnegative constant expression
+   * @param F
+   *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
+   */
+  def repeat(F: TBuilderInstruction, n: BigInt, x: TBuilderInstruction): TBuilderInstruction =
+    binaryFromUnsafe(F, x)(unsafeBuilder.repeat(_, n, _))
 
   /**
    * {{{Skolem(ex)}}}

@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.caches.EqCache._
 import at.forsyte.apalache.tla.bmcmt.rewriter.Recoverable
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, StackableContext}
 import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 import scala.collection.mutable
 

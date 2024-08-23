@@ -4,15 +4,15 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 
 class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle {
 
   override def size: Int = nvalues
 
-  override def whenEqualTo(state: SymbState, position: Int): TBuilderInstruction = {
-    def mkLits(n: Int, cells: Seq[ArenaCell]): Seq[TBuilderInstruction] = {
+  override def whenEqualTo(state: SymbState, position: Int): BuilderT = {
+    def mkLits(n: Int, cells: Seq[ArenaCell]): Seq[BuilderT] = {
       cells match {
         case Nil => Nil
 
@@ -35,8 +35,8 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
 
   override def caseAssertions(
       state: SymbState,
-      assertions: Seq[TBuilderInstruction],
-      elseAssertions: Seq[TBuilderInstruction] = Seq.empty): TBuilderInstruction = {
+      assertions: Seq[BuilderT],
+      elseAssertions: Seq[BuilderT] = Seq.empty): BuilderT = {
     if (elseAssertions.nonEmpty & assertions.size != elseAssertions.size) {
       throw new IllegalStateException(s"Invalid call to Oracle, malformed elseAssertions")
     }

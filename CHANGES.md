@@ -1,6 +1,24 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.45.3 - 2024-08-21
+
+### Features
+
+- Added scope-unsafe builder.
+
+## 0.45.2 - 2024-08-19
+
+## 0.45.1 - 2024-08-19
+
+## 0.45.0 - 2024-08-17
+
+### Features
+
+- Handle expressions such as  S \in SUBSET [ a : Int ]  by rewriting the expression into  \A r \in S: DOMAIN r = {"a"} /\ r.a \in Int
+- Translate Quint's generate into `Apalache!Gen` (#2916)
+- Add `--timeout-smt` to limit SMT queries (#2936)
+
 ## 0.44.11 - 2024-05-06
 
 ### Features

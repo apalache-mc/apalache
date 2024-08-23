@@ -3,7 +3,7 @@
 src="https://raw.githubusercontent.com/informalsystems/apalache/99e58d6f5eebcc41f432a126a13a5f8d2ae7afe6/logo-apalache.svg"
 alt="Apalache Logo">
 
-<h1><a href="https://apalache.informal.systems/">APALACHE</a></h1>
+<h1><a href="https://apalache-mc.org/">APALACHE</a></h1>
 
 <p>A symbolic model checker for TLA+<p>
 
@@ -11,8 +11,8 @@ alt="Apalache Logo">
 
 [![main badge][]][main-ci]
 
-[main badge]: https://github.com/informalsystems/apalache/workflows/build/badge.svg?branch=main
-[main-ci]: https://github.com/informalsystems/apalache/actions?query=branch%3Amain+workflow%3Abuild
+[main badge]: https://github.com/apalache-mc/apalache/workflows/build/badge.svg?branch=main
+[main-ci]: https://github.com/apalache-mc/apalache/actions?query=branch%3Amain+workflow%3Abuild
 
 Apalache translates [TLA+] into the logic supported by SMT solvers such as
 [Microsoft Z3]. Apalache can check inductive invariants (for fixed or bounded
@@ -28,7 +28,7 @@ course].
 Check the [releases page][] for our latest release.
 
 For a stable release, we recommend that you pull the latest docker image with
-`docker pull ghcr.io/informalsystems/apalache:main`, use the jar from the
+`docker pull ghcr.io/apalache-mc/apalache:main`, use the jar from the
 most recent release, or checkout the source code from the most recent release
 tag.
 
@@ -49,10 +49,10 @@ manual][user-manual-installation].
 
 ## Website
 
-Our current website is served at https://apalache.informal.systems .
+Our current website is served at https://apalache-mc.org .
 
 The site is hosted by github, and changes can be made through PRs into the
-[gh-pages](https://github.com/informalsystems/apalache/tree/gh-pages) branch of
+[gh-pages](https://github.com/apalache-mc/apalache/tree/gh-pages) branch of
 this repository. See the README.md on that branch for more information.
 
 The user documentation is automatically deployed to the website branch as per
@@ -72,11 +72,11 @@ knowing too much about the internals of Apalache. Solving these issues would
 improve usability! Please comment in the relevant issue, if you are going to
 solve it.
 
-- Writing annotations in the JSON format: [#804](https://github.com/informalsystems/apalache/issues/804)
-- Add support for VIEW in the TLC config: [#851](https://github.com/informalsystems/apalache/issues/851)
+- Writing annotations in the JSON format: [#804](https://github.com/apalache-mc/apalache/issues/804)
+- Add support for VIEW in the TLC config: [#851](https://github.com/apalache-mc/apalache/issues/851)
 - Translate `\E x \in STRING: P` and `\A x \in STRING: P`:
-    [#844](https://github.com/informalsystems/apalache/issues/844)
-- Interval analysis for `a..b`: [#446](https://github.com/informalsystems/apalache/issues/446)
+    [#844](https://github.com/apalache-mc/apalache/issues/844)
+- Interval analysis for `a..b`: [#446](https://github.com/apalache-mc/apalache/issues/446)
 
 ## Industrial examples
 
@@ -142,27 +142,27 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
-[supported features]: https://apalache.informal.systems/docs/apalache/features.html
+[supported features]: https://apalache-mc.org/docs/apalache/features.html
 [tlc]: http://lamport.azurewebsites.net/tla/tools.html
 [leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [video course]: http://lamport.azurewebsites.net/video/videos.html
-[releases page]: https://github.com/informalsystems/apalache/releases
-[master]: https://github.com/informalsystems/apalache/tree/master
-[main branch]: https://github.com/informalsystems/apalache/tree/main
+[releases page]: https://github.com/apalache-mc/apalache/releases
+[master]: https://github.com/apalache-mc/apalache/tree/master
+[main branch]: https://github.com/apalache-mc/apalache/tree/main
 [apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [tendermint specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/accountability
 [tendermint blockchain]: https://github.com/tendermint
 [standard repository of tla+ examples]: https://github.com/tlaplus/Examples
-[apalache benchmarks]: https://github.com/informalsystems/apalache-tests
-[checking inductive invariants]: https://github.com/informalsystems/apalache-tests/blob/master/results/001indinv-report.md
-[bounded model checking]: https://github.com/informalsystems/apalache-tests/blob/master/results/002bmc-report.md
-[user-manual]: http://informalsystems.github.io/apalache/docs/index.html
-[user-manual-docker]: https://apalache.informal.systems/docs/apalache/installation/docker.html
-[user-manual-installation]: https://apalache.informal.systems/docs/apalache/installation/index.html
-[language-manual]: https://apalache.informal.systems/docs/lang/index.html
-[idioms]: https://apalache.informal.systems//docs/idiomatic/index.html
+[apalache benchmarks]: https://github.com/apalache-mc/apalache-tests
+[checking inductive invariants]: https://github.com/apalache-mc/apalache-tests/blob/master/results/001indinv-report.md
+[bounded model checking]: https://github.com/apalache-mc/apalache-tests/blob/master/results/002bmc-report.md
+[user-manual]: http://apalache-mc.org/docs/index.html
+[user-manual-docker]: https://apalache-mc.org/docs/apalache/installation/docker.html
+[user-manual-installation]: https://apalache-mc.org/docs/apalache/installation/index.html
+[language-manual]: https://apalache-mc.org/docs/lang/index.html
+[idioms]: https://apalache-mc.org/docs/idiomatic/index.html
 [light client specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/verification
 [model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
-[apalache.informal.systems]: https://apalache.informal.systems
+[apalache-mc.org]: https://apalache-mc.org
 [TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
-[Beginner's tutorial]: https://apalache.informal.systems/docs/tutorials/entry-tutorial.html
+[Beginner's tutorial]: https://apalache-mc.org/docs/tutorials/entry-tutorial.html

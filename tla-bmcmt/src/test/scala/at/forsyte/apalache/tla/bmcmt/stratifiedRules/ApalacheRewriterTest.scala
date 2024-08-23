@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.apalache.AssignmentStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, Binding, PureArena}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -27,7 +26,7 @@ class ApalacheRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     val rule = new AssignmentStratifiedRule(rewriter)
 
-    def assignTo(lhs: TBuilderInstruction, rhs: TBuilderInstruction = tla.int(1)): TBuilderInstruction =
+    def assignTo(lhs: BuilderT, rhs: BuilderT = tla.int(1)): BuilderT =
       tla.assign(tla.prime(lhs), rhs)
 
     val startScope = RewriterScope.initial()

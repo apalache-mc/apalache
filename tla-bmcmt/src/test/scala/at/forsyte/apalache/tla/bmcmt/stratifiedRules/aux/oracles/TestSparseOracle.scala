@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
@@ -59,7 +59,7 @@ class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers
     check(prop, minSuccessful(1000), sizeRange(4))
   }
 
-  val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
+  val (assertionsA, assertionsB): (Seq[BuilderT], Seq[BuilderT]) = 0
     .to(10)
     .map { i =>
       (tla.name(s"A$i", BoolT1), tla.name(s"B$i", BoolT1))

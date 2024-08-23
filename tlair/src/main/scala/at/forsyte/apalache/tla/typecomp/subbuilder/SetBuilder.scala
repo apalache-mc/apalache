@@ -14,7 +14,7 @@ import scalaz.Scalaz._
  *   Jure Kukovec
  */
 trait SetBuilder {
-  private val unsafeBuilder = new UnsafeSetBuilder
+  private val unsafeBuilder = new UnsafeSetBuilder {}
 
   /**
    * {{{

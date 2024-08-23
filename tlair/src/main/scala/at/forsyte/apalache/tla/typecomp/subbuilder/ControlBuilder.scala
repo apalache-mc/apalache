@@ -12,7 +12,7 @@ import scalaz._
  *   Jure Kukovec
  */
 trait ControlBuilder {
-  private val unsafeBuilder = new UnsafeControlBuilder
+  private val unsafeBuilder = new UnsafeControlBuilder {}
 
   /** {{{IF p THEN A ELSE B}}} */
   def ite(p: TBuilderInstruction, A: TBuilderInstruction, B: TBuilderInstruction): TBuilderInstruction =

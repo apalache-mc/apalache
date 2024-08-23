@@ -15,7 +15,7 @@ import scalaz.Scalaz._
  *   Jure Kukovec
  */
 trait ApalacheInternalBuilder {
-  private val unsafeBuilder = new UnsafeApalacheInternalBuilder
+  private val unsafeBuilder = new UnsafeApalacheInternalBuilder {}
 
   /**
    * {{{__NotSupportedByModelChecker(msg): t}}}

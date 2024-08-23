@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.oper.TlaSeqOper
  * @author
  *   Jure Kukovec
  */
-class UnsafeSeqBuilder extends ProtoBuilder {
+trait UnsafeSeqBuilder extends ProtoBuilder {
 
   /** {{{Append(seq,elem)}}} */
   def append(seq: TlaEx, elem: TlaEx): TlaEx = buildBySignatureLookup(TlaSeqOper.append, seq, elem)

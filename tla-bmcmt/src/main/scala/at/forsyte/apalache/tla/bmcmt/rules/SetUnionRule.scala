@@ -3,10 +3,9 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TypingException}
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 
 /**
  * Implements the rule for a union of all set elements, that is, UNION S for a set S that contains sets as elements.
@@ -62,7 +61,7 @@ class SetUnionRule(rewriter: SymbStateRewriter) extends RewritingRule {
           // add all the elements to the arena
           nextState = nextState.updateArena(_.appendHas(newSetCell, unionElemPtrs: _*))
 
-          def inPointingSet(elemCell: ArenaCell, set: ArenaCell): TBuilderInstruction = {
+          def inPointingSet(elemCell: ArenaCell, set: ArenaCell): BuilderT = {
             // this is sound, because we have generated element equalities
             // and thus can use congruence of in(...) for free
             tla.and(tla.selectInSet(set.toBuilder, topSetCell.toBuilder),

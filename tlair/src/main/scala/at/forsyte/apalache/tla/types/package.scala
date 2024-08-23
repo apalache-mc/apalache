@@ -1,5 +1,7 @@
 package at.forsyte.apalache.tla
 
+import at.forsyte.apalache.tla.lir.TlaEx
+
 /**
  * Defines a premade instance of [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]], named [[tla]].
  *
@@ -132,6 +134,9 @@ package object types {
 
   import at.forsyte.apalache.tla.typecomp._
 
+  type BuilderT = TBuilderInstruction
+  type BuilderUT = TlaEx
+
   /**
    * A short-hand to the instance of the typed builder, so one can easily construct expressions.
    *
@@ -150,4 +155,5 @@ package object types {
    *   [[at.forsyte.apalache.tla.typecomp.ScopedBuilder ScopedBuilder]] for implementation details.
    */
   val tla: ScopedBuilder = new ScopedBuilder(strict = true)
+  val tlaU: ScopeUnsafeBuilder = new ScopeUnsafeBuilder(strict = true)
 }

@@ -3,8 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Auxiliary methods for handling rewriting rules.
@@ -46,13 +45,13 @@ object AuxOps {
         val domainElems = nextState.arena.getHas(domain)
         val relationElems = nextState.arena.getHas(relation)
 
-        def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell): TBuilderInstruction = {
+        def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell): BuilderT = {
           val eq = tla.unchecked(rewriter.lazyEq.safeEq(domainElem, checkedElem))
           val selectInSet = tla.selectInSet(domainElem.toBuilder, domain.toBuilder)
           tla.and(eq, selectInSet)
         }
 
-        def isInDomain(elem: ArenaCell): TBuilderInstruction = {
+        def isInDomain(elem: ArenaCell): BuilderT = {
           if (domainElems.isEmpty) {
             tla.bool(false)
           } else {
@@ -99,7 +98,7 @@ object AuxOps {
       checkedElem: ArenaCell,
       setElem: ArenaCell,
       setCell: ArenaCell,
-      lazyEq: Boolean): TBuilderInstruction = {
+      lazyEq: Boolean): BuilderT = {
 
     val conjunction = if (lazyEq) {
       tla.and(
@@ -112,6 +111,6 @@ object AuxOps {
           tla.eql(checkedElem.toBuilder, setElem.toBuilder),
       )
     }
-    conjunction.map(simplifier.simplifyShallow)
+    simplifier.applySimplifyShallowToBuilderEx(conjunction)
   }
 }

@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.typecomp.BuilderUtil._
  *   Jure Kukovec
  */
 trait BoolBuilder {
-  private val unsafeBuilder = new UnsafeBoolBuilder
+  private val unsafeBuilder = new UnsafeBoolBuilder {}
 
   /** {{{args[0] /\ ... /\ args[n]}}} */
   def and(args: TBuilderInstruction*): TBuilderInstruction = buildSeq(args).map(unsafeBuilder.and(_: _*))

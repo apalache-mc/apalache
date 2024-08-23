@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.{OperEx, TlaType1}
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla}
 
 /**
  * Rewrites X \cup Y, that is, a union of two sets (not UNION). In the first encoding, we used a linear number of `in`

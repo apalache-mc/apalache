@@ -6,7 +6,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.{tla => tlaLegacy}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.types.tla._
+import at.forsyte.apalache.tla.types.tlaU._
+import at.forsyte.apalache.tla.typecomp._
 
 trait TestSymbStateRewriterApalacheGen extends RewriterBase {
   private val parser = DefaultType1Parser

@@ -16,11 +16,8 @@ import scala.collection.immutable.SortedMap
  * @author
  *   Jure Kukovec
  */
-class UnsafeFunBuilder extends ProtoBuilder {
-
-  // We borrow the LiteralBuilder to make TLA strings from Scala strings
-  private val strBuilder = new UnsafeLiteralAndNameBuilder
-  private def mkTlaStr: String => TlaEx = strBuilder.str
+trait UnsafeFunBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
+  // We extend the LiteralBuilder to make TLA strings from Scala strings
 
   private def formRecordFieldTypes(args: Seq[TlaEx]): SortedMap[String, TlaType1] = {
     require(TlaFunOper.rec.arity.cond(args.size), s"Expected record args to have even arity, found $args.")
@@ -57,7 +54,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
   def rowRec(rowVar: Option[VarT1], args: (String, TlaEx)*): TlaEx = {
     // _recMixed does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
-      Seq(mkTlaStr(k), v)
+      Seq(str(k), v)
     }
     rowRecMixed(rowVar, flatArgs: _*)
   }
@@ -82,7 +79,7 @@ class UnsafeFunBuilder extends ProtoBuilder {
   def rec(args: (String, TlaEx)*): TlaEx = {
     // _recMixed does all the require checks
     val flatArgs = args.flatMap { case (k, v) =>
-      Seq(mkTlaStr(k), v)
+      Seq(str(k), v)
     }
     recMixed(flatArgs: _*)
   }

@@ -3,9 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
 
 /**
  * Implements a rule for Apalache!SetAsFun.
@@ -118,7 +117,7 @@ class SetAsFunRule(rewriter: SymbStateRewriter) extends RewritingRule {
       val key1 = nextState.arena.getHas(pair1).head
 
       // ensure that a pair with the same key has not been included in the relation yet
-      def keysDifferOrNotIncluded(pair2Ptr: ElemPtr): TBuilderInstruction = {
+      def keysDifferOrNotIncluded(pair2Ptr: ElemPtr): BuilderT = {
         val pair2 = pair2Ptr.elem
         val key2 = nextState.arena.getHas(pair2).head
         // pair2 \notin funRel

@@ -7,8 +7,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLit
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, TestingRewriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Prop}
@@ -69,7 +69,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
     check(prop, minSuccessful(200), sizeRange(4))
   }
 
-  val (assertionsA, assertionsB): (Seq[TBuilderInstruction], Seq[TBuilderInstruction]) = 0
+  val (assertionsA, assertionsB): (Seq[BuilderT], Seq[BuilderT]) = 0
     .to(10)
     .map { i =>
       (tla.name(s"A$i", BoolT1), tla.name(s"B$i", BoolT1))
@@ -77,7 +77,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
     .unzip
 
   test("caseAssertions requires assertion sequences of equal length") {
-    val assertionsGen: Gen[(Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
+    val assertionsGen: Gen[(Seq[BuilderT], Option[Seq[BuilderT]])] = for {
       i <- Gen.choose(0, assertionsA.size)
       j <- Gen.choose(0, assertionsB.size)
       opt <- Gen.option(Gen.const(assertionsB.take(j)))
@@ -97,7 +97,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
   }
 
   test("caseAssertions constructs a collection of ITEs, or shorthands") {
-    val gen: Gen[(Int, Seq[TBuilderInstruction], Option[Seq[TBuilderInstruction]])] = for {
+    val gen: Gen[(Int, Seq[BuilderT], Option[Seq[BuilderT]])] = for {
       size <- nonNegIntGen
       opt <- Gen.option(Gen.const(assertionsB.take(size)))
     } yield (size, assertionsA.take(size), opt)

@@ -10,11 +10,9 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
  * @author
  *   Jure Kukovec
  */
-class UnsafeApalacheBuilder(private val strict: Boolean = true) extends ProtoBuilder {
-
-  // We borrow the LiteralBuilder to make TLA integers from Scala ints
-  private val intBuilder = new UnsafeLiteralAndNameBuilder
-  private def mkTlaInt: BigInt => TlaEx = intBuilder.int
+trait UnsafeApalacheBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
+  val strict: Boolean
+  // We extend LiteralBuilder to make TLA integers from Scala ints
 
   /**
    * {{{lhs := rhs}}}
@@ -40,7 +38,20 @@ class UnsafeApalacheBuilder(private val strict: Boolean = true) extends ProtoBui
    */
   def gen(n: BigInt, t: TlaType1): TlaEx = {
     if (strict) require(n > 0, s"Expected n to be positive, found $n.")
-    OperEx(ApalacheOper.gen, mkTlaInt(n))(Typed(t))
+    OperEx(ApalacheOper.gen, int(n))(Typed(t))
+  }
+
+  /**
+   * {{{Repeat(F, N, x): t}}}
+   * @param n
+   *   must be a nonnegative constant expression
+   * @param F
+   *   must be an expression of the shape {{{LET Op(i) == ... IN Op}}}
+   */
+  def repeat(F: TlaEx, n: BigInt, x: TlaEx): TlaEx = {
+    if (strict) require(n > 0, s"Expected n to be positive, found $n.")
+    if (strict) require(isNaryPassByName(n = 2)(F), s"Expected F to be a binary operator passed by name, found $F.")
+    buildBySignatureLookup(ApalacheOper.repeat, F, int(n), x)
   }
 
   /**
@@ -103,7 +114,7 @@ class UnsafeApalacheBuilder(private val strict: Boolean = true) extends ProtoBui
       require(n >= 0, s"Expected n to be nonnegative, found $n.")
       require(isNaryPassByName(n = 1)(F), s"Expected F to be a unary operator passed by name, found $F.")
     }
-    buildBySignatureLookup(ApalacheOper.mkSeq, mkTlaInt(n), F)
+    buildBySignatureLookup(ApalacheOper.mkSeq, int(n), F)
   }
 
   /**
