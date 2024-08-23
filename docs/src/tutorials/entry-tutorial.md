@@ -386,7 +386,7 @@ If it is your first TLA+ specification, you may be surprised by this error:
 ...
 PASS #13: BoundedChecker
 This error may show up when CONSTANTS are not initialized.
-Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html
+Check the manual: https://apalache-mc.org/docs/apalache/parameters.html
 Input error (see the manual): SubstRule: Variable INPUT_SEQ is not assigned a value
 ...
 ```

@@ -15,7 +15,7 @@
 ## 1. Summary
 
 This ADR extends
-[ADR-002](https://apalache.informal.systems/docs/adr/002adr-types.html) on
+[ADR-002](https://apalache-mc.org/docs/adr/002adr-types.html) on
 types and type annotations.
 
 Virtually every user of Snowcat has faced the issue of record type checking
@@ -665,7 +665,7 @@ default untyped implementation for the operators.
 
 
 
-[ADR002]: https://apalache.informal.systems/docs/adr/002adr-types.html
+[ADR002]: https://apalache-mc.org/docs/adr/002adr-types.html
 [#401]: https://github.com/informalsystems/apalache/issues/401
 [#789]: https://github.com/informalsystems/apalache/discussions/789
 [Raft]: https://github.com/ongardie/raft.tla/blob/master/raft.tla

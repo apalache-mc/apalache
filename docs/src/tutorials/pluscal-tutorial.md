@@ -276,7 +276,7 @@ or drop us a message on [Zulip chat].
 [Issue 1412]: https://github.com/informalsystems/apalache/issues/1412
 [open an issue]: https://github.com/informalsystems/apalache/issues
 [Tutorial on Snowcat]: ./snowcat-tutorial.md
-[Checking inductive invariants]: https://apalache.informal.systems/docs/apalache/running.html#checking-an-inductive-invariant
+[Checking inductive invariants]: https://apalache-mc.org/docs/apalache/running.html#checking-an-inductive-invariant
 [TLA+ Cheatsheet in HTML]: https://mbt.informal.systems/docs/tla_basics_tutorials/tla+cheatsheet.html
 [Summary of TLA+]: https://lamport.azurewebsites.net/tla/summary-standalone.pdf
 [TLA+ Video Course]: http://lamport.azurewebsites.net/video/videos.html

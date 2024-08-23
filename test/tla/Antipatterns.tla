@@ -1,7 +1,7 @@
 ---- MODULE Antipatterns ----
 (* Contains a collection of known-to-be-inefficient Apalache constructs, a.k.a. "antipatterns".
 We explain why these constructs are inefficient in 
-https://apalache.informal.systems/docs/apalache/antipatterns.html
+https://apalache-mc.org/docs/apalache/antipatterns.html
 
 The purpose of this file is to collect known antipatterns, so we can measure just how 
 much they affect performance, across various versions of Apalache.

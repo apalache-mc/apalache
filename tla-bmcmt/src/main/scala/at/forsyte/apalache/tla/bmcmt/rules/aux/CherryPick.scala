@@ -283,7 +283,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
           case _: IndexOutOfBoundsException =>
             // TODO Remove once sound record typing is implemented
             val url =
-              "https://apalache.informal.systems/docs/apalache/known-issues.html#updating-records-with-excess-fields"
+              "https://apalache-mc.org/docs/apalache/known-issues.html#updating-records-with-excess-fields"
             val msg =
               s"""|An updated record has more fields than its declared type:
                   |A record with the inferred type `$thisRecT` has been updated with

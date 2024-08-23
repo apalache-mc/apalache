@@ -317,7 +317,7 @@
 ### Breaking changes
 
 - Invalid configuration keys found in configuration sources (e.g., `apalache.cfg` files) will now produce a configuration error on load (see #2125).
-- The structure of the apalache.cfg has changed. All configuration keys that were previously supported have been moved under the `common` key. You can update your config files by prefixing each key from the previous versions with `commong.key-name`. For an example config file, see https://apalache.informal.systems/docs/apalache/config.html#file-format-and-supported-parameters. See #2065.
+- The structure of the apalache.cfg has changed. All configuration keys that were previously supported have been moved under the `common` key. You can update your config files by prefixing each key from the previous versions with `commong.key-name`. For an example config file, see https://apalache-mc.org/docs/apalache/config.html#file-format-and-supported-parameters. See #2065.
 - Introduce --features=no-rows for the old record syntax and switch to `--features=rows` by default
 
 ### Features
@@ -737,7 +737,7 @@
 ### Documentation
 
  * Restructure and update the Apalache manual:
-   https://apalache.informal.systems/docs/index.html
+   https://apalache-mc.org/docs/index.html
 
 ## 0.17.5
 

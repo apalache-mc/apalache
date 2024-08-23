@@ -116,4 +116,4 @@ explain how the parallel checker is working. This is a subject to another ADR.
 To sum up, this layer is offering you a nice abstraction to write different
 model checking strategies.
 
-[KerA+]: https://apalache.informal.systems/docs/apalache/kera.html
+[KerA+]: https://apalache-mc.org/docs/apalache/kera.html
