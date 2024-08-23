@@ -156,7 +156,7 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [apalache benchmarks]: https://github.com/apalache-mc/apalache-tests
 [checking inductive invariants]: https://github.com/apalache-mc/apalache-tests/blob/master/results/001indinv-report.md
 [bounded model checking]: https://github.com/apalache-mc/apalache-tests/blob/master/results/002bmc-report.md
-[user-manual]: http://apalache-mc.org/apalache/docs/index.html
+[user-manual]: http://apalache-mc.org/docs/index.html
 [user-manual-docker]: https://apalache-mc.org/docs/apalache/installation/docker.html
 [user-manual-installation]: https://apalache-mc.org/docs/apalache/installation/index.html
 [language-manual]: https://apalache-mc.org/docs/lang/index.html
