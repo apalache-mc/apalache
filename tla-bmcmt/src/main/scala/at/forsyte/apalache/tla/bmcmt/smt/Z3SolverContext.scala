@@ -486,6 +486,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
 
   override def sat(): Boolean = {
     log("(check-sat)")
+    flushLogs() // good time to flush
     val status = z3solver.check()
     log(s";; sat = ${status.name()}")
     flushLogs() // good time to flush
@@ -513,11 +514,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       // temporarily, change the timeout
       setTimeout(timeoutSec * 1000)
       log("(check-sat)")
+      flushLogs() // good time to flush
       val status = z3solver.check()
       log(s";; sat = ${status.name()}")
+      flushLogs() // good time to flush
       // return timeout to maximum
       setTimeout(Int.MaxValue)
-      flushLogs() // good time to flush
       status match {
         case Status.SATISFIABLE   => Some(true)
         case Status.UNSATISFIABLE => Some(false)
