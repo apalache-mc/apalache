@@ -16,11 +16,11 @@ features. In general, Apalache runs under the same assumptions as [TLC][].
 
 To learn more about TLA+, visit [Leslie Lamport's page on TLA+][] and see his
 [video course][]. Also, check out [TLA+ language manual for
-engineers](https://apalache.informal.systems/docs/lang/index.html).
+engineers](https://apalache-mc.org/docs/lang/index.html).
 
 ## Tutorials
 
-- [Type checking TLA+ with Snowcat](https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html)
+- [Type checking TLA+ with Snowcat](https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html)
 
 - [Extended version of the Apalache tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88)
 
