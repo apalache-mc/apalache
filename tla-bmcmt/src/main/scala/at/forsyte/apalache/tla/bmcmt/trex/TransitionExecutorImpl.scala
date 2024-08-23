@@ -318,6 +318,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    *   timed out or reported *unknown*.
    */
   override def sat(timeoutSec: Int): Option[Boolean] = {
+    ctx.rewriter.flushStatistics()
     ctx.rewriter.solverContext.satOrTimeout(timeoutSec)
   }
 
