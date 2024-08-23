@@ -550,7 +550,7 @@ hint about changing a few things before you have written too much code.</p>
 <pre><code>...
 PASS #13: BoundedChecker
 This error may show up when CONSTANTS are not initialized.
-Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html
+Check the manual: https://apalache-mc.org/docs/apalache/parameters.html
 Input error (see the manual): SubstRule: Variable INPUT_SEQ is not assigned a value
 ...
 </code></pre>
@@ -1755,7 +1755,7 @@ However, since Apalache only analyzes executions that make up to 10
 transitions by default, this analysis is incomplete.</p>
 <h2><a class="header" href="#step-4-checking-mutual-exclusion-for-unbounded-executions" id="step-4-checking-mutual-exclusion-for-unbounded-executions">Step 4: Checking mutual exclusion for unbounded executions</a></h2>
 <p>To analyze executions of arbitrary length with Apalache, we can check an
-inductive invariant. For details, see the section on <a href="https://apalache.informal.systems/docs/apalache/running.html#checking-an-inductive-invariant">Checking inductive
+inductive invariant. For details, see the section on <a href="https://apalache-mc.org/docs/apalache/running.html#checking-an-inductive-invariant">Checking inductive
 invariants</a>. The Bakery specification contains such an invariant written by
 Leslie Lamport:</p>
 <pre><code class="language-tla">(***************************************************************************)
@@ -3965,7 +3965,7 @@ the types of all expressions in the parsed specification. It terminates successf
 </li>
 <li>
 <p><code>simulate</code> performs all of the operations of <code>typecheck</code> and additionally runs the model checker in simulation mode,
-which <em>randomly</em> picks a sequence of <a href="https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices">actions</a>
+which <em>randomly</em> picks a sequence of <a href="https://apalache-mc.org/docs/apalache/assignments-in-depth.html#slices">actions</a>
 and checks the invariants for the subset of all executions which only admit actions in the selected order. 
 It terminates successfully if there are no invariant violations. 
 This command usually checks randomized symbolic runs much faster than the <code>check</code> command.</p>
@@ -3977,7 +3977,7 @@ the length of which does not exceed the value specified by the <code>--length</c
 It terminates successfully if there are no invariant violations.</p>
 </li>
 <li>
-<p><code>test</code> performs all of the operations of <code>check</code> in a mode that is designed to <a href="https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions">test a single action</a>.</p>
+<p><code>test</code> performs all of the operations of <code>check</code> in a mode that is designed to <a href="https://apalache-mc.org/docs/adr/006rfc-unit-testing.html#32-testing-actions">test a single action</a>.</p>
 </li>
 </ul>
 <h2><a class="header" href="#1-model-checker-and-simulator-command-line-parameters" id="1-model-checker-and-simulator-command-line-parameters">1. Model checker and simulator command-line parameters</a></h2>
@@ -4534,7 +4534,7 @@ Inv == FALSE
 <pre><code class="language-console">...
 PASS #9: TransitionFinderPass
 To understand the error, [check the
-manual](https://apalache.informal.systems/docs/apalache/principles/assignments.html):
+manual](https://apalache-mc.org/docs/apalache/principles/assignments.html):
 Assignment error: No assignments found for: a
 It took me 0 days  0 hours  0 min  1 sec
 Total time: 1.88 sec
@@ -5092,7 +5092,7 @@ interesting application of this technique, please let us know!</p>
 the operators in that module are used internally by Apalache, when rewriting a TLA+ specification. It is useful
 to read the comments to the operators defined in <a href="https://github.com/informalsystems/apalache/tree/main/src/tla/Apalache.tla">Apalache.tla</a>, as they will help you in understanding
 the <a href="apalache/principles/../running.html#detailed">detailed output</a> produced by the tool.</p>
-<p>See the detailed description of the <a href="https://apalache.informal.systems/docs/lang/apalache-operators.html">Apalache operators</a>.</p>
+<p>See the detailed description of the <a href="https://apalache-mc.org/docs/lang/apalache-operators.html">Apalache operators</a>.</p>
 <h3><a class="header" href="#naturals" id="naturals">Naturals</a></h3>
 <p>If you look carefully at the <a href="apalache/principles/../../HOWTOs/howto-write-type-annotations.html">HOWTO on annotations</a>, you will find that
 there is no designated type for naturals. Indeed, one can just use the type
@@ -5538,7 +5538,7 @@ Type checker [FAILED]
 <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
 <h2><a class="header" href="#safety-vs-liveness" id="safety-vs-liveness">Safety vs. Liveness</a></h2>
 <p>At the moment, Apalache is able to check state invariants, action invariants,
-temporal properties, trace invariants, as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/principles/invariants.html">page on
+temporal properties, trace invariants, as well as inductive invariants. (See the <a href="https://apalache-mc.org/docs/apalache/principles/invariants.html">page on
 invariants</a> in
 the manual.) To check liveness/temporal properties, we employ a <a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation.</p>
 <h2><a class="header" href="#language" id="language">Language</a></h2>
@@ -5587,7 +5587,7 @@ replaced with a constant.</p>
 <tr><td><code>[ f EXCEPT ![e1] = e2 ]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#records" id="records">Records</a></h4>
-<p><em>Use <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type
+<p><em>Use <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type
 annotations</a>
 to help the model checker in finding the right types.</em> Note that our type
 system distinguishes records from general functions.</p>
@@ -5599,13 +5599,13 @@ system distinguishes records from general functions.</p>
 <tr><td><code>[ r EXCEPT !.h = e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#tuples" id="tuples">Tuples</a></h4>
-<p><em>Use <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type
+<p><em>Use <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type
 annotations</a>
 to help the model checker in finding the right types.</em> Note that our type
 system distinguishes records from general functions.</p>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>e[i]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
-<tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Use a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a> to distinguish between a tuple and a sequence.</td></tr>
+<tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Use a <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type annotation</a> to distinguish between a tuple and a sequence.</td></tr>
 <tr><td><code>S1 \X ... \X S_n</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>[ t EXCEPT ![i] = e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
 </tbody></table>
@@ -5659,7 +5659,7 @@ may only appear in temporal properties, not in e.g. actions.</p>
 </tbody></table>
 <h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
+<tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
 <tr><td><code>Head</code>, <code>Tail</code>, <code>Len``, </code>SubSeq<code>, </code>Append<code>, </code>\o<code>, </code>f[e]`</td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>EXCEPT</code></td><td align="center">✔</td><td align="center"></td><td></td></tr>
 <tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/informalsystems/apalache/issues/1350">#1350</a>.</td></tr>
@@ -11154,7 +11154,7 @@ simple and avoid shadowing at all.</p>
 Systems</a>. In a nutshell, operator application in TLA+ is a <a href="https://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_macro_expansion">Call by macro
 expansion</a>, though it is a bit smarter: It does not blindly mix names from the
 operator's body and its application context. For example, the following
-semantics by substitution is implemented in the <a href="https://apalache.informal.systems">Apalache</a> model checker.</p>
+semantics by substitution is implemented in the <a href="https://apalache-mc.org">Apalache</a> model checker.</p>
 <p>Here we give a simple explanation for non-recursive operators. Consider the
 definition of an <code>n</code>-ary operator <code>A</code> and its application in the definition
 of another operator <code>B</code>:</p>
@@ -11214,7 +11214,7 @@ several steps as follows:</p>
 bottom, like peeling an onion. We could do it in another direction: First
 starting with the application of <code>Fahrenheit2Celcius</code>. This actually does not
 matter, as long as our goal is to produce a TLA+ expression that is free of
-user-defined operators. For instance, <a href="https://apalache.informal.systems">Apalache</a> applies <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion">Alpha conversion</a> and
+user-defined operators. For instance, <a href="https://apalache-mc.org">Apalache</a> applies <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion">Alpha conversion</a> and
 <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B2-reduction">Beta reduction</a> to remove user-defined operator and then translates the TLA+
 expression to SMT.</p>
 <h1><a class="header" href="#let-in-operator-definitions" id="let-in-operator-definitions">LET-IN operator definitions</a></h1>
@@ -12385,7 +12385,7 @@ THEOREMs in the spirit of <a href="adr/001rfc-types.html#typesAsTypeOk">types as
 <tr><td>Shon Feder, Igor Konnov, Jure Kukovec</td><td align="right">8</td><td align="right">July 22, 2022</td></tr>
 </tbody></table>
 <p><em>This is an architectural decision record. For user documentation, check the
-<a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">Snowcat tutorial</a> and <a href="https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html">Snowcat HOWTO</a>.</em></p>
+<a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">Snowcat tutorial</a> and <a href="https://apalache-mc.org/docs/HOWTOs/howto-write-type-annotations.html">Snowcat HOWTO</a>.</em></p>
 <p>This is a follow up of <a href="adr/./001rfc-types.html">RFC-001</a>, which discusses plenty of
 alternative solutions. In this <strong>ADR-002</strong>, we fix one solution that seems to be
 most suitable. The interchange format for the type inference tools will be
@@ -12914,7 +12914,7 @@ model checker)</li>
 </li>
 </ul>
 <p>TRex can be thought of as an API for a satisfiability solver on top of TLA+ (in
-the fragment of <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a>). We can even say that TRex is a solver for TLA+, in
+the fragment of <a href="https://apalache-mc.org/docs/apalache/kera.html">KerA+</a>). We can even say that TRex is a solver for TLA+, in
 contrast to an SMT solver, which is a solver for theories in first-order logic.
 As TLA+ is built around the concepts of a state and a transition, the TRex API
 abstracts symbolic execution in terms of symbolic states and symbolic
@@ -12992,7 +12992,7 @@ model checking strategies.</p>
 </tbody></table>
 <p>This ADR documents our decision on using Java-like annotations in comments.
 Our main motivation to have annotations is to simplify type annotations, as
-presented in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a>. Hence, in the following text, we are using
+presented in <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR-002</a>. Hence, in the following text, we are using
 examples for type annotations. However, the annotations framework is not
 restricted to types. Similar to Java and Scala, we can use annotations
 to decorate operators with hints, which may aid the model checker.</p>
@@ -13169,7 +13169,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 }
 </code></pre>
 <h2><a class="header" href="#3-serializing-tagged-entities" id="3-serializing-tagged-entities">3. Serializing tagged entities</a></h2>
-<p>Serializations of entities annotated with a <code>TypeTag</code> will have an additional field named <code>type</code>, containing the type of the expression (see <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a>, <a href="https://apalache.informal.systems/docs/adr/004adr-annotations.html">ADR-004</a> for a description of our type system and the syntax for types-as-string-annotations respectively), if the tag is <code>Typed</code>, or <code>Untyped</code> otherwise. For example, the integer literal <code>1</code> is represented by a <code>ValEx</code>, which has type <code>Int</code> and is serialized as follows:</p>
+<p>Serializations of entities annotated with a <code>TypeTag</code> will have an additional field named <code>type</code>, containing the type of the expression (see <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR-002</a>, <a href="https://apalache-mc.org/docs/adr/004adr-annotations.html">ADR-004</a> for a description of our type system and the syntax for types-as-string-annotations respectively), if the tag is <code>Typed</code>, or <code>Untyped</code> otherwise. For example, the integer literal <code>1</code> is represented by a <code>ValEx</code>, which has type <code>Int</code> and is serialized as follows:</p>
 <pre><code>{
   &quot;kind&quot;: &quot;ValEx&quot;,
   &quot;type&quot;: &quot;Int&quot;
@@ -14724,7 +14724,7 @@ API from the start.</p>
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
 <tr><td>Rodrigo Otoni</td><td align="right">1.8</td></tr>
 </tbody></table>
-<p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
+<p>This ADR describes an alternative encoding of the <a href="https://apalache-mc.org/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
 with the goal being to encode them using <a href="http://smtlib.cs.uiowa.edu/theories-ArraysEx.shtml">arrays with extensionality</a> instead.
 The hypothesis is that this will lead to increased solver performance and more compact SMT instances.
@@ -14738,7 +14738,7 @@ check the <a href="https://doi.org/10.1007/978-3-031-30823-9_7">Symbolic Model C
 <p>The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the <code>check</code> command of the CLI. The default encoding will be
 the existing one. The option description is shown below. The envvar <code>SMT_ENCODING</code> can also be used to
-set the encoding, see the <a href="https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details. In addition to the <code>arrays</code> encoding,
+set the encoding, see the <a href="https://apalache-mc.org/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details. In addition to the <code>arrays</code> encoding,
 which uses SMT arrays to encode TLA+ sets and functions, we also have the <code>funArrays</code> encoding, which
 restricts itself to encoding only TLA+ functions as SMT arrays.</p>
 <pre><code>--smt-encoding : the SMT encoding: oopsla19, arrays (experimental), funArrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)
@@ -15296,7 +15296,7 @@ program options. See <a href="adr/./022adr-unification-of-configs-and-options.ht
 </ul>
 <h2><a class="header" href="#1-summary" id="1-summary">1. Summary</a></h2>
 <p>This ADR extends
-<a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a> on
+<a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR-002</a> on
 types and type annotations.</p>
 <p>Virtually every user of Snowcat has faced the issue of record type checking
 being imprecise. Some people call it &quot;unsound&quot;, though soundness depends on the
@@ -15323,7 +15323,7 @@ without introducing additional operators.</p>
 <p>We believe that the benefits outweigh the downsides in the long run. Moreover,
 it will improve user experience, as this is the most requested feature.</p>
 <h2><a class="header" href="#2-context" id="2-context">2. Context</a></h2>
-<p>As discussed in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR002</a>, the type checker is not checking the record types
+<p>As discussed in <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR002</a>, the type checker is not checking the record types
 precisely. Consider the following operator:</p>
 <pre><code class="language-tla">Foo ==
   LET S == {[ type |-&gt; &quot;A&quot;, a |-&gt; 1], [ type |-&gt; &quot;B&quot;, b |-&gt; 2 ]} IN
@@ -15825,7 +15825,7 @@ default untyped implementation for the operators.</p>
 </ul>
 <h2><a class="header" href="#summary-2" id="summary-2">Summary</a></h2>
 <p>We propose a simple format for counterexamples (traces) in <a href="https://en.wikipedia.org/wiki/JSON">JSON</a>. Although
-Apalache already supports serialization to <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> in <a href="https://apalache.informal.systems/docs/adr/005adr-json.html">ADR005</a>, it is a
+Apalache already supports serialization to <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> in <a href="https://apalache-mc.org/docs/adr/005adr-json.html">ADR005</a>, it is a
 general serialization format for all the constructs of TLA+ that are supported
 by Apalache. This makes tool integration harder. It also make it hard to
 communicate counterexamples to engineers who are not familiar with TLA+. This
@@ -15985,7 +15985,7 @@ in JSON.</p>
 </ul>
 </li>
 <li>
-<p>Use the JSON serialization as in <a href="https://apalache.informal.systems/docs/adr/005adr-json.html">ADR005</a>:</p>
+<p>Use the JSON serialization as in <a href="https://apalache-mc.org/docs/adr/005adr-json.html">ADR005</a>:</p>
 <ul>
 <li>
 <p>Pros:</p>
@@ -16125,7 +16125,7 @@ error.</p>
 <p>To be able to read ITF traces, Apalache demands the following:</p>
 <ul>
 <li>The <code>#meta</code> field must be present</li>
-<li>The <code>#meta</code> field must contain a field <code>varTypes</code>, which is an object, the keys of which are the variables declared in <code>vars</code>, and the values are string representations of their types (as defined in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR002</a>).</li>
+<li>The <code>#meta</code> field must contain a field <code>varTypes</code>, which is an object, the keys of which are the variables declared in <code>vars</code>, and the values are string representations of their types (as defined in <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR002</a>).</li>
 </ul>
 <p>For example:</p>
 <pre><code class="language-js">&quot;#meta&quot;: {
@@ -17606,7 +17606,7 @@ Inv == TRUE
 <pre><code class="language-json">{
   &quot;name&quot;: &quot;ApalacheIR&quot;,
   &quot;version&quot;: &quot;1.0&quot;,
-  &quot;description&quot;: &quot;https://apalache.informal.systems/docs/adr/005adr-json.html&quot;,
+  &quot;description&quot;: &quot;https://apalache-mc.org/docs/adr/005adr-json.html&quot;,
   &quot;modules&quot;: [
     {
       &quot;kind&quot;: &quot;TlaModule&quot;,

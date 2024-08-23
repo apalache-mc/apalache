@@ -174,7 +174,7 @@
 <table><thead><tr><th>author</th><th align="right">revision</th></tr></thead><tbody>
 <tr><td>Rodrigo Otoni</td><td align="right">1.8</td></tr>
 </tbody></table>
-<p>This ADR describes an alternative encoding of the <a href="https://apalache.informal.systems/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
+<p>This ADR describes an alternative encoding of the <a href="https://apalache-mc.org/docs/apalache/kera.html">KerA+</a> fragment of TLA+ into SMT.
 Compound data structures, e.g. sets, are currently encoded using the <a href="http://smtlib.cs.uiowa.edu/theories-Core.shtml">core theory</a> of SMT,
 with the goal being to encode them using <a href="http://smtlib.cs.uiowa.edu/theories-ArraysEx.shtml">arrays with extensionality</a> instead.
 The hypothesis is that this will lead to increased solver performance and more compact SMT instances.
@@ -188,7 +188,7 @@ check the <a href="https://doi.org/10.1007/978-3-031-30823-9_7">Symbolic Model C
 <p>The encoding using arrays is to be an alternative, not a replacement, to the already existing encoding.
 Given this, a new option is to be added to the <code>check</code> command of the CLI. The default encoding will be
 the existing one. The option description is shown below. The envvar <code>SMT_ENCODING</code> can also be used to
-set the encoding, see the <a href="https://apalache.informal.systems/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details. In addition to the <code>arrays</code> encoding,
+set the encoding, see the <a href="https://apalache-mc.org/docs/apalache/running.html#model-checker-command-line-parameters">model checking parameters</a> for details. In addition to the <code>arrays</code> encoding,
 which uses SMT arrays to encode TLA+ sets and functions, we also have the <code>funArrays</code> encoding, which
 restricts itself to encoding only TLA+ functions as SMT arrays.</p>
 <pre><code>--smt-encoding : the SMT encoding: oopsla19, arrays (experimental), funArrays (experimental), default: oopsla19 (overrides envvar SMT_ENCODING)

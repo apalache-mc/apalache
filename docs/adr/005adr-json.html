@@ -217,7 +217,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 }
 </code></pre>
 <h2><a class="header" href="#3-serializing-tagged-entities" id="3-serializing-tagged-entities">3. Serializing tagged entities</a></h2>
-<p>Serializations of entities annotated with a <code>TypeTag</code> will have an additional field named <code>type</code>, containing the type of the expression (see <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a>, <a href="https://apalache.informal.systems/docs/adr/004adr-annotations.html">ADR-004</a> for a description of our type system and the syntax for types-as-string-annotations respectively), if the tag is <code>Typed</code>, or <code>Untyped</code> otherwise. For example, the integer literal <code>1</code> is represented by a <code>ValEx</code>, which has type <code>Int</code> and is serialized as follows:</p>
+<p>Serializations of entities annotated with a <code>TypeTag</code> will have an additional field named <code>type</code>, containing the type of the expression (see <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR-002</a>, <a href="https://apalache-mc.org/docs/adr/004adr-annotations.html">ADR-004</a> for a description of our type system and the syntax for types-as-string-annotations respectively), if the tag is <code>Typed</code>, or <code>Untyped</code> otherwise. For example, the integer literal <code>1</code> is represented by a <code>ValEx</code>, which has type <code>Int</code> and is serialized as follows:</p>
 <pre><code>{
   &quot;kind&quot;: &quot;ValEx&quot;,
   &quot;type&quot;: &quot;Int&quot;

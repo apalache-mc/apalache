@@ -173,7 +173,7 @@
                         <p>Here is the list of the TLA+ language features that are currently supported by Apalache, following the <a href="https://lamport.azurewebsites.net/tla/summary.pdf">Summary of TLA+</a>.</p>
 <h2><a class="header" href="#safety-vs-liveness" id="safety-vs-liveness">Safety vs. Liveness</a></h2>
 <p>At the moment, Apalache is able to check state invariants, action invariants,
-temporal properties, trace invariants, as well as inductive invariants. (See the <a href="https://apalache.informal.systems/docs/apalache/principles/invariants.html">page on
+temporal properties, trace invariants, as well as inductive invariants. (See the <a href="https://apalache-mc.org/docs/apalache/principles/invariants.html">page on
 invariants</a> in
 the manual.) To check liveness/temporal properties, we employ a <a href="https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub">liveness-to-safety</a> transformation.</p>
 <h2><a class="header" href="#language" id="language">Language</a></h2>
@@ -222,7 +222,7 @@ replaced with a constant.</p>
 <tr><td><code>[ f EXCEPT ![e1] = e2 ]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#records" id="records">Records</a></h4>
-<p><em>Use <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type
+<p><em>Use <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type
 annotations</a>
 to help the model checker in finding the right types.</em> Note that our type
 system distinguishes records from general functions.</p>
@@ -234,13 +234,13 @@ system distinguishes records from general functions.</p>
 <tr><td><code>[ r EXCEPT !.h = e]</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 </tbody></table>
 <h4><a class="header" href="#tuples" id="tuples">Tuples</a></h4>
-<p><em>Use <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type
+<p><em>Use <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type
 annotations</a>
 to help the model checker in finding the right types.</em> Note that our type
 system distinguishes records from general functions.</p>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
 <tr><td><code>e[i]</code></td><td align="center">✔ / ✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
-<tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Use a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a> to distinguish between a tuple and a sequence.</td></tr>
+<tr><td><code>&lt;&lt; e1, ..., e_n &gt;&gt;</code></td><td align="center">✔</td><td align="center">-</td><td>Use a <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type annotation</a> to distinguish between a tuple and a sequence.</td></tr>
 <tr><td><code>S1 \X ... \X S_n</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>[ t EXCEPT ![i] = e]</code></td><td align="center">✔/✖</td><td align="center">-</td><td>Provided that <code>i</code> is a constant expression</td></tr>
 </tbody></table>
@@ -294,7 +294,7 @@ may only appear in temporal properties, not in e.g. actions.</p>
 </tbody></table>
 <h3><a class="header" href="#sequences" id="sequences">Sequences</a></h3>
 <table><thead><tr><th>Operator</th><th align="center">Supported?</th><th align="center">Milestone</th><th>Comment</th></tr></thead><tbody>
-<tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
+<tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
 <tr><td><code>Head</code>, <code>Tail</code>, <code>Len``, </code>SubSeq<code>, </code>Append<code>, </code>\o<code>, </code>f[e]`</td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>EXCEPT</code></td><td align="center">✔</td><td align="center"></td><td></td></tr>
 <tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/informalsystems/apalache/issues/1350">#1350</a>.</td></tr>

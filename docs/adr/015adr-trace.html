@@ -184,7 +184,7 @@
 </ul>
 <h2><a class="header" href="#summary" id="summary">Summary</a></h2>
 <p>We propose a simple format for counterexamples (traces) in <a href="https://en.wikipedia.org/wiki/JSON">JSON</a>. Although
-Apalache already supports serialization to <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> in <a href="https://apalache.informal.systems/docs/adr/005adr-json.html">ADR005</a>, it is a
+Apalache already supports serialization to <a href="https://en.wikipedia.org/wiki/JSON">JSON</a> in <a href="https://apalache-mc.org/docs/adr/005adr-json.html">ADR005</a>, it is a
 general serialization format for all the constructs of TLA+ that are supported
 by Apalache. This makes tool integration harder. It also make it hard to
 communicate counterexamples to engineers who are not familiar with TLA+. This
@@ -344,7 +344,7 @@ in JSON.</p>
 </ul>
 </li>
 <li>
-<p>Use the JSON serialization as in <a href="https://apalache.informal.systems/docs/adr/005adr-json.html">ADR005</a>:</p>
+<p>Use the JSON serialization as in <a href="https://apalache-mc.org/docs/adr/005adr-json.html">ADR005</a>:</p>
 <ul>
 <li>
 <p>Pros:</p>
@@ -484,7 +484,7 @@ error.</p>
 <p>To be able to read ITF traces, Apalache demands the following:</p>
 <ul>
 <li>The <code>#meta</code> field must be present</li>
-<li>The <code>#meta</code> field must contain a field <code>varTypes</code>, which is an object, the keys of which are the variables declared in <code>vars</code>, and the values are string representations of their types (as defined in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR002</a>).</li>
+<li>The <code>#meta</code> field must contain a field <code>varTypes</code>, which is an object, the keys of which are the variables declared in <code>vars</code>, and the values are string representations of their types (as defined in <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR002</a>).</li>
 </ul>
 <p>For example:</p>
 <pre><code class="language-js">&quot;#meta&quot;: {

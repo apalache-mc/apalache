@@ -192,7 +192,7 @@ the types of all expressions in the parsed specification. It terminates successf
 </li>
 <li>
 <p><code>simulate</code> performs all of the operations of <code>typecheck</code> and additionally runs the model checker in simulation mode,
-which <em>randomly</em> picks a sequence of <a href="https://apalache.informal.systems/docs/apalache/assignments-in-depth.html#slices">actions</a>
+which <em>randomly</em> picks a sequence of <a href="https://apalache-mc.org/docs/apalache/assignments-in-depth.html#slices">actions</a>
 and checks the invariants for the subset of all executions which only admit actions in the selected order. 
 It terminates successfully if there are no invariant violations. 
 This command usually checks randomized symbolic runs much faster than the <code>check</code> command.</p>
@@ -204,7 +204,7 @@ the length of which does not exceed the value specified by the <code>--length</c
 It terminates successfully if there are no invariant violations.</p>
 </li>
 <li>
-<p><code>test</code> performs all of the operations of <code>check</code> in a mode that is designed to <a href="https://apalache.informal.systems/docs/adr/006rfc-unit-testing.html#32-testing-actions">test a single action</a>.</p>
+<p><code>test</code> performs all of the operations of <code>check</code> in a mode that is designed to <a href="https://apalache-mc.org/docs/adr/006rfc-unit-testing.html#32-testing-actions">test a single action</a>.</p>
 </li>
 </ul>
 <h2><a class="header" href="#1-model-checker-and-simulator-command-line-parameters" id="1-model-checker-and-simulator-command-line-parameters">1. Model checker and simulator command-line parameters</a></h2>

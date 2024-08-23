@@ -288,7 +288,7 @@ simple and avoid shadowing at all.</p>
 Systems</a>. In a nutshell, operator application in TLA+ is a <a href="https://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_macro_expansion">Call by macro
 expansion</a>, though it is a bit smarter: It does not blindly mix names from the
 operator's body and its application context. For example, the following
-semantics by substitution is implemented in the <a href="https://apalache.informal.systems">Apalache</a> model checker.</p>
+semantics by substitution is implemented in the <a href="https://apalache-mc.org">Apalache</a> model checker.</p>
 <p>Here we give a simple explanation for non-recursive operators. Consider the
 definition of an <code>n</code>-ary operator <code>A</code> and its application in the definition
 of another operator <code>B</code>:</p>
@@ -348,7 +348,7 @@ several steps as follows:</p>
 bottom, like peeling an onion. We could do it in another direction: First
 starting with the application of <code>Fahrenheit2Celcius</code>. This actually does not
 matter, as long as our goal is to produce a TLA+ expression that is free of
-user-defined operators. For instance, <a href="https://apalache.informal.systems">Apalache</a> applies <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion">Alpha conversion</a> and
+user-defined operators. For instance, <a href="https://apalache-mc.org">Apalache</a> applies <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion">Alpha conversion</a> and
 <a href="https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B2-reduction">Beta reduction</a> to remove user-defined operator and then translates the TLA+
 expression to SMT.</p>
 

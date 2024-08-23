@@ -184,7 +184,7 @@
 </ul>
 <h2><a class="header" href="#1-summary" id="1-summary">1. Summary</a></h2>
 <p>This ADR extends
-<a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR-002</a> on
+<a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR-002</a> on
 types and type annotations.</p>
 <p>Virtually every user of Snowcat has faced the issue of record type checking
 being imprecise. Some people call it &quot;unsound&quot;, though soundness depends on the
@@ -211,7 +211,7 @@ without introducing additional operators.</p>
 <p>We believe that the benefits outweigh the downsides in the long run. Moreover,
 it will improve user experience, as this is the most requested feature.</p>
 <h2><a class="header" href="#2-context" id="2-context">2. Context</a></h2>
-<p>As discussed in <a href="https://apalache.informal.systems/docs/adr/002adr-types.html">ADR002</a>, the type checker is not checking the record types
+<p>As discussed in <a href="https://apalache-mc.org/docs/adr/002adr-types.html">ADR002</a>, the type checker is not checking the record types
 precisely. Consider the following operator:</p>
 <pre><code class="language-tla">Foo ==
   LET S == {[ type |-&gt; &quot;A&quot;, a |-&gt; 1], [ type |-&gt; &quot;B&quot;, b |-&gt; 2 ]} IN
