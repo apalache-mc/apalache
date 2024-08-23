@@ -44,7 +44,7 @@ object Tool extends LazyLogging {
         // If it is caught here, logging has not been set up yet, so print directly to `Console.err`.
         Console.err.println(s"Error: Ran out of heap memory (max JVM memory: ${Runtime.getRuntime.maxMemory})")
         Console.err.println(s"To increase available heap memory, see the manual:")
-        Console.err.println("  [https://apalache.informal.systems/docs/apalache/running.html#supplying-jvm-arguments]")
+        Console.err.println("  [https://apalache-mc.org/docs/apalache/running.html#supplying-jvm-arguments]")
         Console.out.println(s"EXITCODE: ERROR (${ExitCodes.ERROR})")
         System.exit(ExitCodes.ERROR)
     }

@@ -598,8 +598,8 @@ AtMostOne ==
 =============================================================================
 ```
 
-[Snowcat tutorial]: https://apalache.informal.systems/docs/tutorials/snowcat-tutorial.html
-[Snowcat HOWTO]: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html
+[Snowcat tutorial]: https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html
+[Snowcat HOWTO]: https://apalache-mc.org/docs/HOWTOs/howto-write-type-annotations.html
 [ADR014]: https://github.com/informalsystems/apalache/blob/main/docs/src/adr/014adr-precise-records.md
 [Issue 401]: https://github.com/informalsystems/apalache/issues/401
 [Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism

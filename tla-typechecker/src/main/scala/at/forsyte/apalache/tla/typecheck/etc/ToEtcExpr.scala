@@ -898,7 +898,7 @@ class ToEtcExpr(
       case OperEx(ApalacheOper.withType, _, annotation) =>
         // Met an old type annotation. Warn the user and ignore the annotation.
         logger.error("Met an old type annotation: " + annotation)
-        logger.error("See: https://apalache.informal.systems/docs/apalache/typechecker-snowcat.html")
+        logger.error("See: https://apalache-mc.org/docs/apalache/typechecker-snowcat.html")
         val msg = s"Old Apalache type annotations (predating 0.12.0) are no longer supported"
         throw new OutdatedAnnotationsError(msg, ex)
 

@@ -225,5 +225,5 @@ expression to SMT.
 [Call by macro expansion]: https://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_macro_expansion
 [Alpha conversion]: https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B1-conversion
 [Beta reduction]: https://en.wikipedia.org/wiki/Lambda_calculus#%CE%B2-reduction
-[Apalache]: https://apalache.informal.systems
+[Apalache]: https://apalache-mc.org
 

@@ -15,7 +15,7 @@ package at.forsyte.apalache.io.annotations.parser
  * Perhaps, the first step would be to write a precise grammar for this lexer, instead of write the spaghetti of
  * if-then-else expressions, as we have in this preprocessor.</p>
  *
- * <p>See the annotations HOWTO: https://apalache.informal.systems/docs/HOWTOs/howto-write-type-annotations.html</p>
+ * <p>See the annotations HOWTO: https://apalache-mc.org/docs/HOWTOs/howto-write-type-annotations.html</p>
  *
  * @author
  *   Igor Konnov

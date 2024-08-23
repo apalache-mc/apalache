@@ -158,7 +158,7 @@ This is done because the SANY parser is pruning the linefeed character `\n`,
 so it would be otherwise impossible to find the end of an annotation.
 
 
-[ADR-002]: https://apalache.informal.systems/docs/adr/002adr-types.html
+[ADR-002]: https://apalache-mc.org/docs/adr/002adr-types.html
 [JavaTokenParsers]: https://www.scala-lang.org/api/2.12.2/scala-parser-combinators/scala/util/parsing/combinator/JavaTokenParsers.html
 
 [Java identifier]: https://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.8

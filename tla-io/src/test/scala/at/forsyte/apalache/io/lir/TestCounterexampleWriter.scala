@@ -231,7 +231,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         """{
           |  "name": "ApalacheIR",
           |  "version": "1.0",
-          |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+          |  "description": "https://apalache-mc.org/docs/adr/005adr-json.html",
           |  "modules": [
           |    {
           |      "kind": "TlaModule",
@@ -334,7 +334,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         """{
         |  "name": "ApalacheIR",
         |  "version": "1.0",
-        |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+        |  "description": "https://apalache-mc.org/docs/adr/005adr-json.html",
         |  "modules": [
         |    {
         |      "kind": "TlaModule",
@@ -505,7 +505,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         """{
         |  "name": "ApalacheIR",
         |  "version": "1.0",
-        |  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+        |  "description": "https://apalache-mc.org/docs/adr/005adr-json.html",
         |  "modules": [
         |    {
         |      "kind": "TlaModule",

@@ -80,7 +80,7 @@ class KeramelizerInputLanguagePred extends ContextualLanguagePred {
 }
 
 object KeramelizerInputLanguagePred {
-  val MANUAL_LINK_SEQ = "https://apalache.informal.systems/docs/apalache/known-issues.html#using-seqs"
+  val MANUAL_LINK_SEQ = "https://apalache-mc.org/docs/apalache/known-issues.html#using-seqs"
 
   private val singleton = new KeramelizerInputLanguagePred
 

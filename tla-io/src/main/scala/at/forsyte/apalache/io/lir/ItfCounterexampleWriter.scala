@@ -56,7 +56,7 @@ object ItfCounterexampleWriter {
           )
       )
       val descriptions = Map[String, ujson.Value](
-          FORMAT_DESCRIPTION_FIELD -> "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+          FORMAT_DESCRIPTION_FIELD -> "https://apalache-mc.org/docs/adr/015adr-trace.html",
           DESCRIPTION_FIELD -> "Created by Apalache on %s".format(Calendar.getInstance().getTime),
       )
 

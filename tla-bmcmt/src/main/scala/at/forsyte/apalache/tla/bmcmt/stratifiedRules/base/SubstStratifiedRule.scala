@@ -29,7 +29,7 @@ class SubstStratifiedRule extends StratifiedRuleInterface with LazyLogging {
         (startingScope, binding(x))
       } else {
         logger.error("This error may show up when CONSTANTS are not initialized.")
-        logger.error("Check the manual: https://apalache.informal.systems/docs/apalache/parameters.html")
+        logger.error("Check the manual: https://apalache-mc.org/docs/apalache/parameters.html")
         throw new TlaInputError(s"${getClass.getSimpleName}: Variable $x is not assigned a value")
       }
 

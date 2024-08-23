@@ -23,8 +23,8 @@ case class RowsFeature(
 }
 
 /**
- * Enable imprecise record types, see <a
- * href="https://apalache.informal.systems/docs/adr/002adr-types.html#15-discussion">the discussion in ADR-002</a>.
+ * Enable imprecise record types, see <a href="https://apalache-mc.org/docs/adr/002adr-types.html#15-discussion">the
+ * discussion in ADR-002</a>.
  *
  * [[ImpreciseRecordsFeature]] is mutually exclusive with [[RowsFeature]]. It is present only for backwards
  * compatibility.
