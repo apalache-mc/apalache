@@ -145,6 +145,11 @@ TestExists15InPowerset ==
     \E S \in SUBSET Set263:
         S = { 2, 6 }
 
+\* This test is expected to fail. It should be run separately.
+FailExpandLargePowerset ==
+    \E S \in SUBSET (1..30):
+        31 \notin S
+
 TestForallInPowerset ==
     \A S \in SUBSET Set1357:
         6 \notin S
