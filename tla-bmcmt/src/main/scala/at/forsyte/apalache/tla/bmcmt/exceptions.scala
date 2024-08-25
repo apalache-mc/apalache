@@ -23,6 +23,17 @@ class CheckerException(message: String, val causeExpr: TlaEx) extends Exception(
 class RewriterException(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
 
 /**
+ * This exception is thrown when the rewriter meets a generally well-formed TLA+ expression
+ * that cannot be handled due to some known limitations of the model checker.
+ *
+ * @param message
+ *   error message
+ * @param causeExpr
+ *   the problematic TLA+ expression, may be NullEx
+ */
+class RewriterKnownLimitationError(message: String, causeExpr: TlaEx) extends CheckerException(message, causeExpr)
+
+/**
  * This exception is thrown when QStateRewrite cannot find an applicable rule.
  *
  * @param message
