@@ -2673,7 +2673,7 @@ EXITCODE: OK
 ```sh
 $ apalache-mc check --length=0 --inv=FailExpandLargePowerset TestSets.tla | sed 's/[IEW]@.*//'
 ...
-<unknown>: known limitation: Attempted to expand SUBSET of size 2^30, whereas the built-in limit is 1048576
+<unknown>: known limitation: Attempted to expand a SUBSET of size 2^30, whereas the built-in limit is 2^20
 ...
 EXITCODE: ERROR (255)
 ```
