@@ -2668,6 +2668,16 @@ $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check TestSets.tla reports an error on FailExpandLargePowerset
+
+```sh
+$ apalache-mc check --length=0 --inv=FailExpandLargePowerset TestSets.tla | sed 's/[IEW]@.*//'
+...
+<unknown>: known limitation: Attempted to expand a SUBSET of size 2^30, whereas the built-in limit is 2^20
+...
+EXITCODE: ERROR (255)
+```
+
 ### check TestCommunityFunctions.tla reports no error (array-encoding)
 
 ```sh

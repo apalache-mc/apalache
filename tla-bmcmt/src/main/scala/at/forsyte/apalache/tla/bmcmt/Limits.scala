@@ -13,9 +13,9 @@ object Limits {
   val MAX_PRODUCT_SIZE = 1000000
 
   /**
-   * An upper bound on the size of an expanded powerset.
+   * An upper bound on the size of a base set that is expanded to a powerset, currently, `20`.
    */
-  val POWSET_MAX_SIZE = 1000000
+  val POWSET_MAX_BASE_SIZE = 20
 
   /**
    * An upper bound on the number of rewriting steps that are applied to the same rule.

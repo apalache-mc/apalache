@@ -85,6 +85,10 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
         "%s: no rule to rewrite a TLA+ expression: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       FailureMessage(msg)
 
+    case err: RewriterKnownLimitationError =>
+      val msg = "%s: known limitation: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
+      NormalErrorMessage(msg)
+
     case err: RewriterException =>
       val msg = "%s: rewriter error: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       FailureMessage(msg)

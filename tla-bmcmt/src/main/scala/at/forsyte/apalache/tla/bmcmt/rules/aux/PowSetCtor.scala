@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir.SetT1
 import at.forsyte.apalache.tla.types.{tlaU => tla}
+import com.typesafe.scalalogging.LazyLogging
 
 /**
  * This class constructs the power set of S, that is, SUBSET S. Sometimes, this is just unavoidable, e.g., consider { Q
@@ -11,7 +12,7 @@ import at.forsyte.apalache.tla.types.{tlaU => tla}
  * @author
  *   Igor Konnov
  */
-class PowSetCtor(rewriter: SymbStateRewriter) {
+class PowSetCtor(rewriter: SymbStateRewriter) extends LazyLogging {
 
   // Confringo is the explosion curse from Harry Potter. To let you know that your SMT solver will probably explode.
   def confringo(state: SymbState, set: ArenaCell): SymbState = {
@@ -39,10 +40,15 @@ class PowSetCtor(rewriter: SymbStateRewriter) {
     }
 
     rewriter.solverContext.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
-    val powSetSize = BigInt(1) << elems.size
-    if (powSetSize >= Limits.POWSET_MAX_SIZE) {
-      throw new RewriterException(s"Attempted to expand a powerset of size 2^${elems.size}", state.ex)
+    if (elems.size > Limits.POWSET_MAX_BASE_SIZE) {
+      logger.error("This error typically occurs when one enumerates all subsets of a set:"
+        + " \\A S \\in SUBSET T: P or \\E S \\in SUBSET T: P")
+      logger.error("Try to decrease the cardinality of the base set T, or avoid enumeration.")
+      val msg =
+        s"Attempted to expand a SUBSET of size 2^${elems.size}, whereas the built-in limit is 2^${Limits.POWSET_MAX_BASE_SIZE}"
+      throw new RewriterKnownLimitationError(msg, state.ex)
     }
+    val powSetSize = BigInt(1) << elems.size
     val subsets =
       if (elems.nonEmpty) {
         BigInt(0).to(powSetSize - 1).map(mkSetByNum)
