@@ -45,7 +45,8 @@ class PowSetCtor(rewriter: SymbStateRewriter) extends LazyLogging {
       logger.error("This error typically occurs when one enumerates all subsets:"
         + " \\A S \\in SUBSET T: P or \\E S \\in SUBSET T: P")
       logger.error("Try to decrease the cardinality of the base set T, or avoid enumeration.")
-      val msg = s"Attempted to expand SUBSET of size 2^${elems.size}, whereas the built-in limit is ${Limits.POWSET_MAX_SIZE}"
+      val msg =
+        s"Attempted to expand SUBSET of size 2^${elems.size}, whereas the built-in limit is ${Limits.POWSET_MAX_SIZE}"
       throw new RewriterKnownLimitationError(msg, state.ex)
     }
     val subsets =
