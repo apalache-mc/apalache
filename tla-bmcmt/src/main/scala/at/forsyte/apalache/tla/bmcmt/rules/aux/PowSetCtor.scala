@@ -40,15 +40,15 @@ class PowSetCtor(rewriter: SymbStateRewriter) extends LazyLogging {
     }
 
     rewriter.solverContext.log("; %s(%s) {".format(getClass.getSimpleName, state.ex))
-    val powSetSize = BigInt(1) << elems.size
-    if (powSetSize > Limits.POWSET_MAX_SIZE) {
-      logger.error("This error typically occurs when one enumerates all subsets:"
+    if (elems.size > Limits.POWSET_MAX_BASE_SIZE) {
+      logger.error("This error typically occurs when one enumerates all subsets of a set:"
         + " \\A S \\in SUBSET T: P or \\E S \\in SUBSET T: P")
       logger.error("Try to decrease the cardinality of the base set T, or avoid enumeration.")
       val msg =
-        s"Attempted to expand SUBSET of size 2^${elems.size}, whereas the built-in limit is ${Limits.POWSET_MAX_SIZE}"
+        s"Attempted to expand a SUBSET of size 2^${elems.size}, whereas the built-in limit is 2^${Limits.POWSET_MAX_BASE_SIZE}"
       throw new RewriterKnownLimitationError(msg, state.ex)
     }
+    val powSetSize = BigInt(1) << elems.size
     val subsets =
       if (elems.nonEmpty) {
         BigInt(0).to(powSetSize - 1).map(mkSetByNum)
