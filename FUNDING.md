@@ -1,5 +1,11 @@
 ## Apalache Funding
 
+Currently, Apalache is not funded by any organization. As a result,
+it is de-facto funded by its current maintainers and contributors,
+including [Igor Konnov][], [Jure Kukovec][], and [Thomas Pani][].
+If you would like to sponsor the project, please contact us, or
+simply sponsor us on GitHub by clicking the "Sponsor" button!
+
 We are grateful to the following organizations for financially supporting
 the Apalache project (in the form of grants or employment) for a significant
 duration of time in the past:
