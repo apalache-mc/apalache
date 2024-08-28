@@ -12,16 +12,19 @@ alt="Apalache Logo">
 [![main badge][]][main-ci]
 
 [main badge]: https://github.com/apalache-mc/apalache/workflows/build/badge.svg?branch=main
+
 [main-ci]: https://github.com/apalache-mc/apalache/actions?query=branch%3Amain+workflow%3Abuild
 
-Apalache translates [TLA+] into the logic supported by SMT solvers such as
-[Microsoft Z3]. Apalache can check inductive invariants (for fixed or bounded
+Apalache translates [TLA+][] into the logic supported by SMT solvers such as
+[Microsoft Z3][]. Apalache can check inductive invariants (for fixed or bounded
 parameters) and check safety of bounded executions (bounded model checking). To
-see the list of supported TLA+ constructs, check the [supported features]. In
-general, Apalache runs under the same assumptions as [TLC].
+see the list of supported TLA+ constructs, check the [supported features][]. In
+general, Apalache runs under the same assumptions as [TLC][]. However, Apalache
+benefits from constraint solving and can handle potentially larger state-spaces,
+e.g., involving integer clocks and Byzantine faults.
 
-To learn more about TLA+, visit [Leslie Lamport's page on TLA+] and his [Video
-course].
+To learn more about TLA+, visit [Leslie Lamport's page on TLA+][] and his [Video
+course][].
 
 ## Releases
 
@@ -39,54 +42,54 @@ You can also find Apalache packaged via Nix at [cosmos.nix](https://github.com/i
 For more information on installation options, see [the
 manual][user-manual-installation].
 
+## Success stories
+
+Check [Apalache examples][] that demonstrate how to use the strengths of Apalache.
+Also, check the [standard repository of TLA+ examples][].
+
 ## Getting started
 
 - Read the [Beginner's tutorial][].
-- Check the material at [TLA-Apalache workshop][].
 - Read the [Apalache user manual][user-manual].
 - Consult the (WIP) [Idioms for writing better TLA+][idioms].
 - Consult the (WIP) [TLA+ language manual for engineers][language-manual].
-
-## Website
-
-Our current website is served at https://apalache-mc.org .
-
-The site is hosted by github, and changes can be made through PRs into the
-[gh-pages](https://github.com/apalache-mc/apalache/tree/gh-pages) branch of
-this repository. See the README.md on that branch for more information.
-
-The user documentation is automatically deployed to the website branch as per
-the [CI configuration](./.github/workflows/deploy.yml).
-
-Our old website is still available at https://forsyte.at/research/apalache/ .
 
 ## Community
 
 - Join the chat in the [Apalache zulip stream].
 - [Contribute](./CONTRIBUTING.md) to the development of Apalache.
 
-## Help wanted
+## Funding and Sponsorship
 
-Want to contribute? Here is a list of issues that could be solved without
-knowing too much about the internals of Apalache. Solving these issues would
-improve usability! Please comment in the relevant issue, if you are going to
-solve it.
+Currently, Apalache is not funded by any organization. As a result,
+it is de-facto funded by its current maintainers and contributors,
+including [Igor Konnov][], [Jure Kukovec][], and [Thomas Pani][].
+If you would like to sponsor the project, please contact us.
 
-- Writing annotations in the JSON format: [#804](https://github.com/apalache-mc/apalache/issues/804)
-- Add support for VIEW in the TLC config: [#851](https://github.com/apalache-mc/apalache/issues/851)
-- Translate `\E x \in STRING: P` and `\A x \in STRING: P`:
-    [#844](https://github.com/apalache-mc/apalache/issues/844)
-- Interval analysis for `a..b`: [#446](https://github.com/apalache-mc/apalache/issues/446)
+We are grateful for the past financial support in the form of grants or
+employment from the following organizations:
 
-## Industrial examples
+ - [Informal Systems][] (Canada/Switzerland/Austria): 2020-2024
+ - [Vienna Business Agency][] (Austria): 2021-2023
+ - [Interchain Foundation][] (Switzerland): 2019-2023
+ - [WWTF][] (Austria): Vienna Science and Technology Fund 2016-2020
+ - [Inria Nancy][] and [LORIA][] (France): 2018-2019
+ - [TU Wien][] (Austria): 2016-2020
 
-- Check [Light client specs][] and [Model-based testing][] of the Tendermint
-  light client.
+More details on the [Funding page](./FUNDING.md).
 
-- Check [Tendermint specs][] to see how we use TLA+ and Apalache at Informal to
-  design and specify protocols for the [Tendermint blockchain].
+## Website
 
-- To see more examples, check the [standard repository of TLA+ examples].
+Our current website is served at https://apalache-mc.org .
+
+The site is hosted by github, and changes can be made through PRs into the
+[gh-pages](https://github.com/apalache-mc/apalache/tree/gh-pages) branch of this repository. See the README.md on that
+branch for more information.
+
+The user documentation is automatically deployed to the website branch as per
+the [CI configuration](./.github/workflows/deploy.yml).
+
+<!-- TODO:this section should go to the website
 
 ## Talks
 
@@ -115,14 +118,9 @@ solve it.
 
 - [Bounded model checking of TLA+ specifications with SMT](https://www.youtube.com/watch?v=Xl1--arESl8)
   TLA+ Community Event 2018 (July 2018).
+-->
 
-## Performance
-
-We are collecting [apalache benchmarks]. See the Apalache performance when
-[checking inductive invariants] and running [bounded model checking]. Versions
-0.6.0 and 0.7.2 are a major improvement over version 0.5.2 (the version
-[reported at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549)).
-
+<!-- TODO: This section should also go to the website
 ## Academic papers
 
 To read an academic paper about the theory behind Apalache,
@@ -131,14 +129,9 @@ For the details of our novel encoding using SMT arrays, check our
 [paper at TACAS23](https://link.springer.com/chapter/10.1007/978-3-031-30823-9_7).
 Related reports and publications can be found at the
 [Apalache page at TU Wien](http://forsyte.at/research/apalache/).
+-->
 
 ---
-
-Apalache is developed at [Informal Systems](https://informal.systems/).
-
-With additional funding from<br />[<img alt="the Vienna Business Agency" src="./Wirtschaftsagentur_Wien_logo.jpg" width="200">](https://viennabusinessagency.at/).
-
-Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](https://wwtf.at/about/).
 
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
@@ -166,3 +159,14 @@ Past funding from [Der Wiener Wissenschafts-, Forschungs- und Technologiefonds](
 [apalache-mc.org]: https://apalache-mc.org
 [TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
 [Beginner's tutorial]: https://apalache-mc.org/docs/tutorials/entry-tutorial.html
+[Apalache examples]: https://github.com/konnov/apalache-examples
+[WWTF]: https://wwtf.at/index.php?lang=EN
+[TU Wien]: https://www.tuwien.at/
+[Inria Nancy]: https://www.inria.fr/en/inria-centre-universite-lorraine
+[LORIA]: https://loria.fr
+[Interchain Foundation]: https://interchain.io/
+[Informal Systems]: https://informal.systems/
+[Vienna Business Agency]: https://viennabusinessagency.at/
+[Igor Konnov]: https://github.com/konnov
+[Jure Kukovec]: https://github.com/kukovec
+[Thomas Pani]: https://github.com/thpani

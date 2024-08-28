@@ -1,7 +1,8 @@
 ## Apalache Funding
 
 We are grateful to the following organizations for financially supporting
-the project Apalache for significant duration of time in the past:
+the Apalache project (in the form of grants or employment) for a significant
+duration of time in the past:
 
 - [Informal Systems][]: 2020-2024
 - [Vienna Business Agency][]: 2021-2023
