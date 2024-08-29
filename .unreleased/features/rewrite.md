@@ -1,0 +1,1 @@
+Handle expressions such as  S \in SUBSET T  in ExprOptimizer by rewriting the expression into  \A r \in S: r \in T
