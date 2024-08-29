@@ -184,6 +184,19 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == output)
   }
 
+  test("""S \in SUBSET T ~~> \A s \in S: s \in T""") {
+    val T = name("T").as(intSetT)
+    val S = name("S").as(intSetT)
+    val powSetT = powSet(T).as(intSetT)
+    val input = in(S, powSetT).as(boolT)
+    val output = optimizer.apply(input)
+
+    val s = name("t_1").as(intT)
+    val expected = forall(s, S, in(s, T).as(boolT)).as(boolT)
+
+    assert(expected == output)
+  }
+
   // optimizations for set cardinalities
 
   test("""Cardinality(S) = 0 becomes S = {}""") {
