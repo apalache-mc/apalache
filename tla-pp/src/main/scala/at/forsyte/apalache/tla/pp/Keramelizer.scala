@@ -105,6 +105,15 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
         .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1))
         .as(BoolT1)
 
+    // rewrite A \in SUBSET B
+    // into \A a \in A: a \in B
+    case OperEx(TlaSetOper.in, setX, OperEx(TlaSetOper.powerset, setY)) =>
+      val elemType = getElemType(setX)
+      val tempName = gen.newName()
+      tla
+        .forall(tla.name(tempName).as(elemType), setX, tla.in(tla.name(tempName).as(elemType), setY).as(BoolT1))
+        .as(BoolT1)
+
     // rewrite f \in [S -> SUBSET T]
     // into DOMAIN f = S /\ \A x \in S: \A y \in f[x]: y \in T
     case OperEx(TlaSetOper.in, fun, OperEx(TlaSetOper.funSet, dom, OperEx(TlaSetOper.powerset, powSetDom))) =>
