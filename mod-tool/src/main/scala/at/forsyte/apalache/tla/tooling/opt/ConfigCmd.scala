@@ -19,7 +19,7 @@ class ConfigCmd extends ApalacheCommand(name = "config", description = "Configur
 
   var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
       description = "Let Apalache submit usage statistics to tlapl.us\n"
-        + "(shared with TLC and TLA+ Toolbox)\nSee: https://apalache.informal.systems/docs/apalache/statistics.html")
+        + "(shared with TLC and TLA+ Toolbox)\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
 
   def run() = {
     logger.info("Configuring Apalache")

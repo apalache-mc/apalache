@@ -467,8 +467,8 @@ write a parser of custom ITF traces. Hence, we have decided to keep only the obj
 as the more general of the two representations. 
 
 
-[ADR005]: https://apalache.informal.systems/docs/adr/005adr-json.html
-[ADR002]: https://apalache.informal.systems/docs/adr/002adr-types.html
+[ADR005]: https://apalache-mc.org/docs/adr/005adr-json.html
+[ADR002]: https://apalache-mc.org/docs/adr/002adr-types.html
 [MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [RFC7159]: https://datatracker.ietf.org/doc/html/rfc7159.html

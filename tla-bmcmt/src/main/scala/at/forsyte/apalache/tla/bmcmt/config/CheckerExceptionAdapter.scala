@@ -42,7 +42,7 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
 
     case err: AssignmentException =>
       logger.info("To understand the error, read the manual:")
-      logger.info("  [https://apalache.informal.systems/docs/apalache/principles/assignments.html]")
+      logger.info("  [https://apalache-mc.org/docs/apalache/principles/assignments.html]")
       NormalErrorMessage("Assignment error: " + err.getMessage)
 
     case err: OutdatedAnnotationsError =>
@@ -84,6 +84,10 @@ class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListene
       val msg =
         "%s: no rule to rewrite a TLA+ expression: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
       FailureMessage(msg)
+
+    case err: RewriterKnownLimitationError =>
+      val msg = "%s: known limitation: %s".format(findLoc(err.causeExpr.ID), err.getMessage)
+      NormalErrorMessage(msg)
 
     case err: RewriterException =>
       val msg = "%s: rewriter error: %s".format(findLoc(err.causeExpr.ID), err.getMessage)

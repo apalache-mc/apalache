@@ -93,7 +93,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         val b = BoolT1
         val domEq = tla.eql(tla.dom(rec).as(strSetT), tla.enumSet(fields: _*).as(strSetT)).as(b)
         val fieldsEq = fields.zip(values.zip(sets)).map { case (key, (value, set)) =>
-          tla.in(tla.appFun(rec, key).as(value.typeTag.asTlaType1()), set).as(b)
+          apply(tla.in(tla.appFun(rec, key).as(value.typeTag.asTlaType1()), set).as(b))
         }
         apply(tla.and(domEq +: fieldsEq: _*).as(b))
       }
@@ -121,10 +121,15 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         val domEq = tla.eql(tla.dom(r).as(SetT1(domType)), tla.enumSet(fields: _*).as(strSetT)).as(b)
 
         val fieldsEq = fields.zip(values.zip(sets)).map { case (key, (value, set)) =>
-          tla.in(tla.appFun(r, key).as(value.typeTag.asTlaType1()), set).as(b)
+          apply(tla.in(tla.appFun(r, key).as(value.typeTag.asTlaType1()), set).as(b))
         }
         apply(tla.forall(r, setRec, tla.and(domEq +: fieldsEq: _*).as(b)).as(b))
       }
+
+    // S ∈ SUBSET T ~~> ∀ s ∈ S: s ∈ T
+    case OperEx(TlaSetOper.in, lSet, OperEx(TlaSetOper.powerset, rSet)) =>
+      val lMem = tla.name(nameGen.newName()).as(getElemType(lSet))
+      apply(tla.forall(lMem, lSet, tla.in(lMem, apply(rSet)).as(BoolT1)).as(BoolT1))
   }
 
   /**

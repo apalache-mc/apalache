@@ -1,0 +1,1 @@
+Better error reporting for hitting the limits of `SUBSET` expansion, see #2969

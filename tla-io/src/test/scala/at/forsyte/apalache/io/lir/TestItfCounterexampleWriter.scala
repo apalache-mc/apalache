@@ -84,7 +84,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
       s"""{
         |  "#meta": {
         |    "format": "ITF",
-        |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+        |    "format-description": "https://apalache-mc.org/docs/adr/015adr-trace.html",
         |    "description": "Created by Apalache"
         |  },
         |  "params": [ "N" ],
@@ -180,7 +180,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
       """{
         |  "#meta": {
         |    "format": "ITF",
-        |    "format-description": "https://apalache.informal.systems/docs/adr/015adr-trace.html",
+        |    "format-description": "https://apalache-mc.org/docs/adr/015adr-trace.html",
         |    "description": "Created by Apalache"
         |  },
         |  "vars": [ "a", "b", "c", "d", "e", "f", "g", "h", "n" ],

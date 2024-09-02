@@ -565,6 +565,7 @@ class SymbStateRewriterImpl(
   }
 
   override def flushStatistics(): Unit = {
+    profilerListener.foreach { _.dumpToFile() }
     statListener.locator.writeStats()
   }
 

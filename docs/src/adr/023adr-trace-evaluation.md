@@ -137,7 +137,7 @@ and trace `testTrace.json` (length 5, `x=1 -> ... -> x=5`).
 {
   "name": "ApalacheIR",
   "version": "1.0",
-  "description": "https://apalache.informal.systems/docs/adr/005adr-json.html",
+  "description": "https://apalache-mc.org/docs/adr/005adr-json.html",
   "modules": [
     {
       "kind": "TlaModule",

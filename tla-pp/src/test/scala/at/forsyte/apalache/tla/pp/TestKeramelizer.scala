@@ -339,6 +339,26 @@ class TestKeramelizer extends AnyFunSuite with Checkers with BeforeAndAfterEach 
     assert(expected == output)
   }
 
+  test("""A \in SUBSET B ~~> \A a \in A: a \in B""") {
+    val types = Map("BOOL" -> BoolT1, "POWSET" -> SetT1(SetT1(IntT1)), "SET" -> SetT1(IntT1), "INT" -> IntT1)
+    def A = tla.name("A") ? "SET"
+    def B = tla.name("B") ? "SET"
+    val input =
+      tla
+        .in(A, tla.powSet(B) ? "POWSET")
+        .typed(types, "BOOL")
+    val output = keramelizer.apply(input)
+
+    val isExpected = output match {
+      // \A element \in A: element \in B
+      case OperEx(TlaBoolOper.forall, NameEx(boundName), NameEx("A"),
+              OperEx(TlaSetOper.in, NameEx(inName), NameEx("B"))) =>
+        boundName == inName
+      case _ => false
+    }
+    assert(isExpected, s"Input $input and got $output")
+  }
+
   test("""A \subseteq B ~~> \A a \in A: a \in B""") {
     val types = Map("BOOL" -> BoolT1, "SET" -> SetT1(IntT1), "INT" -> IntT1)
     def A = tla.name("A") ? "SET"

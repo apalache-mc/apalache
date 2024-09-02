@@ -9,4 +9,4 @@ See the detailed description of the [Apalache operators][].
 
 [Apalache.tla]: https://github.com/informalsystems/apalache/tree/main/src/tla/Apalache.tla
 
-[Apalache operators]: https://apalache.informal.systems/docs/lang/apalache-operators.html
+[Apalache operators]: https://apalache-mc.org/docs/lang/apalache-operators.html

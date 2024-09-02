@@ -71,7 +71,7 @@ Apalache reports an error as follows:
 ...
 PASS #9: TransitionFinderPass
 To understand the error, [check the
-manual](https://apalache.informal.systems/docs/apalache/principles/assignments.html):
+manual](https://apalache-mc.org/docs/apalache/principles/assignments.html):
 Assignment error: No assignments found for: a
 It took me 0 days  0 hours  0 min  1 sec
 Total time: 1.88 sec
