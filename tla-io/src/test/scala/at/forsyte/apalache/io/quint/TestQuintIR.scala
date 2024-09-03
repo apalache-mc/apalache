@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.quint
 
-import at.forsyte.apalache.io.quint.QuintDef.QuintAssume
+import at.forsyte.apalache.io.quint.QuintDef.{QuintAssume, QuintOpDef, QuintTypeDef}
 import at.forsyte.apalache.io.quint.QuintEx.QuintBool
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
@@ -45,6 +45,19 @@ class TestQuintIR extends AnyFunSuite {
 
     val unnamedAssume = QuintAssume(1, "_", QuintBool(2, true))
     assert(unnamedAssume.isUnnamed)
+  }
+
+  test("Simple QuintDef works correctly") {
+    val quintDef = QuintOpDef(1, "myDef", "val", QuintBool(2, true))
+    assert(QuintDeserializer.write[QuintDef](quintDef) == """{"kind":"def","id":1,"name":"myDef","qualifier":"val","expr":{"kind":"bool","id":2,"value":true}}""")
+  }
+
+  test("QuintTypeDef works correctly") {
+    val typeDef = QuintTypeDef(1, "myType", None)
+    val typeDefJson = """{"kind":"typedef","id":1,"name":"myType"}"""
+
+    assert(QuintDeserializer.write[QuintTypeDef](typeDef) == typeDefJson)
+    assert(QuintDeserializer.read[QuintTypeDef](typeDefJson) == typeDef)
   }
 
   // tictactoe.json is located in tla-io/src/test/resources/tictactoe.json

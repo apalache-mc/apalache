@@ -146,16 +146,7 @@ sealed private[quint] trait QuintEx extends WithID
 
 private[quint] object QuintEx {
 
-  implicit val rw: RW[QuintEx] =
-    RW.merge(
-        QuintName.rw,
-        QuintBool.rw,
-        QuintInt.rw,
-        QuintStr.rw,
-        QuintApp.rw,
-        QuintLambda.rw,
-        QuintLet.rw,
-    )
+  implicit val rw: RW[QuintEx] = macroRW
 
   /** A name of: a variable, constant, parameter, user-defined operator */
   @key("name") case class QuintName(id: BigInt, name: String) extends QuintEx {}
@@ -227,34 +218,7 @@ private[quint] object QuintEx {
 sealed private[quint] trait QuintDef extends WithID
 
 private[quint] object QuintDef {
-  // The boilerplate here is a result of the infectious nature
-  // of ser/de customization in upickle currently.
-  // See https://github.com/com-lihaoyi/upickle/issues/394
-  //
-  // The customization is needed for QuintTypeDef.
-  private val toJson: QuintDef => ujson.Value = {
-    case d: QuintOpDef   => QuintDeserializer.writeJs(d)
-    case d: QuintVar     => QuintDeserializer.writeJs(d)
-    case d: QuintConst   => QuintDeserializer.writeJs(d)
-    case d: QuintAssume  => QuintDeserializer.writeJs(d)
-    case d: QuintTypeDef => QuintDeserializer.writeJs(d)
-  }
-  private val ofJson: ujson.Value => QuintDef = {
-    case ujson.Obj(o) if o.get("kind").isDefined =>
-      o.get("kind").map(_.str) match {
-        case Some("def")     => QuintDeserializer.read[QuintOpDef](o)
-        case Some("const")   => QuintDeserializer.read[QuintConst](o)
-        case Some("var")     => QuintDeserializer.read[QuintVar](o)
-        case Some("assume")  => QuintDeserializer.read[QuintAssume](o)
-        case Some("typedef") => QuintDeserializer.read[QuintTypeDef](o)
-        case Some(_)         => throw new QuintIRParseError(s"Definition has invalid `kind` field: ${o}")
-        case None            => throw new QuintIRParseError(s"Definition missing `kind` field: ${o}")
-      }
-    case invalidJson =>
-      throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
-  }
-
-  implicit val rw: RW[QuintDef] = QuintDeserializer.readwriter[ujson.Value].bimap(toJson, ofJson)
+  implicit val rw: RW[QuintDef] = macroRW
 
   trait WithTypeAnnotation {
     val typeAnnotation: QuintType
@@ -337,30 +301,10 @@ private[quint] object QuintDef {
        *
        * Type aliases have `Some(type)` while abstract types have `None`
        */
-      typ: Option[QuintType])
+      @key("type") typ: Option[QuintType] = None)
       extends QuintDef {}
   object QuintTypeDef {
-    // We need custom ser/de here to cope with the optionality of the `type` field
-    // see https://github.com/com-lihaoyi/upickle/issues/75
-    private val toJson: QuintTypeDef => ujson.Value = {
-      case QuintTypeDef(id, name, None) =>
-        ujson.Obj("id" -> QuintDeserializer.writeJs(id), "name" -> QuintDeserializer.writeJs(name))
-      case QuintTypeDef(id, name, Some(t)) =>
-        ujson.Obj("id" -> QuintDeserializer.writeJs(id), "name" -> QuintDeserializer.writeJs(name),
-            "type" -> QuintDeserializer.writeJs(t))
-    }
-
-    private val ofJson: ujson.Value => QuintTypeDef = {
-      case ujson.Obj(entries) if entries.get("id").isDefined && entries.get("name").isDefined =>
-        val id = QuintDeserializer.read[BigInt](entries.get("id").get)
-        val name = QuintDeserializer.read[String](entries.get("name").get)
-        val tt = entries.get("type").map(t => QuintDeserializer.read[QuintType](t))
-        QuintTypeDef(id, name, tt)
-      case invalidJson =>
-        throw new QuintIRParseError(s"Unexpected JSON representation of Quint type definition: ${invalidJson}")
-    }
-
-    implicit val rw: RW[QuintTypeDef] = QuintDeserializer.readwriter[ujson.Value].bimap(toJson, ofJson)
+    implicit val rw: RW[QuintTypeDef] = macroRW
   }
 }
 
@@ -374,27 +318,7 @@ sealed private[quint] trait QuintType
 
 private[quint] object QuintType {
 
-  implicit val rw: RW[QuintType] = RW.merge(
-      QuintBoolT.rw,
-      QuintIntT.rw,
-      QuintStrT.rw,
-      QuintConstT.rw,
-      QuintVarT.rw,
-      QuintSetT.rw,
-      QuintSeqT.rw,
-      QuintFunT.rw,
-      QuintOperT.rw,
-      QuintTupleT.rw,
-      QuintRecordT.rw,
-      QuintSumT.rw,
-  )
-
-  // NOTE: Contrary to quint values, for quint types, source IDs are optional.
-  // This is because many types are inferred, and not derived from the soruce.
-  //
-  // We therefor default id to -1 in the following, because upickle handles
-  // optional values stupidly and if we specify `id` as `Option[Int]` it will
-  // require the value of the ID field to be a (possibly empty) singleton array.
+  implicit val rw: RW[QuintType] = macroRW
 
   @key("bool") case class QuintBoolT() extends QuintType {}
   object QuintBoolT {
@@ -449,7 +373,7 @@ private[quint] object QuintType {
   sealed trait Row
 
   object Row {
-    implicit val rw: RW[Row] = RW.merge(Cell.rw, Var.rw, Nil.rw)
+    implicit val rw: RW[Row] = macroRW
 
     @key("row") case class Cell(fields: Seq[RecordField], other: Row) extends Row
     object Cell {
