@@ -49,7 +49,8 @@ class TestQuintIR extends AnyFunSuite {
 
   test("Simple QuintDef works correctly") {
     val quintDef = QuintOpDef(1, "myDef", "val", QuintBool(2, true))
-    assert(QuintDeserializer.write[QuintDef](quintDef) == """{"kind":"def","id":1,"name":"myDef","qualifier":"val","expr":{"kind":"bool","id":2,"value":true}}""")
+    assert(QuintDeserializer.write[QuintDef](
+        quintDef) == """{"kind":"def","id":1,"name":"myDef","qualifier":"val","expr":{"kind":"bool","id":2,"value":true}}""")
   }
 
   test("QuintTypeDef works correctly") {
