@@ -3807,13 +3807,11 @@ release</a> and unpack into
 a directory of your choice. Depending on your OS, you have two options.</p>
 <p><em>Option 1: Linux, macOS.</em> You can run the script <code>./bin/apalache-mc</code>, or,
 better, add the <code>./bin</code> directory to your <code>PATH</code> and run <code>apalache-mc</code>.</p>
-<p><em>Option 2: Windows.</em> You have to run Java directly with</p>
+<p><em>Option 2: Windows.</em> You can run the script <code>./bin/apalache-mc.bat</code></p>
+<p>Alternatively, you can run Java directly with</p>
 <pre><code>java.exe -jar ./lib/apalache.jar &lt;args&gt;
 </code></pre>
 <p>The arguments <code>&lt;args&gt;</code> are explained in <a href="apalache/installation/../running.html">Running the Tool</a>.</p>
-<p>If you would like to contribute a command-line script for running Apalache in
-Windows, please <a href="https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#making-a-pull-request">open a pull
-request</a>.</p>
 <h1><a class="header" href="#using-a-docker-image" id="using-a-docker-image">Using a docker image</a></h1>
 <p><strong>We publish Docker images for every release</strong> 😎</p>
 <p><strong>NOTE</strong>: Running Apalache through a docker application image complicates
@@ -3938,8 +3936,8 @@ your <code>PATH</code>.</li>
 repository, you have three options after running <code>make</code>:</p>
 <ul>
 <li>Add the <code>./bin</code> directory in the source repository to your <code>PATH</code>, which will
-make <code>apalche-mc</code> available.</li>
-<li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, which will put <code>apalche-mc</code> in your
+make <code>apalache-mc</code> available.</li>
+<li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, which will put <code>apalache-mc</code> in your
 path when you are inside the Apalache repo directory.</li>
 <li>Run <code>./bin/apalache-mc</code> directly.</li>
 </ul>
