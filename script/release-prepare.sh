@@ -36,7 +36,7 @@ then
     # Explicitly set the release version
     sbt "setVersion ${RELEASE_VERSION}"
 else
-    # Derive the relesae version by removing the -SNAPSHOT suffix
+    # Derive the release version by removing the -SNAPSHOT suffix
     sbt removeVersionSnapshot
     RELEASE_VERSION=$("$DIR"/get-version.sh)
 fi
