@@ -56,7 +56,7 @@ Also, check the [standard repository of TLA+ examples][].
 
 ## Community
 
-- Join the chat in the [Apalache zulip stream].
+- Discuss the use of Apalache and R&D on the [Apalache Forum][].
 - [Contribute](./CONTRIBUTING.md) to the development of Apalache.
 
 ## Funding and Sponsorship
@@ -163,6 +163,7 @@ Related reports and publications can be found at the
 [TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
 [Beginner's tutorial]: https://apalache-mc.org/docs/tutorials/entry-tutorial.html
 [Apalache examples]: https://github.com/konnov/apalache-examples
+[Apalache Forum]: https://apalache.discourse.group/
 [WWTF]: https://wwtf.at/index.php?lang=EN
 [TU Wien]: https://www.tuwien.at/
 [Inria Nancy]: https://www.inria.fr/en/inria-centre-universite-lorraine
