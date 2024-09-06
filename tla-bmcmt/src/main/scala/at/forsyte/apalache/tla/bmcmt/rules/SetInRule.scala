@@ -29,7 +29,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   // TODO: x \in S should be equivalent to SkolemExists(\E t \in S: x = t)
-  // This is only true for the positive occurences of x \in S!
+  // This is only true for the positive occurrences of x \in S!
   override def apply(state: SymbState): SymbState = {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
@@ -55,11 +55,7 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
               if setCell == setState.arena.cellNatSet() || setCell == setState.arena.cellIntSet() =>
             intOrNatSetIn(setState, setCell, elemCell, CellTFrom(IntT1))
 
-          case PowSetT(SetT1(_))
-              // at.forsyte.apalache.tla.bmcmt.types.PowSetT does not handle an infinite set T in the expr ... \in SUBSET T.
-              // Moreover, it also does not handle an infinite set S in the expr S \in SUBSET ....
-              if setState.arena.getDom(setCell).cellType != InfSetT(CellTFrom(IntT1)) && elemCell.cellType != InfSetT(
-                  CellTFrom(IntT1)) =>
+          case PowSetT(SetT1(_)) =>
             powSetIn(setState, setCell, elemCell)
 
           case FinFunSetT(_, _) =>
@@ -76,6 +72,20 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
   }
 
   protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
+    // Check that the powsetCell.cellType is not an infinite set.
+    state.arena.getDom(powsetCell).cellType match {
+      case InfSetT(ct) =>
+        throw new RewriterException("SetInRule.powSetIn is not implemented for infinite type %s (found in %s)"
+              .format(InfSetT(ct), state.ex), state.ex)
+      case _ =>
+    }
+    elemCell.cellType match {
+      case InfSetT(_) =>
+        throw new RewriterException("SetInRule.powSetIn is not implemented for infinite type %s (found in %s)"
+              .format(elemCell.cellType, state.ex), state.ex)
+      case _ =>
+    }
+
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(SetT1(expectedType)), CellTFrom(SetT1(actualType))) =>
         if (expectedType != actualType) {
