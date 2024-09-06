@@ -57,7 +57,6 @@ Also, check the [standard repository of TLA+ examples][].
 ## Community
 
 - Discuss the use of Apalache and R&D on the [Apalache Forum][].
-- Join the chat in the [Apalache zulip stream].
 - [Contribute](./CONTRIBUTING.md) to the development of Apalache.
 
 ## Funding and Sponsorship
