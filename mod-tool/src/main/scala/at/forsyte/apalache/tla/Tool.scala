@@ -82,6 +82,8 @@ object Tool extends LazyLogging {
    *   the exit code; as usual, 0 means success.
    */
   def run(args: Array[String]): Int = {
+    // Configure the silent logger first. Otherwise, Apache Commons spills a lot of text to the console.
+    new LogbackConfigurator(None, None).configureDefaultContext()
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
       .parse(args)
@@ -104,7 +106,6 @@ object Tool extends LazyLogging {
       case None => ExitCodes.OK
       // One of our commands.
       case Some(cmd) => {
-
         printStatsConfig()
 
         val exitcode = outputAndLogConfig(cmd) match {
