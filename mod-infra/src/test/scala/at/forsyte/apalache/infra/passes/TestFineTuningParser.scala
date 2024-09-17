@@ -5,7 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestFineTuningParser extends AnyFunSuite{
+class TestFineTuningParser extends AnyFunSuite {
   test("can parse empty tuning options") {
     val config: Either[String, Map[String, Object]] = FineTuningParser.fromStrings(Map[String, String]())
     assert(config.isRight && config.map(_.isEmpty).contains(true))
