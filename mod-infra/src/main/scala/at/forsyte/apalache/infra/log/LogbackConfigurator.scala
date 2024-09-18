@@ -31,7 +31,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
   def configureConsoleOnly(loggerContext: LoggerContext): Unit = {
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
-    val consoleAppender = mkConsoleAppender(loggerContext)
+    val consoleAppender = mkConsoleAppender(loggerContext, isDecorated = false)
     rootLogger.addAppender(consoleAppender)
     rootLogger.setLevel(Level.WARN)
   }
@@ -40,7 +40,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     addInfo("Setting up a logback configuration")
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
-    val consoleAppender = mkConsoleAppender(loggerContext)
+    val consoleAppender = mkConsoleAppender(loggerContext, isDecorated = true)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
     (runDir ++ customRunDir).foreach(d =>
@@ -52,7 +52,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     Configurator.ExecutionStatus.NEUTRAL
   }
 
-  private def mkConsoleAppender(loggerContext: LoggerContext): ConsoleAppender[ILoggingEvent] = {
+  private def mkConsoleAppender(loggerContext: LoggerContext, isDecorated: Boolean): ConsoleAppender[ILoggingEvent] = {
     // set up ConsoleAppender
     val app = new ConsoleAppender[ILoggingEvent]()
     app.setContext(loggerContext)
@@ -63,7 +63,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     filter.start()
     app.addFilter(filter)
     val layout = new PatternLayout()
-    layout.setPattern("%-65msg %.-1level@%d{HH:mm:ss.SSS}%n")
+    layout.setPattern(if (isDecorated) "%-65msg %.-1level@%d{HH:mm:ss.SSS}%n" else "%-80msg%n")
     layout.setContext(loggerContext)
     layout.start()
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
