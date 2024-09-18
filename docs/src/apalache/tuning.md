@@ -15,12 +15,7 @@ passing the option `--tuning-options` that has the following format:
     ...
     ```
 
-The following options are supported:
-
-## Randomization
-
-`smt.randomSeed=<int>` passes the random seed to `z3` (via `z3`'s parameters
-`sat.random_seed` and `smt.random_seed`).
+The rest of this page summarizes the supported parameters.
 
 ## Invariant mode
 
@@ -91,6 +86,47 @@ steps.
 You can also use this option to check different parts of an invariant on
 different machines to speed up turnaround time.
 
+## Z3 Tuning Parameters
+
+Z3 has a very large number of [Z3 Parameters][]. If you have a CLI version of Z3
+installed, you can see a complete list of supported parameters by running `z3`:
+
+```sh
+z3 -pd
+```
+
+In Apalache, you can pass a Z3 parameter `x.y.z=v` as a fine-tuning parameter:
+
+```
+z3.x.y.z=v
+```
+
+For example, to change the SAT and SMT restarts strategies to static:
+
+```
+z3.sat.restart = static
+z3.smt.restart_strategy = 3
+```
+
+Sometimes, the above settings help Apalache to show unsatisfiability faster.
+
+You can also employ Z3 parallelization by setting the number of threads:
+
+```
+z3.sat.threads=10
+```
+
+Technically, Apalache propagates all the parameters that start with `z3.` to Z3.
+However, some of these parameters fail in the solver, even when they work in the
+command line. Hence, you have to experiment with the choice of parameters.
+
+## Randomization
+
+**DEPRECATED:** You can now pass the seeds directly to Z3 via [Z3 Tuning Parameters](#z3-tuning-parameters).
+
+`smt.randomSeed=<int>` passes the random seed to `z3` (via `z3`'s parameters
+`sat.random_seed` and `smt.random_seed`).
+
 ## Translation to SMT
 
 ### Short-circuiting
@@ -104,3 +140,4 @@ true B)`. Otherwise, disjunctions and conjunctions are directly translated to
 
 [invariants]: ../apalache/principles/invariants.md
 [trace invariants]: ../apalache/principles/invariants.md#trace-invariants
+[Z3 Parameters]: https://microsoft.github.io/z3guide/programming/Parameters
