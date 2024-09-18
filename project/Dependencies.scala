@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.7"
+    lazy val logbackVersion = "1.5.8"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -53,7 +53,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.18.0" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.18.1" % Test
     val easymock = "org.easymock" % "easymock" % "5.4.0" % Test
 
     val scalaTestVersion = "3.2.15"
