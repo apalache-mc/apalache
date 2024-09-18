@@ -120,11 +120,36 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    */
   private var maxCellIdPerContext = List(-1)
 
+  private trait ContextState
+  private case class Running() extends ContextState
+  private case class Disposed() extends ContextState
+
+  /**
+   * The internal state of the Z3 solver context.
+   */
+  private var state: ContextState = Running()
+
+  // start a new thread to collect statistics
+  private val statisticsThread = new Thread(() => {
+    while (state == Running()) {
+      Thread.sleep(config.z3StatsSec * 1000)
+      logger.info(s"Z3 statistics for context $id:")
+      val entries = z3solver.getStatistics.getEntries.map(stat => {
+        s"${stat.Key}=${stat.getValueString}"
+      })
+      logger.info(entries.mkString(","))
+    }
+  })
+  if (config.debug && config.z3StatsSec > 0) {
+    statisticsThread.start()
+  }
+
   /**
    * Dispose whatever has to be disposed in the end.
    */
   override def dispose(): Unit = {
     logger.debug(s"Disposing Z3 solver context ${id}")
+    state = Disposed()
     z3context.close()
     closeLogs()
     cellCache.clear()

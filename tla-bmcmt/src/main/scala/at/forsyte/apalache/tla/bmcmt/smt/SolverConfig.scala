@@ -19,10 +19,11 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding
  *   Igor Konnov, Rodrigo Otoni
  */
 sealed case class SolverConfig(
-    debug: Boolean,
-    profile: Boolean,
-    randomSeed: Int,
-    smtEncoding: SMTEncoding) {}
+                                debug: Boolean,
+                                profile: Boolean,
+                                randomSeed: Int,
+                                z3StatsSec: Int,
+                                smtEncoding: SMTEncoding) {}
 
 object SolverConfig {
 
@@ -30,5 +31,5 @@ object SolverConfig {
    * Get the default configuration.
    */
   val default: SolverConfig =
-    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19)
+    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19, z3StatsSec = 60)
 }

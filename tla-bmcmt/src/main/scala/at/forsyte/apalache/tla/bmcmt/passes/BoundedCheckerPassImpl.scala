@@ -75,7 +75,9 @@ class BoundedCheckerPassImpl @Inject() (
 
     val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
-    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
+    val smtStatsSec =
+      tuning.getOrElse("smt.statsSec", SolverConfig.default.z3StatsSec.toString).toInt
+    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtStatsSec, smtEncoding)
 
     val result = options.checker.algo match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
