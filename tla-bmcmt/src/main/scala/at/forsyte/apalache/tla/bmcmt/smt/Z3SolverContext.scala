@@ -61,6 +61,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // Set random seed. We are also setting it via global parameters above, but `Global.setParameter()` says:
   // "When a Z3 module is initialized it will use the value of these parameters when Z3_params objects are not provided."
   params.add("seed", config.randomSeed)
+  // When the user sets z3.smt.logic = QF_LIA, z3 complains about random_seed.
+  // https://github.com/apalache-mc/apalache/issues/2989
   params.add("random_seed", config.randomSeed)
   config.z3Params.foreach {
     case (k, v) =>
