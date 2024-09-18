@@ -13,7 +13,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestSeqModelCheckerWithFunArrays extends TestSeqModelCheckerTrait {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None, SolverConfig(debug = false, profile = false, 0, smtEncoding = SMTEncoding.FunArrays))
+      .createZ3(None, SolverConfig(debug = false, profile = false, 0, z3StatsSec = 0, smtEncoding = SMTEncoding.FunArrays))
     val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl)
     test(rewriter)
   }
