@@ -176,8 +176,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
     val hereProps = {
       if (propsAsString.trim.nonEmpty) {
         // parse the properties and convert them back to strings for config serialization
-        FineTuningParser.fromStrings(propsAsString.split(':').map(parseKeyValue).toMap)
-        match {
+        FineTuningParser.fromStrings(propsAsString.split(':').map(parseKeyValue).toMap) match {
           case Right(parsed) => parsed.view.mapValues(_.toString).toMap
           case Left(error)   => throw new PassOptionException(s"Error in the properties string $propsAsString: $error")
         }

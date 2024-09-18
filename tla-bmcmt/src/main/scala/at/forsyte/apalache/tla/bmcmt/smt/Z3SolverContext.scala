@@ -64,17 +64,16 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // When the user sets z3.smt.logic = QF_LIA, z3 complains about random_seed.
   // https://github.com/apalache-mc/apalache/issues/2989
   params.add("random_seed", config.randomSeed)
-  config.z3Params.foreach {
-    case (k, v) =>
-      if (v.isInstanceOf[Int]) {
-        params.add(k, v.asInstanceOf[Int])
-      } else if (v.isInstanceOf[Boolean]) {
-        params.add(k, v.asInstanceOf[Boolean])
-      } else if (v.isInstanceOf[Double]) {
-        params.add(k, v.asInstanceOf[Double])
-      } else {
-        params.add(k, v.toString)
-      }
+  config.z3Params.foreach { case (k, v) =>
+    if (v.isInstanceOf[Int]) {
+      params.add(k, v.asInstanceOf[Int])
+    } else if (v.isInstanceOf[Boolean]) {
+      params.add(k, v.asInstanceOf[Boolean])
+    } else if (v.isInstanceOf[Double]) {
+      params.add(k, v.asInstanceOf[Double])
+    } else {
+      params.add(k, v.toString)
+    }
   }
   z3solver.setParameters(params)
   log(s";; ${params}")
