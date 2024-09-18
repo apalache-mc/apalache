@@ -13,7 +13,7 @@ class TestTransitionExecutorWithIncrementalAndArrays
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver =
       new Z3SolverContext(SolverConfig(debug = false, profile = false, randomSeed = 0,
-              smtEncoding = SMTEncoding.Arrays))
+              z3StatsSec = 0, smtEncoding = SMTEncoding.Arrays))
     withFixtureInContext(solver, new IncrementalExecutionContext(_), test)
   }
 }
