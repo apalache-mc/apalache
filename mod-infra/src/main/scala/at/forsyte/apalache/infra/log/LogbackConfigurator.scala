@@ -24,14 +24,16 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     setContext(loggerContext)
     runDir match {
       case Some(_) => configure(loggerContext)
-      case None    => configureSilent(loggerContext)
+      case None    => configureConsoleOnly(loggerContext)
     }
   }
 
-  def configureSilent(loggerContext: LoggerContext): Unit = {
+  def configureConsoleOnly(loggerContext: LoggerContext): Unit = {
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
-    rootLogger.setLevel(Level.OFF)
+    val consoleAppender = mkConsoleAppender(loggerContext)
+    rootLogger.addAppender(consoleAppender)
+    rootLogger.setLevel(Level.WARN)
   }
 
   override def configure(loggerContext: LoggerContext): Configurator.ExecutionStatus = {
