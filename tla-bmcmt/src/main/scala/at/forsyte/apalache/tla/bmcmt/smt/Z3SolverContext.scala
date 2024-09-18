@@ -62,7 +62,18 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // "When a Z3 module is initialized it will use the value of these parameters when Z3_params objects are not provided."
   params.add("seed", config.randomSeed)
   params.add("random_seed", config.randomSeed)
-  // params.add("array.extensional", false) // disables extensionality for the theory of arrays
+  config.z3Params.foreach {
+    case (k, v) =>
+      if (v.isInstanceOf[Int]) {
+        params.add(k, v.asInstanceOf[Int])
+      } else if (v.isInstanceOf[Boolean]) {
+        params.add(k, v.asInstanceOf[Boolean])
+      } else if (v.isInstanceOf[Double]) {
+        params.add(k, v.asInstanceOf[Double])
+      } else {
+        params.add(k, v.toString)
+      }
+  }
   z3solver.setParameters(params)
   log(s";; ${params}")
 

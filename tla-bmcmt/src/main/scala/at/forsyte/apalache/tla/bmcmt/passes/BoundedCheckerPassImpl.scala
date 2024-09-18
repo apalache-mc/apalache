@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
+import at.forsyte.apalache.infra.passes.FineTuningParser
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
@@ -13,9 +14,7 @@ import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
-import at.forsyte.apalache.tla.lir.transformations.standard.{
-  IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred,
-}
+import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred}
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
@@ -75,7 +74,12 @@ class BoundedCheckerPassImpl @Inject() (
 
     val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
-    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
+    // Parse the tuning parameters that are relevant to Z3. Some passes add more fields, which cannot be parsed.
+    val z3Parameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith("z3."))) match {
+      case Right(params) => params.map { case (k, v) => (k.substring("z3.".length), v) }
+      case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
+    }
+    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding, z3Parameters)
 
     val result = options.checker.algo match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
