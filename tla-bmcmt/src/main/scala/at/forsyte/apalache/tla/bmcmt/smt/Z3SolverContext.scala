@@ -133,13 +133,10 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private val statisticsThread = new Thread(() => {
     while (state == Running()) {
       Thread.sleep(config.z3StatsSec * 1000)
-      logger.info(s"Z3 statistics for context $id:")
-      val entries = z3solver.getStatistics.getEntries.map(stat => {
-        s"${stat.Key}=${stat.getValueString}"
-      })
-      logger.info(entries.mkString(","))
+      printStatistics()
     }
   })
+
   if (config.debug && config.z3StatsSec > 0) {
     statisticsThread.start()
   }
@@ -149,6 +146,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    */
   override def dispose(): Unit = {
     logger.debug(s"Disposing Z3 solver context ${id}")
+    if (config.debug) {
+      printStatistics()
+    }
     state = Disposed()
     z3context.close()
     closeLogs()
@@ -1038,6 +1038,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private def flushAndThrow(e: Exception): Nothing = {
     flushLogs()
     throw e
+  }
+
+  private def printStatistics(): Unit = {
+    logger.info(s"Z3 statistics for context $id...")
+    val entries = z3solver.getStatistics.getEntries.map(stat => {
+      s"${stat.Key}=${stat.getValueString}"
+    })
+    logger.info(entries.mkString(",") + "\n")
   }
 }
 
