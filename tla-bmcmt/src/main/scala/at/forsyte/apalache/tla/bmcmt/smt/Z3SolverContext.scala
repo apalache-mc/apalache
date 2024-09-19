@@ -132,8 +132,16 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // start a new thread to collect statistics
   private val statisticsThread = new Thread(() => {
     while (state == Running()) {
-      printStatistics()
+      // Sleep for a while.
+      // If we call printStatistics right away, we can easily run into a race condition with Z3 initializing.
+      // This produces a core dump.
       Thread.sleep(config.z3StatsSec * 1000)
+      // Check whether the solver has not been disposed yet. Otherwise, we get a Z3Exception printed.
+      // There is still a small probability of getting this exception. I would like to avoid mutexes here,
+      // to avoid accidental deadlocks in dispose().
+      if (state == Running()) {
+        printStatistics()
+      }
     }
   })
 
