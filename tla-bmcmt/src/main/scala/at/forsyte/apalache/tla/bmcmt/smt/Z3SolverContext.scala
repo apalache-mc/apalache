@@ -132,8 +132,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // start a new thread to collect statistics
   private val statisticsThread = new Thread(() => {
     while (state == Running()) {
-      Thread.sleep(config.z3StatsSec * 1000)
       printStatistics()
+      Thread.sleep(config.z3StatsSec * 1000)
     }
   })
 
