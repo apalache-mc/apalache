@@ -18,6 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.{Lock, ReentrantLock}
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -124,11 +125,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private case class Running() extends ContextState
   private case class Disposed() extends ContextState
 
-  /**
-   * The internal state of the Z3 solver context.
-   */
+  // the state of the context: Running or Disposed
   private var state: ContextState = Running()
 
+  // the lock shared between the context and the statistics thread
+  private var statisticsLock: ReentrantLock = new ReentrantLock()
   // start a new thread to collect statistics
   private val statisticsThread = new Thread(() => {
     while (state == Running()) {
@@ -136,11 +137,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       // If we call printStatistics right away, we can easily run into a race condition with Z3 initializing.
       // This produces a core dump.
       Thread.sleep(config.z3StatsSec * 1000)
-      // Check whether the solver has not been disposed yet. Otherwise, we get a Z3Exception printed.
-      // There is still a small probability of getting this exception. I would like to avoid mutexes here,
-      // to avoid accidental deadlocks in dispose().
-      if (state == Running()) {
-        printStatistics()
+      // make sure that the context is not being disposed right now. Otherwise, we can get a nice core dump.
+      statisticsLock.lock()
+      try {
+        if (state == Running()) {
+          printStatistics()
+        }
+      } finally {
+        statisticsLock.unlock()
       }
     }
   })
@@ -154,16 +158,24 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    */
   override def dispose(): Unit = {
     logger.debug(s"Disposing Z3 solver context ${id}")
-    if (config.debug) {
-      printStatistics()
-    }
     state = Disposed()
-    z3context.close()
-    closeLogs()
-    cellCache.clear()
-    inCache.clear()
-    funDecls.clear()
-    cellSorts.clear()
+    // Try to obtain the lock, to let the statistics thread finish its work.
+    // If it is stuck for some reason, continue after the timeout in any case.
+    statisticsLock.tryLock(2 * config.z3StatsSec, java.util.concurrent.TimeUnit.SECONDS)
+    try {
+      if (config.debug) {
+        printStatistics()
+      }
+      z3context.close()
+      closeLogs()
+      cellCache.clear()
+      inCache.clear()
+      funDecls.clear()
+      cellSorts.clear()
+    } finally {
+      // it's not that important at this point, but let's unlock it for the piece of mind
+      statisticsLock.unlock()
+    }
   }
 
   /**
