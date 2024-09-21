@@ -18,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.locks.{Lock, ReentrantLock}
+import java.util.concurrent.locks.ReentrantLock
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
