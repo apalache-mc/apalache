@@ -24,7 +24,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     setContext(loggerContext)
     runDir match {
       case Some(_) => configure(loggerContext)
-      case None    => configureConsoleOnly(loggerContext)
+      case None    => configureConsoleOnlyWarn(loggerContext)
     }
   }
 
