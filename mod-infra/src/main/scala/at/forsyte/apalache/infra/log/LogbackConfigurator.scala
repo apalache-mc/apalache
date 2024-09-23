@@ -28,7 +28,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     }
   }
 
-  def configureConsoleOnly(loggerContext: LoggerContext): Unit = {
+  def configureConsoleOnlyWarn(loggerContext: LoggerContext): Unit = {
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
     val consoleAppender = mkConsoleAppender(loggerContext, isDecorated = false)
