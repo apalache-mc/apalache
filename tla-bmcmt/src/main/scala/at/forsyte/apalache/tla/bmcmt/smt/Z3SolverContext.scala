@@ -129,7 +129,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private var state: ContextState = Running()
 
   // the lock shared between the context and the statistics thread
-  private var statisticsLock: ReentrantLock = new ReentrantLock()
+  private val statisticsLock: ReentrantLock = new ReentrantLock()
   // start a new thread to collect statistics
   private val statisticsThread = new Thread(() => {
     while (state == Running()) {
