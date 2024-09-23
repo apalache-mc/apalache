@@ -25,6 +25,7 @@ sealed case class SolverConfig(
     profile: Boolean,
     randomSeed: Int,
     smtEncoding: SMTEncoding,
+    z3StatsSec: Int,
     z3Params: Map[String, Object] = Map()) {}
 
 object SolverConfig {
@@ -34,5 +35,5 @@ object SolverConfig {
    */
   val default: SolverConfig =
     new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19,
-        z3Params = Map())
+        z3StatsSec = 60, z3Params = Map())
 }

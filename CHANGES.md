@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.45.6 - 2024-09-19
+
+### Features
+
+- Added an `apalache-mc.bat` file to easily start Apalache on Windows, see #2980
+
 ## 0.45.4 - 2024-09-02
 
 ### Features
