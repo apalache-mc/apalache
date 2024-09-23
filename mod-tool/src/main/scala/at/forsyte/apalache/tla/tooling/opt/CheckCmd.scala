@@ -14,8 +14,9 @@ import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import org.apache.commons.io.FilenameUtils
 import at.forsyte.apalache.infra.passes.options.SourceOption
-import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.infra.passes.{FineTuningParser, PassChainExecutor}
 import at.forsyte.apalache.infra.passes.options.Algorithm
+
 import scala.util.Try
 
 /**
@@ -147,7 +148,11 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       for (name: String <- config.getKeys.asScala) {
         map += (name -> config.getString(name))
       }
-      map
+      // parse the properties and convert them back to strings for config serialization
+      FineTuningParser.fromStrings(map) match {
+        case Right(parsed) => parsed.view.mapValues(_.toString).toMap
+        case Left(error)   => throw new PassOptionException(s"Error in the properties file $filename: $error")
+      }
     } catch {
       case _: FileNotFoundException =>
         throw new PassOptionException(s"The properties file $filename not found")
@@ -170,7 +175,11 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
     val hereProps = {
       if (propsAsString.trim.nonEmpty) {
-        propsAsString.split(':').map(parseKeyValue).toMap
+        // parse the properties and convert them back to strings for config serialization
+        FineTuningParser.fromStrings(propsAsString.split(':').map(parseKeyValue).toMap) match {
+          case Right(parsed) => parsed.view.mapValues(_.toString).toMap
+          case Left(error)   => throw new PassOptionException(s"Error in the properties string $propsAsString: $error")
+        }
       } else {
         Map.empty
       }
