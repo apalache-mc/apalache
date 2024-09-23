@@ -76,7 +76,9 @@ class BoundedCheckerPassImpl @Inject() (
 
     val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
-    // Parse the tuning parameters that are relevant to Z3. Some passes add more fields, which cannot be parsed.
+    // Parse the tuning parameters that are relevant to Z3.
+    // Currently, `tuning` may contain more configuration options (added by some passes) than we parse in
+    // `FineTuningParser`.
     val z3Parameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith("z3."))) match {
       case Right(params) => params.map { case (k, v) => (k.substring("z3.".length), v) }
       case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
