@@ -122,10 +122,9 @@ command line. Hence, you have to experiment with the choice of parameters.
 
 ## Randomization
 
-**DEPRECATED:** You can now pass the seeds directly to Z3 via [Z3 Tuning Parameters](#z3-tuning-parameters).
-
 `smt.randomSeed=<int>` passes the random seed to `z3` (via `z3`'s parameters
-`sat.random_seed` and `smt.random_seed`).
+`sat.random_seed` and `smt.random_seed`). Note that this parameter sets the seed
+across the solvers for various logic theories in z3.
 
 ## Translation to SMT
 
