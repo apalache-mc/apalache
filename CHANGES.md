@@ -1,6 +1,13 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.46.1 - 2024-09-24
+
+### Features
+
+- Periodically print Z3 statistics when `--debug` is on (#2992)
+- Parse and pass z3 tuning parameters in the Apalache fine-tuning parameters (#2990)
+
 ## 0.45.6 - 2024-09-19
 
 ### Features
