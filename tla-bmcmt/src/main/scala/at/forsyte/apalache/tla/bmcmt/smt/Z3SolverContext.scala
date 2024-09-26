@@ -18,6 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
@@ -61,8 +62,20 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // Set random seed. We are also setting it via global parameters above, but `Global.setParameter()` says:
   // "When a Z3 module is initialized it will use the value of these parameters when Z3_params objects are not provided."
   params.add("seed", config.randomSeed)
+  // When the user sets z3.smt.logic = QF_LIA, z3 complains about random_seed.
+  // https://github.com/apalache-mc/apalache/issues/2989
   params.add("random_seed", config.randomSeed)
-  // params.add("array.extensional", false) // disables extensionality for the theory of arrays
+  config.z3Params.foreach { case (k, v) =>
+    if (v.isInstanceOf[Int]) {
+      params.add(k, v.asInstanceOf[Int])
+    } else if (v.isInstanceOf[Boolean]) {
+      params.add(k, v.asInstanceOf[Boolean])
+    } else if (v.isInstanceOf[Double]) {
+      params.add(k, v.asInstanceOf[Double])
+    } else {
+      params.add(k, v.toString)
+    }
+  }
   z3solver.setParameters(params)
   log(s";; ${params}")
 
@@ -120,17 +133,61 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    */
   private var maxCellIdPerContext = List(-1)
 
+  private trait ContextState
+  private case class Running() extends ContextState
+  private case class Disposed() extends ContextState
+
+  // the state of the context: Running or Disposed
+  private var state: ContextState = Running()
+
+  // the lock shared between the context and the statistics thread
+  private val statisticsLock: ReentrantLock = new ReentrantLock()
+  // start a new thread to collect statistics
+  private val statisticsThread = new Thread(() => {
+    while (state == Running()) {
+      // Sleep for a while.
+      // If we call printStatistics right away, we can easily run into a race condition with Z3 initializing.
+      // This produces a core dump.
+      Thread.sleep(config.z3StatsSec * 1000)
+      // make sure that the context is not being disposed right now. Otherwise, we can get a nice core dump.
+      statisticsLock.lock()
+      try {
+        if (state == Running()) {
+          printStatistics()
+        }
+      } finally {
+        statisticsLock.unlock()
+      }
+    }
+  })
+
+  if (config.debug && config.z3StatsSec > 0) {
+    statisticsThread.start()
+  }
+
   /**
    * Dispose whatever has to be disposed in the end.
    */
   override def dispose(): Unit = {
     logger.debug(s"Disposing Z3 solver context ${id}")
-    z3context.close()
-    closeLogs()
-    cellCache.clear()
-    inCache.clear()
-    funDecls.clear()
-    cellSorts.clear()
+    state = Disposed()
+    // Try to obtain the lock, to let the statistics thread finish its work.
+    // If it is stuck for some reason, continue after the timeout in any case.
+    statisticsLock.tryLock(2 * config.z3StatsSec, java.util.concurrent.TimeUnit.SECONDS)
+    try {
+      if (config.debug) {
+        printStatistics()
+      }
+      z3context.close()
+      closeLogs()
+      cellCache.clear()
+      inCache.clear()
+      funDecls.clear()
+      cellSorts.clear()
+    } finally {
+      // it's not that important at this point, but let's unlock it for the piece of mind
+      statisticsLock.unlock()
+    }
   }
 
   /**
@@ -1013,6 +1070,14 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private def flushAndThrow(e: Exception): Nothing = {
     flushLogs()
     throw e
+  }
+
+  private def printStatistics(): Unit = {
+    logger.info(s"Z3 statistics for context $id...")
+    val entries = z3solver.getStatistics.getEntries.map(stat => {
+      s"${stat.Key}=${stat.getValueString}"
+    })
+    logger.info(entries.mkString(",") + "\n")
   }
 }
 

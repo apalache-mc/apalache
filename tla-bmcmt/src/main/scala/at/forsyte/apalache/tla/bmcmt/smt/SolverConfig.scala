@@ -14,6 +14,8 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding
  *   The random seed to be passed to z3 as :random-seed.
  * @param smtEncoding
  *   The SMT encoding to be used.
+ * @param z3Params
+ *   The parameters to be passed to z3, which must contain proper keys and values.
  *
  * @author
  *   Igor Konnov, Rodrigo Otoni
@@ -22,7 +24,9 @@ sealed case class SolverConfig(
     debug: Boolean,
     profile: Boolean,
     randomSeed: Int,
-    smtEncoding: SMTEncoding) {}
+    smtEncoding: SMTEncoding,
+    z3StatsSec: Int,
+    z3Params: Map[String, Object] = Map()) {}
 
 object SolverConfig {
 
@@ -30,5 +34,6 @@ object SolverConfig {
    * Get the default configuration.
    */
   val default: SolverConfig =
-    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19)
+    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19,
+        z3StatsSec = 60, z3Params = Map())
 }

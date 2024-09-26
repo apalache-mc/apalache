@@ -39,6 +39,7 @@
     - [TLA+ Execution Statistics](./apalache/statistics.md)
     - [Profiling Your Specification](./apalache/profiling.md)
     - [Five minutes of theory](./apalache/theory.md)
+- [Fine Tuning](./apalache/tuning.md)
 - [TLC Configuration Files](./apalache/tlc-config.md)
 - [The Snowcat Type Checker](./apalache/typechecker-snowcat.md)
 - [Supported Features](./apalache/features.md)
@@ -46,7 +47,6 @@
 - [Known Issues](./apalache/known-issues.md)
 - [Antipatterns](./apalache/antipatterns.md)
 - [TLA+ Preprocessing](./apalache/preprocessing.md)
-- [Fine Tuning](./apalache/tuning.md)
 - [Assignments and Symbolic Transitions in Depth](./apalache/assignments-in-depth.md)
 - [KerA: kernel logic of actions](./apalache/kera.md)
 

@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
+import at.forsyte.apalache.infra.passes.FineTuningParser
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
@@ -75,7 +76,16 @@ class BoundedCheckerPassImpl @Inject() (
 
     val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
-    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding)
+    val smtStatsSec =
+      tuning.getOrElse("smt.statsSec", SolverConfig.default.z3StatsSec.toString).toInt
+    // Parse the tuning parameters that are relevant to Z3.
+    // Currently, `tuning` may contain more configuration options (added by some passes) than we parse in
+    // `FineTuningParser`.
+    val z3Parameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith("z3."))) match {
+      case Right(params) => params.map { case (k, v) => (k.substring("z3.".length), v) }
+      case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
+    }
+    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding, smtStatsSec, z3Parameters)
 
     val result = options.checker.algo match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
