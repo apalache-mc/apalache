@@ -298,9 +298,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val leftElems = state.arena.getHas(left)
     val rightElems = state.arena.getHas(right)
     if (leftElems.isEmpty) {
+      assert(left.cellType != InfSetT(CellTFrom(IntT1)))
       // SE-SUBSETEQ1
       state.setRex(state.arena.cellTrue().toBuilder)
     } else if (rightElems.isEmpty) {
+      assert(right.cellType != InfSetT(CellTFrom(IntT1)))
       // SE-SUBSETEQ2
       def notIn(le: ArenaCell) = {
         tla.not(tla.selectInSet(le.toBuilder, left.toBuilder))

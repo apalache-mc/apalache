@@ -18,6 +18,20 @@ class SetInRuleWithArrays(rewriter: SymbStateRewriter) extends SetInRule(rewrite
   private val simplifier = new ConstSimplifierForSmt
 
   override protected def powSetIn(state: SymbState, powsetCell: ArenaCell, elemCell: ArenaCell): SymbState = {
+    // Check that the powsetCell.cellType is not an infinite set.
+    state.arena.getDom(powsetCell).cellType match {
+      case InfSetT(ct) =>
+        throw new RewriterException("SetInRule.powSetIn is not implemented for infinite type %s (found in %s)"
+              .format(InfSetT(ct), state.ex), state.ex)
+      case _ =>
+    }
+    elemCell.cellType match {
+      case InfSetT(_) =>
+        throw new RewriterException("SetInRule.powSetIn is not implemented for infinite type %s (found in %s)"
+              .format(elemCell.cellType, state.ex), state.ex)
+      case _ =>
+    }
+
     def checkType: PartialFunction[(CellT, CellT), Unit] = {
       case (PowSetT(SetT1(expectedType)), CellTFrom(SetT1(actualType))) =>
         assert(expectedType == actualType)
