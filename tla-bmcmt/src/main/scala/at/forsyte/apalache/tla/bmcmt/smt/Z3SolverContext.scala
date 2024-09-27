@@ -767,26 +767,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val distinct = z3context.mkDistinct(es: _*)
-        (distinct.asInstanceOf[ExprSort],
-            ns.foldLeft(1L) {
-              _ + _
-            })
+        (distinct.asInstanceOf[ExprSort], sumExprCount(ns))
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (and.asInstanceOf[ExprSort],
-            ns.foldLeft(1L) {
-              _ + _
-            })
+        (and.asInstanceOf[ExprSort], sumExprCount(ns))
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (or.asInstanceOf[ExprSort],
-            ns.foldLeft(1L) {
-              _ + _
-            })
+        (or.asInstanceOf[ExprSort], sumExprCount(ns))
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
@@ -1078,6 +1069,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       s"${stat.Key}=${stat.getValueString}"
     })
     logger.info(entries.mkString(",") + "\n")
+  }
+
+  // sum up the number of expressions in the children, add 1 for self
+  private def sumExprCount(nexprInChildren: Seq[Long]): Long = {
+    nexprInChildren.foldLeft(1L) { _ + _ }
   }
 }
 
