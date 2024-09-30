@@ -765,19 +765,24 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
-        val (es, ns) = (args.map(toExpr)).unzip
-        val distinct = z3context.mkDistinct(es: _*)
-        (distinct.asInstanceOf[ExprSort], ns.sum + 1)
+        if (args.length < 2) {
+          // Produce true for a singleton set or an empty set. Otherwise, we cannot replay the SMT log in CVC5.
+          (z3context.mkTrue().asInstanceOf[ExprSort], 1)
+        } else {
+          val (es, ns) = (args.map(toExpr)).unzip
+          val distinct = z3context.mkDistinct(es: _*)
+          (distinct.asInstanceOf[ExprSort], ns.sum + 1)
+        }
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (and.asInstanceOf[ExprSort], sumExprCount(ns))
+        (and.asInstanceOf[ExprSort], ns.sum + 1)
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (or.asInstanceOf[ExprSort], sumExprCount(ns))
+        (or.asInstanceOf[ExprSort], ns.sum + 1)
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
@@ -1069,11 +1074,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       s"${stat.Key}=${stat.getValueString}"
     })
     logger.info(entries.mkString(",") + "\n")
-  }
-
-  // sum up the number of expressions in the children, add 1 for self
-  private def sumExprCount(nexprInChildren: Seq[Long]): Long = {
-    nexprInChildren.foldLeft(1L) { _ + _ }
   }
 }
 
