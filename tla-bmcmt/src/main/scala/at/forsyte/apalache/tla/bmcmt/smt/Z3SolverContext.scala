@@ -770,12 +770,17 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         (z3context.mkNot(eq.asInstanceOf[BoolExpr]).asInstanceOf[ExprSort], 1 + n)
 
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
-        val (es, ns) = (args.map(toExpr)).unzip
-        val distinct = z3context.mkDistinct(es: _*)
-        (distinct.asInstanceOf[ExprSort],
-            ns.foldLeft(1L) {
-              _ + _
-            })
+        if (args.length < 2) {
+          // Produce true for a singleton set or an empty set. Otherwise, we cannot replay the SMT log in CVC5.
+          (z3context.mkTrue().asInstanceOf[ExprSort], 1)
+        } else {
+          val (es, ns) = (args.map(toExpr)).unzip
+          val distinct = z3context.mkDistinct(es: _*)
+          (distinct.asInstanceOf[ExprSort],
+              ns.foldLeft(1L) {
+                _ + _
+              })
+        }
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
