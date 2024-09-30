@@ -767,7 +767,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       case OperEx(ApalacheInternalOper.distinct, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val distinct = z3context.mkDistinct(es: _*)
-        (distinct.asInstanceOf[ExprSort], sumExprCount(ns))
+        (distinct.asInstanceOf[ExprSort], ns.sum + 1)
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
