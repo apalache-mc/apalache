@@ -1,6 +1,13 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.46.2 - 2024-10-02
+
+### Bug fixes
+
+- Do not produce `(distinct ...)` for singletons, see #3005
+- Show note that expression is unsupported instead of reporting a counterexample claiming that e.g. `{42} \in SUBSET Nat` is false, see #2690
+
 ## 0.46.1 - 2024-09-24
 
 ### Features
