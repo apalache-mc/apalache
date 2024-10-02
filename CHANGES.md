@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.47.0 - 2024-10-02
+
+### Breaking changes
+
+- Downgrade z3 to 4.12.6, due to instability of 4.13.0
+
 ## 0.46.2 - 2024-10-02
 
 ### Bug fixes
