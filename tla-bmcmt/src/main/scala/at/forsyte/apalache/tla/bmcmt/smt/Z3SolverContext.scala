@@ -771,27 +771,18 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         } else {
           val (es, ns) = (args.map(toExpr)).unzip
           val distinct = z3context.mkDistinct(es: _*)
-          (distinct.asInstanceOf[ExprSort],
-              ns.foldLeft(1L) {
-                _ + _
-              })
+          (distinct.asInstanceOf[ExprSort], ns.sum + 1)
         }
 
       case OperEx(TlaBoolOper.and, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val and = z3context.mkAnd(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (and.asInstanceOf[ExprSort],
-            ns.foldLeft(1L) {
-              _ + _
-            })
+        (and.asInstanceOf[ExprSort], ns.sum + 1)
 
       case OperEx(TlaBoolOper.or, args @ _*) =>
         val (es, ns) = (args.map(toExpr)).unzip
         val or = z3context.mkOr(es.map(_.asInstanceOf[BoolExpr]): _*)
-        (or.asInstanceOf[ExprSort],
-            ns.foldLeft(1L) {
-              _ + _
-            })
+        (or.asInstanceOf[ExprSort], ns.sum + 1)
 
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         val (lhsZ3, ln) = toExpr(lhs)
