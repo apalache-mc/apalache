@@ -67,6 +67,9 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
           val notBody = tla.not(tla.fromTlaEx(copy.deepCopyEx(body))).typed(BoolT1)
           val negative =
             TlaOperDecl(NormalizedNames.VC_NOT_TRACE_INV_PREFIX + "0", params, notBody)(traceInv.typeTag)
+          // track the changes
+          tracker.hold(body, positive.body)
+          tracker.hold(body, negative.body)
           TlaModule(module.name, module.declarations :+ positive :+ negative)
 
         case Some(decl: TlaOperDecl) =>
@@ -166,7 +169,10 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
         expr
 
       case (nameEx, set) :: tail =>
-        decorateWithUniversals(tail, tla.forall(nameEx, set, expr).typed(BoolT1))
+        val withForall = tla.forall(nameEx, set, expr).typed(BoolT1)
+        // remember the source of the change
+        tracker.hold(expr, withForall)
+        decorateWithUniversals(tail, withForall)
     }
   }
 }
