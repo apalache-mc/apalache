@@ -10523,12 +10523,12 @@ would be as follows:</p>
 </code></pre>
 <p>To make it easier to represent the fruits, we can introduce variants together with 
 user-defined constructors for each option::</p>
-<pre><code class="language-tla">\* @typeAlias: FRUIT = Apple(Str) | Orange(Bool);
+<pre><code class="language-tla">\* @typeAlias: fruit = Apple(Str) | Orange(Bool);
 
-\* @type: Str =&gt; FRUIT;
+\* @type: Str =&gt; $fruit;
 Apple(color) == Variant(&quot;Apple&quot;, color)
 
-\* @type: Bool =&gt; FRUIT;
+\* @type: Bool =&gt; $fruit;
 Orange(seedless) == Variant(&quot;Orange&quot;, seedless)
 </code></pre>
 <p>Now we can naturally construct apples and orange as follows:</p>
@@ -10536,26 +10536,26 @@ Orange(seedless) == Variant(&quot;Orange&quot;, seedless)
 Orange(TRUE)
 </code></pre>
 <p>Variants can wrap records, for when we want to represent compound data with named fields:</p>
-<pre><code class="language-tla">\* @typeAlias: DRINK =
+<pre><code class="language-tla">\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool =&gt; DRINK;
+\* @type: Bool =&gt; $drink;
 Water(sparkling) == Variant(&quot;Water&quot;, [ sparkling |-&gt; sparkling ])
 
-\* @type: (Str, Int) =&gt; DRINK;
+\* @type: (Str, Int) =&gt; $drink;
 Beer(malt, strength) == Variant(&quot;Beer&quot;, [ malt |-&gt; malt, strength |-&gt; strength ])
 </code></pre>
 <p>Once a variant is constructed, it becomes opaque to the type checker, that is,
 the type checker only knows that <code>Water(TRUE)</code> and <code>Beer(&quot;Dark&quot;, 5)</code> are both
-of type <code>DRINK</code>. This is exactly what we want, in order to combine these values
+of type <code>drink</code>. This is exactly what we want, in order to combine these values
 in a single set. However, we have lost the ability to access the fields of
 these values. To deconstruct values of a variant type, we have to use other
 operators, presented below.</p>
 <p><strong>Filtering by tag name.</strong> Following the idiomatic use of tagged unions in
 untyped TLA+, we can filter a set of variants:</p>
 <pre><code class="language-tla">LET Drinks == { Water(TRUE), Water(FALSE), Beer(&quot;Radler&quot;, 2) } IN
-\E d \in VariantFilter(&quot;Beer&quot;, Drink):
+\E d \in VariantFilter(&quot;Beer&quot;, Drinks):
     d.strength &lt; 3
 </code></pre>
 <p>We believe that <code>VariantFilter</code> is the most commonly used way to partition a
@@ -10608,14 +10608,14 @@ type variable that captures other options in the variant type.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">\* @typeAlias: DRINK =
+<pre><code class="language-tla">\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool =&gt; DRINK;
+\* @type: Bool =&gt; $drink;
 Water(sparkling) == Variant(&quot;Water&quot;, [ sparkling |-&gt; sparkling ])
 
-\* @type: (Str, Int) =&gt; DRINK;
+\* @type: (Str, Int) =&gt; $drink;
 Beer(malt, strength) == Variant(&quot;Beer&quot;, [ malt |-&gt; malt, strength |-&gt; strength ])
 </code></pre>
 <hr />
@@ -10649,14 +10649,14 @@ values that were packed with <code>Variant</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">\* @typeAlias: DRINK =
+<pre><code class="language-tla">\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool =&gt; DRINK;
+\* @type: Bool =&gt; $drink;
 Water(sparkling) == Variant(&quot;Water&quot;, [ sparkling |-&gt; sparkling ])
 
-\* @type: (Str, Int) =&gt; DRINK;
+\* @type: (Str, Int) =&gt; $drink;
 Beer(malt, strength) == Variant(&quot;Beer&quot;, [ malt |-&gt; malt, strength |-&gt; strength ])
 
 LET Drinks == { Water(TRUE), Water(FALSE), Beer(&quot;Radler&quot;, 2) } IN
@@ -10680,14 +10680,14 @@ Otherwise, the operator returns <code>defaultValue</code>.</p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">\* @typeAlias: DRINK =
+<pre><code class="language-tla">\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool =&gt; DRINK;
+\* @type: Bool =&gt; $drink;
 Water(sparkling) == Variant(&quot;Water&quot;, [ sparkling |-&gt; sparkling ])
 
-\* @type: (Str, Int) =&gt; DRINK;
+\* @type: (Str, Int) =&gt; $drink;
 Beer(malt, strength) == Variant(&quot;Beer&quot;, [ malt |-&gt; malt, strength |-&gt; strength ])
 
 LET water == Water(TRUE) IN
@@ -10713,14 +10713,14 @@ is always constructed via <code>Variant</code>, unless the operator is used with
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No errors.</p>
 <p><strong>Example in TLA+:</strong></p>
-<pre><code class="language-tla">\* @typeAlias: DRINK =
+<pre><code class="language-tla">\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool =&gt; DRINK;
+\* @type: Bool =&gt; $drink;
 Water(sparkling) == Variant(&quot;Water&quot;, [ sparkling |-&gt; sparkling ])
 
-\* @type: (Str, Int) =&gt; DRINK;
+\* @type: (Str, Int) =&gt; $drink;
 Beer(malt, strength) == Variant(&quot;Beer&quot;, [ malt |-&gt; malt, strength |-&gt; strength ])
 
 LET drink == Beer(&quot;Dunkles&quot;, 4) IN
