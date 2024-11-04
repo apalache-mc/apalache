@@ -73,12 +73,12 @@ To make it easier to represent the fruits, we can introduce variants together wi
 user-defined constructors for each option::
 
 ```tla
-\* @typeAlias: FRUIT = Apple(Str) | Orange(Bool);
+\* @typeAlias: fruit = Apple(Str) | Orange(Bool);
 
-\* @type: Str => FRUIT;
+\* @type: Str => $fruit;
 Apple(color) == Variant("Apple", color)
 
-\* @type: Bool => FRUIT;
+\* @type: Bool => $fruit;
 Orange(seedless) == Variant("Orange", seedless)
 ```
 
@@ -92,20 +92,20 @@ Orange(TRUE)
 Variants can wrap records, for when we want to represent compound data with named fields:
 
 ```tla
-\* @typeAlias: DRINK =
+\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool => DRINK;
+\* @type: Bool => $drink;
 Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
-\* @type: (Str, Int) => DRINK;
+\* @type: (Str, Int) => $drink;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
 ```
 
 Once a variant is constructed, it becomes opaque to the type checker, that is,
 the type checker only knows that `Water(TRUE)` and `Beer("Dark", 5)` are both
-of type `DRINK`. This is exactly what we want, in order to combine these values
+of type `drink`. This is exactly what we want, in order to combine these values
 in a single set. However, we have lost the ability to access the fields of
 these values. To deconstruct values of a variant type, we have to use other
 operators, presented below.
@@ -115,7 +115,7 @@ untyped TLA+, we can filter a set of variants:
 
 ```tla
 LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
-\E d \in VariantFilter("Beer", Drink):
+\E d \in VariantFilter("Beer", Drinks):
     d.strength < 3
 ```
 
@@ -195,14 +195,14 @@ type variable that captures other options in the variant type.
 **Example in TLA+:**
 
 ```tla
-\* @typeAlias: DRINK =
+\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool => DRINK;
+\* @type: Bool => $drink;
 Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
-\* @type: (Str, Int) => DRINK;
+\* @type: (Str, Int) => $drink;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
 ```
 
@@ -260,14 +260,14 @@ values that were packed with `Variant`.
 **Example in TLA+:**
 
 ```tla
-\* @typeAlias: DRINK =
+\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool => DRINK;
+\* @type: Bool => $drink;
 Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
-\* @type: (Str, Int) => DRINK;
+\* @type: (Str, Int) => $drink;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
 
 LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
@@ -303,14 +303,14 @@ Otherwise, the operator returns `defaultValue`.
 **Example in TLA+:**
 
 ```tla
-\* @typeAlias: DRINK =
+\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool => DRINK;
+\* @type: Bool => $drink;
 Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
-\* @type: (Str, Int) => DRINK;
+\* @type: (Str, Int) => $drink;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
 
 LET water == Water(TRUE) IN
@@ -348,14 +348,14 @@ is always constructed via `Variant`, unless the operator is used with the right 
 **Example in TLA+:**
 
 ```tla
-\* @typeAlias: DRINK =
+\* @typeAlias: drink =
 \*     Water({ sparkling: Bool })
 \*   | Beer({ malt: Str, strength: Int });
 \*
-\* @type: Bool => DRINK;
+\* @type: Bool => $drink;
 Water(sparkling) == Variant("Water", [ sparkling |-> sparkling ])
 
-\* @type: (Str, Int) => DRINK;
+\* @type: (Str, Int) => $drink;
 Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ])
 
 LET drink == Beer("Dunkles", 4) IN
