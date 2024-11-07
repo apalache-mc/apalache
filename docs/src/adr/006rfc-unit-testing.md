@@ -621,14 +621,14 @@ By having all test options specified directly in tests, we reach two goals:
 
 Let us know:
 
- - At [Apalache Zulip stream][],
+ - At [Apalache Discourse][],
 
  - On [ApalacheTLA Twitter][],
 
  - email: igor at informal.systems.
 
 
-[Apalache Zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
+[Apalache Discourse]: https://apalache.discourse.group/
 [ApalacheTLA Twitter]: https://twitter.com/ApalacheTLA
 [Unit testing]: https://en.wikipedia.org/wiki/Unit_testing
 [Property-based testing]: https://en.wikipedia.org/wiki/QuickCheck
