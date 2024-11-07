@@ -63,7 +63,7 @@ Related reports and publications can be found at the
 
 <!-- LINKS -->
 
-[Chat]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
+[Chat]: https://apalache.discourse.group/
 [Contribute]: https://github.com/informalsystems/apalache/blob/unstable/CONTRIBUTING.md
 [Features]: ./docs/apalache/features.html
 [Installation]: ./docs/apalache/installation/index.html

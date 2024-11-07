@@ -1,4 +1,4 @@
-The landing page for Apalache served from http://informalsystems.github.io/apalache/
+The landing page for Apalache served from https://apalache-mc.org/
 
 ## Structure
 
