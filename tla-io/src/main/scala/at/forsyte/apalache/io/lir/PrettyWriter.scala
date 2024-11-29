@@ -297,14 +297,6 @@ class PrettyWriter(
             text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}")
         ) ///
 
-      // a function of multiple arguments that are packed into a tuple: don't print the angular brackets <<...>>
-      case OperEx(op @ TlaFunOper.app, funEx, OperEx(TlaFunOper.tuple, args @ _*)) =>
-        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver))
-        val commaSeparatedArgs = folddoc(argDocs.toList, _ <> text(",") <@> _)
-        group(
-            exToDoc(TlaFunOper.app.precedence, funEx, nameResolver) <> brackets(commaSeparatedArgs)
-        ) ///
-
       // a function of a single argument
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         group(
