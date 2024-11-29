@@ -989,7 +989,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     writer.write(fDecl)
     printWriter.flush()
     val expected =
-      """f[x \in S, y \in S] == f[y, x]
+      """f[x \in S, y \in S] == f[<<y, x>>]
         |
         |""".stripMargin
     assert(expected == stringWriter.toString)

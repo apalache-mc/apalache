@@ -625,7 +625,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin empty Tup operator application to uninterpreted value") {
-    assert(convert(Q.app("Tup")(QuintTupleT.ofTypes())) == "\"U_OF_UNIT\"")
+    assert(convert(Q.app("Tup")(QuintTupleT.ofTypes())) == "[\"tag\" ↦ \"UNIT\"]")
   }
 
   /// SUM TYPES
@@ -651,7 +651,7 @@ class TestQuintEx extends AnyFunSuite {
     val expected =
       """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42)))
          |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))
-         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2([])""".stripMargin
+         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2({})""".stripMargin
         .replace('\n', ' ')
     assert(convert(quintMatch) == expected)
   }

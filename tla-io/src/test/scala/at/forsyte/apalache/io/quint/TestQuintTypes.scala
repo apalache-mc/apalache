@@ -35,7 +35,7 @@ class TestQuintTypes extends AnyFunSuite {
 
   test("empty Quint tuple types are converted to the UNIT uninterpreted type") {
     val tuple = QuintTupleT(Row.Nil())
-    assert(translate(tuple) == ConstT1("UNIT"))
+    assert(translate(tuple) == RecRowT1(RowT1("tag" -> StrT1)))
   }
 
   test("Polymorphic Quint tuples types are converted to sparse tuples") {

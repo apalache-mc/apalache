@@ -474,6 +474,8 @@ class PrettyWriter(
         val doc =
           if (args.isEmpty) {
             text(parseableName(name))
+          } else if (decls.isEmpty) {
+            group(parseableName(name) <> parens(commaSeparated))
           } else {
             group(ssep(decls, line) <> line <> parseableName(name) <> parens(commaSeparated))
           }
@@ -499,6 +501,8 @@ class PrettyWriter(
         val doc =
           if (args.isEmpty) {
             text(unqualifiedName)
+          } else if (decls.isEmpty) {
+            group(unqualifiedName <> parens(commaSeparated))
           } else {
             group(ssep(decls, line) <> line <> unqualifiedName <> parens(commaSeparated))
           }
@@ -530,10 +534,12 @@ class PrettyWriter(
    */
   def extractDecls(exprs: Seq[TlaEx]): (List[Doc], Seq[TlaEx]) = {
     val decls = exprs.collect {
+      case LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) => Nil
       case LetInEx(_, decls @ _*) => decls
       case _                      => Nil
     }
     val newArgs = exprs.collect {
+      case expr @ LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) => expr
       case LetInEx(body, _) => body
       case expr             => expr
     }
