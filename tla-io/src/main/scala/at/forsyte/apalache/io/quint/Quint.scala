@@ -573,7 +573,7 @@ class Quint(quintOutput: QuintOutput) {
         case "Tup" =>
           if (quintArgs.isEmpty) {
             // Translate empty tuples to values of type UNIT
-            (_) => Reader((_) => tla.const("U", ConstT1(("UNIT"))))
+            (_) => Reader((_) => tla.rowRec(None, "tag" -> tla.str("UNIT")))
           } else {
             variadicApp(args => tla.tuple(args: _*))
           }
