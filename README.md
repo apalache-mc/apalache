@@ -145,7 +145,6 @@ Related reports and publications can be found at the
 [releases page]: https://github.com/apalache-mc/apalache/releases
 [master]: https://github.com/apalache-mc/apalache/tree/master
 [main branch]: https://github.com/apalache-mc/apalache/tree/main
-[apalache zulip stream]: https://informal-systems.zulipchat.com/#narrow/stream/265309-apalache
 [tendermint specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/accountability
 [tendermint blockchain]: https://github.com/tendermint
 [standard repository of tla+ examples]: https://github.com/tlaplus/Examples

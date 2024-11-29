@@ -256,7 +256,7 @@ In this tutorial, we have shown how to:
    `N=4`).
 
 If you are experiencing a problem with Apalache, feel free to [open an issue]
-or drop us a message on [Zulip chat].
+or drop us a message on [Discourse].
 
 ## Further reading
 
@@ -284,6 +284,6 @@ or drop us a message on [Zulip chat].
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [TLC]: https://github.com/tlaplus/tlaplus/
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
-[Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
+[Discourse]: https://apalache.discourse.group/
 [Bakery algorithm]: https://en.wikipedia.org/wiki/Lamport%27s_bakery_algorithm
 [ZIP archive]: https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bakery-pluscal

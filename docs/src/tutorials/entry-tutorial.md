@@ -1175,7 +1175,7 @@ did not discuss non-determinism, as our specification is entirely
 deterministic. We will demonstrate advanced features in future tutorials.
 
 If you are experiencing a problem with Apalache, feel free to [open an issue]
-or drop us a message on [Zulip chat].
+or drop us a message on [Discourse].
 
 
 [HOWTO on writing type annotations]: ../HOWTOs/howto-write-type-annotations.md
@@ -1205,5 +1205,5 @@ or drop us a message on [Zulip chat].
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [Test-driven development]: https://en.wikipedia.org/wiki/Test-driven_development
 [TLC]: https://github.com/tlaplus/tlaplus/
-[Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
+[Discourse]: https://apalache.discourse.group/
 [ZIP archive]: https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bin-search
