@@ -5,7 +5,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import at.forsyte.apalache.io.quint.QuintType._
 import at.forsyte.apalache.tla.lir.{
-  ConstT1, FunT1, IntT1, RecRowT1, RowT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1, VariantT1,
+  FunT1, IntT1, RecRowT1, RowT1, SparseTupT1, StrT1, TlaType1, TupT1, VarT1, VariantT1,
 }
 
 /**

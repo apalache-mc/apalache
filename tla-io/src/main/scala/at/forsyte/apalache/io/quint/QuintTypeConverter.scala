@@ -96,10 +96,10 @@ private class QuintTypeConverter extends LazyLogging {
     case QuintSeqT(elem)       => SeqT1(convert(elem))
     case QuintFunT(arg, res)   => FunT1(convert(arg), convert(res))
     case QuintOperT(args, res) => OperT1(args.map(convert), convert(res))
+    // Use the Unit type for empty tuples, since they are the unit type in Quint
+    // The unit type is a record like [ "tag" |-> "UNIT" ] so it can be compared to other constructed types.
+    // This is relevant when we produce a TLA+ file to be used with TLC.
     case QuintTupleT(Row.Nil() | Row.Cell(Seq(), _)) =>
-      // Use the Unit type for empty tuples, since they are the unit type in Quint
-      // The unit type is a record like [ "tag" |-> "UNIT" ] so it can be compared to other constructed types.
-      // This is relevant when we produce a TLA+ file to be used with TLC.
       RecRowT1(RowT1("tag" -> StrT1))
     case QuintTupleT(row)  => rowToTupleT1(row)
     case QuintRecordT(row) => RecRowT1(rowToRowT1(row))

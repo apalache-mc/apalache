@@ -534,14 +534,14 @@ class PrettyWriter(
    */
   def extractDecls(exprs: Seq[TlaEx]): (List[Doc], Seq[TlaEx]) = {
     val decls = exprs.collect {
-      case LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) => Nil
-      case LetInEx(_, decls @ _*) => decls
-      case _                      => Nil
+      case LetInEx(_, TlaOperDecl("LAMBDA", _, _)) => Nil
+      case LetInEx(_, decls @ _*)                  => decls
+      case _                                       => Nil
     }
     val newArgs = exprs.collect {
-      case expr @ LetInEx(body, d @ TlaOperDecl("LAMBDA", _, _)) => expr
-      case LetInEx(body, _) => body
-      case expr             => expr
+      case expr @ LetInEx(_, TlaOperDecl("LAMBDA", _, _)) => expr
+      case LetInEx(body, _)                               => body
+      case expr                                           => expr
     }
 
     (decls.flatten.map(d => group("LET" <> space <> declToDoc(d) <> line <> "IN")).toList, newArgs)
