@@ -844,6 +844,24 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("operator application with LET-IN as argument") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    val decl1 =
+      TlaOperDecl("A", List(OperParam("param1"), OperParam("param2")), plus(name("param1"), name("param2")))
+    val letInEx = letIn(appDecl(decl1, int(1), int(2)), decl1)
+    // Foo(LET A(param1, param2) == param1 + param2 IN A(1, 2))
+    val expr = OperEx(TlaOper.apply, NameEx("Foo"), letInEx)
+
+    writer.write(expr)
+    printWriter.flush()
+    // LET declaration needs to be printed before the application
+    val expected =
+      """LET A(param1, param2) == param1 + param2
+        |IN
+        |Foo((A(1, 2)))""".stripMargin
+    assert(expected == stringWriter.toString)
+  }
+
   test("a LAMBDA as LET-IN") {
     val writer = new PrettyWriter(printWriter, layout40)
     val aDecl = TlaOperDecl("LAMBDA", List(OperParam("x")), NameEx("x"))
@@ -989,7 +1007,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     writer.write(fDecl)
     printWriter.flush()
     val expected =
-      """f[x \in S, y \in S] == f[y, x]
+      """f[x \in S, y \in S] == f[<<y, x>>]
         |
         |""".stripMargin
     assert(expected == stringWriter.toString)
