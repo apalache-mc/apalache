@@ -446,7 +446,7 @@ class Quint(quintOutput: QuintOutput) {
             case ValEx(TlaStr("_")) =>
               // We have a default case, which is always paired with an eliminator that
               // can be applied to the unit value (an empty record).
-              (cs, Some(tla.appOp(defaultElim, tla.rowRec(None))))
+              (cs, Some(tla.appOp(defaultElim, tla.emptySet(IntT1))))
             case _ =>
               // All cases have match expressions
               (allCases, None)
@@ -573,7 +573,7 @@ class Quint(quintOutput: QuintOutput) {
         case "Tup" =>
           if (quintArgs.isEmpty) {
             // Translate empty tuples to values of type UNIT
-            (_) => Reader((_) => tla.const("U", ConstT1(("UNIT"))))
+            (_) => Reader((_) => tla.rowRec(None, "tag" -> tla.str("UNIT")))
           } else {
             variadicApp(args => tla.tuple(args: _*))
           }

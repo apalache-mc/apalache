@@ -297,14 +297,6 @@ class PrettyWriter(
             text("{") <> nest(line <> binding <> ":" <> nest(line <> filter)) <> line <> text("}")
         ) ///
 
-      // a function of multiple arguments that are packed into a tuple: don't print the angular brackets <<...>>
-      case OperEx(op @ TlaFunOper.app, funEx, OperEx(TlaFunOper.tuple, args @ _*)) =>
-        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver))
-        val commaSeparatedArgs = folddoc(argDocs.toList, _ <> text(",") <@> _)
-        group(
-            exToDoc(TlaFunOper.app.precedence, funEx, nameResolver) <> brackets(commaSeparatedArgs)
-        ) ///
-
       // a function of a single argument
       case OperEx(TlaFunOper.app, funEx, argEx) =>
         group(
@@ -473,14 +465,19 @@ class PrettyWriter(
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op @ TlaOper.apply, NameEx(name), args @ _*) =>
+        val (decls, newArgs) = extractDecls(args)
+
         // apply an operator by its name, e.g., F(x)
-        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
+        val argDocs = newArgs.map(exToDoc(op.precedence, _, nameResolver)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
+
         val doc =
           if (args.isEmpty) {
             text(parseableName(name))
-          } else {
+          } else if (decls.isEmpty) {
             group(parseableName(name) <> parens(commaSeparated))
+          } else {
+            group(ssep(decls, line) <> line <> parseableName(name) <> parens(commaSeparated))
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -494,16 +491,20 @@ class PrettyWriter(
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(op, args @ _*) =>
-        val argDocs = args.map(exToDoc(op.precedence, _, nameResolver)).toList
+        val (decls, newArgs) = extractDecls(args)
+        val argDocs = newArgs.map(exToDoc(op.precedence, _, nameResolver)).toList
         val commaSeparated = ssep(argDocs, "," <> softline)
         // The standard operators may contain a '!' that refers to the standard module. Remove it.
         val lastIndexOfBang = op.name.lastIndexOf("!")
         val unqualifiedName = if (lastIndexOfBang < 0) op.name else (op.name.substring(lastIndexOfBang + 1))
+
         val doc =
           if (args.isEmpty) {
             text(unqualifiedName)
-          } else {
+          } else if (decls.isEmpty) {
             group(unqualifiedName <> parens(commaSeparated))
+          } else {
+            group(ssep(decls, line) <> line <> unqualifiedName <> parens(commaSeparated))
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -525,6 +526,25 @@ class PrettyWriter(
 
       case expr => throw new PrettyPrinterError(s"PrettyPrinter failed toDoc conversion on expression ${expr}")
     }
+  }
+
+  /**
+   * On TLA+ files, we can't have LET..IN expressions as arguments. This is a helper function to extract the
+   * declarations so they can be printed before the operator application that would use them as arguments.
+   */
+  def extractDecls(exprs: Seq[TlaEx]): (List[Doc], Seq[TlaEx]) = {
+    val decls = exprs.collect {
+      case LetInEx(_, TlaOperDecl("LAMBDA", _, _)) => Nil
+      case LetInEx(_, decls @ _*)                  => decls
+      case _                                       => Nil
+    }
+    val newArgs = exprs.collect {
+      case expr @ LetInEx(_, TlaOperDecl("LAMBDA", _, _)) => expr
+      case LetInEx(body, _)                               => body
+      case expr                                           => expr
+    }
+
+    (decls.flatten.map(d => group("LET" <> space <> declToDoc(d) <> line <> "IN")).toList, newArgs)
   }
 
   /**
