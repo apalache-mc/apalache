@@ -77,6 +77,14 @@ trait LiteralAndNameBuilder {
     (mi.copy(freeNameScope = scope + (exprName -> finalT), usedNames = mi.usedNames + exprName), ret)
   }
 
+  /**
+   * {{{exprName: t}}}
+   * @param exprName
+   *   can take different types under the same scope (polymorphic operator).
+   */
+  def polymorphicName(exprName: String, t: TlaType1): TBuilderInstruction =
+    unsafeBuilder.name(exprName, t).point[TBuilderInternalState]
+
   /** Attempt to infer the type from the scope. Fails if exprName is not in scope. */
   def nameWithInferredType(exprName: String): TBuilderInstruction = get[TBuilderContext].map { mi: TBuilderContext =>
     val scope = mi.freeNameScope
