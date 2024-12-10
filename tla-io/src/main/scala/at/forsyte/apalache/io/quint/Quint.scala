@@ -727,7 +727,7 @@ class Quint(quintOutput: QuintOutput) {
             val t = typeConv.convert(types(id).typ)
             Reader { nullaryOpNames =>
               if (nullaryOpNames.contains(name)) {
-                tla.appOp(tla.name(name, OperT1(Seq(), t)))
+                tla.appOp(tla.polymorphicName(name, OperT1(Seq(), t)))
               } else {
                 tla.name(name, t)
               }
