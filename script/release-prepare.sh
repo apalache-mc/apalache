@@ -67,6 +67,7 @@ fi
 DEV_VERSION=$("$DIR"/get-version.sh)
 git add --update
 git commit -m "Bump version to ${DEV_VERSION}"
+git pull
 
 instructions="
 # Reviewer instructions
