@@ -38,6 +38,10 @@ then
     JVM_ARGS="${JVM_ARGS} -Xmx4096m"
 fi
 
+# Avoid SANY concurrency issues: https://github.com/tlaplus/tlaplus/issues/688
+TD=`mktemp -d "$TMPDIR"/SANYXXXXXXXXXX`
+JVM_ARGS="${JVM_ARGS} -Djava.io.tmpdir=$TD"
+
 # Check whether the CLI args contains the debug flag
 if [[ "$*" =~ '--debug' ]]
 then
