@@ -43,8 +43,7 @@ if [ -z "$TMPDIR" ]; then
     TMPDIR="$(pwd)/tmp"
     mkdir -p "$TMPDIR"
 fi
-TD=`mktemp -d -p $TMPDIR -t SANYXXXXXXXXXX`
-JVM_ARGS="${JVM_ARGS} -Djava.io.tmpdir=$TD"
+JAVA_IO_TMPDIR=`mktemp -d -p $TMPDIR -t SANYXXXXXXXXXX`
 
 # Check whether the CLI args contains the debug flag
 if [[ "$*" =~ '--debug' ]]
@@ -52,10 +51,11 @@ then
     echo "# Tool home: $DIR"
     echo "# Package:   $APALACHE_JAR"
     echo "# JVM args: $JVM_ARGS"
+    echo "# -Djava.io.tmpdir: $JAVA_IO_TMPDIR"
     echo "#"
 fi
 
 # Run with `exec` to replace the PID, rather than running in a subshell.
 # This saves one process, and ensures signals are sent to the replacement process
 # C.f. https://github.com/sbt/sbt-native-packager/blob/e72f2f45b8cab5881add1cd62743bfc69c2b9b4d/src/main/resources/com/typesafe/sbt/packager/archetypes/scripts/bash-template#L141-L142
-exec java $JVM_ARGS -jar "$APALACHE_JAR" "$@"
+exec java $JVM_ARGS -Djava.io.tmpdir=$JAVA_IO_TMPDIR -jar "$APALACHE_JAR" "$@"
