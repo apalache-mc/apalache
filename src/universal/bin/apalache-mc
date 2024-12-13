@@ -39,7 +39,11 @@ then
 fi
 
 # Avoid SANY concurrency issues: https://github.com/tlaplus/tlaplus/issues/688
-TD=`mktemp -d "$TMPDIR"/SANYXXXXXXXXXX`
+if [ -z "$TMPDIR" ]; then
+    TMPDIR="$(pwd)/tmp"
+    mkdir -p "$TMPDIR"
+fi
+TD=`mktemp -d -p $TMPDIR -t SANYXXXXXXXXXX`
 JVM_ARGS="${JVM_ARGS} -Djava.io.tmpdir=$TD"
 
 # Check whether the CLI args contains the debug flag
