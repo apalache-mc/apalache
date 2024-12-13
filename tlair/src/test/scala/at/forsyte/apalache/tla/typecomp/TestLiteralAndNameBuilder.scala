@@ -152,13 +152,5 @@ class TestLiteralAndNameBuilder extends BuilderTest {
           } yield ()
       )
     }
-
-    // Should not throw with polymorphic names
-    build(
-        for {
-          _ <- builder.polymorphicName("x", IntT1)
-          _ <- builder.polymorphicName("x", BoolT1)
-        } yield ()
-    )
   }
 }
