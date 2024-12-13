@@ -43,7 +43,7 @@ if [ -z "${TMPDIR:-}" ]; then
     TMPDIR="$(pwd)/tmp"
     mkdir -p "$TMPDIR"
 fi
-JAVA_IO_TMPDIR=`mktemp -d -p $TMPDIR -t SANYXXXXXXXXXX`
+JAVA_IO_TMPDIR=`mktemp -d -t SANYXXXXXXXXXX`
 
 # Check whether the CLI args contains the debug flag
 if [[ "$*" =~ '--debug' ]]
