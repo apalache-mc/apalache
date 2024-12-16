@@ -37,8 +37,8 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: sbt
-      - name: Install sbt
-        run: sudo apt-get install -y sbt
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Check formatting
         run: make fmt-check
 
