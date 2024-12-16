@@ -36,6 +36,9 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          cache: sbt
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Check formatting
         run: make fmt-check
 
@@ -50,6 +53,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Check scaladoc
         run: sbt unidoc
 
@@ -64,6 +69,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Coursier cache
         uses: coursier/cache-action@v6
       - name: Set APALACHE_HOME env
@@ -96,7 +103,9 @@ jobs:
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:1.17
-          apps: sbtn
+          apps: sbt
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Set APALACHE_HOME env
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
@@ -164,6 +173,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
         # See https://github.com/actions/cache/issues/324
