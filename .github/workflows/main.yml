@@ -103,7 +103,7 @@ jobs:
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:1.17
-          apps: sbtn
+          apps: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Set APALACHE_HOME env
