@@ -96,7 +96,7 @@ jobs:
         uses: coursier/setup-action@v1
         with:
           jvm: temurin:1.17
-          apps: sbt
+          apps: sbtn
       - name: Set APALACHE_HOME env
         # See https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-environment-variable
         run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
