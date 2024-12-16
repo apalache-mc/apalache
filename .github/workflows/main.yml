@@ -173,6 +173,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Cache nix store
         # Workaround for cache action not playing well with permissions
         # See https://github.com/actions/cache/issues/324
