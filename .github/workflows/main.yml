@@ -37,6 +37,8 @@ jobs:
           distribution: temurin
           java-version: 17
           cache: sbt
+      - name: Install sbt
+        run: sudo apt-get install -y sbt
       - name: Check formatting
         run: make fmt-check
 
