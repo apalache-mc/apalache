@@ -205,7 +205,7 @@ class TestQuintEx extends AnyFunSuite {
 
   def translate(qex: QuintEx): TlaEx = {
     val translator = new Quint(Q.quintOutput)
-    val nullaryOps = Set[String]()
+    val nullaryOps = Set[String]("None")
     val tlaEx = build(translator.tlaExpression(qex).run(nullaryOps))
     tlaEx
   }
@@ -625,7 +625,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin empty Tup operator application to uninterpreted value") {
-    assert(convert(Q.app("Tup")(QuintTupleT.ofTypes())) == "\"U_OF_UNIT\"")
+    assert(convert(Q.app("Tup")(QuintTupleT.ofTypes())) == "[\"tag\" ↦ \"UNIT\"]")
   }
 
   /// SUM TYPES
@@ -651,7 +651,7 @@ class TestQuintEx extends AnyFunSuite {
     val expected =
       """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42)))
          |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))
-         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2([])""".stripMargin
+         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2({})""".stripMargin
         .replace('\n', ' ')
     assert(convert(quintMatch) == expected)
   }
@@ -793,13 +793,13 @@ class TestQuintEx extends AnyFunSuite {
     val polyConst1 = "polyConst1"
 
     // We want to test that we can use this polymorphic operator by applying it to two
-    // different values of the same type.
+    // different values of different types.
     val appliedToStr = Q.app(polyConst1, Q.s)(QuintIntT(), oper.id)
     val appliedToBool = Q.app(polyConst1, Q.tt)(QuintIntT(), oper.id)
     // We'll combine these two applications using addition, just to form a compound expression that includes both
     val body = Q.app("iadd", appliedToStr, appliedToBool)(QuintIntT())
 
-    // Putting it all to gether, we have the let expression
+    // Putting it all together, we have the let expression
     //
     // ```
     // def polyConst1(x): a => int = 1;
@@ -809,6 +809,18 @@ class TestQuintEx extends AnyFunSuite {
 
     // And if our conversion logic is correct, we can convert this to Apalache's IR:
     assert(convert(expr) == """LET polyConst1(x) ≜ 1 IN (polyConst1("s")) + (polyConst1(TRUE))""")
+  }
+
+  test("can convert nullary polymorphic operator used polymorphically") {
+    val optionInt = QuintSumT.ofVariantTypes("Some" -> QuintIntT(), "None" -> QuintRecordT.ofFieldTypes())
+    val noneInt = Q.nam("None", optionInt)
+
+    val optionBool = QuintSumT.ofVariantTypes("Some" -> QuintBoolT(), "None" -> QuintRecordT.ofFieldTypes())
+    val noneBool = Q.nam("None", optionBool)
+
+    val expr = Q.app("Tup", noneInt, noneBool)(QuintTupleT.ofTypes(optionInt, optionBool))
+
+    assert(convert(expr) == """<<None(), None()>>""")
   }
 
   test("oneOf operator occuring outside of a nondet binding is an error") {
