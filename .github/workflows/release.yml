@@ -21,6 +21,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Cut Release
         env:
           # NOTE: We must not use the default GITHUB_TOKEN for auth here,

@@ -26,6 +26,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
       - name: Configure Git
         run: |
           git config --global user.name "$GITHUB_ACTOR"

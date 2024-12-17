@@ -4,16 +4,14 @@ import at.forsyte.apalache.io.quint.QuintEx._
 import at.forsyte.apalache.io.quint.QuintType._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeLiteralAndNameBuilder
 import at.forsyte.apalache.tla.types.tla
 
 // scalaz is brought in For the Reader monad, which we use for
 // append-only, context local state for tracking reference to nullary TLA
 // operators
 import scalaz._
-// list and traverse give us monadic mapping over lists
-// see https://github.com/scalaz/scalaz/blob/88fc7de1c439d152d40fce6b20d90aea33cbb91b/example/src/main/scala-2/scalaz/example/TraverseUsage.scala
-import scalaz.std.list._
-import scalaz.syntax.traverse._
+import Scalaz._
 
 import scala.util.{Failure, Success, Try}
 import at.forsyte.apalache.tla.lir.values.TlaStr
@@ -31,6 +29,8 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 class Quint(quintOutput: QuintOutput) {
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val typeConv = new QuintTypeConverter
+  private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}
+
   private val table = quintOutput.table
   private val types = quintOutput.types
 
@@ -727,7 +727,12 @@ class Quint(quintOutput: QuintOutput) {
             val t = typeConv.convert(types(id).typ)
             Reader { nullaryOpNames =>
               if (nullaryOpNames.contains(name)) {
-                tla.appOp(tla.name(name, OperT1(Seq(), t)))
+                // Name can be a polymorphic operator, but we need to give it the
+                // specialized type inferred by Quint to avoid type errors in
+                // Apalache. So we use the unsafe builder instead, as the safe
+                // builder enforces that same names have the same types under
+                // the scope.
+                tla.appOp(unsafeBuilder.name(name, OperT1(Seq(), t)).point[TBuilderInternalState])
               } else {
                 tla.name(name, t)
               }
