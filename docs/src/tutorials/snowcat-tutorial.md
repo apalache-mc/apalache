@@ -292,7 +292,7 @@ type checker. To learn about type aliases, see [HOWTO on writing type
 annotations][].
 
 If you are experiencing a problem with Snowcat, feel free to [open an issue][]
-or drop us a message on [Zulip chat][].
+or drop us a message on [Discourse][].
 
 
 [ADR002]: ../adr/002adr-types.md
@@ -312,5 +312,5 @@ or drop us a message on [Zulip chat][].
 [CarTalkPuzzleTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla
 [QueensTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/QueensTyped.tla
 [open an issue]: https://github.com/informalsystems/apalache/issues
-[Zulip chat]: https://informal-systems.zulipchat.com/login/#narrow/stream/265309-apalache
+[Discourse]: https://apalache.discourse.group/
 [Idiom 15]: ../idiomatic/003record-sets.md
