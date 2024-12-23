@@ -2,7 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "systems.informal"
 
 libraryDependencies ++= Seq(
-    "org.scala-sbt" % "sbt" % "1.10.6"
+    "org.scala-sbt" % "sbt" % "1.10.7"
 )
 
 lazy val sbt_changeling = (project in file("."))
