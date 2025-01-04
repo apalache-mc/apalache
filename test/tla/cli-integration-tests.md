@@ -2065,7 +2065,7 @@ $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
 ;; sat.random_seed = 0
 ;; sls.random_seed = 0
 ;; smt.random_seed = 0
-;; (params seed 0 random_seed 0)
+;; (params random_seed 0)
 ...
 $ rm -rf ./test-out-dir
 ```
@@ -2082,7 +2082,7 @@ $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
 ;; sat.random_seed = 4242
 ;; sls.random_seed = 4242
 ;; smt.random_seed = 4242
-;; (params seed 4242 random_seed 4242)
+;; (params random_seed 4242)
 ...
 $ rm -rf ./test-out-dir
 ```
