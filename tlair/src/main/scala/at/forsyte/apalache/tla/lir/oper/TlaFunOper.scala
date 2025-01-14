@@ -86,7 +86,7 @@ object TlaFunOper {
    * been defined before. That is why we keep function definitions intermingled with operator definitions. Moreover, we
    * do not refer to the function name in its body, as otherwise, we would run in two problems: (1) the operator name
    * would clash with the function name, an (2) the renaming transformations would try to rename the function. TLA+
-   * forbids mutually recursive functions, so it is sound to refer to the function with the operator `recFunDef`.</p>
+   * forbids mutually recursive functions, so it is sound to refer to the function with the operator `recFunDef`. </p>
    *
    * <p><b>Example.</b> `Fact[n \in Int] == IF n <= 1 THEN 1 ELSE n * Fact[n - 1]` is translated into:</p>
    *

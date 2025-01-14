@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir.TlaOperDecl
 import at.forsyte.apalache.tla.lir.transformations._
 
 /**
- * <p>TrackerWithListeners tracks a transformation by executing all of its `listeners`' onTransformation, whenever the
+ * <p>TrackerWithListeners tracks a transformation by executing all of its `listeners` ' onTransformation, whenever the
  * tracked transformation is executed.</p>
  *
  * <p>For any input x, track(t)(x) and t(x) are equal.</p>

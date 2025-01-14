@@ -81,7 +81,7 @@ abstract class ApalacheCommand(name: String, description: String)
    *
    * All execution logic specific to the subcommand should be triggered encapsulated in the [[run]] method.
    *
-   * Most subclasses use the `PassChainExecutor` to sequence a chain of passes. `PassChainExecutor`s are created by
+   * Most subclasses use the `PassChainExecutor` to sequence a chain of passes. `PassChainExecutor` s are created by
    * providing a `ToolModule`. E.g.,
    *
    * {{{

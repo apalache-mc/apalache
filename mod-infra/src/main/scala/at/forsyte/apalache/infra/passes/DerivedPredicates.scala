@@ -3,7 +3,7 @@ package at.forsyte.apalache.infra.passes
 import com.google.inject.Inject
 
 /**
- * For shared-memory communication of information about specification predicates between `Pass`es
+ * For shared-memory communication of information about specification predicates between `Pass` es
  *
  * ==Motivation==
  *

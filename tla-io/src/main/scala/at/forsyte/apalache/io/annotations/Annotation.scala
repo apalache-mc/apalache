@@ -12,8 +12,8 @@ case class Annotation(name: String, args: AnnotationArg*) {
   /**
    * <p>A string representation of the annotation. There are two cases:</p>
    *
-   * <ol> <li>The annotation `name` has zero arguments. The output is `@name`</li> <li>The annotation `name` has N > 0
-   * arguments `arg1`, ..., `argN`. The output is `@name(arg1, ..., argN)`</li> </ol>
+   * <ol> <li>The annotation `name` has zero arguments. The output is `@name` </li> <li>The annotation `name` has N > 0
+   * arguments `arg1`, ..., `argN`. The output is `@name(arg1, ..., argN)` </li> </ol>
    *
    * @return
    *   the string representation of the annotation.

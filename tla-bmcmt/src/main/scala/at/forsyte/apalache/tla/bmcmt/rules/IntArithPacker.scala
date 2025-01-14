@@ -16,7 +16,7 @@ trait IntArithPacker {
   private lazy val substRule = new SubstRule
 
   /**
-   * Rewrite `state`'s expression into an expression that is purely arithmetic, referring to arena cells for
+   * Rewrite `state` 's expression into an expression that is purely arithmetic, referring to arena cells for
    * non-arithmetic subexpressions.
    *
    * @param rewriter

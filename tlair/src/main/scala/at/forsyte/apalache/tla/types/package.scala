@@ -38,8 +38,8 @@ import at.forsyte.apalache.tla.lir.TlaEx
  *   val tlaEx = v.build
  * }}}
  * Here, `build` is an implicit `TBuilderInstruction => TlaEx` conversion defined in [[typecomp]]. The same package
- * defines an implicit class, with a `_.build` method, so `build` may be used as a suffix-call to
- * `TBuilderInstruction`s. These implicits get imported alongside [[tla]] with
+ * defines an implicit class, with a `_.build` method, so `build` may be used as a suffix-call to `TBuilderInstruction`
+ * s. These implicits get imported alongside [[tla]] with
  * {{{
  * import at.forsyte.apalache.tla.types._
  * }}}
@@ -96,7 +96,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
  *
  * <li> `IllegalArgumentException`: This exception indicates that one or more arguments has an illegal shape, w.r.t. the
  * operator, or that the number of arguments is incorrect. Some operators require e.g. `ValEx(TlaStr(_))` values
- * specifically, instead of just `Str`-typed values (for instance keys in
+ * specifically, instead of just `Str` -typed values (for instance keys in
  * [[typecomp.ScopedBuilder.rec the record constructor]]). Other operators are variadic, but require the number of
  * arguments to be of a specific parity (e.g. [[typecomp.ScopedBuilder.funDefMixed funDefMixed]]), or require a positive
  * number of arguments (e.g. [[typecomp.ScopedBuilder.enumSet enumSet]]). Example:

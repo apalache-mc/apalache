@@ -188,7 +188,7 @@ object ApalacheOper {
    * key \in Dom |-> CHOOSE value \in Rng: &lt;&lt;key, value&gt;&gt; \in R ] </pre>
    *
    * <p>Note that the relation `R` may be ambiguous in the sense that the same key has more than one value. In this
-   * case, the Apalache encodings choose one of the values, which corresponds to `CHOOSE`.</p>
+   * case, the Apalache encodings choose one of the values, which corresponds to `CHOOSE`. </p>
    */
   object setAsFun extends ApalacheOper {
     override def name: String = "Apalache!SetAsFun"

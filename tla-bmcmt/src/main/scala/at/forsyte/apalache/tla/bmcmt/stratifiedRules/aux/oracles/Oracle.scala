@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
  *
  * For the purposes of describing the oracle's behavior, we can assume that there are `N` distinct possible values,
  * which are indexed with `0,1,2,...,N-1` (though they need not be represented as such in the implementation). We refer
- * to the `i`-th candidate value as `vi`.
+ * to the `i` -th candidate value as `vi`.
  *
  * @author
  *   Jure Kukovec
@@ -34,12 +34,12 @@ trait Oracle {
    * Produce a ground expression that contains assertions for the possible oracle values.
    *
    * The `assertions` sequence must contain `N` elements, where `N` equals the number of oracle value candidates. The
-   * `i`-th element of `assertions` describes a formula, which holds if the oracle value is equal to the `i`-th
+   * `i` -th element of `assertions` describes a formula, which holds if the oracle value is equal to the `i` -th
    * candidate value `vi`.
    *
    * Optionally, a sequence option `elseAssertionsOpt`, containing a sequence of the same length as `assertions`, may be
-   * provided. If it is, the `i`-th element of the sequence describes a formula, which holds if the oracle value is
-   * _not_ equal to the `i`-th candidate value `vi`. If this value is not provided, a default sequence, containing `N`
+   * provided. If it is, the `i` -th element of the sequence describes a formula, which holds if the oracle value is
+   * _not_ equal to the `i` -th candidate value `vi`. If this value is not provided, a default sequence, containing `N`
    * copies of `TRUE` is taken in place of the aforementioned formulas.
    */
   def caseAssertions(

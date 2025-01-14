@@ -3,7 +3,7 @@ package at.forsyte.apalache.io.lir
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 
 /**
- * <p>An abstract writer of TLA+ expressions. For an example, see `PrettyWriter`.</p>
+ * <p>An abstract writer of TLA+ expressions. For an example, see `PrettyWriter`. </p>
  *
  * <p>Igor: We should refactor the writers' architecture. Use the Writer monad?</p>
  */

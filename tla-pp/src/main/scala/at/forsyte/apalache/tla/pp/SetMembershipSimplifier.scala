@@ -51,7 +51,7 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    *   - sets of records over type-defining field types, e.g., [type: STRING, val: Int], ...
    *
    * In particular, `Nat` is not type-defining, nor are sequence sets / power sets thereof, since `i \in Nat` does not
-   * hold for all `IntT1`-typed `i`.
+   * hold for all `IntT1` -typed `i`.
    */
   private def isTypeDefining: Function[TlaEx, Boolean] = {
     // base case: BOOLEAN, Int, Real, STRING
