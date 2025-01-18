@@ -19,8 +19,13 @@ class TestTransitionExecutorWithOfflineAndOOPSLA19 extends TestTransitionExecuto
   override def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
       .createZ3(None,
-          SolverConfig(debug = false, profile = false, randomSeed = 0, z3StatsSec = 0,
-              smtEncoding = SMTEncoding.OOPSLA19))
+          SolverConfig(
+              debug = false,
+              profile = false,
+              randomSeed = 0,
+              z3StatsSec = 0,
+              smtEncoding = SMTEncoding.OOPSLA19,
+          ))
     withFixtureInContext(solver, new OfflineExecutionContext(_, new IncrementalRenaming(new IdleTracker)), test)
   }
 }

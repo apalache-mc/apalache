@@ -54,6 +54,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
      *   A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
      */
     def allSelections(ex: TlaEx, letInMap: letInMapType = Map.empty): SelMapType = ex match {
+
       /** Base case, assignments */
       case e @ OperEx(ApalacheOper.assign, _, _) => Map(e.ID -> Set(Set(e.ID)))
 

@@ -59,6 +59,7 @@ object SmtTools {
    */
   def simplify(phi: BoolFormula): BoolFormula = {
     phi match {
+
       /**
        * Recursively simplify branches first. If any branch is false, the whole formula is false. It is important to
        * recurse first, since otherwise false-simplification would not propagate upward.
