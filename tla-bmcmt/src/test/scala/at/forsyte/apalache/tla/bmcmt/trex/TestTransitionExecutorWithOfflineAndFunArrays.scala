@@ -14,8 +14,13 @@ class TestTransitionExecutorWithOfflineAndFunArrays
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
       .createZ3(None,
-          SolverConfig(debug = false, profile = false, randomSeed = 0, z3StatsSec = 0,
-              smtEncoding = SMTEncoding.FunArrays))
+          SolverConfig(
+              debug = false,
+              profile = false,
+              randomSeed = 0,
+              z3StatsSec = 0,
+              smtEncoding = SMTEncoding.FunArrays,
+          ))
     withFixtureInContext(solver, new OfflineExecutionContext(_, new IncrementalRenaming(new IdleTracker)), test)
   }
 }

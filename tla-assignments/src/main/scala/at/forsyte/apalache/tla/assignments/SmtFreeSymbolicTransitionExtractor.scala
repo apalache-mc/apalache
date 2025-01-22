@@ -21,6 +21,7 @@ class SmtFreeSymbolicTransitionExtractor(
 
   /** Checks whether expressions, which cannot contain assignments, use unassigned variables */
   private def throwOnUseBeforeAssignment(unassignedVars: Set[String]): TlaEx => Unit = {
+
     /** Manual assignments at such locations throw exceptions */
     case ex @ OperEx(ApalacheOper.assign, OperEx(TlaActionOper.prime, NameEx(_)), _) =>
       val locString = getLocString(ex)
@@ -75,6 +76,7 @@ class SmtFreeSymbolicTransitionExtractor(
 
   // Transition method between partial states
   private def getStrategyOptInternal(currentState: PartialState, operMap: BodyMap): TlaEx => PartialState = {
+
     /** Base case, assignment candidates */
     case ex @ OperEx(TlaOper.eq, OperEx(TlaActionOper.prime, NameEx(name)), assignmentFreeRhs) =>
       // First, check if assignmentFreeRhs contains unassigned varaible access
@@ -101,6 +103,7 @@ class SmtFreeSymbolicTransitionExtractor(
     case OperEx(TlaBoolOper.and, args @ _*) =>
       // We sequentially update the partial state
       args.foldLeft(currentState) { getStrategyOptInternal(_, operMap)(_) }
+
     /** Disjunction */
     case OperEx(TlaBoolOper.or, args @ _*) =>
       handleDisjunctionOrITE(currentState, operMap, args)

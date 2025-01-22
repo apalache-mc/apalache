@@ -49,13 +49,13 @@ class UninterpretedLiteralCache extends Cache[PureArena, (TlaType1, String), Are
    * d2 + ... + dN` disequalities, i.e. {{{\sum_{n=1}^N n(n-1)/2 = N(N^2 -1)/6}}} In contrast, `addAllConstraints`
    * produces `dN = N(N-1)/2` disequalities, which is `O(N^2)`, instead of `O(N^3)`.
    */
-  override def addConstraintsForElem(ctx: SolverContext): (((TlaType1, String), ArenaCell)) => Unit = {
-    case ((utype, _), v) =>
-      require(utype == StrT1 || utype.isInstanceOf[ConstT1], "Type must be Str, or an uninterpreted type.")
-      val others = values().withFilter { c => c.cellType == CellTFrom(utype) && c != v }.map(_.toBuilder).toSeq
-      // The cell should differ from the previously created cells.
-      // We use the SMT constraint (distinct ...).
-      ctx.assertGroundExpr(tla.distinct(v.toBuilder +: others: _*))
+  override def addConstraintsForElem(
+      ctx: SolverContext): (((TlaType1, String), ArenaCell)) => Unit = { case ((utype, _), v) =>
+    require(utype == StrT1 || utype.isInstanceOf[ConstT1], "Type must be Str, or an uninterpreted type.")
+    val others = values().withFilter { c => c.cellType == CellTFrom(utype) && c != v }.map(_.toBuilder).toSeq
+    // The cell should differ from the previously created cells.
+    // We use the SMT constraint (distinct ...).
+    ctx.assertGroundExpr(tla.distinct(v.toBuilder +: others: _*))
   }
 
   /**

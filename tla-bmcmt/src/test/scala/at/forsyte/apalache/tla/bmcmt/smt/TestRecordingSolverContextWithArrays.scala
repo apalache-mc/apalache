@@ -8,8 +8,13 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestRecordingSolverContextWithArrays extends TestRecordingSolverContext {
   override protected def withFixture(test: NoArgTest): Outcome = {
-    solverConfig = SolverConfig(debug = false, profile = false, randomSeed = 0, z3StatsSec = 0,
-        smtEncoding = SMTEncoding.Arrays)
+    solverConfig = SolverConfig(
+        debug = false,
+        profile = false,
+        randomSeed = 0,
+        z3StatsSec = 0,
+        smtEncoding = SMTEncoding.Arrays,
+    )
     test()
   }
 }
