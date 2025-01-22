@@ -13,8 +13,13 @@ class TestTransitionExecutorWithOfflineAndArrays extends TestTransitionExecutorI
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
       .createZ3(None,
-          SolverConfig(debug = false, profile = false, randomSeed = 0, z3StatsSec = 0,
-              smtEncoding = SMTEncoding.Arrays))
+          SolverConfig(
+              debug = false,
+              profile = false,
+              randomSeed = 0,
+              z3StatsSec = 0,
+              smtEncoding = SMTEncoding.Arrays,
+          ))
     withFixtureInContext(solver, new OfflineExecutionContext(_, new IncrementalRenaming(new IdleTracker)), test)
   }
 }

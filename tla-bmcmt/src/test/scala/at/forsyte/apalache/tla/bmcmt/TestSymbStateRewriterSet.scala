@@ -725,8 +725,13 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     val setBool = enumSet(bool(false), bool(true)).as(boolSetT)
     val mapping = tuple(name("y").as(boolT)).as(parser("<<Bool>>"))
     val mappedSet =
-      map(mapping, name("x").as(intT), set12minus2.as(intSetT), name("y").as(boolT), setBool).as(
-          parser("Set(<<Bool>>)"))
+      map(
+          mapping,
+          name("x").as(intT),
+          set12minus2.as(intSetT),
+          name("y").as(boolT),
+          setBool,
+      ).as(parser("Set(<<Bool>>)"))
     val inMappedSet = in(tuple(bool(true)).typed(TupT1(BoolT1)), mappedSet)
       .typed(BoolT1)
 

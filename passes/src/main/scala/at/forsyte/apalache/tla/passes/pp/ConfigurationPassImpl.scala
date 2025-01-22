@@ -122,14 +122,15 @@ class ConfigurationPassImpl @Inject() (
       OperEx(TlaOper.eq, NameEx(varName)(body.typeTag), body)(boolTag)
     }
 
-    val newCinitDecl = oldCinitOpt
-      .map { d =>
-        d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*)(boolTag))
-      }
-      .getOrElse {
-        TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(Typed(OperT1(Seq.empty,
-                    BoolT1)))
-      }
+    val newCinitDecl =
+      oldCinitOpt
+        .map { d =>
+          d.copy(body = OperEx(TlaBoolOper.and, d.body +: overridesAsEql: _*)(boolTag))
+        }
+        .getOrElse {
+          TlaOperDecl(cinitName, List.empty, OperEx(TlaBoolOper.and, overridesAsEql: _*)(boolTag))(
+              Typed(OperT1(Seq.empty, BoolT1)))
+        }
 
     // Since declarations are a Seq not a Set, we may need to remove the old CInit first
     tlaModule.declarations.filterNot(_.name == derivedPreds.cinit) :+ newCinitDecl

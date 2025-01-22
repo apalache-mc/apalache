@@ -572,7 +572,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val notInv = not(inv).typed(types, "b")
 
     val checkerInput =
-      new CheckerInput(mkModuleWithXandY(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
+      new CheckerInput(
+          mkModuleWithXandY(),
+          initTrans,
+          nextTrans,
+          None,
+          CheckerInputVC(List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map())
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)
@@ -787,7 +793,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
     val dummyModule = TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
     val checkerInput =
-      new CheckerInput(dummyModule, initTrans, nextTrans, Some(cInit), CheckerInputVC(List((inv, notInv))))
+      new CheckerInput(
+          dummyModule,
+          initTrans,
+          nextTrans,
+          Some(cInit),
+          CheckerInputVC(List((inv, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     // initialize the model checker
     val ctx = new IncrementalExecutionContext(rewriter)

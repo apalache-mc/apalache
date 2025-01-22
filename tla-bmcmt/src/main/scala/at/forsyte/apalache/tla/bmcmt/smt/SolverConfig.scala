@@ -34,6 +34,12 @@ object SolverConfig {
    * Get the default configuration.
    */
   val default: SolverConfig =
-    new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = SMTEncoding.OOPSLA19,
-        z3StatsSec = 60, z3Params = Map())
+    new SolverConfig(
+        debug = false,
+        profile = false,
+        randomSeed = 0,
+        smtEncoding = SMTEncoding.OOPSLA19,
+        z3StatsSec = 60,
+        z3Params = Map(),
+    )
 }
