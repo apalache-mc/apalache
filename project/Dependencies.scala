@@ -36,7 +36,7 @@ object Dependencies {
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "4.0.2"
     val upickle = "com.lihaoyi" %% "upickle" % "4.0.2"
-    val z3 = "tools.aqua" % "z3-turnkey" % "4.13.4"
+    val z3 = "tools.aqua" % "z3-turnkey" % "4.14.0"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
