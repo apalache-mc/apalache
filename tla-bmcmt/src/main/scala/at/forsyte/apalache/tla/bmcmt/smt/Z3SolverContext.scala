@@ -143,17 +143,21 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private val statisticsLock: ReentrantLock = new ReentrantLock()
   // start a new thread to collect statistics
   private val statisticsThread = new Thread(() => {
-    while (state == Running()) {
+    var interrupted = false
+    while (state == Running() && !interrupted) {
       // Sleep for a while.
       // If we call printStatistics right away, we can easily run into a race condition with Z3 initializing.
       // This produces a core dump.
-      Thread.sleep(config.z3StatsSec * 1000)
       // make sure that the context is not being disposed right now. Otherwise, we can get a nice core dump.
       statisticsLock.lock()
       try {
-        if (state == Running()) {
-          printStatistics()
-        }
+        Thread.sleep(config.z3StatsSec * 1000)
+        printStatistics()
+      } catch {
+        case _: InterruptedException =>
+          // terminate the thread immediately upon interruption
+          logger.info(s"Finishing the statistics thread ${id}")
+          interrupted = true
       } finally {
         statisticsLock.unlock()
       }
@@ -172,6 +176,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     state = Disposed()
     // Try to obtain the lock, to let the statistics thread finish its work.
     // If it is stuck for some reason, continue after the timeout in any case.
+    statisticsThread.interrupt()
     statisticsLock.tryLock(2 * config.z3StatsSec, java.util.concurrent.TimeUnit.SECONDS)
     try {
       if (config.debug) {
