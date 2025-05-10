@@ -9,11 +9,7 @@ alt="Apalache Logo">
 
 </div>
 
-[![main badge][]][main-ci]
-
-[main badge]: https://github.com/apalache-mc/apalache/workflows/build/badge.svg?branch=main
-
-[main-ci]: https://github.com/apalache-mc/apalache/actions?query=branch%3Amain+workflow%3Abuild
+[![build](https://github.com/apalache-mc/apalache/actions/workflows/main.yml/badge.svg)](https://github.com/apalache-mc/apalache/actions/workflows/main.yml)
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
 [Microsoft Z3][]. Apalache can check inductive invariants (for fixed or bounded
