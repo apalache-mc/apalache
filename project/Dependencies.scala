@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.12"
+    lazy val logbackVersion = "1.5.18"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -20,8 +20,8 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.11.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.18.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.12.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.19.0"
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion

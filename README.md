@@ -9,11 +9,7 @@ alt="Apalache Logo">
 
 </div>
 
-[![main badge][]][main-ci]
-
-[main badge]: https://github.com/apalache-mc/apalache/workflows/build/badge.svg?branch=main
-
-[main-ci]: https://github.com/apalache-mc/apalache/actions?query=branch%3Amain+workflow%3Abuild
+[![build](https://github.com/apalache-mc/apalache/actions/workflows/main.yml/badge.svg)](https://github.com/apalache-mc/apalache/actions/workflows/main.yml)
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
 [Microsoft Z3][]. Apalache can check inductive invariants (for fixed or bounded
@@ -64,10 +60,7 @@ Also, check the [standard repository of TLA+ examples][].
 Currently, Apalache is not funded by any organization. As a result,
 it is de-facto funded by its current maintainers and contributors,
 including [Igor Konnov][], [Jure Kukovec][], and [Thomas Pani][].
-If you would like to sponsor the project, please contact us, or
-simply sponsor us on GitHub by clicking the "Sponsor" button!
-
-![Reloading Apalache](./assets/reloading-apalache.png)
+If you would like to sponsor the project, please contact us.
 
 We are grateful for the past financial support in the form of grants or
 employment from the following organizations:
