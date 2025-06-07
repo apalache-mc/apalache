@@ -13,7 +13,7 @@ addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.10.4")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.3")
 // https://scalapb.github.io/zio-grpc/docs/installation
-addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
+addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.8")
 // https://github.com/sbt/sbt-unidoc
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
 
