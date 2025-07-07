@@ -688,7 +688,7 @@ class PrettyWriter(
   //
   // - `::`, Used by apalache for "namespacing" and module imports
   // - Anything that is not a TLA+2 "NameChar".
-  //   See https://github.com/tlaplus/tlaplus-standard/blob/main/grammar/TLAPlus2Grammar.tla#L26
+  //   https://github.com/tlaplus/rfcs/blob/2a772d9dd11acec5d7dedf30abfab91a49de48b8/language_standard/grammar/TLAPlus2Grammar.tla#L26
   //
   // We treat `::` special so that it will be replaced with a single `_`
   private val invalidIdentifierParts = """(::|[^a-zA-Z0-9_])""".r
@@ -696,7 +696,7 @@ class PrettyWriter(
   // In our tests, TLC will only accept identifiers that start with a prefix
   // matching this pattern, even tho the spec of the grammar says numerals should
   // also be valid following an underscore.
-  // See https://github.com/tlaplus/tlaplus-standard/blob/main/grammar/TLAPlus2Grammar.tla#L26
+  // https://github.com/tlaplus/rfcs/blob/2a772d9dd11acec5d7dedf30abfab91a49de48b8/language_standard/grammar/TLAPlus2Grammar.tla#L26
   private val validIdentifierPrefix = """_*[a-zA-Z]""".r
 
   // Sanitize an identifier to ensure it can be read by TLC

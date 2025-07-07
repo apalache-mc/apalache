@@ -137,7 +137,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Cache local m2 repository
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala') }}
