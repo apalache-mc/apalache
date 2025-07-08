@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.12"
+    lazy val logbackVersion = "1.5.18"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -20,8 +20,8 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.9.4" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.11.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.18.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.12.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.19.0"
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
@@ -31,12 +31,12 @@ object Dependencies {
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
-    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.16"
+    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.17"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = "org.lamport" % "tla2tools" % "1.7.0-SNAPSHOT"
     val ujson = "com.lihaoyi" %% "ujson" % "4.0.2"
     val upickle = "com.lihaoyi" %% "upickle" % "4.0.2"
-    val z3 = "tools.aqua" % "z3-turnkey" % "4.13.4"
+    val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
     val zioGrpcCodgen = "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % "0.6.0-test3" % "provided"
@@ -54,7 +54,7 @@ object Dependencies {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.18.1" % Test
-    val easymock = "org.easymock" % "easymock" % "5.5.0" % Test
+    val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 
     val scalaTestVersion = "3.2.15"
     val scalatest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
