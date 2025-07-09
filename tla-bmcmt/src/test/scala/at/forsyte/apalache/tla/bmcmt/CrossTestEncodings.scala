@@ -369,10 +369,10 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    */
   private def genWitness(witnessType: TlaType1): Gen[TlaEx] = lzy {
     witnessType match {
-      case IntT1           => irGen.genInt
-      case BoolT1          => irGen.genBool
-      case StrT1           => irGen.genStr
-      case SetT1(elemType) => genWitnessSet(elemType)
+      case IntT1                => irGen.genInt
+      case BoolT1               => irGen.genBool
+      case StrT1                => irGen.genStr
+      case SetT1(elemType)      => genWitnessSet(elemType)
       case tp @ SeqT1(elemType) =>
         for {
           elements <- listOf(genWitness(elemType))
@@ -440,7 +440,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     case FunT1(arg, res)                 => Stream(arg, res)
     case SetT1(elem)                     => Stream(elem)
     case SeqT1(elem)                     => Stream(elem)
-    case TupT1(elems @ _*) =>
+    case TupT1(elems @ _*)               =>
       Stream.concat(
           // shrink to one of the element types
           Stream(elems: _*),

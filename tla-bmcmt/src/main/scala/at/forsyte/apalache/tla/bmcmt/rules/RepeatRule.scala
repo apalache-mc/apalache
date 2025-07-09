@@ -45,7 +45,7 @@ class RepeatRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ext
           val opT = OperT1(Seq(a, IntT1), a)
           // sanity check
           TlaType1.fromTypeTag(opDecl.typeTag) match {
-            case `opT` => // all good
+            case `opT`   => // all good
             case badType =>
               val msg = s"FoldSet argument ${opDecl.name} should have the tag $opT, found $badType."
               throw new TypingException(msg, opDecl.ID)

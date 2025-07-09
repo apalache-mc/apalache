@@ -244,7 +244,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       if (pairs.isEmpty) {
         val pairType = relation.cellType match {
           case CellTFrom(SetT1(elemT)) => elemT
-          case t =>
+          case t                       =>
             throw new CheckerException(s"Codomain cell type should be a set of pairs, found: $t.", relation.toBuilder)
         }
         tla.emptySet(pairType)

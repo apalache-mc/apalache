@@ -279,7 +279,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
 
     // unsafe for non-applicative
     private def argGen(appT: TlaType1): Gen[TBuilderInstruction] = (appT: @unchecked) match {
-      case FunT1(a, _) => Gen.const(builder.name("x", a))
+      case FunT1(a, _)      => Gen.const(builder.name("x", a))
       case TupT1(args @ _*) => // assume nonempty
         Gen.choose[BigInt](1, args.size).map(builder.int)
       case RecT1(flds) => // assume nonempty
@@ -299,7 +299,7 @@ trait BuilderTest extends AnyFunSuite with BeforeAndAfter with Checkers with App
     def argAndCdmTypeGen(appT: TlaType1): Gen[(TBuilderInstruction, TlaType1)] = {
       ctr += 1
       (appT: @unchecked) match {
-        case FunT1(a, b) => Gen.const((builder.name(s"x$ctr", a), b))
+        case FunT1(a, b)      => Gen.const((builder.name(s"x$ctr", a), b))
         case TupT1(args @ _*) => // assume nonempty
           Gen.choose[Int](1, args.size).map(i => (builder.int(i), args(i - 1)))
         case RecT1(flds) => // assume nonempty

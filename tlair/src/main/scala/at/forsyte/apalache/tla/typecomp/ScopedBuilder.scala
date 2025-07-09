@@ -305,7 +305,7 @@ class ScopedBuilder(val strict: Boolean = true)
     require(args.nonEmpty, s"args must be nonempty")
 
     args match {
-      case Seq(head) => except(f, head, e)
+      case Seq(head)    => except(f, head, e)
       case head +: tail =>
         except(
             f,

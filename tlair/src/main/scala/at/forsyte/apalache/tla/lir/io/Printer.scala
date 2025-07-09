@@ -95,7 +95,7 @@ object UTFPrinter extends Printer {
     val ret = p_ex match {
       case NullEx       => "<[NULL]>"
       case NameEx(name) => name
-      case ValEx(v) =>
+      case ValEx(v)     =>
         v match {
           case TlaInt(i)       => i.toString
           case TlaDecimal(d)   => d.toString
@@ -148,7 +148,7 @@ object UTFPrinter extends Printer {
           case TlaActionOper.unchanged   => mkOpApp("UNCHANGED %s", args: _*)
           case TlaActionOper.composition => mkOpApp("%%s %s %%s".format(m_cdot), args: _*)
 
-          case TlaControlOper.caseNoOther => "CASE %s".format(opAppStrPairs(args))
+          case TlaControlOper.caseNoOther   => "CASE %s".format(opAppStrPairs(args))
           case TlaControlOper.caseWithOther =>
             "CASE %s %s OTHER %s %s".format(opAppStrPairs(args.tail), m_box, m_rarrow, args.head)
           case TlaControlOper.ifThenElse => mkOpApp("IF %s THEN %s ELSE %s", args: _*)
@@ -195,7 +195,7 @@ object UTFPrinter extends Printer {
           case TlaSetOper.subseteq => mkOpApp("%%s %s %%s".format(m_subseteq), args: _*)
           case TlaSetOper.times    => opAppStr(args, pad(m_times))
           case TlaSetOper.union    => mkOpApp("UNION %s", args: _*)
-          case TlaOper.label =>
+          case TlaOper.label       =>
             val body = this(args.head)
             val label = this(args.tail.head)
             val argsStr = args.tail.tail.map(apply).mkString(", ")

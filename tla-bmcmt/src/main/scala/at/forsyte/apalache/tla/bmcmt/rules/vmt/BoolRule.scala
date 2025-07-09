@@ -24,9 +24,9 @@ class BoolRule(rewriter: ToTermRewriter) extends FormulaRule {
   // Assume isApplicable
   override def apply(ex: TlaEx): TermBuilderT =
     ex match {
-      case OperEx(TlaBoolOper.and, args @ _*) => cmpSeq(args.map(rewrite)).map { seq => And(seq: _*) }
-      case OperEx(TlaBoolOper.or, args @ _*)  => cmpSeq(args.map(rewrite)).map { seq => Or(seq: _*) }
-      case OperEx(TlaBoolOper.not, arg)       => rewrite(arg).map(Neg)
+      case OperEx(TlaBoolOper.and, args @ _*)    => cmpSeq(args.map(rewrite)).map { seq => And(seq: _*) }
+      case OperEx(TlaBoolOper.or, args @ _*)     => cmpSeq(args.map(rewrite)).map { seq => Or(seq: _*) }
+      case OperEx(TlaBoolOper.not, arg)          => rewrite(arg).map(Neg)
       case OperEx(TlaBoolOper.implies, lhs, rhs) =>
         for {
           lhsTerm <- rewrite(lhs)
