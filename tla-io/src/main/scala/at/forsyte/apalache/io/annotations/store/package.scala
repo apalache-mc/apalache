@@ -42,7 +42,7 @@ package object store {
    */
   def findAnnotation(store: AnnotationStore, key: UID, name: String): Option[Annotation] = {
     store.get(key) match {
-      case None => None
+      case None              => None
       case Some(annotations) =>
         annotations.find {
           _.name == name

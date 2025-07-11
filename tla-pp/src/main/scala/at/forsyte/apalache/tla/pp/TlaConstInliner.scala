@@ -21,7 +21,7 @@ class TlaConstInliner(tracker: TransformationTracker, constants: Set[String]) {
     // We only inline primitive values, since ConstInit _may_ be arbitrarily complex
     case OperEx(TlaOper.eq, NameEx(c), v: ValEx) if constants.contains(c) =>
       initial.get(c) match {
-        case None => initial + (c -> v)
+        case None         => initial + (c -> v)
         case Some(mapVal) =>
           if (mapVal != v)
             throw new TlaInputError(s"Constant $c has multiple initializations: $v and $mapVal.")

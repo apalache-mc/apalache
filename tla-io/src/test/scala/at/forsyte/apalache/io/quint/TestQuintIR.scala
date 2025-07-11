@@ -79,7 +79,7 @@ class TestQuintIR extends AnyFunSuite {
 
   test("Invalid JSON returns sensible error") {
     QuintOutput.read("""{"foo": 1}""") match {
-      case Success(_) => fail("should return a failure")
+      case Success(_)   => fail("should return a failure")
       case Failure(err) =>
         assert(err.getMessage().contains("missing keys in dictionary: stage, modules, types"))
     }

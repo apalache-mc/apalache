@@ -44,7 +44,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       }
       found match {
         case Some(pair) => pair(1) // get the value
-        case _ => {
+        case _          => {
           val msg = s"Access to non-existent record field $accessedKey in ${expr}"
           throw new TlaInputError(msg, Some(expr.ID))
         }
@@ -260,7 +260,7 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
   private def getElemType(e: TlaEx): TlaType1 = {
     e.typeTag match {
       case Typed(SetT1(elemType)) => elemType
-      case t =>
+      case t                      =>
         throw new MalformedTlaError(s"Expected a set, found: $t", e)
     }
   }

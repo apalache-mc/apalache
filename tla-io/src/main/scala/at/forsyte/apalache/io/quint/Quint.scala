@@ -57,7 +57,7 @@ class Quint(quintOutput: QuintOutput) {
   // Find the type for an id via the lookup table provided in the quint output
   private def getTypeFromLookupTable(id: BigInt): Try[QuintType] = {
     table.get(id) match {
-      case None => Failure(new QuintIRParseError(s"No entry found for id ${id} in lookup table"))
+      case None              => Failure(new QuintIRParseError(s"No entry found for id ${id} in lookup table"))
       case Some(lookupEntry) =>
         types.get(lookupEntry.id) match {
           case None =>
@@ -199,7 +199,7 @@ class Quint(quintOutput: QuintOutput) {
             // type.
             val paramTypes = types(id).typ match {
               case QuintOperT(args, _) => args
-              case invalidType =>
+              case invalidType         =>
                 throw new QuintIRParseError(
                     s"""|Operator ${op} is a binding operator requiring an operator as it's second argument,
                         |but it was given ${opName} with type ${invalidType}""".stripMargin
@@ -242,7 +242,7 @@ class Quint(quintOutput: QuintOutput) {
         case Seq() =>
           val elementType = types(id).typ match {
             case QuintSeqT(t) => typeConv.convert(t)
-            case invalidType =>
+            case invalidType  =>
               throw new QuintIRParseError(s"List with id ${id} has invalid type ${invalidType}")
           }
           tla.emptySeq(elementType)
@@ -387,7 +387,7 @@ class Quint(quintOutput: QuintOutput) {
         .grouped(2)
         .foldRight((List[String](), List[QuintEx]())) {
           case (Seq(QuintStr(_, f), v), (fields, values)) => ((f :: fields), v :: values)
-          case (invalidArgs, _) =>
+          case (invalidArgs, _)                           =>
             throw new QuintIRParseError(s"Invalid argument given to Rec ${invalidArgs}")
         }
       variadicApp { tlaVals =>
@@ -407,7 +407,7 @@ class Quint(quintOutput: QuintOutput) {
                 // so we have to build the converted TLA expression and extract its string value.
                 labelInstruction.flatMap {
                   case ValEx(TlaStr(label)) => tla.variant(label, expr, variantType)
-                  case invalidLabel =>
+                  case invalidLabel         =>
                     throw new QuintIRParseError(s"Invalid label found in application of variant ${invalidLabel}")
                 })
         case _ => throw new QuintIRParseError(s"Invalid type inferred for application of variant ${quintType}")
@@ -520,24 +520,24 @@ class Quint(quintOutput: QuintOutput) {
             case QuintSetT(t) => MkTla.setEnumeration(t)
             case invalidType  => throw new QuintIRParseError(s"Set with id ${id} has invalid type ${invalidType}")
           }
-        case "exists"    => binaryBindingApp(opName, tla.exists)
-        case "forall"    => binaryBindingApp(opName, tla.forall)
-        case "in"        => binaryApp(opName, tla.in)
-        case "contains"  => binaryApp(opName, (set, elem) => tla.in(elem, set))
-        case "notin"     => binaryApp(opName, tla.notin)
-        case "union"     => binaryApp(opName, tla.cup)
-        case "intersect" => binaryApp(opName, tla.cap)
-        case "exclude"   => binaryApp(opName, tla.setminus)
-        case "subseteq"  => binaryApp(opName, tla.subseteq)
-        case "filter"    => binaryBindingApp(opName, tla.filter)
-        case "map"       => binaryBindingApp(opName, (name, set, expr) => tla.map(expr, (name, set)))
-        case "fold"      => ternaryApp(opName, (set, init, op) => tla.foldSet(op, init, set))
-        case "powerset"  => unaryApp(opName, tla.powSet)
-        case "flatten"   => unaryApp(opName, tla.union)
-        case "allLists"  => unaryApp(opName, tla.seqSet)
-        case "isFinite"  => unaryApp(opName, tla.isFiniteSet)
-        case "size"      => unaryApp(opName, tla.cardinality)
-        case "to"        => binaryApp(opName, tla.dotdot)
+        case "exists"     => binaryBindingApp(opName, tla.exists)
+        case "forall"     => binaryBindingApp(opName, tla.forall)
+        case "in"         => binaryApp(opName, tla.in)
+        case "contains"   => binaryApp(opName, (set, elem) => tla.in(elem, set))
+        case "notin"      => binaryApp(opName, tla.notin)
+        case "union"      => binaryApp(opName, tla.cup)
+        case "intersect"  => binaryApp(opName, tla.cap)
+        case "exclude"    => binaryApp(opName, tla.setminus)
+        case "subseteq"   => binaryApp(opName, tla.subseteq)
+        case "filter"     => binaryBindingApp(opName, tla.filter)
+        case "map"        => binaryBindingApp(opName, (name, set, expr) => tla.map(expr, (name, set)))
+        case "fold"       => ternaryApp(opName, (set, init, op) => tla.foldSet(op, init, set))
+        case "powerset"   => unaryApp(opName, tla.powSet)
+        case "flatten"    => unaryApp(opName, tla.union)
+        case "allLists"   => unaryApp(opName, tla.seqSet)
+        case "isFinite"   => unaryApp(opName, tla.isFiniteSet)
+        case "size"       => unaryApp(opName, tla.cardinality)
+        case "to"         => binaryApp(opName, tla.dotdot)
         case "chooseSome" => {
           // `chooseSome(S)` is translated to `CHOOSE x \in S: TRUE`
           // and to construct the latter we need to generate a unique
@@ -560,7 +560,7 @@ class Quint(quintOutput: QuintOutput) {
         case "replaceAt" => ternaryApp(opName, (seq, idx, x) => tla.except(seq, incrTla(idx), x))
         case "slice"     => ternaryApp(opName, (seq, from, to) => tla.subseq(seq, incrTla(from), to))
         case "select"    => MkTla.selectSeq(opName, typeConv.convert(types(id).typ))
-        case "range" =>
+        case "range"     =>
           binaryApp(opName,
               (low, high) => {
                 val iParam = tla.param(nameGen.uniqueVarName(), IntT1)
@@ -586,7 +586,7 @@ class Quint(quintOutput: QuintOutput) {
         case "Rec" =>
           val rowVar = types(id).typ match {
             case r: QuintRecordT => r.rowVar
-            case invalidType =>
+            case invalidType     =>
               throw new QuintIRParseError(s"Invalid type given for Rec operator application ${invalidType}")
           }
           MkTla.record(rowVar)
@@ -713,9 +713,9 @@ class Quint(quintOutput: QuintOutput) {
   def tlaExpression(qEx: QuintEx): NullaryOpReader[TBuilderInstruction] =
     qEx match {
       // scalar values don't need to read anything
-      case QuintBool(_, b) => Reader(_ => tla.bool(b))
-      case QuintInt(_, i)  => Reader(_ => tla.int(i))
-      case QuintStr(_, s)  => Reader(_ => tla.str(s))
+      case QuintBool(_, b)     => Reader(_ => tla.bool(b))
+      case QuintInt(_, i)      => Reader(_ => tla.int(i))
+      case QuintStr(_, s)      => Reader(_ => tla.str(s))
       case QuintName(id, name) =>
         name match {
           // special case: predefined set BOOLEAN is Bool in Quint
@@ -771,8 +771,8 @@ class Quint(quintOutput: QuintOutput) {
         case _: QuintTypeDef => None
         // Constant and var declarations are trivial to construct, and
         // no methods for them are provided by the ScopedBuilder.
-        case QuintConst(id, name, _) => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
-        case QuintVar(id, name, _)   => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
+        case QuintConst(id, name, _)           => Some(None, TlaConstDecl(name)(typeTagOfId(id)))
+        case QuintVar(id, name, _)             => Some(None, TlaVarDecl(name)(typeTagOfId(id)))
         case d @ QuintAssume(_, name, quintEx) =>
           val tlaEx = build(tlaExpression(quintEx).run(nullaryOps))
           val definedName = Option.unless(d.isUnnamed)(name)

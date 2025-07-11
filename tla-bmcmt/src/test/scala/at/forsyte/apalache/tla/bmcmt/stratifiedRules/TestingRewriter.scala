@@ -26,7 +26,7 @@ sealed case class TestingRewriter(var cheatyMap: Map[UID, ArenaCell])
   def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell) =
     ruleLookupTable.get(key(ex)) match {
       case Some(rule) => rule.apply(ex)(startingScope)
-      case None =>
+      case None       =>
         (startingScope, cheatyMap(ex.ID))
     }
 

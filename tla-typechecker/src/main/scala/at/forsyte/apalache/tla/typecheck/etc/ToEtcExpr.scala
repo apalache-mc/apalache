@@ -508,7 +508,7 @@ class ToEtcExpr(
                 .grouped(2)
                 .map {
                   case Seq(varEx, setEx) => (varEx, setEx)
-                  case orphan =>
+                  case orphan            =>
                     throw new TypingException(s"Invalid bound variables and sets $orphan in: $ex", ex.ID)
                 }
                 .toSeq: _*
@@ -557,7 +557,7 @@ class ToEtcExpr(
                 .grouped(2)
                 .map {
                   case Seq(varEx, setEx) => (varEx, setEx)
-                  case orphan =>
+                  case orphan            =>
                     throw new TypingException(s"Invalid bound variables and sets ${orphan} in: $ex", ex.ID)
                 }
                 .toSeq: _*

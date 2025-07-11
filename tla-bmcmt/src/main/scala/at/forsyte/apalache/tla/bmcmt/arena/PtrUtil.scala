@@ -47,7 +47,7 @@ object PtrUtil {
     require(ptrs.forall(_.elem == cell))
     ptrs match {
       case Seq(single) => single
-      case _ =>
+      case _           =>
         if (ptrs.exists { _.isInstanceOf[FixedElemPtr] }) FixedElemPtr(cell)
         else SmtExprElemPtr(cell, tla.or(ptrs.map(_.toSmt): _*))
     }
