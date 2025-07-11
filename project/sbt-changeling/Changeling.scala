@@ -236,7 +236,7 @@ object Changeling {
       .sortBy(changeDirOrder)
       .flatMap { changeDir =>
         IO.listFiles(changeDir).filterNot(_.name == gitkeep) match {
-          case Array() => Seq() // Omit sections with no entries
+          case Array()       => Seq() // Omit sections with no entries
           case changeEntries => {
             val heading = s"### ${deNormalizeFileName(changeDir.base.toString)}"
             val changes = changeEntries.map(f => mdBulletItem(IO.read(f)))

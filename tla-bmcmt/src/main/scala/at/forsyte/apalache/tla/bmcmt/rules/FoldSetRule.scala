@@ -54,13 +54,13 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       val a = TlaType1.fromTypeTag(baseEx.typeTag)
       val b = TlaType1.fromTypeTag(setEx.typeTag) match {
         case SetT1(bType) => bType
-        case nonSet =>
+        case nonSet       =>
           throw new TypingException(s"FoldSet argument $setEx should have the type Set(_), found $nonSet.", setEx.ID)
       }
       val opT = OperT1(Seq(a, b), a)
       // sanity check
       TlaType1.fromTypeTag(opDecl.typeTag) match {
-        case `opT` => // all good
+        case `opT`   => // all good
         case badType =>
           val msg = s"FoldSet argument ${opDecl.name} should have the tag $opT, found $badType."
           throw new TypingException(msg, opDecl.ID)

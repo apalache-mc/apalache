@@ -1,15 +1,15 @@
 // https://scalameta.org/scalafmt/docs/installation.html#sbt
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.4")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.5")
 // https://github.com/sbt/sbt-assembly
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
 // https://github.com/marcuslonnberg/sbt-docker
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.11.0")
 // https://github.com/scoverage/sbt-scoverage
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.2.2")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.3.1")
 // https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 // https://github.com/sbt/sbt-native-packager
-addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.10.4")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.1")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.3")
 // https://scalapb.github.io/zio-grpc/docs/installation

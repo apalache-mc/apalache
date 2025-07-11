@@ -139,7 +139,7 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
       case NUMBER(text)  => ConfigIntValue(BigInt(text))
       case STRING(text)  => ConfigStrValue(text)
       case BOOLEAN(text) => ConfigBoolValue(text.toBoolean)
-      case _ ~ list ~ _ =>
+      case _ ~ list ~ _  =>
         ConfigSetValue(list.asInstanceOf[List[ConfigConstExpr]]: _*)
     }
   }

@@ -56,7 +56,7 @@ class TestItfCounterexampleWriter extends AnyFunSuite {
    */
   def assertEqualOver(nestedAccess: Seq[AbstractAccess]*)(json1: Value, json2: Value): Unit = {
     def prop(seq: Seq[AbstractAccess])(v1: Value, v2: Value): Boolean = seq match {
-      case Seq() => v1 == v2
+      case Seq()  => v1 == v2
       case h +: t =>
         (
             for {

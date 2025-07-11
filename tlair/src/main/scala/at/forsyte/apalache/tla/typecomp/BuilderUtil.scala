@@ -18,7 +18,7 @@ object BuilderUtil {
    * type
    */
   def composeAndValidateTypes(oper: TlaOper, typeCmp: TypeComputation, args: TlaEx*): TlaEx = typeCmp(args) match {
-    case Left(err) => throw err
+    case Left(err)      => throw err
     case Right(typeRes) =>
       OperEx(oper, args: _*)(Typed(typeRes))
   }
@@ -28,7 +28,7 @@ object BuilderUtil {
    * throws an IllegalArgumentException.
    */
   def getBoundVarsOrThrow(elem: TlaEx): Set[String] = elem match {
-    case NameEx(name) => Set(name)
+    case NameEx(name)                                                               => Set(name)
     case OperEx(TlaFunOper.tuple, args @ _*) if args.forall(_.isInstanceOf[NameEx]) =>
       val varnames = args.map { _.asInstanceOf[NameEx].name }.toSet
       if (varnames.size < args.size)

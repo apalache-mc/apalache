@@ -64,7 +64,7 @@ trait LiteralAndNameBuilder {
       val unifOpt = new TypeUnifier(new TypeVarPool()).unify(Substitution.empty, tt, t)
       unifOpt match {
         case Some((_, unifiedOperT)) => unifiedOperT
-        case None =>
+        case None                    =>
           throw new TBuilderScopeException(
               s"Name $exprName with type $t constructed in scope where expected type is $tt."
           )
