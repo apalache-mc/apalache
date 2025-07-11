@@ -173,7 +173,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       firstLine = lines.nextOption().getOrElse("")
       moduleName <- (Iterator(firstLine) ++ lines).find(MODULE_LINE_RE.matches(_)) match {
         case Some(MODULE_LINE_RE(name)) => Success(name)
-        case _ =>
+        case _                          =>
           Failure(
               new SanyImporterException(s"No module name found in source for module beginning with line ${firstLine}"))
       }

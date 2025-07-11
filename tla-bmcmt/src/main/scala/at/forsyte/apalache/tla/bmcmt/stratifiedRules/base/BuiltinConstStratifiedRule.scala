@@ -30,7 +30,7 @@ class BuiltinConstStratifiedRule extends StratifiedRuleInterface {
       case ValEx(TlaBoolSet)     => PureArena.cellBooleanSet(arena)
       case ValEx(TlaNatSet)      => PureArena.cellNatSet(arena)
       case ValEx(TlaIntSet)      => PureArena.cellIntSet(arena)
-      case _ =>
+      case _                     =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), ex)
     }
     (startingScope, cell)

@@ -25,7 +25,7 @@ object ParamUtil {
     case TupT1(elems @ _*)       => elems.forall(isAcceptableParamType(false))
     case SparseTupT1(fieldTypes) => fieldTypes.values.forall(isAcceptableParamType(false))
     case RecT1(fieldTypes)       => fieldTypes.values.forall(isAcceptableParamType(false))
-    case OperT1(args, res) =>
+    case OperT1(args, res)       =>
       if (canContainOper)
         args.nonEmpty &&
         args.forall(isAcceptableParamType(false)) &&

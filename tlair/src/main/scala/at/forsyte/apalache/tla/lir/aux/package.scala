@@ -71,7 +71,7 @@ package object aux {
    */
   def collectSegments(decls: Iterable[TlaOperDecl]): List[List[TlaOperDecl]] = decls match {
     case d if d.isEmpty => List.empty
-    case head :: tail =>
+    case head :: tail   =>
       val headPosArity = hasPositiveArity(head)
       val rec = collectSegments(tail)
       val recHeadOrEmpty = rec.headOption.getOrElse(List.empty)
@@ -87,8 +87,8 @@ package object aux {
     case (OperEx(op1, args1 @ _*), OperEx(op2, args2 @ _*)) if op1 == op2 =>
       val argDiff = args1.zipAll(args2, NullEx, NullEx).map { case (x, y) => diff(x, y) }
       OperEx(op1, argDiff: _*)
-    case (ValEx(v1), ValEx(v2)) if v1 == v2   => ex1
-    case (NameEx(n1), NameEx(n2)) if n1 == n2 => ex1
+    case (ValEx(v1), ValEx(v2)) if v1 == v2                   => ex1
+    case (NameEx(n1), NameEx(n2)) if n1 == n2                 => ex1
     case (LetInEx(b1, decls1 @ _*), LetInEx(b2, decls2 @ _*)) =>
       val defaultDecl = TlaOperDecl("Null", List.empty, NullEx)
       val defaultParam = OperParam("diffParam")

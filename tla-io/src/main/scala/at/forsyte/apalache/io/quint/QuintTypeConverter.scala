@@ -51,8 +51,8 @@ private class QuintTypeConverter extends LazyLogging {
     //
     // `acc` is used as an accumulator to enable tail recursion
     def aux(r: Row, acc0: SortedMap[Int, TlaType1]): (SortedMap[Int, TlaType1], Option[VarT1]) = r match {
-      case Row.Nil()  => (acc0, None)
-      case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
+      case Row.Nil()               => (acc0, None)
+      case Row.Var(v)              => (acc0, Some(VarT1(getVarNo(v))))
       case Row.Cell(fields, other) =>
         val acc1 = acc0 ++ fields.map { f => (f.fieldName.toInt + 1) -> convert(f.fieldType) }
         aux(other, acc1)
@@ -72,8 +72,8 @@ private class QuintTypeConverter extends LazyLogging {
     //
     // `acc` is used as an accumulator to enable tail recursion
     def aux(r: Row, acc0: Seq[(String, TlaType1)]): (Seq[(String, TlaType1)], Option[VarT1]) = r match {
-      case Row.Nil()  => (acc0, None)
-      case Row.Var(v) => (acc0, Some(VarT1(getVarNo(v))))
+      case Row.Nil()               => (acc0, None)
+      case Row.Var(v)              => (acc0, Some(VarT1(getVarNo(v))))
       case Row.Cell(fields, other) =>
         val acc1 = fields.map { case f => (f.fieldName, convert(f.fieldType)) } ++ acc0
         aux(other, acc1)
@@ -86,9 +86,9 @@ private class QuintTypeConverter extends LazyLogging {
   }
 
   val convert: QuintType => TlaType1 = {
-    case QuintBoolT() => BoolT1
-    case QuintIntT()  => IntT1
-    case QuintStrT()  => StrT1
+    case QuintBoolT()      => BoolT1
+    case QuintIntT()       => IntT1
+    case QuintStrT()       => StrT1
     case QuintConstT(name) =>
       ConstT1(name) // TODO: Raise error if we hit this. See https://github.com/informalsystems/apalache/issues/2788
     case QuintVarT(name)       => VarT1(getVarNo(name))

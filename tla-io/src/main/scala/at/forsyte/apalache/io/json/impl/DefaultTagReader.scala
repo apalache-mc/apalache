@@ -9,7 +9,7 @@ object DefaultTagReader extends TypeTagReader {
   override def apply(tagStr: String): TypeTag = {
     tagStr match {
       case "Untyped" => Untyped
-      case s =>
+      case s         =>
         try {
           Typed(DefaultType1Parser(tagStr))
         } catch {

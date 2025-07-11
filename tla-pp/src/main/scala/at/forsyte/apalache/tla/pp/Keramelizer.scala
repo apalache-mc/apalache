@@ -44,7 +44,7 @@ class Keramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker)
   private def getElemType(e: TlaEx): TlaType1 = {
     e.typeTag match {
       case Typed(SetT1(elemType)) => elemType
-      case t =>
+      case t                      =>
         throw new MalformedTlaError(s"Expected a set, found: $t", e)
     }
   }

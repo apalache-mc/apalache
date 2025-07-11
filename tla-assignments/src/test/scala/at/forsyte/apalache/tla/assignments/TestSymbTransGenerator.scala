@@ -191,7 +191,7 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     // Only expected to work on the above
     def countXprime(ex: TlaEx): Int = ex match {
       case OperEx(TlaActionOper.prime, NameEx("x")) => 1
-      case OperEx(_, args @ _*) =>
+      case OperEx(_, args @ _*)                     =>
         (args.map(countXprime)).sum
       case _ => 0
     }
