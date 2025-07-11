@@ -262,7 +262,7 @@ class OpApplTranslator(
       // NOTE: previously, we have a special object for the only empty set is a value,
       // but that seems to create problems
       case "$Tuple" => OperEx(TlaFunOper.tuple) // just an empty tuple/sequence
-      case _ =>
+      case _        =>
         throw new SanyImporterException(
             "Unsupported constant built-in operator: " + node.getOperator
         )

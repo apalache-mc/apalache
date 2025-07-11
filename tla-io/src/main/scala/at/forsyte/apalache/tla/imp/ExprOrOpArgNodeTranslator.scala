@@ -194,7 +194,7 @@ class ExprOrOpArgNodeTranslator(
   private def wrapBuiltinWithLetIn(oper: TlaOper): TlaEx = {
     val nparams = oper.arity match {
       case FixedArity(n) => n
-      case _ =>
+      case _             =>
         throw new SanyImporterException("Expected an operator with a fixed number of arguments, found: " + oper.name)
     }
 

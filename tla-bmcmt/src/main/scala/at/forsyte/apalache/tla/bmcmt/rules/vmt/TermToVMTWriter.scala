@@ -21,7 +21,7 @@ object TermToVMTWriter {
     args match {
       case Nil      => onEmpty
       case h +: Nil => mkSMT2String(h)
-      case _ =>
+      case _        =>
         val argStrings = args.map { x => s"${tr(x)}" }
         s"($head ${argStrings.mkString(" ")})"
     }

@@ -485,7 +485,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
       (leftElemOpt, rightElemOpt) match {
         // Neither record has the key indicated by its type
-        case (None, None) => tla.bool(true)
+        case (None, None)                      => tla.bool(true)
         case (Some(leftElem), Some(rightElem)) => {
           newState = cacheOneEqConstraint(newState, leftElem, rightElem)
           val (newArena, keyCell) =

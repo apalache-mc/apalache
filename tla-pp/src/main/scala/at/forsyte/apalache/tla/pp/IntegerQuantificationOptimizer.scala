@@ -65,8 +65,8 @@ class IntegerQuantificationOptimizer(tracker: TransformationTracker) extends Tla
 
       // T depends on the shape of S
       val newPred = setEx match {
-        case ValEx(TlaIntSet) => pred
-        case ValEx(TlaNatSet) => OperEx(outerPred, ge0(name), pred)(boolTag)
+        case ValEx(TlaIntSet)                                    => pred
+        case ValEx(TlaNatSet)                                    => OperEx(outerPred, ge0(name), pred)(boolTag)
         case OperEx(TlaArithOper.dotdot, lowerBound, upperBound) =>
           OperEx(outerPred, inRange(name, lowerBound, upperBound), pred)(boolTag)
         case ex =>

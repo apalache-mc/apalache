@@ -36,7 +36,7 @@ trait RewriterBase extends FixtureAnyFunSuite {
       case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, renaming)
       case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
       case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, renaming)
-      case oddRewriterType =>
+      case oddRewriterType       =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }
   }

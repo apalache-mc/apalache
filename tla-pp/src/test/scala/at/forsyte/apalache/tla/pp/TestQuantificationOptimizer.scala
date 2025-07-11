@@ -47,8 +47,8 @@ class TestQuantificationOptimizer extends AnyFunSuite with Checkers {
       if (oper == TlaBoolOper.exists) tla.and(_, _) else tla.impl(_, _)
 
     setEx match {
-      case ValEx(TlaIntSet) => ex
-      case ValEx(TlaNatSet) => outerOperatorCtor(varnameGe0, ex).as(BoolT1)
+      case ValEx(TlaIntSet)                                    => ex
+      case ValEx(TlaNatSet)                                    => outerOperatorCtor(varnameGe0, ex).as(BoolT1)
       case OperEx(TlaArithOper.dotdot, lowerBound, upperBound) =>
         outerOperatorCtor(varnameInBounds(lowerBound, upperBound), ex).as(BoolT1)
       case _ => ex

@@ -33,7 +33,7 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
 
   // Rethrow as JsonDeserializationError if unable to read
   private def tryRead(readable: ujson.Readable): UJsonRep = Try(ujson.read(readable)) match {
-    case Success(ujsonVal) => UJsonRep(ujsonVal)
+    case Success(ujsonVal)  => UJsonRep(ujsonVal)
     case Failure(exception) =>
       throw new JsonDeserializationError(s"Unable to read $readable as JSON.", exception)
   }

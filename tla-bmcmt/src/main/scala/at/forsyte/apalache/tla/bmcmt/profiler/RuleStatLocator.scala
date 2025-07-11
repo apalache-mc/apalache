@@ -17,7 +17,7 @@ class RuleStatLocator {
   def getRuleStat(ruleName: String): RuleStat = {
     ruleStats.get(ruleName) match {
       case Some(r) => r
-      case None =>
+      case None    =>
         val newRule = new RuleStat(ruleName)
         ruleStats += ruleName -> newRule
         newRule

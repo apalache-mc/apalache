@@ -50,7 +50,7 @@ class FunExceptRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case RecRowT1(_)       => rewriteRowRec(nextState, funCell, indexEx, valueCell)
           case tt @ TupT1(_ @_*) => rewriteTuple(nextState, funCell, tt, indexEx, valueCell)
           case SeqT1(et)         => rewriteSeq(nextState, funCell, et, indexCell, valueCell)
-          case _ =>
+          case _                 =>
             throw new NotImplementedError(s"EXCEPT is not implemented for $funT. Write a feature request.")
         }
 

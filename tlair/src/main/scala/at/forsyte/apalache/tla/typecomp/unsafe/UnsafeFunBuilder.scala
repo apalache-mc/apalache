@@ -37,7 +37,7 @@ trait UnsafeFunBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
       .grouped(2)
       .map {
         case Seq(ValEx(TlaStr(s)), ex) => (s -> ex.typeTag.asTlaType1())
-        case _ => // Impossible, but need to suppress warning
+        case _                         => // Impossible, but need to suppress warning
           throw new IllegalArgumentException("record field must be a TLA string")
       }
       .toSeq
