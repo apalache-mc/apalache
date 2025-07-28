@@ -15837,7 +15837,7 @@ proposed solution is backwards-compatible with TLC, as we are proposing the
 default untyped implementation for the operators.</p>
 <h1><a class="header" href="#adr-015-informal-trace-format-in-json" id="adr-015-informal-trace-format-in-json">ADR-015: Informal Trace Format in JSON</a></h1>
 <table><thead><tr><th>authors</th><th>proposed by</th><th align="right">last revised</th></tr></thead><tbody>
-<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2023-09-14</td></tr>
+<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2025-07-28</td></tr>
 </tbody></table>
 <p><strong>Table of Contents</strong></p>
 <ul>
@@ -15859,6 +15859,17 @@ TLA+ and can be easily integrated into other tools.</p>
 <p><strong>Rev. 2023-09-14.</strong> Each integer value <code>num</code> is now represented as <code>{ #bigint: &quot;num&quot; }</code>.
 The use of JSON numbers is not allowed anymore. This simplifies custom parsers for ITF,
 see <a href="adr/015adr-trace.html#consequences">Consequences</a>.</p>
+<h2><a class="header" href="#implementations" id="implementations">Implementations</a></h2>
+<ul>
+<li><a href="https://github.com/konnov/itf-py">itf-py</a>: a Python library for (de-)serializing ITF traces</li>
+<li><a href="https://crates.io/crates/itf">itf-rs</a>: a Rust library for (de-)serializing ITF traces</li>
+<li><a href="https://github.com/informalsystems/vscode-itf-trace-viewer/blob/main/src/Trace.ts">Trace.ts</a>:
+a TypeScript parser of ITF traces (from ITF Trace Viewer)</li>
+<li><a href="https://marketplace.visualstudio.com/items?itemName=informal.itf-trace-viewer">ITF Trace Viewer</a>:
+a VSCode plugin for viewing ITF traces</li>
+<li><a href="https://github.com/apalache-mc/apalache">Apalache</a>: the TLA<sup>+</sup>/Quint model checker produces ITF traces</li>
+<li><a href="https://github.com/informalsystems/quint">Quint</a>: the Quint simulator produces ITF traces</li>
+</ul>
 <h2><a class="header" href="#context-2" id="context-2">Context</a></h2>
 <p>A TLA+ execution (called a behavior in TLA+) is a very powerful concept. It can
 represent virtually any execution of a state machine, including sequential
