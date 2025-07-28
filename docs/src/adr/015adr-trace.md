@@ -2,7 +2,7 @@
 
 | authors                                | proposed by                   | last revised |
 | -------------------------------------- | ----------------------------  |-------------:|
-| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov |   2023-09-14 |
+| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov |   2025-07-28 |
 
 **Table of Contents**
 
@@ -27,6 +27,17 @@ TLA+ and can be easily integrated into other tools.
 **Rev. 2023-09-14.** Each integer value `num` is now represented as `{ #bigint: "num" }`.
 The use of JSON numbers is not allowed anymore. This simplifies custom parsers for ITF,
 see [Consequences](#consequences).
+
+## Implementations
+
+ - [itf-py](https://github.com/konnov/itf-py): a Python library for (de-)serializing ITF traces
+ - [itf-rs](https://crates.io/crates/itf): a Rust library for (de-)serializing ITF traces
+ - [Trace.ts](https://github.com/informalsystems/vscode-itf-trace-viewer/blob/main/src/Trace.ts):
+    a TypeScript parser of ITF traces (from ITF Trace Viewer)
+ - [ITF Trace Viewer](https://marketplace.visualstudio.com/items?itemName=informal.itf-trace-viewer):
+    a VSCode plugin for viewing ITF traces
+ - [Apalache](https://github.com/apalache-mc/apalache): the TLA<sup>+</sup>/Quint model checker produces ITF traces
+ - [Quint](https://github.com/informalsystems/quint): the Quint simulator produces ITF traces
 
 ## Context
 
