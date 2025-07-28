@@ -31,7 +31,11 @@ see [Consequences](#consequences).
 ## Implementations
 
  - [itf-py](https://github.com/konnov/itf-py): a Python library for (de-)serializing ITF traces
- - [itf-rs](https://github.com/informalsystems/itf-rs): a Rust library for (de-)serializing ITF traces
+ - [itf-rs](https://crates.io/crates/itf): a Rust library for (de-)serializing ITF traces
+ - [Trace.ts](https://github.com/informalsystems/vscode-itf-trace-viewer/blob/main/src/Trace.ts):
+    a TypeScript parser of ITF traces (from ITF Trace Viewer)
+ - [ITF Trace Viewer](https://marketplace.visualstudio.com/items?itemName=informal.itf-trace-viewer):
+    a VSCode plugin for viewing ITF traces
  - [Apalache](https://github.com/apalache-mc/apalache): the TLA<sup>+</sup>/Quint model checker produces ITF traces
  - [Quint](https://github.com/informalsystems/quint): the Quint simulator produces ITF traces
 
