@@ -238,6 +238,12 @@ lazy val shai = (project in file("shai"))
       ),
   )
 
+lazy val json_rpc = (project in file("json-rpc"))
+  .dependsOn(tlair, infra, tla_io, tla_typechecker, tla_bmcmt, passes)
+  .settings(
+      // Add any specific settings or dependencies for json-rpc here
+  )
+
 lazy val tool = (project in file("mod-tool"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, passes)
   .enablePlugins(BuildInfoPlugin)
@@ -291,6 +297,7 @@ lazy val root = (project in file("."))
       tla_bmcmt,
       passes,
       shai,
+      json_rpc,
       tool,
       distribution,
   )
