@@ -1,8 +1,5 @@
 package com.github.apalachemc.apalache.jsonrpc
 
-import java.io.{BufferedReader, InputStreamReader, PrintWriter}
-import java.net.ServerSocket
-
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
@@ -63,3 +60,18 @@ class JsonRpcServlet(service: CalculatorService) extends HttpServlet {
   }
 }
 
+object JsonRpcServerApp {
+  def main(args: Array[String]): Unit = {
+    val server = new Server(8080)
+    val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
+    context.setContextPath("/")
+    server.setHandler(context)
+
+    val calculator = new CalculatorService()
+    context.addServlet(new ServletHolder(new JsonRpcServlet(calculator)), "/rpc")
+
+    server.start()
+    println("JSON-RPC server running on http://localhost:8080/rpc")
+    server.join()
+  }
+}

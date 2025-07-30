@@ -20,7 +20,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.14"
+ThisBuild / scalaVersion := "2.13.16"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
@@ -243,8 +243,9 @@ lazy val json_rpc = (project in file("json-rpc"))
   .settings(
     testSettings,
     libraryDependencies ++= Seq(
+        Deps.jakartaServlet,
         Deps.jacksonDatabind,
-        //Deps.jacksonModuleScala,
+        Deps.jacksonModuleScala,
         Deps.jettyServer,
         Deps.jettyServlet,
     )
