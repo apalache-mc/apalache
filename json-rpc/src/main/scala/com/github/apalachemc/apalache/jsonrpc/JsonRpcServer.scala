@@ -3,40 +3,63 @@ package com.github.apalachemc.apalache.jsonrpc
 import java.io.{BufferedReader, InputStreamReader, PrintWriter}
 import java.net.ServerSocket
 
-object JsonRpcServer {
-  def main(args: Array[String]): Unit = {
-    val port = 8080
-    val server = new ServerSocket(port)
-    println(s"JSON-RPC server running on port $port")
-    while (true) {
-      val client = server.accept()
-      new Thread(() => handleClient(client)).start()
-    }
-  }
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
-  def handleClient(socket: java.net.Socket): Unit = {
-    val in = new BufferedReader(new InputStreamReader(socket.getInputStream))
-    val out = new PrintWriter(socket.getOutputStream, true)
-    try {
-      val input = in.readLine()
-      val response = handleRequest(input)
-      out.println(response)
-    } finally {
-      in.close()
-      out.close()
-      socket.close()
-    }
-  }
+import scala.jdk.CollectionConverters._
 
-  def handleRequest(request: String): String = {
-    // Very basic JSON parsing for demonstration
-    val parsed = JSON.parseFull(request)
-    parsed match {
-      case Some(map: Map[String, Any]) if map.get("method").contains("health") =>
-        """{"jsonrpc":"2.0","result":"ok","id":1}"""
-      case _ =>
-        """{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":null}"""
+// Simple service
+class CalculatorService {
+  def add(a: Int, b: Int): Int = a + b
+}
+
+// JSON-RPC servlet
+class JsonRpcServlet(service: CalculatorService) extends HttpServlet {
+  private val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+
+  override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+    val input = req.getInputStream
+    val requestJson = mapper.readTree(input)
+
+    val jsonrpc = requestJson.path("jsonrpc").asText()
+    val method = requestJson.path("method").asText()
+    val paramsNode = requestJson.path("params")
+    val id = requestJson.path("id")
+
+    val (resultNode, errorNode) = try {
+      // Dispatch methods manually
+      val result: Any = method match {
+        case "add" =>
+          val params = paramsNode.elements().asScala.toSeq.map(_.asInt())
+          service.add(params(0), params(1))
+        case _ =>
+          throw new RuntimeException(s"Method not found: $method")
+      }
+
+      (mapper.valueToTree[JsonNode](result), null)
+    } catch {
+      case ex: Exception =>
+        val errorObj = mapper.createObjectNode()
+        errorObj.put("code", -32601) // Method not found
+        errorObj.put("message", ex.getMessage)
+        (null, errorObj)
     }
+
+    // Build JSON-RPC response
+    val responseJson = mapper.createObjectNode()
+    responseJson.put("jsonrpc", "2.0")
+    responseJson.set("id", id)
+    if (errorNode != null) {
+      responseJson.set("error", errorNode)
+    } else {
+      responseJson.set("result", resultNode)
+    }
+
+    resp.setContentType("application/json")
+    mapper.writeValue(resp.getOutputStream, responseJson)
   }
 }
 

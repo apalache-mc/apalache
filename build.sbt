@@ -241,7 +241,13 @@ lazy val shai = (project in file("shai"))
 lazy val json_rpc = (project in file("json-rpc"))
   .dependsOn(tlair, infra, tla_io, tla_typechecker, tla_bmcmt, passes)
   .settings(
-      // Add any specific settings or dependencies for json-rpc here
+    testSettings,
+    libraryDependencies ++= Seq(
+        Deps.jacksonDatabind,
+        //Deps.jacksonModuleScala,
+        Deps.jettyServer,
+        Deps.jettyServlet,
+    )
   )
 
 lazy val tool = (project in file("mod-tool"))

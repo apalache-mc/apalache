@@ -48,6 +48,11 @@ object Dependencies {
     // see https://scalapb.github.io/docs/faq/#i-am-getting-import-was-not-found-or-had-errors
     val scalapbRuntime =
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
+    // json-rpc dependencies
+    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2"
+    //val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.19.0"
+    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "12.0.23"
+    val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.25"
   }
 
   // Test only depenendencies
