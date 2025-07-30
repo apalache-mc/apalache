@@ -23,8 +23,7 @@ ThisBuild / organization := "at.forsyte"
 ThisBuild / scalaVersion := "2.13.14"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
-ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
-ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("releases")
+ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
 
 // Shared dependencies accross all sub projects
 ThisBuild / libraryDependencies ++= Seq(
