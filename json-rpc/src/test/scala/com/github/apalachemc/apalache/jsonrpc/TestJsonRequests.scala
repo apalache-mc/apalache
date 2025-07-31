@@ -66,7 +66,7 @@ class TestJsonRequests extends AnyFunSuite {
     val inputJson = mapper.readTree(input)
     val parsed = new JsonParameterParser(mapper).parseDisposeSpec(inputJson.path("params"))
     if (parsed.isRight) {
-        fail("Expected failure, but got: " + parsed)
+      fail("Expected failure, but got: " + parsed)
     }
   }
 }
