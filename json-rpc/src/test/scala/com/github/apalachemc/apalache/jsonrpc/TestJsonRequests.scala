@@ -44,4 +44,32 @@ class TestJsonRequests extends AnyFunSuite {
       // ok
     }
   }
+
+  test("parse DisposeSpecParams") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "disposeSpec", "params": { "sessionId": "1a1555f8" }, "id": 1}"""
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseDisposeSpec(inputJson.path("params"))
+    parsed match {
+      case Right(params: DisposeSpecParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+      case Left(error) =>
+        fail(s"Failed to load specification: $error")
+    }
+  }
+
+  test("parse errors DisposeSpecParams") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "disposeSpec", "params": { "sessionId": "" }, "id": 1}"""
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseDisposeSpec(inputJson.path("params"))
+    parsed match {
+      case Right(params: DisposeSpecParams) =>
+        fail("Expected failure, but got: " + params)
+      case Left(error) =>
+        // ok
+    }
+  }
 }

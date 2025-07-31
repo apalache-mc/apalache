@@ -14,18 +14,40 @@ import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import scala.util.{Random, Try}
 
-abstract class ExplorationServiceResult
+/**
+ * All kinds of the results that the exploration service can return.
+ */
+sealed abstract class ExplorationServiceResult
+
+/**
+ * The result of loading a specification.
+ * @param sessionId the new session ID
+ */
 case class LoadSpecResult(sessionId: String) extends ExplorationServiceResult
 
+/**
+ * The result of disposing a specification.
+ * @param sessionId the new session ID
+ */
+case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
+
+/**
+ * An error that can occur in the exploration service.
+ * @param code error code, typically a JSON-RPC error code
+ * @param message a human-readable error message
+ */
 case class ServiceError(code: Int, message: String)
 
 /**
  * A transition exploration service.
+ * @param config
+ *  the service configuration, typically, constructed with [[ConfigManager]].
  */
 class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
   // a pRNG to generate session IDs
   private val random = new Random(20250731)
-  // Guice modules instantiated for each session
+  // Guice modules instantiated for each session.
+  // Currently, just the parser module. In the future, we need something similar to the CheckerModule.
   private var sessions: Map[String, ParserModule] = Map.empty
 
   /**
@@ -53,10 +75,31 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
     Right(LoadSpecResult(sessionId))
   }
+
+  /**
+   * Dispose a previously loaded specification by its session ID.
+   * @param params the parameters object that contains the session ID
+   * @return
+   */
+  def disposeSpec(params: DisposeSpecParams): Either[ServiceError, ExplorationServiceResult] = {
+    sessions.get(params.sessionId) match {
+      case Some(_) =>
+        sessions -= params.sessionId
+        logger.info(s"Session ${params.sessionId} disposed successfully.")
+        Right(DisposeSpecResult(params.sessionId))
+      case None =>
+        Left(ServiceError(-32602, s"Session not found: ${params.sessionId}"))
+    }
+  }
 }
 
-// JSON-RPC servlet
+/**
+ * A simple JSON-RPC servlet that handles requests for the exploration service.
+ * @param service exploration service that processes the exploration logic
+ */
 class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
+  // data mapper for JSON serialization/deserialization
+  // using Jackson with Scala module for better compatibility with case classes
   private val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
 
   override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
@@ -81,6 +124,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
               .parseLoadSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
                   serviceParams => service.loadSpec(serviceParams))
+
+          case "disposeSpec" =>
+            new JsonParameterParser(mapper)
+              .parseDisposeSpec(paramsNode)
+              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+                  serviceParams => service.disposeSpec(serviceParams))
 
           case _ =>
             Left(ServiceError(-32601, s"Method not found: $method"))
@@ -114,7 +163,7 @@ object JsonRpcServerApp {
     context.addServlet(new ServletHolder(new JsonRpcServlet(service)), "/rpc")
 
     server.start()
-    println(s"JSON-RPC server running on http://localhost:${port}/rpc")
+    println(s"JSON-RPC server running on http://localhost:$port/rpc")
     server.join()
   }
 
