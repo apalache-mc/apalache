@@ -234,17 +234,28 @@ object Config {
     def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
   }
 
+  sealed abstract class ServerType
+  case class FuzzerServer() extends ServerType {
+    override def toString: String = "fuzzer"
+  }
+  case class CheckerServer() extends ServerType {
+    override def toString: String = "checker"
+  }
+
   /**
    * Configuration of the server
    *
    * @param port
    *   the port to serve requests from
+   * @param serverType
+   *   the type of server to run, either a fuzzer or a checker server
    */
   case class Server(
-      port: Option[Int] = Some(8822))
+      port: Option[Int] = Some(8822),
+      serverType: ServerType = CheckerServer())
       extends Config[Server] {
 
-    def empty: Server = Generic[Server].from(Generic[Server].to(this).map(emptyPoly))
+    def empty: Server = Server(port = None, serverType = serverType)
   }
 
   /**
