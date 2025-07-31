@@ -7,7 +7,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestExplorationService extends AnyFunSuite with BeforeAndAfter  {
+class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   private val text =
     """---- MODULE Inc ----
       |EXTENDS Integers
@@ -28,6 +28,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter  {
     service.loadSpec(LoadSpecParams(sources = Seq(text))) match {
       case Right(LoadSpecResult(sessionId)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }
@@ -35,15 +37,19 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter  {
 
   test("dispose spec") {
     service.loadSpec(LoadSpecParams(sources = Seq(text))) match {
-        case Right(LoadSpecResult(sessionId)) =>
-            service.disposeSpec(DisposeSpecParams(sessionId)) match {
-            case Right(DisposeSpecResult(newSessionId)) =>
-                assert(newSessionId == sessionId, "Session ID should remain the same after disposal")
-            case Left(error) =>
-                fail(s"Failed to dispose specification: $error")
-            }
-        case Left(error) =>
-            fail(s"Failed to load specification for disposal: $error")
+      case Right(LoadSpecResult(sessionId)) =>
+        service.disposeSpec(DisposeSpecParams(sessionId)) match {
+          case Right(DisposeSpecResult(newSessionId)) =>
+            assert(newSessionId == sessionId, "Session ID should remain the same after disposal")
+          case Right(result) =>
+            fail(s"Unexpected result: $result")
+          case Left(error) =>
+            fail(s"Failed to dispose specification: $error")
+        }
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to load specification for disposal: $error")
     }
   }
 }
