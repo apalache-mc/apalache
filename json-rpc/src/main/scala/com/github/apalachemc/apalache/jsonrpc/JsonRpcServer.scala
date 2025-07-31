@@ -12,6 +12,7 @@ import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletRespons
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
+import java.util.concurrent.locks.ReadWriteLock
 import scala.util.{Random, Try}
 
 /**
@@ -21,29 +22,35 @@ sealed abstract class ExplorationServiceResult
 
 /**
  * The result of loading a specification.
- * @param sessionId the new session ID
+ * @param sessionId
+ *   the new session ID
  */
 case class LoadSpecResult(sessionId: String) extends ExplorationServiceResult
 
 /**
  * The result of disposing a specification.
- * @param sessionId the new session ID
+ * @param sessionId
+ *   the new session ID
  */
 case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
 
 /**
  * An error that can occur in the exploration service.
- * @param code error code, typically a JSON-RPC error code
- * @param message a human-readable error message
+ * @param code
+ *   error code, typically a JSON-RPC error code
+ * @param message
+ *   a human-readable error message
  */
 case class ServiceError(code: Int, message: String)
 
 /**
  * A transition exploration service.
  * @param config
- *  the service configuration, typically, constructed with [[ConfigManager]].
+ *   the service configuration, typically, constructed with [[ConfigManager]].
  */
 class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
+  // the rwLock to prevent concurrent
+  private val rwLock: ReadWriteLock = new java.util.concurrent.locks.ReentrantReadWriteLock()
   // a pRNG to generate session IDs
   private val random = new Random(20250731)
   // Guice modules instantiated for each session.
@@ -57,7 +64,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @return
    */
   def loadSpec(params: LoadSpecParams): Either[ServiceError, ExplorationServiceResult] = {
+    rwLock.writeLock().lock()
     val sessionId = random.nextInt().toHexString
+    rwLock.writeLock().unlock()
     logger.info(s"Session $sessionId: Loading specification with ${params.sources.length} sources.")
     // pack the sources into the config
     val source = SourceOption.StringSource(params.sources.head, params.sources.tail)
@@ -71,31 +80,40 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         return Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))
       case Right(_) =>
         // Successfully loaded the spec, we can access the module later
+        rwLock.writeLock().lock()
         sessions = sessions + (sessionId -> parser)
+        rwLock.writeLock().unlock()
     }
     Right(LoadSpecResult(sessionId))
   }
 
   /**
    * Dispose a previously loaded specification by its session ID.
-   * @param params the parameters object that contains the session ID
+   * @param params
+   *   the parameters object that contains the session ID
    * @return
    */
   def disposeSpec(params: DisposeSpecParams): Either[ServiceError, ExplorationServiceResult] = {
-    sessions.get(params.sessionId) match {
-      case Some(_) =>
-        sessions -= params.sessionId
-        logger.info(s"Session ${params.sessionId} disposed successfully.")
-        Right(DisposeSpecResult(params.sessionId))
-      case None =>
-        Left(ServiceError(-32602, s"Session not found: ${params.sessionId}"))
-    }
+    rwLock.writeLock().lock()
+    val result =
+      sessions.get(params.sessionId) match {
+        case Some(_) =>
+          sessions -= params.sessionId
+          logger.info(s"Session ${params.sessionId} disposed successfully.")
+          Right(DisposeSpecResult(params.sessionId))
+        case None =>
+          Left(ServiceError(-32602, s"Session not found: ${params.sessionId}"))
+      }
+
+    rwLock.writeLock().unlock()
+    result
   }
 }
 
 /**
  * A simple JSON-RPC servlet that handles requests for the exploration service.
- * @param service exploration service that processes the exploration logic
+ * @param service
+ *   exploration service that processes the exploration logic
  */
 class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
   // data mapper for JSON serialization/deserialization
