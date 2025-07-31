@@ -46,7 +46,7 @@ case class ServiceError(code: Int, message: String)
 /**
  * A transition exploration service.
  * @param config
- *   the service configuration, typically, constructed with [[ConfigManager]].
+ *   the service configuration, typically, constructed with [[at.forsyte.apalache.io.ConfigManager]].
  */
 class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
   // the rwLock to prevent concurrent
