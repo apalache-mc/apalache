@@ -112,8 +112,8 @@ class ConfigurationPassImpl @Inject() (
       tlaModule: TlaModule,
       cinitName: String): Seq[TlaDecl] = {
     val oldCinitOpt = tlaModule.operDeclarations
-      .find {
-        _.name == derivedPreds.cinit
+      .find { decl =>
+        derivedPreds.cinit.contains(decl.name)
       }
 
     val boolTag = Typed(BoolT1)
@@ -133,7 +133,7 @@ class ConfigurationPassImpl @Inject() (
         }
 
     // Since declarations are a Seq not a Set, we may need to remove the old CInit first
-    tlaModule.declarations.filterNot(_.name == derivedPreds.cinit) :+ newCinitDecl
+    tlaModule.declarations.filterNot(decl => derivedPreds.cinit.contains(decl.name)) :+ newCinitDecl
   }
 
   private def setDerivedPredicates(): Unit = {
@@ -168,7 +168,7 @@ class ConfigurationPassImpl @Inject() (
    *   additional declarations, which originate from assignments and replacements
    */
   private def loadOptionsFromTlcConfig(module: TlaModule, config: TlcConfig, configFile: File): Seq[TlaDecl] = {
-    val basename = configFile.getName()
+    val basename = configFile.getName
     val configuredModule = new TlcConfigImporter(config)(module)
     val (init, next) = options.predicates.behaviorSpec match {
       case InitNextSpec(init, next) => (init, next)
