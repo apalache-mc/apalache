@@ -7,7 +7,7 @@ import org.backuity.clist._
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 
-class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode (in early development)")
+class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode")
     with LazyLogging {
 
   var port = opt[Option[Int]](description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)",
