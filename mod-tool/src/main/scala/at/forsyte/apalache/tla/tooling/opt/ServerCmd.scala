@@ -14,7 +14,7 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
       useEnv = true)
 
   var serverType = opt[String](
-      description = "the type of server to run: 'checker' or 'fuzzer', default: checker",
+      description = "the type of server to run: 'checker' (shai-grpc) or 'fuzzer' (json-rpc), default: checker",
       default = "checker")
 
   override def toConfig() = {

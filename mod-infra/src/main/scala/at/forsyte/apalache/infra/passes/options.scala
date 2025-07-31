@@ -1,6 +1,7 @@
 package at.forsyte.apalache.infra.passes.options
 
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.passes.options.Config.{CheckerServer, FuzzerServer, ServerType}
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.tla.lir.Feature
@@ -715,14 +716,21 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to configure the server */
   case class Server(
-      port: Int)
+      port: Int, serverType: ServerType = CheckerServer())
       extends OptionGroup
 
   object Server extends Configurable[Config.Server, Server] {
     def apply(server: Config.Server): Try[Server] = for {
       port <- server.port.toTry("server.port")
+      serverType = server.serverType match {
+        case _: CheckerServer => CheckerServer()
+        case _: FuzzerServer  => FuzzerServer()
+        case unknown =>
+          throw new PassOptionException(s"Unexpected server type: ${unknown.toString}")
+      }
     } yield Server(
-        port = port
+        port = port,
+        serverType = serverType
     )
   }
 
