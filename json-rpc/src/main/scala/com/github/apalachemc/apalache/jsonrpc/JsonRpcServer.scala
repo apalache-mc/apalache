@@ -1,7 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
-import com.fasterxml.jackson.module.scala.{DefaultScalaModule, ScalaObjectMapper}
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
@@ -21,7 +21,8 @@ class ExplorationService {
 
   /**
    * Loads a specification based on the provided parameters.
-   * @param params parsed loading parameters
+   * @param params
+   *   parsed loading parameters
    * @return
    */
   def loadSpec(params: LoadSpecParams): Either[ServiceError, ExplorationServiceResult] = {
@@ -56,7 +57,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
             new JsonParameterParser(mapper)
               .parseLoadSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
-                    serviceParams => service.loadSpec(serviceParams))
+                  serviceParams => service.loadSpec(serviceParams))
 
           case _ =>
             Left(ServiceError(-32601, s"Method not found: $method"))

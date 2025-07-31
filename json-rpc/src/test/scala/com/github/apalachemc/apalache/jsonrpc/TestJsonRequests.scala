@@ -41,7 +41,7 @@ class TestJsonRequests extends AnyFunSuite {
       case Right(loadSpecParams: LoadSpecParams) =>
         fail("Expected failure, but got: " + loadSpecParams)
       case Left(_) =>
-        // ok
+      // ok
     }
   }
 }

@@ -7,8 +7,7 @@ import org.backuity.clist._
 import at.forsyte.apalache.infra.passes.options.Config
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 
-class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode")
-    with LazyLogging {
+class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode") with LazyLogging {
 
   var port = opt[Option[Int]](description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)",
       useEnv = true)
@@ -21,8 +20,8 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
     super.toConfig().map { cfg =>
       val selectedServerType = serverType.toLowerCase match {
         case "checker" => Config.CheckerServer()
-        case "fuzzer" => Config.FuzzerServer()
-        case invalid =>
+        case "fuzzer"  => Config.FuzzerServer()
+        case invalid   =>
           logger.warn(s"Invalid server type: $invalid, using default (checker)")
           Config.CheckerServer()
       }

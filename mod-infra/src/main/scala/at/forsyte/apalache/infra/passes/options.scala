@@ -716,7 +716,8 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to configure the server */
   case class Server(
-      port: Int, serverType: ServerType = CheckerServer())
+      port: Int,
+      serverType: ServerType = CheckerServer())
       extends OptionGroup
 
   object Server extends Configurable[Config.Server, Server] {
@@ -725,12 +726,12 @@ object OptionGroup extends LazyLogging {
       serverType = server.serverType match {
         case _: CheckerServer => CheckerServer()
         case _: FuzzerServer  => FuzzerServer()
-        case unknown =>
+        case unknown          =>
           throw new PassOptionException(s"Unexpected server type: ${unknown.toString}")
       }
     } yield Server(
         port = port,
-        serverType = serverType
+        serverType = serverType,
     )
   }
 
