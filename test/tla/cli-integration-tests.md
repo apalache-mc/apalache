@@ -3942,6 +3942,9 @@ input {
 output {}
 server {
     port=8822
+    server-type {
+      type=checker-server
+    }
 }
 tracee {}
 typechecker {
