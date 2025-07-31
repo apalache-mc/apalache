@@ -11,8 +11,8 @@ import scala.util.Try
 
 class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode") with LazyLogging {
 
-  var port: Option[Int] = opt[Option[Int]](description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)",
-      useEnv = true)
+  var port: Option[Int] = opt[Option[Int]](
+      description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)", useEnv = true)
 
   var serverType: String = opt[String](
       description = "the type of server to run: 'checker' (shai-grpc) or 'fuzzer' (json-rpc), default: checker",
@@ -40,7 +40,7 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
       case Config.CheckerServer() =>
         val server = shai.v1.RpcServer(options.server.port)
         server.main(Array())
-      case Config.FuzzerServer()  =>
+      case Config.FuzzerServer() =>
         JsonRpcServerApp.run(configuration, options.server.port)
     }
 
