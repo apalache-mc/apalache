@@ -20,13 +20,13 @@ class TestJsonRequests extends AnyFunSuite {
     // encode text in base64
     val encodedText = java.util.Base64.getEncoder.encodeToString(text.getBytes("UTF-8"))
     val input =
-      s"""{"jsonrpc": "2.0", "method": "loadSpec", "params": { "sources": [["Inc", "$encodedText"]] }, "id": 1}"""
+      s"""{"jsonrpc": "2.0", "method": "loadSpec", "params": { "sources": ["$encodedText"] }, "id": 1}"""
     val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
     val inputJson = mapper.readTree(input)
     val parsed = new JsonParameterParser(mapper).parseLoadSpec(inputJson.path("params"))
     parsed match {
       case Right(loadSpecParams: LoadSpecParams) =>
-        assert(loadSpecParams.sources == Seq(("Inc", text)), "Session ID should not be empty")
+        assert(loadSpecParams.sources == Seq(text), "Session ID should not be empty")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }

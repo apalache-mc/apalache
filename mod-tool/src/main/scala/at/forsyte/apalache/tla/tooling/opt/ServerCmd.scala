@@ -37,12 +37,11 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
 
     logger.info(s"Starting ${options.server.serverType} server on port ${options.server.port}...")
     options.server.serverType match {
-      case Config.CheckerServer() => {
+      case Config.CheckerServer() =>
         val server = shai.v1.RpcServer(options.server.port)
         server.main(Array())
-      }
       case Config.FuzzerServer()  =>
-        JsonRpcServerApp.run(options.server.port)
+        JsonRpcServerApp.run(configuration, options.server.port)
     }
 
     Right("Server terminated")

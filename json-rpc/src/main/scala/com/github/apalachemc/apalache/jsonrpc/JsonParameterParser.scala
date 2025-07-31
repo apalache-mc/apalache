@@ -6,10 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 /**
  * Parameters for loading a specification in the JSON-RPC server.
  * @param sources
- *   A sequence of pairs, where each pair consists of a name and a base64-encoded content. The first element corresponds
- *   to the root module.
+ *   A sequence of specification modules, each encoded in base64. The head must be the root module, and the rest are
+ *   additional modules that are imported by the root module (except the standard ones).
  */
-case class LoadSpecParams(sources: Seq[(String, String)])
+case class LoadSpecParams(sources: Seq[String])
 
 /**
  * A parser for JSON parameters used in the JSON-RPC server.
@@ -35,9 +35,9 @@ class JsonParameterParser(mapper: ObjectMapper) {
         return Left("loadSpec parameters must be non-empty.")
       }
 
-      val decodedSources = specParams.sources.map { case (name, base64Content) =>
+      val decodedSources = specParams.sources.map { base64Content =>
         val decodedContent = java.util.Base64.getDecoder.decode(base64Content)
-        (name, new String(decodedContent, "UTF-8"))
+        new String(decodedContent, "UTF-8")
       }
 
       Right(LoadSpecParams(decodedSources))
