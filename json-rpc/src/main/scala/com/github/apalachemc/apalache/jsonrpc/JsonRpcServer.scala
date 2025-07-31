@@ -81,8 +81,8 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
 }
 
 object JsonRpcServerApp {
-  def main(args: Array[String]): Unit = {
-    val server = new Server(8080)
+  def run(port: Int): Unit = {
+    val server = new Server(port)
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")
     server.setHandler(context)
@@ -91,7 +91,12 @@ object JsonRpcServerApp {
     context.addServlet(new ServletHolder(new JsonRpcServlet(service)), "/rpc")
 
     server.start()
-    println("JSON-RPC server running on http://localhost:8080/rpc")
+    println(s"JSON-RPC server running on http://localhost:${port}/rpc")
     server.join()
+  }
+
+  def main(args: Array[String]): Unit = {
+    val port = if (args.nonEmpty) args(0).toInt else 8080
+    run(port)
   }
 }

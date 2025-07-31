@@ -252,7 +252,7 @@ lazy val json_rpc = (project in file("json-rpc"))
   )
 
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, passes)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, json_rpc, passes)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,

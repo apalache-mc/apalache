@@ -3943,7 +3943,7 @@ output {}
 server {
     port=8822
     server-type {
-      type=checker-server
+        type=checker-server
     }
 }
 tracee {}
