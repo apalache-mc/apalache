@@ -41,8 +41,8 @@ exploration of TLA+ specifications.
    - [Jetty Server][]. Yes, it is about 30 years old.
       It works. It is fast, simple, reliable, maintained, and is well-documented.
    - [Jackson][]. It is fast, simple, reliable, maintained, and is well-documented.
-      It uses plain-old Java objects, and it supports basic Scala types. No "mom,
-      look at my beatiful types" here.
+      It uses plain-old Java objects, and it supports basic Scala types. No super-advanced
+      FP here.
   
 ## 2. JSON-RPC methods
 
@@ -57,8 +57,11 @@ This is work in progress. More methods to be added in the future.
 
 Load a TLA+ specification from a list of base64-encoded source files.
 The server will parse the specification and store all the necessary
-objects in memory for further exploration. This includes the SMT solver,
-which may consume a lot of memory.
+objects in memory for further exploration. This includes the SMT solver.
+The solver does not consume much memory after loading the specification.
+However, it may consume a lot of memory when checking the specification
+in the subsequent calls. Hence, you should be mindful of the memory
+when loading multiple specifications in different sessions.
 
 **Input:**
 
@@ -84,19 +87,24 @@ which may consume a lot of memory.
 **Example**:
 
 ```sh
+SPEC=`cat <<EOF | base64
+---- MODULE Inc ----
+EXTENDS Integers
+VARIABLE x
+Init == x = 0
+Next == x' = x + 1
+=====================
+EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [
-    "LS0tLSBNT0RVTEUgSW5jIC0tLS0KRVhURU5EUyBJbnRlZ2VycwpWQVJJQUJMRSB4CkluaXQgPT0geCA9IDAKTmV4dCA9PSB4JyA9IHggKyAxCj09PT09PT09PT09PT09PT09PT09PQogICAgICA="
-    ]},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ]},"id":1}'
 ```
 
 ### 2.2. Method disposeSpec
 
 Dispose the state that is associated with a session, including the SMT solver.
-You should call this method when you are done with the session, unless you
-shutdown the server. The session identifier must have been returned by the
-`loadSpec` method in an earlier call.
+You should call this method when you are done with the session. The session
+identifier must have been returned by the `loadSpec` method in an earlier call.
 
 **Input:**
 
