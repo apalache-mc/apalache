@@ -128,9 +128,8 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
    */
   def openConnection(req: ConnectRequest): Result[Connection] = for {
     id <- ZIO.effectTotal(UUID.randomUUID())
-    conn = Conn(id)
     _ <- setConnection(Conn(id))
-    connection = Connection(id.toString())
+    connection = Connection(id.toString)
     _ <- Log.info(Some(connection), "New connection created")
   } yield connection
 
@@ -190,7 +189,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
       } catch {
         case err: Throwable =>
           val errData =
-            ujson.Obj("msg" -> err.getMessage(), "stack_trace" -> err.getStackTrace().map(_.toString()).toList)
+            ujson.Obj("msg" -> err.getMessage, "stack_trace" -> err.getStackTrace.map(_.toString()).toList)
           Left(TransExplorerError(errorType = TransExplorerErrorType.UNEXPECTED, data = errData.toString()))
       }
     }
