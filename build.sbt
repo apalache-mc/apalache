@@ -20,7 +20,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.14"
+ThisBuild / scalaVersion := "2.13.16"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
@@ -238,8 +238,21 @@ lazy val shai = (project in file("shai"))
       ),
   )
 
+lazy val json_rpc = (project in file("json-rpc"))
+  .dependsOn(tlair, infra, tla_io, tla_typechecker, tla_bmcmt, passes)
+  .settings(
+      testSettings,
+      libraryDependencies ++= Seq(
+          Deps.jakartaServlet,
+          Deps.jacksonDatabind,
+          Deps.jacksonModuleScala,
+          Deps.jettyServer,
+          Deps.jettyServlet,
+      ),
+  )
+
 lazy val tool = (project in file("mod-tool"))
-  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, passes)
+  .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, json_rpc, passes)
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
@@ -291,6 +304,7 @@ lazy val root = (project in file("."))
       tla_bmcmt,
       passes,
       shai,
+      json_rpc,
       tool,
       distribution,
   )
