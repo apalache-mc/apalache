@@ -27,6 +27,26 @@ import scala.util.{Random, Try}
 sealed abstract class ExplorationServiceResult
 
 /**
+ * Parameters for preparing a symbolic transition in the solver context.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param transitionId
+ *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
+ *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
+ * @param checkEnabled
+ *   whether to check if the transition is enabled. If `false`, the transition is prepared and assumed, but no
+ *   satisfiability is checked
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
+ *   if `checkEnabled` is `false`.
+ */
+case class AssumeTransitionParams(
+    sessionId: String,
+    transitionId: Int,
+    checkEnabled: Boolean = true,
+    timeoutSec: Int = 0)
+
+/**
  * The result of loading a specification.
  * @param sessionId
  *   the new session ID
@@ -61,14 +81,11 @@ case class SpecParameters(
     hasView: Boolean)
 
 /**
- * Parameters for preparing a symbolic transition in the solver context.
+ * The result of disposing a specification.
  * @param sessionId
  *   the ID of the previously loaded specification
- * @param transitionId
- *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
- *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
  */
-case class PrepareTransitionParams(sessionId: String, transitionId: Int)
+case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
 
 /**
  * The result of preparing a symbolic transition.
@@ -83,11 +100,18 @@ case class PrepareTransitionResult(sessionId: String, transitionId: Int, enabled
     extends ExplorationServiceResult
 
 /**
- * The result of disposing a specification.
+ * Parameters for switching to the next step in symbolic path exploration.
  * @param sessionId
  *   the ID of the previously loaded specification
  */
-case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
+case class NextStepParams(sessionId: String)
+
+/**
+ * The result of switching to the next step in symbolic path exploration.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ */
+case class NextStepResult(sessionId: String) extends ExplorationServiceResult
 
 /**
  * An error that can occur in the exploration service.
@@ -196,7 +220,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @return
    *   either an error or [[PrepareTransitionResult]]
    */
-  def prepareTransition(params: PrepareTransitionParams): Either[ServiceError, PrepareTransitionResult] = {
+  def assumeTransition(params: AssumeTransitionParams): Either[ServiceError, PrepareTransitionResult] = {
     val transitionId = params.transitionId
     val sessionId = params.sessionId
     // validate the input parameters under the global lock
@@ -214,9 +238,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.checkerInput.nextTransitions
         }
         if (transitionId < 0 || transitionId >= transitions.size) {
-          Left(ServiceError(-32602, s"Invalid transition ID: ${transitionId} not in [0, $transitions.size)"))
+          Left(ServiceError(-32602, s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
         } else {
-          Right((checkerContext, transitions))
+          Right((checkerContext, transitions(transitionId)))
         }
 
       case None =>
@@ -227,12 +251,77 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
     validationResult
       .map {
-        case (checkerContext, transitions) => {
+        case (checkerContext, actionExpr) => {
           checkerContext.synchronized {
-            val isEnabled = checkerContext.trex.prepareTransition(transitionId, transitions(transitionId))
             val stepNo = checkerContext.trex.stepNo
+            // Upload the transition into the SMT context.
+            // It returns the result of a simple check that does not check satisfiability.
+            val isEnabled = checkerContext.trex.prepareTransition(transitionId, actionExpr)
             logger.info(s"Session $sessionId: Prepared transition $transitionId at step $stepNo, enabled = $isEnabled.")
-            PrepareTransitionResult(sessionId, transitionId, enabled = isEnabled)
+            if (!isEnabled) {
+              PrepareTransitionResult(sessionId, transitionId, enabled = false)
+            } else {
+              val snapshot = checkerContext.trex.snapshot()
+              // assume that this transition takes place
+              checkerContext.trex.assumeTransition(transitionId)
+              if (!params.checkEnabled) {
+                // if we do not check satisfiability, we assume that the transition is enabled
+                PrepareTransitionResult(sessionId, transitionId, enabled = true)
+              } else {
+                // check satisfiability
+                checkerContext.trex.sat(params.timeoutSec) match {
+                  case Some(isSat) =>
+                    logger.info(s"Session $sessionId: Transition $transitionId is enabled = $isSat.")
+                    if (!isSat) {
+                      checkerContext.trex.recover(snapshot)
+                    }
+                    PrepareTransitionResult(sessionId, transitionId, enabled = isSat)
+                  case None =>
+                    // in case of timeout or unknown, we assume that the transition is enabled
+                    logger.warn(
+                        s"Session $sessionId: Transition $transitionId is unknown or timed out. Assuming enabled.")
+                    PrepareTransitionResult(sessionId, transitionId, enabled = true)
+                }
+              }
+            }
+          }
+        }
+      }
+  }
+
+  /**
+   * Switch to the next step.
+   *
+   * @param params
+   *   the parameters object that contains the session ID
+   * @return
+   * either an error or [[NextStepResult]]
+   */
+  def nextStep(params: NextStepParams): Either[ServiceError, NextStepResult] = {
+    val sessionId = params.sessionId
+    // validate the input parameters under the global lock
+    rwLock.readLock().lock()
+    val validationResult = sessions.get(sessionId) match {
+      case Some(injector) =>
+        // get the checker context from the injector
+        val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+        val checkerContext = checkerModule.modelCheckerContext.get
+        Right(checkerContext)
+
+      case None =>
+        Left(ServiceError(-32602, s"Session not found: $sessionId"))
+    }
+    rwLock.readLock().unlock()
+
+    // Roll to the next step. Make sure that we do not update the SMT context concurrently.
+    validationResult
+      .map { checkerContext =>
+        {
+          checkerContext.synchronized {
+            checkerContext.trex.nextState()
+            val stepNo = checkerContext.trex.stepNo
+            logger.info(s"Session $sessionId: Next step $stepNo.")
+            NextStepResult(sessionId)
           }
         }
       }
@@ -311,11 +400,17 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
               .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
                   serviceParams => service.disposeSpec(serviceParams))
 
-          case "prepareTransition" =>
+          case "assumeTransition" =>
             new JsonParameterParser(mapper)
-              .parsePrepareTransition(paramsNode)
+              .parseAssumeTransition(paramsNode)
               .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
-                  serviceParams => service.prepareTransition(serviceParams))
+                  serviceParams => service.assumeTransition(serviceParams))
+
+          case "nextStep" =>
+            new JsonParameterParser(mapper)
+              .parseNextStep(paramsNode)
+              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+                  serviceParams => service.nextStep(serviceParams))
 
           case _ =>
             Left(ServiceError(-32601, s"Method not found: $method"))
