@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
 import at.forsyte.apalache.infra.passes.FineTuningParser
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.infra.passes.options.Algorithm.Remote
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
@@ -22,6 +23,7 @@ import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.{Algorithm, OptionGroup}
+import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -38,6 +40,17 @@ class BoundedCheckerPassImpl @Inject() (
     extends BoundedCheckerPass with LazyLogging {
 
   override def name: String = "BoundedChecker"
+
+  /**
+   * The model checker context that is saved for the remote symbolic execution. This context is not used by the standard
+   * `check` command. It is used by the JSON-RPC server to access the current model checking context.
+   */
+  var modelCheckerContext: Option[ModelCheckerContext[IncrementalExecutionContextSnapshot]] = None
+
+  /**
+   * The rewriter that is used for the remote symbolic execution.
+   */
+  var rewriter: Option[SymbStateRewriterImpl] = None
 
   override def execute(module: TlaModule): PassResult = {
     LanguageWatchdog(KeraLanguagePred()).check(module)
@@ -90,6 +103,7 @@ class BoundedCheckerPassImpl @Inject() (
     val result = options.checker.algo match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
       case Algorithm.Offline     => runOfflineChecker(params, input, tuning, solverConfig)
+      case Remote                => prepareRemoteContext(params, input, tuning, solverConfig)
     }
 
     if (result.isOk) {
@@ -133,8 +147,8 @@ class BoundedCheckerPassImpl @Inject() (
     val filteredTrex =
       new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val checker =
-      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
+    val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
+    val checker = new SeqModelChecker[SnapshotT](ctx)
     val outcome = checker.run()
     rewriter.dispose()
     logger.info(s"The outcome is: " + outcome)
@@ -168,94 +182,42 @@ class BoundedCheckerPassImpl @Inject() (
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val checker =
-      new SeqModelChecker[SnapshotT](params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
+    val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
+    val checker = new SeqModelChecker[SnapshotT](ctx)
     val outcome = checker.run()
     executorContext.dispose()
     logger.info(s"The outcome is: " + outcome)
     outcome
   }
 
-  /*
-  TODO: the following code will be uncommented when the paralel checker is transferred from ik/multicore
+  private def prepareRemoteContext(
+      params: ModelCheckerParams,
+      input: CheckerInput,
+      tuning: Map[String, String],
+      solverConfig: SolverConfig): Checker.CheckerResult = {
+    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
 
-  private def runParallelChecker(params: ModelCheckerParams,
-                                 input: CheckerInput,
-                                 tuning: Map[String, String],
-                                 nworkers: Int): Boolean = {
-    val sharedState = new SharedSearchState(nworkers)
-
-    def createCheckerThread(rank: Int): Thread = {
-      new Thread {
-        override def run(): Unit = {
-          try {
-            val checker = createParallelWorker(rank, sharedState, params, input, tuning)
-            val outcome = checker.run()
-            logger.info(s"Worker $rank: The outcome is: $outcome")
-          } catch {
-            case e: Exception if exceptionAdapter.toMessage.isDefinedAt(e) =>
-              val message = exceptionAdapter.toMessage(e)
-              logger.info(s"Worker $rank: The outcome is: Error")
-              logger.error("Worker %s: %s".format(rank, message))
-
-            case e: Throwable =>
-              logger.error(s"Worker $rank has thrown an exception", e)
-              System.exit(EXITCODE_ON_EXCEPTION)
-          }
-        }
-      }
-    }
-
-    // run the threads and join
-    val workerThreads = 1.to(nworkers) map createCheckerThread
-    val shutdownHook = createShutdownHook(workerThreads)
-    Runtime.getRuntime.addShutdownHook(shutdownHook)    // shutdown the threads, if needed
-    workerThreads.foreach(_.start())                    // start the workers
-    workerThreads.foreach(_.join())                     // wait for their termination
-    Runtime.getRuntime.removeShutdownHook(shutdownHook) // no need for the hook anymore
-
-    sharedState.workerStates.values.forall(_ == BugFreeState())
-  }
-
-  private def createParallelWorker(rank: Int,
-                                 sharedState: SharedSearchState,
-                                 params: ModelCheckerParams,
-                                 input: CheckerInput,
-                                 tuning: Map[String, String]): ParModelChecker = {
-    val profile = options.getOrElse("smt", "prof", false)
-    val solverContext: RecordingZ3SolverContext = RecordingZ3SolverContext(None, params.debug, profile)
-
-    val typeFinder = new TrivialTypeFinder
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
-      case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, typeFinder, exprGradeStore)
-      case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, typeFinder, exprGradeStore)
-      case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, typeFinder, exprGradeStore)
-      case oddEncoding           => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
+      case SMTEncoding.OOPSLA19 =>
+        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, None)
+      case SMTEncoding.Arrays =>
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, None)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore, None)
+      case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
-    rewriter.formulaHintsStore = hintsStore
+
     rewriter.config = RewriterConfig(tuning)
 
-    val executorContext = new OfflineExecutorContext(rewriter)
-    val trex = new TransitionExecutorImpl[OfflineSnapshot](params.consts, params.vars, executorContext)
-    val filteredTrex = new FilteredTransitionExecutor[OfflineSnapshot](params.transitionFilter, params.invFilter, trex)
-    val context = new WorkerContext(rank, sharedState.searchRoot, filteredTrex)
+    type SnapshotT = IncrementalExecutionContextSnapshot
+    val executorContext = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
 
-    new ParModelChecker(input, params, sharedState, context)
+    this.modelCheckerContext = Some(ModelCheckerContext(params, input, trex, Seq(DumpFilesModelCheckerListener)))
+    this.rewriter = Some(rewriter)
+    logger.info(s"The outcome is: prepared for remote symbolic execution")
+    NoError()
   }
-
-  private def createShutdownHook(workerThreads: Seq[Thread]): Thread = {
-    new Thread() {
-      override def run(): Unit = {
-        logger.error("Shutdown hook activated. Interrupting the workers and joining them for %d ms."
-          .format(JOIN_TIMEOUT_MS))
-        workerThreads.foreach(_.interrupt())
-        workerThreads.foreach(_.join(JOIN_TIMEOUT_MS))
-        logger.error("Forced shutdown")
-        Runtime.getRuntime.halt(EXITCODE_ON_SHUTDOWN)
-      }
-    }
-  }
-   */
 
   override def dependencies = Set(ModuleProperty.Analyzed)
 

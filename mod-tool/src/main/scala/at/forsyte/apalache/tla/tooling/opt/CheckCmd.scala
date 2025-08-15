@@ -34,11 +34,11 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   // Parses the algo option
   implicit val algoRead: Read[Algorithm] =
-    Read.reads[Algorithm](s"a checking algorithm, either ${Algorithm.Incremental} or ${Algorithm.Offline}")(
+    Read.reads[Algorithm](s"a checking algorithm: ${Algorithm.Incremental}, ${Algorithm.Offline}, or ${Algorithm.Remote}")(
         Algorithm.ofString)
 
   var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
-      description = "the search algorithm: offline, incremental, parallel (soon), default: incremental")
+      description = "the search algorithm: offline, incremental, remote (used by fuzzer), default: incremental")
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
       description =
         s"the SMT encoding: ${SMTEncoding.OOPSLA19}, ${SMTEncoding.Arrays} (experimental), ${SMTEncoding.FunArrays} (experimental), default: ${SMTEncoding.OOPSLA19} (overrides envvar SMT_ENCODING)")

@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
-import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
-import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
+import at.forsyte.apalache.tla.bmcmt.search.SearchState
+import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
@@ -23,34 +23,30 @@ import scala.util.Random
  * @author
  *   Igor Konnov
  */
-class SeqModelChecker[ExecutorContextT](
-    val params: ModelCheckerParams,
-    val checkerInput: CheckerInput,
-    trexImpl: TransitionExecutor[ExecutorContextT],
-    val listeners: Seq[ModelCheckerListener] = Nil)
+class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorContextT])
     extends Checker with LazyLogging {
 
   type SnapshotT = ExecutionSnapshot[ExecutorContextT]
 
   private val trex: ConstrainedTransitionExecutor[ExecutorContextT] =
-    new ConstrainedTransitionExecutor[ExecutorContextT](trexImpl)
+    new ConstrainedTransitionExecutor[ExecutorContextT](ctx.trex)
 
-  private val notInvariants: Seq[TlaEx] = checkerInput.verificationConditions.stateInvariantsAndNegations.map(_._2)
+  private val notInvariants: Seq[TlaEx] = ctx.checkerInput.verificationConditions.stateInvariantsAndNegations.map(_._2)
   private val notActionInvariants: Seq[TlaEx] =
-    checkerInput.verificationConditions.actionInvariantsAndNegations.map(_._2)
+    ctx.checkerInput.verificationConditions.actionInvariantsAndNegations.map(_._2)
   private val notTraceInvariants: Seq[TlaOperDecl] =
-    checkerInput.verificationConditions.traceInvariantsAndNegations.map(_._2)
+    ctx.checkerInput.verificationConditions.traceInvariantsAndNegations.map(_._2)
 
   // the number of found errors, up to params.maxErrors
-  private val searchState: SearchState = new SearchState(params)
+  private val searchState: SearchState = new SearchState(ctx.params)
 
   override def run(): CheckerResult = {
     // initialize CONSTANTS
-    if (checkerInput.constInitPrimed.isDefined) {
-      trex.initializeConstants(checkerInput.constInitPrimed.get)
+    if (ctx.checkerInput.constInitPrimed.isDefined) {
+      trex.initializeConstants(ctx.checkerInput.constInitPrimed.get)
     }
     // propagate constraints from ASSUME(...)
-    checkerInput.rootModule.assumeDeclarations.foreach { d =>
+    ctx.checkerInput.rootModule.assumeDeclarations.foreach { d =>
       trex.assertState(d.body)
     }
     val constSnapshot = trex.snapshot()
@@ -59,14 +55,14 @@ class SeqModelChecker[ExecutorContextT](
     // If the error budget (set with `params.nMaxErrors`) is overrun, terminate immediately.
     while (searchState.canContinue) {
       // apply the Init predicate
-      makeStep(isNext = false, checkerInput.initTransitions)
+      makeStep(isNext = false, ctx.checkerInput.initTransitions)
       // unroll the transition relation
-      while (searchState.canContinue && trex.stepNo <= params.stepsBound) {
+      while (searchState.canContinue && trex.stepNo <= ctx.params.stepsBound) {
         // apply the Next predicate
-        makeStep(isNext = true, checkerInput.nextTransitions)
+        makeStep(isNext = true, ctx.checkerInput.nextTransitions)
       }
 
-      if (params.isRandomSimulation && params.saveRuns) {
+      if (ctx.params.isRandomSimulation && ctx.params.saveRuns) {
         outputExampleRun()
       }
 
@@ -81,7 +77,7 @@ class SeqModelChecker[ExecutorContextT](
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
-    } else if (!params.isRandomSimulation && params.saveRuns) {
+    } else if (!ctx.params.isRandomSimulation && ctx.params.saveRuns) {
       // Output an example in the end of the search.
       outputExampleRun()
     }
@@ -94,9 +90,9 @@ class SeqModelChecker[ExecutorContextT](
    */
   private def outputExampleRun(): Unit = {
     logger.info("Constructing an example run")
-    trex.sat(params.timeoutSmtSec) match {
+    trex.sat(ctx.params.timeoutSmtSec) match {
       case Some(true) =>
-        listeners.foreach(_.onExample(checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft))
+        ctx.listeners.foreach(_.onExample(ctx.checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft))
       case Some(false) =>
         logger.warn("All executions are shorter than the provided bound")
       case None =>
@@ -115,7 +111,7 @@ class SeqModelChecker[ExecutorContextT](
   private def notifyOnError(
       counterexample: Counterexample,
       errorIndex: Int): Unit = {
-    listeners.foreach(_.onCounterexample(counterexample, errorIndex))
+    ctx.listeners.foreach(_.onCounterexample(counterexample, errorIndex))
   }
 
   private def makeStep(isNext: Boolean, transitions: Seq[TlaEx]): Unit = {
@@ -125,16 +121,16 @@ class SeqModelChecker[ExecutorContextT](
       return
     }
 
-    if (!params.discardDisabled && params.checkForDeadlocks) {
+    if (!ctx.params.discardDisabled && ctx.params.checkForDeadlocks) {
       // We do this check only if all transitions are unconditionally enabled.
       // Otherwise, we should have found it already.
       logger.info(f"Step ${trex.stepNo}: checking for deadlocks")
-      trex.sat(params.timeoutSmtSec) match {
+      trex.sat(ctx.params.timeoutSmtSec) match {
         case Some(true) => () // OK
 
         case Some(false) =>
           val counterexample = if (trex.sat(0).contains(true)) {
-            val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
+            val cx = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
             notifyOnError(cx, searchState.nFoundErrors)
             logger.error("Found a deadlock.")
             Some(cx)
@@ -154,7 +150,7 @@ class SeqModelChecker[ExecutorContextT](
       return
     }
 
-    if (params.invariantMode == InvariantMode.AfterJoin && isNext) {
+    if (ctx.params.invariantMode == InvariantMode.AfterJoin && isNext) {
       checkInvariants(trex.stepNo - 1, notActionInvariants, maybeActionInvariantNos, ActionInvariant)
       if (!searchState.canContinue) {
         return
@@ -165,7 +161,7 @@ class SeqModelChecker[ExecutorContextT](
     trex.nextState()
 
     // check the state invariants
-    if (params.invariantMode == InvariantMode.AfterJoin) {
+    if (ctx.params.invariantMode == InvariantMode.AfterJoin) {
       checkInvariants(trex.stepNo - 1, notInvariants, maybeInvariantNos, StateInvariant)
       if (!searchState.canContinue) {
         return
@@ -203,14 +199,14 @@ class SeqModelChecker[ExecutorContextT](
 
     // in case we do random simulation, shuffle the indices and stop at the first enabled transition
     val transitionIndices =
-      if (params.isRandomSimulation) Random.shuffle(transitions.indices.toList) else transitions.indices
+      if (ctx.params.isRandomSimulation) Random.shuffle(transitions.indices.toList) else transitions.indices
 
     // keep track of SMT timeouts
     var nTimeouts = 0
 
     for (no <- transitionIndices) {
       var snapshot: Option[SnapshotT] = None
-      if (params.discardDisabled) {
+      if (ctx.params.discardDisabled) {
         // save the context, unless the transitions are not checked
         snapshot = Some(trex.snapshot())
       }
@@ -219,20 +215,20 @@ class SeqModelChecker[ExecutorContextT](
         val transitionInvs = addMaybeInvariants(no)
         val transitionActionInvs = addMaybeActionInvariants(no)
 
-        if (params.discardDisabled) {
+        if (ctx.params.discardDisabled) {
           // check, whether the transition is enabled in SMT
           logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
           val assumeSnapshot = trex.snapshot()
           // assume that the transition is fired and check, whether the constraints are satisfiable
           trex.assumeTransition(no)
-          trex.sat(params.timeoutSmtSec) match {
+          trex.sat(ctx.params.timeoutSmtSec) match {
             case Some(true) =>
               logger.debug(s"Step ${trex.stepNo}: Transition #$no is enabled")
               // recover to the state before the transition was fired
               snapshot = Some(assumeSnapshot)
 
               // keep the transition and collect the invariants
-              if (params.invariantMode == InvariantMode.BeforeJoin) {
+              if (ctx.params.invariantMode == InvariantMode.BeforeJoin) {
                 // check the action invariants, unless we process Init
                 if (isNext) {
                   checkInvariants(trex.stepNo - 1, notActionInvariants, transitionActionInvs, ActionInvariant)
@@ -251,7 +247,7 @@ class SeqModelChecker[ExecutorContextT](
                 }
               }
 
-              if (params.isRandomSimulation) {
+              if (ctx.params.isRandomSimulation) {
                 // When random simulation is enabled, we need only one enabled transition.
                 // recover from the snapshot
                 trex.recover(snapshot.get)
@@ -266,7 +262,7 @@ class SeqModelChecker[ExecutorContextT](
               logger.info(s"Step ${trex.stepNo}: Transition #$no is disabled")
 
             case None =>
-              if (params.isRandomSimulation) {
+              if (ctx.params.isRandomSimulation) {
                 logger.info(s"Step ${trex.stepNo}: Transition #$no => TIMEOUT. Transition ignored.")
                 nTimeouts += 1
               } else {
@@ -278,7 +274,7 @@ class SeqModelChecker[ExecutorContextT](
           trex.recover(snapshot.get)
         } else {
           // Special case: when --discard-disabled=false, the transition has not been assumed
-          if (params.invariantMode == InvariantMode.BeforeJoin) {
+          if (ctx.params.invariantMode == InvariantMode.BeforeJoin) {
             checkInvariantsForPreparedTransition(isNext, no, transitionInvs, transitionActionInvs)
             if (!searchState.canContinue) {
               return (Set.empty, Set.empty)
@@ -289,7 +285,7 @@ class SeqModelChecker[ExecutorContextT](
     }
 
     if (trex.preparedTransitionNumbers.isEmpty) {
-      if (nTimeouts > 0 || !params.checkForDeadlocks) {
+      if (nTimeouts > 0 || !ctx.params.checkForDeadlocks) {
         // Either (1) there were timeouts, and we cannot claim to have found a deadlock,
         // or (2) the user does not care about deadlocks
         val msg = "All executions are shorter than the provided bound."
@@ -297,7 +293,7 @@ class SeqModelChecker[ExecutorContextT](
         searchState.onResult(ExecutionsTooShort())
       } else {
         val counterexample = if (trex.sat(0).contains(true)) {
-          val cx = Counterexample(checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
+          val cx = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
           notifyOnError(cx, searchState.nFoundErrors)
           logger.error("Found a deadlock.")
           Some(cx)
@@ -362,9 +358,9 @@ class SeqModelChecker[ExecutorContextT](
           // check the invariant
           trex.assertState(notInv)
 
-          trex.sat(params.timeoutSmtSec) match {
+          trex.sat(ctx.params.timeoutSmtSec) match {
             case Some(true) =>
-              val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), notInv)
+              val counterexample = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), notInv)
               searchState.onResult(Error(1, Seq(counterexample)))
               notifyOnError(counterexample, searchState.nFoundErrors)
               logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} violated.")
@@ -410,9 +406,9 @@ class SeqModelChecker[ExecutorContextT](
         val traceInvApp = applyTraceInv(notInv)
         trex.assertState(traceInvApp)
 
-        trex.sat(params.timeoutSmtSec) match {
+        trex.sat(ctx.params.timeoutSmtSec) match {
           case Some(true) =>
-            val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
+            val counterexample = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
             searchState.onResult(Error(1, Seq(counterexample)))
             notifyOnError(counterexample, searchState.nFoundErrors)
             val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)
@@ -439,7 +435,7 @@ class SeqModelChecker[ExecutorContextT](
   private def applyTraceInv(notTraceInv: TlaOperDecl): TlaEx = {
     // the path by transition executor includes the binding before Init, so we apply `tail` to exclude it
     val path = trex.execution.path.map(_._1).tail
-    val stateType = RecT1(checkerInput.rootModule.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
+    val stateType = RecT1(ctx.checkerInput.rootModule.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
 
     // convert a variable binding to a record
     def mkRecord(b: Binding): BuilderT = {
@@ -494,7 +490,7 @@ class SeqModelChecker[ExecutorContextT](
       OperEx(TlaBoolOper.not, OperEx(TlaOper.eq, modelView, view)(boolTag))(boolTag)
     }
 
-    checkerInput.verificationConditions.stateView.foreach { view =>
+    ctx.checkerInput.verificationConditions.stateView.foreach { view =>
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables

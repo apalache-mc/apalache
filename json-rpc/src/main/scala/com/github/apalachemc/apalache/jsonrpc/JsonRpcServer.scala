@@ -1,10 +1,13 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.infra.passes.options.Algorithm.Remote
 import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
-import at.forsyte.apalache.infra.passes.options.{Config, OptionGroup, SourceOption}
+import at.forsyte.apalache.infra.passes.options.OptionGroup.{HasCheckerPreds, WithCheckerPreds}
+import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
+import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.tla.passes.imp.ParserModule
+import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.typesafe.scalalogging.LazyLogging
@@ -13,6 +16,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import java.util.concurrent.locks.ReadWriteLock
+import scala.collection.immutable
 import scala.util.{Random, Try}
 
 /**
@@ -54,8 +58,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   // a pRNG to generate session IDs
   private val random = new Random(20250731)
   // Guice modules instantiated for each session.
-  // Currently, just the parser module. In the future, we need something similar to the CheckerModule.
-  private var sessions: Map[String, ParserModule] = Map.empty
+  // We instantiate a CheckerModule for each session. Instead of doing model checking,
+  // it just prepares ModelCheckerContext in the `remote` mode.
+  private var sessions: Map[String, CheckerModule] = Map.empty
 
   /**
    * Loads a specification based on the provided parameters.
@@ -68,20 +73,16 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     val sessionId = random.nextInt().toHexString
     rwLock.writeLock().unlock()
     logger.info(s"Session $sessionId: Loading specification with ${params.sources.length} sources.")
-    // pack the sources into the config
-    val source = SourceOption.StringSource(params.sources.head, params.sources.tail)
-    val input = config.get.input.copy(source = Some(source))
-    val configWithInput = config.get.copy(input = input, output = config.get.output.copy(output = None))
-    val options = OptionGroup.WithIO(configWithInput).get
+    val options = createConfigFromParams(params).get
     // call the parser
-    val parser = new ParserModule(options)
-    PassChainExecutor.run(parser) match {
+    val checker = new CheckerModule(options)
+    PassChainExecutor.run(checker) match {
       case Left(failure) =>
         return Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))
       case Right(_) =>
         // Successfully loaded the spec, we can access the module later
         rwLock.writeLock().lock()
-        sessions = sessions + (sessionId -> parser)
+        sessions = sessions + (sessionId -> checker)
         rwLock.writeLock().unlock()
     }
     Right(LoadSpecResult(sessionId))
@@ -107,6 +108,39 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     rwLock.writeLock().unlock()
     result
+  }
+
+  /**
+   * Produce a configuration from the parameters of the loadSpec method.
+   * @param params
+   *   specification parameters
+   * @return
+   *   the configuration for spawning a CheckerModule
+   */
+  private def createConfigFromParams(params: LoadSpecParams): Try[HasCheckerPreds] = {
+    // pack the sources into the config
+    val source = SourceOption.StringSource(params.sources.head, params.sources.tail)
+    val input = config.get.input.copy(source = Some(source))
+    val configWithInput = config.get.copy(input = input, output = config.get.output.copy(output = None))
+    WithCheckerPreds(configWithInput)
+      .map(cfg => {
+        // We do not need to set the checker options, as we do not run the model checker.
+        // We just prepare the context for the remote mode.
+        // Most of the options are irrelevant, as the remote algorithm does its own exploration.
+        cfg.copy(
+          checker = cfg.checker.copy(
+            algo = Remote,
+            smtEncoding = OOPSLA19,
+            // TODO: propagate the tuning options from params
+            tuning = immutable.Map[String, String](),
+            discardDisabled = false,
+            noDeadlocks = true,
+            maxError = 1,
+            // TODO: propagate from params
+            timeoutSmtSec = 0
+          )
+        )
+      })
   }
 }
 
