@@ -34,7 +34,8 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   // Parses the algo option
   implicit val algoRead: Read[Algorithm] =
-    Read.reads[Algorithm](s"a checking algorithm: ${Algorithm.Incremental}, ${Algorithm.Offline}, or ${Algorithm.Remote}")(
+    Read.reads[Algorithm](
+        s"a checking algorithm: ${Algorithm.Incremental}, ${Algorithm.Offline}, or ${Algorithm.Remote}")(
         Algorithm.ofString)
 
   var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,

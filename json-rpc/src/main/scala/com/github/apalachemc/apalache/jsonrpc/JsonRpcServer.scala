@@ -128,17 +128,17 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // We just prepare the context for the remote mode.
         // Most of the options are irrelevant, as the remote algorithm does its own exploration.
         cfg.copy(
-          checker = cfg.checker.copy(
-            algo = Remote,
-            smtEncoding = OOPSLA19,
-            // TODO: propagate the tuning options from params
-            tuning = immutable.Map[String, String](),
-            discardDisabled = false,
-            noDeadlocks = true,
-            maxError = 1,
-            // TODO: propagate from params
-            timeoutSmtSec = 0
-          )
+            checker = cfg.checker.copy(
+                algo = Remote,
+                smtEncoding = OOPSLA19,
+                // TODO: propagate the tuning options from params
+                tuning = immutable.Map[String, String](),
+                discardDisabled = false,
+                noDeadlocks = true,
+                maxError = 1,
+                // TODO: propagate from params
+                timeoutSmtSec = 0,
+            )
         )
       })
   }

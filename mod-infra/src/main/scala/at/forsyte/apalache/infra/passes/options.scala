@@ -408,7 +408,7 @@ object Algorithm {
   val ofString: String => Algorithm = {
     case "incremental" => Incremental
     case "offline"     => Offline
-    case "remote"     => Remote
+    case "remote"      => Remote
     case invalid       => throw new IllegalArgumentException(s"Unexpected checker algorithm type $invalid")
   }
 }
