@@ -30,8 +30,7 @@ class Pass2 extends ParametrizedPass(true, Set(ModuleProperty.Inlined), Set())
 class Pass3 extends ParametrizedPass(true, Set(), Set())
 class Pass4 extends ParametrizedPass(false, Set(), Set())
 
-class DummyExceptionAdapter extends ExceptionAdapter {
-}
+class DummyExceptionAdapter extends ExceptionAdapter {}
 
 /**
  * A dummy tool module that allows to test the pass chain executor.

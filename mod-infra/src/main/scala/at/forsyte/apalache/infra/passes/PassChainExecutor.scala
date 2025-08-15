@@ -21,6 +21,7 @@ import at.forsyte.apalache.infra.AdaptedException
  */
 class PassChainExecutor[O <: OptionGroup](toolModule: ToolModule[O]) extends LazyLogging {
   type PassResultModule = Either[Pass.PassFailure, TlaModule with TlaModuleProperties]
+
   /**
    * Dependency injector that can be used to extract the constructed objects.
    */

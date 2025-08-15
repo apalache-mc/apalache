@@ -118,12 +118,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     val checkerModule = passChainExecutor.injector.getInstance(classOf[BoundedCheckerPassImpl])
     val checkerInput = checkerModule.modelCheckerContext.get.checkerInput
     val specParameters = SpecParameters(
-      nInitTransitions = checkerInput.initTransitions.size,
-      nNextTransitions = checkerInput.nextTransitions.size,
-      nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
-      nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
-      nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
-      hasView = checkerInput.verificationConditions.stateView.nonEmpty
+        nInitTransitions = checkerInput.initTransitions.size,
+        nNextTransitions = checkerInput.nextTransitions.size,
+        nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
+        nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
+        nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
+        hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
 
     Right(LoadSpecResult(sessionId, specParameters))

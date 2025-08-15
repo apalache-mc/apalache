@@ -12,7 +12,10 @@ package at.forsyte.apalache.shai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.shai.v1.transExplorer.{ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, TransExplorerError, TransExplorerErrorType, ZioTransExplorer}
+import at.forsyte.apalache.shai.v1.transExplorer.{
+  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, TransExplorerError,
+  TransExplorerErrorType, ZioTransExplorer,
+}
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
