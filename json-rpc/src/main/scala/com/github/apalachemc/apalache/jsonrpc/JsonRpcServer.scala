@@ -295,7 +295,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @param params
    *   the parameters object that contains the session ID
    * @return
-   * either an error or [[NextStepResult]]
+   *   either an error or [[NextStepResult]]
    */
   def nextStep(params: NextStepParams): Either[ServiceError, NextStepResult] = {
     val sessionId = params.sessionId

@@ -13,7 +13,7 @@ import at.forsyte.apalache.infra.AdaptedException
  *
  * @throws AdaptedException
  *   if any exceptions are caught by the configured [[ExceptionAdapter]]
- * @throws MissingTransformationError
+ * @throws at.forsyte.apalache.tla.lir.MissingTransformationError
  *   if passes are executed in an order that causes a passes to be executed without its pass dependencies to be met
  *
  * @author
