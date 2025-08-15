@@ -84,7 +84,7 @@ case class ServiceError(code: Int, message: String)
 class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
   // the rwLock to prevent concurrent
   private val rwLock: ReadWriteLock = new java.util.concurrent.locks.ReentrantReadWriteLock()
-  // a pRNG to generate session IDs
+  // a pRNG to generate session IDs, we keep it constant to make the tests deterministic
   private val random = new Random(20250731)
   // Guice injector instantiated for each session. This injector contains objects that are
   // configured via CheckerModule. Instead of doing model checking, it just prepares
@@ -116,14 +116,27 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
     // get the singleton instance of BoundedModelCheckerPass from checker
     val checkerModule = passChainExecutor.injector.getInstance(classOf[BoundedCheckerPassImpl])
-    val checkerInput = checkerModule.modelCheckerContext.get.checkerInput
+    val checkerContext = checkerModule.modelCheckerContext.get
+    val checkerInput = checkerContext.checkerInput
+    // initialize CONSTANTS
+    if (checkerContext.checkerInput.constInitPrimed.isDefined) {
+      checkerContext.trex.initializeConstants(checkerContext.checkerInput.constInitPrimed.get)
+    }
+    // propagate constraints from ASSUME(...)
+    checkerContext.checkerInput.rootModule.assumeDeclarations.foreach { d =>
+      checkerContext.trex.assertState(d.body)
+    }
+    // save the snapshot of the checker context
+    checkerContext.trex.snapshot()
+
+    // produce the specification parameters for remote exploration
     val specParameters = SpecParameters(
-        nInitTransitions = checkerInput.initTransitions.size,
-        nNextTransitions = checkerInput.nextTransitions.size,
-        nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
-        nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
-        nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
-        hasView = checkerInput.verificationConditions.stateView.nonEmpty,
+      nInitTransitions = checkerInput.initTransitions.size,
+      nNextTransitions = checkerInput.nextTransitions.size,
+      nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
+      nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
+      nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
+      hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
 
     Right(LoadSpecResult(sessionId, specParameters))
@@ -172,12 +185,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             checker = cfg.checker.copy(
                 algo = Remote,
                 smtEncoding = OOPSLA19,
-                // TODO: propagate the tuning options from params
+                // TODO: propagate the tuning options from LoadSpecParams
                 tuning = immutable.Map[String, String](),
                 discardDisabled = false,
                 noDeadlocks = true,
                 maxError = 1,
-                // TODO: propagate from params
+                // TODO: propagate from LoadSpecParams
                 timeoutSmtSec = 0,
             )
         )
