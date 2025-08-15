@@ -61,9 +61,31 @@ case class SpecParameters(
     hasView: Boolean)
 
 /**
+ * Parameters for preparing a symbolic transition in the solver context.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param transitionId
+ *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
+ *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
+ */
+case class PrepareTransitionParams(sessionId: String, transitionId: Int)
+
+/**
+ * The result of preparing a symbolic transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param transitionId
+ *   the number of the prepared transition
+ * @param enabled
+ *   whether the transition is enabled for some state that is reachable via the prepared symbolic path
+ */
+case class PrepareTransitionResult(sessionId: String, transitionId: Int, enabled: Boolean)
+    extends ExplorationServiceResult
+
+/**
  * The result of disposing a specification.
  * @param sessionId
- *   the new session ID
+ *   the ID of the previously loaded specification
  */
 case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
 
@@ -97,7 +119,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    *   parsed loading parameters
    * @return
    */
-  def loadSpec(params: LoadSpecParams): Either[ServiceError, ExplorationServiceResult] = {
+  def loadSpec(params: LoadSpecParams): Either[ServiceError, LoadSpecResult] = {
     rwLock.writeLock().lock()
     val sessionId = random.nextInt().toHexString
     rwLock.writeLock().unlock()
@@ -131,13 +153,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     // produce the specification parameters for remote exploration
     val specParameters = SpecParameters(
-      nInitTransitions = checkerInput.initTransitions.size,
-      nNextTransitions = checkerInput.nextTransitions.size,
-      nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
-      nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
-      nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
-      hasView = checkerInput.verificationConditions.stateView.nonEmpty,
+        nInitTransitions = checkerInput.initTransitions.size,
+        nNextTransitions = checkerInput.nextTransitions.size,
+        nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
+        nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
+        nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
+        hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
+
+    logger.info(s"Session $sessionId: Specification ready.")
 
     Right(LoadSpecResult(sessionId, specParameters))
   }
@@ -147,14 +171,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @param params
    *   the parameters object that contains the session ID
    * @return
+   *   either an error or [[DisposeSpecResult]]
    */
-  def disposeSpec(params: DisposeSpecParams): Either[ServiceError, ExplorationServiceResult] = {
+  def disposeSpec(params: DisposeSpecParams): Either[ServiceError, DisposeSpecResult] = {
     rwLock.writeLock().lock()
     val result =
       sessions.get(params.sessionId) match {
         case Some(_) =>
           sessions -= params.sessionId
-          logger.info(s"Session ${params.sessionId} disposed successfully.")
+          logger.info(s"Session ${params.sessionId}: Disposed.")
           Right(DisposeSpecResult(params.sessionId))
         case None =>
           Left(ServiceError(-32602, s"Session not found: ${params.sessionId}"))
@@ -162,6 +187,55 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     rwLock.writeLock().unlock()
     result
+  }
+
+  /**
+   * Prepare a symbolic transition in the solver context.
+   * @param params
+   *   the parameters object that contains the session ID and the transition ID
+   * @return
+   *   either an error or [[PrepareTransitionResult]]
+   */
+  def prepareTransition(params: PrepareTransitionParams): Either[ServiceError, PrepareTransitionResult] = {
+    val transitionId = params.transitionId
+    val sessionId = params.sessionId
+    // validate the input parameters under the global lock
+    rwLock.readLock().lock()
+    val validationResult = sessions.get(sessionId) match {
+      case Some(injector) =>
+        // get the checker context from the injector
+        val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+        val checkerContext = checkerModule.modelCheckerContext.get
+        // prepare the transition
+        val stepNo = checkerContext.trex.stepNo
+        val transitions = if (stepNo == 0) {
+          checkerContext.checkerInput.initTransitions
+        } else {
+          checkerContext.checkerInput.nextTransitions
+        }
+        if (transitionId < 0 || transitionId >= transitions.size) {
+          Left(ServiceError(-32602, s"Invalid transition ID: ${transitionId} not in [0, $transitions.size)"))
+        } else {
+          Right((checkerContext, transitions))
+        }
+
+      case None =>
+        Left(ServiceError(-32602, s"Session not found: $sessionId"))
+    }
+    rwLock.readLock().unlock()
+
+    // Prepare the transition. Make sure that we do not update the SMT context concurrently.
+    validationResult
+      .map {
+        case (checkerContext, transitions) => {
+          checkerContext.synchronized {
+            val isEnabled = checkerContext.trex.prepareTransition(transitionId, transitions(transitionId))
+            val stepNo = checkerContext.trex.stepNo
+            logger.info(s"Session $sessionId: Prepared transition $transitionId at step $stepNo, enabled = $isEnabled.")
+            PrepareTransitionResult(sessionId, transitionId, enabled = isEnabled)
+          }
+        }
+      }
   }
 
   /**
@@ -236,6 +310,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
               .parseDisposeSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
                   serviceParams => service.disposeSpec(serviceParams))
+
+          case "prepareTransition" =>
+            new JsonParameterParser(mapper)
+              .parsePrepareTransition(paramsNode)
+              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+                  serviceParams => service.prepareTransition(serviceParams))
 
           case _ =>
             Left(ServiceError(-32601, s"Method not found: $method"))

@@ -54,6 +54,13 @@ class JsonParameterParser(mapper: ObjectMapper) {
     }
   }
 
+  /**
+   * Parses the parameters for disposing a session in the JSON-RPC server.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a LoadSpecParams instance containing the parsed sources.
+   */
   def parseDisposeSpec(params: TreeNode): Either[String, DisposeSpecParams] = {
     // Convert DisposeSpecParams to class
     try {
@@ -65,6 +72,30 @@ class JsonParameterParser(mapper: ObjectMapper) {
     } catch {
       case e: Exception =>
         Left(s"Parse error in disposeSpec: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for preparing a transition in the JSON-RPC server.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a LoadSpecParams instance containing the parsed sources.
+   */
+  def parsePrepareTransition(params: TreeNode): Either[String, PrepareTransitionParams] = {
+    // Convert PrepareTransitionParams to class
+    try {
+      val prepareParams = mapper.treeToValue(params, classOf[PrepareTransitionParams])
+      if (prepareParams.sessionId.isEmpty) {
+        return Left("prepareTransition parameters must contain a non-empty sessionId.")
+      }
+      if (prepareParams.transitionId < 0) {
+        return Left("prepareTransition parameters must contain a non-negative transitionId.")
+      }
+      Right(prepareParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in prepareTransition: ${e.getMessage}")
     }
   }
 }
