@@ -52,7 +52,7 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     val executionLength = getLenFromFile(options.input.source) - 1
 
     val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = executionLength))
-    PassChainExecutor.run(new TraceeModule(lenAdjustedOpt)) match {
+    PassChainExecutor(new TraceeModule(lenAdjustedOpt)).run() match {
       case Right(_)      => Right(s"Trace successfully generated.")
       case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
     }
