@@ -15,7 +15,9 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       |  \* @type: Int;
       |  x
       |Init == x = 0
-      |Next == x' = x + 1 \/ x' = x - 1
+      |Next ==
+      |  \/ x < 3  /\ x' = x + 1
+      |  \/ x > -3 /\ x' = x - 1
       |=====================
       """.stripMargin
 
@@ -58,6 +60,78 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         fail(s"Unexpected result: $result")
       case Left(error) =>
         fail(s"Failed to load specification for disposal: $error")
+    }
+  }
+
+  test("assume transition 0") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
+    service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0)) match {
+      case Right(AssumeTransitionResult(newSessionId, transitionId, isEnabled)) =>
+        assert(newSessionId == specResult.sessionId, "Session ID should remain the same after assuming transition")
+        assert(transitionId == 0, "Transition ID should match the assumed transition")
+        assert(isEnabled, "Transition should be enabled after assumption")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to assume transition: $error")
+    }
+  }
+
+  test("next step") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
+    assert(service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0)).isRight,
+        "Assuming transition 0 should succeed")
+    service.nextStep(NextStepParams(sessionId = specResult.sessionId)) match {
+      case Right(NextStepResult(newSessionId, newStepNo)) =>
+        assert(newSessionId == specResult.sessionId, "Session ID should remain the same after next step")
+        assert(newStepNo == 1, "Step number should be 1 after the first step")
+      case Left(error) =>
+        fail(s"Failed to proceed to the next step: $error")
+    }
+  }
+
+  test("sequence 0-0-0-0-0") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
+    val sessionId = specResult.sessionId
+    val params = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    for (_ <- 0 until 4) {
+      assert(service.assumeTransition(params).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    service.assumeTransition(params) match {
+      case Right(AssumeTransitionResult(newSessionId, transitionId, isEnabled)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
+        assert(transitionId == 0, "Transition ID should match the assumed transition")
+        assert(!isEnabled, "Transition should be disabled")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to assume transition: $error")
+    }
+  }
+
+  test("sequence 0-0-0-1-1-0") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    val t1 = AssumeTransitionParams(sessionId = sessionId, transitionId = 1, checkEnabled = true)
+    for (_ <- 0 until 3) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    for (_ <- 0 until 2) {
+      assert(service.assumeTransition(t1).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    service.assumeTransition(t0) match {
+      case Right(AssumeTransitionResult(newSessionId, transitionId, isEnabled)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
+        assert(transitionId == 0, "Transition ID should match the assumed transition")
+        assert(isEnabled, "Transition should be enabled")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to assume transition: $error")
     }
   }
 }

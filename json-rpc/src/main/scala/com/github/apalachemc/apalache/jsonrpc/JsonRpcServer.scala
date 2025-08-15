@@ -43,8 +43,18 @@ sealed abstract class ExplorationServiceResult
 case class AssumeTransitionParams(
     sessionId: String,
     transitionId: Int,
-    checkEnabled: Boolean = true,
-    timeoutSec: Int = 0)
+    checkEnabled: Boolean,
+    timeoutSec: Int)
+
+object AssumeTransitionParams {
+  def apply(sessionId: String, transitionId: Int): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled = true, timeoutSec = 0)
+  }
+
+  def apply(sessionId: String, transitionId: Int, checkEnabled: Boolean): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled, timeoutSec = 0)
+  }
+}
 
 /**
  * The result of loading a specification.
@@ -96,7 +106,7 @@ case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
  * @param enabled
  *   whether the transition is enabled for some state that is reachable via the prepared symbolic path
  */
-case class PrepareTransitionResult(sessionId: String, transitionId: Int, enabled: Boolean)
+case class AssumeTransitionResult(sessionId: String, transitionId: Int, enabled: Boolean)
     extends ExplorationServiceResult
 
 /**
@@ -110,8 +120,10 @@ case class NextStepParams(sessionId: String)
  * The result of switching to the next step in symbolic path exploration.
  * @param sessionId
  *   the ID of the previously loaded specification
+ * @param newStepNo
+ *   the number of the new step
  */
-case class NextStepResult(sessionId: String) extends ExplorationServiceResult
+case class NextStepResult(sessionId: String, newStepNo: Int) extends ExplorationServiceResult
 
 /**
  * An error that can occur in the exploration service.
@@ -215,12 +227,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
   /**
    * Prepare a symbolic transition in the solver context.
+   *
    * @param params
    *   the parameters object that contains the session ID and the transition ID
    * @return
-   *   either an error or [[PrepareTransitionResult]]
+   *   either an error or [[AssumeTransitionResult]]
    */
-  def assumeTransition(params: AssumeTransitionParams): Either[ServiceError, PrepareTransitionResult] = {
+  def assumeTransition(params: AssumeTransitionParams): Either[ServiceError, AssumeTransitionResult] = {
     val transitionId = params.transitionId
     val sessionId = params.sessionId
     // validate the input parameters under the global lock
@@ -259,14 +272,14 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             val isEnabled = checkerContext.trex.prepareTransition(transitionId, actionExpr)
             logger.info(s"Session $sessionId: Prepared transition $transitionId at step $stepNo, enabled = $isEnabled.")
             if (!isEnabled) {
-              PrepareTransitionResult(sessionId, transitionId, enabled = false)
+              AssumeTransitionResult(sessionId, transitionId, enabled = false)
             } else {
               val snapshot = checkerContext.trex.snapshot()
               // assume that this transition takes place
               checkerContext.trex.assumeTransition(transitionId)
               if (!params.checkEnabled) {
                 // if we do not check satisfiability, we assume that the transition is enabled
-                PrepareTransitionResult(sessionId, transitionId, enabled = true)
+                AssumeTransitionResult(sessionId, transitionId, enabled = true)
               } else {
                 // check satisfiability
                 checkerContext.trex.sat(params.timeoutSec) match {
@@ -275,12 +288,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                     if (!isSat) {
                       checkerContext.trex.recover(snapshot)
                     }
-                    PrepareTransitionResult(sessionId, transitionId, enabled = isSat)
+                    AssumeTransitionResult(sessionId, transitionId, enabled = isSat)
                   case None =>
                     // in case of timeout or unknown, we assume that the transition is enabled
                     logger.warn(
                         s"Session $sessionId: Transition $transitionId is unknown or timed out. Assuming enabled.")
-                    PrepareTransitionResult(sessionId, transitionId, enabled = true)
+                    AssumeTransitionResult(sessionId, transitionId, enabled = true)
                 }
               }
             }
@@ -321,7 +334,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             checkerContext.trex.nextState()
             val stepNo = checkerContext.trex.stepNo
             logger.info(s"Session $sessionId: Next step $stepNo.")
-            NextStepResult(sessionId)
+            NextStepResult(sessionId, stepNo)
           }
         }
       }
