@@ -11,6 +11,7 @@ import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.google.inject.Injector
 import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.Server
@@ -85,10 +86,10 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   private val rwLock: ReadWriteLock = new java.util.concurrent.locks.ReentrantReadWriteLock()
   // a pRNG to generate session IDs
   private val random = new Random(20250731)
-  // Guice modules instantiated for each session.
-  // We instantiate a CheckerModule for each session. Instead of doing model checking,
-  // it just prepares ModelCheckerContext in the `remote` mode.
-  private var sessions: Map[String, CheckerModule] = Map.empty
+  // Guice injector instantiated for each session. This injector contains objects that are
+  // configured via CheckerModule. Instead of doing model checking, it just prepares
+  // ModelCheckerContext in the `remote` mode.
+  private var sessions: Map[String, Injector] = Map.empty
 
   /**
    * Loads a specification based on the provided parameters.
@@ -103,15 +104,14 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     logger.info(s"Session $sessionId: Loading specification with ${params.sources.length} sources.")
     val options = createConfigFromParams(params).get
     // call the parser
-    val checker = new CheckerModule(options)
-    val passChainExecutor = PassChainExecutor(checker)
+    val passChainExecutor = PassChainExecutor(new CheckerModule(options))
     passChainExecutor.run() match {
       case Left(failure) =>
         return Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))
       case Right(_) =>
         // Successfully loaded the spec, we can access the module later
         rwLock.writeLock().lock()
-        sessions = sessions + (sessionId -> checker)
+        sessions = sessions + (sessionId -> passChainExecutor.injector)
         rwLock.writeLock().unlock()
     }
     // get the singleton instance of BoundedModelCheckerPass from checker
