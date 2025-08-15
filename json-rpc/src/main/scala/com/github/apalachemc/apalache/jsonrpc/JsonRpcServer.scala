@@ -8,6 +8,7 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.typesafe.scalalogging.LazyLogging
@@ -28,8 +29,35 @@ sealed abstract class ExplorationServiceResult
  * The result of loading a specification.
  * @param sessionId
  *   the new session ID
+ * @param specParameters
+ *   the specification parameters that are needed for symbolic path exploration
  */
-case class LoadSpecResult(sessionId: String) extends ExplorationServiceResult
+case class LoadSpecResult(sessionId: String, specParameters: SpecParameters) extends ExplorationServiceResult
+
+/**
+ * Specification parameters that are needed for symbolic path exploration. These numbers may be different from what the
+ * user expects by reading the specification, as transitions and invariants are decomposed.
+ *
+ * @param nInitTransitions
+ *   the number of initial symbolic transitions
+ * @param nNextTransitions
+ *   the number of next symbolic transitions
+ * @param nStateInvariants
+ *   the number of state invariants
+ * @param nActionInvariants
+ *   the number of action invariants
+ * @param nTraceInvariants
+ *   the number of trace invariants
+ * @param hasView
+ *   whether a view predicate is present in the specification
+ */
+case class SpecParameters(
+    nInitTransitions: Int,
+    nNextTransitions: Int,
+    nStateInvariants: Int,
+    nActionInvariants: Int,
+    nTraceInvariants: Int,
+    hasView: Boolean)
 
 /**
  * The result of disposing a specification.
@@ -76,7 +104,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     val options = createConfigFromParams(params).get
     // call the parser
     val checker = new CheckerModule(options)
-    PassChainExecutor.run(checker) match {
+    val passChainExecutor = PassChainExecutor(checker)
+    passChainExecutor.run() match {
       case Left(failure) =>
         return Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))
       case Right(_) =>
@@ -85,7 +114,19 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         sessions = sessions + (sessionId -> checker)
         rwLock.writeLock().unlock()
     }
-    Right(LoadSpecResult(sessionId))
+    // get the singleton instance of BoundedModelCheckerPass from checker
+    val checkerModule = passChainExecutor.injector.getInstance(classOf[BoundedCheckerPassImpl])
+    val checkerInput = checkerModule.modelCheckerContext.get.checkerInput
+    val specParameters = SpecParameters(
+      nInitTransitions = checkerInput.initTransitions.size,
+      nNextTransitions = checkerInput.nextTransitions.size,
+      nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
+      nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
+      nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
+      hasView = checkerInput.verificationConditions.stateView.nonEmpty
+    )
+
+    Right(LoadSpecResult(sessionId, specParameters))
   }
 
   /**

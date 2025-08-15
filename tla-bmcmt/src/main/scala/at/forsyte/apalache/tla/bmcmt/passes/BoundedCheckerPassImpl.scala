@@ -20,7 +20,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 }
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.NormalizedNames
-import com.google.inject.Inject
+import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.infra.passes.options.{Algorithm, OptionGroup}
 import at.forsyte.apalache.tla.bmcmt.Checker.NoError
@@ -31,6 +31,7 @@ import at.forsyte.apalache.tla.bmcmt.Checker.NoError
  * @author
  *   Igor Konnov
  */
+@Singleton()
 class BoundedCheckerPassImpl @Inject() (
     options: OptionGroup.HasChecker,
     exprGradeStore: ExprGradeStore,

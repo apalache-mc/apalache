@@ -4,30 +4,37 @@ import at.forsyte.apalache.infra.passes.Pass.PassResult
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties}
 import at.forsyte.apalache.infra.passes.options.OptionGroup
-import com.google.inject.Guice
+import com.google.inject.{Guice, Injector}
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.AdaptedException
 
 /**
- * This object executes the passes defined by a [[ToolModule]]
+ * This object executes the passes defined by a [[ToolModule]]. The executor can be executed only once.
  *
  * @throws AdaptedException
  *   if any exceptions are caught by the configured [[ExceptionAdapter]]
- * @throws tla.lir.MissingTransformationError
+ * @throws MissingTransformationError
  *   if passes are executed in an order that causes a passes to be executed without its pass dependencies to be met
  *
  * @author
  *   Igor Konnov, Shon Feder
  */
-object PassChainExecutor extends LazyLogging {
-
+class PassChainExecutor[O <: OptionGroup](toolModule: ToolModule[O]) extends LazyLogging {
   type PassResultModule = Either[Pass.PassFailure, TlaModule with TlaModuleProperties]
+  /**
+   * Dependency injector that can be used to extract the constructed objects.
+   */
+  val injector: Injector = Guice.createInjector(toolModule)
+  // has the executor been executed?
+  private var isExecuted: Boolean = false
 
-  def run[O <: OptionGroup](toolModule: ToolModule[O]): PassResult = {
+  def run(): PassResult = {
+    if (isExecuted) {
+      throw new IllegalStateException("PassChainExecutor can only be executed once.")
+    }
+    isExecuted = true
 
-    val injector = Guice.createInjector(toolModule)
     val exceptionAdapter = injector.getInstance(classOf[ExceptionAdapter])
-
     val passes = toolModule.passes.zipWithIndex.map { case (p, i) => injector.getInstance(p).withNumber(i) }
 
     try {
@@ -40,8 +47,7 @@ object PassChainExecutor extends LazyLogging {
     }
   }
 
-  // Allow use elsewhere in the package for testing
-  private[passes] def runOnPasses(passes: Seq[Pass]): PassResultModule = passes.foldLeft(initialModule)(runPassOnModule)
+  private def runOnPasses(passes: Seq[Pass]): PassResultModule = passes.foldLeft(initialModule)(runPassOnModule)
 
   // The module used to initiate a pass execution
   private val initialModule: PassResultModule = Right(new TlaModule("empty", Seq()) with TlaModuleProperties)
@@ -75,5 +81,11 @@ object PassChainExecutor extends LazyLogging {
       throw new MissingTransformationError(
           s"${pass.name} cannot run for a module without the properties: ${missing.mkString(", ")}", module)
     }
+  }
+}
+
+object PassChainExecutor {
+  def apply(toolModule: ToolModule[_ <: OptionGroup]): PassChainExecutor[_ <: OptionGroup] = {
+    new PassChainExecutor(toolModule)
   }
 }

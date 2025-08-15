@@ -90,7 +90,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       }
 
       tlaModule <-
-        try { PassChainExecutor.run(toolModule).left.map(passErr) }
+        try { PassChainExecutor(toolModule).run().left.map(passErr) }
         catch {
           case err: Throwable => Left(throwableErr(err))
         }
