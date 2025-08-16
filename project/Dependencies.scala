@@ -52,8 +52,8 @@ object Dependencies {
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.1.0" % Provided
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2"
     val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.19.2"
-    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.25"
-    val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.25"
+    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.26"
+    val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.26"
   }
 
   // Test only depenendencies
