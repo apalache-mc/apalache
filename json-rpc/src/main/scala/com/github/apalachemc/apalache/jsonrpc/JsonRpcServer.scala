@@ -57,13 +57,34 @@ object AssumeTransitionParams {
 }
 
 /**
+ * The result of preparing a symbolic transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context after the transition has been assumed.
+ * @param transitionId
+ *   the number of the prepared transition
+ * @param enabled
+ *   whether the transition is enabled for some state that is reachable via the prepared symbolic path
+ */
+case class AssumeTransitionResult(
+    sessionId: String,
+    snapshotId: Int,
+    transitionId: Int,
+    enabled: Boolean)
+    extends ExplorationServiceResult
+
+/**
  * The result of loading a specification.
  * @param sessionId
  *   the new session ID
+ * @param snapshotId
+ *   the snapshot ID for recovering the context right after loading the specification.
  * @param specParameters
  *   the specification parameters that are needed for symbolic path exploration
  */
-case class LoadSpecResult(sessionId: String, specParameters: SpecParameters) extends ExplorationServiceResult
+case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: SpecParameters)
+    extends ExplorationServiceResult
 
 /**
  * Specification parameters that are needed for symbolic path exploration. These numbers may be different from what the
@@ -98,18 +119,6 @@ case class SpecParameters(
 case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
 
 /**
- * The result of preparing a symbolic transition.
- * @param sessionId
- *   the ID of the previously loaded specification
- * @param transitionId
- *   the number of the prepared transition
- * @param enabled
- *   whether the transition is enabled for some state that is reachable via the prepared symbolic path
- */
-case class AssumeTransitionResult(sessionId: String, transitionId: Int, enabled: Boolean)
-    extends ExplorationServiceResult
-
-/**
  * Parameters for switching to the next step in symbolic path exploration.
  * @param sessionId
  *   the ID of the previously loaded specification
@@ -120,10 +129,12 @@ case class NextStepParams(sessionId: String)
  * The result of switching to the next step in symbolic path exploration.
  * @param sessionId
  *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context right after loading the specification.
  * @param newStepNo
  *   the number of the new step
  */
-case class NextStepResult(sessionId: String, newStepNo: Int) extends ExplorationServiceResult
+case class NextStepResult(sessionId: String, snapshotId: Int, newStepNo: Int) extends ExplorationServiceResult
 
 /**
  * An error that can occur in the exploration service.
@@ -185,7 +196,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       checkerContext.trex.assertState(d.body)
     }
     // save the snapshot of the checker context
-    checkerContext.trex.snapshot()
+    val snapshot = checkerContext.trex.snapshot()
+    val snapshotId = snapshot.contextSnapshot.rewriterLevel
 
     // produce the specification parameters for remote exploration
     val specParameters = SpecParameters(
@@ -197,9 +209,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
 
-    logger.info(s"Session $sessionId: Specification ready.")
+    logger.info(s"Session=$sessionId Step=0 Snapshot=$snapshotId: Specification ready")
 
-    Right(LoadSpecResult(sessionId, specParameters))
+    Right(LoadSpecResult(sessionId, snapshotId, specParameters))
   }
 
   /**
@@ -213,7 +225,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     rwLock.writeLock().lock()
     val result =
       sessions.get(params.sessionId) match {
-        case Some(_) =>
+        case Some(injector) =>
+          // get the checker context from the injector
+          injector.synchronized {
+            val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+            checkerModule.modelCheckerContext.foreach(_.trex.dispose())
+          }
           sessions -= params.sessionId
           logger.info(s"Session ${params.sessionId}: Disposed.")
           Right(DisposeSpecResult(params.sessionId))
@@ -267,33 +284,45 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         case (checkerContext, actionExpr) => {
           checkerContext.synchronized {
             val stepNo = checkerContext.trex.stepNo
+            val snapshotBefore = checkerContext.trex.snapshot()
+            val snapshotBeforeId = snapshotBefore.contextSnapshot.rewriterLevel
             // Upload the transition into the SMT context.
             // It returns the result of a simple check that does not check satisfiability.
             val isEnabled = checkerContext.trex.prepareTransition(transitionId, actionExpr)
-            logger.info(s"Session $sessionId: Prepared transition $transitionId at step $stepNo, enabled = $isEnabled.")
+            logger.info(
+                s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: Prepared transition $transitionId, enabled=$isEnabled.")
             if (!isEnabled) {
-              AssumeTransitionResult(sessionId, transitionId, enabled = false)
+              checkerContext.trex.recover(snapshotBefore)
+              AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, enabled = false)
             } else {
-              val snapshot = checkerContext.trex.snapshot()
               // assume that this transition takes place
               checkerContext.trex.assumeTransition(transitionId)
+              val snapshotAfter = checkerContext.trex.snapshot()
+              val snapshotAfterId = snapshotAfter.contextSnapshot.rewriterLevel
               if (!params.checkEnabled) {
                 // if we do not check satisfiability, we assume that the transition is enabled
-                AssumeTransitionResult(sessionId, transitionId, enabled = true)
+                logger.info(
+                    s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: Assumed transition $transitionId, enabled=?")
+                AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, enabled = true)
               } else {
                 // check satisfiability
                 checkerContext.trex.sat(params.timeoutSec) match {
                   case Some(isSat) =>
-                    logger.info(s"Session $sessionId: Transition $transitionId is enabled = $isSat.")
                     if (!isSat) {
-                      checkerContext.trex.recover(snapshot)
+                      checkerContext.trex.recover(snapshotBefore)
                     }
-                    AssumeTransitionResult(sessionId, transitionId, enabled = isSat)
+                    logger.info(
+                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: Assumed transition $transitionId, enabled=$isSat")
+                    AssumeTransitionResult(sessionId, snapshotBefore.contextSnapshot.rewriterLevel, transitionId,
+                        enabled = isSat)
                   case None =>
                     // in case of timeout or unknown, we assume that the transition is enabled
                     logger.warn(
                         s"Session $sessionId: Transition $transitionId is unknown or timed out. Assuming enabled.")
-                    AssumeTransitionResult(sessionId, transitionId, enabled = true)
+                    logger.info(
+                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: Assumed transition $transitionId, enabled=?")
+                    AssumeTransitionResult(sessionId, snapshotAfter.contextSnapshot.rewriterLevel, transitionId,
+                        enabled = true)
                 }
               }
             }
@@ -331,10 +360,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       .map { checkerContext =>
         {
           checkerContext.synchronized {
+            val stepBeforeNo = checkerContext.trex.stepNo
             checkerContext.trex.nextState()
-            val stepNo = checkerContext.trex.stepNo
-            logger.info(s"Session $sessionId: Next step $stepNo.")
-            NextStepResult(sessionId, stepNo)
+            val stepAfterNo = checkerContext.trex.stepNo
+            val snapshot = checkerContext.trex.snapshot()
+            val snapshotId = snapshot.contextSnapshot.rewriterLevel
+            logger.info(s"Session=$sessionId Step=$stepAfterNo Snapshot=$snapshotId: Switched from step $stepBeforeNo")
+            NextStepResult(sessionId, snapshotId, stepAfterNo)
           }
         }
       }

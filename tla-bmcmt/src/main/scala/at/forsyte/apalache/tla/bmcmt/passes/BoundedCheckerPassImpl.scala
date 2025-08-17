@@ -48,11 +48,6 @@ class BoundedCheckerPassImpl @Inject() (
    */
   var modelCheckerContext: Option[ModelCheckerContext[IncrementalExecutionContextSnapshot]] = None
 
-  /**
-   * The rewriter that is used for the remote symbolic execution.
-   */
-  var rewriter: Option[SymbStateRewriterImpl] = None
-
   override def execute(module: TlaModule): PassResult = {
     LanguageWatchdog(KeraLanguagePred()).check(module)
     LanguageWatchdog(MonotypeLanguagePred()).check(module)
@@ -215,7 +210,6 @@ class BoundedCheckerPassImpl @Inject() (
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
 
     this.modelCheckerContext = Some(ModelCheckerContext(params, input, trex, Seq(DumpFilesModelCheckerListener)))
-    this.rewriter = Some(rewriter)
     logger.info(s"The outcome is: prepared for remote symbolic execution")
     NoError()
   }
