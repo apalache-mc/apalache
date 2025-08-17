@@ -56,6 +56,12 @@ object AssumeTransitionParams {
   }
 }
 
+object TransitionStatus extends Enumeration {
+  type TransitionStatus = Value
+  val ENABLED, DISABLED, UNKNOWN = Value
+}
+import TransitionStatus.TransitionStatus
+
 /**
  * The result of preparing a symbolic transition.
  * @param sessionId
@@ -64,14 +70,14 @@ object AssumeTransitionParams {
  *   the snapshot ID for recovering the context after the transition has been assumed.
  * @param transitionId
  *   the number of the prepared transition
- * @param enabled
- *   whether the transition is enabled for some state that is reachable via the prepared symbolic path
+ * @param status
+ *   status of the transition: "ENABLED", "DISABLED", or "UNKNOWN"
  */
 case class AssumeTransitionResult(
     sessionId: String,
     snapshotId: Int,
     transitionId: Int,
-    enabled: Boolean)
+    status: TransitionStatus)
     extends ExplorationServiceResult
 
 /**
@@ -289,11 +295,11 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             // Upload the transition into the SMT context.
             // It returns the result of a simple check that does not check satisfiability.
             val isEnabled = checkerContext.trex.prepareTransition(transitionId, actionExpr)
-            logger.info(
-                s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: Prepared transition $transitionId, enabled=$isEnabled.")
             if (!isEnabled) {
               checkerContext.trex.recover(snapshotBefore)
-              AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, enabled = false)
+              logger.info(
+                  s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: transition $transitionId DISABLED")
+              AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, TransitionStatus.DISABLED)
             } else {
               // assume that this transition takes place
               checkerContext.trex.assumeTransition(transitionId)
@@ -302,8 +308,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
               if (!params.checkEnabled) {
                 // if we do not check satisfiability, we assume that the transition is enabled
                 logger.info(
-                    s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: Assumed transition $transitionId, enabled=?")
-                AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, enabled = true)
+                    s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
+                AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
               } else {
                 // check satisfiability
                 checkerContext.trex.sat(params.timeoutSec) match {
@@ -311,18 +317,16 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                     if (!isSat) {
                       checkerContext.trex.recover(snapshotBefore)
                     }
+                    val status = if (isSat) TransitionStatus.ENABLED else TransitionStatus.DISABLED
                     logger.info(
-                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: Assumed transition $transitionId, enabled=$isSat")
-                    AssumeTransitionResult(sessionId, snapshotBefore.contextSnapshot.rewriterLevel, transitionId,
-                        enabled = isSat)
+                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId $status")
+                    AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, status)
                   case None =>
-                    // in case of timeout or unknown, we assume that the transition is enabled
-                    logger.warn(
-                        s"Session $sessionId: Transition $transitionId is unknown or timed out. Assuming enabled.")
+                    // in case of timeout or unknown, we do not rollback the context, but return unknown
                     logger.info(
-                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: Assumed transition $transitionId, enabled=?")
+                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
                     AssumeTransitionResult(sessionId, snapshotAfter.contextSnapshot.rewriterLevel, transitionId,
-                        enabled = true)
+                      TransitionStatus.UNKNOWN)
                 }
               }
             }

@@ -30,7 +30,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
 
   test("load spec") {
     service.loadSpec(LoadSpecParams(sources = Seq(text))) match {
-      case Right(LoadSpecResult(sessionId, params)) =>
+      case Right(LoadSpecResult(sessionId, _, params)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
         assert(params.nInitTransitions == 1, "Should have one initial transition")
         assert(params.nNextTransitions == 2, "Should have two next transitions")
@@ -47,7 +47,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
 
   test("dispose spec") {
     service.loadSpec(LoadSpecParams(sources = Seq(text))) match {
-      case Right(LoadSpecResult(sessionId, _)) =>
+      case Right(LoadSpecResult(sessionId, _, _)) =>
         service.disposeSpec(DisposeSpecParams(sessionId)) match {
           case Right(DisposeSpecResult(newSessionId)) =>
             assert(newSessionId == sessionId, "Session ID should remain the same after disposal")
@@ -66,10 +66,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   test("assume transition 0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
     service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0)) match {
-      case Right(AssumeTransitionResult(newSessionId, transitionId, isEnabled)) =>
+      case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == specResult.sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(isEnabled, "Transition should be enabled after assumption")
+        assert(status == TransitionStatus.ENABLED, "Transition should be enabled after assumption")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -82,7 +82,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     assert(service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0)).isRight,
         "Assuming transition 0 should succeed")
     service.nextStep(NextStepParams(sessionId = specResult.sessionId)) match {
-      case Right(NextStepResult(newSessionId, newStepNo)) =>
+      case Right(NextStepResult(newSessionId, _, newStepNo)) =>
         assert(newSessionId == specResult.sessionId, "Session ID should remain the same after next step")
         assert(newStepNo == 1, "Step number should be 1 after the first step")
       case Left(error) =>
@@ -99,10 +99,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     }
     service.assumeTransition(params) match {
-      case Right(AssumeTransitionResult(newSessionId, transitionId, isEnabled)) =>
+      case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(!isEnabled, "Transition should be disabled")
+        assert(status == TransitionStatus.DISABLED, "Transition should be disabled")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -124,10 +124,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     }
     service.assumeTransition(t0) match {
-      case Right(AssumeTransitionResult(newSessionId, transitionId, isEnabled)) =>
+      case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(isEnabled, "Transition should be enabled")
+        assert(status == TransitionStatus.ENABLED, "Transition should be enabled")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
