@@ -326,7 +326,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                     logger.info(
                         s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
                     AssumeTransitionResult(sessionId, snapshotAfter.contextSnapshot.rewriterLevel, transitionId,
-                      TransitionStatus.UNKNOWN)
+                        TransitionStatus.UNKNOWN)
                 }
               }
             }
