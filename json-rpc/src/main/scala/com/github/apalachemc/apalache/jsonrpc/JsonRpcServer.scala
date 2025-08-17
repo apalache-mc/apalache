@@ -56,11 +56,12 @@ object AssumeTransitionParams {
   }
 }
 
-object TransitionStatus extends Enumeration {
-  type TransitionStatus = Value
-  val ENABLED, DISABLED, UNKNOWN = Value
+object TransitionStatus {
+  type T = String
+  val ENABLED = "ENABLED"
+  val DISABLED = "DISABLED"
+  val UNKNOWN = "UNKNOWN"
 }
-import TransitionStatus.TransitionStatus
 
 /**
  * The result of preparing a symbolic transition.
@@ -77,7 +78,7 @@ case class AssumeTransitionResult(
     sessionId: String,
     snapshotId: Int,
     transitionId: Int,
-    status: TransitionStatus)
+    status: TransitionStatus.T)
     extends ExplorationServiceResult
 
 /**
