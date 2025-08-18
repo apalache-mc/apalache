@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.47.3 - 2025-08-18
+
+### Breaking changes
+
+- Upgrade Z3 to 4.13.4 (restores linux/arm64 support), see #3057
+
 ## 0.47.2 - 2024-12-16
 
 ## 0.47.1 - 2024-12-16
