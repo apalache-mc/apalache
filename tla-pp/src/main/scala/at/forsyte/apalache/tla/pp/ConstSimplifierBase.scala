@@ -319,6 +319,7 @@ abstract class ConstSimplifierBase {
           literals.map {
             case s: String  => ValEx(TlaStr(s))(strTag)
             case i: Int     => ValEx(TlaInt(i))(intTag)
+            case i: BigInt  => ValEx(TlaInt(i))(intTag)
             case b: Boolean => ValEx(TlaBool(b))(boolTag)
           }: _*)(typeTag)
     }
