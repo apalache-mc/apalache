@@ -384,4 +384,4 @@ LET pf == OptionPartialFun(f, undef) IN
 /\ \A n \in undef: pf[n] = None
 ```
 
-[Option.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla
+[Option.tla]: https://github.com/apalache-mc/apalache/blob/main/src/tla/Option.tla

@@ -29,7 +29,7 @@ We maintain a [changelog](https://keepachangelog.com/en/1.0.0/)
 > changes have been made between each release (or version) of the project.
 
 Any changeset that introduces observable changes to the behavior of our software
-should include additions to the changelog.  Currently, [additions are made](https://github.com/informalsystems/apalache/blob/60e6a14d451cb67c93dfd29cffd0cc0eb9d7922d/CONTRIBUTING.md#changelog) by
+should include additions to the changelog.  Currently, [additions are made](https://github.com/apalache-mc/apalache/blob/60e6a14d451cb67c93dfd29cffd0cc0eb9d7922d/CONTRIBUTING.md#changelog) by
 updating the `UNRELEASED.md` file. The changes recorded there are then added to
 the `CHANGES.md` file during our automated release process.
 
@@ -115,9 +115,9 @@ authoring the message.
 The tool has subcommands to generate and update the `CHANGES.md`, and it supports
 a variety of options via its TOML configuration.
 
-[unclog]: https://github.com/informalsystems/unclog
-[informalsystems/tendermint-rs]: https://github.com/informalsystems/tendermint-rs
-[informalsystems/ibc-rs]: https://github.com/informalsystems/ibc-rs
+[unclog]: https://github.com/apalache-mc/unclog
+[informalsystems/tendermint-rs]: https://github.com/apalache-mc/tendermint-rs
+[informalsystems/ibc-rs]: https://github.com/apalache-mc/ibc-rs
 
 #### Pros
 

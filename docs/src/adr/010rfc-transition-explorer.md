@@ -26,11 +26,11 @@ Users of Apalache have voiced a need for the following kinds of behavior:
 - interactive selection of parameter values
 
 The discussion around these needs is summarized and linked in
-[#79](https://github.com/informalsystems/apalache/issues/79) .
+[#79](https://github.com/apalache-mc/apalache/issues/79) .
 
 The proximal use cases motivating this feature are discovered in the needs of or
 collaborators working on implementing model based testing (MBT) via the
-[Modelator](https://github.com/informalsystems/modelator) project.
+[Modelator](https://github.com/apalache-mc/modelator) project.
 [@konnov](https://github.com/konnov) has given the following articulation of the
 general concern:
 
@@ -65,7 +65,7 @@ The specific functionality that should be available for interaction is
 enumerated in the [Requirements](#requirements).
 
 As per [previous
-discussions](https://github.com/informalsystems/apalache/issues/730#issue-855835332),
+discussions](https://github.com/apalache-mc/apalache/issues/730#issue-855835332),
 interactivity will be supported by running a daemon (or "service") that serves
 incoming requests. Clients will interact via a simple, well supported protocol,
 that provides an online RPC interface.
@@ -83,16 +83,16 @@ on our GitHub issues:
 
 | TRANS-EX.1::QCHECK.1 |
 : enable checking specs without repeated JVM startup costs
-  [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+  [730#issue-855835332](https://github.com/apalache-mc/apalache/issues/730#issue-855835332)
 
 | TRANS-EX.1::EXPLORE.1 |
 : enable exploring model checking results for a spec without repeated
   preprocessing costs
-  [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+  [730#issue-855835332](https://github.com/apalache-mc/apalache/issues/730#issue-855835332)
 
 | TRANS-EX.1::LOAD.1 |
 : enable loading and unloading specs
-  [730#issuecomment-818201654](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+  [730#issuecomment-818201654](https://github.com/apalache-mc/apalache/issues/730#issue-855835332)
 
 | TRANS-EX.1::EXTENSIBLE.1 |
 : The transition explorer should be extensible in the following ways:
@@ -105,7 +105,7 @@ on our GitHub issues:
 
 | TRANS-EX.1::SBMC.1 |
 : expose symbolic model checking
-  [730#issue-855835332](https://github.com/informalsystems/apalache/issues/730#issue-855835332)
+  [730#issue-855835332](https://github.com/apalache-mc/apalache/issues/730#issue-855835332)
 
 | TRANS-EX.1::SBMC.1::ADVANCE.1 |
 : can incrementally advance symbolic states
@@ -121,12 +121,12 @@ on our GitHub issues:
 
 | TRANS-EX.1::SBMC.1::COUNTER.1 |
 : supports enumerating counterexamples
-  [79#issue-534407916](https://github.com/informalsystems/apalache/issues/79#issue-534407916)
+  [79#issue-534407916](https://github.com/apalache-mc/apalache/issues/79#issue-534407916)
 
 | TRANS-EX.1::SBMC.1::PARAMS.1 |
 : supports enumerating parameter values (`CONSTANTS`) that lead to a
   counterexample
-  [79#issuecomment-576449107](https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107)
+  [79#issuecomment-576449107](https://github.com/apalache-mc/apalache/issues/79#issuecomment-576449107)
 
 
 ### Architecture
@@ -153,7 +153,7 @@ I propose the following high-level architecture:
 *NOTE*: The high-level sketch above assumes the new code organization proposed
 in [ADR 7][].
 
-[ADR 7]: https://github.com/informalsystems/apalache/tree/main/docs/src/adr/007adr-restructuring.md
+[ADR 7]: https://github.com/apalache-mc/apalache/tree/main/docs/src/adr/007adr-restructuring.md
 
 #### API
 
@@ -170,7 +170,7 @@ with `Example`.
 
 In essence, this proposed API is only a thin wrapper around the
 [TransitionExecutor
-class](https://github.com/informalsystems/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala).
+class](https://github.com/apalache-mc/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala).
 During previous iterations of the proposed API we discussed exposing a
 higher-level API, targeted at meeting the requirements more directly.  However,
 discussion revealed that the expensive computational costs of SAT solving in

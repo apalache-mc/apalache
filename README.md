@@ -1,6 +1,6 @@
 <div align="center">
 <img
-src="https://raw.githubusercontent.com/informalsystems/apalache/99e58d6f5eebcc41f432a126a13a5f8d2ae7afe6/logo-apalache.svg"
+src="https://raw.githubusercontent.com/apalache-mc/apalache/99e58d6f5eebcc41f432a126a13a5f8d2ae7afe6/logo-apalache.svg"
 alt="Apalache Logo">
 
 <h1><a href="https://apalache-mc.org/">APALACHE</a></h1>
@@ -33,7 +33,7 @@ tag.
 
 To try the latest cool features, check out the head of the [main branch][].
 
-You can also find Apalache packaged via Nix at [cosmos.nix](https://github.com/informalsystems/cosmos.nix)
+You can also find Apalache packaged via Nix at [cosmos.nix](https://github.com/apalache-mc/cosmos.nix)
 
 For more information on installation options, see [the
 manual][user-manual-installation].
@@ -150,9 +150,9 @@ Related reports and publications can be found at the
 [language-manual]: https://apalache-mc.org/docs/lang/index.html
 [idioms]: https://apalache-mc.org/docs/idiomatic/index.html
 [light client specs]: https://github.com/tendermint/tendermint/tree/master/spec/light-client/verification
-[model-based testing]: https://github.com/informalsystems/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
+[model-based testing]: https://github.com/apalache-mc/tendermint-rs/tree/master/light-client/tests/support/model_based#light-client-model-based-testing-guide
 [apalache-mc.org]: https://apalache-mc.org
-[TLA-Apalache workshop]: https://github.com/informalsystems/tla-apalache-workshop
+[TLA-Apalache workshop]: https://github.com/apalache-mc/tla-apalache-workshop
 [Beginner's tutorial]: https://apalache-mc.org/docs/tutorials/entry-tutorial.html
 [Apalache examples]: https://github.com/konnov/apalache-examples
 [Apalache Forum]: https://apalache.discourse.group/

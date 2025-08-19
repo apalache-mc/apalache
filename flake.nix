@@ -67,7 +67,7 @@
                   export PATH=$DIR/bin:$PATH
 
                   # Base path for looking up the Apalache standard library, see
-                  # https://github.com/informalsystems/apalache/pull/1553
+                  # https://github.com/apalache-mc/apalache/pull/1553
                   export APALACHE_HOME=$DIR
               }
 

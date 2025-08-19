@@ -3,9 +3,9 @@
 ## Assignments and symbolic transitions
 
 Let us go back to the example
-[`test/tla/y2k.tla`](https://github.com/informalsystems/apalache/blob/main/test/tla/y2k.tla)
+[`test/tla/y2k.tla`](https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k.tla)
 and run `apalache-mc` against
-[`test/tla/y2k_override.tla`](https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_override.tla)
+[`test/tla/y2k_override.tla`](https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_override.tla)
 while instructing Apalache to write intermediate output files:
 
 ```console
@@ -53,7 +53,7 @@ follows:
 
 If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-[`test/tla/Assignments20200309.tla`](https://github.com/informalsystems/apalache/blob/main/test/tla/Assignments20200309.tla):
+[`test/tla/Assignments20200309.tla`](https://github.com/apalache-mc/apalache/blob/main/test/tla/Assignments20200309.tla):
 
 ```tla
 {{#include ../../../../test/tla/Assignments20200309.tla::}}

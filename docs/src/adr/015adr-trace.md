@@ -32,12 +32,12 @@ see [Consequences](#consequences).
 
  - [itf-py](https://github.com/konnov/itf-py): a Python library for (de-)serializing ITF traces
  - [itf-rs](https://crates.io/crates/itf): a Rust library for (de-)serializing ITF traces
- - [Trace.ts](https://github.com/informalsystems/vscode-itf-trace-viewer/blob/main/src/Trace.ts):
+ - [Trace.ts](https://github.com/apalache-mc/vscode-itf-trace-viewer/blob/main/src/Trace.ts):
     a TypeScript parser of ITF traces (from ITF Trace Viewer)
  - [ITF Trace Viewer](https://marketplace.visualstudio.com/items?itemName=informal.itf-trace-viewer):
     a VSCode plugin for viewing ITF traces
  - [Apalache](https://github.com/apalache-mc/apalache): the TLA<sup>+</sup>/Quint model checker produces ITF traces
- - [Quint](https://github.com/informalsystems/quint): the Quint simulator produces ITF traces
+ - [Quint](https://github.com/apalache-mc/quint): the Quint simulator produces ITF traces
 
 ## Context
 
@@ -141,7 +141,7 @@ InvariantViolation == who_is_on_bank["E"] = {}
 
 ================================================================================
 (* Created by Apalache on Wed Dec 22 09:18:50 CET 2021 *)
-(* https://github.com/informalsystems/apalache *)
+(* https://github.com/apalache-mc/apalache *)
 ```
 
 The above counterexample looks very simple and natural, if the reader knows
@@ -431,7 +431,7 @@ the `#meta` object by Apalache.
 
 Shon Feder @shonfeder flagged important concerns about irregularity of the
 proposed format in the [PR
-comments](https://github.com/informalsystems/apalache/pull/1190). In a
+comments](https://github.com/apalache-mc/apalache/pull/1190). In a
 regular approach we would treat all expressions uniformly. For example:
 
 ```json
@@ -480,6 +480,6 @@ as the more general of the two representations.
 
 [ADR005]: https://apalache-mc.org/docs/adr/005adr-json.html
 [ADR002]: https://apalache-mc.org/docs/adr/002adr-types.html
-[MissionariesAndCannibalsTyped]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
+[MissionariesAndCannibalsTyped]: https://github.com/apalache-mc/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
 [JSON]: https://en.wikipedia.org/wiki/JSON
 [RFC7159]: https://datatracker.ietf.org/doc/html/rfc7159.html

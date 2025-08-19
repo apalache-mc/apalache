@@ -27,7 +27,7 @@ accepting the development costs.
 <!-- Communicates the forces at play (technical, political, social, project).
      This is the story explaining the problem we are looking to resolve.
 -->
-As explained in [#1845](https://github.com/informalsystems/apalache/issues/1845), one often runs into the problem of unreadable counterexamples; 
+As explained in [#1845](https://github.com/apalache-mc/apalache/issues/1845), one often runs into the problem of unreadable counterexamples; 
 for complex specifications, it is often the case that either the state contains many variables, or the invariant contains many conjunctive components (or both).
 In that case, trying to determine exactly why e.g. `A1 /\ ... /\ An` was violated basically boils down to manually evaluating each formula `Ai` with whatever variables are present in the state.
 This is laborious and error-prone, and should be automated.
@@ -95,7 +95,7 @@ E_vars == <<x_1, ..., x_k>>
 
 Optionally, we could investigate one of the following two alternatives to the output format:
   1. The output trace variables are `x_1,...,x_k,E_1,...,E_m` instead, where `x_1,...,x_k` are the variables of the original trace. The value of each variable from the input trace has the same value in every state of the output trace, as it does in the corresponding state of the input trace.
-  This is perhaps preferable to use with the [ITF trace viewer](https://github.com/informalsystems/vscode-itf-trace-viewer).
+  This is perhaps preferable to use with the [ITF trace viewer](https://github.com/apalache-mc/vscode-itf-trace-viewer).
   2. The output contains _both_ the input trace and the output trace (as it would have been produced in the original suggestion) in the same file, but separately.
 
 
@@ -407,7 +407,7 @@ InvariantViolation == TRUE
 
 ================================================================================
 (* Created by Apalache on Mon Oct 17 16:06:59 CEST 2022 *)
-(* https://github.com/informalsystems/apalache *)
+(* https://github.com/apalache-mc/apalache *)
 ```
 
 </details> 

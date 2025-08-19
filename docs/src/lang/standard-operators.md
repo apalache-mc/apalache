@@ -29,7 +29,7 @@ distinct from programming languages. Wherever possible, we complement the
 English semantics with code in [Python](https://www.python.org/). Although our
 semantics are more restrictive than the denotational semantics in Chapter 16 of
 [Specifying Systems], they are very close to the treatment of TLA+ by the model
-checkers: [Apalache](https://github.com/informalsystems/apalache) and
+checkers: [Apalache](https://github.com/apalache-mc/apalache) and
 [TLC](http://lamport.azurewebsites.net/tla/tools.html). Our relation between
 TLA+ operators and Python code bears some resemblance to
 [SALT](https://github.com/Viasat/salt) and
@@ -216,7 +216,7 @@ _Functions that pretend to be lists, indexed with 1, 2, 3,..._
  - Temporal universal quantification: `\AA x: F`
 
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
-[Apalache model checker]: https://github.com/informalsystems/apalache
+[Apalache model checker]: https://github.com/apalache-mc/apalache
 [TLC model checker]: http://lamport.azurewebsites.net/tla/tools.html
 [Summary of TLA]: https://lamport.azurewebsites.net/tla/summary.pdf
 [TLA+ Home Page]: http://lamport.azurewebsites.net/tla/tla.html

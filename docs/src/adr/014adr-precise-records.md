@@ -595,7 +595,7 @@ Having precise types for variants, we have two options:
  not present in the actual record type.
 
  1. Implement the
- [suggestion by Shon Feder](https://github.com/informalsystems/apalache/discussions/789#discussioncomment-1592118).
+ [suggestion by Shon Feder](https://github.com/apalache-mc/apalache/discussions/789#discussioncomment-1592118).
 
 Although Option 2 looks nicer, we prefer keeping Option 1. The reason is that
 the current implementation introduces the minimal number of constraints
@@ -666,8 +666,8 @@ default untyped implementation for the operators.
 
 
 [ADR002]: https://apalache-mc.org/docs/adr/002adr-types.html
-[#401]: https://github.com/informalsystems/apalache/issues/401
-[#789]: https://github.com/informalsystems/apalache/discussions/789
+[#401]: https://github.com/apalache-mc/apalache/issues/401
+[#789]: https://github.com/apalache-mc/apalache/discussions/789
 [Raft]: https://github.com/ongardie/raft.tla/blob/master/raft.tla
 [Leijen05]: https://www.microsoft.com/en-us/research/publication/extensible-records-with-scoped-labels
 [Row types]: https://www.microsoft.com/en-us/research/publication/extensible-records-with-scoped-labels/

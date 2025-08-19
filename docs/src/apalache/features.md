@@ -33,7 +33,7 @@ the manual.) To check liveness/temporal properties, we employ a [liveness-to-saf
 | `/\`, `\/`, `~`, `=>`, `<=>`          |     ✔      |     -     |                                                                                                                                                                                    |
 | ``TRUE``, ``FALSE``, ``BOOLEAN``      |     ✔      |     -     |                                                                                                                                                                                    |
 | ``\A x \in S: p``, ``\E x \in S : p`` |     ✔      |     -     |                                                                                                                                                                                    |
-| ``CHOOSE x \in S : p``                |     ✖      |     -     | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `ApaFoldSet`, or `ApaFoldSeqLeft`. See [#841](https://github.com/informalsystems/apalache/issues/841). |
+| ``CHOOSE x \in S : p``                |     ✖      |     -     | Partial support prior to version 0.16.1. From 0.16.1 and later, use `Some`, `ApaFoldSet`, or `ApaFoldSeqLeft`. See [#841](https://github.com/apalache-mc/apalache/issues/841). |
 | ``CHOOSE x : x \notin S``             |     ✖      |     -     | Not supported. You can use records or a default value such as -1.                                                                                                                  |
 | ``\A x : p, \E x : p``                |     ✖      |     -     | Use bounded quantifiers                                                                                                                                                            |
 | ``CHOOSE x : p``                      |     ✖      |     -     |                                                                                                                                                                                    |
@@ -161,7 +161,7 @@ For the moment, the model checker does not differentiate between integers and na
 | `<<...>>`                                                |     ✔      |           | Often needs a [type annotation](https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html). |
 | `Head`, `Tail`, `Len``, `SubSeq`, `Append`, `\o`, `f[e]` |     ✔      |     -     |                                                                                                          |
 | `EXCEPT`                                                 |     ✔      |           |                                                                                                          |
-| `SelectSeq`                                              |     ✔      |     -     | Not as efficient, as it could be, see [#1350](https://github.com/informalsystems/apalache/issues/1350).  |
+| `SelectSeq`                                              |     ✔      |     -     | Not as efficient, as it could be, see [#1350](https://github.com/apalache-mc/apalache/issues/1350).  |
 | `Seq(S)`                                                 |     ✖      |     -     | Use `Gen` of Apalache to produce bounded sequences                                                       |
 
 ### FiniteSets
@@ -188,4 +188,4 @@ Not supported, not a priority
 
 [cheat]: https://lamport.azurewebsites.net/tla/summary.pdf
 [liveness-to-safety]: https://www.sciencedirect.com/science/article/pii/S1571066104804109?via%3Dihub
-[liveness feature]: https://github.com/informalsystems/apalache/issues/488
+[liveness feature]: https://github.com/apalache-mc/apalache/issues/488

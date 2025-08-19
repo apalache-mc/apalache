@@ -180,7 +180,7 @@ EXITCODE: ERROR (255)
 ## error handling for invalid file formats
 
 Ensure we give a proper user error if invalid file format extension is given in
-input. See https://github.com/informalsystems/apalache/issues/2175 .
+input. See https://github.com/apalache-mc/apalache/issues/2175 .
 
 ```sh
 $ for cmd in check parse typecheck transpile; do apalache-mc $cmd f.badext 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "Configuration error: Unsupported file format badext"; done
@@ -1013,7 +1013,7 @@ EXITCODE: ERROR (12)
 
 The option `--no-deadlock` forces the model checker to pass, even if it cannot
 extend an execution prefix. See a discussion in
-[#1640](https://github.com/informalsystems/apalache/issues/1640).
+[#1640](https://github.com/apalache-mc/apalache/issues/1640).
 
 ```sh
 $ apalache-mc check --length=5 --no-deadlock=1 --inv=Inv HandshakeWithTypes.tla | sed 's/I@.*//'
@@ -1421,7 +1421,7 @@ EXITCODE: OK
 ```
 
 ### check SimpleLambda succeeds
-Regression test for https://github.com/informalsystems/apalache/issues/1446
+Regression test for https://github.com/apalache-mc/apalache/issues/1446
 
 ```sh
 $ apalache-mc check --inv=Inv SimpleLambda.tla | sed 's/I@.*//'
@@ -1440,7 +1440,7 @@ EXITCODE: OK
 
 ### typecheck Bug914 fails
 
-Regression test for https://github.com/informalsystems/apalache/issues/914 In
+Regression test for https://github.com/apalache-mc/apalache/issues/914 In
 the earlier version, we expected the model checker to complain about
 mismatching record types. The new type checker with row typing is reporting a
 type error, and this is what we expect.
@@ -1456,7 +1456,7 @@ EXITCODE: ERROR (120)
 
 ### check RecordExcept987 succeeds
 
-Regression test for https://github.com/informalsystems/apalache/issues/987
+Regression test for https://github.com/apalache-mc/apalache/issues/987
 We should always use sorted keys on record types.
 
 ```sh
@@ -1467,7 +1467,7 @@ EXITCODE: OK
 
 ### check Bug985 succeeds
 
-Regression test for https://github.com/informalsystems/apalache/issues/985
+Regression test for https://github.com/apalache-mc/apalache/issues/985
 Skolemization should be sound.
 
 ```sh
@@ -1478,7 +1478,7 @@ EXITCODE: OK
 
 ### check Bug1126 succeeds
 
-Regression test for https://github.com/informalsystems/apalache/issues/1126
+Regression test for https://github.com/apalache-mc/apalache/issues/1126
 An occurence of `Seq(S)` should point to an explanation.
 
 ```sh
@@ -1674,7 +1674,7 @@ EXITCODE: ERROR (12)
 
 ### check SetSndRcv succeeds (array-encoding)
 
-Regression test for https://github.com/informalsystems/apalache/issues/1152
+Regression test for https://github.com/apalache-mc/apalache/issues/1152
 Sets should not become unconstrained when choosing an element in a set minus operation.
 
 ```sh
@@ -1685,7 +1685,7 @@ EXITCODE: OK
 
 ### check SetAddDel succeeds (array-encoding)
 
-Regression test for https://github.com/informalsystems/apalache/issues/1162
+Regression test for https://github.com/apalache-mc/apalache/issues/1162
 Sets should not become unconstrained when union is performed.
 
 ```sh
@@ -1706,7 +1706,7 @@ EXITCODE: ERROR (12)
 
 ### check OracleFunSet succeeds (array-encoding)
 
-Regression test for https://github.com/informalsystems/apalache/issues/1680
+Regression test for https://github.com/apalache-mc/apalache/issues/1680
 Function sets themselves should be able to be set elements.
 
 ```sh
@@ -1717,7 +1717,7 @@ EXITCODE: OK
 
 ### check Verifier_functionComparison fails (array-encoding)
 
-Regression test for https://github.com/informalsystems/apalache/issues/1811
+Regression test for https://github.com/apalache-mc/apalache/issues/1811
 Comparisons with functions with empty domains should be sound (as should everything else)
 
 ```sh
@@ -1748,7 +1748,7 @@ EXITCODE: OK
 
 ### check TrivialFail fails with --discard-disabled=false
 
-Regression test for https://github.com/informalsystems/apalache/issues/2158
+Regression test for https://github.com/apalache-mc/apalache/issues/2158
 
 ```sh
 $ apalache-mc check --inv=Inv --discard-disabled=false TrivialFail.tla | sed 's/I@.*//'
@@ -1760,7 +1760,7 @@ EXITCODE: ERROR (12)
 
 Test that model checking properly handles first-order `CONSTANTS`.
 
-Regression test for https://github.com/informalsystems/apalache/issues/2388
+Regression test for https://github.com/apalache-mc/apalache/issues/2388
 
 ```sh
 $ apalache-mc check --length=0 --inv=Inv ConstantOperatorImpl.tla | sed 's/I@.*//'
@@ -2257,7 +2257,7 @@ Unhandled `IllegalArgumentException` when accessing a non-existent field on a
 record. With the old records, this spec was failing during model checking.
 With the new records, this spec is failing at type checking.
 
-See https://github.com/informalsystems/apalache/issues/874
+See https://github.com/apalache-mc/apalache/issues/874
 
 ```sh
 $ apalache-mc typecheck Bug874.tla | sed 's/[IEW]@.*//'
@@ -2877,7 +2877,7 @@ EXITCODE: OK
 
 A regression test for function membership in the presence of infinite sets.
 
-See https://github.com/informalsystems/apalache/issues/2810
+See https://github.com/apalache-mc/apalache/issues/2810
 
 ```sh
 $ apalache-mc check --init=TypeOkay_ --inv=TypeOkay --length=1 FunInInfiniteSubset.tla | sed 's/[IEW]@.*//'
@@ -3274,7 +3274,7 @@ EXITCODE: OK
 Unhandled exception thrown when type-checking a spec that uses the wrong
 annotation syntax for operators.
 
-See https://github.com/informalsystems/apalache/issues/860
+See https://github.com/apalache-mc/apalache/issues/860
 
 ```sh
 $ apalache-mc typecheck Bug860.tla | sed 's/[IEW]@.*//'
@@ -3290,7 +3290,7 @@ EXITCODE: ERROR (255)
 Unhandled exception thrown due to incorrect annotation of a tuple return
 type.
 
-See https://github.com/informalsystems/apalache/issues/832
+See https://github.com/apalache-mc/apalache/issues/832
 
 ```sh
 $ apalache-mc typecheck Bug832.tla | sed 's/[IEW]@.*//'
@@ -3305,7 +3305,7 @@ EXITCODE: ERROR (255)
 
 Type unification should not recurse infinitely.
 
-See: https://github.com/informalsystems/apalache/issues/925
+See: https://github.com/apalache-mc/apalache/issues/925
 
 ```sh
 $ apalache-mc typecheck Bug925.tla | sed 's/[IEW]@.*//'
@@ -3591,7 +3591,7 @@ EXITCODE: OK
 
 ### typecheck annotation with comments
 
-Regression test for https://github.com/informalsystems/apalache/issues/2163
+Regression test for https://github.com/apalache-mc/apalache/issues/2163
 
 ```sh
 $ apalache-mc typecheck CommentedTypeAnnotation.tla | sed 's/[IEW]@.*//'
@@ -3605,7 +3605,7 @@ EXITCODE: OK
 
 Test that typechecker supports first-order `CONSTANTS`.
 
-Regression test for https://github.com/informalsystems/apalache/issues/2388
+Regression test for https://github.com/apalache-mc/apalache/issues/2388
 
 ```sh
 $ apalache-mc typecheck ConstantOperator.tla | sed 's/[IEW]@.*//'
@@ -3618,7 +3618,7 @@ EXITCODE: OK
 Test that typechecker supports substituting a first-order `CONSTANT` via
 `INSTANCE`.
 
-Regression test for https://github.com/informalsystems/apalache/issues/2388
+Regression test for https://github.com/apalache-mc/apalache/issues/2388
 
 ```sh
 $ apalache-mc typecheck ConstantOperatorImpl.tla | sed 's/[IEW]@.*//'
@@ -3976,7 +3976,7 @@ $ rm module-lookup/subdir-no-dummy/output.tla
 
 ### module lookup: looks up modules in the same directory
 
-Regression test for https://github.com/informalsystems/apalache/issues/426
+Regression test for https://github.com/apalache-mc/apalache/issues/426
 
 Look up files in the same directory as the file supplied on commandline.
 
@@ -4089,7 +4089,7 @@ EXITCODE: OK
 
 ### quint input: bigints are deserialized correctly
 
-Regression test for https://github.com/informalsystems/quint/issues/1055
+Regression test for https://github.com/apalache-mc/quint/issues/1055
 
 ```sh
 $ apalache-mc check --out-dir=./test-out-dir --init=init --next=step --inv=inv bigint.qnt.json

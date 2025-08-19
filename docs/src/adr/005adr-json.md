@@ -205,7 +205,7 @@ The implementation of the serialization can be found in the class
 
 [ADR-004]: https://apalache-mc.org/docs/adr/004adr-annotations.html
 
-[TlaToJson]: https://github.com/informalsystems/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54
-[TlaEx]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10
-[TlaDecl]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9
-[TlaModule]: https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19
+[TlaToJson]: https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54
+[TlaEx]: https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10
+[TlaDecl]: https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9
+[TlaModule]: https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19
