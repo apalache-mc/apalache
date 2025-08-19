@@ -18,7 +18,7 @@ case class IDENT(name: String) extends AnnotationToken {}
 /**
  * Annotation name that start with "@". We introduce a special token for that instead of using a token for "@" and
  * IDENT. The reason is that we want to ignore standalone "@" in the parser. See:
- * https://github.com/informalsystems/apalache/issues/757
+ * https://github.com/apalache-mc/apalache/issues/757
  *
  * @param name
  *   the name associated with the identifier

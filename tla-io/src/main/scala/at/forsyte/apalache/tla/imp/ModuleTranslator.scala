@@ -87,7 +87,7 @@ class ModuleTranslator(
           }
 
           // TODO(igor) temporary bugfix for the issue #130. Remove as soon as it is fixed in tla2tools.
-          // https://github.com/informalsystems/apalache/issues/130
+          // https://github.com/apalache-mc/apalache/issues/130
           workaroundMarkRecursive(Set(decl), decl.body)
 
         case _ => () // XXX: do something?
@@ -165,7 +165,7 @@ class ModuleTranslator(
   }
 
   /**
-   * This is a temporary bugfix for the issue 130: https://github.com/informalsystems/apalache/issues/130 TODO(igor)
+   * This is a temporary bugfix for the issue 130: https://github.com/apalache-mc/apalache/issues/130 TODO(igor)
    * Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators, but I have
    * never seen mutual recursion in TLA+.
    *

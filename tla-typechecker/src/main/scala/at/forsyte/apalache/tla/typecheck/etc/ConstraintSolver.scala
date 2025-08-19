@@ -91,7 +91,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     def outsideClass(cls: EqClass): Boolean = !cls.typeVars.contains(varNo)
     // Check both the approximate solution, which the solver was initialized with, and the solution, if it exists.
     // This is probably a computationally expensive check:
-    // https://github.com/informalsystems/apalache/issues/973
+    // https://github.com/apalache-mc/apalache/issues/973
     approximateSolution.mapping.keySet.forall(outsideClass) && solution.mapping.keySet.forall(outsideClass)
   }
 

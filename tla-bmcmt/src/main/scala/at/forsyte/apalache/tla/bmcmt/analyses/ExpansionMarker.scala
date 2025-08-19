@@ -46,7 +46,7 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       if (shallExpand) {
         // Expand everything, including the function set.
         // Expansion of function sets is not implemented yet, see:
-        // https://github.com/informalsystems/apalache/issues/1452
+        // https://github.com/apalache-mc/apalache/issues/1452
         OperEx(ApalacheOper.expand, OperEx(op, transform(true)(dom), transform(true)(cdm))(tag))(tag)
       } else {
         // Only expand the domain, but keep the co-domain unexpanded,

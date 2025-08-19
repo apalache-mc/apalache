@@ -101,7 +101,7 @@ class SubstTranslator(
     // SANY gives us the operator B1!C1!magic == (x /= 2)[x <- y][y <- z]
     // Note that y should be translated in the context of B1, whereas z should be translated in the root context.
     //
-    // See issue #143: https://github.com/informalsystems/apalache/issues/143
+    // See issue #143: https://github.com/apalache-mc/apalache/issues/143
     val upperLookupPrefix = context.lookupPrefix.dropRight(1)
     val upperContext = context.setLookupPrefix(upperLookupPrefix)
     val exprTranslator =

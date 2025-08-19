@@ -901,7 +901,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   }
 
   test("imprecise annotation") {
-    // Test case for: https://github.com/informalsystems/apalache/issues/2102
+    // Test case for: https://github.com/apalache-mc/apalache/issues/2102
 
     // let @type: (a, b) => Bool;
     //   LET F(x, y) == x = y in TRUE

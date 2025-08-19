@@ -16,7 +16,7 @@ object AnnotationLexer extends RegexParsers {
   override def skipWhitespace: Boolean = true
 
   // We cannot throw away new lines, or else we lose the ability to parse out one line comments in annotations
-  // See https://github.com/informalsystems/apalache/issues/2162
+  // See https://github.com/apalache-mc/apalache/issues/2162
   override val whiteSpace: Regex = """([ \t\f]+)""".r
 
   /**

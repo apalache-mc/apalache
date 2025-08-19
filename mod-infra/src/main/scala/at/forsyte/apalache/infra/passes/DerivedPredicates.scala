@@ -20,7 +20,7 @@ import com.google.inject.Inject
  * Due to the way we are currently sequencing the execution of passes, the only way to communicate data between passes
  * is either to add it on to the `TlaModule` they process, or share some mutable state. Since we aim to keep the
  * `TlaModule` as trim as possible, we opt for the latter (tho see
- * https://github.com/informalsystems/apalache/issues/2105 for a possible alternative). Since derived predicates must be
+ * https://github.com/apalache-mc/apalache/issues/2105 for a possible alternative). Since derived predicates must be
  * communicated between passes, we need some mutable state to serve as the communication channel. That is the purpose of
  * the `DerivedPredicates` trait.
  *

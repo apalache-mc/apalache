@@ -824,7 +824,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("oneOf operator occuring outside of a nondet binding is an error") {
-    // See https://github.com/informalsystems/apalache/issues/2774
+    // See https://github.com/apalache-mc/apalache/issues/2774
     val err = intercept[QuintIRParseError](convert(Q.oneOfSet))
     assert(err.getMessage().contains("`oneOf` can only occur as the principle operator of a `nondet` declaration"))
   }

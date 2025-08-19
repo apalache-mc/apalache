@@ -434,7 +434,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
         eqCache.put(leftFun, rightFun, EqCache.EqEntry())
 
         // For the rare case in which one function has an empty domain, we need to be extra careful
-        // See https://github.com/informalsystems/apalache/issues/1811
+        // See https://github.com/apalache-mc/apalache/issues/1811
         val leftDom = nextState.arena.getDom(leftFun)
         val rightDom = nextState.arena.getDom(rightFun)
         nextState = cacheOneEqConstraint(nextState, leftDom, rightDom)

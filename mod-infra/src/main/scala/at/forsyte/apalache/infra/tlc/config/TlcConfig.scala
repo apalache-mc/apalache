@@ -67,7 +67,7 @@ case class ConfigModelValue(name: String) extends ConfigConstExpr {
   override def toTla: TBuilderInstruction = {
     // currently, we use the type Str for all model values.
     // In the future, we might want to distinguish between different uninterpreted types.
-    // See https://github.com/informalsystems/apalache/issues/570
+    // See https://github.com/apalache-mc/apalache/issues/570
     tla.str(STR_PREFIX + name)
   }
 }
