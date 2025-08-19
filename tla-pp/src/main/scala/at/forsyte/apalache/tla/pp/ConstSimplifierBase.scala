@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.types.{BuilderT, BuilderUT, tlaU => tla}
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderT, BuilderUT}
 
 import scala.collection.immutable.SortedSet
 
