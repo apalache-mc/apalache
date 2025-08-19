@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.48.1 - 2025-08-19
+
+### Features
+
+- Simplify set operators over literals:  - Set union `{1, 2, 3} \cup {4}` becomes `{1, 2, 3, 4}`  - Set difference `{3, 4} \ {3}` becomes `{4}`  - Set union `{1, 2, 3} \cap {1, 3}` becomes `{1, 3}`  - Set cardinality `Cardinality({3, 4, 5})` becomes 3
+
 ## 0.48.0 - 2025-08-19
 
 ## 0.47.3 - 2025-08-18
