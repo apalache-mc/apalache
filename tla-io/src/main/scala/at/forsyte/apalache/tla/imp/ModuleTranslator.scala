@@ -165,9 +165,9 @@ class ModuleTranslator(
   }
 
   /**
-   * This is a temporary bugfix for the issue 130: https://github.com/apalache-mc/apalache/issues/130 TODO(igor)
-   * Once it is fixed in SANY, remove this method. This method does not detect mutually recursive operators, but I have
-   * never seen mutual recursion in TLA+.
+   * This is a temporary bugfix for the issue 130: https://github.com/apalache-mc/apalache/issues/130 TODO(igor) Once it
+   * is fixed in SANY, remove this method. This method does not detect mutually recursive operators, but I have never
+   * seen mutual recursion in TLA+.
    *
    * @param declared
    *   the set of names that have been introduced at higher levels.

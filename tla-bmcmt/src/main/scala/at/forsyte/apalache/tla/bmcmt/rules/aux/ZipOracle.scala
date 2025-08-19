@@ -14,8 +14,7 @@ import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
  *   the background oracle whose values are grouped together
  * @param groups
  *   A list of groups over the indices of the background oracle. Indices within each group must be sorted, as the
- *   sorting determines the order of generated SMT constraints; see
- *   https://github.com/apalache-mc/apalache/issues/2120.
+ *   sorting determines the order of generated SMT constraints; see https://github.com/apalache-mc/apalache/issues/2120.
  */
 class ZipOracle(backOracle: Oracle, groups: Seq[Seq[Int]]) extends Oracle {
   override def size: Int = groups.size

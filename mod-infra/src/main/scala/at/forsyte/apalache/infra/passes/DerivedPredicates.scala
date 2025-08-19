@@ -19,10 +19,9 @@ import com.google.inject.Inject
  *
  * Due to the way we are currently sequencing the execution of passes, the only way to communicate data between passes
  * is either to add it on to the `TlaModule` they process, or share some mutable state. Since we aim to keep the
- * `TlaModule` as trim as possible, we opt for the latter (tho see
- * https://github.com/apalache-mc/apalache/issues/2105 for a possible alternative). Since derived predicates must be
- * communicated between passes, we need some mutable state to serve as the communication channel. That is the purpose of
- * the `DerivedPredicates` trait.
+ * `TlaModule` as trim as possible, we opt for the latter (tho see https://github.com/apalache-mc/apalache/issues/2105
+ * for a possible alternative). Since derived predicates must be communicated between passes, we need some mutable state
+ * to serve as the communication channel. That is the purpose of the `DerivedPredicates` trait.
  *
  * Since most specification predicates are derived predicates, and in order to reduce sources of possible confusion when
  * reasoning about the communication of specification predicates, the communication of all predicates between passes
