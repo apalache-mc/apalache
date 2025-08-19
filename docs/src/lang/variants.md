@@ -369,4 +369,4 @@ IN
 
 [Variants]: https://en.wikipedia.org/wiki/Tagged_union
 [Tagged unions in Paxos]: https://github.com/tlaplus/Examples/blob/779852ba9951621f062fc4074b8e81fd12db21dc/specifications/Paxos/Paxos.tla#L85-L106
-[Variants.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla
+[Variants.tla]: https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla

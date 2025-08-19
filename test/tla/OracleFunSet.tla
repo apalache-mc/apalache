@@ -1,6 +1,6 @@
 ------ MODULE OracleFunSet --------
 \* A regression test for the use of sets of function sets, see:
-\* https://github.com/informalsystems/apalache/issues/1680
+\* https://github.com/apalache-mc/apalache/issues/1680
 
 VARIABLES
    \* @type: Set(Bool -> Int);

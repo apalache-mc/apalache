@@ -304,13 +304,13 @@ or drop us a message on [Discourse][].
 [Lamport's mutex]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex
 [TwoPhase.tla]: https://github.com/tlaplus/Examples/blob/911dac1462344337940779a797a5f329a77be98c/specifications/transaction_commit/TwoPhase.tla
 [LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla
-[LamportMutexTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/LamportMutexTyped.tla
-[TwoPhaseTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/TwoPhaseTyped.tla
+[LamportMutexTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/LamportMutexTyped.tla
+[TwoPhaseTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/TwoPhaseTyped.tla
 [Stephan Merz]: https://members.loria.fr/Stephan.Merz/
-[GameOfLifeTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/GameOfLifeTyped.tla
-[CigaretteSmokersTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla
-[CarTalkPuzzleTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla
-[QueensTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/QueensTyped.tla
-[open an issue]: https://github.com/informalsystems/apalache/issues
+[GameOfLifeTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/GameOfLifeTyped.tla
+[CigaretteSmokersTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla
+[CarTalkPuzzleTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla
+[QueensTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/QueensTyped.tla
+[open an issue]: https://github.com/apalache-mc/apalache/issues
 [Discourse]: https://apalache.discourse.group/
 [Idiom 15]: ../idiomatic/003record-sets.md

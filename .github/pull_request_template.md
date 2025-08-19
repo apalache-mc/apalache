@@ -5,4 +5,4 @@
 - [ ] Documentation added for any new functionality
 - [ ] [Entries added to `./unreleased/`][changelog format] for any new functionality
 
-[changelog format]: https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#how-to-record-a-change
+[changelog format]: https://github.com/apalache-mc/apalache/blob/main/CONTRIBUTING.md#how-to-record-a-change

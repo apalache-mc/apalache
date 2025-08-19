@@ -1,6 +1,6 @@
 ----------------------------- MODULE InfDomFun ---------------------------
 \* A regression test for functions with infinite domain, see:
-\* https://github.com/informalsystems/apalache/issues/1798
+\* https://github.com/apalache-mc/apalache/issues/1798
 EXTENDS Integers
 
 VARIABLES

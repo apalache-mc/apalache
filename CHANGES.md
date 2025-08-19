@@ -360,11 +360,11 @@
 
 ### Features
 
-- Add [Option.tla](https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla) module providing support for option types (see #2097).
+- Add [Option.tla](https://github.com/apalache-mc/apalache/blob/main/src/tla/Option.tla) module providing support for option types (see #2097).
 
 ### Bug fixes
 
-- Fix missing support for single-line comments inside of type annotations (see https://github.com/informalsystems/apalache/issues/2162)
+- Fix missing support for single-line comments inside of type annotations (see https://github.com/apalache-mc/apalache/issues/2162)
 
 ## 0.29.1 - 2022-09-12
 
@@ -1257,7 +1257,7 @@
  * Using `z3` version `4.8.7`
 
  * A 2-8x speedup for 5 out 16
-   [benchmarks](https://github.com/informalsystems/apalache-tests),
+   [benchmarks](https://github.com/apalache-mc/apalache-tests),
    due to the optimizations and maybe switching to z3 4.8.x.
 
  * Distributing the releases with docker as `apalache/mc`
@@ -1352,13 +1352,13 @@
 
  * speed up by using constants instead of uninterpreted functions
 
- * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/tuning.md)
+ * options for fine tuning with `--fine-tuning`, see [tuning](https://github.com/apalache-mc/apalache/blob/main/docs/src/apalache/tuning.md)
 
  * bugfix in logback configuration
 
 ## 0.4.0-pre1
 
- * type annotations and very simple type inference, see the [notes](https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/types-and-annotations.md)
+ * type annotations and very simple type inference, see the [notes](https://github.com/apalache-mc/apalache/blob/main/docs/src/apalache/types-and-annotations.md)
 
  * a dramatic speed up of many operators by using a `QF_NIA` theory and cherry pick
 

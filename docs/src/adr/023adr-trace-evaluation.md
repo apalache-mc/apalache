@@ -27,7 +27,7 @@ accepting the development costs.
 <!-- Communicates the forces at play (technical, political, social, project).
      This is the story explaining the problem we are looking to resolve.
 -->
-As explained in [#1845](https://github.com/informalsystems/apalache/issues/1845), one often runs into the problem of unreadable counterexamples; 
+As explained in [#1845](https://github.com/apalache-mc/apalache/issues/1845), one often runs into the problem of unreadable counterexamples; 
 for complex specifications, it is often the case that either the state contains many variables, or the invariant contains many conjunctive components (or both).
 In that case, trying to determine exactly why e.g. `A1 /\ ... /\ An` was violated basically boils down to manually evaluating each formula `Ai` with whatever variables are present in the state.
 This is laborious and error-prone, and should be automated.
@@ -407,7 +407,7 @@ InvariantViolation == TRUE
 
 ================================================================================
 (* Created by Apalache on Mon Oct 17 16:06:59 CEST 2022 *)
-(* https://github.com/informalsystems/apalache *)
+(* https://github.com/apalache-mc/apalache *)
 ```
 
 </details> 

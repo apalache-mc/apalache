@@ -8,7 +8,7 @@
    - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)
    - On Arch: `sudo pacman -Syu sbt`
    - On macOS / Homebrew: `brew install sbt`
-4. Clone the git repository: `git clone https://github.com/informalsystems/apalache.git`.
+4. Clone the git repository: `git clone https://github.com/apalache-mc/apalache.git`.
 5. Change into the project directory: `cd apalache`.
 6. Install [direnv][] and run `direnv allow`, or use [another way to set up the shell environment][shell environment].
 7. To build and package Apalache for development purposes, run `make`.
@@ -37,4 +37,4 @@ repository, you have three options after running `make`:
 [compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [sbt]: https://www.scala-sbt.org/1.x/docs/Setup.html
 [direnv]: https://direnv.net/
-[shell environment]: https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#environment
+[shell environment]: https://github.com/apalache-mc/apalache/blob/main/CONTRIBUTING.md#environment

@@ -72,7 +72,7 @@ The following data is submitted for each run if you have opted in:
 [Visual Studio Code Plugin for TLA+]: https://marketplace.visualstudio.com/items?itemName=alygin.vscode-tlaplus
 [anonymized statistics programme]: https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.md
 [ExecutionStatisticsCollector]: https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.java
-[Tool]: https://github.com/informalsystems/apalache/blob/main/mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala
+[Tool]: https://github.com/apalache-mc/apalache/blob/main/mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala
 [Informal Systems]: https://informal.systems
 [TU Wien]: https://www.tuwien.at/
 [Vienna Science and Technology Fund]: https://www.wwtf.at/index.php?lang=EN

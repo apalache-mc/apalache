@@ -279,10 +279,10 @@ first part of work. To be detailed later...
 [state, action, and trace invariants]: ../apalache/principles/invariants.md
 [Specifying Systems]: https://lamport.azurewebsites.net/tla/book.html
 [Handbook of Satisfiability]: https://ebooks.iospress.nl/publication/4999
-[first prototype]: https://github.com/informalsystems/apalache/tree/feature/liveness
+[first prototype]: https://github.com/apalache-mc/apalache/tree/feature/liveness
 [Transition Executor]: ./003adr-trex.md
 [ADR-010]: ./010rfc-transition-explorer.md
-[issue on temporal properties]: https://github.com/informalsystems/apalache/issues/488
+[issue on temporal properties]: https://github.com/apalache-mc/apalache/issues/488
 [trace invariants]: ../apalache/principles/invariants.md#trace-invariants
 [Model Checking]: https://mitpress.mit.edu/books/model-checking-second-edition
 [Padon et al. 2021]: https://link.springer.com/article/10.1007/s10703-021-00377-1

@@ -1,5 +1,5 @@
 ------------------------------- MODULE Bug593 -------------------------------
-\* Module used in https://github.com/informalsystems/apalache/issues/593
+\* Module used in https://github.com/apalache-mc/apalache/issues/593
 \* Test to see issue has been resolved
 
 EXTENDS Integers, Bug593Aux

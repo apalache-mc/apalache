@@ -1,6 +1,6 @@
 ---------------------------- MODULE SetSndRcv --------------------------
 \* A regression test for the use of oracles in set minus, see:
-\* https://github.com/informalsystems/apalache/issues/1152
+\* https://github.com/apalache-mc/apalache/issues/1152
 
 \* We model message transmission from sender to receiver via transmission medium.
 \* The medium models lossy transmission, i.e., it can drop messages.

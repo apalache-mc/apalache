@@ -1,6 +1,6 @@
 -------------------------------- MODULE Bug914 --------------------------------
 
-\* Minimal reproduction for https://github.com/informalsystems/apalache/issues/914
+\* Minimal reproduction for https://github.com/apalache-mc/apalache/issues/914
 \*
 \* The crash occurs when the the number of fields added to the record in `msgs'` in
 \* the first disjunct of `Next` are greater than the number of fields declared for
