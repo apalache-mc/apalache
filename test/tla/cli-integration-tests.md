@@ -2314,7 +2314,7 @@ Test that the model checker nicely complains about unresolved polymorphism.
 ```sh
 $ apalache-mc check --inv=Inv Bug931.tla | sed 's/[IEW]@.*//'
 ...
-Bug931.tla:6:20-6:21: unexpected expression: Expected a non-polymorphic type, found: Set(b)
+Bug931.tla:6:21-6:22: unexpected expression: Expected a non-polymorphic type, found: Set(d)
 ...
 EXITCODE: ERROR (255)
 ```
