@@ -260,7 +260,7 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the intersection
-        val setIntersection = (literals1.flatten.intersect(literals2.flatten)).distinct
+        val setIntersection = ((literals1.flatten.distinct.intersect(literals2.flatten.distinct))).distinct
         literalsToSet(setIntersection, originalExpr.typeTag)
       }
 
@@ -274,7 +274,7 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the set difference
-        val setDifference = (literals1.flatten.diff(literals2.flatten)).distinct
+        val setDifference = ((literals1.flatten.distinct.diff(literals2.flatten.distinct))).distinct
         literalsToSet(setDifference, originalExpr.typeTag)
       }
 
@@ -301,6 +301,8 @@ abstract class ConstSimplifierBase {
     ex.map(simplifyShallow) // when using TBuilderInstruction
 
   // extract basic literals from the arguments of a set constructor
+  // returns a sequence of Some(literal) or None if the argument is not a literal
+  // A literal is either a string, an integer, or a boolean.
   private def extractLiterals(args: Seq[TlaEx]): Seq[Option[Any]] = {
     args.map {
       case ValEx(TlaStr(s))  => Some(s)
