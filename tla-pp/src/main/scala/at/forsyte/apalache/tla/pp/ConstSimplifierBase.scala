@@ -16,6 +16,7 @@ import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderT, BuilderUT}
 abstract class ConstSimplifierBase {
   private val boolTag = Typed(BoolT1)
   private val intTag = Typed(IntT1)
+  private val strTag = Typed(StrT1)
 
   private def trueEx = ValEx(TlaBool(true))(boolTag)
   private def falseEx = ValEx(TlaBool(false))(boolTag)
@@ -235,15 +236,55 @@ abstract class ConstSimplifierBase {
     case funSet @ OperEx(TlaSetOper.funSet, _, OperEx(TlaSetOper.enumSet)) =>
       emptySet(funSet.typeTag)
 
+    // S \cup T when both S and T contain only literals
+    case originalExpr @ OperEx(TlaSetOper.cup,
+            OperEx(TlaSetOper.enumSet, args1 @ _*),
+            OperEx(TlaSetOper.enumSet, args2 @ _*)) =>
+      val literals1 = extractLiterals(args1)
+      val literals2 = extractLiterals(args2)
+      if (!literals1.forall(_.isDefined) || !literals2.forall(_.isDefined)) {
+        // at least one of the sets contains non-literals, so we cannot simplify
+        originalExpr
+      } else {
+        // all elements are literals, so we can statically compute the union
+        val setUnion = (literals1.flatten ++ literals2.flatten).distinct
+        literalsToSet(setUnion, originalExpr.typeTag)
+      }
+
+    // S \cap T when both S and T contain only literals
+    case originalExpr @ OperEx(TlaSetOper.cap,
+            OperEx(TlaSetOper.enumSet, args1 @ _*),
+            OperEx(TlaSetOper.enumSet, args2 @ _*)) =>
+      val literals1 = extractLiterals(args1)
+      val literals2 = extractLiterals(args2)
+      if (!literals1.forall(_.isDefined) || !literals2.forall(_.isDefined)) {
+        // at least one of the sets contains non-literals, so we cannot simplify
+        originalExpr
+      } else {
+        // all elements are literals, so we can statically compute the intersection
+        val setIntersection = (literals1.flatten intersect literals2.flatten).distinct
+        literalsToSet(setIntersection, originalExpr.typeTag)
+      }
+
+    // S \ T when both S and T contain only literals
+    case originalExpr @ OperEx(TlaSetOper.setminus,
+            OperEx(TlaSetOper.enumSet, args1 @ _*),
+            OperEx(TlaSetOper.enumSet, args2 @ _*)) =>
+      val literals1 = extractLiterals(args1)
+      val literals2 = extractLiterals(args2)
+      if (!literals1.forall(_.isDefined) || !literals2.forall(_.isDefined)) {
+        // at least one of the sets contains non-literals, so we cannot simplify
+        originalExpr
+      } else {
+        // all elements are literals, so we can statically compute the set difference
+        val setDifference = (literals1.flatten diff literals2.flatten).distinct
+        literalsToSet(setDifference, originalExpr.typeTag)
+      }
+
     // Cardinality({ ... }) when the elements are literals
     case originalExpr @ OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaSetOper.enumSet, args @ _*)) =>
       // Try to extract the literals from the set constructor by enumeration.
-      val literals = args.map {
-        case ValEx(TlaStr(s)) => Some(s)
-        case ValEx(TlaInt(i)) => Some(i)
-        case ValEx(TlaBool(b)) => Some(b)
-        case _                => None
-      }
+      val literals = extractLiterals(args)
       if (!literals.forall(_.isDefined)) {
         originalExpr
       } else {
@@ -261,4 +302,28 @@ abstract class ConstSimplifierBase {
     simplifyShallow(ex) // when using TlaEx
   def applySimplifyShallowToBuilderEx(ex: BuilderT): BuilderT =
     ex.map(simplifyShallow) // when using TBuilderInstruction
+
+  // extract basic literals from the arguments of a set constructor
+  private def extractLiterals(args: Seq[TlaEx]): Seq[Option[Any]] = {
+    args.map {
+      case ValEx(TlaStr(s))  => Some(s)
+      case ValEx(TlaInt(i))  => Some(i)
+      case ValEx(TlaBool(b)) => Some(b)
+      case _                 => None
+    }
+  }
+
+  // construct a set enumerator from a sequence of literals
+  private def literalsToSet(literals: Seq[Any], typeTag: TypeTag): OperEx = {
+    if (literals.isEmpty) {
+      emptySet(typeTag)
+    } else {
+      OperEx(TlaSetOper.enumSet,
+        literals.map {
+          case s: String => ValEx(TlaStr(s))(strTag)
+          case i: Int => ValEx(TlaInt(i))(intTag)
+          case b: Boolean => ValEx(TlaBool(b))(boolTag)
+        }: _*)(typeTag)
+    }
+  }
 }

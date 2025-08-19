@@ -451,6 +451,33 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
     check(prop, minSuccessful(1000), sizeRange(8))
   }
 
+  test("""{"a", "b", "c"} \\union {"d"} becomes {"a", "b", "c", "d", "e"}""") {
+    val set1 = enumSet(str("a"), str("b"), str("c")).as(strSetT)
+    val set2 = enumSet(str("d"), str("e")).as(strSetT)
+    val unionSet = cup(set1, set2).as(strSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(str("a"), str("b"), str("c"), str("d"), str("e")).as(strSetT)
+    assert(output == expected)
+  }
+
+  test("""{"a", "b", "c"} \ {"b"} becomes {"a", "c"}""") {
+    val set1 = enumSet(str("a"), str("b"), str("c")).as(strSetT)
+    val set2 = enumSet(str("b")).as(strSetT)
+    val unionSet = setminus(set1, set2).as(strSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(str("a"), str("c")).as(strSetT)
+    assert(output == expected)
+  }
+
+  test("""{"a", "b", "c"} \\cap {"a", "d"} becomes {"a"}""") {
+    val set1 = enumSet(str("a"), str("b"), str("c")).as(strSetT)
+    val set2 = enumSet(str("a"), str("d")).as(strSetT)
+    val unionSet = cap(set1, set2).as(strSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(str("a")).as(strSetT)
+    assert(output == expected)
+  }
+
   test("""Cardinality({"a", "b", "c"}) becomes 3""") {
     val input = card(enumSet(str("a"), str("b"), str("c")).as(strSetT)).as(intT)
     val output = simplifier.apply(input)
