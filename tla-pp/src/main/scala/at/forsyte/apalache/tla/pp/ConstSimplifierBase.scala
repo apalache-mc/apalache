@@ -3,7 +3,33 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderT, BuilderUT}
+import at.forsyte.apalache.tla.types.{BuilderT, BuilderUT, tlaU => tla}
+
+import scala.collection.immutable.SortedSet
+
+/**
+ * A based class for literals that are simplified.
+ */
+sealed abstract class Literal extends Ordered[Literal]
+case class IntLiteral(value: BigInt) extends Literal {
+  override def compare(that: Literal): Int = that match {
+    case IntLiteral(thatValue) => value.compareTo(thatValue)
+    case _                     => 1 // IntLiteral is greater than any other literal
+  }
+}
+case class BoolLiteral(value: Boolean) extends Literal {
+  override def compare(that: Literal): Int = that match {
+    case BoolLiteral(thatValue) => value.compareTo(thatValue)
+    case _                      => -1 // BoolLiteral is lesser than any other literal
+  }
+}
+case class StrLiteral(value: String) extends Literal {
+  override def compare(that: Literal): Int = that match {
+    case StrLiteral(thatValue) => value.compareTo(thatValue)
+    case BoolLiteral(_)        => 1 // StrLiteral is greater than BoolLiteral
+    case _                     => -1 // StrLiteral is lesser than any other literal
+  }
+}
 
 /**
  * <p>A base class for constant simplification that is shared by more specialized simplifiers.</p>
@@ -246,7 +272,7 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the union
-        val setUnion = (literals1.flatten ++ literals2.flatten).distinct
+        val setUnion = ((SortedSet(literals1.flatten: _*).union(SortedSet(literals2.flatten: _*)))).toSeq
         literalsToSet(setUnion, originalExpr.typeTag)
       }
 
@@ -260,7 +286,7 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the intersection
-        val setIntersection = ((literals1.flatten.distinct.intersect(literals2.flatten.distinct))).distinct
+        val setIntersection = ((SortedSet(literals1.flatten: _*).intersect(SortedSet(literals2.flatten: _*)))).toSeq
         literalsToSet(setIntersection, originalExpr.typeTag)
       }
 
@@ -274,7 +300,7 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the set difference
-        val setDifference = ((literals1.flatten.distinct.diff(literals2.flatten.distinct))).distinct
+        val setDifference = ((SortedSet(literals1.flatten: _*).diff(SortedSet(literals2.flatten: _*)))).toSeq
         literalsToSet(setDifference, originalExpr.typeTag)
       }
 
@@ -300,29 +326,27 @@ abstract class ConstSimplifierBase {
   def applySimplifyShallowToBuilderEx(ex: BuilderT): BuilderT =
     ex.map(simplifyShallow) // when using TBuilderInstruction
 
-  // extract basic literals from the arguments of a set constructor
-  // returns a sequence of Some(literal) or None if the argument is not a literal
-  // A literal is either a string, an integer, or a boolean.
-  private def extractLiterals(args: Seq[TlaEx]): Seq[Option[Any]] = {
+  // Extract basic literals from the arguments of a set constructor.
+  // Returns a sequence of Some(literal) or None if the argument is not a literal.
+  private def extractLiterals(args: Seq[TlaEx]): Seq[Option[Literal]] = {
     args.map {
-      case ValEx(TlaStr(s))  => Some(s)
-      case ValEx(TlaInt(i))  => Some(i)
-      case ValEx(TlaBool(b)) => Some(b)
+      case ValEx(TlaStr(s))  => Some(StrLiteral(s))
+      case ValEx(TlaInt(i))  => Some(IntLiteral(i))
+      case ValEx(TlaBool(b)) => Some(BoolLiteral(b))
       case _                 => None
     }
   }
 
-  // construct a set enumerator from a sequence of literals
-  private def literalsToSet(literals: Seq[Any], typeTag: TypeTag): OperEx = {
+  // Construct a set enumerator from a sequence of literals.
+  private def literalsToSet(literals: Seq[Literal], typeTag: TypeTag): OperEx = {
     if (literals.isEmpty) {
       emptySet(typeTag)
     } else {
       OperEx(TlaSetOper.enumSet,
           literals.map {
-            case s: String  => ValEx(TlaStr(s))(strTag)
-            case i: Int     => ValEx(TlaInt(i))(intTag)
-            case i: BigInt  => ValEx(TlaInt(i))(intTag)
-            case b: Boolean => ValEx(TlaBool(b))(boolTag)
+            case StrLiteral(s)  => ValEx(TlaStr(s))(strTag)
+            case IntLiteral(i)  => ValEx(TlaInt(i))(intTag)
+            case BoolLiteral(b) => ValEx(TlaBool(b))(boolTag)
           }: _*)(typeTag)
     }
   }
