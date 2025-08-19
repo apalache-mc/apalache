@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
+import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
@@ -18,6 +19,11 @@ import org.scalatestplus.scalacheck.Checkers
  */
 @RunWith(classOf[JUnitRunner])
 class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Checkers with AppendedClues with Matchers {
+  private val intT = IntT1
+  private val boolSetT = SetT1(BoolT1)
+  private val intSetT = SetT1(IntT1)
+  private val strSetT = SetT1(StrT1)
+
   private var simplifier: ConstSimplifier = _
 
   private val gens = new IrGenerators {
@@ -444,6 +450,122 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
       true
     }
     check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("""{"a", "b", "c"} \\union {"e", "d"} becomes {"a", "b", "c", "d", "e"}""") {
+    val set1 = enumSet(str("a"), str("b"), str("c")).as(strSetT)
+    val set2 = enumSet(str("e"), str("d")).as(strSetT)
+    val unionSet = cup(set1, set2).as(strSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(str("a"), str("b"), str("c"), str("d"), str("e")).as(strSetT)
+    assert(output == expected)
+  }
+
+  test("""{2, 4, 2, 5} \\union {3, 6} becomes {2, 3, 4, 5, 6}""") {
+    val set1 = enumSet(int(2), int(4), int(2), int(5)).as(intSetT)
+    val set2 = enumSet(int(3), int(6)).as(intSetT)
+    val unionSet = cup(set1, set2).as(intSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(int(2), int(3), int(4), int(5), int(6)).as(intSetT)
+    assert(output == expected)
+  }
+
+  test("""{TRUE} \\union {FALSE} becomes {FALSE, TRUE}""") {
+    val set1 = enumSet(bool(true)).as(boolSetT)
+    val set2 = enumSet(bool(false)).as(boolSetT)
+    val unionSet = cup(set1, set2).as(boolSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(bool(false), bool(true)).as(boolSetT)
+    assert(output == expected)
+  }
+
+  test("""{"a", "b", "c"} \\ {"b"} becomes {"a", "c"}""") {
+    val set1 = enumSet(str("a"), str("b"), str("c")).as(strSetT)
+    val set2 = enumSet(str("b")).as(strSetT)
+    val unionSet = setminus(set1, set2).as(strSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(str("a"), str("c")).as(strSetT)
+    assert(output == expected)
+  }
+
+  test("""{2, 4, 2, 5} \\ {2} becomes {4, 5}""") {
+    val set1 = enumSet(int(2), int(4), int(2), int(5)).as(intSetT)
+    val set2 = enumSet(int(2)).as(intSetT)
+    val diffSet = setminus(set1, set2).as(intSetT)
+    val output = simplifier.apply(diffSet)
+    val expected = enumSet(int(4), int(5)).as(intSetT)
+    assert(output == expected)
+  }
+
+  test("""{TRUE, FALSE} \\ {TRUE} becomes {FALSE}""") {
+    val set1 = enumSet(bool(true), bool(false)).as(boolSetT)
+    val set2 = enumSet(bool(true)).as(boolSetT)
+    val diffSet = setminus(set1, set2).as(boolSetT)
+    val output = simplifier.apply(diffSet)
+    val expected = enumSet(bool(false)).as(boolSetT)
+    assert(output == expected)
+  }
+
+  test("""{"a", "b", "c"} \\cap {"a", "d"} becomes {"a"}""") {
+    val set1 = enumSet(str("a"), str("b"), str("c")).as(strSetT)
+    val set2 = enumSet(str("a"), str("d")).as(strSetT)
+    val unionSet = cap(set1, set2).as(strSetT)
+    val output = simplifier.apply(unionSet)
+    val expected = enumSet(str("a")).as(strSetT)
+    assert(output == expected)
+  }
+
+  test("""{2, 4, 2, 5} \\cap {5, 2} becomes {2, 5}""") {
+    val set1 = enumSet(int(2), int(4), int(2), int(5)).as(intSetT)
+    val set2 = enumSet(int(5), int(2)).as(intSetT)
+    val intersection = cap(set1, set2).as(intSetT)
+    val output = simplifier.apply(intersection)
+    val expected = enumSet(int(2), int(5)).as(intSetT)
+    assert(output == expected)
+  }
+
+  test("""{TRUE} \\cap {FALSE} becomes {}""") {
+    val set1 = enumSet(bool(true)).as(boolSetT)
+    val set2 = enumSet(bool(false)).as(boolSetT)
+    val intersection = cap(set1, set2).as(boolSetT)
+    val output = simplifier.apply(intersection)
+    val expected = enumSet().as(boolSetT)
+    assert(output == expected)
+  }
+
+  test("""Cardinality({"a", "b", "c"}) becomes 3""") {
+    val input = card(enumSet(str("a"), str("b"), str("c")).as(strSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({"a", "b", "c", "b", "c", "a"}) becomes 3""") {
+    val input = card(enumSet(str("a"), str("b"), str("c")).as(strSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({1, 2, 3}) becomes 3""") {
+    val input = card(enumSet(int(1), int(2), int(3)).as(intSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({1, 2, 3, 2, 3, 1}) becomes 3""") {
+    val input = card(enumSet(int(1), int(2), int(3), int(2), int(3), int(1)).as(intSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({1, 2, 3, 4 - 1}) becomes 3""") {
+    val input = card(enumSet(int(1), int(2), minus(int(4), int(1)).as(intT)).as(intSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
   }
 
   test("simplifies quantifiers which rewrite to set emptiness checks") {
