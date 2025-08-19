@@ -237,8 +237,7 @@ abstract class ConstSimplifierBase {
       emptySet(funSet.typeTag)
 
     // S \cup T when both S and T contain only literals
-    case originalExpr @ OperEx(TlaSetOper.cup,
-            OperEx(TlaSetOper.enumSet, args1 @ _*),
+    case originalExpr @ OperEx(TlaSetOper.cup, OperEx(TlaSetOper.enumSet, args1 @ _*),
             OperEx(TlaSetOper.enumSet, args2 @ _*)) =>
       val literals1 = extractLiterals(args1)
       val literals2 = extractLiterals(args2)
@@ -252,8 +251,7 @@ abstract class ConstSimplifierBase {
       }
 
     // S \cap T when both S and T contain only literals
-    case originalExpr @ OperEx(TlaSetOper.cap,
-            OperEx(TlaSetOper.enumSet, args1 @ _*),
+    case originalExpr @ OperEx(TlaSetOper.cap, OperEx(TlaSetOper.enumSet, args1 @ _*),
             OperEx(TlaSetOper.enumSet, args2 @ _*)) =>
       val literals1 = extractLiterals(args1)
       val literals2 = extractLiterals(args2)
@@ -262,13 +260,12 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the intersection
-        val setIntersection = (literals1.flatten intersect literals2.flatten).distinct
+        val setIntersection = (literals1.flatten.intersect(literals2.flatten)).distinct
         literalsToSet(setIntersection, originalExpr.typeTag)
       }
 
     // S \ T when both S and T contain only literals
-    case originalExpr @ OperEx(TlaSetOper.setminus,
-            OperEx(TlaSetOper.enumSet, args1 @ _*),
+    case originalExpr @ OperEx(TlaSetOper.setminus, OperEx(TlaSetOper.enumSet, args1 @ _*),
             OperEx(TlaSetOper.enumSet, args2 @ _*)) =>
       val literals1 = extractLiterals(args1)
       val literals2 = extractLiterals(args2)
@@ -277,7 +274,7 @@ abstract class ConstSimplifierBase {
         originalExpr
       } else {
         // all elements are literals, so we can statically compute the set difference
-        val setDifference = (literals1.flatten diff literals2.flatten).distinct
+        val setDifference = (literals1.flatten.diff(literals2.flatten)).distinct
         literalsToSet(setDifference, originalExpr.typeTag)
       }
 
@@ -319,11 +316,11 @@ abstract class ConstSimplifierBase {
       emptySet(typeTag)
     } else {
       OperEx(TlaSetOper.enumSet,
-        literals.map {
-          case s: String => ValEx(TlaStr(s))(strTag)
-          case i: Int => ValEx(TlaInt(i))(intTag)
-          case b: Boolean => ValEx(TlaBool(b))(boolTag)
-        }: _*)(typeTag)
+          literals.map {
+            case s: String  => ValEx(TlaStr(s))(strTag)
+            case i: Int     => ValEx(TlaInt(i))(intTag)
+            case b: Boolean => ValEx(TlaBool(b))(boolTag)
+          }: _*)(typeTag)
     }
   }
 }

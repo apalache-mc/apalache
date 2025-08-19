@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
