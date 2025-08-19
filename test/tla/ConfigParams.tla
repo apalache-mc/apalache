@@ -5,7 +5,7 @@ CONSTANTS
   \* @type: Str;
   MyStr,
   \* TODO: use a model type here
-  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
+  \* when #570 is closed: https://github.com/apalache-mc/apalache/issues/570
   \* @type: Str;
   MyModelValue1,
   \* @type: Str;

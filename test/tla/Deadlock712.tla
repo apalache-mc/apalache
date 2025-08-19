@@ -1,7 +1,7 @@
 ------------------------ MODULE Deadlock712 ------------------------------------
 (*
  This test shows that Apalache 0.15.1 can miss a deadlock.
- Discussed in issue: https://github.com/informalsystems/apalache/issues/712
+ Discussed in issue: https://github.com/apalache-mc/apalache/issues/712
  *)
 EXTENDS Integers
 

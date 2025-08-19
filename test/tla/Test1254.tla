@@ -3,7 +3,7 @@ EXTENDS Integers
 
 ------ MODULE base ----
 \* A regression test for the bug report:
-\* https://github.com/informalsystems/apalache/issues/1254
+\* https://github.com/apalache-mc/apalache/issues/1254
 EXTENDS Integers
 VARIABLES 
     \* @type: Int;
