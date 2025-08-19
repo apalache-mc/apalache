@@ -101,7 +101,7 @@ abstract class ConstSimplifierBase {
     // 0 ^ 0 = undefined
     case OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) if (base == 0 && power == 0) =>
       throw new TlaInputError(s"0 ^ 0 is undefined")
-    // Try to evaluante constant exponentiation
+    // Try to evaluate constant exponentiation
     case ex @ OperEx(TlaArithOper.exp, ValEx(TlaInt(base)), ValEx(TlaInt(power))) =>
       if (power < 0) {
         throw new TlaInputError(s"Negative power at ${ex}")
@@ -234,6 +234,23 @@ abstract class ConstSimplifierBase {
     // if A /= {}, then [ A -> {} ] <=> {}
     case funSet @ OperEx(TlaSetOper.funSet, _, OperEx(TlaSetOper.enumSet)) =>
       emptySet(funSet.typeTag)
+
+    // Cardinality({ ... }) when the elements are literals
+    case originalExpr @ OperEx(TlaFiniteSetOper.cardinality, OperEx(TlaSetOper.enumSet, args @ _*)) =>
+      // Try to extract the literals from the set constructor by enumeration.
+      val literals = args.map {
+        case ValEx(TlaStr(s)) => Some(s)
+        case ValEx(TlaInt(i)) => Some(i)
+        case ValEx(TlaBool(b)) => Some(b)
+        case _                => None
+      }
+      if (!literals.forall(_.isDefined)) {
+        originalExpr
+      } else {
+        // all elements are literals, so we can statically compute the cardinality
+        val distinct = literals.flatten.distinct
+        ValEx(TlaInt(distinct.length))(intTag)
+      }
 
     // default
     case ex =>

@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.pp
 
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
-import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.transformations.impl.{IdleTracker, TrackerWithListeners}
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
@@ -18,6 +19,10 @@ import org.scalatestplus.scalacheck.Checkers
  */
 @RunWith(classOf[JUnitRunner])
 class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Checkers with AppendedClues with Matchers {
+  private val intT = IntT1
+  private val intSetT = SetT1(IntT1)
+  private val strSetT = SetT1(StrT1)
+
   private var simplifier: ConstSimplifier = _
 
   private val gens = new IrGenerators {
@@ -444,6 +449,41 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
       true
     }
     check(prop, minSuccessful(1000), sizeRange(8))
+  }
+
+  test("""Cardinality({"a", "b", "c"}) becomes 3""") {
+    val input = card(enumSet(str("a"), str("b"), str("c")).as(strSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({"a", "b", "c", "b", "c", "a"}) becomes 3""") {
+    val input = card(enumSet(str("a"), str("b"), str("c")).as(strSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({1, 2, 3}) becomes 3""") {
+    val input = card(enumSet(int(1), int(2), int(3)).as(intSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({1, 2, 3, 2, 3, 1}) becomes 3""") {
+    val input = card(enumSet(int(1), int(2), int(3), int(2), int(3), int(1)).as(intSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
+  }
+
+  test("""Cardinality({1, 2, 3, 4 - 1}) becomes 3""") {
+    val input = card(enumSet(int(1), int(2), minus(int(4), int(1)).as(intT)).as(intSetT)).as(intT)
+    val output = simplifier.apply(input)
+    val expected = int(3).as(intT)
+    assert(expected == output)
   }
 
   test("simplifies quantifiers which rewrite to set emptiness checks") {
