@@ -405,7 +405,7 @@ TPTypeOK ==
 contains records of two types: <code>{ type: Str }</code> and <code>{ type: Str, rm: RM }</code>.
 This seems to be problematic, as we have to mix in two records types in a
 single set, which requires us to specify its only type.</p>
-<p>To this end, we have to use the <a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla">Variants module</a>, which is distributed with
+<p>To this end, we have to use the <a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla">Variants module</a>, which is distributed with
 Apalache. For reference, check the <a href="../lang/variants.html">Chapter on variants</a>. First, we declare a
 type alias for the type of messages in a separate file called
 <code>TwoPhaseTyped_typedefs.tla</code>:</p>
@@ -512,7 +512,7 @@ problem in untyped TLA+. In fact, it is a well-known idiom: Construct a
 function by using the function set operator, and then apply sequence operators to it.
 In Apalache we have to explicitly write that a function should be reinterpreted
 as a sequence.  To this end, we have to use the operator <code>FunAsSeq</code> from the
-module <a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla">Apalache.tla</a>. Hence, we add <code>Apalache</code> to the <code>EXTENDS</code> clause and
+module <a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Apalache.tla">Apalache.tla</a>. Hence, we add <code>Apalache</code> to the <code>EXTENDS</code> clause and
 apply the operator <code>FunAsSeq</code> as follows:</p>
 <pre><code class="language-tla">EXTENDS Naturals, Sequences, Apalache
 ...
@@ -545,7 +545,7 @@ shortcut.</p>
 <p>By convention, we introduce all type aliases by annotating an operator called
 <code>&lt;PREFIX&gt;_typedefs</code>, where the <code>&lt;PREFIX&gt;</code> is replaced with a unique prefix to
 prevent name clashes across different modules. Typically <code>&lt;PREFIX&gt;</code> is just the
-module name. For the <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped.tla</a> example, we have:</p>
+module name. For the <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped.tla</a> example, we have:</p>
 <pre><code class="language-tla">\* @typeAlias: persons = Set(PERSON);
 MissionariesAndCannibals_typedefs = TRUE
 </code></pre>

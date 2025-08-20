@@ -174,9 +174,9 @@
 <a name="symbolicTransitions"></a></p>
 <h2><a class="header" href="#assignments-and-symbolic-transitions" id="assignments-and-symbolic-transitions">Assignments and symbolic transitions</a></h2>
 <p>Let us go back to the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>
 and run <code>apalache-mc</code> against
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>
 while instructing Apalache to write intermediate output files:</p>
 <pre><code class="language-console">$ apalache-mc check --write-intermediate=true y2k_override.tla
 </code></pre>
@@ -255,7 +255,7 @@ assignment of the form <code>x' := e</code> in every symbolic transition <code>A
 </blockquote>
 <p>If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
 <pre><code class="language-tla">----- MODULE Assignments20200309 -----
 VARIABLE
     \* @type: Int;

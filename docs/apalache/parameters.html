@@ -177,7 +177,7 @@ by writing a symbolic constraint, see <a href="#ConstInit">Section 5.3</a>.</p>
 <h2><a class="header" href="#using-instance" id="using-instance">Using INSTANCE</a></h2>
 <p>You can set the specification parameters, using the standard <code>INSTANCE</code>
 expression of TLA+. For instance, below is the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_instance.tla"><code>y2k_instance.tla</code></a>,
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_instance.tla"><code>y2k_instance.tla</code></a>,
 which instantiates <code>y2k.tla</code>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_instance ----------------------------
 (*
@@ -217,7 +217,7 @@ OVERRIDE_LICENSE_AGE == 18
 <p>This approach is similar to the <code>Init</code> operator, but applied to the
 constants. We define a special operator, e.g., called <code>ConstInit</code>. For
 instance, below is the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_cinit.tla"><code>y2k_cinit.tla</code></a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_cinit.tla"><code>y2k_cinit.tla</code></a>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_cinit ----------------------------
 (*
  * Another way to instantiate constants for apalache is give it constraints

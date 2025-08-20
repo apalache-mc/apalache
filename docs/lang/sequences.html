@@ -563,7 +563,7 @@ infinite. You can override <code>Seq(S)</code> with its bounded version <code>BS
 for some <code>n</code>. See: <a href="https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ">Overriding Seq in TLC</a>.</p>
 <p>Apalache does not support <code>Seq(S)</code> yet. As a workaround, you can manually
 replace <code>Seq(S)</code> with <code>BSeq(S, n)</code> for some constant <code>n</code>.  See the progress in
-<a href="https://github.com/informalsystems/apalache/issues/314">Issue 314</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/issues/314">Issue 314</a>.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  Seq({1, 2, 3})
     \* The infinite set

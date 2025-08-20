@@ -180,7 +180,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 <p>The following classes are serializable:</p>
 <ol>
 <li>
-<p>TLA+ expressions (see <a href="https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10">TlaEx</a>) and subclasses thereof:</p>
+<p>TLA+ expressions (see <a href="https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10">TlaEx</a>) and subclasses thereof:</p>
 <ul>
 <li>Named expressions <code>NameEx</code></li>
 <li>Literal values <code>ValEx</code> for the following literals:
@@ -196,7 +196,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 </ul>
 </li>
 <li>
-<p>TLA+ declarations (see <a href="https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9">TlaDecl</a>) and subclasses thereof:</p>
+<p>TLA+ declarations (see <a href="https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9">TlaDecl</a>) and subclasses thereof:</p>
 <ul>
 <li>Variable declarations <code>TlaVarDecl</code></li>
 <li>Constant declarations <code>TlaConstDecl</code></li>
@@ -206,7 +206,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 </ul>
 </li>
 <li>
-<p>TLA+ modules, see <a href="https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19">TlaModule</a></p>
+<p>TLA+ modules, see <a href="https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19">TlaModule</a></p>
 </li>
 </ol>
 <h2><a class="header" href="#2-disambiguation-field" id="2-disambiguation-field">2. Disambiguation field</a></h2>
@@ -353,7 +353,7 @@ We could encode all values as strings, but they would be similarly indistinguish
 <p>In general, for any given <code>oper: TlaOper</code> of <code>OperEx</code>, the value of the <code>oper</code> field in the serialization equals <code>oper.name</code>.</p>
 <h2><a class="header" href="#7-implementation" id="7-implementation">7. Implementation</a></h2>
 <p>The implementation of the serialization can be found in the class
-<code>at.forsyte.apalache.io.json.TlaToJson</code> of the module <code>tla-import</code>, see <a href="https://github.com/informalsystems/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54">TlaToJson</a>.</p>
+<code>at.forsyte.apalache.io.json.TlaToJson</code> of the module <code>tla-import</code>, see <a href="https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54">TlaToJson</a>.</p>
 
                     </main>
 

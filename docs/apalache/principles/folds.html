@@ -311,7 +311,7 @@ to remove from the set at each step, utilizes the <code>CHOOSE</code> operator.
 This is a common trait shared by many operators that implement recursion over sets. 
 Since the introduction of folds, the use of <code>CHOOSE</code> in Apalache is heavily discouraged as it is both inefficient,
 and nondeterministic (unlike how <code>CHOOSE</code> is defined in TLA+ literature).
-For details, see the discussion in <a href="https://github.com/informalsystems/apalache/issues/841">issue 841</a>.</p>
+For details, see the discussion in <a href="https://github.com/apalache-mc/apalache/issues/841">issue 841</a>.</p>
 <p>So the third advantage of using folds is the ability to, almost always, avoid using the <code>CHOOSE</code> operator.</p>
 <p>The downside of folding, compared to general recursion, is the inability to express non-primitively recursive functions.
 For instance, one cannot define the <a href="https://en.wikipedia.org/wiki/Ackermann_function">Ackermann function</a>, as a fold.

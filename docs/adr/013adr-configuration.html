@@ -185,7 +185,7 @@
 <h2><a class="header" href="#summary" id="summary">Summary</a></h2>
 <!-- Statement to summarize, following the following formula: -->
 <p>In the context of using Apalache from other programs, different environments, and
-in different planned modes (see, e.g., <a href="https://github.com/informalsystems/apalache/issues/730">#703</a>),<br />
+in different planned modes (see, e.g., <a href="https://github.com/apalache-mc/apalache/issues/730">#703</a>),<br />
 facing the need to supply different configurations for different use cases<br />
 we decided for adopting the <a href="https://github.com/pureconfig/pureconfig">PureConfig</a> library and for introducing a small component to
 integrate <code>PureConfig</code> with our CLI parsing <br />
@@ -200,19 +200,19 @@ programmatic pipelines, and strives to provide more functionality, we inevitably
 need to make it more configurable.</p>
 <p>Recent additions that have extended configurability include:</p>
 <ul>
-<li><a href="https://github.com/informalsystems/apalache/pull/1081">#1081</a>, introducing
+<li><a href="https://github.com/apalache-mc/apalache/pull/1081">#1081</a>, introducing
 the <code>run-dir</code> flag.</li>
-<li><a href="https://github.com/informalsystems/apalache/pull/1036">#1036</a>, introducing
+<li><a href="https://github.com/apalache-mc/apalache/pull/1036">#1036</a>, introducing
 the <code>write-intermediate</code>, and <code>profiling</code>, <code>out-dir</code> configuration parameters,
 exposed both via CLI and configuration file.</li>
-<li><a href="https://github.com/informalsystems/apalache/pull/1054">#1054</a>, introducing
+<li><a href="https://github.com/apalache-mc/apalache/pull/1054">#1054</a>, introducing
 the <code>smt-encoding</code> flag.</li>
 </ul>
-<p>The ongoing work for <a href="https://github.com/informalsystems/apalache/issues/730">the server
+<p>The ongoing work for <a href="https://github.com/apalache-mc/apalache/issues/730">the server
 mode</a> is expected to
 require introducing several more configurable paramters.</p>
-<p>As discussed in <a href="https://github.com/informalsystems/apalache/issues/1069">#1069</a>
-and <a href="https://github.com/informalsystems/apalache/issues/1929">#1929</a> we have at
+<p>As discussed in <a href="https://github.com/apalache-mc/apalache/issues/1069">#1069</a>
+and <a href="https://github.com/apalache-mc/apalache/issues/1929">#1929</a> we have at
 least 5 different sources from which we need to load configuration parameters,
 and the loading must cascade, with the first listed source taking priority:</p>
 <ul>

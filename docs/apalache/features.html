@@ -196,7 +196,7 @@ the manual.) To check liveness/temporal properties, we employ a <a href="https:/
 <tr><td><code>/\</code>, <code>\/</code>, <code>~</code>, <code>=&gt;</code>, <code>&lt;=&gt;</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>TRUE</code>, <code>FALSE</code>, <code>BOOLEAN</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>\A x \in S: p</code>, <code>\E x \in S : p</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>ApaFoldSet</code>, or <code>ApaFoldSeqLeft</code>. See <a href="https://github.com/informalsystems/apalache/issues/841">#841</a>.</td></tr>
+<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>ApaFoldSet</code>, or <code>ApaFoldSeqLeft</code>. See <a href="https://github.com/apalache-mc/apalache/issues/841">#841</a>.</td></tr>
 <tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">-</td><td>Not supported. You can use records or a default value such as -1.</td></tr>
 <tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center">-</td><td>Use bounded quantifiers</td></tr>
 <tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
@@ -297,7 +297,7 @@ may only appear in temporal properties, not in e.g. actions.</p>
 <tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
 <tr><td><code>Head</code>, <code>Tail</code>, <code>Len``, </code>SubSeq<code>, </code>Append<code>, </code>\o<code>, </code>f[e]`</td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>EXCEPT</code></td><td align="center">✔</td><td align="center"></td><td></td></tr>
-<tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/informalsystems/apalache/issues/1350">#1350</a>.</td></tr>
+<tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/apalache-mc/apalache/issues/1350">#1350</a>.</td></tr>
 <tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>Use <code>Gen</code> of Apalache to produce bounded sequences</td></tr>
 </tbody></table>
 <h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>

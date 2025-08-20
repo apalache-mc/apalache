@@ -290,24 +290,24 @@ creates five SMT constraints:</p>
 list of element cells, we propose to map parent cells to membership pointers of
 various kinds. To this end, we introduce an abstract edge (the Scala code can
 be found in the package <code>at.forsyte.apalache.tla.bmcmt.arena</code>):</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L8-L24</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L8-L24</p>
 <p>Having an abstract edge, we introduce various case classes. The simplest case
 is the <code>FixedElemPtr</code>, which always evaluates to a fixed Boolean value:</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L26-L39</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L26-L39</p>
 <p>Instances of <code>FixedElemPtr</code> may be used in cases, when the membership is
 statically known. For instance, set membership for the sets <code>{1, 2, 3}</code> and
 <code>1..100</code> is static (always <code>true</code>) and thus it does not require any additional
 variables and constraints in SMT. The same applies to records and tuples.</p>
 <p>The next case is element membership that is represented via a Boolean constant
 in SMT:</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L41-L64</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L41-L64</p>
 <p>Instances of <code>SmtConstElemPtr</code> may be used in cases, when set membership can be
 encoded via a Boolean constant. Typically, this is needed when the membership
 is either to be defined by the solver, or when this constant caches a complex
 SMT constraint. For instance, it can be used by <code>CherryPick</code>.</p>
 <p>The most general case is represented via an SMT expression, which is encoded in
 TLA+ IR:</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L66-L77</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L66-L77</p>
 <p>Instances of <code>SmtExprElemPtr</code> may be used to encode set membership via SMT
 expressions. For instance:</p>
 <ul>

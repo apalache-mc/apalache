@@ -227,7 +227,7 @@ the vocabulary of TLA+. Moreover, TLA+ counterexamples are using the expression
 language of TLA+.</p>
 <p>To illustrate the problem, consider a very simple TLA+ specification of the
 MissionariesAndCannibals puzzle (specified by Leslie Lamport). We use a typed
-version of this specification, see <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped</a>. Consider
+version of this specification, see <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped</a>. Consider
 the following instance of the specification:</p>
 <pre><code class="language-tla">------------------- MODULE MC_MissionariesAndCannibalsTyped -----------------    
 Missionaries == { &quot;m1_OF_PERSON&quot;, &quot;m2_OF_PERSON&quot; }
@@ -303,7 +303,7 @@ InvariantViolation == who_is_on_bank[&quot;E&quot;] = {}
 
 ================================================================================
 (* Created by Apalache on Wed Dec 22 09:18:50 CET 2021 *)
-(* https://github.com/informalsystems/apalache *)
+(* https://github.com/apalache-mc/apalache *)
 </code></pre>
 <p>The above counterexample looks very simple and natural, if the reader knows
 TLA+. In our experience, these examples look alien to engineers, who are not
@@ -593,7 +593,7 @@ example. This operator is simply not a part of the trace. It could be added in
 the <code>#meta</code> object by Apalache.</p>
 <h3><a class="header" href="#discussion" id="discussion">Discussion</a></h3>
 <p>Shon Feder @shonfeder flagged important concerns about irregularity of the
-proposed format in the <a href="https://github.com/informalsystems/apalache/pull/1190">PR
+proposed format in the <a href="https://github.com/apalache-mc/apalache/pull/1190">PR
 comments</a>. In a
 regular approach we would treat all expressions uniformly. For example:</p>
 <pre><code class="language-json">// proposed form:

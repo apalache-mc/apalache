@@ -204,7 +204,7 @@ prefer a printable version in pdf, check the <a href="https://lamport.azurewebsi
 <h2><a class="header" href="#setup" id="setup">Setup</a></h2>
 <p>We assume that you have Apalache installed. If not, check the manual page on
 <a href="../apalache/installation/index.html">Apalache installation</a>. The minimal required version is 0.22.0.</p>
-<p>We provide all source files referenced in this tutorial as a <a href="https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bin-search">ZIP archive</a>
+<p>We provide all source files referenced in this tutorial as a <a href="https://download-directory.github.io/?url=https://github.com/apalache-mc/apalache/tree/main/test/tla/bin-search">ZIP archive</a>
 download. We still recommend that you follow along typing the TLA+ examples
 yourself.</p>
 <h2><a class="header" href="#running-example-binary-search" id="running-example-binary-search">Running example: Binary search</a></h2>
@@ -264,7 +264,7 @@ written as plain-text comments.</p>
 </ol>
 <h2><a class="header" href="#step-0-introducing-a-template-module" id="step-0-introducing-a-template-module">Step 0: Introducing a template module</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch0.tla">BinSearch0.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch0.tla">BinSearch0.tla</a>.</p>
 <p>TLA+ is built around the concept of a state machine. The specified system
 starts in a state that is picked from the set of its <em>initial states</em>. This
 set of states is described with a predicate over states in TLA+. This predicate
@@ -327,8 +327,8 @@ run Apalache again and observe what happens.</p>
 that the tools are working.</p>
 <h2><a class="header" href="#step-1-introducing-specification-parameters" id="step-1-introducing-specification-parameters">Step 1: Introducing specification parameters</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch1.tla">BinSearch1.tla</a>.</p>
-<p><em>Diffs</em>: <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch1.tla.patch">BinSearch1.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch1.tla">BinSearch1.tla</a>.</p>
+<p><em>Diffs</em>: <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch1.tla.patch">BinSearch1.tla.patch</a>.</p>
 <p>The Java code of <code>binarySearch</code> accepts two parameters: an array of integers
 called <code>a</code>, and an integer called <code>key</code>. Similar to these parameters, we introduce
 two specification parameters (called <code>CONSTANTS</code> in TLA+):</p>
@@ -386,8 +386,8 @@ type errors, execute:</p>
 </code></pre>
 <h2><a class="header" href="#step-2-specifying-the-base-case" id="step-2-specifying-the-base-case">Step 2: Specifying the base case</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>.</p>
-<p><em>Diffs</em>: <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch2.tla.patch">BinSearch2.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>.</p>
+<p><em>Diffs</em>: <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch2.tla.patch">BinSearch2.tla.patch</a>.</p>
 <p>We start with the simplest possible case that occurs in <code>binarySearch</code>. Namely,
 we consider the case where <code>low &gt; high</code>, that is, <code>binarySearch</code> never enters
 the loop.</p>
@@ -516,9 +516,9 @@ computed after evaluation of <code>Next</code>. You can think of the effect of <
 being delayed until the whole predicate <code>Next</code> is evaluated.</p>
 <h2><a class="header" href="#step-2b-basic-checks-for-the-base-case" id="step-2b-basic-checks-for-the-base-case">Step 2b: Basic checks for the base case</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC2_8.tla">MC2_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC2_8.tla">MC2_8.tla</a>.</p>
 <p>As we discussed, it is a good habit to periodically run the model checker, as you are writing
 the specification. Even if it doesn't check much, you would be able to catch
 the moment when the model checker slows down. This may give you a useful
@@ -589,13 +589,13 @@ anything interesting about our expectations. Because we have not set our
 expectations yet!</p>
 <h2><a class="header" href="#step-3-specifying-an-invariant-and-checking-it-for-the-base-case" id="step-3-specifying-an-invariant-and-checking-it-for-the-base-case">Step 3: Specifying an invariant and checking it for the base case</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch3.tla">BinSearch3.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch3.tla">BinSearch3.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC3_8.tla">MC3_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC3_8.tla">MC3_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch3.tla.patch">BinSearch3.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch3.tla.patch">BinSearch3.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC3_8.tla.patch">MC3_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC3_8.tla.patch">MC3_8.tla.patch</a>.</p>
 <p>What do we expect from binary search? We can check the Java documentation,
 e.g., <a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>:</p>
 <blockquote>
@@ -670,13 +670,13 @@ parameters. Hence, we have checked the property just for one data point. In
 Step 5, we will check <code>Postcondition</code> for all sequences admitted by <code>INT_WIDTH</code>.</p>
 <h2><a class="header" href="#step-4-specifying-the-loop-with-a-caveat" id="step-4-specifying-the-loop-with-a-caveat">Step 4: Specifying the loop (with a caveat)</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch4.tla">BinSearch4.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch4.tla">BinSearch4.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC4_8.tla">MC4_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC4_8.tla">MC4_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch4.tla.patch">BinSearch4.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch4.tla.patch">BinSearch4.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC4_8.tla.patch">MC4_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC4_8.tla.patch">MC4_8.tla.patch</a>.</p>
 <p>We specify the loop of <code>binarySearch</code> in TLA+ as follows:</p>
 <pre><code class="language-tla">\* Computation step (lines 5-16)
 Next ==
@@ -775,13 +775,13 @@ preprocessed specification that has <code>Init</code> and <code>Next</code> deco
 a detailed explanation in the section on <a href="../apalache/assignments-in-depth.html">Assignments in Apalache</a>.</p>
 <h2><a class="header" href="#step-5-checking-postcondition-for-plenty-of-inputs" id="step-5-checking-postcondition-for-plenty-of-inputs">Step 5: Checking Postcondition for plenty of inputs</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch5.tla.patch">BinSearch5.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch5.tla.patch">BinSearch5.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC5_8.tla.patch">MC5_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC5_8.tla.patch">MC5_8.tla.patch</a>.</p>
 <p>In this step, we are going to check the invariant <code>Postcondition</code> for all
 possible input sequences and all input keys (for a fixed bit-width).</p>
 <p>Create the file <code>MC5_8.tla</code> with the following contents:</p>
@@ -923,9 +923,9 @@ State2 ==
 the search, rather our invariant <code>Postcondition</code> is imprecise.</p>
 <h2><a class="header" href="#step-5b-fixing-the-postcondition" id="step-5b-fixing-the-postcondition">Step 5b: Fixing the postcondition</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
 <p>If we check our source of truth, that is, the Java documentation in
 <a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>, we will see the following sentences:</p>
 <pre><code>The range must be sorted (as by the {@link #sort(int[], int, int)} method)
@@ -973,13 +973,13 @@ whether the search is terminating on all inputs.</p>
 </div>
 <h2><a class="header" href="#step-6-checking-termination-and-progress" id="step-6-checking-termination-and-progress">Step 6: Checking termination and progress</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch6.tla">BinSearch6.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch6.tla">BinSearch6.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC6_8.tla">MC6_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC6_8.tla">MC6_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch6.tla.patch">BinSearch6.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch6.tla.patch">BinSearch6.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC6_8.tla.patch">MC6_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC6_8.tla.patch">MC6_8.tla.patch</a>.</p>
 <p>Actually, we do not need 10 steps to check termination for the case <code>INT_WIDTH = 8</code>. If you recall the complexity of the binary search, it needs
 <code>ceil(log2(Len(INPUT_SEQ)))</code> steps to terminate.</p>
 <p>To check this property, we add the number of steps as a variable in
@@ -1028,13 +1028,13 @@ write a simpler property, which demonstrates the progress of the search:</p>
 <p>It takes about 10 seconds to check <code>Progress</code> as well.</p>
 <h2><a class="header" href="#step-7-fixed-width-integers" id="step-7-fixed-width-integers">Step 7: Fixed-width integers</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch7.tla">BinSearch7.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch7.tla">BinSearch7.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC7_8.tla">MC7_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC7_8.tla">MC7_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch7.tla.patch">BinSearch7.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch7.tla.patch">BinSearch7.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC7_8.tla.patch">MC7_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC7_8.tla.patch">MC7_8.tla.patch</a>.</p>
 <p>Do you recall that our specification of the loop had a caveat? Let us have a
 look at this piece of the specification again:</p>
 <pre><code class="language-tla">    IF ~isTerminated
@@ -1120,13 +1120,13 @@ Total time: 39.540 sec
 issue that is caused by the integer overflow!</p>
 <h2><a class="header" href="#step-8-checking-the-boundaries" id="step-8-checking-the-boundaries">Step 8: Checking the boundaries</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch8.tla">BinSearch8.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch8.tla">BinSearch8.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC8_8.tla">MC8_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC8_8.tla">MC8_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch8.tla.patch">BinSearch8.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch8.tla.patch">BinSearch8.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC8_8.tla.patch">MC8_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC8_8.tla.patch">MC8_8.tla.patch</a>.</p>
 <p>As we have seen in Step 7, the cause of all errors in <code>PostconditionSorted</code>,
 <code>Termination</code>, and <code>Progress</code> is that the addition <code>low + high</code> overflows and
 thus the expression <code>INPUT_SEQ[mid + 1]</code> accesses <code>INPUT_SEQ</code> outside of its
@@ -1173,13 +1173,13 @@ State1 ==
 <p>In state 1, we have <code>low + high = 116 + 59 &gt; 2^7</code>. Since we have <code>INT_WIDTH = 8</code>, we have <code>IAdd(116, 59) = -81</code>.</p>
 <h2><a class="header" href="#step-9-fixing-the-access-bug" id="step-9-fixing-the-access-bug">Step 9: Fixing the access bug</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch9.tla">BinSearch9.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch9.tla">BinSearch9.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC9_8.tla">MC9_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC9_8.tla">MC9_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch9.tla.patch">BinSearch9.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch9.tla.patch">BinSearch9.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC9_8.tla.patch">MC9_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC9_8.tla.patch">MC9_8.tla.patch</a>.</p>
 <p>Let us apply the fix that was proposed by Joshua Bloch in <a href="https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html">Nearly All Binary
 Searches and Mergesorts are Broken</a>. Namely, we update this line of
 <code>BinSearch8.tla</code>:</p>
@@ -1229,13 +1229,13 @@ it takes Apalache significantly less time.</p>
 Observe that it takes Apalache significantly more time.</p>
 <h2><a class="header" href="#step-10-beautifying-the-specification" id="step-10-beautifying-the-specification">Step 10: Beautifying the specification</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla.patch">BinSearch10.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch10.tla.patch">BinSearch10.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla.patch">MC10_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC10_8.tla.patch">MC10_8.tla.patch</a>.</p>
 <p>We have reached our goals: TLA+ and Apalache helped us in finding the access
 bug and showing that its fix works. Now it is time to look back at the
 specification and make it easier to read.</p>
@@ -1310,9 +1310,9 @@ formula into actions. Normally, an action contains assignments to all primed
 variables.</p>
 <h2><a class="header" href="#discussion" id="discussion">Discussion</a></h2>
 <p>The final specifications can be found in
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
 <p>In this tutorial, we have shown how to:</p>
 <ul>
 <li>Specify the behavior of a sequential algorithm (binary search).</li>
@@ -1345,7 +1345,7 @@ this tutorial.</p>
 <p>This tutorial touches upon the basics of TLA+ and Apalache. For instance, we
 did not discuss non-determinism, as our specification is entirely
 deterministic. We will demonstrate advanced features in future tutorials.</p>
-<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
+<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/apalache-mc/apalache/issues">open an issue</a>
 or drop us a message on <a href="https://apalache.discourse.group/">Discourse</a>.</p>
 
                     </main>

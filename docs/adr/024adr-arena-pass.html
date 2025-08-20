@@ -193,7 +193,7 @@ accepting a reasonable time investment into refactoring.</p>
 <!-- Communicates the forces at play (technical, political, social, project).
      This is the story explaining the problem we are looking to resolve.
 -->
-<p>The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. <a href="https://github.com/informalsystems/apalache/issues/1774">#1774</a>, <a href="https://github.com/informalsystems/apalache/issues/2338">#2338</a>).
+<p>The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. <a href="https://github.com/apalache-mc/apalache/issues/1774">#1774</a>, <a href="https://github.com/informalsystems/apalache/issues/2338">#2338</a>).
 Relevant for this ADR is the fact that rewriting rules do multiple things at once, which are difficult to separate. They:</p>
 <ol>
 <li>Modify arenas</li>
@@ -232,7 +232,7 @@ Observe also, that calls to <code>Z3SolverContext</code> happen at multiple poin
 <p>Under (3), the same rule would look more like this:
 <img src="seqDiaAfter.png" alt="" /></p>
 <p>Specifically, we would no longer need <code>PureArenaAdapters</code>, and we could drop the parts of <code>SymbState</code>, which are treated as mutable (the <code>TlaEx</code> value). In the above, <code>RewriterScope</code> is what remains of <code>SymbState</code>, when we remove the <code>TlaEx</code> value.</p>
-<p>A prototype implementation can be found in <a href="https://github.com/informalsystems/apalache/pull/2554">this PR</a>.</p>
+<p>A prototype implementation can be found in <a href="https://github.com/apalache-mc/apalache/pull/2554">this PR</a>.</p>
 <h2><a class="header" href="#consequences" id="consequences">Consequences</a></h2>
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
@@ -240,9 +240,9 @@ Observe also, that calls to <code>Z3SolverContext</code> happen at multiple poin
 <h3><a class="header" href="#isolated-arena-pass" id="isolated-arena-pass">Isolated arena pass</a></h3>
 <p>We initially explored option (2), as we believed it best embodied the &quot;separation of concerns&quot; principle. 
 Additionally, the idea was that removing arena computation from the rewriting rules should simplify the rules and result in more clarity, readability, and maintainability.
-A prototype can be found <a href="https://github.com/informalsystems/apalache/tree/jk/arenaSeparationProto/tla-pp/src/main/scala/at/forsyte/apalache/tla/pp/arenas">here</a>.</p>
+A prototype can be found <a href="https://github.com/apalache-mc/apalache/tree/jk/arenaSeparationProto/tla-pp/src/main/scala/at/forsyte/apalache/tla/pp/arenas">here</a>.</p>
 <p>However, separating arena computation into its own pass introduced a new issue, the propagation of information between the arena computation pass and the SMT translation pass that would follow it.
-In <a href="https://github.com/informalsystems/apalache/pull/2467">Notes</a> one can find a more in-depth explanation of the issue and its solutions.
+In <a href="https://github.com/apalache-mc/apalache/pull/2467">Notes</a> one can find a more in-depth explanation of the issue and its solutions.
 In a nutshell, the problem was that, to retain information from ephemeral expressions, and tie it back to the original syntax tree, we would need a map-of-maps data structure (in the theoretical sense, there potentially exist more efficient tree-like structures at the level of implementation detail, but not by a significant order of magnitude).
 Between the two passes, this data structure needs to be stored either in memory or to a file (and read later).</p>
 <p>Compared to that, the single-traversal approach of the current rewriting rules

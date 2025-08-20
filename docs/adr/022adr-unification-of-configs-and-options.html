@@ -189,19 +189,19 @@ we decided for unifying our CLI input with our configuration management system<b
 to achieve a more modular architecture and greater static guarantees<br />
 accepting the development costs and possible increased cost of introducing new CLI inputs in the future.</p>
 <h2><a class="header" href="#context" id="context">Context</a></h2>
-<p>As work has proceeded on <a href="https://github.com/informalsystems/apalache/milestone/42">Shai</a>, following the design laid out in <a href="./010rfc-transition-explorer.html">RFC 010</a>, it
+<p>As work has proceeded on <a href="https://github.com/apalache-mc/apalache/milestone/42">Shai</a>, following the design laid out in <a href="./010rfc-transition-explorer.html">RFC 010</a>, it
 has been revealed that we can provide value to the MBT team  by exposing the
-current command line interface via RPC calls (see <a href="https://github.com/informalsystems/apalache/issues/2013">#2013</a>). This functionality
+current command line interface via RPC calls (see <a href="https://github.com/apalache-mc/apalache/issues/2013">#2013</a>). This functionality
 will require a way of receiving program configuration input from a gRPC call and
 forwarding that configuration on to various pass executors.</p>
 <p>Additionally, for a long while we have been aware of the limitations and
 brittleness of our current system for storing and communicating configured
-options throughout the paths of the program (see <a href="https://github.com/informalsystems/apalache/issues/1174">#1174</a>) and we have
+options throughout the paths of the program (see <a href="https://github.com/apalache-mc/apalache/issues/1174">#1174</a>) and we have
 recognized the value we might derive by unifying our CLI inputs with our
-configuration management system (see <a href="https://github.com/informalsystems/apalache/issues/1177">#1177</a>).</p>
+configuration management system (see <a href="https://github.com/apalache-mc/apalache/issues/1177">#1177</a>).</p>
 <h2><a class="header" href="#options" id="options">Options</a></h2>
-<p>We considered trying to implement the needed RPCs without addressing <a href="https://github.com/informalsystems/apalache/issues/1174">#1174</a> and
-<a href="https://github.com/informalsystems/apalache/issues/1177">#1177</a>, but two factors convinced us that these were legitimate pre-requisites:</p>
+<p>We considered trying to implement the needed RPCs without addressing <a href="https://github.com/apalache-mc/apalache/issues/1174">#1174</a> and
+<a href="https://github.com/apalache-mc/apalache/issues/1177">#1177</a>, but two factors convinced us that these were legitimate pre-requisites:</p>
 <ol>
 <li>If we try to expose the current CLI functionality via RPC calls without first
 introducing a unifying abstraction, any flag or option introduced on one side

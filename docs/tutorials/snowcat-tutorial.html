@@ -379,7 +379,7 @@ Type checker [OK]
 </code></pre>
 <p>Snowcat is happy, and so we are too!</p>
 <h1><a class="header" href="#discussion" id="discussion">Discussion</a></h1>
-<p>To see the complete code, check <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/LamportMutexTyped.tla">LamportMutexTyped.tla</a>. We have added seven
+<p>To see the complete code, check <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/LamportMutexTyped.tla">LamportMutexTyped.tla</a>. We have added seven
 type annotations for 184 lines of code. Not bad.</p>
 <p>It was relatively easy to figure out the types of constants and variables in
 our example, though it required some exploration of the specification.</p>
@@ -392,7 +392,7 @@ engineering-oriented peers find these annotations to be quite important.</p>
 usually happens when you declare an operator of a parameter that can be: a
 function, a tuple, a record, or a sequence (or a subset of these four types
 that has at least two elements). For instance, here is a definition from
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/GameOfLifeTyped.tla">GameOfLifeTyped.tla</a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/GameOfLifeTyped.tla">GameOfLifeTyped.tla</a>:</p>
 <pre><code class="language-tla">Pos ==
     { &lt;&lt;x, y&gt;&gt;: x, y \in 1..N }
 </code></pre>
@@ -413,15 +413,15 @@ Pos ==
 <h2><a class="header" href="#further-reading" id="further-reading">Further reading</a></h2>
 <p>For more advanced type annotations, check the following examples:</p>
 <ul>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla">CarTalkPuzzleTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/TwoPhaseTyped.tla">TwoPhaseTyped.tla</a>.</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla">CarTalkPuzzleTyped.tla</a>,</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/TwoPhaseTyped.tla">TwoPhaseTyped.tla</a>.</li>
 </ul>
 <p>We have not discussed type aliases, which are a more advanced feature of the
 type checker. To learn about type aliases, see <a href="../HOWTOs/howto-write-type-annotations.html">HOWTO on writing type
 annotations</a>.</p>
-<p>If you are experiencing a problem with Snowcat, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
+<p>If you are experiencing a problem with Snowcat, feel free to <a href="https://github.com/apalache-mc/apalache/issues">open an issue</a>
 or drop us a message on <a href="https://apalache.discourse.group/">Discourse</a>.</p>
 
                     </main>

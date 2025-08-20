@@ -230,7 +230,7 @@ prefer a printable version in pdf, check the <a href="https://lamport.azurewebsi
 <h2><a class="header" href="#setup" id="setup">Setup</a></h2>
 <p>We assume that you have Apalache installed. If not, check the manual page on
 <a href="tutorials/../apalache/installation/index.html">Apalache installation</a>. The minimal required version is 0.22.0.</p>
-<p>We provide all source files referenced in this tutorial as a <a href="https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bin-search">ZIP archive</a>
+<p>We provide all source files referenced in this tutorial as a <a href="https://download-directory.github.io/?url=https://github.com/apalache-mc/apalache/tree/main/test/tla/bin-search">ZIP archive</a>
 download. We still recommend that you follow along typing the TLA+ examples
 yourself.</p>
 <h2><a class="header" href="#running-example-binary-search" id="running-example-binary-search">Running example: Binary search</a></h2>
@@ -290,7 +290,7 @@ written as plain-text comments.</p>
 </ol>
 <h2><a class="header" href="#step-0-introducing-a-template-module" id="step-0-introducing-a-template-module">Step 0: Introducing a template module</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch0.tla">BinSearch0.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch0.tla">BinSearch0.tla</a>.</p>
 <p>TLA+ is built around the concept of a state machine. The specified system
 starts in a state that is picked from the set of its <em>initial states</em>. This
 set of states is described with a predicate over states in TLA+. This predicate
@@ -353,8 +353,8 @@ run Apalache again and observe what happens.</p>
 that the tools are working.</p>
 <h2><a class="header" href="#step-1-introducing-specification-parameters" id="step-1-introducing-specification-parameters">Step 1: Introducing specification parameters</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch1.tla">BinSearch1.tla</a>.</p>
-<p><em>Diffs</em>: <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch1.tla.patch">BinSearch1.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch1.tla">BinSearch1.tla</a>.</p>
+<p><em>Diffs</em>: <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch1.tla.patch">BinSearch1.tla.patch</a>.</p>
 <p>The Java code of <code>binarySearch</code> accepts two parameters: an array of integers
 called <code>a</code>, and an integer called <code>key</code>. Similar to these parameters, we introduce
 two specification parameters (called <code>CONSTANTS</code> in TLA+):</p>
@@ -412,8 +412,8 @@ type errors, execute:</p>
 </code></pre>
 <h2><a class="header" href="#step-2-specifying-the-base-case" id="step-2-specifying-the-base-case">Step 2: Specifying the base case</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>.</p>
-<p><em>Diffs</em>: <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch2.tla.patch">BinSearch2.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>.</p>
+<p><em>Diffs</em>: <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch2.tla.patch">BinSearch2.tla.patch</a>.</p>
 <p>We start with the simplest possible case that occurs in <code>binarySearch</code>. Namely,
 we consider the case where <code>low &gt; high</code>, that is, <code>binarySearch</code> never enters
 the loop.</p>
@@ -542,9 +542,9 @@ computed after evaluation of <code>Next</code>. You can think of the effect of <
 being delayed until the whole predicate <code>Next</code> is evaluated.</p>
 <h2><a class="header" href="#step-2b-basic-checks-for-the-base-case" id="step-2b-basic-checks-for-the-base-case">Step 2b: Basic checks for the base case</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch2.tla">BinSearch2.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC2_8.tla">MC2_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC2_8.tla">MC2_8.tla</a>.</p>
 <p>As we discussed, it is a good habit to periodically run the model checker, as you are writing
 the specification. Even if it doesn't check much, you would be able to catch
 the moment when the model checker slows down. This may give you a useful
@@ -615,13 +615,13 @@ anything interesting about our expectations. Because we have not set our
 expectations yet!</p>
 <h2><a class="header" href="#step-3-specifying-an-invariant-and-checking-it-for-the-base-case" id="step-3-specifying-an-invariant-and-checking-it-for-the-base-case">Step 3: Specifying an invariant and checking it for the base case</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch3.tla">BinSearch3.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch3.tla">BinSearch3.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC3_8.tla">MC3_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC3_8.tla">MC3_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch3.tla.patch">BinSearch3.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch3.tla.patch">BinSearch3.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC3_8.tla.patch">MC3_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC3_8.tla.patch">MC3_8.tla.patch</a>.</p>
 <p>What do we expect from binary search? We can check the Java documentation,
 e.g., <a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>:</p>
 <blockquote>
@@ -696,13 +696,13 @@ parameters. Hence, we have checked the property just for one data point. In
 Step 5, we will check <code>Postcondition</code> for all sequences admitted by <code>INT_WIDTH</code>.</p>
 <h2><a class="header" href="#step-4-specifying-the-loop-with-a-caveat" id="step-4-specifying-the-loop-with-a-caveat">Step 4: Specifying the loop (with a caveat)</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch4.tla">BinSearch4.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch4.tla">BinSearch4.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC4_8.tla">MC4_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC4_8.tla">MC4_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch4.tla.patch">BinSearch4.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch4.tla.patch">BinSearch4.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC4_8.tla.patch">MC4_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC4_8.tla.patch">MC4_8.tla.patch</a>.</p>
 <p>We specify the loop of <code>binarySearch</code> in TLA+ as follows:</p>
 <pre><code class="language-tla">\* Computation step (lines 5-16)
 Next ==
@@ -801,13 +801,13 @@ preprocessed specification that has <code>Init</code> and <code>Next</code> deco
 a detailed explanation in the section on <a href="tutorials/../apalache/assignments-in-depth.html">Assignments in Apalache</a>.</p>
 <h2><a class="header" href="#step-5-checking-postcondition-for-plenty-of-inputs" id="step-5-checking-postcondition-for-plenty-of-inputs">Step 5: Checking Postcondition for plenty of inputs</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch5.tla.patch">BinSearch5.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch5.tla.patch">BinSearch5.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC5_8.tla.patch">MC5_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC5_8.tla.patch">MC5_8.tla.patch</a>.</p>
 <p>In this step, we are going to check the invariant <code>Postcondition</code> for all
 possible input sequences and all input keys (for a fixed bit-width).</p>
 <p>Create the file <code>MC5_8.tla</code> with the following contents:</p>
@@ -949,9 +949,9 @@ State2 ==
 the search, rather our invariant <code>Postcondition</code> is imprecise.</p>
 <h2><a class="header" href="#step-5b-fixing-the-postcondition" id="step-5b-fixing-the-postcondition">Step 5b: Fixing the postcondition</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch5.tla">BinSearch5.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC5_8.tla">MC5_8.tla</a>.</p>
 <p>If we check our source of truth, that is, the Java documentation in
 <a href="https://github.com/openjdk/jdk/blob/d7f31d0d53bfec627edc83ceb75fc6202891e186/src/java.base/share/classes/java/util/Arrays.java#L1662-L1698">Arrays.java in OpenJDK</a>, we will see the following sentences:</p>
 <pre><code>The range must be sorted (as by the {@link #sort(int[], int, int)} method)
@@ -999,13 +999,13 @@ whether the search is terminating on all inputs.</p>
 </div>
 <h2><a class="header" href="#step-6-checking-termination-and-progress" id="step-6-checking-termination-and-progress">Step 6: Checking termination and progress</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch6.tla">BinSearch6.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch6.tla">BinSearch6.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC6_8.tla">MC6_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC6_8.tla">MC6_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch6.tla.patch">BinSearch6.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch6.tla.patch">BinSearch6.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC6_8.tla.patch">MC6_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC6_8.tla.patch">MC6_8.tla.patch</a>.</p>
 <p>Actually, we do not need 10 steps to check termination for the case <code>INT_WIDTH = 8</code>. If you recall the complexity of the binary search, it needs
 <code>ceil(log2(Len(INPUT_SEQ)))</code> steps to terminate.</p>
 <p>To check this property, we add the number of steps as a variable in
@@ -1054,13 +1054,13 @@ write a simpler property, which demonstrates the progress of the search:</p>
 <p>It takes about 10 seconds to check <code>Progress</code> as well.</p>
 <h2><a class="header" href="#step-7-fixed-width-integers" id="step-7-fixed-width-integers">Step 7: Fixed-width integers</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch7.tla">BinSearch7.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch7.tla">BinSearch7.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC7_8.tla">MC7_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC7_8.tla">MC7_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch7.tla.patch">BinSearch7.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch7.tla.patch">BinSearch7.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC7_8.tla.patch">MC7_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC7_8.tla.patch">MC7_8.tla.patch</a>.</p>
 <p>Do you recall that our specification of the loop had a caveat? Let us have a
 look at this piece of the specification again:</p>
 <pre><code class="language-tla">    IF ~isTerminated
@@ -1146,13 +1146,13 @@ Total time: 39.540 sec
 issue that is caused by the integer overflow!</p>
 <h2><a class="header" href="#step-8-checking-the-boundaries" id="step-8-checking-the-boundaries">Step 8: Checking the boundaries</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch8.tla">BinSearch8.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch8.tla">BinSearch8.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC8_8.tla">MC8_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC8_8.tla">MC8_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch8.tla.patch">BinSearch8.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch8.tla.patch">BinSearch8.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC8_8.tla.patch">MC8_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC8_8.tla.patch">MC8_8.tla.patch</a>.</p>
 <p>As we have seen in Step 7, the cause of all errors in <code>PostconditionSorted</code>,
 <code>Termination</code>, and <code>Progress</code> is that the addition <code>low + high</code> overflows and
 thus the expression <code>INPUT_SEQ[mid + 1]</code> accesses <code>INPUT_SEQ</code> outside of its
@@ -1199,13 +1199,13 @@ State1 ==
 <p>In state 1, we have <code>low + high = 116 + 59 &gt; 2^7</code>. Since we have <code>INT_WIDTH = 8</code>, we have <code>IAdd(116, 59) = -81</code>.</p>
 <h2><a class="header" href="#step-9-fixing-the-access-bug" id="step-9-fixing-the-access-bug">Step 9: Fixing the access bug</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch9.tla">BinSearch9.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch9.tla">BinSearch9.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC9_8.tla">MC9_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC9_8.tla">MC9_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch9.tla.patch">BinSearch9.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch9.tla.patch">BinSearch9.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC9_8.tla.patch">MC9_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC9_8.tla.patch">MC9_8.tla.patch</a>.</p>
 <p>Let us apply the fix that was proposed by Joshua Bloch in <a href="https://ai.googleblog.com/2006/06/extra-extra-read-all-about-it-nearly.html">Nearly All Binary
 Searches and Mergesorts are Broken</a>. Namely, we update this line of
 <code>BinSearch8.tla</code>:</p>
@@ -1255,13 +1255,13 @@ it takes Apalache significantly less time.</p>
 Observe that it takes Apalache significantly more time.</p>
 <h2><a class="header" href="#step-10-beautifying-the-specification" id="step-10-beautifying-the-specification">Step 10: Beautifying the specification</a></h2>
 <p><em>Source files for this step</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
 <p><em>Diffs</em>:
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla.patch">BinSearch10.tla.patch</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch10.tla.patch">BinSearch10.tla.patch</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla.patch">MC10_8.tla.patch</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC10_8.tla.patch">MC10_8.tla.patch</a>.</p>
 <p>We have reached our goals: TLA+ and Apalache helped us in finding the access
 bug and showing that its fix works. Now it is time to look back at the
 specification and make it easier to read.</p>
@@ -1336,9 +1336,9 @@ formula into actions. Normally, an action contains assignments to all primed
 variables.</p>
 <h2><a class="header" href="#discussion" id="discussion">Discussion</a></h2>
 <p>The final specifications can be found in
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/BinSearch10.tla">BinSearch10.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bin-search/MC10_8.tla">MC10_8.tla</a>.</p>
 <p>In this tutorial, we have shown how to:</p>
 <ul>
 <li>Specify the behavior of a sequential algorithm (binary search).</li>
@@ -1371,7 +1371,7 @@ this tutorial.</p>
 <p>This tutorial touches upon the basics of TLA+ and Apalache. For instance, we
 did not discuss non-determinism, as our specification is entirely
 deterministic. We will demonstrate advanced features in future tutorials.</p>
-<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
+<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/apalache-mc/apalache/issues">open an issue</a>
 or drop us a message on <a href="https://apalache.discourse.group/">Discourse</a>.</p>
 <h1><a class="header" href="#tutorial-on-the-snowcat-type-checker" id="tutorial-on-the-snowcat-type-checker">Tutorial on the Snowcat❄🐱 Type Checker</a></h1>
 <p><strong>Difficulty: Blue trail – Easy</strong></p>
@@ -1582,7 +1582,7 @@ Type checker [OK]
 </code></pre>
 <p>Snowcat is happy, and so we are too!</p>
 <h1><a class="header" href="#discussion-1" id="discussion-1">Discussion</a></h1>
-<p>To see the complete code, check <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/LamportMutexTyped.tla">LamportMutexTyped.tla</a>. We have added seven
+<p>To see the complete code, check <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/LamportMutexTyped.tla">LamportMutexTyped.tla</a>. We have added seven
 type annotations for 184 lines of code. Not bad.</p>
 <p>It was relatively easy to figure out the types of constants and variables in
 our example, though it required some exploration of the specification.</p>
@@ -1595,7 +1595,7 @@ engineering-oriented peers find these annotations to be quite important.</p>
 usually happens when you declare an operator of a parameter that can be: a
 function, a tuple, a record, or a sequence (or a subset of these four types
 that has at least two elements). For instance, here is a definition from
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/GameOfLifeTyped.tla">GameOfLifeTyped.tla</a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/GameOfLifeTyped.tla">GameOfLifeTyped.tla</a>:</p>
 <pre><code class="language-tla">Pos ==
     { &lt;&lt;x, y&gt;&gt;: x, y \in 1..N }
 </code></pre>
@@ -1616,15 +1616,15 @@ Pos ==
 <h2><a class="header" href="#further-reading" id="further-reading">Further reading</a></h2>
 <p>For more advanced type annotations, check the following examples:</p>
 <ul>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla">CarTalkPuzzleTyped.tla</a>,</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
-<li><a href="https://github.com/informalsystems/apalache/blob/main/test/tla/TwoPhaseTyped.tla">TwoPhaseTyped.tla</a>.</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/CigaretteSmokersTyped.tla">CigaretteSmokersTyped.tla</a>,</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/CarTalkPuzzleTyped.tla">CarTalkPuzzleTyped.tla</a>,</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/QueensTyped.tla">QueensTyped.tla</a>.</li>
+<li><a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/TwoPhaseTyped.tla">TwoPhaseTyped.tla</a>.</li>
 </ul>
 <p>We have not discussed type aliases, which are a more advanced feature of the
 type checker. To learn about type aliases, see <a href="tutorials/../HOWTOs/howto-write-type-annotations.html">HOWTO on writing type
 annotations</a>.</p>
-<p>If you are experiencing a problem with Snowcat, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
+<p>If you are experiencing a problem with Snowcat, feel free to <a href="https://github.com/apalache-mc/apalache/issues">open an issue</a>
 or drop us a message on <a href="https://apalache.discourse.group/">Discourse</a>.</p>
 <h1><a class="header" href="#tutorial-on-checking-pluscal-specifications-with-apalache" id="tutorial-on-checking-pluscal-specifications-with-apalache">Tutorial on checking PlusCal specifications with Apalache</a></h1>
 <p><strong>Difficulty: Blue trail – Easy</strong></p>
@@ -1639,7 +1639,7 @@ specification, check the comments in the original <a href="https://github.com/tl
 <h2><a class="header" href="#setup-2" id="setup-2">Setup</a></h2>
 <p>We assume that you have Apalache installed. If not, check the manual page on
 <a href="tutorials/../apalache/installation/index.html">Apalache installation</a>. The minimal required version is 0.22.0.</p>
-<p>We provide all source files referenced in this tutorial as a <a href="https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bakery-pluscal">ZIP archive</a>
+<p>We provide all source files referenced in this tutorial as a <a href="https://download-directory.github.io/?url=https://github.com/apalache-mc/apalache/tree/main/test/tla/bakery-pluscal">ZIP archive</a>
 download. We still recommend that you follow along typing the TLA+ examples
 yourself.</p>
 <h2><a class="header" href="#running-example-bakery" id="running-example-bakery">Running example: Bakery</a></h2>
@@ -1648,7 +1648,7 @@ specification has been checked with the model checker <a href="https://github.co
 <a href="https://lamport.azurewebsites.net/">Leslie Lamport</a> has proved safety of this algorithm with the <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
 <h2><a class="header" href="#step-0-remove-the-tlaps-proof" id="step-0-remove-the-tlaps-proof">Step 0: Remove the TLAPS proof</a></h2>
 <p>Since we are not interested in the TLAPS proof, we copy <a href="https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla">Bakery.tla</a> to
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> and modify it as follows:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> and modify it as follows:</p>
 <ul>
 <li>
 <p>Remove <code>TLAPS</code> from the list of extended modules</p>
@@ -1663,7 +1663,7 @@ specification has been checked with the model checker <a href="https://github.co
 </li>
 </ul>
 <h2><a class="header" href="#step-1-add-a-module-with-type-annotations" id="step-1-add-a-module-with-type-annotations">Step 1: Add a module with type annotations</a></h2>
-<p>Let us check the types of <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> with Apalache:</p>
+<p>Let us check the types of <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a> with Apalache:</p>
 <pre><code class="language-sh">$ apalache-mc typecheck BakeryWoTlaps.tla
 ...
 Typing input error: Expected a type annotation for VARIABLE max
@@ -1678,7 +1678,7 @@ syntax:</p>
     variables unchecked = {}, max = 0, nxt = 1 ;
 </code></pre>
 <p>The most straightforward approach would be to add type annotations directly in
-the PlusCal code. As reported in <a href="https://github.com/informalsystems/apalache/issues/1412">Issue 1412</a>, this does not work as
+the PlusCal code. As reported in <a href="https://github.com/apalache-mc/apalache/issues/1412">Issue 1412</a>, this does not work as
 expected, as the PlusCal translator erases the comments.</p>
 <p>A simple solution is to add type annotations directly to the declarations in
 the generated TLA+ code. However, this solution is fragile. If we change the
@@ -1854,9 +1854,9 @@ IsPositive(x) == x &gt; 0
 </code></pre>
 <h2><a class="header" href="#conclusion" id="conclusion">Conclusion</a></h2>
 <p>The final specifications can be found in
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla">BakeryTyped.tla</a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla">BakeryTyped.tla</a>
 and
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla">BakeryWoTlaps.tla</a>.</p>
 <p>In this tutorial, we have shown how to:</p>
 <ul>
 <li>Annotate a PlusCal spec with types by introducing an additional TLA+ module.</li>
@@ -1865,7 +1865,7 @@ and
 <li>Check safety of Bakery for unbounded executions by invariant checking (for
 <code>N=4</code>).</li>
 </ul>
-<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/informalsystems/apalache/issues">open an issue</a>
+<p>If you are experiencing a problem with Apalache, feel free to <a href="https://github.com/apalache-mc/apalache/issues">open an issue</a>
 or drop us a message on <a href="https://apalache.discourse.group/">Discourse</a>.</p>
 <h2><a class="header" href="#further-reading-1" id="further-reading-1">Further reading</a></h2>
 <ul>
@@ -3424,7 +3424,7 @@ TPTypeOK ==
 contains records of two types: <code>{ type: Str }</code> and <code>{ type: Str, rm: RM }</code>.
 This seems to be problematic, as we have to mix in two records types in a
 single set, which requires us to specify its only type.</p>
-<p>To this end, we have to use the <a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla">Variants module</a>, which is distributed with
+<p>To this end, we have to use the <a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla">Variants module</a>, which is distributed with
 Apalache. For reference, check the <a href="HOWTOs/../lang/variants.html">Chapter on variants</a>. First, we declare a
 type alias for the type of messages in a separate file called
 <code>TwoPhaseTyped_typedefs.tla</code>:</p>
@@ -3531,7 +3531,7 @@ problem in untyped TLA+. In fact, it is a well-known idiom: Construct a
 function by using the function set operator, and then apply sequence operators to it.
 In Apalache we have to explicitly write that a function should be reinterpreted
 as a sequence.  To this end, we have to use the operator <code>FunAsSeq</code> from the
-module <a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla">Apalache.tla</a>. Hence, we add <code>Apalache</code> to the <code>EXTENDS</code> clause and
+module <a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Apalache.tla">Apalache.tla</a>. Hence, we add <code>Apalache</code> to the <code>EXTENDS</code> clause and
 apply the operator <code>FunAsSeq</code> as follows:</p>
 <pre><code class="language-tla">EXTENDS Naturals, Sequences, Apalache
 ...
@@ -3564,7 +3564,7 @@ shortcut.</p>
 <p>By convention, we introduce all type aliases by annotating an operator called
 <code>&lt;PREFIX&gt;_typedefs</code>, where the <code>&lt;PREFIX&gt;</code> is replaced with a unique prefix to
 prevent name clashes across different modules. Typically <code>&lt;PREFIX&gt;</code> is just the
-module name. For the <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped.tla</a> example, we have:</p>
+module name. For the <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped.tla</a> example, we have:</p>
 <pre><code class="language-tla">\* @typeAlias: persons = Set(PERSON);
 MissionariesAndCannibals_typedefs = TRUE
 </code></pre>
@@ -3808,7 +3808,7 @@ for the tool.</p>
 <h1><a class="header" href="#prebuilt-packages" id="prebuilt-packages">Prebuilt Packages</a></h1>
 <p>You need to download and install a Java Virtual Machine first. 
 We recommend version 17 of the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-17-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK.</p>
-<p>Once you have installed Java, download the <a href="https://github.com/informalsystems/apalache/releases">latest
+<p>Once you have installed Java, download the <a href="https://github.com/apalache-mc/apalache/releases">latest
 release</a> and unpack into
 a directory of your choice. Depending on your OS, you have two options.</p>
 <p><em>Option 1: Linux, macOS.</em> You can run the script <code>./bin/apalache-mc</code>, or,
@@ -3882,7 +3882,7 @@ $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/ap
 </code></pre>
 <h2><a class="header" href="#using-the-development-branch-of-apalache" id="using-the-development-branch-of-apalache">Using the development branch of Apalache</a></h2>
 <p>The development of Apalache proceeds at a quick pace, and we cut releases weekly.
-Please refer to the <a href="https://github.com/informalsystems/apalache/blob/main/CHANGES.md">changelog</a> and the <a href="https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md">manual</a> on the <code>main</code> development
+Please refer to the <a href="https://github.com/apalache-mc/apalache/blob/main/CHANGES.md">changelog</a> and the <a href="https://github.com/apalache-mc/apalache/blob/main/docs/src/apalache/index.md">manual</a> on the <code>main</code> development
 branch for a report of the newest features. Since we cut releases weekly, you
 should have access to all the latest features in the last week by using the
 <code>latest</code> tag. However, if you wish to use the very latest developments as they
@@ -3922,9 +3922,9 @@ build a docker image of Apalache, issue the following command in
 <li>On macOS / Homebrew: <code>brew install sbt</code></li>
 </ul>
 </li>
-<li>Clone the git repository: <code>git clone https://github.com/informalsystems/apalache.git</code>.</li>
+<li>Clone the git repository: <code>git clone https://github.com/apalache-mc/apalache.git</code>.</li>
 <li>Change into the project directory: <code>cd apalache</code>.</li>
-<li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, or use <a href="https://github.com/informalsystems/apalache/blob/main/CONTRIBUTING.md#environment">another way to set up the shell environment</a>.</li>
+<li>Install <a href="https://direnv.net/">direnv</a> and run <code>direnv allow</code>, or use <a href="https://github.com/apalache-mc/apalache/blob/main/CONTRIBUTING.md#environment">another way to set up the shell environment</a>.</li>
 <li>To build and package Apalache for development purposes, run <code>make</code>.
 <ul>
 <li>To skip running the tests, you can run <code>make package</code>.</li>
@@ -4246,7 +4246,7 @@ run the following command:</p>
 </li>
 <li>
 <p>It translates SANY semantic nodes
-into <a href="https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala">Apalache IR</a>
+into <a href="https://github.com/apalache-mc/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala">Apalache IR</a>
 .</p>
 </li>
 <li>
@@ -4263,7 +4263,7 @@ E.g.,</p>
 <h1><a class="header" href="#an-example-tla-specification" id="an-example-tla-specification">An example TLA+ specification</a></h1>
 <p>We introduce a TLA+ specification that we use to discuss features of Apalache in
 the following sections. Its source code can be found in
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>:</p>
 <pre><code class="language-tla">-------------------------------- MODULE y2k --------------------------------
 (*
  * A simple specification of a year counter that is subject to the Y2K problem.
@@ -4327,7 +4327,7 @@ by writing a symbolic constraint, see <a href="apalache/parameters.html#ConstIni
 <h2><a class="header" href="#using-instance" id="using-instance">Using INSTANCE</a></h2>
 <p>You can set the specification parameters, using the standard <code>INSTANCE</code>
 expression of TLA+. For instance, below is the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_instance.tla"><code>y2k_instance.tla</code></a>,
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_instance.tla"><code>y2k_instance.tla</code></a>,
 which instantiates <code>y2k.tla</code>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_instance ----------------------------
 (*
@@ -4367,7 +4367,7 @@ OVERRIDE_LICENSE_AGE == 18
 <p>This approach is similar to the <code>Init</code> operator, but applied to the
 constants. We define a special operator, e.g., called <code>ConstInit</code>. For
 instance, below is the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_cinit.tla"><code>y2k_cinit.tla</code></a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_cinit.tla"><code>y2k_cinit.tla</code></a>:</p>
 <pre><code class="language-tla">---------------------------- MODULE y2k_cinit ----------------------------
 (*
  * Another way to instantiate constants for apalache is give it constraints
@@ -4437,9 +4437,9 @@ and <a href="apalache/principles/../../HOWTOs/howto-write-type-annotations.html"
 <a name="symbolicTransitions"></a></p>
 <h2><a class="header" href="#assignments-and-symbolic-transitions" id="assignments-and-symbolic-transitions">Assignments and symbolic transitions</a></h2>
 <p>Let us go back to the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>
 and run <code>apalache-mc</code> against
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_override.tla"><code>test/tla/y2k_override.tla</code></a>
 while instructing Apalache to write intermediate output files:</p>
 <pre><code class="language-console">$ apalache-mc check --write-intermediate=true y2k_override.tla
 </code></pre>
@@ -4518,7 +4518,7 @@ assignment of the form <code>x' := e</code> in every symbolic transition <code>A
 </blockquote>
 <p>If Apalache cannot find expressions with the above properties, it fails.
 Consider the example
-<a href="https://github.com/informalsystems/apalache/blob/main/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/Assignments20200309.tla"><code>test/tla/Assignments20200309.tla</code></a>:</p>
 <pre><code class="language-tla">----- MODULE Assignments20200309 -----
 VARIABLE
     \* @type: Int;
@@ -4688,7 +4688,7 @@ to remove from the set at each step, utilizes the <code>CHOOSE</code> operator.
 This is a common trait shared by many operators that implement recursion over sets. 
 Since the introduction of folds, the use of <code>CHOOSE</code> in Apalache is heavily discouraged as it is both inefficient,
 and nondeterministic (unlike how <code>CHOOSE</code> is defined in TLA+ literature).
-For details, see the discussion in <a href="https://github.com/informalsystems/apalache/issues/841">issue 841</a>.</p>
+For details, see the discussion in <a href="https://github.com/apalache-mc/apalache/issues/841">issue 841</a>.</p>
 <p>So the third advantage of using folds is the ability to, almost always, avoid using the <code>CHOOSE</code> operator.</p>
 <p>The downside of folding, compared to general recursion, is the inability to express non-primitively recursive functions.
 For instance, one cannot define the <a href="https://en.wikipedia.org/wiki/Ackermann_function">Ackermann function</a>, as a fold.
@@ -5092,9 +5092,9 @@ computed by the view expressions.</p>
 <p>We are using this technique in model-based testing.  If you have found another
 interesting application of this technique, please let us know!</p>
 <h1><a class="header" href="#the-apalache-module" id="the-apalache-module">The Apalache Module</a></h1>
-<p>Similar to the <code>TLC</code> module, we provide a module called <code>Apalache</code>, which can be found in <a href="https://github.com/informalsystems/apalache/tree/main/src/tla/Apalache.tla">Apalache.tla</a>. Many of
+<p>Similar to the <code>TLC</code> module, we provide a module called <code>Apalache</code>, which can be found in <a href="https://github.com/apalache-mc/apalache/tree/main/src/tla/Apalache.tla">Apalache.tla</a>. Many of
 the operators in that module are used internally by Apalache, when rewriting a TLA+ specification. It is useful
-to read the comments to the operators defined in <a href="https://github.com/informalsystems/apalache/tree/main/src/tla/Apalache.tla">Apalache.tla</a>, as they will help you in understanding
+to read the comments to the operators defined in <a href="https://github.com/apalache-mc/apalache/tree/main/src/tla/Apalache.tla">Apalache.tla</a>, as they will help you in understanding
 the <a href="apalache/principles/../running.html#detailed">detailed output</a> produced by the tool.</p>
 <p>See the detailed description of the <a href="https://apalache-mc.org/docs/lang/apalache-operators.html">Apalache operators</a>.</p>
 <h3><a class="header" href="#naturals" id="naturals">Naturals</a></h3>
@@ -5194,7 +5194,7 @@ Code Plugin for TLA+</a>.</p>
 for the programme either in TLA+ Toolbox, or in Apalache. When statistics
 collection is enabled by the user, it is submitted to <code>tlapl.us</code> via the
 util.<a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.java">ExecutionStatisticsCollector</a>, which is part of <code>tla2tools.jar</code>. Apalache
-accesses this class in at.forsyte.apalache.tla.<a href="https://github.com/informalsystems/apalache/blob/main/mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala">Tool</a>.</p>
+accesses this class in at.forsyte.apalache.tla.<a href="https://github.com/apalache-mc/apalache/blob/main/mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala">Tool</a>.</p>
 <p>As explained in <a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.md">anonymized statistics programme</a>, if you never create the file
 <code>$HOME/.tlaplus/esc.txt</code>, then the statistics is not submitted to <code>tlapl.us</code>.
 If you opt in for the programme and later remove the file, then the statistics
@@ -5452,7 +5452,7 @@ and <a href="apalache/./running.html">Running the Tool</a>.</p>
 <a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a> configuration files
 in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> and
 comments on the treatment of its sections in
-<a href="https://github.com/informalsystems/apalache">Apalache</a>. A detailed discussion
+<a href="https://github.com/apalache-mc/apalache">Apalache</a>. A detailed discussion
 on using the config files with TLC can be found in Leslie Lamport's
 <a href="http://lamport.azurewebsites.net/tla/book.html">Specifying Systems</a>,
 Chapter 14 and in
@@ -5662,7 +5662,7 @@ the manual.) To check liveness/temporal properties, we employ a <a href="https:/
 <tr><td><code>/\</code>, <code>\/</code>, <code>~</code>, <code>=&gt;</code>, <code>&lt;=&gt;</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>TRUE</code>, <code>FALSE</code>, <code>BOOLEAN</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>\A x \in S: p</code>, <code>\E x \in S : p</code></td><td align="center">✔</td><td align="center">-</td><td></td></tr>
-<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>ApaFoldSet</code>, or <code>ApaFoldSeqLeft</code>. See <a href="https://github.com/informalsystems/apalache/issues/841">#841</a>.</td></tr>
+<tr><td><code>CHOOSE x \in S : p</code></td><td align="center">✖</td><td align="center">-</td><td>Partial support prior to version 0.16.1. From 0.16.1 and later, use <code>Some</code>, <code>ApaFoldSet</code>, or <code>ApaFoldSeqLeft</code>. See <a href="https://github.com/apalache-mc/apalache/issues/841">#841</a>.</td></tr>
 <tr><td><code>CHOOSE x : x \notin S</code></td><td align="center">✖</td><td align="center">-</td><td>Not supported. You can use records or a default value such as -1.</td></tr>
 <tr><td><code>\A x : p, \E x : p</code></td><td align="center">✖</td><td align="center">-</td><td>Use bounded quantifiers</td></tr>
 <tr><td><code>CHOOSE x : p</code></td><td align="center">✖</td><td align="center">-</td><td></td></tr>
@@ -5763,7 +5763,7 @@ may only appear in temporal properties, not in e.g. actions.</p>
 <tr><td><code>&lt;&lt;...&gt;&gt;</code></td><td align="center">✔</td><td align="center"></td><td>Often needs a <a href="https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html">type annotation</a>.</td></tr>
 <tr><td><code>Head</code>, <code>Tail</code>, <code>Len``, </code>SubSeq<code>, </code>Append<code>, </code>\o<code>, </code>f[e]`</td><td align="center">✔</td><td align="center">-</td><td></td></tr>
 <tr><td><code>EXCEPT</code></td><td align="center">✔</td><td align="center"></td><td></td></tr>
-<tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/informalsystems/apalache/issues/1350">#1350</a>.</td></tr>
+<tr><td><code>SelectSeq</code></td><td align="center">✔</td><td align="center">-</td><td>Not as efficient, as it could be, see <a href="https://github.com/apalache-mc/apalache/issues/1350">#1350</a>.</td></tr>
 <tr><td><code>Seq(S)</code></td><td align="center">✖</td><td align="center">-</td><td>Use <code>Gen</code> of Apalache to produce bounded sequences</td></tr>
 </tbody></table>
 <h3><a class="header" href="#finitesets" id="finitesets">FiniteSets</a></h3>
@@ -5948,10 +5948,10 @@ would have required more than <code>UNROLL_TIMES_Op</code> steps</li>
 <h1><a class="header" href="#known-issues-1" id="known-issues-1">Known issues</a></h1>
 <p>This page collects known issues that were reported by the users.</p>
 <h2><a class="header" href="#deadlock-detection" id="deadlock-detection">Deadlock detection</a></h2>
-<p>Deadlock detection is imprecise. It may report false negatives, see <a href="https://github.com/informalsystems/apalache/issues/711">Issue
+<p>Deadlock detection is imprecise. It may report false negatives, see <a href="https://github.com/apalache-mc/apalache/issues/711">Issue
 711</a>.</p>
 <p><strong>Affected versions:</strong> &lt;= 0.15.x</p>
-<p><strong>Planned fix:</strong> <a href="https://github.com/informalsystems/apalache/issues/712">Issue 712</a></p>
+<p><strong>Planned fix:</strong> <a href="https://github.com/apalache-mc/apalache/issues/712">Issue 712</a></p>
 <h2><a class="header" href="#updating-records-with-excess-fields" id="updating-records-with-excess-fields">Updating records with excess fields</a></h2>
 <p>Given a record with a type declaration specifying <code>n</code> fields, if that record is
 given more than <code>n</code> fields and the specification includes an <code>EXCEPT</code> expression
@@ -5973,7 +5973,7 @@ Next ==
 specification is not considered incorrectly typed. However, due to the update
 using <code>EXCEPT</code> in the <code>Next</code> operator, the specification cannot be checked.</p>
 <p><strong>Affected versions:</strong> &lt;= 0.15.x</p>
-<p><strong>Planned fix:</strong> <a href="https://github.com/informalsystems/apalache/issues/401">Issue 401</a></p>
+<p><strong>Planned fix:</strong> <a href="https://github.com/apalache-mc/apalache/issues/401">Issue 401</a></p>
 <h3><a class="header" href="#workaround" id="workaround">Workaround</a></h3>
 <p>Add the <code>foo</code> field to the variable's type signature:</p>
 <pre><code class="language-tla">VARIABLE
@@ -5989,7 +5989,7 @@ Next ==
 <h2><a class="header" href="#integer-ranges-with-non-constant-bounds" id="integer-ranges-with-non-constant-bounds">Integer ranges with non-constant bounds</a></h2>
 <p>When using an integer range <code>a..b</code>, where <code>a</code> or <code>b</code> aren't constant
 (or cannot be simplified to a constant),
-the current encoding fails (see <a href="https://github.com/informalsystems/apalache/issues/425">Issue 425</a>):</p>
+the current encoding fails (see <a href="https://github.com/apalache-mc/apalache/issues/425">Issue 425</a>):</p>
 <pre><code class="language-tla">---------- MODULE Example ----------
 
 EXTENDS Integers
@@ -6028,7 +6028,7 @@ this set. Consider the following snippet:</p>
 <p>If you know an upper bound on the length of sequences you need,
 which is often the case when checking one model, you can
 work around this issue by using
-<a href="https://github.com/informalsystems/apalache/blob/0bf827c521d3992f39e085cc98ff114bfa0b1721/src/tla/Apalache.tla#L31-L39">Apalache.Gen</a>:</p>
+<a href="https://github.com/apalache-mc/apalache/blob/0bf827c521d3992f39e085cc98ff114bfa0b1721/src/tla/Apalache.tla#L31-L39">Apalache.Gen</a>:</p>
 <pre><code class="language-tla">EXTENDS Apalache
 ...
   LET s == Gen(10) IN
@@ -6240,7 +6240,7 @@ that has one of the following forms:</p>
 <li><code>x' = e</code>,</li>
 <li><code>x' \in S</code>,</li>
 <li><code>UNCHANGED x</code>, or</li>
-<li><code>x' := e</code> (note that <code>:=</code> is the operator defined in <a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla">Apalache.tla</a>)</li>
+<li><code>x' := e</code> (note that <code>:=</code> is the operator defined in <a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Apalache.tla">Apalache.tla</a>)</li>
 </ul>
 <p>So to reformulate the second requirement: the transition operator must contain
 at least one assignment candidate for each variable declared in the
@@ -6470,7 +6470,7 @@ regarding assignment positions are incorrect.</p>
 <p>See <a href="https://dl.acm.org/citation.cfm?id=3360549">TLA+ model checking made symbolic</a>.</p>
 <h1><a class="header" href="#tla-language-reference-manual-" id="tla-language-reference-manual-">TLA+ Language Reference Manual 📗</a></h1>
 <p>In this manual, we summarize our knowledge about TLA+ and about its treatment
-with the <a href="https://github.com/informalsystems/apalache">Apalache model checker</a>. This is not the manual on Apalache, which
+with the <a href="https://github.com/apalache-mc/apalache">Apalache model checker</a>. This is not the manual on Apalache, which
 can be found in <a href="lang/../.">Apalache manual</a>. The <a href="http://lamport.azurewebsites.net/video/videos.html">TLA+ Video Course</a> by Leslie Lamport is
 an excellent starting point, if you are new to TLA+. For a comprehensive
 description and philosophy of the language, check <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a> and the
@@ -6493,7 +6493,7 @@ by Leslie Lamport is an excellent starting point, if you are new to TLA+.
 For a comprehensive description and philosophy of the language,
 check <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> and the <a href="http://lamport.azurewebsites.net/tla/tla.html">TLA+ Home Page</a>.
 You can find handy extensions of the standard library in <a href="https://github.com/tlaplus/CommunityModules">Community Modules</a>.</p>
-<p>We explain the semantics of the operators under the lenses of the <a href="https://github.com/informalsystems/apalache">Apalache model checker</a>.
+<p>We explain the semantics of the operators under the lenses of the <a href="https://github.com/apalache-mc/apalache">Apalache model checker</a>.
 Traditionally, the emphasis was put on the temporal operators and action operators,
 as they build the foundation of TLA.
 We focus on the &quot;+&quot; aspect of the language, which provides you with a language
@@ -6512,7 +6512,7 @@ distinct from programming languages. Wherever possible, we complement the
 English semantics with code in <a href="https://www.python.org/">Python</a>. Although our
 semantics are more restrictive than the denotational semantics in Chapter 16 of
 <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a>, they are very close to the treatment of TLA+ by the model
-checkers: <a href="https://github.com/informalsystems/apalache">Apalache</a> and
+checkers: <a href="https://github.com/apalache-mc/apalache">Apalache</a> and
 <a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a>. Our relation between
 TLA+ operators and Python code bears some resemblance to
 <a href="https://github.com/Viasat/salt">SALT</a> and
@@ -7792,7 +7792,7 @@ table below.</em></p>
 <p><em>Unfortunately, <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html">Specifying Systems</a> only gives us the definition for the case
 <code>b &gt; 0</code> (that is, cases 1–2 in our description).
 The implementation in SMT and TLC produce incompatible results for <code>b &lt; 0</code>.
-See <a href="https://github.com/informalsystems/apalache/issues/331">issue #331 in Apalache</a>.</em></p>
+See <a href="https://github.com/apalache-mc/apalache/issues/331">issue #331 in Apalache</a>.</em></p>
 <p><strong>Determinism:</strong> Deterministic.</p>
 <p><strong>Errors:</strong> No overflow is possible. In pure TLA+, the result is undefined if
 one of the arguments evaluates to a non-integer value. In this case, Apalache
@@ -8888,7 +8888,7 @@ non-determinism with <code>CHOOSE</code>. For non-determinism, see:
 guarantee the repeatability property of <code>CHOOSE</code>. It does not guarantee
 non-determinism either. Interestingly, this behavior does not really make a
 difference for the use cases 1 and 2. If you believe that this causes a problem
-in your specification, <a href="https://github.com/informalsystems/apalache/issues/new/choose">open an issue...</a></p>
+in your specification, <a href="https://github.com/apalache-mc/apalache/issues/new/choose">open an issue...</a></p>
 <p><strong>Errors:</strong> Pure TLA+ does not restrict the operator arguments.  TLC flags a
 model checking error, if <code>S</code> is infinite. Apalache produces a static type
 error, if the type of elements of <code>S</code> is not compatible with the type of <code>x</code>
@@ -9139,7 +9139,7 @@ TypeError: unhashable type: 'dict'
 <p>Of course, this is an implementation detail of Python, and it has nothing to do
 with TLA+. This example probably demonstrates that the built-in primitives of
 TLA+ are more powerful than the standard primitives of many programming
-languages (see <a href="https://github.com/informalsystems/apalache/discussions/551">this discussion</a>).</p>
+languages (see <a href="https://github.com/apalache-mc/apalache/discussions/551">this discussion</a>).</p>
 <p>Alternatively, we could represent a TLA+ function in Python as a set
 of pairs <code>(key, value)</code> and implement TLA+ function operators over such a
 set. Surely, this implementation would be inefficient, but this is not
@@ -10162,7 +10162,7 @@ infinite. You can override <code>Seq(S)</code> with its bounded version <code>BS
 for some <code>n</code>. See: <a href="https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ">Overriding Seq in TLC</a>.</p>
 <p>Apalache does not support <code>Seq(S)</code> yet. As a workaround, you can manually
 replace <code>Seq(S)</code> with <code>BSeq(S, n)</code> for some constant <code>n</code>.  See the progress in
-<a href="https://github.com/informalsystems/apalache/issues/314">Issue 314</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/issues/314">Issue 314</a>.</p>
 <p><strong>Example in TLA+:</strong></p>
 <pre><code class="language-tla">  Seq({1, 2, 3})
     \* The infinite set
@@ -10500,7 +10500,7 @@ a field, which records marked with the given tag do not have. For example:</p>
     /\ e.seedless
 </code></pre>
 <p><strong>Variants module.</strong> Apalache formalizes the above idiom in the module
-<a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla">Variants.tla</a>. Apalache's type checker alerts users with a type error when
+<a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla">Variants.tla</a>. Apalache's type checker alerts users with a type error when
 they access a wrong value. Additionally, the default implementation raises an
 error in TLC when a variant is used incorrectly.</p>
 <p><strong>Immutability</strong>. All variants are immutable.</p>
@@ -10743,7 +10743,7 @@ the partial function <code>pf : A -&gt; Option(B)</code>, such that, for each <c
 <code>pf(a) = Some(f(a))</code> iff <code>f(a)</code> is defined, and <code>None</code> otherwise.</p>
 <p>Apalache leverages its support for <a href="lang/./variants.html">variants</a> to define a
 polymorphic option type along with some common utility functions in the module
-<a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla">Option.tla</a>. </p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Option.tla">Option.tla</a>. </p>
 <p>The module defines a type alias <code>$option</code> as</p>
 <pre><code class="language-tla">\* @typeAlias: option = Some(a) | None(UNIT);
 </code></pre>
@@ -11817,7 +11817,7 @@ using <code>IF-THEN-ELSE</code> expressions can help to make determinism explici
 <p>Message sets are canonically modeled as sets of records with mixed types.
 While the current type system supports this, in the future,
 Apalache is likely going to change support for these kinds of sets and implement stricter type-checking.
-See <a href="https://github.com/informalsystems/apalache/issues/401">this</a> issue for a discussion.
+See <a href="https://github.com/apalache-mc/apalache/issues/401">this</a> issue for a discussion.
 This document aims to provide instructions for users to migrate their specs to maintain type compatibility
 in the future (and improve the performance and robustness of current specs in the present).</p>
 <h2><a class="header" href="#the-common-approach" id="the-common-approach">The common approach</a></h2>
@@ -12555,10 +12555,10 @@ error messages.</p>
 <p><a id="rows"></a>
 <a id="ts12"></a></p>
 <h3><a class="header" href="#13-type-system-12-including-precise-records-variants-and-rows" id="13-type-system-12-including-precise-records-variants-and-rows">1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
-<p>As discussed in <a href="https://github.com/informalsystems/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
+<p>As discussed in <a href="https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
-given in <a href="https://github.com/informalsystems/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR014</a>, we discuss the extension of the type grammar in this
+given in <a href="https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR014</a>, we discuss the extension of the type grammar in this
 ADR-002. If you do not know about row typing, it may be useful to check the
 Wikipedia page on  <a href="https://en.wikipedia.org/wiki/Row_polymorphism">Row polymorphism</a>. We extend the grammar with new
 records, variants, and rows as follows:</p>
@@ -12655,7 +12655,7 @@ field <code>type</code> carefully.</p>
 their record types (including the Apalache developers!). Hence, we are
 migrating to Type System 1.2.</p>
 <p><strong>Default: Sets of tagged records (variants) in Type System 1.2.</strong> Apalache
-provides the user with the module <a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla">Variants.tla</a> that implements operators
+provides the user with the module <a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla">Variants.tla</a> that implements operators
 over <a href="https://en.wikipedia.org/wiki/Tagged_union">variant types</a>.</p>
 <p>Using variants, we can write the above set of messages as follows:</p>
 <pre><code class="language-tla">{
@@ -13137,7 +13137,7 @@ FactFun[n \in Int] ==
 <h2><a class="header" href="#4-implementation" id="4-implementation">4. Implementation</a></h2>
 <p>The implementation of the annotation parser can be found in the class
 <code>at.forsyte.apalache.io.annotations.AnnotationParser</code> of the module
-<code>tla-io</code>, see <a href="https://github.com/informalsystems/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/annotations/AnnotationParser.scala">AnnotationParser</a>.</p>
+<code>tla-io</code>, see <a href="https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/annotations/AnnotationParser.scala">AnnotationParser</a>.</p>
 <h2><a class="header" href="#5-discussion" id="5-discussion">5. Discussion</a></h2>
 <p>Most likely, this topic does not deserve much discussion, as we are using
 the pretty standard syntax of Java annotations. So we are following the
@@ -13156,7 +13156,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 <p>The following classes are serializable:</p>
 <ol>
 <li>
-<p>TLA+ expressions (see <a href="https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10">TlaEx</a>) and subclasses thereof:</p>
+<p>TLA+ expressions (see <a href="https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaEx.scala#L10">TlaEx</a>) and subclasses thereof:</p>
 <ul>
 <li>Named expressions <code>NameEx</code></li>
 <li>Literal values <code>ValEx</code> for the following literals:
@@ -13172,7 +13172,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 </ul>
 </li>
 <li>
-<p>TLA+ declarations (see <a href="https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9">TlaDecl</a>) and subclasses thereof:</p>
+<p>TLA+ declarations (see <a href="https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L9">TlaDecl</a>) and subclasses thereof:</p>
 <ul>
 <li>Variable declarations <code>TlaVarDecl</code></li>
 <li>Constant declarations <code>TlaConstDecl</code></li>
@@ -13182,7 +13182,7 @@ The purpose of introducing such a serialization is to expose the internal repres
 </ul>
 </li>
 <li>
-<p>TLA+ modules, see <a href="https://github.com/informalsystems/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19">TlaModule</a></p>
+<p>TLA+ modules, see <a href="https://github.com/apalache-mc/apalache/blob/main/tlair/src/main/scala/at/forsyte/apalache/tla/lir/TlaDecl.scala#L19">TlaModule</a></p>
 </li>
 </ol>
 <h2><a class="header" href="#2-disambiguation-field" id="2-disambiguation-field">2. Disambiguation field</a></h2>
@@ -13329,7 +13329,7 @@ We could encode all values as strings, but they would be similarly indistinguish
 <p>In general, for any given <code>oper: TlaOper</code> of <code>OperEx</code>, the value of the <code>oper</code> field in the serialization equals <code>oper.name</code>.</p>
 <h2><a class="header" href="#7-implementation" id="7-implementation">7. Implementation</a></h2>
 <p>The implementation of the serialization can be found in the class
-<code>at.forsyte.apalache.io.json.TlaToJson</code> of the module <code>tla-import</code>, see <a href="https://github.com/informalsystems/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54">TlaToJson</a>.</p>
+<code>at.forsyte.apalache.io.json.TlaToJson</code> of the module <code>tla-import</code>, see <a href="https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/json/TlaToJson.scala#L54">TlaToJson</a>.</p>
 <h1><a class="header" href="#rfc-006-unit-testing-and-property-based-testing-of-tla-specifications" id="rfc-006-unit-testing-and-property-based-testing-of-tla-specifications">RFC-006: Unit testing and property-based testing of TLA+ specifications</a></h1>
 <table><thead><tr><th>authors</th><th align="right">revision</th></tr></thead><tbody>
 <tr><td>Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...</td><td align="right">2</td></tr>
@@ -13474,7 +13474,7 @@ necessary ingredients for implementing this approach. We are asking for your
 input to find an ergonomic approach to testing TLA+ specifications.  Many of
 the following ideas apply to TLC as well. We are gradually introducing
 Apalache-specific features.</em></p>
-<p>A complete specification can be found in <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/ChangRobertsTyped_Test.tla">ChangRobertsTyped_Test.tla</a>.</p>
+<p>A complete specification can be found in <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/ChangRobertsTyped_Test.tla">ChangRobertsTyped_Test.tla</a>.</p>
 <p>Our idea is to quickly check operators in isolation, without analyzing the
 whole specification and without analyzing temporal behavior of the
 specification. There are three principally different kinds of operators in TLA+:</p>
@@ -14351,7 +14351,7 @@ otherwise</li>
 <li>interactive selection of parameter values</li>
 </ul>
 <p>The discussion around these needs is summarized and linked in
-<a href="https://github.com/informalsystems/apalache/issues/79">#79</a> .</p>
+<a href="https://github.com/apalache-mc/apalache/issues/79">#79</a> .</p>
 <p>The proximal use cases motivating this feature are discovered in the needs of or
 collaborators working on implementing model based testing (MBT) via the
 <a href="https://github.com/informalsystems/modelator">Modelator</a> project.
@@ -14383,7 +14383,7 @@ preprocessors at will, and to drive the <code>TransitionExecutor</code> interact
 a simplified API.</p>
 <p>The specific functionality that should be available for interaction is
 enumerated in the <a href="adr/010rfc-transition-explorer.html#requirements">Requirements</a>.</p>
-<p>As per <a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">previous
+<p>As per <a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">previous
 discussions</a>,
 interactivity will be supported by running a daemon (or &quot;service&quot;) that serves
 incoming requests. Clients will interact via a simple, well supported protocol,
@@ -14398,14 +14398,14 @@ Example</a> for details.</p>
 on our GitHub issues:</p>
 <p>| TRANS-EX.1::QCHECK.1 |
 : enable checking specs without repeated JVM startup costs
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
 <p>| TRANS-EX.1::EXPLORE.1 |
 : enable exploring model checking results for a spec without repeated
 preprocessing costs
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
 <p>| TRANS-EX.1::LOAD.1 |
 : enable loading and unloading specs
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issuecomment-818201654</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issuecomment-818201654</a></p>
 <p>| TRANS-EX.1::EXTENSIBLE.1 |
 : The transition explorer should be extensible in the following ways:</p>
 <p>| TRANS-EX.1::EXTENSIBLE.1::CLOUD.1 |
@@ -14414,7 +14414,7 @@ preprocessing costs
 : extensible for interactive terminal usage |</p>
 <p>| TRANS-EX.1::SBMC.1 |
 : expose symbolic model checking
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
 <p>| TRANS-EX.1::SBMC.1::ADVANCE.1 |
 : can incrementally advance symbolic states</p>
 <p>| TRANS-EX.1::SBMC.1::ROLLBACK.1 |
@@ -14425,11 +14425,11 @@ preprocessing costs
 : can execute a specific transition given a selected action</p>
 <p>| TRANS-EX.1::SBMC.1::COUNTER.1 |
 : supports enumerating counterexamples
-<a href="https://github.com/informalsystems/apalache/issues/79#issue-534407916">79#issue-534407916</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/79#issue-534407916">79#issue-534407916</a></p>
 <p>| TRANS-EX.1::SBMC.1::PARAMS.1 |
 : supports enumerating parameter values (<code>CONSTANTS</code>) that lead to a
 counterexample
-<a href="https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107">79#issuecomment-576449107</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/79#issuecomment-576449107">79#issuecomment-576449107</a></p>
 <h3><a class="header" href="#architecture" id="architecture">Architecture</a></h3>
 <p>The interactive mode will take advantage of the <code>TransitionExecutor</code>'s
 abstraction for writing different model checking strategies, to give the user an
@@ -14450,7 +14450,7 @@ and relevant aspects of the <code>SeqModelChecker</code> (or slightly altered ve
 its methods).</li>
 </ul>
 <p><em>NOTE</em>: The high-level sketch above assumes the new code organization proposed
-in <a href="https://github.com/informalsystems/apalache/tree/main/docs/src/adr/007adr-restructuring.md">ADR 7</a>.</p>
+in <a href="https://github.com/apalache-mc/apalache/tree/main/docs/src/adr/007adr-restructuring.md">ADR 7</a>.</p>
 <h4><a class="header" href="#api" id="api">API</a></h4>
 <p>The following is a rough sketch of the proposed API for the transition explorer.
 It aims to present a highly abstracted interface, but in terms of existing data
@@ -14462,7 +14462,7 @@ understand when they should be thinking in terms of constraint sets as opposed
 to concrete states. Concrete states can be obtained by the functions suffixed
 with <code>Example</code>.</p>
 <p>In essence, this proposed API is only a thin wrapper around the
-<a href="https://github.com/informalsystems/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala">TransitionExecutor
+<a href="https://github.com/apalache-mc/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala">TransitionExecutor
 class</a>.
 During previous iterations of the proposed API we discussed exposing a
 higher-level API, targeted at meeting the requirements more directly.  However,
@@ -14776,7 +14776,7 @@ restricts itself to encoding only TLA+ functions as SMT arrays.</p>
 <li>Use the new option to set the <code>SolverConfig</code> encoding field and select between different <code>SymbStateRewriter</code>
 implementations in classes <code>BoundedCheckerPassImpl</code> and <code>SymbStateRewriterAuto</code>.</li>
 <li>The infrastructure changes made for the <code>funArrays</code> encoding mirror the ones made for the <code>arrays</code> one.
-See <a href="https://github.com/informalsystems/apalache/pull/2027">PR 2027</a> for details.</li>
+See <a href="https://github.com/apalache-mc/apalache/pull/2027">PR 2027</a> for details.</li>
 </ul>
 <h2><a class="header" href="#2-testing-the-new-encoding" id="2-testing-the-new-encoding">2. Testing the new encoding</a></h2>
 <p>The new encoding should provide the same results as the existing one, the available test suite
@@ -15124,7 +15124,7 @@ in its native context of &quot;design patterns&quot;.</p>
 <h2><a class="header" href="#summary-1" id="summary-1">Summary</a></h2>
 <!-- Statement to summarize, following the following formula: -->
 <p>In the context of using Apalache from other programs, different environments, and
-in different planned modes (see, e.g., <a href="https://github.com/informalsystems/apalache/issues/730">#703</a>),<br />
+in different planned modes (see, e.g., <a href="https://github.com/apalache-mc/apalache/issues/730">#703</a>),<br />
 facing the need to supply different configurations for different use cases<br />
 we decided for adopting the <a href="https://github.com/pureconfig/pureconfig">PureConfig</a> library and for introducing a small component to
 integrate <code>PureConfig</code> with our CLI parsing <br />
@@ -15139,19 +15139,19 @@ programmatic pipelines, and strives to provide more functionality, we inevitably
 need to make it more configurable.</p>
 <p>Recent additions that have extended configurability include:</p>
 <ul>
-<li><a href="https://github.com/informalsystems/apalache/pull/1081">#1081</a>, introducing
+<li><a href="https://github.com/apalache-mc/apalache/pull/1081">#1081</a>, introducing
 the <code>run-dir</code> flag.</li>
-<li><a href="https://github.com/informalsystems/apalache/pull/1036">#1036</a>, introducing
+<li><a href="https://github.com/apalache-mc/apalache/pull/1036">#1036</a>, introducing
 the <code>write-intermediate</code>, and <code>profiling</code>, <code>out-dir</code> configuration parameters,
 exposed both via CLI and configuration file.</li>
-<li><a href="https://github.com/informalsystems/apalache/pull/1054">#1054</a>, introducing
+<li><a href="https://github.com/apalache-mc/apalache/pull/1054">#1054</a>, introducing
 the <code>smt-encoding</code> flag.</li>
 </ul>
-<p>The ongoing work for <a href="https://github.com/informalsystems/apalache/issues/730">the server
+<p>The ongoing work for <a href="https://github.com/apalache-mc/apalache/issues/730">the server
 mode</a> is expected to
 require introducing several more configurable paramters.</p>
-<p>As discussed in <a href="https://github.com/informalsystems/apalache/issues/1069">#1069</a>
-and <a href="https://github.com/informalsystems/apalache/issues/1929">#1929</a> we have at
+<p>As discussed in <a href="https://github.com/apalache-mc/apalache/issues/1069">#1069</a>
+and <a href="https://github.com/apalache-mc/apalache/issues/1929">#1929</a> we have at
 least 5 different sources from which we need to load configuration parameters,
 and the loading must cascade, with the first listed source taking priority:</p>
 <ul>
@@ -15360,7 +15360,7 @@ of sense. This may lead to unexpected results in a large specification. In the
 above example, the model checker would just produce some values for <code>m.a</code> or
 <code>m.b</code>, which will probably result in a spurious counterexample.</p>
 <p>Further, multiple related issues and potential solutions were underlined in
-<a href="https://github.com/informalsystems/apalache/issues/401">#401</a> and <a href="https://github.com/informalsystems/apalache/discussions/789">#789</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/issues/401">#401</a> and <a href="https://github.com/apalache-mc/apalache/discussions/789">#789</a>.</p>
 <p>There are two main patterns of record use in TLA+:</p>
 <ol>
 <li>
@@ -15784,7 +15784,7 @@ not present in the actual record type.</p>
 </li>
 <li>
 <p>Implement the
-<a href="https://github.com/informalsystems/apalache/discussions/789#discussioncomment-1592118">suggestion by Shon Feder</a>.</p>
+<a href="https://github.com/apalache-mc/apalache/discussions/789#discussioncomment-1592118">suggestion by Shon Feder</a>.</p>
 </li>
 </ol>
 <p>Although Option 2 looks nicer, we prefer keeping Option 1. The reason is that
@@ -15892,7 +15892,7 @@ the vocabulary of TLA+. Moreover, TLA+ counterexamples are using the expression
 language of TLA+.</p>
 <p>To illustrate the problem, consider a very simple TLA+ specification of the
 MissionariesAndCannibals puzzle (specified by Leslie Lamport). We use a typed
-version of this specification, see <a href="https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped</a>. Consider
+version of this specification, see <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla">MissionariesAndCannibalsTyped</a>. Consider
 the following instance of the specification:</p>
 <pre><code class="language-tla">------------------- MODULE MC_MissionariesAndCannibalsTyped -----------------    
 Missionaries == { &quot;m1_OF_PERSON&quot;, &quot;m2_OF_PERSON&quot; }
@@ -15968,7 +15968,7 @@ InvariantViolation == who_is_on_bank[&quot;E&quot;] = {}
 
 ================================================================================
 (* Created by Apalache on Wed Dec 22 09:18:50 CET 2021 *)
-(* https://github.com/informalsystems/apalache *)
+(* https://github.com/apalache-mc/apalache *)
 </code></pre>
 <p>The above counterexample looks very simple and natural, if the reader knows
 TLA+. In our experience, these examples look alien to engineers, who are not
@@ -16258,7 +16258,7 @@ example. This operator is simply not a part of the trace. It could be added in
 the <code>#meta</code> object by Apalache.</p>
 <h3><a class="header" href="#discussion-2" id="discussion-2">Discussion</a></h3>
 <p>Shon Feder @shonfeder flagged important concerns about irregularity of the
-proposed format in the <a href="https://github.com/informalsystems/apalache/pull/1190">PR
+proposed format in the <a href="https://github.com/apalache-mc/apalache/pull/1190">PR
 comments</a>. In a
 regular approach we would treat all expressions uniformly. For example:</p>
 <pre><code class="language-json">// proposed form:
@@ -16543,7 +16543,7 @@ to do much research around this. However, we have to adapt the standard
 techniques to the domain of TLA+. For instance, we have to understand how to
 deal with <code>ENABLED</code>, <code>WF</code>, and <code>SF</code>, which deviate from the standard setting of
 model checking.</p>
-<p>Viktor Sergeev wrote the <a href="https://github.com/informalsystems/apalache/tree/feature/liveness">first prototype</a> for liveness checking at
+<p>Viktor Sergeev wrote the <a href="https://github.com/apalache-mc/apalache/tree/feature/liveness">first prototype</a> for liveness checking at
 University of Lorraine in 2019. Since his implementation was tightly integrated
 with the exploration algorithm, which was refactored several times, this
 implementation has not been integrated in the main branch. We have learned from
@@ -16575,7 +16575,7 @@ see the result of preprocessing and optimize it, if needed. When the new
 implementation is well understood, we can revisit it and consider Option 1,
 once <a href="adr/./010rfc-transition-explorer.html">ADR-010</a> is implemented.</p>
 <h2><a class="header" href="#work-plan" id="work-plan">Work plan</a></h2>
-<p>The work plan is tracked in the <a href="https://github.com/informalsystems/apalache/issues/488">issue on temporal properties</a>.</p>
+<p>The work plan is tracked in the <a href="https://github.com/apalache-mc/apalache/issues/488">issue on temporal properties</a>.</p>
 <p>We propose to split this work into two big subtasks:</p>
 <ul>
 <li>
@@ -16737,7 +16737,7 @@ first part of work. To be detailed later...</p>
 <h2><a class="header" href="#summary-5" id="summary-5">Summary</a></h2>
 <!-- Statement to summarize, following the following formula: -->
 <p>This ADR defines the various kinds of inlining considered in Apalache and discusses the pros and cons of their implementations.
-Since we have recently reworked the inliner in <a href="https://github.com/informalsystems/apalache/pull/1569">#1569</a>, we saw it fit to document exactly how inlining is supposed to work and we have chosen the transformations performed in the inlining pass. </p>
+Since we have recently reworked the inliner in <a href="https://github.com/apalache-mc/apalache/pull/1569">#1569</a>, we saw it fit to document exactly how inlining is supposed to work and we have chosen the transformations performed in the inlining pass. </p>
 <h2><a class="header" href="#context-5" id="context-5">Context</a></h2>
 <!-- Communicates the forces at play (technical, political, social, project).
      This is the story explaining the problem we are looking to resolve.
@@ -16887,7 +16887,7 @@ process.</p>
 changes have been made between each release (or version) of the project.</p>
 </blockquote>
 <p>Any changeset that introduces observable changes to the behavior of our software
-should include additions to the changelog.  Currently, <a href="https://github.com/informalsystems/apalache/blob/60e6a14d451cb67c93dfd29cffd0cc0eb9d7922d/CONTRIBUTING.md#changelog">additions are made</a> by
+should include additions to the changelog.  Currently, <a href="https://github.com/apalache-mc/apalache/blob/60e6a14d451cb67c93dfd29cffd0cc0eb9d7922d/CONTRIBUTING.md#changelog">additions are made</a> by
 updating the <code>UNRELEASED.md</code> file. The changes recorded there are then added to
 the <code>CHANGES.md</code> file during our automated release process.</p>
 <p>This process creates a race condition over <code>UNRELEASED.md</code> between any
@@ -17147,24 +17147,24 @@ creates five SMT constraints:</p>
 list of element cells, we propose to map parent cells to membership pointers of
 various kinds. To this end, we introduce an abstract edge (the Scala code can
 be found in the package <code>at.forsyte.apalache.tla.bmcmt.arena</code>):</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L8-L24</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L8-L24</p>
 <p>Having an abstract edge, we introduce various case classes. The simplest case
 is the <code>FixedElemPtr</code>, which always evaluates to a fixed Boolean value:</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L26-L39</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L26-L39</p>
 <p>Instances of <code>FixedElemPtr</code> may be used in cases, when the membership is
 statically known. For instance, set membership for the sets <code>{1, 2, 3}</code> and
 <code>1..100</code> is static (always <code>true</code>) and thus it does not require any additional
 variables and constraints in SMT. The same applies to records and tuples.</p>
 <p>The next case is element membership that is represented via a Boolean constant
 in SMT:</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L41-L64</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L41-L64</p>
 <p>Instances of <code>SmtConstElemPtr</code> may be used in cases, when set membership can be
 encoded via a Boolean constant. Typically, this is needed when the membership
 is either to be defined by the solver, or when this constant caches a complex
 SMT constraint. For instance, it can be used by <code>CherryPick</code>.</p>
 <p>The most general case is represented via an SMT expression, which is encoded in
 TLA+ IR:</p>
-<p>https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L66-L77</p>
+<p>https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L66-L77</p>
 <p>Instances of <code>SmtExprElemPtr</code> may be used to encode set membership via SMT
 expressions. For instance:</p>
 <ul>
@@ -17274,7 +17274,7 @@ priority of work.</p>
 attention, we would like a lightweight framework for reaching consensus on the
 new priorities, and deriving a new ordering of the work to be done.</p>
 <p>The decision to adopt an action priority matrix for prioritizing our work was
-reached in <a href="https://github.com/informalsystems/apalache/commit/f379a717ca02a559b8f48d503f4413410d0b8abd">December of 2021</a>, but we weren't clear at that time
+reached in <a href="https://github.com/apalache-mc/apalache/commit/f379a717ca02a559b8f48d503f4413410d0b8abd">December of 2021</a>, but we weren't clear at that time
 how to we would determine the scores for each work item. This ADR aims to
 outline and codify the approach we will use.</p>
 <p>In this document we talk about &quot;items of work&quot; or &quot;work items&quot;. These are just
@@ -17448,19 +17448,19 @@ we decided for unifying our CLI input with our configuration management system<b
 to achieve a more modular architecture and greater static guarantees<br />
 accepting the development costs and possible increased cost of introducing new CLI inputs in the future.</p>
 <h2><a class="header" href="#context-8" id="context-8">Context</a></h2>
-<p>As work has proceeded on <a href="https://github.com/informalsystems/apalache/milestone/42">Shai</a>, following the design laid out in <a href="adr/./010rfc-transition-explorer.html">RFC 010</a>, it
+<p>As work has proceeded on <a href="https://github.com/apalache-mc/apalache/milestone/42">Shai</a>, following the design laid out in <a href="adr/./010rfc-transition-explorer.html">RFC 010</a>, it
 has been revealed that we can provide value to the MBT team  by exposing the
-current command line interface via RPC calls (see <a href="https://github.com/informalsystems/apalache/issues/2013">#2013</a>). This functionality
+current command line interface via RPC calls (see <a href="https://github.com/apalache-mc/apalache/issues/2013">#2013</a>). This functionality
 will require a way of receiving program configuration input from a gRPC call and
 forwarding that configuration on to various pass executors.</p>
 <p>Additionally, for a long while we have been aware of the limitations and
 brittleness of our current system for storing and communicating configured
-options throughout the paths of the program (see <a href="https://github.com/informalsystems/apalache/issues/1174">#1174</a>) and we have
+options throughout the paths of the program (see <a href="https://github.com/apalache-mc/apalache/issues/1174">#1174</a>) and we have
 recognized the value we might derive by unifying our CLI inputs with our
-configuration management system (see <a href="https://github.com/informalsystems/apalache/issues/1177">#1177</a>).</p>
+configuration management system (see <a href="https://github.com/apalache-mc/apalache/issues/1177">#1177</a>).</p>
 <h2><a class="header" href="#options-7" id="options-7">Options</a></h2>
-<p>We considered trying to implement the needed RPCs without addressing <a href="https://github.com/informalsystems/apalache/issues/1174">#1174</a> and
-<a href="https://github.com/informalsystems/apalache/issues/1177">#1177</a>, but two factors convinced us that these were legitimate pre-requisites:</p>
+<p>We considered trying to implement the needed RPCs without addressing <a href="https://github.com/apalache-mc/apalache/issues/1174">#1174</a> and
+<a href="https://github.com/apalache-mc/apalache/issues/1177">#1177</a>, but two factors convinced us that these were legitimate pre-requisites:</p>
 <ol>
 <li>If we try to expose the current CLI functionality via RPC calls without first
 introducing a unifying abstraction, any flag or option introduced on one side
@@ -17546,7 +17546,7 @@ accepting the development costs.</p>
 <!-- Communicates the forces at play (technical, political, social, project).
      This is the story explaining the problem we are looking to resolve.
 -->
-<p>As explained in <a href="https://github.com/informalsystems/apalache/issues/1845">#1845</a>, one often runs into the problem of unreadable counterexamples; 
+<p>As explained in <a href="https://github.com/apalache-mc/apalache/issues/1845">#1845</a>, one often runs into the problem of unreadable counterexamples; 
 for complex specifications, it is often the case that either the state contains many variables, or the invariant contains many conjunctive components (or both).
 In that case, trying to determine exactly why e.g. <code>A1 /\ ... /\ An</code> was violated basically boils down to manually evaluating each formula <code>Ai</code> with whatever variables are present in the state.
 This is laborious and error-prone, and should be automated.</p>
@@ -17904,7 +17904,7 @@ InvariantViolation == TRUE
 
 ================================================================================
 (* Created by Apalache on Mon Oct 17 16:06:59 CEST 2022 *)
-(* https://github.com/informalsystems/apalache *)
+(* https://github.com/apalache-mc/apalache *)
 </code></pre>
 </details> 
 <h2><a class="header" href="#consequences-9" id="consequences-9">Consequences</a></h2>
@@ -17935,7 +17935,7 @@ accepting a reasonable time investment into refactoring.</p>
 <!-- Communicates the forces at play (technical, political, social, project).
      This is the story explaining the problem we are looking to resolve.
 -->
-<p>The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. <a href="https://github.com/informalsystems/apalache/issues/1774">#1774</a>, <a href="https://github.com/informalsystems/apalache/issues/2338">#2338</a>).
+<p>The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. <a href="https://github.com/apalache-mc/apalache/issues/1774">#1774</a>, <a href="https://github.com/informalsystems/apalache/issues/2338">#2338</a>).
 Relevant for this ADR is the fact that rewriting rules do multiple things at once, which are difficult to separate. They:</p>
 <ol>
 <li>Modify arenas</li>
@@ -17974,7 +17974,7 @@ Observe also, that calls to <code>Z3SolverContext</code> happen at multiple poin
 <p>Under (3), the same rule would look more like this:
 <img src="adr/seqDiaAfter.png" alt="" /></p>
 <p>Specifically, we would no longer need <code>PureArenaAdapters</code>, and we could drop the parts of <code>SymbState</code>, which are treated as mutable (the <code>TlaEx</code> value). In the above, <code>RewriterScope</code> is what remains of <code>SymbState</code>, when we remove the <code>TlaEx</code> value.</p>
-<p>A prototype implementation can be found in <a href="https://github.com/informalsystems/apalache/pull/2554">this PR</a>.</p>
+<p>A prototype implementation can be found in <a href="https://github.com/apalache-mc/apalache/pull/2554">this PR</a>.</p>
 <h2><a class="header" href="#consequences-10" id="consequences-10">Consequences</a></h2>
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
@@ -17982,9 +17982,9 @@ Observe also, that calls to <code>Z3SolverContext</code> happen at multiple poin
 <h3><a class="header" href="#isolated-arena-pass" id="isolated-arena-pass">Isolated arena pass</a></h3>
 <p>We initially explored option (2), as we believed it best embodied the &quot;separation of concerns&quot; principle. 
 Additionally, the idea was that removing arena computation from the rewriting rules should simplify the rules and result in more clarity, readability, and maintainability.
-A prototype can be found <a href="https://github.com/informalsystems/apalache/tree/jk/arenaSeparationProto/tla-pp/src/main/scala/at/forsyte/apalache/tla/pp/arenas">here</a>.</p>
+A prototype can be found <a href="https://github.com/apalache-mc/apalache/tree/jk/arenaSeparationProto/tla-pp/src/main/scala/at/forsyte/apalache/tla/pp/arenas">here</a>.</p>
 <p>However, separating arena computation into its own pass introduced a new issue, the propagation of information between the arena computation pass and the SMT translation pass that would follow it.
-In <a href="https://github.com/informalsystems/apalache/pull/2467">Notes</a> one can find a more in-depth explanation of the issue and its solutions.
+In <a href="https://github.com/apalache-mc/apalache/pull/2467">Notes</a> one can find a more in-depth explanation of the issue and its solutions.
 In a nutshell, the problem was that, to retain information from ephemeral expressions, and tie it back to the original syntax tree, we would need a map-of-maps data structure (in the theoretical sense, there potentially exist more efficient tree-like structures at the level of implementation detail, but not by a significant order of magnitude).
 Between the two passes, this data structure needs to be stored either in memory or to a file (and read later).</p>
 <p>Compared to that, the single-traversal approach of the current rewriting rules

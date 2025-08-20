@@ -200,7 +200,7 @@
 <li>interactive selection of parameter values</li>
 </ul>
 <p>The discussion around these needs is summarized and linked in
-<a href="https://github.com/informalsystems/apalache/issues/79">#79</a> .</p>
+<a href="https://github.com/apalache-mc/apalache/issues/79">#79</a> .</p>
 <p>The proximal use cases motivating this feature are discovered in the needs of or
 collaborators working on implementing model based testing (MBT) via the
 <a href="https://github.com/informalsystems/modelator">Modelator</a> project.
@@ -232,7 +232,7 @@ preprocessors at will, and to drive the <code>TransitionExecutor</code> interact
 a simplified API.</p>
 <p>The specific functionality that should be available for interaction is
 enumerated in the <a href="#requirements">Requirements</a>.</p>
-<p>As per <a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">previous
+<p>As per <a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">previous
 discussions</a>,
 interactivity will be supported by running a daemon (or &quot;service&quot;) that serves
 incoming requests. Clients will interact via a simple, well supported protocol,
@@ -247,14 +247,14 @@ Example</a> for details.</p>
 on our GitHub issues:</p>
 <p>| TRANS-EX.1::QCHECK.1 |
 : enable checking specs without repeated JVM startup costs
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
 <p>| TRANS-EX.1::EXPLORE.1 |
 : enable exploring model checking results for a spec without repeated
 preprocessing costs
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
 <p>| TRANS-EX.1::LOAD.1 |
 : enable loading and unloading specs
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issuecomment-818201654</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issuecomment-818201654</a></p>
 <p>| TRANS-EX.1::EXTENSIBLE.1 |
 : The transition explorer should be extensible in the following ways:</p>
 <p>| TRANS-EX.1::EXTENSIBLE.1::CLOUD.1 |
@@ -263,7 +263,7 @@ preprocessing costs
 : extensible for interactive terminal usage |</p>
 <p>| TRANS-EX.1::SBMC.1 |
 : expose symbolic model checking
-<a href="https://github.com/informalsystems/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/730#issue-855835332">730#issue-855835332</a></p>
 <p>| TRANS-EX.1::SBMC.1::ADVANCE.1 |
 : can incrementally advance symbolic states</p>
 <p>| TRANS-EX.1::SBMC.1::ROLLBACK.1 |
@@ -274,11 +274,11 @@ preprocessing costs
 : can execute a specific transition given a selected action</p>
 <p>| TRANS-EX.1::SBMC.1::COUNTER.1 |
 : supports enumerating counterexamples
-<a href="https://github.com/informalsystems/apalache/issues/79#issue-534407916">79#issue-534407916</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/79#issue-534407916">79#issue-534407916</a></p>
 <p>| TRANS-EX.1::SBMC.1::PARAMS.1 |
 : supports enumerating parameter values (<code>CONSTANTS</code>) that lead to a
 counterexample
-<a href="https://github.com/informalsystems/apalache/issues/79#issuecomment-576449107">79#issuecomment-576449107</a></p>
+<a href="https://github.com/apalache-mc/apalache/issues/79#issuecomment-576449107">79#issuecomment-576449107</a></p>
 <h3><a class="header" href="#architecture" id="architecture">Architecture</a></h3>
 <p>The interactive mode will take advantage of the <code>TransitionExecutor</code>'s
 abstraction for writing different model checking strategies, to give the user an
@@ -299,7 +299,7 @@ and relevant aspects of the <code>SeqModelChecker</code> (or slightly altered ve
 its methods).</li>
 </ul>
 <p><em>NOTE</em>: The high-level sketch above assumes the new code organization proposed
-in <a href="https://github.com/informalsystems/apalache/tree/main/docs/src/adr/007adr-restructuring.md">ADR 7</a>.</p>
+in <a href="https://github.com/apalache-mc/apalache/tree/main/docs/src/adr/007adr-restructuring.md">ADR 7</a>.</p>
 <h4><a class="header" href="#api" id="api">API</a></h4>
 <p>The following is a rough sketch of the proposed API for the transition explorer.
 It aims to present a highly abstracted interface, but in terms of existing data
@@ -311,7 +311,7 @@ understand when they should be thinking in terms of constraint sets as opposed
 to concrete states. Concrete states can be obtained by the functions suffixed
 with <code>Example</code>.</p>
 <p>In essence, this proposed API is only a thin wrapper around the
-<a href="https://github.com/informalsystems/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala">TransitionExecutor
+<a href="https://github.com/apalache-mc/apalache/tree/main/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/trex/TransitionExecutor.scala">TransitionExecutor
 class</a>.
 During previous iterations of the proposed API we discussed exposing a
 higher-level API, targeted at meeting the requirements more directly.  However,

@@ -182,7 +182,7 @@ the partial function <code>pf : A -&gt; Option(B)</code>, such that, for each <c
 <code>pf(a) = Some(f(a))</code> iff <code>f(a)</code> is defined, and <code>None</code> otherwise.</p>
 <p>Apalache leverages its support for <a href="./variants.html">variants</a> to define a
 polymorphic option type along with some common utility functions in the module
-<a href="https://github.com/informalsystems/apalache/blob/main/src/tla/Option.tla">Option.tla</a>. </p>
+<a href="https://github.com/apalache-mc/apalache/blob/main/src/tla/Option.tla">Option.tla</a>. </p>
 <p>The module defines a type alias <code>$option</code> as</p>
 <pre><code class="language-tla">\* @typeAlias: option = Some(a) | None(UNIT);
 </code></pre>
