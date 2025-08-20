@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.49.0 - 2025-08-20
+
+### Breaking changes
+
+- Changed the intermediate representation of Quint's `apalache::generate` (#3138)
+
 ## 0.48.1 - 2025-08-19
 
 ### Features
