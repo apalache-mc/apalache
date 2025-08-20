@@ -401,9 +401,14 @@ object Algorithm {
     override def toString = "offline"
   }
 
+  final case object Remote extends Algorithm {
+    override def toString = "remote"
+  }
+
   val ofString: String => Algorithm = {
     case "incremental" => Incremental
     case "offline"     => Offline
+    case "remote"      => Remote
     case invalid       => throw new IllegalArgumentException(s"Unexpected checker algorithm type $invalid")
   }
 }
