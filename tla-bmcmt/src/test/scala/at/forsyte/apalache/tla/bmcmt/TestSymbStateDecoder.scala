@@ -145,7 +145,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     assertBuildEqual(expectedOutcome, decodedEx)
   }
 
-  // See https://github.com/informalsystems/apalache/issues/962
+  // See https://github.com/apalache-mc/apalache/issues/962
   test("decode fun does not show duplicate indices") { rewriterType: SMTEncoding =>
     // The specified domain includes duplicate values
     val domEx = enumSet(int(1), int(1))

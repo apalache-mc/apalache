@@ -600,9 +600,9 @@ AtMostOne ==
 
 [Snowcat tutorial]: https://apalache-mc.org/docs/tutorials/snowcat-tutorial.html
 [Snowcat HOWTO]: https://apalache-mc.org/docs/HOWTOs/howto-write-type-annotations.html
-[ADR014]: https://github.com/informalsystems/apalache/blob/main/docs/src/adr/014adr-precise-records.md
-[Issue 401]: https://github.com/informalsystems/apalache/issues/401
+[ADR014]: https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/014adr-precise-records.md
+[Issue 401]: https://github.com/apalache-mc/apalache/issues/401
 [Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism
-[Variants.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla
+[Variants.tla]: https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla
 [variant types]: https://en.wikipedia.org/wiki/Tagged_union
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla

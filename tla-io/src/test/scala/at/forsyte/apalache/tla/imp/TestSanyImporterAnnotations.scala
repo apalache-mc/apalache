@@ -324,7 +324,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
 
   test("line breaks are preserved inside type annotations") {
     // Required to allow identifying and parsing out one-line comments inside of type annotations
-    // See https://github.com/informalsystems/apalache/issues/2162
+    // See https://github.com/apalache-mc/apalache/issues/2162
     val text =
       """----- MODULE OneLineComments -----
         |

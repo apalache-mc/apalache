@@ -94,7 +94,7 @@ class MapBase(rewriter: SymbStateRewriter) {
     //
     // This is probably a memory-hungry solution.
     // We will replace it with a better one in an array-based SMT encoding:
-    // https://github.com/informalsystems/apalache/issues/365
+    // https://github.com/apalache-mc/apalache/issues/365
     val resultsToSource = mutable.MultiDict.empty[ArenaCell, TlaEx]
     for (argPtrs <- ptrIter) {
       val (ns, resultCell, memEx) =

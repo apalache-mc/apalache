@@ -123,7 +123,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
   }
 
   test("annotation starting with @") {
-    // Regression: https://github.com/informalsystems/apalache/issues/1304
+    // Regression: https://github.com/apalache-mc/apalache/issues/1304
     val input =
       """(*
         |@type: Int;
@@ -135,7 +135,7 @@ class TestCommentPreprocessor extends AnyFunSuite with Checkers with Matchers {
   }
 
   test("annotation in the very beginning") {
-    // Regression: https://github.com/informalsystems/apalache/issues/1304
+    // Regression: https://github.com/apalache-mc/apalache/issues/1304
     val input =
       """\*@type: Int;"""
     val (output, potentialAnnotations) = CommentPreprocessor()(input)

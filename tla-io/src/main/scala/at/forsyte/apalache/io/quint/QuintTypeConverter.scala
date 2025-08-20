@@ -90,7 +90,7 @@ private class QuintTypeConverter extends LazyLogging {
     case QuintIntT()       => IntT1
     case QuintStrT()       => StrT1
     case QuintConstT(name) =>
-      ConstT1(name) // TODO: Raise error if we hit this. See https://github.com/informalsystems/apalache/issues/2788
+      ConstT1(name) // TODO: Raise error if we hit this. See https://github.com/apalache-mc/apalache/issues/2788
     case QuintVarT(name)       => VarT1(getVarNo(name))
     case QuintSetT(elem)       => SetT1(convert(elem))
     case QuintSeqT(elem)       => SeqT1(convert(elem))

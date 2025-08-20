@@ -236,7 +236,7 @@ TypeError: unhashable type: 'dict'
 Of course, this is an implementation detail of Python, and it has nothing to do
 with TLA+. This example probably demonstrates that the built-in primitives of
 TLA+ are more powerful than the standard primitives of many programming
-languages (see [this discussion](https://github.com/informalsystems/apalache/discussions/551)).
+languages (see [this discussion](https://github.com/apalache-mc/apalache/discussions/551)).
 
 Alternatively, we could represent a TLA+ function in Python as a set
 of pairs `(key, value)` and implement TLA+ function operators over such a

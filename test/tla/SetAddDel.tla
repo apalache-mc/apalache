@@ -1,6 +1,6 @@
 ---------------------------- MODULE SetAddDel --------------------------
 \* A regression test for the use of set union, see:
-\* https://github.com/informalsystems/apalache/issues/1162
+\* https://github.com/apalache-mc/apalache/issues/1162
 
 \* In this parametric example we have N values, and a set variable, initially empty.
 \* At each step we can add one element to the set, or remove one element from the set.

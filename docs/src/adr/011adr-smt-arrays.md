@@ -318,4 +318,4 @@ additional features using SMT arrays, or potentially ADTs, will be left for the 
 [Symbolic Model Checking for TLA+ Made Faster]: https://doi.org/10.1007/978-3-031-30823-9_7
 [model checking parameters]: https://apalache-mc.org/docs/apalache/running.html#model-checker-command-line-parameters
 [represented internally in Z3]: https://theory.stanford.edu/~nikolaj/programmingz3.html#sec-arrays
-[PR 2027]: https://github.com/informalsystems/apalache/pull/2027
+[PR 2027]: https://github.com/apalache-mc/apalache/pull/2027

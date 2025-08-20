@@ -1,6 +1,6 @@
 ------------------------ MODULE Test1425 -----------------------------
 \* This test demonstrates an issue that appears in the original Bakery.
-\* https://github.com/informalsystems/apalache/issues/1425
+\* https://github.com/apalache-mc/apalache/issues/1425
 EXTENDS Integers
 
 VARIABLES

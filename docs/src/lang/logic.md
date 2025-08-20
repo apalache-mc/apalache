@@ -508,4 +508,4 @@ more about unbounded `CHOOSE`, read Section 16.1.2 of [Specifying Systems].
 [Min and Max in FiniteSetsExt]: https://github.com/tlaplus/CommunityModules/blob/master/modules/FiniteSetsExt.tla#L63-L64
 [ReduceSet in FiniteSetsExt]:  https://github.com/tlaplus/CommunityModules/blob/master/modules/FiniteSetsExt.tla#L5-L17
 [Program synthesis]: https://en.wikipedia.org/wiki/Program_synthesis
-[open an issue...]: https://github.com/informalsystems/apalache/issues/new/choose
+[open an issue...]: https://github.com/apalache-mc/apalache/issues/new/choose

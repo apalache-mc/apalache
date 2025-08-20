@@ -110,9 +110,9 @@ configuration system:
 
 TBD
 
-[Shai]: https://github.com/informalsystems/apalache/milestone/42
+[Shai]: https://github.com/apalache-mc/apalache/milestone/42
 [RFC 010]: ./010rfc-transition-explorer.md
-[#2013]: https://github.com/informalsystems/apalache/issues/2013
-[#1174]: https://github.com/informalsystems/apalache/issues/1174
-[#1177]: https://github.com/informalsystems/apalache/issues/1177
+[#2013]: https://github.com/apalache-mc/apalache/issues/2013
+[#1174]: https://github.com/apalache-mc/apalache/issues/1174
+[#1177]: https://github.com/apalache-mc/apalache/issues/1177
 [ADR 013]: ./013adr-configuration.md

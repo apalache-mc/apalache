@@ -163,7 +163,7 @@ class Quint(quintOutput: QuintOutput) {
   // performing all needed validation and extraction.
   private val binaryBindingApp: (String, (T, T, T) => T) => Seq[QuintEx] => NullaryOpReader[T] = {
     // Multi argument bindings must be wrapped in a tuple
-    // See https://github.com/informalsystems/apalache/issues/2292
+    // See https://github.com/apalache-mc/apalache/issues/2292
     val wrapArgs: Seq[T] => T = {
       case Seq(singleName) => singleName
       case names           => tla.tuple(names: _*)
@@ -488,7 +488,7 @@ class Quint(quintOutput: QuintOutput) {
         // of the translation (e.g., inside special forms like `nondet`) or
         // via rewrites in quint.
         case "oneOf" =>
-          // See https://github.com/informalsystems/apalache/issues/2774
+          // See https://github.com/apalache-mc/apalache/issues/2774
           throw new QuintIRParseError(
               s"`oneOf` can only occur as the principle operator of a `nondet` declaration: `oneOf` operator with id ${id} applied to ${quintArgs}")
 

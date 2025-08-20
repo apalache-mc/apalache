@@ -117,7 +117,7 @@ this set. Consider the following snippet:
 If you know an upper bound on the length of sequences you need,
 which is often the case when checking one model, you can
 work around this issue by using
-[Apalache.Gen](https://github.com/informalsystems/apalache/blob/0bf827c521d3992f39e085cc98ff114bfa0b1721/src/tla/Apalache.tla#L31-L39):
+[Apalache.Gen](https://github.com/apalache-mc/apalache/blob/0bf827c521d3992f39e085cc98ff114bfa0b1721/src/tla/Apalache.tla#L31-L39):
 
 ```tla
 EXTENDS Apalache
@@ -135,10 +135,10 @@ We further restrict the sequence to contain the elements of `{ 1, 2, 3 }`.
 However, note that our workaround only works for bounded sequences, whereas
 `Seq({ 1, 2, 3 })` is the set of all sequences whose elements come from `{ 1, 2, 3 }`.
 
-[Issue 425]: https://github.com/informalsystems/apalache/issues/425
+[Issue 425]: https://github.com/apalache-mc/apalache/issues/425
 
-[Issue 711]: https://github.com/informalsystems/apalache/issues/711
+[Issue 711]: https://github.com/apalache-mc/apalache/issues/711
 
-[Issue 712]: https://github.com/informalsystems/apalache/issues/712
+[Issue 712]: https://github.com/apalache-mc/apalache/issues/712
 
-[Issue 401]: https://github.com/informalsystems/apalache/issues/401
+[Issue 401]: https://github.com/apalache-mc/apalache/issues/401

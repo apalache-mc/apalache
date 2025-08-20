@@ -17,7 +17,7 @@
 <!-- Statement to summarize, following the following formula: -->
 
 This ADR defines the various kinds of inlining considered in Apalache and discusses the pros and cons of their implementations.
-Since we have recently reworked the inliner in [#1569](https://github.com/informalsystems/apalache/pull/1569), we saw it fit to document exactly how inlining is supposed to work and we have chosen the transformations performed in the inlining pass. 
+Since we have recently reworked the inliner in [#1569](https://github.com/apalache-mc/apalache/pull/1569), we saw it fit to document exactly how inlining is supposed to work and we have chosen the transformations performed in the inlining pass. 
 
 ## Context
 

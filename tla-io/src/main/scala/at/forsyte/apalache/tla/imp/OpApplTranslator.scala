@@ -80,7 +80,7 @@ class OpApplTranslator(
     if (!applyNode.getOperator.isLocal) {
       translateNonLocalUserOperator(applyNode)
     } else {
-      // issue 295: https://github.com/informalsystems/apalache/issues/295
+      // issue 295: https://github.com/apalache-mc/apalache/issues/295
       // LOCAL operators may originate from the standard library :face_palm
       // For instance, if the user writes LOCAL INSTANCE Sequences
       applyNode.getOperator match {

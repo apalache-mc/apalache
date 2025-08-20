@@ -32,7 +32,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |
         |================================================================================
         |(* Created by Apalache on DATETIME *)
-        |(* https://github.com/informalsystems/apalache *)
+        |(* https://github.com/apalache-mc/apalache *)
         |""".stripMargin,
     )
   }
@@ -69,7 +69,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |
           |================================================================================
           |(* Created by Apalache on DATETIME *)
-          |(* https://github.com/informalsystems/apalache *)
+          |(* https://github.com/apalache-mc/apalache *)
           |""".stripMargin,
     )
   }
@@ -106,7 +106,7 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |
         |================================================================================
         |(* Created by Apalache on DATETIME *)
-        |(* https://github.com/informalsystems/apalache *)
+        |(* https://github.com/apalache-mc/apalache *)
         |""".stripMargin,
     )
   }

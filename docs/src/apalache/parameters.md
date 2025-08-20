@@ -8,7 +8,7 @@ by writing a symbolic constraint, see [Section 5.3](#ConstInit).
 
 You can set the specification parameters, using the standard `INSTANCE`
 expression of TLA+. For instance, below is the example
-[`y2k_instance.tla`](https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_instance.tla),
+[`y2k_instance.tla`](https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_instance.tla),
 which instantiates `y2k.tla`:
 
 ```tla
@@ -33,7 +33,7 @@ Alternatively, you can extend the base module and use overrides:
 This approach is similar to the ``Init`` operator, but applied to the
 constants. We define a special operator, e.g., called ``ConstInit``. For
 instance, below is the example
-[`y2k_cinit.tla`](https://github.com/informalsystems/apalache/blob/main/test/tla/y2k_cinit.tla):
+[`y2k_cinit.tla`](https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k_cinit.tla):
 
 ```tla
 {{#include ../../../test/tla/y2k_cinit.tla::13}}

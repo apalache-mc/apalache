@@ -8,7 +8,7 @@ package object bmcmt {
    * A theory used to evaluate a TLA+ expression: cells, Booleans, and integers.
    *
    * This concept is obsolete and will be removed in the future. See the <a
-   * href="https://github.com/informalsystems/apalache/issues/22">issue</a>.
+   * href="https://github.com/apalache-mc/apalache/issues/22">issue</a>.
    */
   sealed abstract class Theory {
 

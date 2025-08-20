@@ -176,7 +176,7 @@ to remove from the set at each step, utilizes the `CHOOSE` operator.
 This is a common trait shared by many operators that implement recursion over sets. 
 Since the introduction of folds, the use of `CHOOSE` in Apalache is heavily discouraged as it is both inefficient,
 and nondeterministic (unlike how `CHOOSE` is defined in TLA+ literature).
-For details, see the discussion in [issue 841](https://github.com/informalsystems/apalache/issues/841).
+For details, see the discussion in [issue 841](https://github.com/apalache-mc/apalache/issues/841).
 
 So the third advantage of using folds is the ability to, almost always, avoid using the `CHOOSE` operator.
 

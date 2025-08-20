@@ -1,6 +1,6 @@
 ------------------- MODULE CommentedTypeAnnotation -----------------------
 
-(* Used as regression test for https://github.com/informalsystems/apalache/issues/2163 *)
+(* Used as regression test for https://github.com/apalache-mc/apalache/issues/2163 *)
 
 CONSTANT
   \* @type: Set({
