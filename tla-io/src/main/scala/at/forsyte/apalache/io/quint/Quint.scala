@@ -659,7 +659,7 @@ class Quint(quintOutput: QuintOutput) {
   //   ~~>
   //   \E name \in domain: scope
   //
-  //   nondet name = generate(sz, typeSet); scope
+  //   nondet name: type = generate(sz); scope
   //   ~~>
   //   \E name \in { Apalache!Gen(sz) }: scope
   private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => NullaryOpReader[TBuilderInstruction] = {
@@ -671,7 +671,7 @@ class Quint(quintOutput: QuintOutput) {
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, tlaDomain, tlaScope)
 
-    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "generate", Seq(bound, _))), scope) =>
+    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "apalache::generate", Seq(bound))), scope) =>
       val elemType = typeConv.convert(types(id).typ)
       val boundIntConst = intFromExpr(bound)
       if (boundIntConst.isEmpty) {
