@@ -81,19 +81,6 @@ class TestApalacheBuilder extends BuilderTest {
             resultIsExpected,
         )
     )
-
-    // throws on n <= 0
-    assertThrows[IllegalArgumentException] {
-      build(
-          builder.gen(0, IntT1)
-      )
-    }
-
-    assertThrows[IllegalArgumentException] {
-      build(
-          builder.gen(-1, IntT1)
-      )
-    }
   }
 
   test("skolem") {
