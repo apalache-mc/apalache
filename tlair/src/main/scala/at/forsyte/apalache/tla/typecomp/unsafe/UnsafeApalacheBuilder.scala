@@ -28,17 +28,16 @@ trait UnsafeApalacheBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilde
   }
 
   /**
-   * {{{Gen(n): t}}}
+   * {{{Gen(boundEx): returnType}}}
    *
-   * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
-   * argument.
+   * Produce an Apalache generator for a bound expression and the return type. Can return any type of expression, so the
+   * type must be manually provided, as it cannot be inferred from the argument.
    *
-   * @param n
-   *   must be positive
+   * @param boundEx
+   *   a bound expression, which must be constant after all simplifications
    */
-  def gen(n: BigInt, t: TlaType1): TlaEx = {
-    if (strict) require(n > 0, s"Expected n to be positive, found $n.")
-    OperEx(ApalacheOper.gen, int(n))(Typed(t))
+  def gen(boundEx: TlaEx, returnType: TlaType1): TlaEx = {
+    OperEx(ApalacheOper.gen, boundEx)(Typed(returnType))
   }
 
   /**

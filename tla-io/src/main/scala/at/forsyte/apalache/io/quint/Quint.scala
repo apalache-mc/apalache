@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeLiteralAndNameBuilder
 import at.forsyte.apalache.tla.types.tla
+import com.typesafe.scalalogging.LazyLogging
 
 // scalaz is brought in For the Reader monad, which we use for
 // append-only, context local state for tracking reference to nullary TLA
@@ -26,7 +27,7 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 //
 // Since we need access to the statefull uniqeLambdaName, this class must be
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
-class Quint(quintOutput: QuintOutput) {
+class Quint(quintOutput: QuintOutput) extends LazyLogging {
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val typeConv = new QuintTypeConverter
   private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}
@@ -673,13 +674,10 @@ class Quint(quintOutput: QuintOutput) {
 
     case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "apalache::generate", Seq(bound))), scope) =>
       val elemType = typeConv.convert(types(id).typ)
-      val boundIntConst = intFromExpr(bound)
-      if (boundIntConst.isEmpty) {
-        throw new QuintIRParseError(s"nondet $name = generate($bound) ... expects an integer constant")
-      }
-      val genExpr = tla.enumSet(tla.gen(boundIntConst.get, elemType))
-      val tlaName = tla.name(name, elemType)
       for {
+        boundExpr <- tlaExpression(bound)
+        tlaName = tla.name(name, elemType)
+        genExpr = tla.enumSet(tla.gen(boundExpr, elemType))
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, genExpr, tlaScope)
 
@@ -826,14 +824,4 @@ class Quint(quintOutput: QuintOutput) {
         .reverse // Return the declarations to their original order
     }
   } yield TlaModule(module.name, declarations)
-
-  private def intFromExpr(expr: QuintEx): Option[BigInt] = {
-    expr match {
-      case QuintInt(_, value) =>
-        Some(value)
-
-      case _ =>
-        None
-    }
-  }
 }
