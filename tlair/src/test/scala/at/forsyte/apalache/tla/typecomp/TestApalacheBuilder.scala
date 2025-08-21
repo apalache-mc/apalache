@@ -71,7 +71,7 @@ class TestApalacheBuilder extends BuilderTest {
     )
 
     // We don't want generators producing BigInt, so we have to manually cast the parameter argument
-    def genFromInt(i: Int, t: TlaType1): TBuilderInstruction = builder.gen(BigInt.int2bigInt(i), t)
+    def genFromInt(i: Int, t: TlaType1): TBuilderInstruction = builder.gen(i, t)
 
     checkRun(Generators.positiveIntAndTypeGen)(
         runBinary(
