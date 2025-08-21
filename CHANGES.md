@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.49.1 - 2025-08-21
+
+### Features
+
+- Constant expressions are now allowed in `apalache::generate` when translating Quint (#3141)
+
 ## 0.49.0 - 2025-08-20
 
 ### Breaking changes
