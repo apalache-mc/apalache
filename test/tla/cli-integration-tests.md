@@ -2900,7 +2900,7 @@ EXITCODE: OK
 A regression test for ensuring that `Apalache!Gen(_)` is not cached by the rewriter.
 
 ```sh
-$ apalache-mc check --length=1 --init=InitSameArgs test/tla/Bug2973.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --init=InitSameArgs Bug2973.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -2912,7 +2912,7 @@ EXITCODE: OK
 A regression test for ensuring that `Apalache!Gen(_)` is not cached by the rewriter.
 
 ```sh
-$ apalache-mc check --length=1 --init=InitDifferentArgs test/tla/Bug2973.tla | sed 's/I@.*//'
+$ apalache-mc check --length=1 --init=InitDifferentArgs Bug2973.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
