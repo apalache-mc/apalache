@@ -2895,6 +2895,30 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug2973.tla with InitSameArgs
+
+A regression test for ensuring that `Apalache!Gen(_)` is not cached by the rewriter.
+
+```sh
+$ apalache-mc check --length=1 --init=InitSameArgs Bug2973.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Bug2973.tla with InitDifferentArgs
+
+A regression test for ensuring that `Apalache!Gen(_)` is not cached by the rewriter.
+
+```sh
+$ apalache-mc check --length=1 --init=InitDifferentArgs Bug2973.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error

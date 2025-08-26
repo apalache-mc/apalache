@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.50.0 - 2025-08-25
+
+### Breaking changes
+
+- Not caching `Apalache!Gen(n)` as it breaks completeness (#3147)
+
 ## 0.49.1 - 2025-08-21
 
 ### Features

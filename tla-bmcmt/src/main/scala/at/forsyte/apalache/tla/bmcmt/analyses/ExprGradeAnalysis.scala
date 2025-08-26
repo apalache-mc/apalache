@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaBoolOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import com.google.inject.Inject
 
@@ -41,6 +41,10 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
           update(e, ExprGrade.StateFree)
         else
           update(e, ExprGrade.StateBound)
+
+      case OperEx(ApalacheOper.gen, _) =>
+        // Apalache!Gen(n) should not be cached, as it produces a new set of constants on each call
+        update(e, ExprGrade.NonCacheable)
 
       case OperEx(TlaActionOper.prime, arg) =>
         // e.g., x'
