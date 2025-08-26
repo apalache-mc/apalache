@@ -71,7 +71,7 @@ class TestApalacheBuilder extends BuilderTest {
     )
 
     // We don't want generators producing BigInt, so we have to manually cast the parameter argument
-    def genFromInt(i: Int, t: TlaType1): TBuilderInstruction = builder.gen(BigInt.int2bigInt(i), t)
+    def genFromInt(i: Int, t: TlaType1): TBuilderInstruction = builder.gen(i, t)
 
     checkRun(Generators.positiveIntAndTypeGen)(
         runBinary(
@@ -81,19 +81,6 @@ class TestApalacheBuilder extends BuilderTest {
             resultIsExpected,
         )
     )
-
-    // throws on n <= 0
-    assertThrows[IllegalArgumentException] {
-      build(
-          builder.gen(0, IntT1)
-      )
-    }
-
-    assertThrows[IllegalArgumentException] {
-      build(
-          builder.gen(-1, IntT1)
-      )
-    }
   }
 
   test("skolem") {

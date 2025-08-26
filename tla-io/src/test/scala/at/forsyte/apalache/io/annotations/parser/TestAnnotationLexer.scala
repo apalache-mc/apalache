@@ -92,7 +92,7 @@ class TestAnnotationLexer extends AnyFunSuite {
     // it is a job of CommentPreprocessor to feed us with proper annotations
     val text =
       """  \* TODO: use a model type here
-        |  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
+        |  \* when #570 is closed: https://github.com/apalache-mc/apalache/issues/570
         |  \* @type: Str;""".stripMargin
     expectError(text)
   }

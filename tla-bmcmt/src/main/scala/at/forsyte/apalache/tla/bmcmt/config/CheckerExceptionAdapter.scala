@@ -26,7 +26,7 @@ import com.typesafe.scalalogging.LazyLogging
 @Singleton
 class CheckerExceptionAdapter @Inject() (sourceStore: SourceStore, changeListener: ChangeListener)
     extends ExceptionAdapter with LazyLogging {
-  private lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
+  private lazy val ISSUES_LINK: String = "[https://github.com/apalache-mc/apalache/issues]"
 
   override def toMessage: PartialFunction[Throwable, ErrorMessage] = super.toMessage.orElse {
     // normal errors

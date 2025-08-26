@@ -1,6 +1,7 @@
 package at.forsyte.apalache.infra.passes.options
 
 import at.forsyte.apalache.infra.PassOptionException
+import at.forsyte.apalache.infra.passes.options.Config.{CheckerServer, FuzzerServer, ServerType}
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.tla.lir.Feature
@@ -27,7 +28,7 @@ import java.io.FileNotFoundException
  * `PureConfig` for automatic derivation (see, e.g. 'apalache.io.ConfigManager'), or via arbitrary functions.
  *
  * See
- * [[https://github.com/informalsystems/apalache/blob/main/docs/src/adr/022adr-unification-of-configs-and-options.md ADR022]]
+ * [[https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/022adr-unification-of-configs-and-options.md ADR022]]
  * for motivation and details.
  *
  * @author
@@ -234,17 +235,28 @@ object Config {
     def empty: Typechecker = Generic[Typechecker].from(Generic[Typechecker].to(this).map(emptyPoly))
   }
 
+  sealed abstract class ServerType
+  case class FuzzerServer() extends ServerType {
+    override def toString: String = "fuzzer"
+  }
+  case class CheckerServer() extends ServerType {
+    override def toString: String = "checker"
+  }
+
   /**
    * Configuration of the server
    *
    * @param port
    *   the port to serve requests from
+   * @param serverType
+   *   the type of server to run, either a fuzzer or a checker server
    */
   case class Server(
-      port: Option[Int] = Some(8822))
+      port: Option[Int] = Some(8822),
+      serverType: ServerType = CheckerServer())
       extends Config[Server] {
 
-    def empty: Server = Generic[Server].from(Generic[Server].to(this).map(emptyPoly))
+    def empty: Server = Server(port = None, serverType = serverType)
   }
 
   /**
@@ -704,14 +716,22 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to configure the server */
   case class Server(
-      port: Int)
+      port: Int,
+      serverType: ServerType = CheckerServer())
       extends OptionGroup
 
   object Server extends Configurable[Config.Server, Server] {
     def apply(server: Config.Server): Try[Server] = for {
       port <- server.port.toTry("server.port")
+      serverType = server.serverType match {
+        case _: CheckerServer => CheckerServer()
+        case _: FuzzerServer  => FuzzerServer()
+        case unknown          =>
+          throw new PassOptionException(s"Unexpected server type: ${unknown.toString}")
+      }
     } yield Server(
-        port = port
+        port = port,
+        serverType = serverType,
     )
   }
 

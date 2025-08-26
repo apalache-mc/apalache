@@ -82,7 +82,7 @@ Injection(__S, __T) == { __f \in [__S -> __T]: IsInjective(__f) }
  * This operator is not defined in the community modules.
  * As a temporary workaround, we define it globally.
  * TODO: It should be declared as LOCAL, once this issue is fixed:
- * https://github.com/informalsystems/apalache/issues/1495
+ * https://github.com/apalache-mc/apalache/issues/1495
  *
  * @type: (Set(a), Set(b), a -> b) => Bool;
  *)

@@ -2,7 +2,7 @@
 \* This is a regression test
 \* for unsound Skolemization of expressions under LET-IN:
 \*
-\* https://github.com/informalsystems/apalache/issues/985
+\* https://github.com/apalache-mc/apalache/issues/985
 VARIABLES
     \* @type: Set(Int);
     S,

@@ -552,7 +552,7 @@ for some `n`. See: [Overriding Seq in TLC].
 
 Apalache does not support `Seq(S)` yet. As a workaround, you can manually
 replace `Seq(S)` with `BSeq(S, n)` for some constant `n`.  See the progress in
-[Issue 314](https://github.com/informalsystems/apalache/issues/314).
+[Issue 314](https://github.com/apalache-mc/apalache/issues/314).
 
 **Example in TLA+:**
 
@@ -577,7 +577,7 @@ till the end of the universe.
 [Control Flow and Non-determinism]: ./control-and-nondeterminism.md
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html
 [Paxos]: https://github.com/tlaplus/Examples/blob/master/specifications/Paxos/Paxos.tla
-[Apalache ADR002]: https://github.com/informalsystems/apalache/blob/main/docs/src/adr/002adr-types.md
+[Apalache ADR002]: https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/002adr-types.md
 [Cartesian product]: https://en.wikipedia.org/wiki/Cartesian_product
 [Overriding Seq in TLC]: https://groups.google.com/g/tlaplus/c/sYx_6e3YyWk/m/4CnwPqIVAgAJ
 [HOWTO write type annotations]: ../HOWTOs/howto-write-type-annotations.md

@@ -24,7 +24,7 @@ integrate `PureConfig` with our CLI parsing \
 in order to achieve maintainable, reasonable, and extensible management of configurations\
 accepting the additional external dependency and development costs.
 
-[703]: https://github.com/informalsystems/apalache/issues/730
+[703]: https://github.com/apalache-mc/apalache/issues/730
 
 ## Context
 
@@ -38,20 +38,20 @@ need to make it more configurable.
 
 Recent additions that have extended configurability include:
 
-- [#1081](https://github.com/informalsystems/apalache/pull/1081), introducing
+- [#1081](https://github.com/apalache-mc/apalache/pull/1081), introducing
   the `run-dir` flag.
-- [#1036](https://github.com/informalsystems/apalache/pull/1036), introducing
+- [#1036](https://github.com/apalache-mc/apalache/pull/1036), introducing
   the `write-intermediate`, and `profiling`, `out-dir` configuration parameters,
   exposed both via CLI and configuration file.
-- [#1054](https://github.com/informalsystems/apalache/pull/1054), introducing
+- [#1054](https://github.com/apalache-mc/apalache/pull/1054), introducing
   the `smt-encoding` flag.
   
 The ongoing work for [the server
-mode](https://github.com/informalsystems/apalache/issues/730) is expected to
+mode](https://github.com/apalache-mc/apalache/issues/730) is expected to
 require introducing several more configurable paramters.
 
-As discussed in [#1069](https://github.com/informalsystems/apalache/issues/1069)
-and [#1929](https://github.com/informalsystems/apalache/issues/1929) we have at
+As discussed in [#1069](https://github.com/apalache-mc/apalache/issues/1069)
+and [#1929](https://github.com/apalache-mc/apalache/issues/1929) we have at
 least 5 different sources from which we need to load configuration parameters,
 and the loading must cascade, with the first listed source taking priority:
 

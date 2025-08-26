@@ -4,7 +4,6 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.BuilderUtil._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeApalacheBuilder
-import scalaz.Scalaz._
 import scalaz._
 
 /**
@@ -28,15 +27,18 @@ trait ApalacheBuilder {
     binaryFromUnsafe(lhs, rhs)(unsafeBuilder.assign)
 
   /**
-   * {{{Gen(n): t}}}
+   * {{{Gen(boundEx): returnType}}}
    *
-   * Can return any type of expression, so the type must be manually provided, as it cannot be inferred from the
-   * argument.
+   * Produce a value generator, given a bound expression and the expected return type.
    *
-   * @param n
-   *   must be positive
+   * @param boundEx
+   *   a bound on the number of generated expressions; it must be reducible to a constant expression
+   * @param returnType
+   *   the return type of the produced expression
    */
-  def gen(n: BigInt, t: TlaType1): TBuilderInstruction = unsafeBuilder.gen(n, t).point[TBuilderInternalState]
+  def gen(boundEx: TBuilderInstruction, returnType: TlaType1): TBuilderInstruction = {
+    boundEx.map(unsafeBuilder.gen(_, returnType))
+  }
 
   /**
    * {{{Repeat(F, N, x): t}}}

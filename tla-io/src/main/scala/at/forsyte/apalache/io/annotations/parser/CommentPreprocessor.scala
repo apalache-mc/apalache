@@ -160,7 +160,7 @@ class CommentPreprocessor {
         case (true, true) =>
           // This must NOT ignore new lines, or else we lose the ability to identify
           // single-line comments in type annotations.
-          // See https://github.com/informalsystems/apalache/issues/2162
+          // See https://github.com/apalache-mc/apalache/issues/2162
           if (group != "\\*" && group != "(*" && group != "*)") {
             annotationBuilder.append(group)
           } // else: prune the comment characters and line-feed

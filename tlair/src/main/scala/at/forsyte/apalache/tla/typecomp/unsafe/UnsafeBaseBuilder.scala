@@ -40,7 +40,7 @@ trait UnsafeBaseBuilder extends ProtoBuilder with UnsafeLiteralAndNameBuilder {
         retypedOp match {
           // This is a workaround for the fact that that we currently de-lambda,
           // because lambdas are not supported in the Apalache IR. See
-          // https://github.com/informalsystems/apalache/issues/2532
+          // https://github.com/apalache-mc/apalache/issues/2532
           case LetInEx(nameEx @ NameEx(operName), decl) if operName == decl.name =>
             val appliedByName = buildBySignatureLookup(TlaOper.apply, nameEx +: retypedArgs: _*)
             LetInEx(appliedByName, decl)(appliedByName.typeTag)

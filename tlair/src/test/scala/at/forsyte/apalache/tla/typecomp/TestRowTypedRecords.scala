@@ -46,7 +46,7 @@ class TestRowTypedRecords extends AnyFunSuite with Checkers {
           builder.appOp(opName, b),
       )
 
-    // Regresson test for https://github.com/informalsystems/apalache/issues/2581
+    // Regresson test for https://github.com/apalache-mc/apalache/issues/2581
     assert(Try(build(operatorApplications)).isSuccess,
         "Failed to build the application of row-polymorphic operator to compatible records")
   }

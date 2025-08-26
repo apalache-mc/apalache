@@ -28,7 +28,7 @@ accepting a reasonable time investment into refactoring.\
      This is the story explaining the problem we are looking to resolve.
 -->
 
-The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. [#1774](https://github.com/informalsystems/apalache/issues/1774), [#2338](https://github.com/informalsystems/apalache/issues/2338)).
+The core of the model checking pass -- the rewriting rules -- have shown to be a significant hurdle to onboarding, maintenance and modification efforts (e.g. [#1774](https://github.com/apalache-mc/apalache/issues/1774), [#2338](https://github.com/informalsystems/apalache/issues/2338)).
 Relevant for this ADR is the fact that rewriting rules do multiple things at once, which are difficult to separate. They:
   1. Modify arenas
   2. Push constraints into SMT
@@ -76,7 +76,7 @@ Under (3), the same rule would look more like this:
 
 Specifically, we would no longer need `PureArenaAdapters`, and we could drop the parts of `SymbState`, which are treated as mutable (the `TlaEx` value). In the above, `RewriterScope` is what remains of `SymbState`, when we remove the `TlaEx` value.
 
-A prototype implementation can be found in [this PR](https://github.com/informalsystems/apalache/pull/2554).
+A prototype implementation can be found in [this PR](https://github.com/apalache-mc/apalache/pull/2554).
 
 ## Consequences
 
@@ -100,5 +100,5 @@ actually has a much better memory footprint, since only the information relevant
 
 
 
-[Notes]: https://github.com/informalsystems/apalache/pull/2467
-[proto]: https://github.com/informalsystems/apalache/tree/jk/arenaSeparationProto/tla-pp/src/main/scala/at/forsyte/apalache/tla/pp/arenas
+[Notes]: https://github.com/apalache-mc/apalache/pull/2467
+[proto]: https://github.com/apalache-mc/apalache/tree/jk/arenaSeparationProto/tla-pp/src/main/scala/at/forsyte/apalache/tla/pp/arenas

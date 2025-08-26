@@ -1,5 +1,5 @@
 ------------------------------- MODULE Bug540 -------------------------------
-\* Module used in https://github.com/informalsystems/apalache/issues/540
+\* Module used in https://github.com/apalache-mc/apalache/issues/540
 \* Test to see issue has been resolved
 
 EXTENDS Integers, FiniteSets

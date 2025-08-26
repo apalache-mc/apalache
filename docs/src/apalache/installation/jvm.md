@@ -4,7 +4,7 @@ You need to download and install a Java Virtual Machine first.
 We recommend version 17 of the [Eclipse Temurin][] or [Zulu][] builds of OpenJDK.
 
 Once you have installed Java, download the [latest
-release](https://github.com/informalsystems/apalache/releases) and unpack into
+release](https://github.com/apalache-mc/apalache/releases) and unpack into
 a directory of your choice. Depending on your OS, you have two options.
 
 *Option 1: Linux, macOS.* You can run the script `./bin/apalache-mc`, or,

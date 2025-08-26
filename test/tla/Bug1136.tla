@@ -1,6 +1,6 @@
 -------------------------------- MODULE Bug1136 -------------------------------
 \* a regression test for a^b, see:
-\* https://github.com/informalsystems/apalache/issues/1136
+\* https://github.com/apalache-mc/apalache/issues/1136
 
 EXTENDS Integers
 

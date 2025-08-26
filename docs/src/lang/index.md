@@ -16,7 +16,7 @@ Pluscal, check [LearnTla.com] by Hillel Wayne.
  1. [User-defined operators](./user-operators.md) :bulb:
  1. [Modules and instances](./modules.md): MODULE, EXTENDS and INSTANCES :scissors:
 
-[Apalache model checker]: https://github.com/informalsystems/apalache
+[Apalache model checker]: https://github.com/apalache-mc/apalache
 [Apalache manual]: ../.
 [TLC model checker]: http://lamport.azurewebsites.net/tla/tools.html
 [Summary of TLA]: https://lamport.azurewebsites.net/tla/summary.pdf

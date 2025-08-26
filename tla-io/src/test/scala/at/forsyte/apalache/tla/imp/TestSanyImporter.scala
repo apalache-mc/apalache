@@ -1138,7 +1138,7 @@ class TestSanyImporter extends SanyImporterTestBase {
         ),
     )(mod.declarations(3))
 
-    // using @ in EXCEPT: https://github.com/informalsystems/apalache/issues/286
+    // using @ in EXCEPT: https://github.com/apalache-mc/apalache/issues/286
     expectDecl(
         "E4",
         OperEx(

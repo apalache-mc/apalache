@@ -65,7 +65,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
-    pretty.writeComment("https://github.com/informalsystems/apalache")
+    pretty.writeComment("https://github.com/apalache-mc/apalache")
     pretty.close()
   }
 }

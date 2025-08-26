@@ -46,9 +46,12 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     (runDir ++ customRunDir).foreach(d =>
       rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile())))
     rootLogger.addAppender(consoleAppender)
-    // debug messages at the apalache level
-    val apalacheLogger = loggerContext.getLogger("at.forsyte.apalache")
-    apalacheLogger.setLevel(Level.DEBUG)
+    // debug messages at the legacy Apalache level
+    val legacyApalacheLogger = loggerContext.getLogger("at.forsyte.apalache")
+    legacyApalacheLogger.setLevel(Level.DEBUG)
+    // debug messages at the newer Apalache level
+    val newApalacheLogger = loggerContext.getLogger("com.github.apalachemc.apalache")
+    newApalacheLogger.setLevel(Level.DEBUG)
     Configurator.ExecutionStatus.NEUTRAL
   }
 
