@@ -51,7 +51,13 @@ class EtcTypeCheckerPassImpl @Inject() (
     val loggingListener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
     val recordingListener = new RecordingTypeCheckerListener(sourceStore, changeListener)
     val listener = new MultiTypeCheckerListener(loggingListener, recordingListener)
-    if (tool.check(listener, tlaModule)) {
+    val result = tool.check(listener, tlaModule)
+    if (recordingListener.getWarnings().nonEmpty) {
+        logger.warn(" > Snowcat has some warnings:")
+        recordingListener.getWarnings().foreach { case (loc, msg) => logger.warn(s" > $loc: $msg") }
+    }
+
+    if (result) {
       val transformer = new TypeRewriter(tracker, defaultTag)(recordingListener.toMap)
       val taggedDecls = tlaModule.declarations.map(transformer(_))
       val newModule = TlaModule(tlaModule.name, taggedDecls)
