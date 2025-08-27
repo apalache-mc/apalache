@@ -21,4 +21,10 @@ class MultiTypeCheckerListener(subscribers: TypeCheckerListener*) extends TypeCh
       s.onTypeError(sourceRef, message)
     }
   }
+
+  override def onTypeWarn(sourceRef: EtcRef, message: String): Unit = {
+    for (s <- subscribers) {
+      s.onTypeWarn(sourceRef, message)
+    }
+  }
 }

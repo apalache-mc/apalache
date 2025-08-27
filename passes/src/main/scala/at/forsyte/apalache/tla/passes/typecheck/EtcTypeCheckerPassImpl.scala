@@ -51,18 +51,24 @@ class EtcTypeCheckerPassImpl @Inject() (
     val loggingListener = new LoggingTypeCheckerListener(sourceStore, changeListener, inferPoly)
     val recordingListener = new RecordingTypeCheckerListener(sourceStore, changeListener)
     val listener = new MultiTypeCheckerListener(loggingListener, recordingListener)
-    if (tool.check(listener, tlaModule)) {
+    if (!tool.check(listener, tlaModule)) {
+      logger.info(" > Snowcat asks you to fix the types. Meow.")
+      passFailure(recordingListener.getErrors(), ExitCodes.ERROR_TYPECHECK)
+    } else {
       val transformer = new TypeRewriter(tracker, defaultTag)(recordingListener.toMap)
       val taggedDecls = tlaModule.declarations.map(transformer(_))
       val newModule = TlaModule(tlaModule.name, taggedDecls)
-      logger.info(" > Your types are purrfect!")
+      if (recordingListener.getWarnings().isEmpty) {
+        logger.info(" > Your types are purrfect!")
+      } else {
+        logger.warn(" > Snowcat has some warnings:")
+        recordingListener.getWarnings().foreach { case (loc, msg) => logger.warn(s" > $loc: $msg") }
+      }
+
       logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
       writeOut(writerFactory, newModule)
       utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
       Right(newModule)
-    } else {
-      logger.info(" > Snowcat asks you to fix the types. Meow.")
-      passFailure(recordingListener.getErrors(), ExitCodes.ERROR_TYPECHECK)
     }
   }
 

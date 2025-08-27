@@ -30,4 +30,14 @@ class DefaultTypeCheckerListener extends TypeCheckerListener {
    *   the error description
    */
   override def onTypeError(sourceRef: EtcRef, message: String): Unit = {}
+
+  /**
+   * This method is called when the type checker finds a type warning.
+   *
+   * @param sourceRef
+   *   a reference to the source expression
+   * @param message
+   *   the warning description
+   */
+  override def onTypeWarn(sourceRef: EtcRef, message: String): Unit = {}
 }

@@ -3600,9 +3600,9 @@ EXITCODE: OK
 ```sh
 $ apalache-mc typecheck PolyTooGeneral.tla | sed 's/[IEW]@.*//'
 ...
-[PolyTooGeneral.tla:6:1-6:10]: Id's type annotation ((c) => b) is too general, inferred: ((a) => a)
+ > PolyTooGeneral.tla:6:1-6:10: Id's type annotation ((c) => b) is too general, inferred: ((a) => a)
 ...
-EXITCODE: ERROR (120)
+EXITCODE: OK
 ```
 
 ### typecheck PrintTypes
