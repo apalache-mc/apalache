@@ -31,7 +31,6 @@ trait TypeCheckerListener {
    */
   def onTypeError(sourceRef: EtcRef, message: String): Unit
 
-
   /**
    * This method is called when the type checker finds a type warning.
    * @param sourceRef

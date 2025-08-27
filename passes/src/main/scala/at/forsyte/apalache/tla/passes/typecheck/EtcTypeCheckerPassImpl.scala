@@ -53,8 +53,8 @@ class EtcTypeCheckerPassImpl @Inject() (
     val listener = new MultiTypeCheckerListener(loggingListener, recordingListener)
     val result = tool.check(listener, tlaModule)
     if (recordingListener.getWarnings().nonEmpty) {
-        logger.warn(" > Snowcat has some warnings:")
-        recordingListener.getWarnings().foreach { case (loc, msg) => logger.warn(s" > $loc: $msg") }
+      logger.warn(" > Snowcat has some warnings:")
+      recordingListener.getWarnings().foreach { case (loc, msg) => logger.warn(s" > $loc: $msg") }
     }
 
     if (result) {
