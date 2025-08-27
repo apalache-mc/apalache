@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.50.1 - 2025-08-27
+
+### Breaking changes
+
+- Report a warning instead of an error when generic types are not tight (#3151)
+
 ## 0.50.0 - 2025-08-25
 
 ### Breaking changes
