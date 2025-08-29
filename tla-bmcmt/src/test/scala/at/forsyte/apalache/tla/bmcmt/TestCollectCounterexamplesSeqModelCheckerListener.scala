@@ -46,7 +46,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
     // run the model checker with listener
     val listener = new CollectCounterexamplesModelCheckerListener()
-    val checker = new SeqModelChecker(params, checkerInput, trex, Seq(listener))
+    val checker = new SeqModelChecker(ModelCheckerContext(params, checkerInput, trex, Seq(listener)))
     (listener, checker)
   }
 
