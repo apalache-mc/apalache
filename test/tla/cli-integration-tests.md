@@ -2907,12 +2907,23 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
-### check Bug2973.tla with InitDifferentArgs
+### check Bug3158.tla
 
-A regression test for ensuring that `Apalache!Gen(_)` is not cached by the rewriter.
+A regression test for ensuring that `Apalache!Gen(_)` does not break functions
+of empty domain and it does not produce junk.
 
 ```sh
-$ apalache-mc check --length=1 --init=InitDifferentArgs Bug2973.tla | sed 's/I@.*//'
+$ apalache-mc check --length=0 --inv=Inv Bug3158.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
+
+```sh
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
