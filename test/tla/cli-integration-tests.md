@@ -2909,15 +2909,15 @@ EXITCODE: OK
 
 ### check Bug3158.tla
 
-A regression test for ensuring that `Apalache!Gen(_)` does not break functions
-of empty domain and it does not produce junk.
+A regression test for ensuring that `Apalache!Gen(_)` does not produce junk
+in the counterexamples.
 
 ```sh
-$ apalache-mc check --length=0 --inv=Inv Bug3158.tla | sed 's/I@.*//'
+$ apalache-mc check --length=0 --inv=Inv --run-dir=_run3158 Bug3158.tla | sed 's/I@.*//'
 ...
-The outcome is: NoError
-...
-EXITCODE: OK
+EXITCODE: ERROR (12)
+$ grep "State0 == fun = SetAsFun({})" _run3158/violation1.tla
+State0 == fun = SetAsFun({})
 ```
 
 ### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
