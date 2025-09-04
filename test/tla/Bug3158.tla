@@ -1,5 +1,6 @@
 -------------------------------- MODULE Bug3158 -------------------------------
-\* the buggy generators were not able to produce functions of empty domain
+\* Function generators were producing counterexamples with junk,
+\* even though the internal representation in SMT seems to be sound.
 EXTENDS Integers, FiniteSets, Apalache
 
 VARIABLE
