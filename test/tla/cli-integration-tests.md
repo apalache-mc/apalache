@@ -2919,6 +2919,29 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Bug3158.tla
+
+A regression test for ensuring that `Apalache!Gen(_)` does not produce junk
+in the counterexamples.
+
+```sh
+$ apalache-mc check --length=0 --inv=Inv --run-dir=_run3158 Bug3158.tla | sed 's/I@.*//'
+...
+EXITCODE: ERROR (12)
+$ grep "State0 == fun = SetAsFun({})" _run3158/violation1.tla
+State0 == fun = SetAsFun({})
+```
+
+### check Bug20201118 succeeds: regression for issue 333 (array-encoding)
+
+```sh
+$ apalache-mc check --length=10 --init=Init --next=Next --inv=Inv Bug20201118.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
