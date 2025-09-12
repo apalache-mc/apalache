@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -138,6 +139,9 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
       val negativePrefix =
         if (level == TlaLevelAction) NormalizedNames.VC_NOT_ACTION_INV_PREFIX else NormalizedNames.VC_NOT_INV_PREFIX
       val negative = TlaOperDecl(negativePrefix + index, List(), notInvPieceCopy)(tag)
+      // track the changes
+      tracker.hold(invPiece, positive.body)
+      tracker.hold(invPiece, negative.body)
       Seq(positive, negative)
     }
 
@@ -155,6 +159,20 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
       case OperEx(TlaBoolOper.and, args @ _*) =>
         // we split A /\ B into the set {A, B}
         args.flatMap(splitInv(universalsRev, _))
+
+      case OperEx(TlaOper.label, body, labelArgs @ _*) =>
+        // Label(args) :: body
+        val split = splitInv(universalsRev, body)
+        if (split.size <= 1) {
+            split
+        } else {
+          // decorate each piece with the label
+            split.map { ex =>
+              val labelledEx = OperEx(TlaOper.label, ex +: labelArgs :_*)(ex.typeTag)
+              tracker.hold(ex, labelledEx)
+              labelledEx
+            }
+        }
 
       case _ =>
         // nothing to split, just add quantifiers that were collected on the way
