@@ -12,7 +12,9 @@ class TestJsonRequests extends AnyFunSuite {
     val text =
       """---- MODULE Inc ----
         |EXTENDS Integers
-        |VARIABLE x
+        |VARIABLE
+        |  \* @type: Int;
+        |  x
         |Init == x = 0
         |Next == x' = x + 1
         |=====================

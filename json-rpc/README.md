@@ -79,10 +79,26 @@ when loading multiple specifications in different sessions.
 ```json
 {
   "result": {
-    "sessionId": "<unique session identifier>"
+    "sessionId": "<unique session identifier>",
+    "snapshotId": <snapshot identifier after loading the spec>,
+    "specParameters":{
+      "nInitTransitions": <number of Init transitions>,
+      "nNextTransitions": <number of Next transitions>,
+      "nStateInvariants": <number of state invariants>,
+      "nActionInvariants": <number of action invariants>,
+      "nTraceInvariants": <number of trace invariants>,
+      "hasView": <true if there is a view operator>
+    }
   }
 }
 ```
+
+The `sessionId` is a unique identifier for the session. You should use this
+identifier in subsequent calls to the server to refer to the loaded specification.
+The `snapshotId` is an identifier of the snapshot that was created after loading
+the specification and initializing the constants, if there is a constant initializer.
+Further, `specParameters` contains key parameters of the specification that are
+usually needed for symbolic exploration.
 
 **Example**:
 
@@ -90,14 +106,32 @@ when loading multiple specifications in different sessions.
 SPEC=`cat <<EOF | base64
 ---- MODULE Inc ----
 EXTENDS Integers
-VARIABLE x
+VARIABLE
+  \* @type: Int;
+  x
 Init == x = 0
-Next == x' = x + 1
+Next == (x < 3 /\\ x' = x + 1) \\/ (x > -3 /\\ x' = x - 1)
 =====================
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ]},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ]},"id":1}' 2>/dev/null | jq
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "sessionId": "1a1555f8",
+    "snapshotId": 0,
+    "specParameters": {
+      "nInitTransitions": 1,
+      "nNextTransitions": 2,
+      "nStateInvariants": 0,
+      "nActionInvariants": 0,
+      "nTraceInvariants": 0,
+      "hasView": false
+    }
+  }
+}
 ```
 
 ### 2.2. Method disposeSpec
@@ -136,6 +170,89 @@ This identifier cannot be used in the future calls.
 curl -X POST http://localhost:8822/rpc \
 -H "Content-Type: application/json" \
 -d '{"jsonrpc":"2.0","method":"disposeSpec","params":{"sessionId": "1a1555f8"},"id":2}'
+```
+
+### 2.3. Method assumeTransition
+
+Given a session identifier and a transition identifier, prepare this transition in the
+SMT context and assume that this transition holds true. Additionally, if `checkEnabled`
+is set to `true`, the server checks, whether there is a state that is reachable via
+the current transition prefix, including the supplied transition. The parameter `timeoutSec`
+sets the timeout for this check in seconds. If this parameter is set to `0`, then
+the timout is infinite.
+
+**Input:**
+
+```json
+{
+  "method":"assumeTransition",
+  "params": {
+    "sessionId": <session identifier>,
+    "transitionId": <transition identifier>,
+    "checkEnabled": <check whether the transition is enabled>,
+    "timeoutSec": <timeout in seconds, or 0 for infinite>
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "<session identifier>",
+    "snapshotId": <snapshot identifier after assuming the transition>,
+    "transitionId": <transition identifier>,
+    "status": <"ENABLED" or "DISABLED" or "UNKNOWN">
+  }
+}
+```
+
+**Example**:
+
+```sh
+curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"assumeTransition","params":{"sessionId":"1a1555f8","transitionId":0,"checkEnabled":true},"id":2}'
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1a1555f8","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
+```
+
+### 2.4. Method nextState
+
+Given a session identifier, switch to the next symbolic state. This method should be called
+only after the `assumeTransition` method was called successfully (with the status `"ENABLED"`
+or `"UNKNOWN"`).
+
+**Input:**
+
+```json
+{
+  "method": "nextState",
+  "params": {
+    "sessionId": "<session identifier>"
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "<session identifier>",
+    "snapshotId": <snapshot identifier after assuming the transition>,
+    "newStepNo": <the number of the new step>
+  }
+}
+```
+
+**Example**:
+
+```sh
+curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"nextStep","params":{"sessionId":"1a1555f8"},"id":3}'
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1a1555f8","snapshotId":3,"newStepNo":1}}
 ```
 
 [Jetty Server]: https://jetty.org/
