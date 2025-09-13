@@ -7,8 +7,6 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.{:+, ::}
-
 /**
  * <p>The skolemization analysis finds the existential quantifiers that can be safely replaced by constants
  * (Skolemizable). This class is not a pure analysis but a transformer, that is, it modifies an argument expression.
@@ -95,7 +93,7 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
 
     case OperEx(TlaOper.label, body, args @ _*) =>
       // propagete skolemization under labels
-      OperEx(TlaOper.label, transform(body) +: args :_*)(body.typeTag)
+      OperEx(TlaOper.label, transform(body) +: args: _*)(body.typeTag)
 
     case ex @ OperEx(_, _ @_*) =>
       // bugfix for #148: do not descend into value expressions, as Skolemization of non-formulas is unsound
