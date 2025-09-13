@@ -79,16 +79,8 @@ object TlaExUtil {
     case OperEx(_, args @ _*) =>
       args.flatMap(findLabels)
 
-    case ex @ LetInEx(body, defs @ _*) =>
-      def findInDef: TlaOperDecl => Seq[String] = {
-        case TlaOperDecl(_, List(), body) =>
-          findLabels(body)
-
-        case TlaOperDecl(name, params, _) =>
-          val msg = "Operator %s: expected 0 parameters, found %d parameters".format(name, params.length)
-          throw new InvalidTlaExException(msg, ex)
-      }
-      defs.flatMap(findInDef) ++ findLabels(body)
+    case LetInEx(body, defs @ _*) =>
+      defs.flatMap(d => findLabels(d.body)) ++ findLabels(body)
 
     case _ => Seq()
   }
