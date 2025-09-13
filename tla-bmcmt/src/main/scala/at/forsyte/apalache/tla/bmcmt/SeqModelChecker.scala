@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
 import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
+import at.forsyte.apalache.tla.bmcmt.util.{InitTransKind, LabelsCache, NextTransKind, VCKind}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -11,7 +12,7 @@ import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.util.Random
@@ -43,6 +44,8 @@ class SeqModelChecker[ExecutorContextT](
 
   // the number of found errors, up to params.maxErrors
   private val searchState: SearchState = new SearchState(params)
+  // cache for labels that are used in the current run
+  private val labelsCache = new LabelsCache()
 
   override def run(): CheckerResult = {
     // initialize CONSTANTS
@@ -221,13 +224,15 @@ class SeqModelChecker[ExecutorContextT](
 
         if (params.discardDisabled) {
           // check, whether the transition is enabled in SMT
-          logger.debug(s"Step ${trex.stepNo}: Transition #$no. Is it enabled?")
+          val labels = labelsCache.getLabels(if (isNext) NextTransKind(no) else InitTransKind(no), transitions(no))
+          val labels_s = if (labels.isEmpty) "" else labels.mkString(" [", ", ", "]")
+          logger.debug(s"Step ${trex.stepNo}: Transition #$no$labels_s. Is it enabled?")
           val assumeSnapshot = trex.snapshot()
           // assume that the transition is fired and check, whether the constraints are satisfiable
           trex.assumeTransition(no)
           trex.sat(params.timeoutSmtSec) match {
             case Some(true) =>
-              logger.debug(s"Step ${trex.stepNo}: Transition #$no is enabled")
+              logger.debug(s"Step ${trex.stepNo}: Transition #$no$labels_s is enabled")
               // recover to the state before the transition was fired
               snapshot = Some(assumeSnapshot)
 
@@ -256,18 +261,18 @@ class SeqModelChecker[ExecutorContextT](
                 // recover from the snapshot
                 trex.recover(snapshot.get)
                 // pick one transition
-                logger.info(s"Step ${trex.stepNo}: randomly picked transition $no")
+                logger.info(s"Step ${trex.stepNo}: randomly picked transition $no$labels_s")
                 trex.pickTransition()
                 return (maybeInvariantNos, maybeActionInvariantNos)
               }
 
             case Some(false) =>
               // recover the transition before the transition was prepared
-              logger.info(s"Step ${trex.stepNo}: Transition #$no is disabled")
+              logger.info(s"Step ${trex.stepNo}: Transition #$no$labels_s is disabled")
 
             case None =>
               if (params.isRandomSimulation) {
-                logger.info(s"Step ${trex.stepNo}: Transition #$no => TIMEOUT. Transition ignored.")
+                logger.info(s"Step ${trex.stepNo}: Transition #$no$labels_s => TIMEOUT. Transition ignored.")
                 nTimeouts += 1
               } else {
                 searchState.onResult(RuntimeError())
@@ -350,7 +355,9 @@ class SeqModelChecker[ExecutorContextT](
 
     for ((notInv, invNo) <- notInvs.zipWithIndex) {
       if (numbersToCheck.contains(invNo)) {
-        logger.debug(s"State $stateNo: Checking $kind invariant $invNo")
+        val labels = labelsCache.getLabels(VCKind(invNo), notInv)
+        val labels_s = if (labels.isEmpty) "" else labels.mkString(" [", ", ", "]")
+        logger.debug(s"State $stateNo: Checking $kind invariant $invNo$labels_s")
         var invariantHolds = false
 
         while (!invariantHolds && searchState.canContinue) {
@@ -367,18 +374,18 @@ class SeqModelChecker[ExecutorContextT](
               val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), notInv)
               searchState.onResult(Error(1, Seq(counterexample)))
               notifyOnError(counterexample, searchState.nFoundErrors)
-              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} violated.")
+              logger.info(f"State ${stateNo}: $kind invariant $invNo$labels_s violated.")
               excludePathView()
 
             case Some(false) =>
               // no counterexample found, so the invariant holds true
               invariantHolds = true
-              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} holds.")
+              logger.info(f"State ${stateNo}: $kind invariant $invNo$labels_s holds.")
 
             case None =>
               // UNKNOWN or timeout. Assume that the invariant holds true, so we can continue.
               invariantHolds = true
-              logger.info(f"State ${stateNo}: ${kind} invariant ${invNo} => TIMEOUT. Assuming it holds true.")
+              logger.info(f"State ${stateNo}: $kind invariant $invNo$labels_s => TIMEOUT. Assuming it holds true.")
               searchState.onResult(SmtTimeout(1))
           }
 
@@ -397,7 +404,9 @@ class SeqModelChecker[ExecutorContextT](
     }
 
     for ((notInv, invNo) <- notTraceInvariants.zipWithIndex) {
-      logger.debug(s"State $stateNo: Checking trace invariant $invNo")
+      val labels = labelsCache.getLabels(VCKind(invNo), notInv.body)
+      val labels_s = if (labels.isEmpty) "" else labels.mkString(" [", ", ", "]")
+      logger.debug(s"State $stateNo: Checking trace invariant $invNo$labels_s")
       var invariantHolds = false
 
       while (!invariantHolds && searchState.canContinue) {
@@ -415,7 +424,7 @@ class SeqModelChecker[ExecutorContextT](
             val counterexample = Counterexample(checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
             searchState.onResult(Error(1, Seq(counterexample)))
             notifyOnError(counterexample, searchState.nFoundErrors)
-            val msg = "State %d: trace invariant %s violated.".format(stateNo, invNo)
+            val msg = s"State $stateNo: trace invariant $invNo$labels_s violated."
             logger.error(msg)
             excludePathView()
 
@@ -426,7 +435,7 @@ class SeqModelChecker[ExecutorContextT](
           case None =>
             // Timeout. Assume that the invariant holds true, so we can continue.
             invariantHolds = true
-            logger.info(f"State ${stateNo}: trace invariant ${invNo} => TIMEOUT. Assuming it holds true.")
+            logger.info(f"State $stateNo: trace invariant $invNo$labels_s => TIMEOUT. Assuming it holds true.")
             searchState.onResult(SmtTimeout(1))
         }
 

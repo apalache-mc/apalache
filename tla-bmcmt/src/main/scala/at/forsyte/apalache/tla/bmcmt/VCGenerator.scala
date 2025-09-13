@@ -6,7 +6,6 @@ import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.values.TlaStr
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -163,15 +162,11 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
       case OperEx(TlaOper.label, body, labelArgs @ _*) =>
         // Label(args) :: body
         val split = splitInv(universalsRev, body)
-        if (split.size <= 1) {
-            split
-        } else {
-          // decorate each piece with the label
-            split.map { ex =>
-              val labelledEx = OperEx(TlaOper.label, ex +: labelArgs :_*)(ex.typeTag)
-              tracker.hold(ex, labelledEx)
-              labelledEx
-            }
+        // decorate each piece with the label
+        split.map { ex =>
+          val labelledEx = OperEx(TlaOper.label, ex +: labelArgs :_*)(ex.typeTag)
+          tracker.hold(ex, labelledEx)
+          labelledEx
         }
 
       case _ =>
