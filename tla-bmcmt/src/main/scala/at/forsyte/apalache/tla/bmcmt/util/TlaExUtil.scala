@@ -66,8 +66,8 @@ object TlaExUtil {
   }
 
   /**
-   * Find the labels that are used in an expression.
-   * We assume that the label names are unique. Hence, they are returned as a sequence, not a set.
+   * Find the labels that are used in an expression. We assume that the label names are unique. Hence, they are returned
+   * as a sequence, not a set.
    *
    * @return
    *   the set of used labels

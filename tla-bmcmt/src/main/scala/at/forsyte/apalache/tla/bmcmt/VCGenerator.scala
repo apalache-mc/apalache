@@ -164,7 +164,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
         val split = splitInv(universalsRev, body)
         // decorate each piece with the label
         split.map { ex =>
-          val labelledEx = OperEx(TlaOper.label, ex +: labelArgs :_*)(ex.typeTag)
+          val labelledEx = OperEx(TlaOper.label, ex +: labelArgs: _*)(ex.typeTag)
           tracker.hold(ex, labelledEx)
           labelledEx
         }
