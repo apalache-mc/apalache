@@ -30,7 +30,9 @@ case class VCKind(index: Integer) extends ExprToLabelKind {}
 
 /**
  * A cache for labels that are attached to expressions. The cache is used to avoid repeated calls of
- * TlaExUtil.findLabels.
+ * `TlaExUtil.findLabels`. When the same transition is evaluated multiple times, e.g., in the randomized
+ * simulator, it seems unnecessary to recompute the labels on each call. Hence, this cache. We have not
+ * profiled this cache yet. It may give us negligible speedup.
  */
 class LabelsCache {
   private var labels = Map[ExprToLabelKind, Seq[String]]()

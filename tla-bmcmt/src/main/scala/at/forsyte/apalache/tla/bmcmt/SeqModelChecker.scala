@@ -261,7 +261,7 @@ class SeqModelChecker[ExecutorContextT](
                 // recover from the snapshot
                 trex.recover(snapshot.get)
                 // pick one transition
-                logger.info(s"Step ${trex.stepNo}: randomly picked transition $no$labels_s")
+                logger.info(s"Step ${trex.stepNo}: randomly picked transition #$no$labels_s")
                 trex.pickTransition()
                 return (maybeInvariantNos, maybeActionInvariantNos)
               }
