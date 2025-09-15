@@ -29,7 +29,7 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
 class Quint(quintOutput: QuintOutput) extends LazyLogging {
   // the name prefix that is used to introduce expression labels
-  private final val LABEL_PREFIX = "__label_"
+  final private val LABEL_PREFIX = "__label_"
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val typeConv = new QuintTypeConverter
   private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}

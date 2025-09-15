@@ -174,7 +174,8 @@ class TestQuintEx extends AnyFunSuite {
     val nondetBinding =
       e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
     val labelledExpr =
-      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "__label_Foo", "val", tt), QuintBoolT()), nIsGreaterThan0), QuintBoolT())
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "__label_Foo", "val", tt), QuintBoolT()), nIsGreaterThan0),
+          QuintBoolT())
     val generateSet = app("apalache::generate", _42)(QuintSetT(QuintIntT()))
     val nondetGenerateId = uid
     val appGenSet =
