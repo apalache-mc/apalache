@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.util
 
 import at.forsyte.apalache.tla.bmcmt.InvalidTlaExException
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaOper}
-import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.values.TlaStr
+import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx, TlaOperDecl, ValEx}
 
 object TlaExUtil {
   private def isFold(op: TlaOper): Boolean = {
@@ -62,5 +63,25 @@ object TlaExUtil {
 
     findRec(expr)
     used
+  }
+
+  /**
+   * Find the labels that are used in an expression. We assume that the label names are unique. Hence, they are returned
+   * as a sequence, not a set.
+   *
+   * @return
+   *   the set of used labels
+   */
+  def findLabels: TlaEx => Seq[String] = {
+    case OperEx(TlaOper.label, body, ValEx(TlaStr(name)), _*) =>
+      name +: findLabels(body)
+
+    case OperEx(_, args @ _*) =>
+      args.flatMap(findLabels)
+
+    case LetInEx(body, defs @ _*) =>
+      defs.flatMap(d => findLabels(d.body)) ++ findLabels(body)
+
+    case _ => Seq()
   }
 }

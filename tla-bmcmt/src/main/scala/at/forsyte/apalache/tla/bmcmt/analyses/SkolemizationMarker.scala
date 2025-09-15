@@ -91,6 +91,10 @@ class SkolemizationMarker @Inject() (tracker: TransformationTracker) extends Tla
           ex
       }
 
+    case OperEx(TlaOper.label, body, args @ _*) =>
+      // propagete skolemization under labels
+      OperEx(TlaOper.label, transform(body) +: args: _*)(body.typeTag)
+
     case ex @ OperEx(_, _ @_*) =>
       // bugfix for #148: do not descend into value expressions, as Skolemization of non-formulas is unsound
       ex

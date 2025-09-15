@@ -245,4 +245,25 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
   }
 
+  test("Disjunction with labels") {
+    // \/ (L1: x' = 1)
+    val equality1 = eql(prime(name("x").as(Int)).as(Int), int(1)).as(Bool)
+    val labelledEquality1 = label(equality1, "L1").as(Bool)
+    //  \/ (L2: x' = 2)
+    val equality2 = eql(prime(name("x").as(Int)).as(Int), int(2)).as(Bool)
+    val labelledEquality2 = label(equality2, "L2").as(Bool)
+    // next == (L1: x' = 1) \/ (L2: x' = 2)
+    val next = or(labelledEquality1, labelledEquality2).as(Bool)
+    // select only the first assignment
+    val selections = Seq(equality1.ID, equality2.ID)
+    val transitions = stg(next, selections)
+    assert(transitions.size == 2)
+    // the equalities are transformed into assignments
+    // \/ (L1:: x' := 1)
+    // \/ (L2:: x' := 2)
+    val assign1 = label(assign(prime(name("x")).as(Int), int(1)).as(Bool), "L1").as(Bool)
+    val assign2 = label(assign(prime(name("x")).as(Int), int(2)).as(Bool), "L2").as(Bool)
+    assert(transitions.head._2 == assign1)
+    assert(transitions(1)._2 == assign2)
+  }
 }
