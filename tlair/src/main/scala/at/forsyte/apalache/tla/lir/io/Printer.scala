@@ -197,7 +197,10 @@ object UTFPrinter extends Printer {
           case TlaSetOper.union    => mkOpApp("UNION %s", args: _*)
           case TlaOper.label       =>
             val body = this(args.head)
-            val label = this(args.tail.head)
+            val label = args.tail.head match {
+              case ValEx(TlaStr(s)) => s
+              case _                => this(args.tail.head) // fall back to the default printing
+            }
             val argsStr = args.tail.tail.map(apply).mkString(", ")
             if (args.lengthCompare(2) > 0) {
               s"$label($argsStr):: $body"
