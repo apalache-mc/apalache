@@ -2942,6 +2942,28 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check TestInvLabels.tla
+
+This test checks whether labels are printed properly.
+
+```sh
+$ apalache-mc check --inv=Inv TestInvLabels.tla | sed 's/I@.*//'
+...
+State 0: state invariant 0 [Inv2] holds.
+State 0: state invariant 1 [Inv3] holds.
+State 0: state invariant 2 [Inv4] holds.
+State 0: Checking 3 state invariants
+State 0: state invariant 0 [Inv2] holds.
+State 0: state invariant 1 [Inv3] holds.
+State 0: state invariant 2 [Inv4] holds.
+...
+State 1: Checking 3 state invariants
+...
+State 1: state invariant 0 [Inv2] violated.
+...
+EXITCODE: ERROR (12)
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error

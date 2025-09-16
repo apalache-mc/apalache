@@ -58,6 +58,11 @@ class SymbTransGenerator(tracker: TransformationTracker) {
       /** Base case, assignments */
       case e @ OperEx(ApalacheOper.assign, _, _) => Map(e.ID -> Set(Set(e.ID)))
 
+      /** Propagate into label bodies */
+      case OperEx(TlaOper.label, body, _*) =>
+        val bodyMap = allSelections(body, letInMap)
+        if (bodyMap.isEmpty) bodyMap else bodyMap + (ex.ID -> bodyMap.getOrElse(body.ID, Set(Set.empty[UID])))
+
       /**
        * Branches( /\ \phi_i ) = { Br_1 U ... U Br_s | \forall i . Br_i \in Branches(\phi_i) } { S \cap A | S \in
        * Branches( /\ phi_i ) } = { (Br_1 U ... U Br_s) \cap A | \forall i . Br_i \in Branches(\phi_i) } = { (Br_1 \cap
@@ -274,7 +279,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
   }
 
   /**
-   * Point of access method
+   * Given an expression `phi` and an assignment strategy `asgnStrategy`, computes a collection of symbolic transitions.
    *
    * @param phi
    *   TLA+ formula
