@@ -1,6 +1,18 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.50.3 - 2025-09-04
+
+### Bug fixes
+
+- Fix `Apalache!Gen` of functions (#3158)
+
+## 0.50.2 - 2025-09-02
+
+### Bug fixes
+
+- Bump GRPC message size to 1 GB (#3155)
+
 ## 0.50.1 - 2025-08-27
 
 ### Breaking changes

@@ -35,8 +35,8 @@ object Dependencies {
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.7.4").from(
         "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar")
-    val ujson = "com.lihaoyi" %% "ujson" % "4.2.1"
-    val upickle = "com.lihaoyi" %% "upickle" % "4.2.1"
+    val ujson = "com.lihaoyi" %% "ujson" % "4.3.2"
+    val upickle = "com.lihaoyi" %% "upickle" % "4.3.2"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
@@ -60,7 +60,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.18.1" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.19.0" % Test
     val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 
     val scalaTestVersion = "3.2.15"
