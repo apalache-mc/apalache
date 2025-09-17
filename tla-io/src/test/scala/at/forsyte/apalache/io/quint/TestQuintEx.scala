@@ -173,6 +173,9 @@ class TestQuintEx extends AnyFunSuite {
     val oneOfSet = app("oneOf", intSet)(QuintIntT())
     val nondetBinding =
       e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
+    val labelledExpr =
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "__label_Foo", "val", tt), QuintBoolT()), nIsGreaterThan0),
+          QuintBoolT())
     val generateSet = app("apalache::generate", _42)(QuintSetT(QuintIntT()))
     val nondetGenerateId = uid
     val appGenSet =
@@ -724,6 +727,10 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert nondet...generate") {
     assert(convert(Q.nondetGenerate) == "∃S ∈ {Apalache!Gen(42)}: (S = {})")
+  }
+
+  test("can convert val __label_Foo = ...") {
+    assert(convert(Q.labelledExpr) == "Foo:: n > 0")
   }
 
   test("can convert let binding with reference to name in scope") {

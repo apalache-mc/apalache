@@ -98,6 +98,23 @@ class TestVCGenerator extends AnyFunSuite {
     assertDecl(newMod, "VCNotInv$1", "¬(x < 10)")
   }
 
+  test("conjunction under label") {
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |Inv == L0 :: (x > 0 /\ x < 10)
+        |====================
+      """.stripMargin
+
+    val mod = loadFromText("inv", text)
+    val newMod = mkVCGen().gen(mod, "Inv", None)
+    assertDecl(newMod, "VCInv$0", "L0:: x > 0")
+    assertDecl(newMod, "VCInv$1", "L0:: x < 10")
+    assertDecl(newMod, "VCNotInv$0", "¬(L0:: x > 0)")
+    assertDecl(newMod, "VCNotInv$1", "¬(L0:: x < 10)")
+  }
+
   test("conjunction under universals") {
     val text =
       """---- MODULE inv ----
