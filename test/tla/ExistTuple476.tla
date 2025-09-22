@@ -1,6 +1,6 @@
 ------------------ MODULE ExistTuple476 ----------------------
 (* A regression test for the issue:
-   https://github.com/informalsystems/apalache/issues/476
+   https://github.com/apalache-mc/apalache/issues/476
  *)
 EXTENDS Integers
 

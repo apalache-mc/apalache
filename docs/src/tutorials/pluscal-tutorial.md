@@ -243,9 +243,9 @@ IsPositive(x) == x > 0
 ## Conclusion
 
 The final specifications can be found in
-[BakeryTyped.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla)
+[BakeryTyped.tla](https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryTyped.tla)
 and
-[BakeryWoTlaps.tla](https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla).
+[BakeryWoTlaps.tla](https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla).
 
 In this tutorial, we have shown how to:
 
@@ -268,13 +268,13 @@ or drop us a message on [Discourse].
 
 [PlusCal specification]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
 [Bakery.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/Bakery-Boulangerie/Bakery.tla
-[BakeryWoTlaps.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla
+[BakeryWoTlaps.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/bakery-pluscal/BakeryWoTlaps.tla
 [Entry-level Tutorial on the Model Checker]: ./entry-tutorial.md
 [HOWTO on writing type annotations]: ../HOWTOs/howto-write-type-annotations.md
 [Apalache installation]: ../apalache/installation/index.md
 [Leslie Lamport]: https://lamport.azurewebsites.net/
-[Issue 1412]: https://github.com/informalsystems/apalache/issues/1412
-[open an issue]: https://github.com/informalsystems/apalache/issues
+[Issue 1412]: https://github.com/apalache-mc/apalache/issues/1412
+[open an issue]: https://github.com/apalache-mc/apalache/issues
 [Tutorial on Snowcat]: ./snowcat-tutorial.md
 [Checking inductive invariants]: https://apalache-mc.org/docs/apalache/running.html#checking-an-inductive-invariant
 [TLA+ Cheatsheet in HTML]: https://mbt.informal.systems/docs/tla_basics_tutorials/tla+cheatsheet.html
@@ -286,4 +286,4 @@ or drop us a message on [Discourse].
 [TLAPS]: https://tla.msr-inria.inria.fr/tlaps/content/Home.html
 [Discourse]: https://apalache.discourse.group/
 [Bakery algorithm]: https://en.wikipedia.org/wiki/Lamport%27s_bakery_algorithm
-[ZIP archive]: https://download-directory.github.io/?url=https://github.com/informalsystems/apalache/tree/main/test/tla/bakery-pluscal
+[ZIP archive]: https://download-directory.github.io/?url=https://github.com/apalache-mc/apalache/tree/main/test/tla/bakery-pluscal

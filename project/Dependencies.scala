@@ -26,7 +26,7 @@ object Dependencies {
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
-    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
+    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6"
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.9"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
@@ -35,8 +35,8 @@ object Dependencies {
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.7.4").from(
         "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar")
-    val ujson = "com.lihaoyi" %% "ujson" % "4.0.2"
-    val upickle = "com.lihaoyi" %% "upickle" % "4.0.2"
+    val ujson = "com.lihaoyi" %% "ujson" % "4.3.2"
+    val upickle = "com.lihaoyi" %% "upickle" % "4.3.2"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
@@ -51,7 +51,7 @@ object Dependencies {
     // json-rpc dependencies
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.1.0" % Provided
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2"
-    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.19.2"
+    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.0"
     val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.26"
     val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.26"
   }
@@ -60,7 +60,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.18.1" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.19.0" % Test
     val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 
     val scalaTestVersion = "3.2.15"

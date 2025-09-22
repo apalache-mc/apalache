@@ -112,7 +112,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       }
     }
 
-    // Override to temporarily avoid sets of functions, see https://github.com/informalsystems/apalache/issues/1759.
+    // Override to temporarily avoid sets of functions, see https://github.com/apalache-mc/apalache/issues/1759.
     override def genSet: Gen[TlaType1] = sized { size => // use 'sized' to control the depth of the generated term
       for {
         // use resize to decrease the depth of the elements (as terms)
@@ -417,7 +417,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
           arg <- arbitrary[Boolean]
           set <- oneOf(tla.booleanSet().as(SetT1(tp)), tla.enumSet(tla.bool(arg)).as(SetT1(tp)))
         } yield set
-      // Temporarily avoid sets of function sets, see https://github.com/informalsystems/apalache/issues/1759.
+      // Temporarily avoid sets of function sets, see https://github.com/apalache-mc/apalache/issues/1759.
       // TODO(#1452): Re-enable when we have better support.
       // case tp @ FunT1(arg, res) =>
       //  for {

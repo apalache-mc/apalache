@@ -51,7 +51,7 @@ class TestBaseBuilder extends BuilderTest {
     checkRun(Generators.singleTypeGen)(run(TlaOper.ne, builder.neql))
   }
 
-  // Regression test for https://github.com/informalsystems/apalache/issues/2559
+  // Regression test for https://github.com/apalache-mc/apalache/issues/2559
   test("can build application of polymorphic operator") {
     val polyConst1 = builder.name("polyConst1", OperT1(Seq(VarT1("a")), IntT1))
     val instruction = builder.appOp(polyConst1, builder.str("s"))

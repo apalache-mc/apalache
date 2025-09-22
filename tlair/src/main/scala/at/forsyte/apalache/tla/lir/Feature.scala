@@ -10,7 +10,7 @@ sealed trait Feature {
 
 /**
  * Enable rows, new records, and variants, as described in <a
- * href="https://github.com/informalsystems/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
+ * href="https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR-014</a>.
  *
  * [[RowsFeature]] is mutually exclusive to [[ImpreciseRecordsFeature]]. We enable [[RowsFeature]] by default and keep
  * it only for backwards compatibility.

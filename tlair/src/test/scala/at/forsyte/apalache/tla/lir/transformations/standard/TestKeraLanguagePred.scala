@@ -88,7 +88,7 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectFail(pred.isExprOk(cap(enumSet(int(1)), enumSet(int(2)))))
     expectFail(pred.isExprOk(setminus(enumSet(int(1)), enumSet(int(2)))))
     expectFail(pred.isExprOk(notin(int(1), enumSet(int(2)))))
-    // Keramelizer rewrites \subseteq since https://github.com/informalsystems/apalache/pull/1621
+    // Keramelizer rewrites \subseteq since https://github.com/apalache-mc/apalache/pull/1621
     expectFail(pred.isExprOk(subseteq(enumSet(int(1)), enumSet(int(2)))))
   }
 

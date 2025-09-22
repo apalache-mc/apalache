@@ -28,7 +28,7 @@ import java.io.FileNotFoundException
  * `PureConfig` for automatic derivation (see, e.g. 'apalache.io.ConfigManager'), or via arbitrary functions.
  *
  * See
- * [[https://github.com/informalsystems/apalache/blob/main/docs/src/adr/022adr-unification-of-configs-and-options.md ADR022]]
+ * [[https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/022adr-unification-of-configs-and-options.md ADR022]]
  * for motivation and details.
  *
  * @author

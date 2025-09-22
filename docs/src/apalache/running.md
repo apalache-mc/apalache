@@ -356,7 +356,7 @@ In this case, Apalache performs the following steps:
 1. It parses the specification with [SANY](https://lamport.azurewebsites.net/tla/tools.html).
 
 2. It translates SANY semantic nodes
-   into [Apalache IR](https://github.com/informalsystems/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala)
+   into [Apalache IR](https://github.com/apalache-mc/apalache/blob/master/tlair/src/main/scala/at/forsyte/apalache/tla/lir/package.scala)
    .
 
 3. If the `--write-intermediate` flag is given, it pretty-prints the IR into

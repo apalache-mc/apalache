@@ -26,7 +26,7 @@ import at.forsyte.apalache.io.ConfigManager
  *   Igor Konnov
  */
 object Tool extends LazyLogging {
-  lazy val ISSUES_LINK: String = "[https://github.com/informalsystems/apalache/issues]"
+  lazy val ISSUES_LINK: String = "[https://github.com/apalache-mc/apalache/issues]"
 
   /**
    * Run the tool in the standalone mode with the provided arguments. This method calls [[java.lang.System.exit]] with

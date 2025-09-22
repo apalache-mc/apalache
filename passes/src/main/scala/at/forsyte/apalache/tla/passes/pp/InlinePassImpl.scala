@@ -30,7 +30,7 @@ class InlinePassImpl @Inject() (
     val initPrimedName = initName + "Primed"
     val cinitPrimedName = cinitName + "Primed"
 
-    // Fixing issue 283: https://github.com/informalsystems/apalache/issues/283
+    // Fixing issue 283: https://github.com/apalache-mc/apalache/issues/283
     // Remove the operators that are not needed,
     // as some of them may contain higher-order operators that cannot be substituted
     val relevantOperators = derivedPreds.operatorNames().toSet

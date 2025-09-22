@@ -91,7 +91,7 @@ class TestAnnotationParser extends AnyFunSuite with Checkers {
     // The text should be preprocessed by CommentPreprocessor first, so we expect a failure.
     val text =
       """  \* TODO: use a model type here
-        |  \* when #570 is closed: https://github.com/informalsystems/apalache/issues/570
+        |  \* when #570 is closed: https://github.com/apalache-mc/apalache/issues/570
         |  \* @type: Str;""".stripMargin
     AnnotationParser
       .parse(text)

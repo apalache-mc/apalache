@@ -145,7 +145,7 @@ trait TestSymbStateDecoder extends RewriterBase {
     assertBuildEqual(expectedOutcome, decodedEx)
   }
 
-  // See https://github.com/informalsystems/apalache/issues/962
+  // See https://github.com/apalache-mc/apalache/issues/962
   test("decode fun does not show duplicate indices") { rewriterType: SMTEncoding =>
     // The specified domain includes duplicate values
     val domEx = enumSet(int(1), int(1))
@@ -272,7 +272,7 @@ trait TestSymbStateDecoder extends RewriterBase {
 
   test("decode gen: Regression #1 for #2702") { rewriterType: SMTEncoding =>
     val valName = tla.name("gen", SetT1(IntT1))
-    val genEx = tla.gen(1, SetT1(IntT1))
+    val genEx = tla.gen(tla.int(1), SetT1(IntT1))
     val x = tla.name("x", IntT1)
     val cond = tla.forall(x, valName, tla.eql(x, tla.int(0)))
 
@@ -301,7 +301,7 @@ trait TestSymbStateDecoder extends RewriterBase {
 
   test("decode gen: Regression #2 for #2702") { rewriterType: SMTEncoding =>
     val valName = tla.name("gen", SetT1(IntT1))
-    val genEx = tla.gen(1, SetT1(IntT1))
+    val genEx = tla.gen(tla.int(1), SetT1(IntT1))
     val x = tla.name("x", IntT1)
     val cond = tla.forall(x, valName, tla.neql(x, tla.int(42)))
 

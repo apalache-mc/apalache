@@ -41,4 +41,16 @@ class LoggingTypeCheckerListener(
   override def onTypeError(sourceRef: EtcRef, message: String): Unit = {
     logger.error("[%s]: %s".format(findLoc(sourceRef.tlaId), message))
   }
+
+  /**
+   * This method is called when the type checker finds a type warning.
+   *
+   * @param sourceRef
+   *   a reference to the source expression; this one does not have to be exact
+   * @param message
+   *   the warning description
+   */
+  override def onTypeWarn(sourceRef: EtcRef, message: String): Unit = {
+    logger.debug("[%s]: %s".format(findLoc(sourceRef.tlaId), message))
+  }
 }

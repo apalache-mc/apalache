@@ -116,7 +116,7 @@ TestSetMapSets ==
     Sets = { {}, { 1, 3 }, { 1, 2, 3 } }
 
 \* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1358
+\* https://github.com/apalache-mc/apalache/issues/1358
 TestPowersetEmpty ==
     LET \* @type: Set(Int);
         S == {}
@@ -124,23 +124,23 @@ TestPowersetEmpty ==
     SUBSET S = { {} }
 
 \* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1358
+\* https://github.com/apalache-mc/apalache/issues/1358
 TestPowerset26 ==
     { {}, { 2 }, { 6 }, { 2, 6 } } = SUBSET Set26
 
 \* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1103
+\* https://github.com/apalache-mc/apalache/issues/1103
 TestPowersetSubsetEq ==
     (SUBSET Set26) \subseteq SUBSET Set26
 
 \* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1339
+\* https://github.com/apalache-mc/apalache/issues/1339
 TestExistsEmptyInPowerset ==
     \E S \in SUBSET Set263:
         S = {}
 
 \* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1339
+\* https://github.com/apalache-mc/apalache/issues/1339
 TestExists15InPowerset ==
     \E S \in SUBSET Set263:
         S = { 2, 6 }
@@ -248,7 +248,7 @@ TestIsFiniteSet ==
     /\ IsFiniteSet(Set1357)
 
 \* TODO: FIX IT!
-\* https://github.com/informalsystems/apalache/issues/1361
+\* https://github.com/apalache-mc/apalache/issues/1361
 TestIsFiniteSetOnInfinite ==
     /\ ~IsFiniteSet(Int)
     /\ ~IsFiniteSet(Nat)

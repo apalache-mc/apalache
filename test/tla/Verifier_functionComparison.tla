@@ -1,6 +1,6 @@
 ---- MODULE Verifier_functionComparison ----
 \* Test for function comparison involving a funcion with an empty domain
-\* See https://github.com/informalsystems/apalache/issues/1811
+\* See https://github.com/apalache-mc/apalache/issues/1811
 EXTENDS Apalache, Integers
 
 VARIABLES

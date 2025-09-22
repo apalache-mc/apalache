@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.typecomp.unsafe.UnsafeLiteralAndNameBuilder
 import at.forsyte.apalache.tla.types.tla
+import com.typesafe.scalalogging.LazyLogging
 
 // scalaz is brought in For the Reader monad, which we use for
 // append-only, context local state for tracking reference to nullary TLA
@@ -26,7 +27,9 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 //
 // Since we need access to the statefull uniqeLambdaName, this class must be
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
-class Quint(quintOutput: QuintOutput) {
+class Quint(quintOutput: QuintOutput) extends LazyLogging {
+  // the name prefix that is used to introduce expression labels
+  final private val LABEL_PREFIX = "__label_"
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val typeConv = new QuintTypeConverter
   private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}
@@ -163,7 +166,7 @@ class Quint(quintOutput: QuintOutput) {
   // performing all needed validation and extraction.
   private val binaryBindingApp: (String, (T, T, T) => T) => Seq[QuintEx] => NullaryOpReader[T] = {
     // Multi argument bindings must be wrapped in a tuple
-    // See https://github.com/informalsystems/apalache/issues/2292
+    // See https://github.com/apalache-mc/apalache/issues/2292
     val wrapArgs: Seq[T] => T = {
       case Seq(singleName) => singleName
       case names           => tla.tuple(names: _*)
@@ -488,7 +491,7 @@ class Quint(quintOutput: QuintOutput) {
         // of the translation (e.g., inside special forms like `nondet`) or
         // via rewrites in quint.
         case "oneOf" =>
-          // See https://github.com/informalsystems/apalache/issues/2774
+          // See https://github.com/apalache-mc/apalache/issues/2774
           throw new QuintIRParseError(
               s"`oneOf` can only occur as the principle operator of a `nondet` declaration: `oneOf` operator with id ${id} applied to ${quintArgs}")
 
@@ -659,7 +662,7 @@ class Quint(quintOutput: QuintOutput) {
   //   ~~>
   //   \E name \in domain: scope
   //
-  //   nondet name = generate(sz, typeSet); scope
+  //   nondet name: type = generate(sz); scope
   //   ~~>
   //   \E name \in { Apalache!Gen(sz) }: scope
   private val nondetBinding: (QuintDef.QuintOpDef, QuintEx) => NullaryOpReader[TBuilderInstruction] = {
@@ -671,20 +674,25 @@ class Quint(quintOutput: QuintOutput) {
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, tlaDomain, tlaScope)
 
-    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "generate", Seq(bound, _))), scope) =>
+    case (QuintDef.QuintOpDef(_, name, "nondet", QuintApp(id, "apalache::generate", Seq(bound))), scope) =>
       val elemType = typeConv.convert(types(id).typ)
-      val boundIntConst = intFromExpr(bound)
-      if (boundIntConst.isEmpty) {
-        throw new QuintIRParseError(s"nondet $name = generate($bound) ... expects an integer constant")
-      }
-      val genExpr = tla.enumSet(tla.gen(boundIntConst.get, elemType))
-      val tlaName = tla.name(name, elemType)
       for {
+        boundExpr <- tlaExpression(bound)
+        tlaName = tla.name(name, elemType)
+        genExpr = tla.enumSet(tla.gen(boundExpr, elemType))
         tlaScope <- tlaExpression(scope)
       } yield tla.exists(tlaName, genExpr, tlaScope)
 
     case invalidValue =>
       throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
+  }
+
+  // Translate Quint expression `val __label_Foo = true; scope` into TLA+ `Label(e, "Foo")`.
+  private def labelledExpression(opDef: QuintDef.QuintOpDef, expr: QuintEx): NullaryOpReader[TBuilderInstruction] = {
+    val labelName = opDef.name.stripPrefix(LABEL_PREFIX)
+    for {
+      tlaExpr <- tlaExpression(expr)
+    } yield tla.label(tlaExpr, labelName)
   }
 
   private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[(TBuilderOperDeclInstruction, Option[String])] = {
@@ -740,6 +748,8 @@ class Quint(quintOutput: QuintOutput) {
         }
       case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
         nondetBinding(binding, scope)
+      case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.name.startsWith(LABEL_PREFIX) =>
+        labelledExpression(binding, scope)
       case QuintLet(_, opDef, expr) =>
         opDefConverter(opDef).flatMap { case (tlaOpDef, nullaryName) =>
           tlaExpression(expr)
@@ -826,14 +836,4 @@ class Quint(quintOutput: QuintOutput) {
         .reverse // Return the declarations to their original order
     }
   } yield TlaModule(module.name, declarations)
-
-  private def intFromExpr(expr: QuintEx): Option[BigInt] = {
-    expr match {
-      case QuintInt(_, value) =>
-        Some(value)
-
-      case _ =>
-        None
-    }
-  }
 }

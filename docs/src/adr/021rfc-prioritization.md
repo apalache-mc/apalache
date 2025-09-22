@@ -219,4 +219,4 @@ TBD
 
 [cod]: https://kanbanize.com/lean-management/value-waste/cost-of-delay
 [apm]: https://cio-wiki.org/wiki/Action_Priority_Matrix_(APM)
-[dec-decision]: https://github.com/informalsystems/apalache/commit/f379a717ca02a559b8f48d503f4413410d0b8abd
+[dec-decision]: https://github.com/apalache-mc/apalache/commit/f379a717ca02a559b8f48d503f4413410d0b8abd

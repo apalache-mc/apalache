@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets
 //  - https://twitter.github.io/scala_school/concurrency.html#danger
 //  - https://www.scala-lang.org/api/current/scala/AnyRef.html#synchronized[T0](x$1:=%3ET0):T0
 //
-// For more context on the SANY concurrency issues see https://github.com/informalsystems/apalache/issues/1963
+// For more context on the SANY concurrency issues see https://github.com/apalache-mc/apalache/issues/1963
 //
 // All invocation of SANY should go through a synchronized method in this object.
 object SANYSyncWrapper {

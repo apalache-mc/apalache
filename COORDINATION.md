@@ -37,14 +37,14 @@ shared understanding of how to use and interpret the main features:
 (For more on projects vs. milestones, see
 https://stackoverflow.com/a/47542346/1187277)
 
-[adr and rfc]: https://github.com/informalsystems/apalache/tree/main/docs/src/adr
-[discussion]: https://github.com/informalsystems/apalache/discussions
-[issues]: https://github.com/informalsystems/apalache/issues
-[labels]: https://github.com/informalsystems/apalache/issues/labels
-[milestones]: https://github.com/informalsystems/apalache/milestones
+[adr and rfc]: https://github.com/apalache-mc/apalache/tree/main/docs/src/adr
+[discussion]: https://github.com/apalache-mc/apalache/discussions
+[issues]: https://github.com/apalache-mc/apalache/issues
+[labels]: https://github.com/apalache-mc/apalache/issues/labels
+[milestones]: https://github.com/apalache-mc/apalache/milestones
 [okr]: https://informal-workflow-explorer.netlify.app/
 [project]: https://github.com/orgs/informalsystems/projects/30
-[prs]: https://github.com/informalsystems/apalache/pulls
+[prs]: https://github.com/apalache-mc/apalache/pulls
 [strategy]: https://github.com/informalsystems/strategy/blob/main/projects/apalache/yearly2021-2022/plan2022.md
 
 Some of these elements call for special discussion.
@@ -109,7 +109,7 @@ nothing is a priority".
 
 We use a modified action-priority matrix. Our prioritization process is
 recorded in
-[RFC-021](https://github.com/informalsystems/apalache/blob/main/docs/src/adr/021rfc-prioritization.md)
+[RFC-021](https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/021rfc-prioritization.md)
 
 ### Milestones
 

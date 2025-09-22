@@ -343,13 +343,8 @@ object BuilderCallByName {
         val Seq(x, e) = args
         tla.assign(x, e)
       case ApalacheOper.gen =>
-        val Seq(nEx): Seq[TlaEx] = args
-        nEx match {
-          case ValEx(TlaInt(n)) =>
-            tla.gen(n, tt1)
-          // should never happen, for case-completeness
-          case _ => throw new JsonDeserializationError(s"${oper.name} requires an integer argument.")
-        }
+        val Seq(boundEx) = args
+        tla.gen(boundEx, tt1)
       case ApalacheOper.skolem =>
         val Seq(ex) = args
         tla.skolem(ex)

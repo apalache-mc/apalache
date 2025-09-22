@@ -901,7 +901,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   }
 
   test("imprecise annotation") {
-    // Test case for: https://github.com/informalsystems/apalache/issues/2102
+    // Test case for: https://github.com/apalache-mc/apalache/issues/2102
 
     // let @type: (a, b) => Bool;
     //   LET F(x, y) == x = y in TRUE
@@ -924,7 +924,7 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
 
     val listener = mock[TypeCheckerListener]
     expecting {
-      listener.onTypeError(letIn.sourceRef.asInstanceOf[ExactRef],
+      listener.onTypeWarn(letIn.sourceRef.asInstanceOf[ExactRef],
           "F's type annotation ((a, b) => Bool) is too general, inferred: ((a, a) => Bool)")
       // consume all found types
       for (ex <- Seq(fBody, domX, domY, x, y, lambda, underLet, letIn, annotatedLetInF, bool, gAbs, letInG)) {

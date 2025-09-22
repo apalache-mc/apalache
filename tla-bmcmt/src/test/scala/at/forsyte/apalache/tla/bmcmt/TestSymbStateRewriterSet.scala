@@ -752,7 +752,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
-  // Regression for the issue 365: https://github.com/informalsystems/apalache/issues/365
+  // Regression for the issue 365: https://github.com/apalache-mc/apalache/issues/365
   test("""MAP: \E S \in SUBSET { [a: "a", b: 1], [a: "a", b: 2] }:  "a" \in { r.a: r \in S }""") {
     rewriterType: SMTEncoding =>
       // this test reveals a deep bug in the encoding: SUBSET {[a: 1, b: 1], [a: 1, b: 2]} produces a powerset,

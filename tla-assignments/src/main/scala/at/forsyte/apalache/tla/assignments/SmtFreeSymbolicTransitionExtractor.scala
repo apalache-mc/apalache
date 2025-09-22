@@ -115,6 +115,11 @@ class SmtFreeSymbolicTransitionExtractor(
       // if no exception is thrown, continue in subEx
       getStrategyOptInternal(currentState, operMap)(subEx)
 
+    /** a label, e.g., L1(x, y) :: e */
+    case OperEx(TlaOper.label, body, _*) =>
+      // Just recurse into the body
+      getStrategyOptInternal(currentState, operMap)(body)
+
     /** ITE */
     case OperEx(TlaControlOper.ifThenElse, assignmentFreeCond, thenAndElse @ _*) =>
       // We need to check that assignmentFreeCond does not contain unassigned primes.

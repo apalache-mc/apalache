@@ -122,12 +122,12 @@ various kinds. To this end, we introduce an abstract edge (the Scala code can
 be found in the package `at.forsyte.apalache.tla.bmcmt.arena`):
 
 
-https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L8-L24
+https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L8-L24
 
 Having an abstract edge, we introduce various case classes. The simplest case
 is the `FixedElemPtr`, which always evaluates to a fixed Boolean value:
 
-https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L26-L39
+https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L26-L39
 
 Instances of `FixedElemPtr` may be used in cases, when the membership is
 statically known. For instance, set membership for the sets `{1, 2, 3}` and
@@ -137,7 +137,7 @@ variables and constraints in SMT. The same applies to records and tuples.
 The next case is element membership that is represented via a Boolean constant
 in SMT:
 
-https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L41-L64
+https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L41-L64
 
 Instances of `SmtConstElemPtr` may be used in cases, when set membership can be
 encoded via a Boolean constant. Typically, this is needed when the membership
@@ -147,7 +147,7 @@ SMT constraint. For instance, it can be used by `CherryPick`.
 The most general case is represented via an SMT expression, which is encoded in
 TLA+ IR:
 
-https://github.com/informalsystems/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L66-L77
+https://github.com/apalache-mc/apalache/blob/81e397fadc6f3ce346d8f8a709ebb3715ac57391/tla-bmcmt/src/main/scala/at/forsyte/apalache/tla/bmcmt/arena/ElemPtr.scala#L66-L77
 
 Instances of `SmtExprElemPtr` may be used to encode set membership via SMT
 expressions. For instance:

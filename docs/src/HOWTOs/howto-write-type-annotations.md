@@ -574,7 +574,7 @@ This may change later when the tlaplus [Issue 578][] is resolved.
 
 
 [old type annotations]: ../apalache/types-and-annotations.md
-[Apalache.tla]: https://github.com/informalsystems/apalache/blob/main/src/tla/Apalache.tla
+[Apalache.tla]: https://github.com/apalache-mc/apalache/blob/main/src/tla/Apalache.tla
 [Snowcat]: ../apalache/typechecker-snowcat.md
 [ADR002]: ../adr/002adr-types.md
 [Type System 1]: ../adr/002adr-types.md#ts1
@@ -586,15 +586,15 @@ This may change later when the tlaplus [Issue 578][] is resolved.
 [TCommit.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TCommit.tla
 [Queens.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/N-Queens/Queens.tla
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book
-[Issue 401]: https://github.com/informalsystems/apalache/issues/401
+[Issue 401]: https://github.com/apalache-mc/apalache/issues/401
 [Issue 578]: https://github.com/tlaplus/tlaplus/issues/578
-[Issue 718]: https://github.com/informalsystems/apalache/issues/718
+[Issue 718]: https://github.com/apalache-mc/apalache/issues/718
 [MissionariesAndCannibals.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/MissionariesAndCannibals/MissionariesAndCannibals.tla
-[Variants module]: https://github.com/informalsystems/apalache/blob/main/src/tla/Variants.tla
+[Variants module]: https://github.com/apalache-mc/apalache/blob/main/src/tla/Variants.tla
 [Chapter on variants]: ../lang/variants.md
 [Variants]: ../lang/variants.md
 [Idiom 15]: ../idiomatic/003record-sets.md
 [LamportMutex.tla]: https://github.com/tlaplus/Examples/blob/master/specifications/lamport_mutex/LamportMutex.tla
 [Type Aliases]: ../adr/002adr-types.md#defTypeAlias
-[MissionariesAndCannibalsTyped.tla]: https://github.com/informalsystems/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
+[MissionariesAndCannibalsTyped.tla]: https://github.com/apalache-mc/apalache/blob/main/test/tla/MissionariesAndCannibalsTyped.tla
 [Row polymorphism]: https://en.wikipedia.org/wiki/Row_polymorphism

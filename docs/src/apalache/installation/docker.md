@@ -103,8 +103,8 @@ To create an alias pointing to the `main` version:
 $ alias apalache='docker run --rm -v $(pwd):/var/apalache ghcr.io/apalache-mc/apalache:main'
 ```
 
-[changelog]: https://github.com/informalsystems/apalache/blob/main/CHANGES.md
-[manual]: https://github.com/informalsystems/apalache/blob/main/docs/src/apalache/index.md
+[changelog]: https://github.com/apalache-mc/apalache/blob/main/CHANGES.md
+[manual]: https://github.com/apalache-mc/apalache/blob/main/docs/src/apalache/index.md
 
 
 ## Building an image

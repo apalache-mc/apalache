@@ -1,6 +1,6 @@
 ------------------------ MODULE UnchangedExpr471 ----------------------------
 (* A regression test for UNCHANGED e:
-   see issue: https://github.com/informalsystems/apalache/issues/471
+   see issue: https://github.com/apalache-mc/apalache/issues/471
  *)
 EXTENDS Integers
 

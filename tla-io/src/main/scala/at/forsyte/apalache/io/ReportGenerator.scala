@@ -39,7 +39,7 @@ object ReportGenerator {
       |<!-- sections, as it help us to address the problem effectively. -->
       |
       |<!-- NOTE: Please try to ensure the bug can be produced on the latest release of -->
-      |<!-- Apalache. See https://github.com/informalsystems/apalache/releases -->
+      |<!-- Apalache. See https://github.com/apalache-mc/apalache/releases -->
       |
       |## Impact
       |

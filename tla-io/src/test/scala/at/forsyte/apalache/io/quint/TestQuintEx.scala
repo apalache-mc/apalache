@@ -173,7 +173,10 @@ class TestQuintEx extends AnyFunSuite {
     val oneOfSet = app("oneOf", intSet)(QuintIntT())
     val nondetBinding =
       e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "n", "nondet", oneOfSet), QuintIntT()), nIsGreaterThan0), QuintBoolT())
-    val generateSet = app("generate", _42, app("Set", _42)(QuintSetT(QuintIntT())))(QuintSetT(QuintIntT()))
+    val labelledExpr =
+      e(QuintLet(uid, d(QuintDef.QuintOpDef(uid, "__label_Foo", "val", tt), QuintBoolT()), nIsGreaterThan0),
+          QuintBoolT())
+    val generateSet = app("apalache::generate", _42)(QuintSetT(QuintIntT()))
     val nondetGenerateId = uid
     val appGenSet =
       app("eq", e(QuintName(uid, "S"), QuintSetT(QuintIntT())), app("Set")(QuintSetT(QuintIntT())))(QuintBoolT())
@@ -726,6 +729,10 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.nondetGenerate) == "∃S ∈ {Apalache!Gen(42)}: (S = {})")
   }
 
+  test("can convert val __label_Foo = ...") {
+    assert(convert(Q.labelledExpr) == "Foo:: n > 0")
+  }
+
   test("can convert let binding with reference to name in scope") {
     assert(convert(Q.letNbe42inNisGreaterThan0) == "LET n ≜ 42 IN n() > 0")
   }
@@ -824,7 +831,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("oneOf operator occuring outside of a nondet binding is an error") {
-    // See https://github.com/informalsystems/apalache/issues/2774
+    // See https://github.com/apalache-mc/apalache/issues/2774
     val err = intercept[QuintIRParseError](convert(Q.oneOfSet))
     assert(err.getMessage().contains("`oneOf` can only occur as the principle operator of a `nondet` declaration"))
   }

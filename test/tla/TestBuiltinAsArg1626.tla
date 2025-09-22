@@ -1,7 +1,7 @@
 ------------------------- MODULE TestBuiltinAsArg1626 -------------------------
 (**
   * A regression test for passing built-in operators as arguments.
-  * For details, see: https://github.com/informalsystems/apalache/issues/1626
+  * For details, see: https://github.com/apalache-mc/apalache/issues/1626
   *)
 EXTENDS Integers
 

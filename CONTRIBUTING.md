@@ -17,8 +17,8 @@ The rest of this document outlines the best practices for contributing to
 Apalache:
 
 [TLA+]: https://lamport.azurewebsites.net/tla/tla.html
-[help-wanted]: https://github.com/informalsystems/apalache/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
-[open a new issue]: https://github.com/informalsystems/apalache/issues/new/choose
+[help-wanted]: https://github.com/apalache-mc/apalache/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
+[open a new issue]: https://github.com/apalache-mc/apalache/issues/new/choose
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
@@ -380,7 +380,7 @@ python3 -m doctest -v docs/src/lang/*.md
 
 ### Continuous Integration
 
-We run continuous integration tests using [GitHub actions](https://github.com/informalsystems/apalache/actions).
+We run continuous integration tests using [GitHub actions](https://github.com/apalache-mc/apalache/actions).
 
 The CI configuration is located in
 [.github/workflows/main.yml](.github/workflows/main.yml).
@@ -488,7 +488,7 @@ The process proceeds in two steps:
 
 [./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml
 [./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
-[github-ui]: https://github.com/informalsystems/apalache/actions?query=workflow%3A%22Prepare+Release%22
+[github-ui]: https://github.com/apalache-mc/apalache/actions?query=workflow%3A%22Prepare+Release%22
 
 ### Manually
 
@@ -529,9 +529,9 @@ When the PR is merged into `main`:
   - tag the release commit
   - package the
   - create the release on github
-- [ ] Update the download links at https://github.com/informalsystems/apalache/blob/gh-pages/_config.yml#L7
+- [ ] Update the download links at https://github.com/apalache-mc/apalache/blob/gh-pages/_config.yml#L7
 
-[Github Issue]: https://github.com/informalsystems/apalache/issues
+[Github Issue]: https://github.com/apalache-mc/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
 [adr]: https://en.wikipedia.org/wiki/Architectural_decision
 [draft pull request]: https://github.blog/2019-02-14-introducing-draft-pull-requests/

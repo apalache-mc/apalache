@@ -9,19 +9,19 @@ addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.3.1")
 // https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 // https://github.com/sbt/sbt-native-packager
-addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.1")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.3")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
 addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.3")
 // https://scalapb.github.io/zio-grpc/docs/installation
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 // https://github.com/sbt/sbt-unidoc
-addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.5.0")
+addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.6.0")
 
 // See https://github.com/scalapb/zio-grpc/blob/master/examples/routeguide/project/plugins.sbt
 val zioGrpcVersion = "0.5.3"
 libraryDependencies ++= Seq(
     "com.thesamet.scalapb.zio-grpc" %% "zio-grpc-codegen" % zioGrpcVersion,
-    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.17",
+    "com.thesamet.scalapb" %% "compilerplugin" % "0.11.20",
 )
 
 // Add the locally defined plugins

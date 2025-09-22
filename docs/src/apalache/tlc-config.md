@@ -10,7 +10,7 @@ This file presents the syntax of
 [TLC](http://lamport.azurewebsites.net/tla/tools.html) configuration files
 in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) and
 comments on the treatment of its sections in
-[Apalache](https://github.com/informalsystems/apalache). A detailed discussion
+[Apalache](https://github.com/apalache-mc/apalache). A detailed discussion
 on using the config files with TLC can be found in Leslie Lamport's
 [Specifying Systems],
 Chapter 14 and in
