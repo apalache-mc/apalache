@@ -6,17 +6,20 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.immutable.SortedSet
+
 @RunWith(classOf[JUnitRunner])
-class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriterBase {
+class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
   test("single state") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(2))),
+        IndexedSeq(SortedSet(), SortedSet()),
+        gt(name("x", IntT1), int(1)).build,
+    )
     compare(
         "tla",
-        new TlaModule("test", List()),
-        gt(name("x", IntT1), int(1)),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(2))),
-        ),
+        cex,
         """---------------------------- MODULE counterexample ----------------------------
         |
         |EXTENDS test
@@ -38,16 +41,15 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("two steps") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
+        IndexedSeq(SortedSet(), SortedSet("Init0"), SortedSet("Trans1"), SortedSet("Trans2")),
+        gt(name("x", IntT1), int(1)).build,
+    )
     compare(
         "tla",
-        new TlaModule("test", List()),
-        gt(name("x", IntT1), int(1)),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(0))),
-            ("Trans1", Map("x" -> int(1))),
-            ("Trans2", Map("x" -> int(2))),
-        ),
+        cex,
         """---------------------------- MODULE counterexample ----------------------------
           |
           |EXTENDS test
@@ -55,13 +57,13 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
           |(* Constant initialization state *)
           |ConstInit == TRUE
           |
-          |(* Initial state *)
+          |(* Initial state [Init0] *)
           |State0 == x = 0
           |
-          |(* Transition Trans1 to State1 *)
+          |(* State1 [Trans1] *)
           |State1 == x = 1
           |
-          |(* Transition Trans2 to State2 *)
+          |(* State2 [Trans2] *)
           |State2 == x = 2
           |
           |(* The following formula holds true in the last state and violates the invariant *)
@@ -75,16 +77,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("two steps with conjunction") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
+            Map("x" -> int(2), "y" -> int(10))),
+        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
+    )
+
     compare(
         "tla",
-        new TlaModule("test", List()),
-        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(0), "y" -> int(8))),
-            ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
-        ),
+        cex,
         """---------------------------- MODULE counterexample ----------------------------
         |
         |EXTENDS test
@@ -95,10 +98,10 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
         |(* Initial state *)
         |State0 == x = 0 /\ y = 8
         |
-        |(* Transition Trans1 to State1 *)
+        |(* State1 [Trans1] *)
         |State1 == x = 1 /\ y = 9
         |
-        |(* Transition Trans2 to State2 *)
+        |(* State2 [Trans2] *)
         |State2 == x = 2 /\ y = 10
         |
         |(* The following formula holds true in the last state and violates the invariant *)
@@ -112,14 +115,16 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("TLC single state") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(2))),
+        IndexedSeq(SortedSet(), SortedSet()),
+        gt(name("x", IntT1), int(1)).build,
+    )
+
     compare(
         "tlc",
-        new TlaModule("test", List()),
-        gt(name("x", IntT1), int(1)),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(2))),
-        ),
+        cex,
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
         |@!@!@ENDMSG 2262 @!@!@
@@ -139,16 +144,16 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("TLC two steps") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
+        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Next"), SortedSet("Next")),
+        gt(name("x", IntT1), int(1)).build,
+    )
+
     compare(
         "tlc",
-        new TlaModule("test", List()),
-        gt(name("x", IntT1), int(1)),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(0))),
-            ("Next", Map("x" -> int(1))),
-            ("Next", Map("x" -> int(2))),
-        ),
+        cex,
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
         |@!@!@ENDMSG 2262 @!@!@
@@ -178,16 +183,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("TLC two steps with conjunction") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
+            Map("x" -> int(2), "y" -> int(10))),
+        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
+    )
+
     compare(
         "tlc",
-        new TlaModule("test", List()),
-        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(0), "y" -> int(8))),
-            ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
-        ),
+        cex,
         """@!@!@STARTMSG 2262:0 @!@!@
         |Created by Apalache on DATETIME
         |@!@!@ENDMSG 2262 @!@!@
@@ -220,14 +226,16 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("JSON single state") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(2))),
+        IndexedSeq(SortedSet(), SortedSet()),
+        gt(name("x", IntT1), int(1)).build,
+    )
+
     compare(
         "json",
-        new TlaModule("test", List()),
-        gt(name("x", IntT1), int(1)),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(2))),
-        ),
+        cex,
         """{
           |  "name": "ApalacheIR",
           |  "version": "1.0",
@@ -321,16 +329,16 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("JSON two steps") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
+        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        gt(name("x", IntT1), int(1)).build,
+    )
+
     compare(
         "json",
-        new TlaModule("test", List()),
-        gt(name("x", IntT1), int(1)),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(0))),
-            ("Trans1", Map("x" -> int(1))),
-            ("Trans2", Map("x" -> int(2))),
-        ),
+        cex,
         """{
         |  "name": "ApalacheIR",
         |  "version": "1.0",
@@ -492,16 +500,17 @@ class TestCounterexampleWriter extends AnyFunSuite with TestCounterexampleWriter
   }
 
   test("JSON two steps with conjunction") {
+    val cex = Trace(
+        TlaModule("test", List()),
+        IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
+            Map("x" -> int(2), "y" -> int(10))),
+        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
+    )
+
     compare(
         "json",
-        new TlaModule("test", List()),
-        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))),
-        List(
-            ("", Map()),
-            ("", Map("x" -> int(0), "y" -> int(8))),
-            ("Trans1", Map("x" -> int(1), "y" -> int(9))),
-            ("Trans2", Map("x" -> int(2), "y" -> int(10))),
-        ),
+        cex,
         """{
         |  "name": "ApalacheIR",
         |  "version": "1.0",

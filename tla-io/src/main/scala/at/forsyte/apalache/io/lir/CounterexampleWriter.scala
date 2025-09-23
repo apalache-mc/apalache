@@ -19,14 +19,14 @@ import java.util.Calendar
  */
 trait CounterexampleWriter {
   // Print out invariant violation
-  def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit
+  def write(trace: Trace[TlaEx]): Unit
 }
 
 class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
 
   import CounterexampleWriter.stateToEx
 
-  def printStateFormula(pretty: PrettyWriter, state: State): Unit =
+  def printStateFormula(pretty: PrettyWriter, state: Trace.State): Unit =
     if (state.isEmpty) {
       pretty.write(tla.bool(true))
     } else {
@@ -38,30 +38,31 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
       }
     }
 
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+  override def write(trace: Trace[TlaEx]): Unit = {
     val pretty = new PrettyWriter(writer)
+    pretty.writeHeader("counterexample", List(trace.module.name))
 
-    pretty.writeHeader("counterexample", List(rootModule.name))
-
-    states.zipWithIndex.foreach {
-      case (state, 0) =>
-        pretty.writeComment("Constant initialization state")
-        val decl = tla.decl("ConstInit", stateToEx(state._2))
+    trace.states.zip(trace.labels).zipWithIndex.foreach {
+      case ((state, labels), 0) =>
+        val labels_s = if (labels.isEmpty) "" else labels.toList.mkString(" [", ",", "]")
+        pretty.writeComment(s"Constant initialization state$labels_s")
+        val decl = tla.decl("ConstInit", stateToEx(state))
         pretty.write(decl)
-      case (state, j) =>
+      case ((state, labels), j) =>
         // Index 0 is reserved for ConstInit, but users expect State0 to
         // be the initial state, so we shift indices by 1 for print-output
         val i = j - 1
+        val labels_str = if (labels.isEmpty) "" else labels.toList.mkString(" [", ",", "]")
         if (i == 0) {
-          pretty.writeComment("Initial state")
+          pretty.writeComment(s"Initial state$labels_str")
         } else {
-          pretty.writeComment(s"Transition ${state._1} to State$i")
+          pretty.writeComment(s"State$i$labels_str")
         }
-        val decl = tla.decl(s"State$i", stateToEx(state._2))
+        val decl = tla.decl(s"State$i", stateToEx(state))
         pretty.writeWithNameReplacementComment(decl)
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
-    pretty.writeWithNameReplacementComment(tla.decl("InvariantViolation", tla.unchecked(notInvariant)))
+    pretty.writeWithNameReplacementComment(tla.decl("InvariantViolation", tla.unchecked(trace.data)))
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
@@ -71,10 +72,10 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 }
 
 class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
+  override def write(trace: Trace[TlaEx]): Unit = {
     // `states` must always contain at least 1 state: the constant initialization
     // This makes `states.tail` safe, since we have a nonempty sequence
-    assert(states.nonEmpty)
+    assert(trace.states.nonEmpty)
 
     val pretty = new PrettyWriter(writer)
 
@@ -89,13 +90,13 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
                     |@!@!@ENDMSG 2121 @!@!@
                     |""".stripMargin)
 
-    states.zipWithIndex.tail.foreach { case (state, i) =>
+    trace.states.zipWithIndex.tail.foreach { case (state, i) =>
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
       writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
                         |$prefix""".stripMargin)
       // We still need to call PrettyWriter, since PrintWriter doesn't know how to output TlaEx
-      printStateFormula(pretty, state._2)
+      printStateFormula(pretty, state)
       writer.println("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
     }
@@ -107,30 +108,28 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
 
   import CounterexampleWriter.stateToEx
 
-  override def write(rootModule: TlaModule, notInvariant: NotInvariant, states: List[NextState]): Unit = {
-
-    val tlaStates = states.zipWithIndex.collect { case (state, i) =>
+  override def write(trace: Trace[TlaEx]): Unit = {
+    val tlaStates = trace.states.zipWithIndex.collect { case (state, i) =>
       val name = i match {
         case 0 => "ConstInit"
         case _ => s"State${i - 1}"
       }
-      tla.decl(name, stateToEx(state._2))
+      tla.decl(name, stateToEx(state))
     }
 
-    val operDecls = (tlaStates :+ tla.decl("InvariantViolation", tla.unchecked(notInvariant))).map(build)
+    val operDecls = (tlaStates :+ tla.decl("InvariantViolation", tla.unchecked(trace.data))).map(build)
 
     val mod = TlaModule("counterexample", operDecls)
 
     // No SourceLocator, since CEs aren't part of the spec
     val jsonText = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer).makeRoot(Seq(mod)).toString
     writer.write(jsonText)
-
   }
 }
 
 object CounterexampleWriter extends LazyLogging {
 
-  def stateToEx(state: State): TBuilderInstruction =
+  def stateToEx(state: Trace.State): TBuilderInstruction =
     if (state.isEmpty) {
       tla.bool(true)
     } else {
@@ -155,11 +154,9 @@ object CounterexampleWriter extends LazyLogging {
   def writeAllFormats(
       prefix: String,
       suffix: String,
-      rootModule: TlaModule,
-      notInvariant: NotInvariant,
-      states: List[NextState]): List[String] = {
+      trace: Trace[TlaEx]): List[String] = {
     val writerHelper: String => PrintWriter => Unit =
-      kind => writer => apply(kind, writer).write(rootModule, notInvariant, states)
+      kind => writer => apply(kind, writer).write(trace)
 
     val fileNames = List(
         ("tla", s"$prefix$suffix.tla"),
