@@ -533,12 +533,12 @@ class SeqModelChecker[ExecutorContextT](
         case 1 =>
           // this is the state after Init
           SortedSet(labelsCache.getLabels(InitTransKind(no), checkerInput.initTransitions(no)): _*) ++
-            SortedSet(s"Transition $no")
+            SortedSet(s"_transition($no)")
 
         case _ =>
           // this is a state after Next
           SortedSet(labelsCache.getLabels(NextTransKind(no), checkerInput.nextTransitions(no)): _*) ++
-            SortedSet(s"Transition $no")
+            SortedSet(s"_transition($no)")
       }
     }
 

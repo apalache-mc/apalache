@@ -44,7 +44,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
     trace.states.zip(trace.labels).zipWithIndex.foreach {
       case ((state, labels), 0) =>
-        val labels_s = if (labels.isEmpty) "" else labels.toList.mkString(" [", ",", "]")
+        val labels_s = if (labels.isEmpty) "" else labels.toList.mkString(" [", ", ", "]")
         pretty.writeComment(s"Constant initialization state$labels_s")
         val decl = tla.decl("ConstInit", stateToEx(state))
         pretty.write(decl)
@@ -52,7 +52,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
         // Index 0 is reserved for ConstInit, but users expect State0 to
         // be the initial state, so we shift indices by 1 for print-output
         val i = j - 1
-        val labels_str = if (labels.isEmpty) "" else labels.toList.mkString(" [", ",", "]")
+        val labels_str = if (labels.isEmpty) "" else labels.toList.mkString(" [", ", ", "]")
         if (i == 0) {
           pretty.writeComment(s"Initial state$labels_str")
         } else {
