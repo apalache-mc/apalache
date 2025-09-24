@@ -268,7 +268,7 @@ class ItfToTla[T <: JsonRepresentation](
       }
     }
 
-  def getTrace(json: T): Either[Exception, Trace] = for {
+  def getTrace(json: T): Either[Exception, IndexedSeq[Trace.State]] = for {
     typesMap <- validateShapeAndGetTypes(json)
     varSet = typesMap.keySet
     statesJsonSeq <- json

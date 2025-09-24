@@ -15,7 +15,7 @@ trait TraceReader[T <: JsonRepresentation] {
 
   def getTraceLength(traceJson: TraceJson[T]): Int
 
-  def convert(traceJson: TraceJson[T]): Trace
+  def convert(traceJson: TraceJson[T]): StateSeq
 }
 
 object TraceReader {

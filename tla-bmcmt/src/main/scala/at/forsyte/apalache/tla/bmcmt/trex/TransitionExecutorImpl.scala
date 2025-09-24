@@ -322,16 +322,23 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     ctx.rewriter.solverContext.satOrTimeout(timeoutSec)
   }
 
+  /**
+   * Produce a concrete execution from the SMT model.
+   *
+   * @return
+   *   the decoded execution
+   */
   override def decodedExecution(): DecodedExecution = {
     val decoder = new SymbStateDecoder(ctx.solver, ctx.rewriter)
 
-    def decodePair(binding: Binding, oracle: Oracle): (Map[String, TlaEx], Int) = {
+    def decodePair(binding: Binding, oracle: Oracle): DecodedState = {
       val transitionNo = oracle.evalPosition(ctx.solver, lastState)
       val decodedState = decoder.decodeStateVariables(lastState.setBinding(binding))
-      (decodedState, transitionNo)
+      // we do not return labels here, as we do not have access to the transition definitions
+      DecodedState(decodedState, transitionNo)
     }
 
-    new DecodedExecution(execution.path.map(p => decodePair(p._1, p._2)))
+    DecodedExecution(execution.path.map(p => decodePair(p._1, p._2)))
   }
 
   /**
