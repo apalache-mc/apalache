@@ -71,9 +71,8 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     assert(listener.counterExamples.length == 1)
     val cex = listener.counterExamples.head.states
     assert(cex.length == 2) // () --(init transition)--> initial state
-    assert(cex.forall(_._1 == "0")) // state number
-    assert(cex.head._2.isEmpty) // empty binding on 0th state
-    val (_, binding) = cex.last
+    assert(cex.head.isEmpty) // empty binding on 0th state
+    val binding = cex.last
     assert(binding.contains("x"))
     val valOfX = binding("x")
     assert(valOfX.isInstanceOf[ValEx])
@@ -96,9 +95,8 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     assert(listener.counterExamples.length == 1)
     val cex = listener.counterExamples.head.states
     assert(cex.length == 3) // () --(init transition)--> initial state
-    assert(cex.forall(_._1 == "0")) // state number
-    assert(cex.head._2.isEmpty) // empty binding on 0th state
-    val (_, binding) = cex.last
+    assert(cex.head.isEmpty) // empty binding on 0th state
+    val binding = cex.last
     assert(binding.contains("x"))
     val valOfX = binding("x")
     assert(valOfX.isInstanceOf[ValEx])

@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.SearchState
@@ -15,6 +16,7 @@ import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.collection.immutable.SortedSet
 import scala.util.Random
 
 /**
@@ -95,7 +97,8 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
     logger.info("Constructing an example run")
     trex.sat(ctx.params.timeoutSmtSec) match {
       case Some(true) =>
-        ctx.listeners.foreach(_.onExample(ctx.checkerInput.rootModule, trex.decodedExecution(), searchState.nRunsLeft))
+        val unit: Unit = ()
+        listeners.foreach(_.onExample(getTrace(unit), searchState.nRunsLeft))
       case Some(false) =>
         logger.warn("All executions are shorter than the provided bound")
       case None =>
@@ -112,7 +115,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
    *   Number of found error (likely [[SearchState.nFoundErrors]]).
    */
   private def notifyOnError(
-      counterexample: Counterexample,
+      counterexample: Trace[TlaEx],
       errorIndex: Int): Unit = {
     ctx.listeners.foreach(_.onCounterexample(counterexample, errorIndex))
   }
@@ -133,10 +136,10 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
 
         case Some(false) =>
           val counterexample = if (trex.sat(0).contains(true)) {
-            val cx = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
-            notifyOnError(cx, searchState.nFoundErrors)
+            val cex: Trace[TlaEx] = getTrace(tla.bool(true))
+            notifyOnError(cex, searchState.nFoundErrors)
             logger.error("Found a deadlock.")
-            Some(cx)
+            Some(cex)
           } else {
             logger.error(s"Found a deadlock. No SMT model.")
             None
@@ -298,10 +301,10 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
         searchState.onResult(ExecutionsTooShort())
       } else {
         val counterexample = if (trex.sat(0).contains(true)) {
-          val cx = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), tla.bool(true))
-          notifyOnError(cx, searchState.nFoundErrors)
+          val cex: Trace[TlaEx] = getTrace(tla.bool(true))
+          notifyOnError(cex, searchState.nFoundErrors)
           logger.error("Found a deadlock.")
-          Some(cx)
+          Some(cex)
         } else {
           logger.error(s"Found a deadlock. No SMT model.")
           None
@@ -367,9 +370,9 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
 
           trex.sat(ctx.params.timeoutSmtSec) match {
             case Some(true) =>
-              val counterexample = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), notInv)
-              searchState.onResult(Error(1, Seq(counterexample)))
-              notifyOnError(counterexample, searchState.nFoundErrors)
+              val cex: Trace[TlaEx] = getTrace(notInv)
+              searchState.onResult(Error(1, Seq(cex)))
+              notifyOnError(cex, searchState.nFoundErrors)
               logger.info(f"State ${stateNo}: $kind invariant $invNo$labels_s violated.")
               excludePathView()
 
@@ -417,9 +420,9 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
 
         trex.sat(ctx.params.timeoutSmtSec) match {
           case Some(true) =>
-            val counterexample = Counterexample(ctx.checkerInput.rootModule, trex.decodedExecution(), traceInvApp)
-            searchState.onResult(Error(1, Seq(counterexample)))
-            notifyOnError(counterexample, searchState.nFoundErrors)
+            val cex: Trace[TlaEx] = getTrace(traceInvApp)
+            searchState.onResult(Error(1, Seq(cex)))
+            notifyOnError(cex, searchState.nFoundErrors)
             val msg = s"State $stateNo: trace invariant $invNo$labels_s violated."
             logger.error(msg)
             excludePathView()
@@ -503,8 +506,38 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
       // extract expressions from the model, as we are going to use these expressions (not the cells!) in path constraints
       val exec = trex.decodedExecution()
       // omit the first assignment, as it contains only assignments to the state variables
-      val pathConstraint = tla.bool(true).build :: (exec.path.tail.map(_._1).map(computeViewNeq(view)))
+      val pathConstraint = tla.bool(true).build :: exec.path.tail.map(_.assignments).map(computeViewNeq(view))
       trex.addPathOrConstraint(pathConstraint)
     }
+  }
+
+  /**
+   * Extract a trace from the transition executor.
+   * @param data
+   *   additional data to be attached to the trace
+   * @return
+   *   a trace with the data attached
+   */
+  private def getTrace[T](data: T): Trace[T] = {
+    val path = trex.decodedExecution().path
+    val labels = path.zipWithIndex.map { case (state, idx) =>
+      val no = state.transitionNo
+      idx match {
+        case 0 =>
+          // this is the state, where the CONSTANTS are initialized
+          SortedSet[String]()
+        case 1 =>
+          // this is the state after Init
+          SortedSet(labelsCache.getLabels(InitTransKind(no), checkerInput.initTransitions(no)): _*) ++
+            SortedSet(s"_transition($no)")
+
+        case _ =>
+          // this is a state after Next
+          SortedSet(labelsCache.getLabels(NextTransKind(no), checkerInput.nextTransitions(no)): _*) ++
+            SortedSet(s"_transition($no)")
+      }
+    }
+
+    Trace(checkerInput.rootModule, path.map(_.assignments).toIndexedSeq, labels.toIndexedSeq, data)
   }
 }

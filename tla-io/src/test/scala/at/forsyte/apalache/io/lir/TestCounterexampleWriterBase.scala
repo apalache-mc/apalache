@@ -1,10 +1,11 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.lir.TlaEx
+import org.scalatest.Assertions
 
 import java.io.{PrintWriter, StringWriter}
 
-trait TestCounterexampleWriterBase {
+trait TestCounterexampleWriterBase extends Assertions {
 
   /**
    * Write a counterexample and compare the output to the expected result.
@@ -22,15 +23,13 @@ trait TestCounterexampleWriterBase {
    */
   def compare(
       kind: String,
-      rootModule: TlaModule,
-      notInvariant: NotInvariant,
-      states: List[NextState],
+      trace: Trace[TlaEx],
       expected: String): Unit = {
 
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
     val writer = CounterexampleWriter(kind, printWriter)
-    writer.write(rootModule, notInvariant, states)
+    writer.write(trace)
     printWriter.flush()
     val dateErasure = stringWriter.toString.replaceFirst(
         "Created by Apalache on [A-Za-z 0-9:]*( \\*\\))?([\n\"])",
@@ -38,5 +37,4 @@ trait TestCounterexampleWriterBase {
     )
     assert(dateErasure == expected)
   }
-
 }

@@ -46,7 +46,7 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
     case src => throw new IllegalArgumentException(s"Tried to load state from an invalid source: $src.")
   }
 
-  override def convert(traceJson: TraceUJson): Trace = traceJson match {
+  override def convert(traceJson: TraceUJson): StateSeq = traceJson match {
     case ITFJson(json)      => convertITF(json)
     case ApalacheJson(json) => convertApalacheJson(json)
   }
@@ -61,7 +61,7 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
       throw new JsonDeserializationError(s"Provided JSON does not comply with the ITF format.")
     }
 
-  private def convertITF(json: UJsonRep): Trace = itfToTla.getTrace(json) match {
+  private def convertITF(json: UJsonRep): StateSeq = itfToTla.getTrace(json) match {
     case Right(trace) => trace
     case Left(err)    => throw err
   }
@@ -71,7 +71,7 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
     case _ => throw new JsonDeserializationError(s"Cannot read variable assignment from $ex.")
   }
 
-  private def convertApalacheJson(json: UJsonRep): Trace = {
+  private def convertApalacheJson(json: UJsonRep): StateSeq = {
     val operDecls = for {
       modules <- json.getFieldOpt("modules")
       decls <- UJsonScalaFactory.asSeq(modules).head.getFieldOpt("declarations")

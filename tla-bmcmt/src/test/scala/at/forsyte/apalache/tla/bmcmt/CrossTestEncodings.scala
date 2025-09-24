@@ -205,7 +205,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         // extract witness expression from the counterexample
         assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
         val cex = listener.counterExamples.head.states
-        val (_, binding) = cex.last // initial state binding
+        val binding = cex.last // initial state binding
         Right(binding)
 
       case outcome => Left(outcome)
