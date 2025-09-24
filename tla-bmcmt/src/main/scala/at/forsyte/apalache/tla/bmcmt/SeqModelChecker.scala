@@ -528,12 +528,19 @@ class SeqModelChecker[ExecutorContextT](
     val path = trex.decodedExecution().path
     val labels = path.zipWithIndex.map { case (state, idx) =>
       val no = state.transitionNo
-      if (idx == 0) {
-        SortedSet(labelsCache.getLabels(InitTransKind(no), checkerInput.initTransitions(no)): _*) ++
-          SortedSet(s"Transition $no")
-      } else {
-        SortedSet(labelsCache.getLabels(NextTransKind(no), checkerInput.nextTransitions(no)): _*) ++
-          SortedSet(s"Transition $no")
+      idx match {
+        case 0 =>
+          // this is the state, where the CONSTANTS are initialized
+          SortedSet[String]()
+        case 1 =>
+          // this is the state after Init
+          SortedSet(labelsCache.getLabels(InitTransKind(no), checkerInput.initTransitions(no)): _*) ++
+            SortedSet(s"Transition $no")
+
+        case _ =>
+          // this is a state after Next
+          SortedSet(labelsCache.getLabels(NextTransKind(no), checkerInput.nextTransitions(no)): _*) ++
+            SortedSet(s"Transition $no")
       }
     }
 

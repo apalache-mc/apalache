@@ -124,25 +124,25 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     val decPath = trex.decodedExecution().path
     assert(decPath.length == 5)
     // state 0 is produced by transition 0
-    assert(0 == decPath(0)._2)
-    assert(Binding().toMap == decPath(0)._1)
+    assert(0 == decPath.head.transitionNo)
+    assert(Binding().toMap == decPath.head.assignments)
     // state 1 is produced by transition 1
-    assert(1 == decPath(1)._2)
+    assert(1 == decPath(1).transitionNo)
 
     def mapWithBuild(pairs: (String, BuilderT)*): Map[String, TlaEx] =
       pairs.map { case (a, b) => a -> b.build }.toMap
 
-    assert(mapWithBuild("x" -> tla.int(1), "y" -> tla.int(1)) == decPath(1)._1)
+    assert(mapWithBuild("x" -> tla.int(1), "y" -> tla.int(1)) == decPath(1).assignments)
     // state 2 is produced by transition 1
-    assert(1 == decPath(2)._2)
-    assert(mapWithBuild("x" -> tla.int(1), "y" -> tla.int(2)) == decPath(2)._1)
+    assert(1 == decPath(2).transitionNo)
+    assert(mapWithBuild("x" -> tla.int(1), "y" -> tla.int(2)) == decPath(2).assignments)
     // state 3 is produced by transition 1
-    assert(1 == decPath(3)._2)
-    assert(mapWithBuild("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(3)._1)
+    assert(1 == decPath(3).transitionNo)
+    assert(mapWithBuild("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(3).assignments)
     // state 4 is produced either by transition 1, or by transition 2
-    assert(1 == decPath(4)._2 || 2 == decPath(4)._2)
-    assert(mapWithBuild("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(4)._1
-      || mapWithBuild("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4)._1)
+    assert(1 == decPath(4).transitionNo || 2 == decPath(4).transitionNo)
+    assert(mapWithBuild("x" -> tla.int(2), "y" -> tla.int(3)) == decPath(4).assignments
+      || mapWithBuild("x" -> tla.int(3), "y" -> tla.int(5)) == decPath(4).assignments)
 
     // test the symbolic execution
     val exe = trex.execution
