@@ -4,9 +4,7 @@ import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
 import at.forsyte.apalache.tla.bmcmt.search.{ModelCheckerParams, SearchState}
-import at.forsyte.apalache.tla.bmcmt.trex.{
-  ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor,
-}
+import at.forsyte.apalache.tla.bmcmt.trex.{ConstrainedTransitionExecutor, ExecutionSnapshot, TransitionExecutor}
 import at.forsyte.apalache.tla.bmcmt.util.{InitTransKind, LabelsCache, NextTransKind, VCKind}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.UntypedPredefs._

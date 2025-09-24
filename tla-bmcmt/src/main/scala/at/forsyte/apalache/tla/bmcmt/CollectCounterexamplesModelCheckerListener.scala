@@ -12,8 +12,8 @@ import scala.collection.mutable.ListBuffer
 class CollectCounterexamplesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
   override def onCounterexample(
-                                 counterexample: Trace[TlaEx],
-                                 errorIndex: Int): Unit = {
+      counterexample: Trace[TlaEx],
+      errorIndex: Int): Unit = {
     _counterExamples += counterexample
   }
 

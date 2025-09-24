@@ -6,6 +6,7 @@ import org.scalatest.Assertions
 import java.io.{PrintWriter, StringWriter}
 
 trait TestCounterexampleWriterBase extends Assertions {
+
   /**
    * Write a counterexample and compare the output to the expected result.
    *

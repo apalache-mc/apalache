@@ -14,20 +14,20 @@ import scala.collection.immutable.SortedSet
  * @param labels
  *   The sequence of labels for each state. Normally, these are the transition labels.
  * @param data
- *   Additional data that can be attached to the counterexample, e.g., the negated invariant.
- *   The most common use case is to attach the negated invariant for invariant violations:
- *    - for invariant violations: the negated invariant,
- *    - for deadlocks: `ValEx(TlaBool(true))`,
- *    - for trace invariants: the applied, negated trace invariant
+ *   Additional data that can be attached to the counterexample, e.g., the negated invariant. The most common use case
+ *   is to attach the negated invariant for invariant violations:
+ *   - for invariant violations: the negated invariant,
+ *   - for deadlocks: `ValEx(TlaBool(true))`,
+ *   - for trace invariants: the applied, negated trace invariant
  *
  * @author
  *   Shon Feder, Igor Konnov
  */
 case class Trace[T](
-                     module: TlaModule,
-                     states: IndexedSeq[Trace.State],
-                     labels: IndexedSeq[SortedSet[String]],
-                     data: T)
+    module: TlaModule,
+    states: IndexedSeq[Trace.State],
+    labels: IndexedSeq[SortedSet[String]],
+    data: T)
 
 object Trace {
   import upickle.default.{writer, Writer}

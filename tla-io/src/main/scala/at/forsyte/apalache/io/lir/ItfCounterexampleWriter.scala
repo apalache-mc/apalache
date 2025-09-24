@@ -39,9 +39,9 @@ object ItfCounterexampleWriter {
   def mkJson(rootModule: TlaModule, states: IndexedSeq[Trace.State]): ujson.Value = {
     // merge constant initialization and variable initialization into a single state
     val state0 = states match {
-      case constInit +: Seq()            => constInit
+      case constInit +: Seq()          => constInit
       case constInit +: initState +: _ => constInit ++ initState
-      case Seq()                         => throw new IllegalArgumentException("Expected at least one state, found none")
+      case Seq()                       => throw new IllegalArgumentException("Expected at least one state, found none")
     }
     val mappedStates = state0 +: states.drop(2)
     // construct the root JSON object
