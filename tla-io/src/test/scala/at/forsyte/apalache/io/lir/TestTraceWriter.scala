@@ -12,10 +12,10 @@ import scala.collection.immutable.SortedSet
 class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
   test("single state") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(2))),
-        IndexedSeq(SortedSet(), SortedSet()),
-        gt(name("x", IntT1), int(1)).build,
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(2))),
+        labels = IndexedSeq(SortedSet(), SortedSet()),
+        data = gt(name("x", IntT1), int(1)).build,
     )
     compare(
         "tla",
@@ -42,10 +42,10 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("two steps") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
-        IndexedSeq(SortedSet(), SortedSet("Init0"), SortedSet("Trans1"), SortedSet("Trans2")),
-        gt(name("x", IntT1), int(1)).build,
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
+        labels = IndexedSeq(SortedSet(), SortedSet("Init0"), SortedSet("Trans1"), SortedSet("Trans2")),
+        data = gt(name("x", IntT1), int(1)).build,
     )
     compare(
         "tla",
@@ -78,11 +78,11 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("two steps with conjunction") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
             Map("x" -> int(2), "y" -> int(10))),
-        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
-        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
+        labels = IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        data = and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
     )
 
     compare(
@@ -116,10 +116,10 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("TLC single state") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(2))),
-        IndexedSeq(SortedSet(), SortedSet()),
-        gt(name("x", IntT1), int(1)).build,
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(2))),
+        labels = IndexedSeq(SortedSet(), SortedSet()),
+        data = gt(name("x", IntT1), int(1)).build,
     )
 
     compare(
@@ -145,10 +145,10 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("TLC two steps") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
-        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Next"), SortedSet("Next")),
-        gt(name("x", IntT1), int(1)).build,
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
+        labels = IndexedSeq(SortedSet(), SortedSet(), SortedSet("Next"), SortedSet("Next")),
+        data = gt(name("x", IntT1), int(1)).build,
     )
 
     compare(
@@ -184,11 +184,11 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("TLC two steps with conjunction") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
             Map("x" -> int(2), "y" -> int(10))),
-        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
-        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
+        labels = IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        data = and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
     )
 
     compare(
@@ -227,10 +227,10 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("JSON single state") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(2))),
-        IndexedSeq(SortedSet(), SortedSet()),
-        gt(name("x", IntT1), int(1)).build,
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(2))),
+        labels = IndexedSeq(SortedSet(), SortedSet()),
+        data = gt(name("x", IntT1), int(1)).build,
     )
 
     compare(
@@ -330,10 +330,10 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("JSON two steps") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
-        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
-        gt(name("x", IntT1), int(1)).build,
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(0)), Map("x" -> int(1)), Map("x" -> int(2))),
+        labels = IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        data = gt(name("x", IntT1), int(1)).build,
     )
 
     compare(
@@ -501,11 +501,11 @@ class TestTraceWriter extends AnyFunSuite with TestCounterexampleWriterBase {
 
   test("JSON two steps with conjunction") {
     val cex = Trace(
-        TlaModule("test", List()),
-        IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
+        module = TlaModule("test", List()),
+        states = IndexedSeq(Map(), Map("x" -> int(0), "y" -> int(8)), Map("x" -> int(1), "y" -> int(9)),
             Map("x" -> int(2), "y" -> int(10))),
-        IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
-        and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
+        labels = IndexedSeq(SortedSet(), SortedSet(), SortedSet("Trans1"), SortedSet("Trans2")),
+        data = and(gt(name("x", IntT1), int(1)), eql(name("y", IntT1), int(10))).build,
     )
 
     compare(

@@ -23,7 +23,6 @@ class TestItfTraceWriter extends AnyFunSuite {
   def mkJson(rootModule: TlaModule, states: IndexedSeq[Trace.State]): Value =
     ItfCounterexampleWriter.mkJson(rootModule, states)
 
-  import scala.language.implicitConversions
 
   test("ITF JSON no state") {
     val intTag = Typed(IntT1)
