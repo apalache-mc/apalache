@@ -98,7 +98,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
     trex.sat(ctx.params.timeoutSmtSec) match {
       case Some(true) =>
         val unit: Unit = ()
-        listeners.foreach(_.onExample(getTrace(unit), searchState.nRunsLeft))
+        ctx.listeners.foreach(_.onExample(getTrace(unit), searchState.nRunsLeft))
       case Some(false) =>
         logger.warn("All executions are shorter than the provided bound")
       case None =>
@@ -528,16 +528,16 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
           SortedSet[String]()
         case 1 =>
           // this is the state after Init
-          SortedSet(labelsCache.getLabels(InitTransKind(no), checkerInput.initTransitions(no)): _*) ++
+          SortedSet(labelsCache.getLabels(InitTransKind(no), ctx.checkerInput.initTransitions(no)): _*) ++
             SortedSet(s"_transition($no)")
 
         case _ =>
           // this is a state after Next
-          SortedSet(labelsCache.getLabels(NextTransKind(no), checkerInput.nextTransitions(no)): _*) ++
+          SortedSet(labelsCache.getLabels(NextTransKind(no), ctx.checkerInput.nextTransitions(no)): _*) ++
             SortedSet(s"_transition($no)")
       }
     }
 
-    Trace(checkerInput.rootModule, path.map(_.assignments).toIndexedSeq, labels.toIndexedSeq, data)
+    Trace(ctx.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq, labels.toIndexedSeq, data)
   }
 }
