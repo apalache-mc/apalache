@@ -7,10 +7,8 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup.{HasCheckerPreds, Wi
 import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
-import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, IncrementalExecutionContextSnapshot}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Injector
@@ -21,7 +19,7 @@ import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.concurrent.TrieMap
-import scala.collection.{immutable, mutable}
+import scala.collection.immutable
 import scala.util.Try
 
 /**
@@ -33,6 +31,9 @@ sealed abstract class ExplorationServiceResult
  * Parameters for preparing a symbolic transition in the solver context.
  * @param sessionId
  *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context before the transition is assumed.
+ *   If it is negative, no snapshot recovery is performed.
  * @param transitionId
  *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
  *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
@@ -45,17 +46,18 @@ sealed abstract class ExplorationServiceResult
  */
 case class AssumeTransitionParams(
     sessionId: String,
+    snapshotId: Int,
     transitionId: Int,
     checkEnabled: Boolean,
     timeoutSec: Int)
 
 object AssumeTransitionParams {
-  def apply(sessionId: String, transitionId: Int): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, transitionId, checkEnabled = true, timeoutSec = 0)
+  def apply(sessionId: String, snapshotId: Int, transitionId: Int): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, snapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
   }
 
-  def apply(sessionId: String, transitionId: Int, checkEnabled: Boolean): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, transitionId, checkEnabled, timeoutSec = 0)
+  def apply(sessionId: String, snapshotId: Int, transitionId: Int, checkEnabled: Boolean): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, snapshotId, transitionId, checkEnabled, timeoutSec = 0)
   }
 }
 
@@ -266,18 +268,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // get the checker context from the injector
         val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
         val checkerContext = checkerModule.modelCheckerContext.get
-        // validate the transition ID
-        val stepNo = checkerContext.trex.stepNo
-        val transitions = if (stepNo == 0) {
-          checkerContext.checkerInput.initTransitions
-        } else {
-          checkerContext.checkerInput.nextTransitions
-        }
-        if (transitionId < 0 || transitionId >= transitions.size) {
+        // we can only check obvious issues with transition ID here, as the step number
+        // may change after snapshot recovery
+        if (transitionId < 0) {
           Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                  s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
+                  s"Invalid transition ID: $transitionId must be non-negative"))
         } else {
-          Right((checkerContext, transitions(transitionId)))
+          Right(checkerContext)
         }
 
       case None =>
@@ -286,11 +283,33 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
     validationResult
-      .map {
-        case (checkerContext, actionExpr) => {
+      .map { checkerContext => {
           checkerContext.synchronized {
+            var snapshotBeforeId: Integer = -1
+            if (params.snapshotId >= 0) {
+              // try to recover the snapshot
+              val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
+              if (!recovered) {
+                return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                    s"Snapshot not found: ${params.snapshotId} in session $sessionId"))
+              }
+              snapshotBeforeId = params.snapshotId
+            } else {
+              // take a snapshot of the current context
+              snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
+            }
+            // the step number might have changed after recovery, so we re-fetch the transitions
             val stepNo = checkerContext.trex.stepNo
-            val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
+            val transitions = if (stepNo == 0) {
+              checkerContext.checkerInput.initTransitions
+            } else {
+              checkerContext.checkerInput.nextTransitions
+            }
+            if (transitionId < 0 || transitionId >= transitions.size) {
+              return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
+            }
+            val actionExpr = transitions(transitionId)
             // Upload the transition into the SMT context.
             // It returns the result of a simple check that does not check satisfiability.
             val isApplicable = checkerContext.trex.prepareTransition(transitionId, actionExpr)

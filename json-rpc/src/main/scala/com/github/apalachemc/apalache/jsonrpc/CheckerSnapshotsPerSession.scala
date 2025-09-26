@@ -2,6 +2,7 @@ package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, IncrementalExecutionContextSnapshot}
+import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
@@ -17,7 +18,7 @@ import scala.collection.mutable
  * @author
  *   Igor Konnov
  */
-class CheckerSnapshotsPerSession {
+class CheckerSnapshotsPerSession extends LazyLogging {
   type Snapshot = ExecutionSnapshot[IncrementalExecutionContextSnapshot]
   type CheckerContext = ModelCheckerContext[IncrementalExecutionContextSnapshot]
 
@@ -66,6 +67,7 @@ class CheckerSnapshotsPerSession {
       sessionSnapshots.filterInPlace((id, _) => id <= snapshotId)
       // recover the snapshot
       checkerContext.trex.recover(snapshot.get)
+      logger.info(s"Session=$sessionId: Recovered snapshot $snapshotId")
       true
     }
   }

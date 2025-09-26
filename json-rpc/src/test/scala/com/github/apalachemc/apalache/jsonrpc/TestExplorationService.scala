@@ -65,7 +65,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
 
   test("assume transition 0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
-    service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0)) match {
+    service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, snapshotId = -1,
+            transitionId = 0)) match {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == specResult.sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
@@ -79,8 +80,9 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
 
   test("next step") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
-    assert(service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0)).isRight,
-        "Assuming transition 0 should succeed")
+    assert(service
+          .assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, snapshotId = -1, transitionId = 0))
+          .isRight, "Assuming transition 0 should succeed")
     service.nextStep(NextStepParams(sessionId = specResult.sessionId)) match {
       case Right(NextStepResult(newSessionId, _, newStepNo)) =>
         assert(newSessionId == specResult.sessionId, "Session ID should remain the same after next step")
@@ -90,13 +92,22 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
-  test("sequence 0-0-0-0-0") {
+  test("sequence 0-0-0-0-0 (disabled)") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
     val sessionId = specResult.sessionId
-    val params = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    val params = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
+    // Init$0 is enabled, Next$0 is enabled 3 times, and then disabled
     for (_ <- 0 until 4) {
-      assert(service.assumeTransition(params).isRight)
-      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+      service.assumeTransition(params) match {
+        case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
+          assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
+          assert(transitionId == 0, "Transition ID should match the assumed transition")
+          assert(status == TransitionStatus.ENABLED, "Transition should be enabled")
+          assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+
+        case Left(error) =>
+          fail(s"Failed to assume transition: $error")
+      }
     }
     service.assumeTransition(params) match {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
@@ -113,8 +124,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   test("sequence 0-0-0-1-1-0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
     val sessionId = specResult.sessionId
-    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
-    val t1 = AssumeTransitionParams(sessionId = sessionId, transitionId = 1, checkEnabled = true)
+    val t0 = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
+    val t1 = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 1, checkEnabled = true)
     for (_ <- 0 until 3) {
       assert(service.assumeTransition(t0).isRight)
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
@@ -132,6 +143,51 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         fail(s"Unexpected result: $result")
       case Left(error) =>
         fail(s"Failed to assume transition: $error")
+    }
+  }
+
+  test("sequence 0-0-0-0-rollback-0-0-0-0") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(text))).toOption.get
+    val sessionId = specResult.sessionId
+    val params = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
+    // Init$0 is enabled, Next$0 is enabled 3 times
+    for (_ <- 0 until 4) {
+      service.assumeTransition(params) match {
+        case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
+          assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
+          assert(transitionId == 0, "Transition ID should match the assumed transition")
+          assert(status == TransitionStatus.ENABLED, "Transition should be enabled")
+          assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+
+        case Left(error) =>
+          fail(s"Failed to assume transition: $error")
+      }
+    }
+    // We should not be able to assume transition 0 again
+    service.assumeTransition(params) match {
+      case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
+        assert(transitionId == 0, "Transition ID should match the assumed transition")
+        assert(status == TransitionStatus.DISABLED, "Transition should be disabled")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to assume transition: $error")
+    }
+    // Now we roll back to the snapshot right after loading the spec.
+    // As a result, we should be able to assume transition 0 four times again.
+    // We have to be careful to recover the snapshot only once.
+    val paramsRecover = AssumeTransitionParams(sessionId = sessionId, snapshotId = specResult.snapshotId,
+        transitionId = 0, checkEnabled = true)
+    // Init$0
+    assume(service.assumeTransition(paramsRecover).map(_.status == TransitionStatus.ENABLED) == Right(true),
+      "After recovery, transition 0 should be enabled")
+    assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    // Next$0 three times
+    for (i <- 1 until 4) {
+      assume(service.assumeTransition(params).map(_.status == TransitionStatus.ENABLED) == Right(true),
+        s"Transition 0 is disabled when i=$i")
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     }
   }
 }
