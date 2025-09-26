@@ -1,6 +1,6 @@
 package com.github.apalachemc.apalache.jsonrpc
 
-abstract class ExplorationServiceParams
+sealed abstract class ExplorationServiceParams
 
 /**
  * Parameters for loading a specification in the JSON-RPC server.
@@ -22,8 +22,8 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  * @param sessionId
  *   the ID of the previously loaded specification
  * @param snapshotId
- *   the snapshot ID for recovering the context before the transition is assumed.
- *   If it is negative, no snapshot recovery is performed.
+ *   the snapshot ID for recovering the context before the transition is assumed. If it is negative, no snapshot
+ *   recovery is performed.
  * @param transitionId
  *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
  *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
@@ -35,18 +35,23 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  *   if `checkEnabled` is `false`.
  */
 case class AssumeTransitionParams(
-                                   sessionId: String,
-                                   snapshotId: Int = -1,
-                                   transitionId: Int,
-                                   checkEnabled: Boolean,
-                                   timeoutSec: Int = 0) extends ExplorationServiceParams
+    sessionId: String,
+    snapshotId: Int = -1,
+    transitionId: Int,
+    checkEnabled: Boolean,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
 
 object AssumeTransitionParams {
   def apply(sessionId: String, snapshotId: Int, transitionId: Int): AssumeTransitionParams = {
     new AssumeTransitionParams(sessionId, snapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
   }
 
-  def apply(sessionId: String, snapshotId: Int, transitionId: Int, checkEnabled: Boolean): AssumeTransitionParams = {
+  def apply(
+      sessionId: String,
+      snapshotId: Int,
+      transitionId: Int,
+      checkEnabled: Boolean): AssumeTransitionParams = {
     new AssumeTransitionParams(sessionId, snapshotId, transitionId, checkEnabled, timeoutSec = 0)
   }
 }
@@ -57,3 +62,28 @@ object AssumeTransitionParams {
  *   the ID of the previously loaded specification
  */
 case class NextStepParams(sessionId: String) extends ExplorationServiceParams
+
+/**
+ * Parameters for checking invariants in the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param stateInvariantIds
+ *   the IDs of state invariants to check
+ * @param actionInvariantIds
+ *   the IDS of action invariants to check
+ * @param traceInvariantIds
+ *   the IDs of trace invariants to check
+ * @param fail
+ *   the number of violations to find before stopping. If `0`, all violations are reported. Default value is `1`.
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
+ *   if `checkEnabled` is `false`.
+ */
+case class CheckInvariantParams(
+    sessionId: String,
+    stateInvariantIds: List[Int],
+    actionInvariantIds: List[Int],
+    traceInvariantIds: List[Int],
+    fail: Int = 1,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams

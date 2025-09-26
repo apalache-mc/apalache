@@ -24,11 +24,11 @@ object TransitionStatus {
  *   status of the transition: "ENABLED", "DISABLED", or "UNKNOWN"
  */
 case class AssumeTransitionResult(
-                                   sessionId: String,
-                                   snapshotId: Int,
-                                   transitionId: Int,
-                                   status: TransitionStatus.T)
-  extends ExplorationServiceResult
+    sessionId: String,
+    snapshotId: Int,
+    transitionId: Int,
+    status: TransitionStatus.T)
+    extends ExplorationServiceResult
 
 /**
  * The result of loading a specification.
@@ -40,7 +40,7 @@ case class AssumeTransitionResult(
  *   the specification parameters that are needed for symbolic path exploration
  */
 case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: SpecParameters)
-  extends ExplorationServiceResult
+    extends ExplorationServiceResult
 
 /**
  * Specification parameters that are needed for symbolic path exploration. These numbers may be different from what the
@@ -60,12 +60,12 @@ case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: Sp
  *   whether a view predicate is present in the specification
  */
 case class SpecParameters(
-                           nInitTransitions: Int,
-                           nNextTransitions: Int,
-                           nStateInvariants: Int,
-                           nActionInvariants: Int,
-                           nTraceInvariants: Int,
-                           hasView: Boolean)
+    nInitTransitions: Int,
+    nNextTransitions: Int,
+    nStateInvariants: Int,
+    nActionInvariants: Int,
+    nTraceInvariants: Int,
+    hasView: Boolean)
 
 /**
  * The result of disposing a specification.
@@ -84,3 +84,21 @@ case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
  *   the number of the new step
  */
 case class NextStepResult(sessionId: String, snapshotId: Int, newStepNo: Int) extends ExplorationServiceResult
+
+/**
+ * The result of checking invariants in the current state or transition.
+ * @param sessionId
+ *  the ID of the previously loaded specification
+ * @param failedStateInvariantIds
+ *  the IDs of state invariants that have failed
+ * @param failedActionInvariantIds
+ *  the IDs of action invariants that have failed
+ * @param failedTraceInvariantIds
+ *  the IDs of trace invariants that have failed
+ */
+case class CheckInvariantResult(
+    sessionId: String,
+    failedStateInvariantIds: List[Int],
+    failedActionInvariantIds: List[Int],
+    failedTraceInvariantIds: List[Int])
+    extends ExplorationServiceResult

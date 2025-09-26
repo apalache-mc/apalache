@@ -69,15 +69,15 @@ class JsonParameterParser(mapper: ObjectMapper) {
     try {
       val assumeParams = mapper.treeToValue(params, classOf[AssumeTransitionParams])
       if (assumeParams.sessionId.isEmpty) {
-        return Left("prepareTransition parameters must contain a non-empty sessionId.")
+        return Left("assumeTransition parameters must contain a non-empty sessionId.")
       }
       if (assumeParams.transitionId < 0) {
-        return Left("prepareTransition parameters must contain a non-negative transitionId.")
+        return Left("assumeTransition parameters must contain a non-negative transitionId.")
       }
       Right(assumeParams)
     } catch {
       case e: Exception =>
-        Left(s"Parse error in prepareTransition: ${e.getMessage}")
+        Left(s"Parse error in assumeTransition: ${e.getMessage}")
     }
   }
 
@@ -98,6 +98,33 @@ class JsonParameterParser(mapper: ObjectMapper) {
     } catch {
       case e: Exception =>
         Left(s"Parse error in nextStep: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for checking invariants against the symbolic state.
+   * @param node tree node representing the JSON method parameters
+   * @return Either an error message or a [[CheckInvariantParams]] instance containing the parsed sources.
+   */
+  def parseCheckInvariant(node: TreeNode): Either[String, CheckInvariantParams] = {
+    try {
+      val invParams = mapper.treeToValue(node, classOf[CheckInvariantParams])
+      if (invParams.sessionId.isEmpty) {
+        return Left("checkInvariant parameters must contain a non-empty sessionId.")
+      }
+      if (invParams.stateInvariantIds.exists(_ < 0)) {
+        return Left("stateInvariantIds parameters must contain non-negative identifiers.")
+      }
+      if (invParams.actionInvariantIds.exists(_ < 0)) {
+        return Left("actionInvariantIds parameters must contain non-negative identifiers.")
+      }
+      if (invParams.traceInvariantIds.exists(_ < 0)) {
+        return Left("traceInvariantIds parameters must contain non-negative identifiers.")
+      }
+      Right(invParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in checkInvariant: ${e.getMessage}")
     }
   }
 }
