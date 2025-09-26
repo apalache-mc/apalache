@@ -7,8 +7,10 @@ import at.forsyte.apalache.infra.passes.options.OptionGroup.{HasCheckerPreds, Wi
 import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
+import at.forsyte.apalache.tla.bmcmt.trex.{ExecutionSnapshot, IncrementalExecutionContextSnapshot}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Injector
@@ -19,7 +21,7 @@ import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.concurrent.TrieMap
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 import scala.util.Try
 
 /**
@@ -165,6 +167,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   private val sessions: TrieMap[String, Injector] = TrieMap.empty
   // A counter for generating session IDs.
   private val lastSessionId: AtomicInteger = new AtomicInteger(0)
+  // A snapshot manager.
+  private val snapshots: CheckerSnapshotsPerSession = new CheckerSnapshotsPerSession()
 
   /**
    * Loads a specification based on the provided parameters.
@@ -198,8 +202,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       checkerContext.trex.assertState(d.body)
     }
     // save the snapshot of the checker context
-    val snapshot = checkerContext.trex.snapshot()
-    val snapshotId = snapshot.contextSnapshot.rewriterLevel
+    val snapshotId = snapshots.takeSnapshot(sessionId, checkerContext)
 
     // produce the specification parameters for remote exploration
     val specParameters = SpecParameters(
@@ -229,6 +232,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         case Some(injector) =>
           // immediately remove the session, so the other threads would start anything on it
           sessions.remove(params.sessionId)
+          snapshots.remove(params.sessionId)
           // get the checker context from the injector
           val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
           val checkerContext = checkerModule.modelCheckerContext
@@ -286,21 +290,19 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         case (checkerContext, actionExpr) => {
           checkerContext.synchronized {
             val stepNo = checkerContext.trex.stepNo
-            val snapshotBefore = checkerContext.trex.snapshot()
-            val snapshotBeforeId = snapshotBefore.contextSnapshot.rewriterLevel
+            val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
             // Upload the transition into the SMT context.
             // It returns the result of a simple check that does not check satisfiability.
             val isApplicable = checkerContext.trex.prepareTransition(transitionId, actionExpr)
             if (!isApplicable) {
-              checkerContext.trex.recover(snapshotBefore)
+              snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
               logger.info(
                   s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: transition $transitionId DISABLED")
               AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, TransitionStatus.DISABLED)
             } else {
               // assume that this transition takes place
               checkerContext.trex.assumeTransition(transitionId)
-              val snapshotAfter = checkerContext.trex.snapshot()
-              val snapshotAfterId = snapshotAfter.contextSnapshot.rewriterLevel
+              val snapshotAfterId = snapshots.takeSnapshot(sessionId, checkerContext)
               if (!params.checkEnabled) {
                 // if we do not check satisfiability, we assume that the transition is enabled
                 logger.info(
@@ -311,7 +313,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                 checkerContext.trex.sat(params.timeoutSec) match {
                   case Some(isSat) =>
                     if (!isSat) {
-                      checkerContext.trex.recover(snapshotBefore)
+                      snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
                     }
                     val status = if (isSat) TransitionStatus.ENABLED else TransitionStatus.DISABLED
                     logger.info(
@@ -321,8 +323,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                     // in case of timeout or unknown, we do not rollback the context, but return unknown
                     logger.info(
                         s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
-                    AssumeTransitionResult(sessionId, snapshotAfter.contextSnapshot.rewriterLevel, transitionId,
-                        TransitionStatus.UNKNOWN)
+                    AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
                 }
               }
             }
@@ -361,8 +362,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             val stepBeforeNo = checkerContext.trex.stepNo
             checkerContext.trex.nextState()
             val stepAfterNo = checkerContext.trex.stepNo
-            val snapshot = checkerContext.trex.snapshot()
-            val snapshotId = snapshot.contextSnapshot.rewriterLevel
+            val snapshotId = snapshots.takeSnapshot(sessionId, checkerContext)
             logger.info(s"Session=$sessionId Step=$stepAfterNo Snapshot=$snapshotId: Switched from step $stepBeforeNo")
             NextStepResult(sessionId, snapshotId, stepAfterNo)
           }
