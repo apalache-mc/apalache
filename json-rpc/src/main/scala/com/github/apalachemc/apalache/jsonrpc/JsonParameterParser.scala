@@ -31,10 +31,9 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
    * @return
-   *   Either an error message or a LoadSpecParams instance containing the parsed sources.
+   *   Either an error message or a [[LoadSpecParams]] instance containing the parsed sources.
    */
   def parseLoadSpec(params: TreeNode): Either[String, LoadSpecParams] = {
-    // Convert LoadSpecParams to class
     try {
       val specParams = mapper.treeToValue(params, classOf[LoadSpecParams])
 
@@ -54,8 +53,14 @@ class JsonParameterParser(mapper: ObjectMapper) {
     }
   }
 
+  /**
+   * Parses the parameters for disposing a session in the JSON-RPC server.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a [[DisposeSpecParams]] instance containing the parsed sources.
+   */
   def parseDisposeSpec(params: TreeNode): Either[String, DisposeSpecParams] = {
-    // Convert DisposeSpecParams to class
     try {
       val disposeParams = mapper.treeToValue(params, classOf[DisposeSpecParams])
       if (disposeParams.sessionId.isEmpty) {
@@ -65,6 +70,49 @@ class JsonParameterParser(mapper: ObjectMapper) {
     } catch {
       case e: Exception =>
         Left(s"Parse error in disposeSpec: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for preparing a transition in the JSON-RPC server.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a [[AssumeTransitionParams]] instance containing the parsed sources.
+   */
+  def parseAssumeTransition(params: TreeNode): Either[String, AssumeTransitionParams] = {
+    try {
+      val assumeParams = mapper.treeToValue(params, classOf[AssumeTransitionParams])
+      if (assumeParams.sessionId.isEmpty) {
+        return Left("prepareTransition parameters must contain a non-empty sessionId.")
+      }
+      if (assumeParams.transitionId < 0) {
+        return Left("prepareTransition parameters must contain a non-negative transitionId.")
+      }
+      Right(assumeParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in prepareTransition: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for switching to the next step.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a [[NextStepParams]] instance containing the parsed sources.
+   */
+  def parseNextStep(params: TreeNode): Either[String, NextStepParams] = {
+    try {
+      val applyParams = mapper.treeToValue(params, classOf[NextStepParams])
+      if (applyParams.sessionId.isEmpty) {
+        return Left("nextStep parameters must contain a non-empty sessionId.")
+      }
+      Right(applyParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in nextStep: ${e.getMessage}")
     }
   }
 }

@@ -180,8 +180,8 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
               output = Output(Some(new java.io.File("."))),
           )
         }
-        PassChainExecutor
-          .run(new ParserModule(options))
+        PassChainExecutor(new ParserModule(options))
+          .run()
           .left
           .map { err =>
             TransExplorerError(errorType = TransExplorerErrorType.PASS_FAILURE, data = ujson.write(err))

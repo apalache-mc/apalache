@@ -69,7 +69,7 @@ class TestCmd
     // val tuning = Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)
     logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-    PassChainExecutor.run(new CheckerModule(options)) match {
+    PassChainExecutor(new CheckerModule(options)).run() match {
       case Right(_)      => Right("No example found")
       case Left(failure) => Left(failure.exitCode, "Found a violation of the postcondition. Check violation.tla.")
     }

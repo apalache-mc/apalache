@@ -32,7 +32,7 @@ class ParseCmd
 
     logger.info("Parse " + file)
 
-    PassChainExecutor.run(new ParserModule(options)) match {
+    PassChainExecutor(new ParserModule(options)).run() match {
       case Right(m) => Right(s"Parsed successfully\nRoot module: ${m.name} with ${m.declarations.length} declarations.")
       case Left(failure) => Left(failure.exitCode, "Parser has failed")
     }
