@@ -178,8 +178,13 @@ Given a session identifier and a transition identifier, prepare this transition 
 SMT context and assume that this transition holds true. Additionally, if `checkEnabled`
 is set to `true`, the server checks, whether there is a state that is reachable via
 the current transition prefix, including the supplied transition. The parameter `timeoutSec`
-sets the timeout for this check in seconds. If this parameter is set to `0`, then
-the timout is infinite.
+sets the timeout for this check in seconds. If `timeout` is not set, or it is set to `0`, then
+the timeout is infinite.
+
+To avoid an additional call, we also allow `assumeTransition` to roll back the context
+to an earlier snapshot *before* assuming the transition. In this case, the `snapshotId` parameter
+must be set to the identifier of the snapshot to roll back to. If `snapshotId` is negative
+(or not set), then no rollback is performed.
 
 **Input:**
 
@@ -188,6 +193,7 @@ the timout is infinite.
   "method":"assumeTransition",
   "params": {
     "sessionId": <session identifier>,
+    "snapshotId": <optional snapshot identifier>,
     "transitionId": <transition identifier>,
     "checkEnabled": <check whether the transition is enabled>,
     "timeoutSec": <timeout in seconds, or 0 for infinite>

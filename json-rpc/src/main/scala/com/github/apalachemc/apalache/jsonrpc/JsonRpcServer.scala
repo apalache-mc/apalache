@@ -46,10 +46,10 @@ sealed abstract class ExplorationServiceResult
  */
 case class AssumeTransitionParams(
     sessionId: String,
-    snapshotId: Int,
+    snapshotId: Int = -1,
     transitionId: Int,
     checkEnabled: Boolean,
-    timeoutSec: Int)
+    timeoutSec: Int = 0)
 
 object AssumeTransitionParams {
   def apply(sessionId: String, snapshotId: Int, transitionId: Int): AssumeTransitionParams = {
