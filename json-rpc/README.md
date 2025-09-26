@@ -120,7 +120,7 @@ curl -X POST http://localhost:8822/rpc \
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "sessionId": "1a1555f8",
+    "sessionId": "1",
     "snapshotId": 0,
     "specParameters": {
       "nInitTransitions": 1,
@@ -169,7 +169,7 @@ This identifier cannot be used in the future calls.
 ```sh
 curl -X POST http://localhost:8822/rpc \
 -H "Content-Type: application/json" \
--d '{"jsonrpc":"2.0","method":"disposeSpec","params":{"sessionId": "1a1555f8"},"id":2}'
+-d '{"jsonrpc":"2.0","method":"disposeSpec","params":{"sessionId": "1"},"id":2}'
 ```
 
 ### 2.3. Method assumeTransition
@@ -213,8 +213,8 @@ the timout is infinite.
 ```sh
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"assumeTransition","params":{"sessionId":"1a1555f8","transitionId":0,"checkEnabled":true},"id":2}'
-{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1a1555f8","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
+  -d '{"jsonrpc":"2.0","method":"assumeTransition","params":{"sessionId":"1","transitionId":0,"checkEnabled":true},"id":2}'
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
 ```
 
 ### 2.4. Method nextState
@@ -251,8 +251,8 @@ or `"UNKNOWN"`).
 ```sh
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"nextStep","params":{"sessionId":"1a1555f8"},"id":3}'
-{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1a1555f8","snapshotId":3,"newStepNo":1}}
+  -d '{"jsonrpc":"2.0","method":"nextStep","params":{"sessionId":"1"},"id":3}'
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":3,"newStepNo":1}}
 ```
 
 [Jetty Server]: https://jetty.org/
