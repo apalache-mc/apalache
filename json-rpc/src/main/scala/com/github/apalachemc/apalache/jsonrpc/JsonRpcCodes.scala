@@ -6,7 +6,10 @@ package com.github.apalachemc.apalache.jsonrpc
  * See: https://www.jsonrpc.org/specification
  */
 object JsonRpcCodes {
-  /** Parse error - Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text. */
+
+  /**
+   * Parse error - Invalid JSON was received by the server. An error occurred on the server while parsing the JSON text.
+   */
   val PARSE_ERROR = -32700
 
   /** Invalid Request - The JSON sent is not a valid Request object. */
@@ -22,14 +25,14 @@ object JsonRpcCodes {
   val INTERNAL_ERROR = -32603
 
   /**
-   * The minimal value of server error codes (-32099).
-   * Server error codes are reserved for implementation-defined server-errors (-32000 to -32099).
+   * The minimal value of server error codes (-32099). Server error codes are reserved for implementation-defined
+   * server-errors (-32000 to -32099).
    */
   val SERVER_ERROR_MIN = -32099
 
   /**
-   * The maximal value of server error codes (-32000).
-   * Server error codes are reserved for implementation-defined server-errors (-32000 to -32099).
+   * The maximal value of server error codes (-32000). Server error codes are reserved for implementation-defined
+   * server-errors (-32000 to -32099).
    */
   val SERVER_ERROR_MAX = -32000
 }
