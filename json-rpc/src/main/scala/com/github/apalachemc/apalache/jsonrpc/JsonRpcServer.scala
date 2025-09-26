@@ -290,8 +290,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             val snapshotBeforeId = snapshotBefore.contextSnapshot.rewriterLevel
             // Upload the transition into the SMT context.
             // It returns the result of a simple check that does not check satisfiability.
-            val isEnabled = checkerContext.trex.prepareTransition(transitionId, actionExpr)
-            if (!isEnabled) {
+            val isApplicable = checkerContext.trex.prepareTransition(transitionId, actionExpr)
+            if (!isApplicable) {
               checkerContext.trex.recover(snapshotBefore)
               logger.info(
                   s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: transition $transitionId DISABLED")
