@@ -7,8 +7,19 @@ sealed abstract class ExplorationServiceParams
  * @param sources
  *   A sequence of specification modules, each encoded in base64. The head must be the root module, and the rest are
  *   additional modules that are imported by the root module (except the standard ones).
+ * @param init
+ *   the name of the initial predicate. Default is "Init".
+ * @param next
+ *   the name of the next-state predicate. Default is "Next".
+ * @param invariants
+ *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
  */
-case class LoadSpecParams(sources: Seq[String]) extends ExplorationServiceParams
+case class LoadSpecParams(
+    sources: Seq[String],
+    init: String = "Init",
+    next: String = "Next",
+    invariants: List[String] = List())
+    extends ExplorationServiceParams
 
 /**
  * Parameters for disposing of a session in the JSON-RPC server.

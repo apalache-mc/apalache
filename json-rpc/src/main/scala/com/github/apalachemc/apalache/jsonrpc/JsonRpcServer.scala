@@ -6,6 +6,7 @@ import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
 import at.forsyte.apalache.infra.passes.options.OptionGroup.{HasCheckerPreds, WithCheckerPreds}
 import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
+import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
@@ -291,6 +292,11 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                 maxError = 1,
                 // TODO: propagate from LoadSpecParams
                 timeoutSmtSec = 0,
+            ),
+            // TODO: this is the minimal setup for doing anything useful
+            predicates = cfg.predicates.copy(
+                behaviorSpec = InitNextSpec(params.init, params.next),
+                invariants = params.invariants,
             )
         )
       })

@@ -69,7 +69,10 @@ when loading multiple specifications in different sessions.
 {
   "method": "loadSpec",
   "params": {
-    "sources": [ <rootModuleInBase64>, <importedModule1InBase64>, ... ]
+    "sources": [ <rootModuleInBase64>, <importedModule1InBase64>, ... ],
+    "init": "optional initializer for constants",
+    "next": "optional transition predicate",
+    "invariants": [ "invariant 1", ..., "invariant N" ]
   }
 }
 ```

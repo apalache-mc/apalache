@@ -31,7 +31,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
         new String(decodedContent, "UTF-8")
       }
 
-      Right(LoadSpecParams(decodedSources))
+      Right(specParams.copy(sources = decodedSources))
     } catch {
       case e: Exception =>
         Left(s"Parse error in loadSpec: ${e.getMessage}")

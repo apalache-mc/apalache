@@ -8,19 +8,20 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestJsonRequests extends AnyFunSuite {
-  test("parse LoadSpecParams") {
-    val text =
-      """---- MODULE Inc ----
-        |EXTENDS Integers
-        |VARIABLE
-        |  \* @type: Int;
-        |  x
-        |Init == x = 0
-        |Next == x' = x + 1
-        |=====================
+  val spec1: String =
+    """---- MODULE Inc ----
+      |EXTENDS Integers
+      |VARIABLE
+      |  \* @type: Int;
+      |  x
+      |Init == x = 0
+      |Next == x' = x + 1
+      |=====================
       """.stripMargin
+
+  test("parse LoadSpecParams minimal") {
     // encode text in base64
-    val encodedText = java.util.Base64.getEncoder.encodeToString(text.getBytes("UTF-8"))
+    val encodedText = java.util.Base64.getEncoder.encodeToString(spec1.getBytes("UTF-8"))
     val input =
       s"""{"jsonrpc": "2.0", "method": "loadSpec", "params": { "sources": ["$encodedText"] }, "id": 1}"""
     val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
@@ -28,7 +29,27 @@ class TestJsonRequests extends AnyFunSuite {
     val parsed = new JsonParameterParser(mapper).parseLoadSpec(inputJson.path("params"))
     parsed match {
       case Right(loadSpecParams: LoadSpecParams) =>
-        assert(loadSpecParams.sources == Seq(text), "Session ID should not be empty")
+        assert(loadSpecParams.sources == Seq(spec1), "Session ID should not be empty")
+      case Left(error) =>
+        fail(s"Failed to load specification: $error")
+    }
+  }
+
+  test("parse LoadSpecParams with all parameters") {
+    // encode text in base64
+    val encodedText = java.util.Base64.getEncoder.encodeToString(spec1.getBytes("UTF-8"))
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "loadSpec", "params": { "sources": ["$encodedText"],
+         |"init": "MyInit", "next": "MyNext", "invariants": ["inv1", "inv2"] }, "id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseLoadSpec(inputJson.path("params"))
+    parsed match {
+      case Right(loadSpecParams: LoadSpecParams) =>
+        assert(loadSpecParams.sources == Seq(spec1), "Session ID should not be empty")
+        assert(loadSpecParams.init == "MyInit", "Unexpected init")
+        assert(loadSpecParams.next == "MyNext", "Unexpected next")
+        assert(loadSpecParams.invariants == List("inv1", "inv2"), "Unexpected invariants")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }

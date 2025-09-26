@@ -18,6 +18,9 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       |Next ==
       |  \/ x < 3  /\ x' = x + 1
       |  \/ x > -3 /\ x' = x - 1
+      |Inv1 == x >= -3
+      |Inv2 == x <= 3
+      |Inv3 == x /= 0
       |=====================
       """.stripMargin
 
@@ -35,6 +38,23 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         assert(params.nInitTransitions == 1, "Should have one initial transition")
         assert(params.nNextTransitions == 2, "Should have two next transitions")
         assert(params.nStateInvariants == 0, "Should have no state invariants")
+        assert(params.nActionInvariants == 0, "Should have no action invariants")
+        assert(params.nTraceInvariants == 0, "Should have no trace invariants")
+        assert(!params.hasView, "Should have no view")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to load specification: $error")
+    }
+  }
+
+  test("load spec with invariants") {
+    service.loadSpec(LoadSpecParams(sources = Seq(text), invariants = List("Inv1", "Inv2", "Inv3"))) match {
+      case Right(LoadSpecResult(sessionId, _, params)) =>
+        assert(sessionId.nonEmpty, "Session ID should not be empty")
+        assert(params.nInitTransitions == 1, "Should have one initial transition")
+        assert(params.nNextTransitions == 2, "Should have two next transitions")
+        assert(params.nStateInvariants == 3, "Should have 3 invariants")
         assert(params.nActionInvariants == 0, "Should have no action invariants")
         assert(params.nTraceInvariants == 0, "Should have no trace invariants")
         assert(!params.hasView, "Should have no view")
