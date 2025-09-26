@@ -17,9 +17,10 @@ import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletRespons
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
-import java.util.concurrent.locks.ReadWriteLock
+import java.util.concurrent.atomic.AtomicInteger
+import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
-import scala.util.{Random, Try}
+import scala.util.Try
 
 /**
  * All kinds of the results that the exploration service can return.
@@ -158,14 +159,12 @@ case class ServiceError(code: Int, message: String)
  *   the service configuration, typically, constructed with [[at.forsyte.apalache.io.ConfigManager]].
  */
 class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
-  // the rwLock to prevent concurrent
-  private val rwLock: ReadWriteLock = new java.util.concurrent.locks.ReentrantReadWriteLock()
-  // a pRNG to generate session IDs, we keep it constant to make the tests deterministic
-  private val random = new Random(20250731)
   // Guice injector instantiated for each session. This injector contains objects that are
   // configured via CheckerModule. Instead of doing model checking, it just prepares
-  // ModelCheckerContext in the `remote` mode.
-  private var sessions: Map[String, Injector] = Map.empty
+  // ModelCheckerContext in the `remote` mode. We are using TrieMap to allow concurrent reads and updates.
+  private val sessions: TrieMap[String, Injector] = TrieMap.empty
+  // A counter for generating session IDs.
+  private val lastSessionId: AtomicInteger = new AtomicInteger(0)
 
   /**
    * Loads a specification based on the provided parameters.
@@ -174,9 +173,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @return
    */
   def loadSpec(params: LoadSpecParams): Either[ServiceError, LoadSpecResult] = {
-    rwLock.writeLock().lock()
-    val sessionId = random.nextInt().toHexString
-    rwLock.writeLock().unlock()
+    val sessionId = lastSessionId.incrementAndGet().toHexString
     logger.info(s"Session $sessionId: Loading specification with ${params.sources.length} sources.")
     val options = createConfigFromParams(params).get
     // call the parser
@@ -186,9 +183,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         return Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))
       case Right(_) =>
         // Successfully loaded the spec, we can access the module later
-        rwLock.writeLock().lock()
-        sessions = sessions + (sessionId -> passChainExecutor.injector)
-        rwLock.writeLock().unlock()
+        sessions.put(sessionId, passChainExecutor.injector)
     }
     // get the singleton instance of BoundedModelCheckerPass from checker
     val checkerModule = passChainExecutor.injector.getInstance(classOf[BoundedCheckerPassImpl])
@@ -229,23 +224,24 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    *   either an error or [[DisposeSpecResult]]
    */
   def disposeSpec(params: DisposeSpecParams): Either[ServiceError, DisposeSpecResult] = {
-    rwLock.writeLock().lock()
     val result =
       sessions.get(params.sessionId) match {
         case Some(injector) =>
+          // immediately remove the session, so the other threads would start anything on it
+          sessions.remove(params.sessionId)
           // get the checker context from the injector
-          injector.synchronized {
-            val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
-            checkerModule.modelCheckerContext.foreach(_.trex.dispose())
+          val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+          val checkerContext = checkerModule.modelCheckerContext
+          // lock on the checker context, so we do not access the SMT context concurrently
+          checkerContext.synchronized {
+            checkerContext.foreach(_.trex.dispose())
           }
-          sessions -= params.sessionId
           logger.info(s"Session ${params.sessionId}: Disposed.")
           Right(DisposeSpecResult(params.sessionId))
         case None =>
           Left(ServiceError(-32602, s"Session not found: ${params.sessionId}"))
       }
 
-    rwLock.writeLock().unlock()
     result
   }
 
@@ -260,14 +256,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   def assumeTransition(params: AssumeTransitionParams): Either[ServiceError, AssumeTransitionResult] = {
     val transitionId = params.transitionId
     val sessionId = params.sessionId
-    // validate the input parameters under the global lock
-    rwLock.readLock().lock()
+    // validate the input parameters
     val validationResult = sessions.get(sessionId) match {
       case Some(injector) =>
         // get the checker context from the injector
         val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
         val checkerContext = checkerModule.modelCheckerContext.get
-        // prepare the transition
+        // validate the transition ID
         val stepNo = checkerContext.trex.stepNo
         val transitions = if (stepNo == 0) {
           checkerContext.checkerInput.initTransitions
@@ -283,7 +278,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       case None =>
         Left(ServiceError(-32602, s"Session not found: $sessionId"))
     }
-    rwLock.readLock().unlock()
 
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
     validationResult
@@ -347,7 +341,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   def nextStep(params: NextStepParams): Either[ServiceError, NextStepResult] = {
     val sessionId = params.sessionId
     // validate the input parameters under the global lock
-    rwLock.readLock().lock()
     val validationResult = sessions.get(sessionId) match {
       case Some(injector) =>
         // get the checker context from the injector
@@ -358,7 +351,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       case None =>
         Left(ServiceError(-32602, s"Session not found: $sessionId"))
     }
-    rwLock.readLock().unlock()
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
     validationResult
