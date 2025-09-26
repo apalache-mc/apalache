@@ -239,7 +239,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           logger.info(s"Session ${params.sessionId}: Disposed.")
           Right(DisposeSpecResult(params.sessionId))
         case None =>
-          Left(ServiceError(-32602, s"Session not found: ${params.sessionId}"))
+          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
       }
 
     result
@@ -270,13 +270,14 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.checkerInput.nextTransitions
         }
         if (transitionId < 0 || transitionId >= transitions.size) {
-          Left(ServiceError(-32602, s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
+          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                  s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
         } else {
           Right((checkerContext, transitions(transitionId)))
         }
 
       case None =>
-        Left(ServiceError(-32602, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
     }
 
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
@@ -349,7 +350,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         Right(checkerContext)
 
       case None =>
-        Left(ServiceError(-32602, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
     }
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
@@ -433,33 +434,33 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
           case "loadSpec" =>
             new JsonParameterParser(mapper)
               .parseLoadSpec(paramsNode)
-              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.loadSpec(serviceParams))
 
           case "disposeSpec" =>
             new JsonParameterParser(mapper)
               .parseDisposeSpec(paramsNode)
-              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.disposeSpec(serviceParams))
 
           case "assumeTransition" =>
             new JsonParameterParser(mapper)
               .parseAssumeTransition(paramsNode)
-              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.assumeTransition(serviceParams))
 
           case "nextStep" =>
             new JsonParameterParser(mapper)
               .parseNextStep(paramsNode)
-              .fold(errorMessage => Left(ServiceError(-32602, errorMessage)),
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.nextStep(serviceParams))
 
           case _ =>
-            Left(ServiceError(-32601, s"Method not found: $method"))
+            Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
         }
       } catch {
         case ex: Exception =>
-          Left(ServiceError(-32603, s"Internal error: ${ex.getMessage}"))
+          Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, s"Internal error: ${ex.getMessage}"))
       }
 
     errorOrResult match {
