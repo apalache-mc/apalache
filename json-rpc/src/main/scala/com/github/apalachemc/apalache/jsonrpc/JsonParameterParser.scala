@@ -112,14 +112,8 @@ class JsonParameterParser(mapper: ObjectMapper) {
       if (invParams.sessionId.isEmpty) {
         return Left("checkInvariant parameters must contain a non-empty sessionId.")
       }
-      if (invParams.stateInvariantIds.exists(_ < 0)) {
-        return Left("stateInvariantIds parameters must contain non-negative identifiers.")
-      }
-      if (invParams.actionInvariantIds.exists(_ < 0)) {
-        return Left("actionInvariantIds parameters must contain non-negative identifiers.")
-      }
-      if (invParams.traceInvariantIds.exists(_ < 0)) {
-        return Left("traceInvariantIds parameters must contain non-negative identifiers.")
+      if (invParams.invariantId < 0) {
+        return Left("invariantId must be non-negative.")
       }
       Right(invParams)
     } catch {

@@ -78,23 +78,14 @@ case class NextStepParams(sessionId: String) extends ExplorationServiceParams
  * Parameters for checking invariants in the current state or transition.
  * @param sessionId
  *   the ID of the previously loaded specification
- * @param stateInvariantIds
- *   the IDs of state invariants to check
- * @param actionInvariantIds
- *   the IDS of action invariants to check
- * @param traceInvariantIds
- *   the IDs of trace invariants to check
- * @param fail
- *   the number of violations to find before stopping. If `0`, all violations are reported. Default value is `1`.
+ * @param invariantId
+ *   the IDs of the invariant to check
  * @param timeoutSec
  *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
  *   if `checkEnabled` is `false`.
  */
 case class CheckInvariantParams(
     sessionId: String,
-    stateInvariantIds: List[Int],
-    actionInvariantIds: List[Int],
-    traceInvariantIds: List[Int],
-    fail: Int = 1,
+    invariantId: Int,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams

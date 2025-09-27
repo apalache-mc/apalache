@@ -87,7 +87,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         nNextTransitions = checkerInput.nextTransitions.size,
         nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
         nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
-        nTraceInvariants = checkerInput.verificationConditions.traceInvariantsAndNegations.size,
         hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
 
@@ -146,8 +145,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // we can only check obvious issues with transition ID here, as the step number
         // may change after snapshot recovery
         if (transitionId < 0) {
-          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                  s"Invalid transition ID: $transitionId must be non-negative"))
+          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Invalid transition ID: $transitionId must be non-negative"))
         } else {
           Right(checkerContext)
         }
@@ -158,7 +156,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
     validationResult
-      .map { checkerContext => {
+      .map { checkerContext =>
+        {
           checkerContext.synchronized {
             var snapshotBeforeId: Integer = -1
             if (params.snapshotId >= 0) {
@@ -166,7 +165,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
               val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
               if (!recovered) {
                 return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                    s"Snapshot not found: ${params.snapshotId} in session $sessionId"))
+                        s"Snapshot not found: ${params.snapshotId} in session $sessionId"))
               }
               snapshotBeforeId = params.snapshotId
             } else {
@@ -182,7 +181,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             }
             if (transitionId < 0 || transitionId >= transitions.size) {
               return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
+                      s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
             }
             val actionExpr = transitions(transitionId)
             // Upload the transition into the SMT context.
@@ -265,6 +264,81 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   }
 
   /**
+   * Check the invariants against the current SMT context.
+   * @param params
+   *   checking parameters
+   * @return
+   *   either an error or the checking result
+   */
+  def checkInvariant(params: CheckInvariantParams): Either[ServiceError, CheckInvariantResult] = {
+    val sessionId = params.sessionId
+    val invariantId = params.invariantId
+    // validate the input parameters
+    val validationResult = sessions.get(sessionId) match {
+      case Some(injector) =>
+        // get the checker context from the injector
+        val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+        val checkerContext = checkerModule.modelCheckerContext.get
+        // check the invariant IDs, so we don't have to waste compute on obvious errors
+        val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
+        val nActionInvs = checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations.size
+        if (invariantId >= nStateInvs + nActionInvs) {
+          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                  s"Invalid invariant ID: $invariantId not in [0, ${nStateInvs + nActionInvs})"))
+        } else {
+          Right(checkerContext)
+        }
+
+      case None =>
+        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+    }
+
+    // Check the invariant
+    validationResult.map { checkerContext =>
+      checkerContext.synchronized {
+        // take a snapshot of the current context
+        val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
+        // if it's too early to check a state or action invariant, return SATISFIED
+        val stepNo = checkerContext.trex.stepNo
+        val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
+        val isStateInv = invariantId < nStateInvs
+        if (stepNo == 0 || stepNo == 1 && !isStateInv) {
+          // stepNo == 0 => Init has not been applied, so no state invariant can be violated
+          // stepNo == 1 => only Init has been applied, so no action invariant can be violated
+          logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: invariant $invariantId SATISFIED")
+          return Right(CheckInvariantResult(sessionId, InvariantStatus.SATISFIED))
+        }
+        // extract the corresponding invariant negation
+        val notInvExpr =
+          if (isStateInv) {
+            // state invariant
+            checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations(invariantId)._2
+          } else {
+            // action invariant
+            val actionInvId = invariantId - nStateInvs
+            checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations(actionInvId)._2
+          }
+        // assert the negation of the invariant
+        checkerContext.trex.assertState(notInvExpr)
+        // ...and check whether the negation is satisfiable
+        val status =
+          checkerContext.trex.sat(params.timeoutSec) match {
+            case Some(isSat) =>
+              if (isSat) InvariantStatus.VIOLATED else InvariantStatus.SATISFIED
+
+            case None =>
+              InvariantStatus.UNKNOWN
+          }
+        // recover the snapshot
+        snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
+        logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: invariant $invariantId $status")
+        // TODO: produce the counterexample in case of VIOLATED
+        CheckInvariantResult(sessionId, status)
+      }
+    }
+  }
+
+  /**
    * Produce a configuration from the parameters of the loadSpec method.
    * @param params
    *   specification parameters
@@ -297,7 +371,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             predicates = cfg.predicates.copy(
                 behaviorSpec = InitNextSpec(params.init, params.next),
                 invariants = params.invariants,
-            )
+            ),
         )
       })
   }

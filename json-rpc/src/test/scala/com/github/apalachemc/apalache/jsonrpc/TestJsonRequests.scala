@@ -149,17 +149,15 @@ class TestJsonRequests extends AnyFunSuite {
   test("parse CheckInvariantParams") {
     val input =
       s"""{"jsonrpc": "2.0", "method": "checkInvariant",
-         |"params": { "sessionId": "1a1555f8", "stateInvariantIds": [0,1], "actionInvariantIds": [2],
-         |"traceInvariantIds": [3], "timeoutSec": 300 }, "id": 1}""".stripMargin
+         |"params": { "sessionId": "1a1555f8", "invariantId": 3,
+         |"timeoutSec": 300 }, "id": 1}""".stripMargin
     val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
     val inputJson = mapper.readTree(input)
     val parsed = new JsonParameterParser(mapper).parseCheckInvariant(inputJson.path("params"))
     parsed match {
       case Right(params: CheckInvariantParams) =>
         assert(params.sessionId == "1a1555f8", "Unexpected session ID")
-        assert(params.stateInvariantIds == List(0, 1), "Unexpected stateInvariantIds")
-        assert(params.actionInvariantIds == List(2), "Unexpected actionInvariantIds")
-        assert(params.traceInvariantIds == List(3), "Unexpected traceInvariantIds")
+        assert(params.invariantId == 3, "Unexpected invariantId")
         assert(params.timeoutSec == 300, "Expected timeoutSec to be 300")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
