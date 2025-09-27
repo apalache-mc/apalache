@@ -222,9 +222,12 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     // Inv3 is violated right after Init
     service.checkInvariant(CheckInvariantParams(sessionId = sessionId, invariantId = 2)) match {
-      case Right(CheckInvariantResult(newSessionId, invariantStatus)) =>
+      case Right(CheckInvariantResult(newSessionId, invariantStatus, traceNode)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after checking invariants")
         assert(invariantStatus == InvariantStatus.VIOLATED, "Inv3 should be violated")
+        val states = traceNode.get("states")
+        assert(states.size() == 1)
+        assert(states.get(0).toString == """{"#meta":{"index":0},"x":{"#bigint":"0"}}""")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -232,9 +235,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     }
     // Inv1 is not violated right after Init
     service.checkInvariant(CheckInvariantParams(sessionId = sessionId, invariantId = 0)) match {
-      case Right(CheckInvariantResult(newSessionId, invariantStatus)) =>
+      case Right(CheckInvariantResult(newSessionId, invariantStatus, trace)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after checking invariants")
         assert(invariantStatus == InvariantStatus.SATISFIED, "Inv1 should be violated")
+        assert(trace.isNull, "There should be no trace when the invariant is satisfied")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -245,9 +249,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     // Inv3 is not violated after Next$1
     service.checkInvariant(CheckInvariantParams(sessionId = sessionId, invariantId = 2)) match {
-      case Right(CheckInvariantResult(newSessionId, invariantStatus)) =>
+      case Right(CheckInvariantResult(newSessionId, invariantStatus, trace)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after checking invariants")
         assert(invariantStatus == InvariantStatus.SATISFIED, "Inv3 should be satisfied")
+        assert(trace.isNull, "There should be no trace when the invariant is satisfied")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>

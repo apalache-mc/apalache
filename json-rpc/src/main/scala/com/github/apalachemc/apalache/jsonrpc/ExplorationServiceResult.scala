@@ -1,5 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
+import com.fasterxml.jackson.databind.JsonNode
+
 /**
  * All kinds of the results that the exploration service can return.
  */
@@ -96,5 +98,8 @@ case class NextStepResult(sessionId: String, snapshotId: Int, newStepNo: Int) ex
  *   the ID of the previously loaded specification
  * @param invariantStatus
  *   the invariant status: "SATISFIED", "VIOLATED", or "UNKNOWN" (also, in case of a timeout)
+ * @param trace
+ *   a JSON-encoded error trace that shows how the invariant is violated; it is null, if the invariant is not violated
  */
-case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantStatus.T) extends ExplorationServiceResult
+case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantStatus.T, trace: JsonNode)
+    extends ExplorationServiceResult

@@ -8,8 +8,12 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.io.lir.{ItfCounterexampleWriter, Trace}
+import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
+import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Injector
@@ -18,9 +22,11 @@ import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletRespons
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
+import java.io.StringReader
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
+import scala.collection.immutable.SortedSet
 import scala.util.Try
 
 /**
@@ -306,7 +312,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           // stepNo == 0 => Init has not been applied, so no state invariant can be violated
           // stepNo == 1 => only Init has been applied, so no action invariant can be violated
           logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: invariant $invariantId SATISFIED")
-          return Right(CheckInvariantResult(sessionId, InvariantStatus.SATISFIED))
+          return Right(CheckInvariantResult(sessionId, InvariantStatus.SATISFIED, NullNode.getInstance()))
         }
         // extract the corresponding invariant negation
         val notInvExpr =
@@ -321,21 +327,46 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // assert the negation of the invariant
         checkerContext.trex.assertState(notInvExpr)
         // ...and check whether the negation is satisfiable
-        val status =
+        val (status, jsonTrace) =
           checkerContext.trex.sat(params.timeoutSec) match {
             case Some(isSat) =>
-              if (isSat) InvariantStatus.VIOLATED else InvariantStatus.SATISFIED
+              if (isSat) {
+                val counterexample = getTrace(checkerContext)
+                // Serialize the counterexample to JSON
+                val ujsonTrace =
+                  ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
+                // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
+                val jacksonNode =
+                  new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+                (InvariantStatus.VIOLATED, jacksonNode)
+              } else {
+                (InvariantStatus.SATISFIED, NullNode.getInstance())
+              }
 
             case None =>
-              InvariantStatus.UNKNOWN
+              (InvariantStatus.UNKNOWN, NullNode.getInstance())
           }
         // recover the snapshot
         snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
         logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: invariant $invariantId $status")
-        // TODO: produce the counterexample in case of VIOLATED
-        CheckInvariantResult(sessionId, status)
+        CheckInvariantResult(sessionId, status, jsonTrace)
       }
     }
+
+  }
+
+  /**
+   * Extract a trace from the transition executor.
+   *
+   * @return
+   *   a trace with the data attached
+   */
+  private def getTrace(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): Trace[Unit] = {
+    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs.
+    val path = checkerContext.trex.decodedExecution().path
+    Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
+        path.map(_ => SortedSet[String]()).toIndexedSeq, ())
   }
 
   /**
@@ -432,7 +463,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
             new JsonParameterParser(mapper)
               .parseCheckInvariant(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.checkInvariant(serviceParams))
+                  serviceParams => service.checkInvariant(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
