@@ -352,7 +352,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         CheckInvariantResult(sessionId, status, jsonTrace)
       }
     }
-
   }
 
   /**

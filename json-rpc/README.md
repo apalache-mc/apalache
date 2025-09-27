@@ -10,40 +10,40 @@ exploration of TLA+ specifications.
 
 ## 1. Design principles
 
- - The server is designed for running on a local machine:
-   - It does not do any load balancing. If you check plenty of specs in parallel,
-     it may run out of memory.
-   - It is not meant to face the Internet. An attacker may find a way to crash it.
-     You should always run it behind a firewall.
- 
- - The server implementation is minimalistic:
-   - It implements a small number of methods that are sufficient for symbolic
+- The server is designed for running on a local machine:
+    - It does not do any load balancing. If you check plenty of specs in parallel,
+      it may run out of memory.
+    - It is not meant to face the Internet. An attacker may find a way to crash it.
+      You should always run it behind a firewall.
+
+- The server implementation is minimalistic:
+    - It implements a small number of methods that are sufficient for symbolic
       exploration.
-   - All advanced exploration techniques are implemented outside of this
+    - All advanced exploration techniques are implemented outside of this
       module, in third-party applications.
-   - The server is language-agnostic, so it can be used with any programming
+    - The server is language-agnostic, so it can be used with any programming
       language that supports JSON-RPC.
 
- - The server must be easy to test:
-   - The exploration logic is isolated in the `ExplorationService`, which
+- The server must be easy to test:
+    - The exploration logic is isolated in the `ExplorationService`, which
       does not depend on any Web technology.
-   - The parsing logic is separated from the service logic, so it can be
+    - The parsing logic is separated from the service logic, so it can be
       tested independently.
-   - The server component is a simple servlet, which can be tested with
+    - The server component is a simple servlet, which can be tested with
       anything like `curl`.
-   - No fancy web frameworks are used.
+    - No fancy web frameworks are used.
 
- - No rocket-science FP knowledge is required to understand and maintain the code.
-   It's basic Scala and old-school Java.
+- No rocket-science FP knowledge is required to understand and maintain the code.
+  It's basic Scala and old-school Java.
 
- - The server is powered by battle-tested technology, no fancy soopa-doopa Scala
-   unsupported monadic frameworks:
-   - [Jetty Server][]. Yes, it is about 30 years old.
+- The server is powered by battle-tested technology, no fancy soopa-doopa Scala
+  unsupported monadic frameworks:
+    - [Jetty Server][]. Yes, it is about 30 years old.
       It works. It is fast, simple, reliable, maintained, and is well-documented.
-   - [Jackson][]. It is fast, simple, reliable, maintained, and is well-documented.
+    - [Jackson][]. It is fast, simple, reliable, maintained, and is well-documented.
       It uses plain-old Java objects, and it supports basic Scala types. No super-advanced
       FP here.
-  
+
 ## 2. JSON-RPC methods
 
 In the following, we only describe successful responses. If an error occurs,
@@ -69,10 +69,18 @@ when loading multiple specifications in different sessions.
 {
   "method": "loadSpec",
   "params": {
-    "sources": [ <rootModuleInBase64>, <importedModule1InBase64>, ... ],
-    "init": "optional initializer for constants",
-    "next": "optional transition predicate",
-    "invariants": [ "invariant 1", ..., "invariant N" ]
+    "sources": [
+      <rootModuleInBase64>,
+      <importedModule1InBase64>,
+      ...
+    ],
+    "init": "optional-initializer-for-constants",
+    "next": "optional-transition-predicate",
+    "invariants": [
+      "invariant 1",
+      ...,
+      "invariant N"
+    ]
   }
 }
 ```
@@ -82,15 +90,15 @@ when loading multiple specifications in different sessions.
 ```json
 {
   "result": {
-    "sessionId": "<unique session identifier>",
-    "snapshotId": <snapshot identifier after loading the spec>,
-    "specParameters":{
-      "nInitTransitions": <number of Init transitions>,
-      "nNextTransitions": <number of Next transitions>,
-      "nStateInvariants": <number of state invariants>,
-      "nActionInvariants": <number of action invariants>,
-      "nTraceInvariants": <number of trace invariants>,
-      "hasView": <true if there is a view operator>
+    "sessionId": "unique-session-identifier",
+    "snapshotId": snapshot-identifier-after-loading-the-spec,
+    "specParameters": {
+      "nInitTransitions": number-of-Init-transitions,
+      "nNextTransitions": number-of-Next-transitions,
+      "nStateInvariants": number-of-state-invariants,
+      "nActionInvariants": number-of-action-invariants,
+      "nTraceInvariants": number-of-trace-invariants,
+      "hasView": true-if-there-is-a-view-operator
     }
   }
 }
@@ -114,11 +122,12 @@ VARIABLE
   x
 Init == x = 0
 Next == (x < 3 /\\ x' = x + 1) \\/ (x > -3 /\\ x' = x - 1)
+Inv3 == x /= 0
 =====================
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ]},"id":1}' 2>/dev/null | jq
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"]},"id":1}' 2>/dev/null | jq
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -128,7 +137,7 @@ curl -X POST http://localhost:8822/rpc \
     "specParameters": {
       "nInitTransitions": 1,
       "nNextTransitions": 2,
-      "nStateInvariants": 0,
+      "nStateInvariants": 1,
       "nActionInvariants": 0,
       "nTraceInvariants": 0,
       "hasView": false
@@ -149,7 +158,7 @@ identifier must have been returned by the `loadSpec` method in an earlier call.
 {
   "method": "disposeSpec",
   "params": {
-    "sessionId": "<session identifier>"
+    "sessionId": "session-identifier"
   }
 }
 ```
@@ -162,7 +171,7 @@ This identifier cannot be used in the future calls.
 ```json
 {
   "result": {
-    "sessionId": "<session identifier>"
+    "sessionId": "session-identifier"
   }
 }
 ```
@@ -193,13 +202,13 @@ must be set to the identifier of the snapshot to roll back to. If `snapshotId` i
 
 ```json
 {
-  "method":"assumeTransition",
+  "method": "assumeTransition",
   "params": {
-    "sessionId": <session identifier>,
-    "snapshotId": <optional snapshot identifier>,
-    "transitionId": <transition identifier>,
-    "checkEnabled": <check whether the transition is enabled>,
-    "timeoutSec": <timeout in seconds, or 0 for infinite>
+    "sessionId": "session-identifier",
+    "snapshotId": optional-snapshot-identifier,
+    "transitionId": transition-identifier,
+    "checkEnabled": check-if-transition-is-enabled,
+    "timeoutSec": timeout-in-seconds-or-0,
   }
 }
 ```
@@ -209,10 +218,10 @@ must be set to the identifier of the snapshot to roll back to. If `snapshotId` i
 ```json
 {
   "result": {
-    "sessionId": "<session identifier>",
-    "snapshotId": <snapshot identifier after assuming the transition>,
-    "transitionId": <transition identifier>,
-    "status": <"ENABLED" or "DISABLED" or "UNKNOWN">
+    "sessionId": "session-identifier",
+    "snapshotId": snapshot-identifier-after-assuming-transition,
+    "transitionId": transition-identifier,
+    "status": "ENABLED|DISABLED|UNKNOWN"
   }
 }
 ```
@@ -238,7 +247,7 @@ or `"UNKNOWN"`).
 {
   "method": "nextState",
   "params": {
-    "sessionId": "<session identifier>"
+    "sessionId": "session-identifier"
   }
 }
 ```
@@ -248,9 +257,9 @@ or `"UNKNOWN"`).
 ```json
 {
   "result": {
-    "sessionId": "<session identifier>",
-    "snapshotId": <snapshot identifier after assuming the transition>,
-    "newStepNo": <the number of the new step>
+    "sessionId": "session-identifier",
+    "snapshotId": snapshot-id-after-assuming-transition,
+    "newStepNo": new-step-number
   }
 }
 ```
@@ -264,8 +273,64 @@ curl -X POST http://localhost:8822/rpc \
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":3,"newStepNo":1}}
 ```
 
+### 2.5. Method checkInvariant
+
+Given a session identifier and an invariant identifier, check whether this invariant can be violated
+by a concrete execution that follows the collected symbolic path. The invariant identifier is a number
+that follows the following rules:
+
+- If `0 <= invariantId < nStateInvariants`, then the identifier refers to a state invariant.
+- If `nStateInvariants <= invariantId` and `nStateInvariants + nActionInvariants`, then the identifier refers to the
+  action invariant `invariantId - nStateInvariants`.
+
+The parameter `timeoutSec` sets the timeout for this check in seconds. If `timeout` is not set, or it is set to `0`,
+then the timeout is infinite.
+
+If the invariant is violated, then `invariantStatus` is set to `"VIOLATED"`, and the `trace` field contains a concrete
+execution that violates the invariant. This field encodes a trace in the [ITF Format][].
+
+**Input:**
+
+```json
+{
+  "method": "checkInvariant",
+  "params": {
+    "sessionId": "session-identifier",
+    "invariantId": invariant-identifier,
+    "timeoutSec": timeout-in-seconds-or-0
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "session-identifier",
+    "invariantStatus": "SATISFIED|VIOLATED|UNKNOWN",
+    "trace": trace-in-itf-or-null,
+  }
+}
+```
+
+**Example**:
+
+```sh
+curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"checkInvariant","params":{"sessionId":"1","invariantId":0},"id":3}'
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","invariantStatus":"SATISFIED"}}
+```
+
 [Jetty Server]: https://jetty.org/
+
 [Jackson]: https://github.com/FasterXML/jackson
+
 [JSON-RPC specification]: https://www.jsonrpc.org/specification
+
 [Igor Konnov]: https://konnov.phd
+
 [Thomas Pani]: https://thpani.net
+
+[ITF Format]: https://apalache-mc.org/docs/adr/015adr-trace.html
