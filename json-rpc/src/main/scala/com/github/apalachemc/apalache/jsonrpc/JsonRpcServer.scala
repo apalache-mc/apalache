@@ -283,7 +283,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
         val nActionInvs = checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations.size
         if (invariantId >= nStateInvs + nActionInvs) {
-          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
                   s"Invalid invariant ID: $invariantId not in [0, ${nStateInvs + nActionInvs})"))
         } else {
           Right(checkerContext)
@@ -427,6 +427,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
               .parseNextStep(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.nextStep(serviceParams))
+
+          case "checkInvariant" =>
+            new JsonParameterParser(mapper)
+              .parseCheckInvariant(paramsNode)
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+                serviceParams => service.checkInvariant(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
