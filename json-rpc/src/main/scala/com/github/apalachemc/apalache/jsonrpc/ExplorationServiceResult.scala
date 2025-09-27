@@ -93,9 +93,8 @@ case class NextStepResult(sessionId: String, snapshotId: Int, newStepNo: Int) ex
 /**
  * The result of checking invariants in the current state or transition.
  * @param sessionId
- *  the ID of the previously loaded specification
+ *   the ID of the previously loaded specification
  * @param invariantStatus
- *  the invariant status: "SATISFIED", "VIOLATED", or "UNKNOWN" (also, in case of a timeout)
+ *   the invariant status: "SATISFIED", "VIOLATED", or "UNKNOWN" (also, in case of a timeout)
  */
-case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantStatus.T)
-    extends ExplorationServiceResult
+case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantStatus.T) extends ExplorationServiceResult

@@ -103,8 +103,10 @@ class JsonParameterParser(mapper: ObjectMapper) {
 
   /**
    * Parses the parameters for checking invariants against the symbolic state.
-   * @param node tree node representing the JSON method parameters
-   * @return Either an error message or a [[CheckInvariantParams]] instance containing the parsed sources.
+   * @param node
+   *   tree node representing the JSON method parameters
+   * @return
+   *   Either an error message or a [[CheckInvariantParams]] instance containing the parsed sources.
    */
   def parseCheckInvariant(node: TreeNode): Either[String, CheckInvariantParams] = {
     try {

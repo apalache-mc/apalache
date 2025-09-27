@@ -8,8 +8,8 @@ import scala.collection.concurrent.TrieMap
 import scala.collection.mutable
 
 /**
- * A manager for snapshots of the model checker context, indexed by session ID. This class is using thread-safe
- * data structures.
+ * A manager for snapshots of the model checker context, indexed by session ID. This class is using thread-safe data
+ * structures.
  *
  * Each session may have multiple snapshots, as the user may want to roll back to a previous snapshot. Importantly,
  * whenever a snapshot `n` is recovered, all snapshots with IDs greater than `n` are deleted. This approach corresponds
@@ -74,7 +74,8 @@ class CheckerSnapshotsPerSession extends LazyLogging {
 
   /**
    * Forget all snapshots associated with the given session ID.
-   * @param sessionId session ID
+   * @param sessionId
+   *   session ID
    */
   def remove(sessionId: String): Unit = {
     snapshots.remove(sessionId)
