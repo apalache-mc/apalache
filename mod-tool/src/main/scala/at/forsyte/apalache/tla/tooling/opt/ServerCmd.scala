@@ -21,9 +21,9 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
   override def toConfig(): Try[Config.ApalacheConfig] = {
     super.toConfig().map { cfg =>
       val selectedServerType = serverType.toLowerCase match {
-        case "checker" => Config.CheckerServer()
-        case "explorer"  => Config.ExplorerServer()
-        case invalid   =>
+        case "checker"  => Config.CheckerServer()
+        case "explorer" => Config.ExplorerServer()
+        case invalid    =>
           logger.warn(s"Invalid server type: $invalid, using default (checker)")
           Config.CheckerServer()
       }

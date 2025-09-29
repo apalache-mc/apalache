@@ -729,9 +729,9 @@ object OptionGroup extends LazyLogging {
     def apply(server: Config.Server): Try[Server] = for {
       port <- server.port.toTry("server.port")
       serverType = server.serverType match {
-        case _: CheckerServer => CheckerServer()
-        case _: ExplorerServer  => ExplorerServer()
-        case unknown          =>
+        case _: CheckerServer  => CheckerServer()
+        case _: ExplorerServer => ExplorerServer()
+        case unknown           =>
           throw new PassOptionException(s"Unexpected server type: ${unknown.toString}")
       }
     } yield Server(
