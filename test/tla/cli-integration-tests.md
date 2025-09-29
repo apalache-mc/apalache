@@ -4169,3 +4169,25 @@ $ grep State0 test-out-dir/bigint.qnt.json/*/violation.tla
 State0 == balance = 100000000000
 $ rm -rf ./test-out-dir
 ```
+
+### JSON-RPC: explore Prisoners without errors
+
+```sh
+$ ../../script/explorer.py --inv=Inv --max-steps=10 --max-runs=10 --seed=100 MC5_Prisoners.tla PrisonersTyped.tla
+...
+Moved to step 10
+All invariants satisfied at step 10
+Specification session disposed
+Stopping Apalache server...
+```
+
+### JSON-RPC: explore Prisoners and find invariant violation
+
+```sh
+$ ../../script/explorer.py --inv=Inv --max-steps=100 --max-runs=10 --seed=200 MC5_Prisoners.tla PrisonersTyped.tla
+...
+Exploration stopped due to invariant violation: invariant_0
+Specification session disposed
+Stopping Apalache server...
+[1]
+```
