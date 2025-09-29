@@ -14,6 +14,7 @@ Example:
 """
 
 import argparse
+import base64
 import json
 import os
 import random
@@ -32,8 +33,8 @@ class ApalacheExplorer:
         self.server_process = None
         self.session_id = None
         self.current_snapshot_id = None
-        self.current_step = 0
-        self.transitions_explored = 0
+        self.nruns = 0
+        self.nsteps = 0
         self.request_id_counter = 0
 
     def start_server(self) -> bool:
@@ -125,21 +126,25 @@ class ApalacheExplorer:
             print(f"Error making RPC call to {method}: {e}")
             raise
 
-    def load_spec(self, spec_file: str, invariants: List[str]) -> bool:
+    def load_spec(self, sources: List[str], invariants: List[str]) -> bool:
         """Load a TLA+ specification."""
-        print(f"Loading specification: {spec_file}")
+        print(f"Loading specification from: {', '. join(sources)}")
 
+        sources_base64 = []
         # Read the specification file
-        try:
-            with open(spec_file, 'r', encoding='utf-8') as f:
-                spec_content = f.read()
-        except Exception as e:
-            print(f"Error reading specification file: {e}")
-            return False
+        for filename in sources:
+            try:
+                with open(filename, 'r', encoding='utf-8') as f:
+                    text = f.read()
+                    encoded = base64.b64encode(text.encode('utf-8')).decode('ascii')
+                    sources_base64.append(encoded)
+            except Exception as e:
+                print(f"Error reading specification file: {e}")
+                return False
 
         # Make the loadSpec RPC call
         params = {
-            "sources": [spec_content],
+            "sources": sources_base64,
             "init": "Init",
             "next": "Next",
             "invariants": invariants
@@ -164,19 +169,23 @@ class ApalacheExplorer:
             print(f"State invariants: {spec_params['nStateInvariants']}")
             print(f"Action invariants: {spec_params['nActionInvariants']}")
 
-            return True
+            return {
+                'ninit': spec_params['nInitTransitions'],
+                'nnext': spec_params['nNextTransitions'],
+                'snapshot_id': self.current_snapshot_id
+            }
 
         except Exception as e:
             print(f"Error loading specification: {e}")
-            return False
+            return None
 
-    def check_invariants(self, num_invariants: int) -> Optional[str]:
+    def check_invariants(self, num_invariants: int, timeout: int) -> Optional[str]:
         """Check all invariants. Returns violated invariant name or None."""
         for inv_id in range(num_invariants):
             params = {
                 "sessionId": self.session_id,
                 "invariantId": inv_id,
-                "timeoutSec": 10
+                "timeoutSec": timeout
             }
 
             try:
@@ -204,62 +213,54 @@ class ApalacheExplorer:
 
         return None
 
-    def assume_transition(self, transition_id: int) -> bool:
+    def assume_transition(self, snapshot_id: int | None, transition_id: int, timeout: int) -> bool:
         """Assume a transition and check if it's enabled."""
         params = {
             "sessionId": self.session_id,
-            "snapshotId": self.current_snapshot_id,
             "transitionId": transition_id,
             "checkEnabled": True,
-            "timeoutSec": 10
+            "timeoutSec": timeout
         }
 
-        try:
-            response = self._make_rpc_call("assumeTransition", params)
+        if snapshot_id != None:
+            params['snapshotId'] = snapshot_id
 
-            if "error" in response:
-                print(f"Error assuming transition {transition_id}: {response['error']}")
-                return False
+        response = self._make_rpc_call("assumeTransition", params)
 
-            result = response["result"]
-            status = result["status"]
-            self.current_snapshot_id = result["snapshotId"]
-
-            if status == "ENABLED":
-                print(f"Transition {transition_id}: ENABLED")
-                return True
-            elif status == "DISABLED":
-                print(f"Transition {transition_id}: DISABLED")
-                return False
-            else:  # UNKNOWN
-                print(f"Transition {transition_id}: UNKNOWN")
-                return True  # Assume it's enabled for exploration
-
-        except Exception as e:
-            print(f"Error assuming transition {transition_id}: {e}")
+        if "error" in response:
+            print(f"Error assuming transition {transition_id}: {response['error']}")
             return False
+
+        result = response["result"]
+        status = result["status"]
+        self.current_snapshot_id = result["snapshotId"]
+
+        if status == "ENABLED":
+            print(f"Transition {transition_id}: ENABLED")
+            return True
+        elif status == "DISABLED":
+            print(f"Transition {transition_id}: DISABLED")
+            return False
+        else:  # UNKNOWN
+            print(f"Transition {transition_id}: UNKNOWN")
+            return True  # Assume it's enabled for exploration
 
     def next_step(self) -> bool:
         """Move to the next step."""
         params = {"sessionId": self.session_id}
 
-        try:
-            response = self._make_rpc_call("nextStep", params)
+        response = self._make_rpc_call("nextStep", params)
 
-            if "error" in response:
-                print(f"Error moving to next step: {response['error']}")
-                return False
-
-            result = response["result"]
-            self.current_snapshot_id = result["snapshotId"]
-            self.current_step = result["newStepNo"]
-
-            print(f"Moved to step {self.current_step}")
-            return True
-
-        except Exception as e:
-            print(f"Error moving to next step: {e}")
+        if "error" in response:
+            print(f"Error moving to next step: {response['error']}")
             return False
+
+        result = response["result"]
+        self.current_snapshot_id = result["snapshotId"]
+        new_step = result["newStepNo"]
+
+        print(f"Moved to step {new_step}")
+        return True
 
     def dispose_spec(self):
         """Dispose of the current specification session."""
@@ -271,7 +272,8 @@ class ApalacheExplorer:
             except Exception as e:
                 print(f"Error disposing specification: {e}")
 
-    def explore(self, spec_file: str, invariants: List[str], max_transitions: int = 100):
+    def explore(self, sources: List[str], invariants: List[str],
+                max_steps: int = 20, max_runs: int = 100, timeout: int = 60):
         """Main exploration loop."""
         try:
             # Start server
@@ -279,54 +281,60 @@ class ApalacheExplorer:
                 return False
 
             # Load specification
-            if not self.load_spec(spec_file, invariants):
+            params = self.load_spec(sources, invariants)
+            if not params:
                 return False
 
-            print(f"\nStarting exploration (max {max_transitions} transitions)...")
+            print(f"\nStarting exploration (<= {max_runs} runs, <= {max_steps} steps each)...")
 
             # Get initial spec parameters for transition counts
             # We'll assume we get this from the loadSpec response
 
-            while self.transitions_explored < max_transitions:
-                print(f"\n--- Transition {self.transitions_explored + 1} (Step {self.current_step}) ---")
+            while self.nruns < max_runs:
+                print(f"\n--- Run {self.nruns} ---")
+                self.nsteps = 0
+                self.nruns += 1
 
-                # Determine available transitions based on current step
-                if self.current_step == 0:
-                    # Use Init transitions - we'll try different transition IDs
-                    max_transitions_to_try = 5  # Reasonable default
-                else:
-                    # Use Next transitions
-                    max_transitions_to_try = 10  # Reasonable default
+                while self.nsteps < max_steps:
+                    print(f"\n--- Step {self.nsteps} ---")
 
-                # Try to find an enabled transition
-                transition_found = False
-                for trans_id in range(max_transitions_to_try):
-                    if self.assume_transition(trans_id):
-                        transition_found = True
+                    # Determine available transitions based on current step
+                    if self.nsteps == 0:
+                        # Use Init transitions
+                        max_transitions_to_try = params['ninit']
+                    else:
+                        # Use Next transitions
+                        max_transitions_to_try = params['nnext']
+
+                    # Try to find an enabled transition by picking transitions at random
+                    ids = list(range(max_transitions_to_try))
+                    transition_found = False
+                    while len(ids) > 0 and not transition_found:
+                        trans_id = ids[random.randint(0, len(ids) - 1)]
+                        ids.remove(trans_id)
+                        snapshot_id = params['snapshot_id'] if self.nsteps == 0 else None
+                        if self.assume_transition(snapshot_id, trans_id, timeout):
+                            transition_found = True
+
+                    if not transition_found:
+                        print("Cannot extend symbolic run")
                         break
 
-                if not transition_found:
-                    print("No enabled transitions found, exploration complete")
-                    break
+                    # Move to next step
+                    if not self.next_step():
+                        print("Failed to move to next step")
+                        break
 
-                # Move to next step
-                if not self.next_step():
-                    print("Failed to move to next step, stopping exploration")
-                    break
+                    self.nsteps += 1
 
-                self.transitions_explored += 1
+                    # Check invariants after each transition
+                    num_invariants = len(invariants)
+                    violated_invariant = self.check_invariants(num_invariants, timeout)
+                    if violated_invariant:
+                        print(f"\nExploration stopped due to invariant violation: {violated_invariant}")
+                        return False
 
-                # Check invariants after each transition
-                num_invariants = len(invariants)
-                violated_invariant = self.check_invariants(num_invariants)
-                if violated_invariant:
-                    print(f"\nExploration stopped due to invariant violation: {violated_invariant}")
-                    break
-
-                print(f"All invariants satisfied at step {self.current_step}")
-
-            if self.transitions_explored >= max_transitions:
-                print(f"\nExploration completed: reached maximum of {max_transitions} transitions")
+                    print(f"All invariants satisfied at step {self.nsteps}")
 
             return True
 
@@ -353,22 +361,27 @@ Examples:
         """
     )
 
-    parser.add_argument("spec_file", help="TLA+ specification file")
-    parser.add_argument("invariants", nargs="+", help="Names of invariants to check")
+    parser.add_argument("sources", nargs="+", help="TLA+ specification files")
+    parser.add_argument("--inv", type=str, default="Inv", help="Invariant to check (default: Inv)")
     parser.add_argument("--port", type=int, default=8822, help="Server port (default: 8822)")
-    parser.add_argument("--max-transitions", type=int, default=100,
-                       help="Maximum number of transitions to explore (default: 100)")
+    parser.add_argument("--max-steps", type=int, default=20,
+                       help="Maximum steps to explore per run (default: 20)")
+    parser.add_argument("--max-runs", type=int, default=100,
+                       help="Maximum steps to explore per run (default: 100)")
+    parser.add_argument("--timeout", type=int, default=60,
+                       help="Timeout in seconds per single SMT call (default: 60)")
 
     args = parser.parse_args()
 
     # Validate spec file exists
-    if not os.path.exists(args.spec_file):
-        print(f"Error: Specification file '{args.spec_file}' not found")
-        return 1
+    for s in args.sources:
+        if not os.path.exists(s):
+            print(f"Error: Specification file '{args.s}' not found")
+            return 1
 
     # Create explorer and run
     explorer = ApalacheExplorer(port=args.port)
-    success = explorer.explore(args.spec_file, args.invariants, args.max_transitions)
+    success = explorer.explore(args.sources, [args.inv], args.max_steps, args.max_runs, args.timeout)
 
     return 0 if success else 1
 
