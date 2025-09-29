@@ -94,6 +94,7 @@
               # Testing
               pkgsOldMdx.ocamlPackages.mdx
               python39Full
+              python39Packages.requests
             ];
           };
         };
@@ -108,4 +109,3 @@
         devShell = self.packages.${system}.dev-shell;
       });
 }
-

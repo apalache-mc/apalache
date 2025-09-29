@@ -38,7 +38,11 @@ test-coverage:
 
 # Run the integration tests
 integration: package
-	pip install -r requirements.txt
+	@echo "Installing Python dependencies for integration tests..."
+	@python -m pip install --user requests || \
+	 (echo "Warning: Failed to install 'requests' module."; \
+	  echo "In Nix environments, you may need to add python3Packages.requests to your shell.nix"; \
+	  echo "Or run: nix-shell -p python3Packages.requests python3Packages.pip")
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
 # Generate fixtures needed to test quint integration
