@@ -38,6 +38,7 @@ test-coverage:
 
 # Run the integration tests
 integration: package
+	pip install -r requirements.txt
 	test/mdx-test.py --debug "$(TEST_FILTER)"
 
 # Generate fixtures needed to test quint integration
