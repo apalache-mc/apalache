@@ -489,31 +489,31 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
             new JsonParameterParser(mapper)
               .parseLoadSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.loadSpec(serviceParams))
+                  serviceParams => service.loadSpec(serviceParams))
 
           case "disposeSpec" =>
             new JsonParameterParser(mapper)
               .parseDisposeSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.disposeSpec(serviceParams))
+                  serviceParams => service.disposeSpec(serviceParams))
 
           case "assumeTransition" =>
             new JsonParameterParser(mapper)
               .parseAssumeTransition(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.assumeTransition(serviceParams))
+                  serviceParams => service.assumeTransition(serviceParams))
 
           case "nextStep" =>
             new JsonParameterParser(mapper)
               .parseNextStep(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.nextStep(serviceParams))
+                  serviceParams => service.nextStep(serviceParams))
 
           case "checkInvariant" =>
             new JsonParameterParser(mapper)
               .parseCheckInvariant(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.checkInvariant(serviceParams))
+                  serviceParams => service.checkInvariant(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
