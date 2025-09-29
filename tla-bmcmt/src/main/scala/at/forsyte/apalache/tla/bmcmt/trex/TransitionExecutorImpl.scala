@@ -93,7 +93,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    *   is disabled
    */
   override def prepareTransition(transitionNo: Int, transitionEx: TlaEx): Boolean = {
-    assert(controlState == Preparing())
+    assert(controlState == Preparing(), "Expected the executor to be in Preparing state, found: " + controlState)
     if (preparedTransitions.contains(transitionNo)) {
       throw new IllegalStateException(s"prepareTransition is called for $transitionNo two times")
     }
