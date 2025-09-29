@@ -13,16 +13,18 @@ import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
-import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import com.google.inject.Injector
 import com.typesafe.scalalogging.LazyLogging
+import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import java.io.StringReader
+import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
@@ -412,12 +414,61 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
  * @param service
  *   exploration service that processes the exploration logic
  */
-class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
+@WebServlet(urlPatterns = Array("/rpc"), asyncSupported = true)
+class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyLogging {
+
+  /** The number of threads to keep in the pool */
+  val CORE_POOL_SIZE = 16
+
+  /** The maximum number of threads to allow in the pool */
+  val MAX_POOL_SIZE = 1024
+
+  /**
+   * When the number of threads is greater than the core, this is the maximum time that excess idle threads will wait
+   * for new tasks before terminating.
+   */
+  val KEEP_ALIVE_SEC = 60L
+
+  // Our own bounded pool, to avoid blocking Jetty threads
+  private val executor = new ThreadPoolExecutor(
+      CORE_POOL_SIZE,
+      MAX_POOL_SIZE,
+      KEEP_ALIVE_SEC,
+      TimeUnit.SECONDS,
+      new LinkedBlockingQueue[Runnable](MAX_POOL_SIZE),
+      (r: Runnable) => {
+        val t = new Thread(r, "rpc-compute-pool")
+        t.setDaemon(true)
+        t
+      },
+  )
   // data mapper for JSON serialization/deserialization
   // using Jackson with Scala module for better compatibility with case classes
   private val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
 
   override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
+    // Start async and disable its (30s default) timeout for truly long jobs:
+    val async = req.startAsync
+    async.setTimeout(0) // 0 = no timeout
+    val runnable: Runnable = () => {
+      try {
+        val responseJson = processRequest(req)
+        resp.setContentType("application/json")
+        val writer = resp.getWriter
+        mapper.writeValue(writer, responseJson)
+        writer.flush()
+      } catch {
+        case ex: Exception =>
+          logger.error("Failed to process the request", ex)
+          resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR)
+      } finally {
+        async.complete()
+      }
+    }
+    executor.submit(runnable)
+  }
+
+  private def processRequest(req: HttpServletRequest): ObjectNode = {
     val input = req.getInputStream
     val requestJson = mapper.readTree(input)
 
@@ -438,31 +489,31 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
             new JsonParameterParser(mapper)
               .parseLoadSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                  serviceParams => service.loadSpec(serviceParams))
+                serviceParams => service.loadSpec(serviceParams))
 
           case "disposeSpec" =>
             new JsonParameterParser(mapper)
               .parseDisposeSpec(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                  serviceParams => service.disposeSpec(serviceParams))
+                serviceParams => service.disposeSpec(serviceParams))
 
           case "assumeTransition" =>
             new JsonParameterParser(mapper)
               .parseAssumeTransition(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                  serviceParams => service.assumeTransition(serviceParams))
+                serviceParams => service.assumeTransition(serviceParams))
 
           case "nextStep" =>
             new JsonParameterParser(mapper)
               .parseNextStep(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                  serviceParams => service.nextStep(serviceParams))
+                serviceParams => service.nextStep(serviceParams))
 
           case "checkInvariant" =>
             new JsonParameterParser(mapper)
               .parseCheckInvariant(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                  serviceParams => service.checkInvariant(serviceParams))
+                serviceParams => service.checkInvariant(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
@@ -480,8 +531,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet {
         responseJson.set[JsonNode]("result", mapper.valueToTree[JsonNode](result))
     }
 
-    resp.setContentType("application/json")
-    mapper.writeValue(resp.getOutputStream, responseJson)
+    responseJson
   }
 }
 

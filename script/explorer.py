@@ -155,7 +155,8 @@ class ApalacheExplorer:
                 self.base_url,
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=30
+                stream=True,
+                timeout=(10, None)
             )
             response.raise_for_status()
             return response.json()
