@@ -250,7 +250,7 @@ class ApalacheExplorer:
 
         return None
 
-    def assume_transition(self, snapshot_id: int | None, transition_id: int, timeout: int) -> bool:
+    def assume_transition(self, snapshot_id: Optional[int], transition_id: int, timeout: int) -> bool:
         """Assume a transition and check if it's enabled."""
         params = {
             "sessionId": self.session_id,
