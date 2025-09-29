@@ -39,7 +39,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
         Algorithm.ofString)
 
   var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
-      description = "the search algorithm: offline, incremental, remote (used by fuzzer), default: incremental")
+      description = "the search algorithm: offline, incremental, remote (used by explorer), default: incremental")
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
       description =
         s"the SMT encoding: ${SMTEncoding.OOPSLA19}, ${SMTEncoding.Arrays} (experimental), ${SMTEncoding.FunArrays} (experimental), default: ${SMTEncoding.OOPSLA19} (overrides envvar SMT_ENCODING)")

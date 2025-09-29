@@ -15,14 +15,14 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
       description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)", useEnv = true)
 
   var serverType: String = opt[String](
-      description = "the type of server to run: 'checker' (shai-grpc) or 'fuzzer' (json-rpc), default: checker",
+      description = "the type of server to run: 'checker' (shai-grpc) or 'explorer' (json-rpc), default: checker",
       default = "checker")
 
   override def toConfig(): Try[Config.ApalacheConfig] = {
     super.toConfig().map { cfg =>
       val selectedServerType = serverType.toLowerCase match {
         case "checker" => Config.CheckerServer()
-        case "fuzzer"  => Config.FuzzerServer()
+        case "explorer"  => Config.ExplorerServer()
         case invalid   =>
           logger.warn(s"Invalid server type: $invalid, using default (checker)")
           Config.CheckerServer()
@@ -40,7 +40,7 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
       case Config.CheckerServer() =>
         val server = shai.v1.RpcServer(options.server.port)
         server.main(Array())
-      case Config.FuzzerServer() =>
+      case Config.ExplorerServer() =>
         JsonRpcServerApp.run(configuration, options.server.port)
     }
 
