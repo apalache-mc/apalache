@@ -53,6 +53,12 @@ See the [JSON-RPC specification][] for more details. It is real short.
 
 This is work in progress. More methods to be added in the future.
 
+**Running the server.** To try the example below, you need to start the server first:
+
+```sh
+$ ../bin/apalache-mc server --server-type=explorer
+```
+
 ### 2.1. Method loadSpec
 
 Load a TLA+ specification from a list of base64-encoded source files.
@@ -113,8 +119,10 @@ usually needed for symbolic exploration.
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-SPEC=`cat <<EOF | base64
+$ SPEC=`cat <<EOF | base64
 ---- MODULE Inc ----
 EXTENDS Integers
 VARIABLE
@@ -127,7 +135,12 @@ Inv3 == x /= 0
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"]},"id":1}' 2>/dev/null | jq
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"]},"id":1}'
+```
+
+It should produce the following output:
+
+```json
 {
   "jsonrpc": "2.0",
   "id": 1,
@@ -178,10 +191,18 @@ This identifier cannot be used in the future calls.
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
 -H "Content-Type: application/json" \
 -d '{"jsonrpc":"2.0","method":"disposeSpec","params":{"sessionId": "1"},"id":2}'
+```
+
+It produces an output like this:
+
+```json
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1"}}
 ```
 
 ### 2.3. Method assumeTransition
@@ -230,10 +251,17 @@ snapshot.
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"assumeTransition","params":{"sessionId":"1","transitionId":0,"checkEnabled":true},"id":2}'
+```
+
+It produces the following output:
+
+```json  
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
 ```
 
@@ -268,10 +296,17 @@ or `"UNKNOWN"`).
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"nextStep","params":{"sessionId":"1"},"id":3}'
+```
+
+It produces the following output:
+
+```json
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":3,"newStepNo":1}}
 ```
 
@@ -322,10 +357,17 @@ execution that violates the invariant. This field encodes a trace in the [ITF Fo
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"checkInvariant","params":{"sessionId":"1","invariantId":0},"id":3}'
+```
+
+The output is as follows:
+
+```json
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","invariantStatus":"SATISFIED"}}
 ```
 
