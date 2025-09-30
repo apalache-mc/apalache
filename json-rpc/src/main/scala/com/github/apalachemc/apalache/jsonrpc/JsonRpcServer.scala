@@ -290,9 +290,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // check the invariant IDs, so we don't have to waste compute on obvious errors
         val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
         val nActionInvs = checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations.size
-        if (invariantId >= nStateInvs + nActionInvs) {
+        if (params.kind == InvariantKind.STATE && invariantId >= nStateInvs) {
           Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                  s"Invalid invariant ID: $invariantId not in [0, ${nStateInvs + nActionInvs})"))
+            s"Invalid invariant ID: state invariant $invariantId not in [0, $nStateInvs)"))
+        } else if (params.kind == InvariantKind.ACTION && invariantId >= nActionInvs) {
+            Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+              s"Invalid invariant ID: action invariant $invariantId not in [0, $nActionInvs)"))
         } else {
           Right(checkerContext)
         }
@@ -309,8 +312,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // if it's too early to check a state or action invariant, return SATISFIED
         val stepNo = checkerContext.trex.stepNo
         val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
-        val isStateInv = invariantId < nStateInvs
-        if (stepNo == 0 || stepNo == 1 && !isStateInv) {
+        if (stepNo == 0 || stepNo == 1 && params.kind == InvariantKind.ACTION) {
           // stepNo == 0 => Init has not been applied, so no state invariant can be violated
           // stepNo == 1 => only Init has been applied, so no action invariant can be violated
           logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: invariant $invariantId SATISFIED")
@@ -318,13 +320,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         }
         // extract the corresponding invariant negation
         val notInvExpr =
-          if (isStateInv) {
+          if (params.kind == InvariantKind.STATE) {
             // state invariant
             checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations(invariantId)._2
           } else {
             // action invariant
-            val actionInvId = invariantId - nStateInvs
-            checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations(actionInvId)._2
+            checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations(invariantId)._2
           }
         // assert the negation of the invariant
         checkerContext.trex.assertState(notInvExpr)

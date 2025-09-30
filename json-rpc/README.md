@@ -196,7 +196,9 @@ the timeout is infinite.
 To avoid an additional call, we also allow `assumeTransition` to roll back the context
 to an earlier snapshot *before* assuming the transition. In this case, the `snapshotId` parameter
 must be set to the identifier of the snapshot to roll back to. If `snapshotId` is negative
-(or not set), then no rollback is performed.
+(or not set), then no rollback is performed. When the `snapshotId` is set, the rollback is
+performed unconditionally. You have to be careful about landing in a state with the right
+snapshot.
 
 **Input:**
 
@@ -279,9 +281,12 @@ Given a session identifier and an invariant identifier, check whether this invar
 by a concrete execution that follows the collected symbolic path. The invariant identifier is a number
 that follows the following rules:
 
-- If `0 <= invariantId < nStateInvariants`, then the identifier refers to a state invariant.
-- If `nStateInvariants <= invariantId` and `nStateInvariants + nActionInvariants`, then the identifier refers to the
-  action invariant `invariantId - nStateInvariants`.
+- If `kind == "STATE"`, then `invariantId` refers to a state invariant.
+  The following constraints must be satisfied: `0 <= invariantId` and `invariantId < nStateInvariants`.
+- If `kind == "ACTION"`, then `invariantId` refers to an action invariant.
+  The following constraints must be satisfied: `0 <= invariantId` and
+  `invariantId < nActionInvariants`.
+- If `kind` is not set, then `invariantId` refers to a state invariant.
 
 The parameter `timeoutSec` sets the timeout for this check in seconds. If `timeout` is not set, or it is set to `0`,
 then the timeout is infinite.
@@ -297,6 +302,7 @@ execution that violates the invariant. This field encodes a trace in the [ITF Fo
   "params": {
     "sessionId": "session-identifier",
     "invariantId": invariant-identifier,
+    "kind": "STATE|ACTION",
     "timeoutSec": timeout-in-seconds-or-0
   }
 }

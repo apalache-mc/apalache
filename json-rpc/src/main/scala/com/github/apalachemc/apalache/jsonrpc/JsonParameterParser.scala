@@ -117,6 +117,9 @@ class JsonParameterParser(mapper: ObjectMapper) {
       if (invParams.invariantId < 0) {
         return Left("invariantId must be non-negative.")
       }
+      if (invParams.kind != InvariantKind.STATE && invParams.kind != InvariantKind.ACTION) {
+        return Left("kind must be either 'STATE' or 'ACTION'.")
+      }
       Right(invParams)
     } catch {
       case e: Exception =>

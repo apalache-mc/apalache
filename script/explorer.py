@@ -210,6 +210,8 @@ class ApalacheExplorer:
             return {
                 'ninit': spec_params['nInitTransitions'],
                 'nnext': spec_params['nNextTransitions'],
+                'nstate': spec_params['nStateInvariants'],
+                'naction': spec_params['nActionInvariants'],
                 'snapshot_id': self.current_snapshot_id
             }
 
@@ -217,12 +219,14 @@ class ApalacheExplorer:
             print(f"Error loading specification: {e}")
             return None
 
-    def check_invariants(self, num_invariants: int, timeout: int) -> Optional[str]:
+    def check_invariants(self, nstate: int, naction: int, timeout: int) -> Optional[str]:
         """Check all invariants. Returns violated invariant name or None."""
-        for inv_id in range(num_invariants):
+        for (kind, inv_id) in [('STATE', i) for i in range(nstate)] + \
+                      [('ACTION', i) for i in range(naction)]:
             params = {
                 "sessionId": self.session_id,
                 "invariantId": inv_id,
+                "kind": kind,
                 "timeoutSec": timeout
             }
 
@@ -366,8 +370,8 @@ class ApalacheExplorer:
                     self.nsteps += 1
 
                     # Check invariants after each transition
-                    num_invariants = len(invariants)
-                    violated_invariant = self.check_invariants(num_invariants, timeout)
+                    violated_invariant = \
+                        self.check_invariants(params['nstate'], params['naction'], timeout)
                     if violated_invariant:
                         print(f"\nExploration stopped due to invariant violation: {violated_invariant}")
                         return False

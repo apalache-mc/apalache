@@ -3,6 +3,15 @@ package com.github.apalachemc.apalache.jsonrpc
 sealed abstract class ExplorationServiceParams
 
 /**
+ * The kind of invariant to check: state or action.
+ */
+object InvariantKind {
+  type T = String
+  val STATE = "STATE"
+  val ACTION = "ACTION"
+}
+
+/**
  * Parameters for loading a specification in the JSON-RPC server.
  * @param sources
  *   A sequence of specification modules, each encoded in base64. The head must be the root module, and the rest are
@@ -80,6 +89,8 @@ case class NextStepParams(sessionId: String) extends ExplorationServiceParams
  *   the ID of the previously loaded specification
  * @param invariantId
  *   the IDs of the invariant to check
+ * @param kind
+ *  the kind of the invariant to check: "STATE" or "ACTION"
  * @param timeoutSec
  *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
  *   if `checkEnabled` is `false`.
@@ -87,5 +98,6 @@ case class NextStepParams(sessionId: String) extends ExplorationServiceParams
 case class CheckInvariantParams(
     sessionId: String,
     invariantId: Int,
+    kind: InvariantKind.T = InvariantKind.STATE,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
