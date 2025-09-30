@@ -53,7 +53,8 @@ See the [JSON-RPC specification][] for more details. It is real short.
 
 This is work in progress. More methods to be added in the future.
 
-**Running the server.** To try the example below, you need to start the server first:
+**Running the server.** To try the examples below, you need to start the server
+first:
 
 ```sh
 $ ../bin/apalache-mc server --server-type=explorer
@@ -68,6 +69,12 @@ The solver does not consume much memory after loading the specification.
 However, it may consume a lot of memory when checking the specification
 in the subsequent calls. Hence, you should be mindful of the memory
 when loading multiple specifications in different sessions.
+
+**Effect.** The server creates a new session and stores all the necessary
+state in memory. The specification is loaded, parsed, type-checked,
+preprocessed, etc. If there is a constant initializer, it is applied to the
+SMT context. The server returns a unique session identifier, which should
+be used in subsequent calls to refer to this session.
 
 **Input:**
 
@@ -165,6 +172,9 @@ Dispose the state that is associated with a session, including the SMT solver.
 You should call this method when you are done with the session. The session
 identifier must have been returned by the `loadSpec` method in an earlier call.
 
+**Effect.** The server removes all the state that is associated with the
+session identifier. No further calls should be made with this session identifier.
+
 **Input:**
 
 ```json
@@ -221,6 +231,17 @@ must be set to the identifier of the snapshot to roll back to. If `rollbackToSna
 performed unconditionally. You have to be careful about landing in a state with the right
 snapshot.
 
+**Precondition.** This method should be called once before calling `nextState`, unless
+the previous call to `assumeTransition` returned with the status `"DISABLED"`.
+
+**Effect.** If `rollbackToSnapshotId >= 0`, the model checker context is rolled back
+to the snapshot with `rollbackToSnapshotId`. Then, the transition with `transitionId`
+is prepared in the SMT context, and the corresponding constraints are added to the
+context. Unless the method returns with the status `"DISABLED"`, the context remains
+modified after the call. If the method returns with the status `"DISABLED"`, then
+the context is rolled back to the latest snapshot (either the one before the call,
+or the one specified by `rollbackToSnapshotId`).
+
 **Input:**
 
 ```json
@@ -242,7 +263,7 @@ snapshot.
 {
   "result": {
     "sessionId": "session-identifier",
-    "rollbackToSnapshotId": snapshot-identifier-after-assuming-transition,
+    "snapshotId": new-snapshot-id,
     "transitionId": transition-identifier,
     "status": "ENABLED|DISABLED|UNKNOWN"
   }
@@ -271,6 +292,15 @@ Given a session identifier, switch to the next symbolic state. This method shoul
 only after the `assumeTransition` method was called successfully (with the status `"ENABLED"`
 or `"UNKNOWN"`).
 
+**Precondition.** This method should be called after `assumeTransition` that returned with the status
+`"ENABLED"` or `"UNKNOWN"`. If the last call to `assumeTransition` returned with the status
+`"DISABLED"`, then `nextState` produces an error.
+
+**Effect.** This method renamed the primed states variables such `x'` to unprimed variables
+such as `x`. It does not add any new constraints to the SMT context. Hence, if the constraints
+were satisfiable before the call, they remain satisfiable after the call. To accommodate for
+new constraints, `nextStep` takes a new snapshot.
+
 **Input:**
 
 ```json
@@ -288,7 +318,7 @@ or `"UNKNOWN"`).
 {
   "result": {
     "sessionId": "session-identifier",
-    "snapshotId": snapshot-id-after-assuming-transition,
+    "snapshotId": new-snapshot-id,
     "newStepNo": new-step-number
   }
 }
@@ -328,6 +358,13 @@ then the timeout is infinite.
 
 If the invariant is violated, then `invariantStatus` is set to `"VIOLATED"`, and the `trace` field contains a concrete
 execution that violates the invariant. This field encodes a trace in the [ITF Format][].
+
+**Precondition.** State invariants must be checked after `nextState`, and action
+invariants must be checked between a call to `assumeTransition` and a subsequent
+call to `nextState`.
+
+**Effect.** This method temporarily changes the model checker context. After
+checking the invariant, the context is rolled back to the state before the call.
 
 **Input:**
 
@@ -369,6 +406,131 @@ The output is as follows:
 
 ```json
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","invariantStatus":"SATISFIED"}}
+```
+
+### 2.6. Method query
+
+Given a session identifier, query the current context for values of several kinds:
+
+ - `"TRACE"`: A concrete trace that follows the symbolic path constructed so far.
+   There may be multiple such traces. This call returns the trace that
+   was found by the SMT solver.
+ - `"VIEW"`: The value of the view operator. The name of this operator must be
+   specified in the `view` field of the `loadSpec` method. There may be multiple
+   such values. This call returns the view of the model that was found by the
+   SMT solver.
+ - TBD: More kinds to be added in the future.
+
+**Precondition.** This method is successful only if the current context has a
+model. Otherwise, the result is undefined. Below are the conditions under which the
+model is guaranteed to exist:
+ - The last method call was `assumeTransition` with the flag `checkEnabled`
+   set to true, and it returned the status `"ENABLED"`. 
+ - The last method call was `nextState`, and it was called after
+   `assumeTransition` as above.
+ - The last method call was `nextView` (see below), and it returned with the
+   status `"SATISFIED"`.
+
+**Effect.** This method does not change the current model checker context.
+It does not require a rollback.
+
+**Input:**
+
+```json
+{
+  "method": "query",
+  "params": {
+    "sessionId": "session-identifier",
+    "kinds": [ kind1, kind2, ... ]
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "session-identifier",
+    "trace": trace-in-itf-or-null,
+    "view": view-in-itf-or-null
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","kinds":["VIEW"]},"id":5}'
+```
+
+The output is as follows:
+
+```json
+TODO
+```
+
+### 2.7. Method nextView
+
+Given a session identifier, find a view that is different from the one in the
+current context. This method requires a call to the SMT solver, so it may take
+some time. The parameter `timeoutSec` sets the timeout for this check in seconds.
+If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
+If `nextView` returns with the status `"SATISFIED"`, then the current context
+has a model, and the view can be obtained by calling the `query` method.
+
+**Precondition.** The `loadSpec` method must have been called with the parameter
+`view`. This method is successful only if the current context has a model.
+Otherwise, the result is undefined. For details, see the precondition of the
+`query` method.
+
+**Effect.** This method changes the SMT context. It adds a constraint that excludes
+the current value of the view operator. To prevent this constraint from propagating
+into the next states, once you are done with enumerating the views, you should
+roll back to the snapshot before the first call to `nextView` (e.g., to the snapshot
+returned by `nextState`).
+
+**Input:**
+
+```json
+{
+  "method": "nextView",
+  "params": {
+    "sessionId": "session-identifier",
+    "timeoutSec": timeout-in-seconds-or-0
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "session-identifier",
+    "status": (SATISFIED|VIOLATED|UNKNOWN)
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","timeoutSec":10},"id":6}'
+```
+
+The output is as follows:
+
+```json
+TODO
 ```
 
 [Jetty Server]: https://jetty.org/
