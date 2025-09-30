@@ -447,7 +447,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
   private val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
 
   override def doPost(req: HttpServletRequest, resp: HttpServletResponse): Unit = {
-    // Start async and disable its (30s default) timeout for truly long jobs:
+    // Start an asynchronous task, as some of the SMT-related requests may take hours:
     val async = req.startAsync
     async.setTimeout(0) // 0 = no timeout
     val runnable: Runnable = () => {
@@ -465,6 +465,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
         async.complete()
       }
     }
+    // submit the task to our pool, so Jetty can continue serving other requests
     executor.submit(runnable)
   }
 
