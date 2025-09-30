@@ -22,12 +22,15 @@ object InvariantKind {
  *   the name of the next-state predicate. Default is "Next".
  * @param invariants
  *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
+ * @param view
+ *  an optional name of a view to preprocess and expose for evaluation. Default is `None`.
  */
 case class LoadSpecParams(
     sources: Seq[String],
     init: String = "Init",
     next: String = "Next",
-    invariants: List[String] = List())
+    invariants: List[String] = List(),
+    view: Option[String] = None)
     extends ExplorationServiceParams
 
 /**

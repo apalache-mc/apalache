@@ -399,10 +399,11 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                 // TODO: propagate from LoadSpecParams
                 timeoutSmtSec = 0,
             ),
-            // TODO: this is the minimal setup for doing anything useful
+            // TODO: add other options
             predicates = cfg.predicates.copy(
                 behaviorSpec = InitNextSpec(params.init, params.next),
                 invariants = params.invariants,
+                view = params.view,
             ),
         )
       })

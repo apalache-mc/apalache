@@ -29,12 +29,10 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    *   an input module
    * @param invName
    *   name of an invariant
-   * @param optViewName
-   *   optional name of a state view
    * @return
    *   a transformed module
    */
-  def gen(module: TlaModule, invName: String, optViewName: Option[String] = None): TlaModule = {
+  def gen(module: TlaModule, invName: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
     val newModule =
@@ -52,12 +50,12 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
               throw new TlaInputError(message, Some(inv.body.ID))
           }
 
-        case Some(traceInv @ TlaOperDecl(_, params @ List(OperParam(_, 0)), body)) =>
+        case Some(traceInv@TlaOperDecl(_, params@List(OperParam(_, 0)), body)) =>
           // a trace invariant
           if (TlaLevelConst != levelFinder.getLevelOfDecl(traceInv)) {
             throw new TlaInputError(
-                s"Trace invariant $invName should not refer to state variables or use action/temporal operators",
-                Some(body.ID))
+              s"Trace invariant $invName should not refer to state variables or use action/temporal operators",
+              Some(body.ID))
           }
           assertTraceInvType(module, traceInv)
           val copy = DeepCopy(tracker)
@@ -86,27 +84,37 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
           throw new TlaInputError(s"Invariant candidate $invName not found", None)
       }
 
-    if (optViewName.isEmpty) {
-      newModule
-    } else {
-      newModule.declarations.find(d => optViewName.contains(d.name)) match {
-        case Some(decl @ TlaOperDecl(name, params, body)) =>
-          if (params.nonEmpty) {
-            val msg = s"Expected state view $name to have no parameters, found: ${params.size} parameters"
-            throw new MalformedTlaError(msg, body)
-          }
-          val copy = DeepCopy(tracker)
-          val viewDecl =
-            TlaOperDecl(NormalizedNames.VC_VIEW, params, copy.deepCopyEx(body))(decl.typeTag)
-          TlaModule(newModule.name, newModule.declarations :+ viewDecl)
+    newModule
+  }
 
-        case Some(decl @ _) =>
-          val msg = s"Expected state view ${decl.name} to be an operator, found: " + decl
-          throw new MalformedTlaError(msg, NullEx)
+  /**
+   * Given a module and the name of a view operator, normalize this operator as `VCView$0` in the module.
+   *
+   * @param module
+   *   an input module
+   * @param viewName
+   *   name of the view operator
+   * @return
+   *   a transformed module
+   */
+  def genView(module: TlaModule, viewName: String): TlaModule = {
+    module.declarations.find(d => d.name == viewName) match {
+      case Some(decl @ TlaOperDecl(name, params, body)) =>
+        if (params.nonEmpty) {
+          val msg = s"Expected state view $name to have no parameters, found: ${params.size} parameters"
+          throw new MalformedTlaError(msg, body)
+        }
+        val copy = DeepCopy(tracker)
+        val viewDecl =
+          TlaOperDecl(NormalizedNames.VC_VIEW, params, copy.deepCopyEx(body))(decl.typeTag)
+        TlaModule(module.name, module.declarations :+ viewDecl)
 
-        case None =>
-          throw new MalformedTlaError(s"State view ${optViewName.get} not found", NullEx)
-      }
+      case Some(decl @ _) =>
+        val msg = s"Expected state view ${decl.name} to be an operator, found: " + decl
+        throw new MalformedTlaError(msg, NullEx)
+
+      case None =>
+        throw new MalformedTlaError(s"State view $viewName not found", NullEx)
     }
   }
 

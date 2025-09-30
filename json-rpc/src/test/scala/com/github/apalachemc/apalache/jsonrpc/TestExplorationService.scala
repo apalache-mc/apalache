@@ -22,6 +22,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       |Inv2 == x <= 3
       |Inv3 == x /= 0
       |Inv4 == x' - x = 1 \/ x' - x = -1
+      |View == (x = 0)
       |=====================
       """.stripMargin
 
@@ -57,6 +58,22 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         assert(params.nStateInvariants == 3, "Should have 3 invariants")
         assert(params.nActionInvariants == 1, "Should have 1 action invariant")
         assert(!params.hasView, "Should have no view")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to load specification: $error")
+    }
+  }
+
+  test("load spec with a view") {
+    service.loadSpec(LoadSpecParams(sources = Seq(spec1), view = Some("View"))) match {
+      case Right(LoadSpecResult(sessionId, _, params)) =>
+        assert(sessionId.nonEmpty, "Session ID should not be empty")
+        assert(params.nInitTransitions == 1, "Should have one initial transition")
+        assert(params.nNextTransitions == 2, "Should have two next transitions")
+        assert(params.nStateInvariants == 0, "Should have 0 state invariants")
+        assert(params.nActionInvariants == 0, "Should have 0 action invariants")
+        assert(params.hasView, "Should have a view")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
