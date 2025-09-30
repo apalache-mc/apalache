@@ -186,6 +186,32 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
+  test("sequence 0-0-0 then query") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 =
+      AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 0, checkEnabled = true)
+    for (_ <- 0 until 3) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    service.query(QueryParams(sessionId = sessionId, kinds = List("TRACE"))) match {
+      case Right(QueryResult(newSessionId, trace, view)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after querying")
+        assert(view.isNull, "There should be no view")
+        assert(!trace.isNull, "Trace should not be empty")
+        val states = trace.get("states")
+        assert(states.size() == 3)
+        assert(states.get(0).toString == """{"#meta":{"index":0},"x":{"#bigint":"0"}}""")
+        assert(states.get(1).toString == """{"#meta":{"index":1},"x":{"#bigint":"1"}}""")
+        assert(states.get(2).toString == """{"#meta":{"index":2},"x":{"#bigint":"2"}}""")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
   test("sequence 0-0-0-0-rollback-0-0-0-0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     val sessionId = specResult.sessionId

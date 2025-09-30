@@ -169,4 +169,20 @@ class TestJsonRequests extends AnyFunSuite {
         fail(s"Failed to load specification: $error")
     }
   }
+
+  test("parse QueryParams") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "query",
+         |"params": { "sessionId": "1a1555f8", "kinds": ["VIEW", "TRACE"] }, "id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseQuery(inputJson.path("params"))
+    parsed match {
+      case Right(params: QueryParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.kinds == List(QueryKind.VIEW, QueryKind.TRACE), "Unexpected kinds")
+      case Left(error) =>
+        fail(s"Failed to load specification: $error")
+    }
+  }
 }

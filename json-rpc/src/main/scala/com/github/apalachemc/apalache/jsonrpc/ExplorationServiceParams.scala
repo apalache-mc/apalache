@@ -12,6 +12,15 @@ object InvariantKind {
 }
 
 /**
+ * The kinds of values to query.
+ */
+object QueryKind {
+  type T = String
+  val VIEW = "VIEW"
+  val TRACE = "TRACE"
+}
+
+/**
  * Parameters for loading a specification in the JSON-RPC server.
  * @param sources
  *   A sequence of specification modules, each encoded in base64. The head must be the root module, and the rest are
@@ -103,4 +112,16 @@ case class CheckInvariantParams(
     invariantId: Int,
     kind: InvariantKind.T = InvariantKind.STATE,
     timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * Parameters for checking invariants in the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param kinds
+ *   the kinds of the values to query: "VIEW" or "TRACE"
+ */
+case class QueryParams(
+    sessionId: String,
+    kinds: List[InvariantKind.T] = List())
     extends ExplorationServiceParams

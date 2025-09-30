@@ -103,3 +103,14 @@ case class NextStepResult(sessionId: String, snapshotId: Int, newStepNo: Int) ex
  */
 case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantStatus.T, trace: JsonNode)
     extends ExplorationServiceResult
+
+/**
+ * The result of querying the current symbolic context.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param trace
+ *   a JSON-encoded trace, if it was requested; otherwise, it is null
+ * @param view
+ *   a JSON-encoded view, if it was requested; otherwise, it is null
+ */
+case class QueryResult(sessionId: String, trace: JsonNode, view: JsonNode) extends ExplorationServiceResult

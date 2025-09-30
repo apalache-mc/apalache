@@ -333,14 +333,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.trex.sat(params.timeoutSec) match {
             case Some(isSat) =>
               if (isSat) {
-                val counterexample = getTrace(checkerContext)
-                // Serialize the counterexample to JSON
-                val ujsonTrace =
-                  ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
-                // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
-                val jacksonNode =
-                  new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
-                (InvariantStatus.VIOLATED, jacksonNode)
+                (InvariantStatus.VIOLATED, getTraceInJson(checkerContext))
               } else {
                 (InvariantStatus.SATISFIED, NullNode.getInstance())
               }
@@ -354,6 +347,57 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         CheckInvariantResult(sessionId, status, jsonTrace)
       }
     }
+  }
+
+  /**
+   * Query for values.
+   *
+   * @param params
+   *   the parameters object that contains the session ID
+   * @return
+   *   either an error or [[QueryResult]]
+   */
+  def query(params: QueryParams): Either[ServiceError, QueryResult] = {
+    val sessionId = params.sessionId
+    // validate the input parameters under the global lock
+    val validationResult = sessions.get(sessionId) match {
+      case Some(injector) =>
+        // get the checker context from the injector
+        val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+        val checkerContext = checkerModule.modelCheckerContext.get
+        Right(checkerContext)
+
+      case None =>
+        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+    }
+
+    // Roll to the next step. Make sure that we do not update the SMT context concurrently.
+    validationResult.map { checkerContext =>
+      checkerContext.synchronized {
+        val traceInJson = if (params.kinds.contains("TRACE")) {
+          getTraceInJson(checkerContext)
+        } else {
+          NullNode.getInstance()
+        }
+        // TODO: implement VIEW
+        QueryResult(sessionId, trace = traceInJson, view = NullNode.getInstance())
+      }
+    }
+  }
+
+    /**
+     * Extract a trace from the transition executor and serialize it to Jackson JSON.
+     *
+     * @return
+     *   a JSON-encoded trace
+     */
+  private def getTraceInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): JsonNode = {
+    val counterexample = getTrace(checkerContext)
+    // Serialize the counterexample to JSON
+    val ujsonTrace =
+      ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
+    // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
+    new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
   }
 
   /**
@@ -516,6 +560,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
               .parseCheckInvariant(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.checkInvariant(serviceParams))
+
+          case "query" =>
+            new JsonParameterParser(mapper)
+              .parseQuery(paramsNode)
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+                serviceParams => service.query(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
