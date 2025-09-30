@@ -194,9 +194,9 @@ sets the timeout for this check in seconds. If `timeout` is not set, or it is se
 the timeout is infinite.
 
 To avoid an additional call, we also allow `assumeTransition` to roll back the context
-to an earlier snapshot *before* assuming the transition. In this case, the `snapshotId` parameter
-must be set to the identifier of the snapshot to roll back to. If `snapshotId` is negative
-(or not set), then no rollback is performed. When the `snapshotId` is set, the rollback is
+to an earlier snapshot *before* assuming the transition. In this case, the `rollbackToSnapshotId` parameter
+must be set to the identifier of the snapshot to roll back to. If `rollbackToSnapshotId` is negative
+(or not set), then no rollback is performed. When the `rollbackToSnapshotId` is set, the rollback is
 performed unconditionally. You have to be careful about landing in a state with the right
 snapshot.
 
@@ -207,7 +207,7 @@ snapshot.
   "method": "assumeTransition",
   "params": {
     "sessionId": "session-identifier",
-    "snapshotId": optional-snapshot-identifier,
+    "rollbackToSnapshotId": optional-snapshot-identifier,
     "transitionId": transition-identifier,
     "checkEnabled": check-if-transition-is-enabled,
     "timeoutSec": timeout-in-seconds-or-0,
@@ -221,7 +221,7 @@ snapshot.
 {
   "result": {
     "sessionId": "session-identifier",
-    "snapshotId": snapshot-identifier-after-assuming-transition,
+    "rollbackToSnapshotId": snapshot-identifier-after-assuming-transition,
     "transitionId": transition-identifier,
     "status": "ENABLED|DISABLED|UNKNOWN"
   }

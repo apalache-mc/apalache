@@ -265,7 +265,7 @@ class ApalacheExplorer:
         }
 
         if snapshot_id != None:
-            params['snapshotId'] = snapshot_id
+            params['rollbackToSnapshotId'] = snapshot_id
 
         response = self._make_rpc_call("assumeTransition", params)
 

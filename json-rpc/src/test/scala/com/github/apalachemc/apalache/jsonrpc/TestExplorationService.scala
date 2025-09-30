@@ -84,7 +84,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
 
   test("assume transition 0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
-    service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, snapshotId = -1,
+    service.assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, rollbackToSnapshotId = -1,
             transitionId = 0)) match {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == specResult.sessionId, "Session ID should remain the same after assuming transition")
@@ -100,7 +100,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   test("next step") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     assert(service
-          .assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, snapshotId = -1, transitionId = 0))
+          .assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, rollbackToSnapshotId = -1, transitionId = 0))
           .isRight, "Assuming transition 0 should succeed")
     service.nextStep(NextStepParams(sessionId = specResult.sessionId)) match {
       case Right(NextStepResult(newSessionId, _, newStepNo)) =>
@@ -114,7 +114,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   test("sequence 0-0-0-0-0 (disabled)") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     val sessionId = specResult.sessionId
-    val params = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
+    val params = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 0, checkEnabled = true)
     // Init$0 is enabled, Next$0 is enabled 3 times, and then disabled
     for (_ <- 0 until 4) {
       service.assumeTransition(params) match {
@@ -143,8 +143,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   test("sequence 0-0-0-1-1-0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     val sessionId = specResult.sessionId
-    val t0 = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
-    val t1 = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 1, checkEnabled = true)
+    val t0 = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 0, checkEnabled = true)
+    val t1 = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 1, checkEnabled = true)
     for (_ <- 0 until 3) {
       assert(service.assumeTransition(t0).isRight)
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
@@ -168,7 +168,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   test("sequence 0-0-0-0-rollback-0-0-0-0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     val sessionId = specResult.sessionId
-    val params = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
+    val params = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 0, checkEnabled = true)
     // Init$0 is enabled, Next$0 is enabled 3 times
     for (_ <- 0 until 4) {
       service.assumeTransition(params) match {
@@ -196,7 +196,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     // Now we roll back to the snapshot right after loading the spec.
     // As a result, we should be able to assume transition 0 four times again.
     // We have to be careful to recover the snapshot only once.
-    val paramsRecover = AssumeTransitionParams(sessionId = sessionId, snapshotId = specResult.snapshotId,
+    val paramsRecover = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = specResult.snapshotId,
         transitionId = 0, checkEnabled = true)
     // Init$0
     assume(service.assumeTransition(paramsRecover).map(_.status == TransitionStatus.ENABLED) == Right(true),
@@ -216,8 +216,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       .toOption
       .get
     val sessionId = specResult.sessionId
-    val init = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 0, checkEnabled = true)
-    val next1 = AssumeTransitionParams(sessionId = sessionId, snapshotId = -1, transitionId = 1, checkEnabled = true)
+    val init = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 0, checkEnabled = true)
+    val next1 = AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 1, checkEnabled = true)
     assert(service.assumeTransition(init).isRight)
     assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     // Inv3 is violated right after Init

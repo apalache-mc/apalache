@@ -168,14 +168,14 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         {
           checkerContext.synchronized {
             var snapshotBeforeId: Integer = -1
-            if (params.snapshotId >= 0) {
+            if (params.rollbackToSnapshotId >= 0) {
               // try to recover the snapshot
-              val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
+              val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.rollbackToSnapshotId)
               if (!recovered) {
                 return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                        s"Snapshot not found: ${params.snapshotId} in session $sessionId"))
+                        s"Snapshot not found: ${params.rollbackToSnapshotId} in session $sessionId"))
               }
-              snapshotBeforeId = params.snapshotId
+              snapshotBeforeId = params.rollbackToSnapshotId
             } else {
               // take a snapshot of the current context
               snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)

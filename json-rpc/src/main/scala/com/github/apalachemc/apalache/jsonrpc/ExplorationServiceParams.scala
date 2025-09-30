@@ -41,7 +41,7 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  * Parameters for preparing a symbolic transition in the solver context.
  * @param sessionId
  *   the ID of the previously loaded specification
- * @param snapshotId
+ * @param rollbackToSnapshotId
  *   the snapshot ID for recovering the context before the transition is assumed. If it is negative, no snapshot
  *   recovery is performed.
  * @param transitionId
@@ -56,23 +56,23 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  */
 case class AssumeTransitionParams(
     sessionId: String,
-    snapshotId: Int = -1,
+    rollbackToSnapshotId: Int = -1,
     transitionId: Int,
     checkEnabled: Boolean,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
 
 object AssumeTransitionParams {
-  def apply(sessionId: String, snapshotId: Int, transitionId: Int): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, snapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
+  def apply(sessionId: String, rollbackToSnapshotId: Int, transitionId: Int): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
   }
 
   def apply(
       sessionId: String,
-      snapshotId: Int,
+      rollbackToSnapshotId: Int,
       transitionId: Int,
       checkEnabled: Boolean): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, snapshotId, transitionId, checkEnabled, timeoutSec = 0)
+    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled, timeoutSec = 0)
   }
 }
 
