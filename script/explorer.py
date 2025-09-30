@@ -21,13 +21,30 @@ import base64
 import json
 import os
 import random
-import requests
 import subprocess
 import sys
 import time
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
+# Check for requests module and provide helpful error message
+try:
+    import requests
+except ImportError:
+    print("Error: The 'requests' module is required but not installed.")
+    print("Please install it using one of the following commands:")
+    print("  pip install requests")
+    print("  pip3 install requests")
+    print("  python -m pip install requests")
+    print("  python3 -m pip install requests")
+    print("")
+    print("Or install all dependencies from the project root:")
+    print("  pip install -r requirements.txt")
+    print("")
+    print("In Nix environments, you may need to:")
+    print("  - Add python3Packages.requests to your shell.nix or flake.nix")
+    print("  - Or run: nix-shell -p python3Packages.requests python3Packages.pip")
+    sys.exit(1)
 
 class ApalacheExplorer:
     def __init__(self, port: int = 8822):
