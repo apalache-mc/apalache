@@ -45,6 +45,8 @@ class IncrementalExecutionContext(val rewriter: SymbStateRewriter)
     }
 
     rewriter.pop(nPops)
+    // Push immediately, so we cannot damage the recovered snapshot by pushing additional constraints to it.
+    rewriter.push()
   }
 
   /**

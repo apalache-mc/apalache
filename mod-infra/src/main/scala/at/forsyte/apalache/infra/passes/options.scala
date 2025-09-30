@@ -1,7 +1,7 @@
 package at.forsyte.apalache.infra.passes.options
 
 import at.forsyte.apalache.infra.PassOptionException
-import at.forsyte.apalache.infra.passes.options.Config.{CheckerServer, FuzzerServer, ServerType}
+import at.forsyte.apalache.infra.passes.options.Config.{CheckerServer, ExplorerServer, ServerType}
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.tla.lir.Feature
@@ -236,8 +236,8 @@ object Config {
   }
 
   sealed abstract class ServerType
-  case class FuzzerServer() extends ServerType {
-    override def toString: String = "fuzzer"
+  case class ExplorerServer() extends ServerType {
+    override def toString: String = "explorer"
   }
   case class CheckerServer() extends ServerType {
     override def toString: String = "checker"
@@ -249,7 +249,7 @@ object Config {
    * @param port
    *   the port to serve requests from
    * @param serverType
-   *   the type of server to run, either a fuzzer or a checker server
+   *   the type of server to run, either an explorer or a checker server
    */
   case class Server(
       port: Option[Int] = Some(8822),
@@ -729,9 +729,9 @@ object OptionGroup extends LazyLogging {
     def apply(server: Config.Server): Try[Server] = for {
       port <- server.port.toTry("server.port")
       serverType = server.serverType match {
-        case _: CheckerServer => CheckerServer()
-        case _: FuzzerServer  => FuzzerServer()
-        case unknown          =>
+        case _: CheckerServer  => CheckerServer()
+        case _: ExplorerServer => ExplorerServer()
+        case unknown           =>
           throw new PassOptionException(s"Unexpected server type: ${unknown.toString}")
       }
     } yield Server(

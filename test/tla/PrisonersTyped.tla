@@ -1,5 +1,6 @@
 ------------------------ MODULE PrisonersTyped ----------------------------- 
-\* THIS IS A TYPED VERSION OF Prisoners
+\* THIS IS A TYPED VERSION OF Prisoners.
+\* We have also adapted it to use ApaFoldSet instead of a recursive function.
 \* The original is avaiable at: 
 \* https://github.com/tlaplus/Examples/tree/master/specifications/Prisoners
 (***************************************************************************)
@@ -28,7 +29,7 @@
 (*                                                                         *)
 (* The solution presented by the Car Guys is specified below.              *)
 (***************************************************************************)
-EXTENDS Naturals, FiniteSets
+EXTENDS Naturals, FiniteSets, Apalache
 
 CONSTANTS 
   \* @type: Set(PRISONER);
@@ -199,15 +200,26 @@ CountInvariant ==
   (* prove that Spec satisfies its safety property.                        *)
   (*************************************************************************)
   LET totalSwitched ==
+        (*
+          Since Apalache does not support recursive functions any longer,
+          we simply fold over a set.
+        *)
+        LET sum(S) ==
+            LET Add(s, p) == timesSwitched[p] + s IN
+            ApaFoldSet(Add, 0, OtherPrisoner)
+        IN
+        sum(OtherPrisoner)
         (*******************************************************************)
         (* A recursive definition of the sum, over all p in OtherPrisoner, *)
         (* of timesSwitched[p].                                            *)
         (*******************************************************************)
+        (*
         LET sum[S \in SUBSET OtherPrisoner] ==
               IF S = {} THEN 0
                         ELSE LET p == CHOOSE pr \in S : TRUE
                              IN  timesSwitched[p] + sum[S \ {p}]
         IN  sum[OtherPrisoner]
+        *)
       oneIfUp == IF switchAUp THEN 1 ELSE 0
         (*******************************************************************)
         (* Equals 1 if switch A is up, 0 otherwise.                        *)

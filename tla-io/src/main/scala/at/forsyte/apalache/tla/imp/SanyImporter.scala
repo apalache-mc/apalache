@@ -159,7 +159,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
   }
 
   // Regex to match the module line and capture the module name
-  private val MODULE_LINE_RE = """-+ +MODULE +(\w*) -+""".r
+  private val MODULE_LINE_RE = """\s*-+ +MODULE +(\w*) -+\s*""".r
 
   // Try to extract the name of a module from the source specifying the module.
   //
