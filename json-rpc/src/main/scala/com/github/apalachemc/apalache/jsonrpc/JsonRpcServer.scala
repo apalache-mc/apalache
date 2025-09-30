@@ -292,10 +292,10 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         val nActionInvs = checkerContext.checkerInput.verificationConditions.actionInvariantsAndNegations.size
         if (params.kind == InvariantKind.STATE && invariantId >= nStateInvs) {
           Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-            s"Invalid invariant ID: state invariant $invariantId not in [0, $nStateInvs)"))
+                  s"Invalid invariant ID: state invariant $invariantId not in [0, $nStateInvs)"))
         } else if (params.kind == InvariantKind.ACTION && invariantId >= nActionInvs) {
-            Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-              s"Invalid invariant ID: action invariant $invariantId not in [0, $nActionInvs)"))
+          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                  s"Invalid invariant ID: action invariant $invariantId not in [0, $nActionInvs)"))
         } else {
           Right(checkerContext)
         }
@@ -311,7 +311,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
         // if it's too early to check a state or action invariant, return SATISFIED
         val stepNo = checkerContext.trex.stepNo
-        val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
         if (stepNo == 0 || stepNo == 1 && params.kind == InvariantKind.ACTION) {
           // stepNo == 0 => Init has not been applied, so no state invariant can be violated
           // stepNo == 1 => only Init has been applied, so no action invariant can be violated

@@ -90,7 +90,7 @@ case class NextStepParams(sessionId: String) extends ExplorationServiceParams
  * @param invariantId
  *   the IDs of the invariant to check
  * @param kind
- *  the kind of the invariant to check: "STATE" or "ACTION"
+ *   the kind of the invariant to check: "STATE" or "ACTION"
  * @param timeoutSec
  *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
  *   if `checkEnabled` is `false`.
