@@ -26,24 +26,30 @@ class VCGenPassImpl @Inject() (
   override def name: String = "VCGen"
 
   override def execute(tlaModule: TlaModule): PassResult = {
-    val newModule =
+    val moduleWithInvariants =
       derivedPredicates.invariants match {
         case List() =>
           val deadlockMsg = if (options.checker.noDeadlocks) "" else " Only deadlocks will be checked"
-          logger.info(s"  > No invariant given.${deadlockMsg}")
+          logger.info(s"  > No invariant given.$deadlockMsg")
           tlaModule
         case invariants =>
           invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            val optView = derivedPredicates.view
-            optView.foreach { viewName => logger.info(s"  > Using state view ${viewName}") }
-            new VCGenerator(tracker).gen(mod, invName, optView)
+            new VCGenerator(tracker).genInv(mod, invName)
           }
       }
 
-    writeOut(writerFactory, newModule)
+    val moduleWithInvariantsAndView =
+      derivedPredicates.view
+        .map(viewName => {
+          logger.info(s"  > Using state view $viewName")
+          new VCGenerator(tracker).genView(moduleWithInvariants, viewName)
+        })
+        .getOrElse(moduleWithInvariants)
 
-    Right(newModule)
+    writeOut(writerFactory, moduleWithInvariantsAndView)
+
+    Right(moduleWithInvariantsAndView)
   }
 
   override def dependencies = Set(ModuleProperty.Inlined)

@@ -31,7 +31,7 @@ class TestVCGenerator extends AnyFunSuite {
       """.stripMargin
 
     val mod = loadFromText("inv", text)
-    val newMod = mkVCGen().gen(mod, "Inv", None)
+    val newMod = mkVCGen().genInv(mod, "Inv")
     assertDecl(newMod, "VCInv$0", "x > 0")
     assertDecl(newMod, "VCNotInv$0", "¬(x > 0)")
   }
@@ -46,7 +46,7 @@ class TestVCGenerator extends AnyFunSuite {
       """.stripMargin
 
     val mod = loadFromText("inv", text)
-    val newMod = mkVCGen().gen(mod, "Inv", None)
+    val newMod = mkVCGen().genInv(mod, "Inv")
     assertDecl(newMod, "VCActionInv$0", "x' > x")
     assertDecl(newMod, "VCNotActionInv$0", "¬(x' > x)")
   }
@@ -61,7 +61,7 @@ class TestVCGenerator extends AnyFunSuite {
     val xDecl = TlaVarDecl("x")(Typed(IntT1))
     val module = TlaModule("mod", Seq(xDecl, traceInv))
 
-    val newMod = mkVCGen().gen(module, "TraceInv", None)
+    val newMod = mkVCGen().genInv(module, "TraceInv")
     assertDecl(newMod, "VCTraceInv$0", """hist[Len(hist)]["x"] > hist[1]["x"]""")
     assertDecl(newMod, "VCNotTraceInv$0", """¬(hist[Len(hist)]["x"] > hist[1]["x"])""")
   }
@@ -77,7 +77,8 @@ class TestVCGenerator extends AnyFunSuite {
       """.stripMargin
 
     val mod = loadFromText("inv", text)
-    val newMod = mkVCGen().gen(mod, "Inv", Some("View1"))
+    val vcgen = mkVCGen()
+    val newMod = vcgen.genView(vcgen.genInv(mod, "Inv"), "View1")
     assertDecl(newMod, "VCView$0", "x")
   }
 
@@ -91,7 +92,7 @@ class TestVCGenerator extends AnyFunSuite {
       """.stripMargin
 
     val mod = loadFromText("inv", text)
-    val newMod = mkVCGen().gen(mod, "Inv", None)
+    val newMod = mkVCGen().genInv(mod, "Inv")
     assertDecl(newMod, "VCInv$0", "x > 0")
     assertDecl(newMod, "VCInv$1", "x < 10")
     assertDecl(newMod, "VCNotInv$0", "¬(x > 0)")
@@ -108,7 +109,7 @@ class TestVCGenerator extends AnyFunSuite {
       """.stripMargin
 
     val mod = loadFromText("inv", text)
-    val newMod = mkVCGen().gen(mod, "Inv", None)
+    val newMod = mkVCGen().genInv(mod, "Inv")
     assertDecl(newMod, "VCInv$0", "L0:: x > 0")
     assertDecl(newMod, "VCInv$1", "L0:: x < 10")
     assertDecl(newMod, "VCNotInv$0", "¬(L0:: x > 0)")
@@ -125,7 +126,7 @@ class TestVCGenerator extends AnyFunSuite {
       """.stripMargin
 
     val mod = loadFromText("inv", text)
-    val newMod = mkVCGen().gen(mod, "Inv", None)
+    val newMod = mkVCGen().genInv(mod, "Inv")
     assertDecl(newMod, "VCInv$0", """∀z ∈ S: (∀y ∈ S: (y > 0))""")
     assertDecl(newMod, "VCInv$1", """∀z ∈ S: (∀y ∈ S: (y < 10))""")
     assertDecl(newMod, "VCNotInv$0", """¬(∀z ∈ S: (∀y ∈ S: (y > 0)))""")

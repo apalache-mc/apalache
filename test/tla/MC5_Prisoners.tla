@@ -34,4 +34,8 @@ INSTANCE PrisonersTyped
 
 \* use this invariant to find a solution
 Inv == ~Done
+
+\* a view operator
+View ==
+    <<switchAUp, switchBUp, count, { timesSwitched[p]: p \in Prisoner }>>
 ===============================================================================

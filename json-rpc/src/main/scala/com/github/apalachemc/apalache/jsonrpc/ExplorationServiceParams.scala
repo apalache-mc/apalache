@@ -12,6 +12,15 @@ object InvariantKind {
 }
 
 /**
+ * The kinds of values to query.
+ */
+object QueryKind {
+  type T = String
+  val VIEW = "VIEW"
+  val TRACE = "TRACE"
+}
+
+/**
  * Parameters for loading a specification in the JSON-RPC server.
  * @param sources
  *   A sequence of specification modules, each encoded in base64. The head must be the root module, and the rest are
@@ -22,12 +31,15 @@ object InvariantKind {
  *   the name of the next-state predicate. Default is "Next".
  * @param invariants
  *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
+ * @param view
+ *   an optional name of a view to preprocess and expose for evaluation. Default is `None`.
  */
 case class LoadSpecParams(
     sources: Seq[String],
     init: String = "Init",
     next: String = "Next",
-    invariants: List[String] = List())
+    invariants: List[String] = List(),
+    view: Option[String] = None)
     extends ExplorationServiceParams
 
 /**
@@ -99,5 +111,20 @@ case class CheckInvariantParams(
     sessionId: String,
     invariantId: Int,
     kind: InvariantKind.T = InvariantKind.STATE,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * Parameters for checking invariants in the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param kinds
+ *   the kinds of the values to query: "VIEW" or "TRACE"
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class QueryParams(
+    sessionId: String,
+    kinds: List[InvariantKind.T] = List(),
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
