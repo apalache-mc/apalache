@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
+import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -379,8 +380,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         } else {
           NullNode.getInstance()
         }
-        // TODO: implement VIEW
-        QueryResult(sessionId, trace = traceInJson, view = NullNode.getInstance())
+        val viewInJson = if (params.kinds.contains("VIEW")) {
+          getViewInJson(checkerContext, params.timeoutSec)
+        } else {
+          NullNode.getInstance()
+        }
+        QueryResult(sessionId, trace = traceInJson, view = viewInJson)
       }
     }
   }
@@ -392,7 +397,10 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    *   a JSON-encoded trace
    */
   private def getTraceInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): JsonNode = {
-    val counterexample = getTrace(checkerContext)
+    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs.
+    val path = checkerContext.trex.decodedExecution().path
+    val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
+      path.map(_ => SortedSet[String]()).toIndexedSeq, ())
     // Serialize the counterexample to JSON
     val ujsonTrace =
       ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
@@ -400,19 +408,22 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
   }
 
-  /**
-   * Extract a trace from the transition executor.
-   *
-   * @return
-   *   a trace with the data attached
-   */
-  private def getTrace(
-      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): Trace[Unit] = {
-    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs.
-    val path = checkerContext.trex.decodedExecution().path
-    Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
-        path.map(_ => SortedSet[String]()).toIndexedSeq, ())
+  private def getViewInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+                            timeoutSec: Int): JsonNode = {
+    val viewExpr = checkerContext.checkerInput.verificationConditions.stateView
+    if (viewExpr.isEmpty) {
+      return NullNode.getInstance()
+    }
+    checkerContext.trex.evaluate(timeoutSec, viewExpr.get) match {
+      case None => NullNode.getInstance()
+      case Some(evaluatedView) =>
+        // Serialize the counterexample to JSON
+        val ujsonTrace = ItfCounterexampleWriter.exprToJson(evaluatedView)
+        // Convert UJSON to Jackson's JsonNode.
+        new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+    }
   }
+
 
   /**
    * Produce a configuration from the parameters of the loadSpec method.

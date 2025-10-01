@@ -434,6 +434,10 @@ model is guaranteed to exist:
 **Effect.** This method does not change the current model checker context.
 It does not require a rollback.
 
+Some of the queries require an additional satisfiability check. The parameter
+`timeoutSec` sets the timeout for this check in seconds. If `timeout` is not
+set, or it is set to `0`, then the timeout is infinite.
+
 **Input:**
 
 ```json
@@ -441,7 +445,8 @@ It does not require a rollback.
   "method": "query",
   "params": {
     "sessionId": "session-identifier",
-    "kinds": [ kind1, kind2, ... ]
+    "kinds": [ kind1, kind2, ... ],
+    "timeoutSec": timeout-in-seconds-or-0
   }
 }
 ```

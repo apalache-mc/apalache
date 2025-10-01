@@ -120,8 +120,11 @@ case class CheckInvariantParams(
  *   the ID of the previously loaded specification
  * @param kinds
  *   the kinds of the values to query: "VIEW" or "TRACE"
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
  */
 case class QueryParams(
     sessionId: String,
-    kinds: List[InvariantKind.T] = List())
+    kinds: List[InvariantKind.T] = List(),
+    timeoutSec: Int = 0)
     extends ExplorationServiceParams

@@ -187,7 +187,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("sequence 0-0-0 then query") {
-    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), view = Some("View"))).toOption.get
     val sessionId = specResult.sessionId
     val t0 =
       AssumeTransitionParams(sessionId = sessionId, rollbackToSnapshotId = -1, transitionId = 0, checkEnabled = true)
@@ -195,10 +195,11 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       assert(service.assumeTransition(t0).isRight)
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     }
-    service.query(QueryParams(sessionId = sessionId, kinds = List("TRACE"))) match {
+    service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE, QueryKind.VIEW))) match {
       case Right(QueryResult(newSessionId, trace, view)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after querying")
-        assert(view.isNull, "There should be no view")
+        assert(!view.isNull, "View should not be empty")
+        assert(view.toString == """false""", "View should be false at x=3")
         assert(!trace.isNull, "Trace should not be empty")
         val states = trace.get("states")
         assert(states.size() == 3)
