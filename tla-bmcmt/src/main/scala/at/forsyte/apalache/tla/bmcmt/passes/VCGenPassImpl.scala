@@ -43,7 +43,7 @@ class VCGenPassImpl @Inject() (
       derivedPredicates.view
         .map(viewName => {
           logger.info(s"  > Using state view $viewName")
-          new VCGenerator(tracker).genView(tlaModule, viewName)
+          new VCGenerator(tracker).genView(moduleWithInvariants, viewName)
         })
         .getOrElse(moduleWithInvariants)
 
