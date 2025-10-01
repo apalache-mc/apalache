@@ -88,7 +88,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
   }
 
   /**
-   * Given a module and the name of a view operator, normalize this operator as `VCView$0` in the module.
+   * Given a module and the name of a view operator, normalize this operator as `VCView\$0` in the module.
    *
    * @param module
    *   an input module
