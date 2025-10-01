@@ -173,6 +173,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     // Try to obtain the lock, to let the statistics thread finish its work.
     // If it is stuck for some reason, continue after the timeout in any case.
     statisticsLock.tryLock(2 * config.z3StatsSec, java.util.concurrent.TimeUnit.SECONDS)
+    // try to interrupt the current tactic
+    z3context.interrupt()
     try {
       if (config.debug) {
         printStatistics()

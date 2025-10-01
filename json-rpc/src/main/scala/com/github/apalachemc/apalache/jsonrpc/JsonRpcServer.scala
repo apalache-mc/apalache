@@ -24,8 +24,9 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import java.io.StringReader
-import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.{Lock, ReentrantLock}
+import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
 import scala.collection.immutable.SortedSet
@@ -50,6 +51,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   // configured via CheckerModule. Instead of doing model checking, it just prepares
   // ModelCheckerContext in the `remote` mode. We are using TrieMap to allow concurrent reads and updates.
   private val sessions: TrieMap[String, Injector] = TrieMap.empty
+  // A lock for each session, to avoid concurrent access to the same context.
+  private val sessionLocks: TrieMap[String, Lock] = TrieMap.empty
   // A counter for generating session IDs.
   private val lastSessionId: AtomicInteger = new AtomicInteger(0)
   // A snapshot manager.
@@ -73,6 +76,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       case Right(_) =>
         // Successfully loaded the spec, we can access the module later
         sessions.put(sessionId, passChainExecutor.injector)
+        sessionLocks.put(sessionId, new ReentrantLock())
     }
     // get the singleton instance of BoundedModelCheckerPass from checker
     val checkerModule = passChainExecutor.injector.getInstance(classOf[BoundedCheckerPassImpl])
@@ -114,16 +118,17 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     val result =
       sessions.get(params.sessionId) match {
         case Some(injector) =>
-          // immediately remove the session, so the other threads would start anything on it
+          // immediately remove the session, so the other threads would not start anything on it
           sessions.remove(params.sessionId)
           snapshots.remove(params.sessionId)
           // get the checker context from the injector
           val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
           val checkerContext = checkerModule.modelCheckerContext
           // lock on the checker context, so we do not access the SMT context concurrently
-          checkerContext.synchronized {
+          withLock(params.sessionId) {
             checkerContext.foreach(_.trex.dispose())
           }
+          sessionLocks.remove(params.sessionId)
           logger.info(s"Session ${params.sessionId}: Disposed.")
           Right(DisposeSpecResult(params.sessionId))
         case None =>
@@ -165,67 +170,68 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
     validationResult
       .map { checkerContext =>
-        {
-          checkerContext.synchronized {
-            var snapshotBeforeId: Integer = -1
-            if (params.rollbackToSnapshotId >= 0) {
-              // try to recover the snapshot
-              val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.rollbackToSnapshotId)
-              if (!recovered) {
-                return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                        s"Snapshot not found: ${params.rollbackToSnapshotId} in session $sessionId"))
-              }
-              snapshotBeforeId = params.rollbackToSnapshotId
-            } else {
-              // take a snapshot of the current context
-              snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
-            }
-            // the step number might have changed after recovery, so we re-fetch the transitions
-            val stepNo = checkerContext.trex.stepNo
-            val transitions = if (stepNo == 0) {
-              checkerContext.checkerInput.initTransitions
-            } else {
-              checkerContext.checkerInput.nextTransitions
-            }
-            if (transitionId < 0 || transitionId >= transitions.size) {
+        withLock(params.sessionId) {
+          if (!sessions.contains(params.sessionId)) {
+            return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+          }
+          var snapshotBeforeId: Integer = -1
+          if (params.rollbackToSnapshotId >= 0) {
+            // try to recover the snapshot
+            val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.rollbackToSnapshotId)
+            if (!recovered) {
               return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                      s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
+                      s"Snapshot not found: ${params.rollbackToSnapshotId} in session $sessionId"))
             }
-            val actionExpr = transitions(transitionId)
-            // Upload the transition into the SMT context.
-            // It returns the result of a simple check that does not check satisfiability.
-            val isApplicable = checkerContext.trex.prepareTransition(transitionId, actionExpr)
-            if (!isApplicable) {
-              snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
+            snapshotBeforeId = params.rollbackToSnapshotId
+          } else {
+            // take a snapshot of the current context
+            snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
+          }
+          // the step number might have changed after recovery, so we re-fetch the transitions
+          val stepNo = checkerContext.trex.stepNo
+          val transitions = if (stepNo == 0) {
+            checkerContext.checkerInput.initTransitions
+          } else {
+            checkerContext.checkerInput.nextTransitions
+          }
+          if (transitionId < 0 || transitionId >= transitions.size) {
+            return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                    s"Invalid transition ID: $transitionId not in [0, ${transitions.size})"))
+          }
+          val actionExpr = transitions(transitionId)
+          // Upload the transition into the SMT context.
+          // It returns the result of a simple check that does not check satisfiability.
+          val isApplicable = checkerContext.trex.prepareTransition(transitionId, actionExpr)
+          if (!isApplicable) {
+            snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
+            logger.info(
+                s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: transition $transitionId DISABLED")
+            AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, TransitionStatus.DISABLED)
+          } else {
+            // assume that this transition takes place
+            checkerContext.trex.assumeTransition(transitionId)
+            val snapshotAfterId = snapshots.takeSnapshot(sessionId, checkerContext)
+            if (!params.checkEnabled) {
+              // if we do not check satisfiability, we assume that the transition is enabled
               logger.info(
-                  s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: transition $transitionId DISABLED")
-              AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, TransitionStatus.DISABLED)
+                  s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
+              AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
             } else {
-              // assume that this transition takes place
-              checkerContext.trex.assumeTransition(transitionId)
-              val snapshotAfterId = snapshots.takeSnapshot(sessionId, checkerContext)
-              if (!params.checkEnabled) {
-                // if we do not check satisfiability, we assume that the transition is enabled
-                logger.info(
-                    s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
-                AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
-              } else {
-                // check satisfiability
-                checkerContext.trex.sat(params.timeoutSec) match {
-                  case Some(isSat) =>
-                    if (!isSat) {
-                      snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
-                    }
-                    val status = if (isSat) TransitionStatus.ENABLED else TransitionStatus.DISABLED
-                    logger.info(
-                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId $status")
-                    AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, status)
-                  case None =>
-                    // in case of timeout or unknown, we do not rollback the context, but return unknown
-                    logger.info(
-                        s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
-                    AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
-                }
+              // check satisfiability
+              checkerContext.trex.sat(params.timeoutSec) match {
+                case Some(isSat) =>
+                  if (!isSat) {
+                    snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
+                  }
+                  val status = if (isSat) TransitionStatus.ENABLED else TransitionStatus.DISABLED
+                  logger.info(
+                      s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId $status")
+                  AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, status)
+                case None =>
+                  // in case of timeout or unknown, we do not rollback the context, but return unknown
+                  logger.info(
+                      s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
+                  AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
               }
             }
           }
@@ -256,10 +262,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
-    validationResult
-      .map { checkerContext =>
-        {
-          checkerContext.synchronized {
+    withLock(params.sessionId) {
+      validationResult
+        .map { checkerContext =>
+          {
+            if (!sessions.contains(params.sessionId)) {
+              return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+            }
             val stepBeforeNo = checkerContext.trex.stepNo
             checkerContext.trex.nextState()
             val stepAfterNo = checkerContext.trex.stepNo
@@ -268,7 +277,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             NextStepResult(sessionId, snapshotId, stepAfterNo)
           }
         }
-      }
+    }
   }
 
   /**
@@ -305,8 +314,11 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
 
     // Check the invariant
-    validationResult.map { checkerContext =>
-      checkerContext.synchronized {
+    withLock(params.sessionId) {
+      validationResult.map { checkerContext =>
+        if (!sessions.contains(params.sessionId)) {
+          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+        }
         // take a snapshot of the current context
         val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
         // if it's too early to check a state or action invariant, return SATISFIED
@@ -372,8 +384,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
-    validationResult.map { checkerContext =>
-      checkerContext.synchronized {
+    withLock(params.sessionId) {
+      validationResult.map { checkerContext =>
+        if (!sessions.contains(params.sessionId)) {
+          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+        }
+
         val traceInJson = if (params.kinds.contains("TRACE")) {
           getTraceInJson(checkerContext)
         } else {
@@ -461,6 +477,17 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             ),
         )
       })
+  }
+
+  // call the callback under the lock for the given session ID
+  private def withLock[T](sessionId: String)(callback: => T) = {
+    val lock = sessionLocks(sessionId)
+    lock.lock()
+    try {
+      callback
+    } finally {
+      lock.unlock()
+    }
   }
 }
 
