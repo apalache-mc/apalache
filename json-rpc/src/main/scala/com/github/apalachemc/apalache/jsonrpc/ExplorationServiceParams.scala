@@ -32,7 +32,7 @@ object QueryKind {
  * @param invariants
  *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
  * @param view
- *  an optional name of a view to preprocess and expose for evaluation. Default is `None`.
+ *   an optional name of a view to preprocess and expose for evaluation. Default is `None`.
  */
 case class LoadSpecParams(
     sources: Seq[String],

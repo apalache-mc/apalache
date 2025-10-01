@@ -390,6 +390,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    * assumes that the outcome is one of the basic types: a Boolean, integer, or a cell constant. If not, it throws
    * SmtEncodingException.
    *
+   * This method is quite restricted in its behavior. If you want to extract a ground expression of an arena cell,
+   * use [[at.forsyte.apalache.tla.bmcmt.SymbStateDecoder]].
+   *
    * @param ex
    *   an expression to evaluate
    * @return

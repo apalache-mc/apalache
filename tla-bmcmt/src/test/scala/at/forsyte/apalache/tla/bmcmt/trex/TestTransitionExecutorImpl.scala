@@ -2,6 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt.{Binding, StateInvariant}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaFunOper
+import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
 
@@ -20,13 +22,14 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   def nY: BuilderT = tla.name("y", IntT1)
 
   test("constant initialization") { exeCtx: ExecutorContextT =>
-    // N' <- 1
     val trex = new TransitionExecutorImpl(Set("N"), Set("x", "y"), exeCtx)
     trex.debug = true
     assert(trex.stepNo == 0)
+    // initialize constant N to 10
     val constInit = mkAssign("N", 10)
     trex.initializeConstants(constInit)
-    val init = tla.and(mkAssignInt("x", tla.name("N", IntT1)), mkAssign("y", 1))
+    // Init == x = N + 1 /\ y = 4
+    val init = tla.and(mkAssignInt("x", tla.plus(tla.name("N", IntT1), tla.int(1))), mkAssign("y", 4))
     // init is a potential transition with index 3 (the index is defined by the input spec)
     val isTranslated = trex.prepareTransition(3, init)
     assert(isTranslated)
@@ -35,8 +38,19 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // advance the computation: forget the non-primed variables, rename primed to non-primed
     trex.nextState()
     assert(trex.stepNo == 1)
-    // assert something about the current state
+    // evaluate x and y
+    val expr = tla.seq(tla.name("x", IntT1), tla.mult(tla.name("y", IntT1), tla.int(2)))
+    trex.evaluate(timeoutSec = 60, expr = expr) match {
+      case Some(OperEx(TlaFunOper.tuple, ValEx(TlaInt(xVal)), ValEx(TlaInt(yVal)))) =>
+        assert(xVal == 11)
+        assert(yVal == 8)
+
+      case unexpected =>
+        fail(s"unexpected evaluation result $unexpected")
+    }
+    // assert: x = 5
     trex.assertState(tla.eql(nX, tla.int(5)))
+    // UNSAT
     assert(trex.sat(60).contains(false))
   }
 

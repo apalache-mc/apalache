@@ -219,6 +219,33 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
+   * Evaluate a TLA+ expression against the current SMT model.
+   *
+   * @param timeoutSec
+   *   timeout in seconds to evaluate the expression
+   * @param expr
+   *   an expression that refers to constants and/or state variables
+   * @return
+   *   the evaluated expression that refers to constants only
+   */
+  override def evaluate(timeoutSec: Int, expr: TlaEx): Option[TlaEx] = {
+    val nextState = ctx.rewriter.rewriteUntilDone(lastState.setRex(expr))
+    val decoder = new SymbStateDecoder(ctx.solver, ctx.rewriter)
+    val result =
+      sat(timeoutSec) match {
+        case Some(true) => {
+          Some(decoder.decodeCellToTlaEx(nextState.arena, nextState.asCell))
+        }
+        case Some(false) => None
+        case None        => None
+      }
+    // Even though we do not need this expression anymore,
+    // we have to update the arena, to avoid rewriter's corruption.
+    lastState = nextState.setRex(lastState.ex)
+    result
+  }
+
+  /**
    * Pick non-deterministically one transition among the transitions that are prepared in the current step. Further,
    * assume that the picked transition has fired. This method must be called after at least one call to
    * prepareTransition.

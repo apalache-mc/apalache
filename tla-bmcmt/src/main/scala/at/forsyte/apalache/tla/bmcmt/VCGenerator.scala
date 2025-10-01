@@ -32,7 +32,7 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    * @return
    *   a transformed module
    */
-  def gen(module: TlaModule, invName: String): TlaModule = {
+  def genInv(module: TlaModule, invName: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
     val newModule =
@@ -50,12 +50,12 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
               throw new TlaInputError(message, Some(inv.body.ID))
           }
 
-        case Some(traceInv@TlaOperDecl(_, params@List(OperParam(_, 0)), body)) =>
+        case Some(traceInv @ TlaOperDecl(_, params @ List(OperParam(_, 0)), body)) =>
           // a trace invariant
           if (TlaLevelConst != levelFinder.getLevelOfDecl(traceInv)) {
             throw new TlaInputError(
-              s"Trace invariant $invName should not refer to state variables or use action/temporal operators",
-              Some(body.ID))
+                s"Trace invariant $invName should not refer to state variables or use action/temporal operators",
+                Some(body.ID))
           }
           assertTraceInvType(module, traceInv)
           val copy = DeepCopy(tracker)

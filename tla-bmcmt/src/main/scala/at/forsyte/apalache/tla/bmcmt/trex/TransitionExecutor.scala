@@ -103,6 +103,18 @@ trait TransitionExecutor[ExecutorContextT] extends Recoverable[ExecutionSnapshot
   def assertState(assertion: TlaEx): Unit
 
   /**
+   * Evaluate a TLA+ expression against the current SMT model.
+   *
+   * @param timeoutSec
+   *   timeout in seconds to evaluate the expression
+   * @param expr
+   *   an expression that refers to constants and/or state variables
+   * @return
+   *   the evaluated expression that refers to constants only
+   */
+  def evaluate(timeoutSec: Int, expr: TlaEx): Option[TlaEx]
+
+  /**
    * Pick non-deterministically one transition among the transitions that are prepared in the current step. Further,
    * assume that the picked transition has fired. This method must be called after at least one call to
    * prepareTransition.

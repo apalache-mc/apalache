@@ -35,15 +35,17 @@ class VCGenPassImpl @Inject() (
         case invariants =>
           invariants.foldLeft(tlaModule) { (mod, invName) =>
             logger.info(s"  > Producing verification conditions from the invariant $invName")
-            new VCGenerator(tracker).gen(mod, invName)
+            new VCGenerator(tracker).genInv(mod, invName)
           }
       }
 
     val moduleWithInvariantsAndView =
-      derivedPredicates.view.map(viewName => {
-        logger.info(s"  > Using state view $viewName")
-        new VCGenerator(tracker).genView(tlaModule, viewName)
-      }).getOrElse(moduleWithInvariants)
+      derivedPredicates.view
+        .map(viewName => {
+          logger.info(s"  > Using state view $viewName")
+          new VCGenerator(tracker).genView(tlaModule, viewName)
+        })
+        .getOrElse(moduleWithInvariants)
 
     writeOut(writerFactory, moduleWithInvariantsAndView)
 

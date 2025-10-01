@@ -385,12 +385,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
   }
 
-    /**
-     * Extract a trace from the transition executor and serialize it to Jackson JSON.
-     *
-     * @return
-     *   a JSON-encoded trace
-     */
+  /**
+   * Extract a trace from the transition executor and serialize it to Jackson JSON.
+   *
+   * @return
+   *   a JSON-encoded trace
+   */
   private def getTraceInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): JsonNode = {
     val counterexample = getTrace(checkerContext)
     // Serialize the counterexample to JSON
@@ -565,7 +565,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
             new JsonParameterParser(mapper)
               .parseQuery(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
-                serviceParams => service.query(serviceParams))
+                  serviceParams => service.query(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
