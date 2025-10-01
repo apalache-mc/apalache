@@ -13,7 +13,6 @@ import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
-import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -400,7 +399,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs.
     val path = checkerContext.trex.decodedExecution().path
     val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
-      path.map(_ => SortedSet[String]()).toIndexedSeq, ())
+        path.map(_ => SortedSet[String]()).toIndexedSeq, ())
     // Serialize the counterexample to JSON
     val ujsonTrace =
       ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
@@ -408,14 +407,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
   }
 
-  private def getViewInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
-                            timeoutSec: Int): JsonNode = {
+  private def getViewInJson(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+      timeoutSec: Int): JsonNode = {
     val viewExpr = checkerContext.checkerInput.verificationConditions.stateView
     if (viewExpr.isEmpty) {
       return NullNode.getInstance()
     }
     checkerContext.trex.evaluate(timeoutSec, viewExpr.get) match {
-      case None => NullNode.getInstance()
+      case None                => NullNode.getInstance()
       case Some(evaluatedView) =>
         // Serialize the counterexample to JSON
         val ujsonTrace = ItfCounterexampleWriter.exprToJson(evaluatedView)
@@ -423,7 +423,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
     }
   }
-
 
   /**
    * Produce a configuration from the parameters of the loadSpec method.

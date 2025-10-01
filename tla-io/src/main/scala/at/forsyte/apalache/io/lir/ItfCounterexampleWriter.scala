@@ -97,7 +97,8 @@ object ItfCounterexampleWriter {
 
   /**
    * Convert an individual TLA+ expression to its JSON representation in the ITF format.
-   * @return a function that converts TLA+ expressions to JSON values
+   * @return
+   *   a function that converts TLA+ expressions to JSON values
    */
   def exprToJson: TlaEx => ujson.Value = {
     case ValEx(TlaInt(num)) =>

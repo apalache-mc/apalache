@@ -8,7 +8,6 @@ package at.forsyte.apalache.tla.lir
 package object convenience {
 
   /**
-   *
    * <b>Deprecation warning:</b> If you are writing new code, use the typed builder:
    *
    * {{{
