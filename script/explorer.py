@@ -413,9 +413,10 @@ class ApalacheExplorer:
                         print(f"\nExploration stopped due to invariant violation: {violated_invariant}")
                         return False
 
-                    view = self.query(timeout)
-                    view_hash = hashlib.sha256(pickle.dumps(view, protocol=5)).hexdigest()
-                    print(f"View hash: {view_hash}")
+                    if view:
+                        view_val = self.query(timeout)
+                        view_hash = hashlib.sha256(pickle.dumps(view_val, protocol=5)).hexdigest()
+                        print(f"View hash: {view_hash}")
 
                     print(f"All invariants satisfied at step {self.nsteps}")
 
