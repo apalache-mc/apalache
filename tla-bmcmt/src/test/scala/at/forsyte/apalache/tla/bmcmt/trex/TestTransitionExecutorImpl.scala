@@ -28,7 +28,7 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // initialize constant N to 10
     val constInit = mkAssign("N", 10)
     trex.initializeConstants(constInit)
-    // Init == x = N + 1 /\ y = 4
+    // Init == x' := N + 1 /\ y' := 4
     val init = tla.and(mkAssignInt("x", tla.plus(tla.name("N", IntT1), tla.int(1))), mkAssign("y", 4))
     // init is a potential transition with index 3 (the index is defined by the input spec)
     val isTranslated = trex.prepareTransition(3, init)
@@ -55,7 +55,7 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   }
 
   test("push 1 transition") { exeCtx: ExecutorContextT =>
-    // y' <- 1 /\ x' <- 1
+    // y' := 1 /\ x' := 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.debug = true
@@ -68,13 +68,13 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     // advance the computation: forget the non-primed variables, rename primed to non-primed
     trex.nextState()
     assert(trex.stepNo == 1)
-    // assert something about the current state
+    // assert: y = 1
     trex.assertState(tla.eql(nY, tla.int(1)))
     assert(trex.sat(60).contains(true))
   }
 
   test("check enabled and discard") { exeCtx: ExecutorContextT =>
-    // an obviously disabled transition: y' <- 1 /\ y' <- 2
+    // an obviously disabled transition: y' := 1 /\ y' := 2
     val init = tla.and(mkAssign("y", 1), tla.eql(tla.prime(nY), tla.int(2)), mkAssign("x", 3))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.debug = true
@@ -88,7 +88,7 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   }
 
   test("check an invariant after transition") { exeCtx: ExecutorContextT =>
-    // y' <- 1 /\ x' <- 1
+    // y' := 1 /\ x' := 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.debug = true
@@ -100,7 +100,7 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     trex.assumeTransition(3)
     // create a snapshot for a later rollback
     val snapshot = trex.snapshot()
-    // assert invariant violation and check it
+    // assert invariant violation and check it: x' /= y'
     val notInv = tla.not(tla.eql(tla.prime(nY), tla.prime(nX)))
     trex.assertState(notInv)
     assert(trex.sat(60).contains(false))
@@ -111,11 +111,12 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   }
 
   test("Init + 3x Next") { exeCtx: ExecutorContextT =>
-    // x' <- 1 /\ y' <- 1
+    // x' := 1 /\ y' := 1
     val init: TlaEx = tla.and(mkAssign("y", 1), mkAssign("x", 1))
-    // x' <- y /\ y' <- x + y
+    // x' := y /\ y' := x + y
     val trans1: TlaEx =
       tla.and(mkAssignInt("x", nY), mkAssignInt("y", tla.plus(nX, nY)))
+    // x' := x /\ y' := y
     val trans2: TlaEx = tla.and(mkAssignInt("x", nX), mkAssignInt("y", nY))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)
@@ -131,6 +132,17 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     trex.prepareTransition(2, trans2)
     trex.pickTransition()
     trex.nextState()
+
+    // evaluate x and y
+    val expr = tla.seq(tla.name("x", IntT1), tla.name("y", IntT1))
+    trex.evaluate(timeoutSec = 60, expr = expr) match {
+      case Some(OperEx(TlaFunOper.tuple, ValEx(TlaInt(xVal)), ValEx(TlaInt(yVal)))) =>
+        assert(xVal == 2 || xVal == 3, s"expected xVal in {2, 3}, found $xVal")
+        assert(yVal == 3 || yVal == 5, s"expected yVal in {3, 5}, found $yVal")
+
+      case unexpected =>
+        fail(s"unexpected evaluation result $unexpected")
+    }
 
     // a decoded counterexample needs the SMT model
     assert(trex.sat(0).contains(true))
@@ -197,9 +209,9 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
   }
 
   test("mayChangeAssertion") { exeCtx: ExecutorContextT =>
-    // x' <- 1 /\ y' <- 1
+    // x' := 1 /\ y' := 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
-    // x' <- x /\ y' <- x + y
+    // x' := x /\ y' := x + y
     val nextTrans = tla.and(mkAssignInt("x", nX), mkAssignInt("y", tla.plus(nX, nY)))
     // push Init
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
@@ -208,19 +220,20 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
     trex.nextState()
     // prepare Next
     trex.prepareTransition(1, nextTrans)
-    // check what has changed
+    // inv0 == x = 3
     val inv0 = tla.ge(nX, tla.int(3))
     val mayChange0 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
     assert(!mayChange0)
+    // inv1 == x >= y
     val inv1 = tla.ge(nY, nX)
     val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
     assert(mayChange1)
   }
 
   test("regression on #108") { exeCtx: ExecutorContextT =>
-    // y' <- 1
+    // y' := 1
     val init = tla.and(mkAssign("y", 1))
-    // y' <- y + 1
+    // y' := y + 1
     val nextTrans = mkAssignInt("y", tla.plus(nY, tla.int(1)))
     // push Init
     val trex = new TransitionExecutorImpl(Set.empty, Set("y"), exeCtx)
