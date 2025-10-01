@@ -138,11 +138,13 @@ VARIABLE
 Init == x = 0
 Next == (x < 3 /\\ x' = x + 1) \\/ (x > -3 /\\ x' = x - 1)
 Inv3 == x /= 0
+\* @type: () => <<Bool, Bool, Bool>>;
+View == <<x < 0, x = 0, x > 0>>
 =====================
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"]},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"], "view": "View"},"id":1}'
 ```
 
 It should produce the following output:
@@ -160,7 +162,7 @@ It should produce the following output:
       "nStateInvariants": 1,
       "nActionInvariants": 0,
       "nTraceInvariants": 0,
-      "hasView": false
+      "hasView": true
     }
   }
 }
@@ -476,10 +478,12 @@ $ curl -X POST http://localhost:8822/rpc \
 The output is as follows:
 
 ```json
-TODO
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"view":{"#tup":[false,true,false]}}}
 ```
 
 ### 2.7. Method nextView
+
+**NOT IMPLEMENTED YET**
 
 Given a session identifier, find a view that is different from the one in the
 current context. This method requires a call to the SMT solver, so it may take
@@ -529,7 +533,7 @@ Execute the following command:
 ```sh
 $ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","timeoutSec":10},"id":6}'
+  -d '{"jsonrpc":"2.0","method":"nextView","params":{"sessionId":"1","timeoutSec":10},"id":6}'
 ```
 
 The output is as follows:
