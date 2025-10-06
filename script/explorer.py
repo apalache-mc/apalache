@@ -276,7 +276,22 @@ class ApalacheExplorer:
 
         return None
 
-    def assume_transition(self, snapshot_id: Optional[int], transition_id: int, timeout: int) -> bool:
+    def rollback(self, snapshot_id: int) -> bool:
+        """Roll back to an earlier snapshot."""
+        params = {
+            "sessionId": self.session_id,
+            "snapshotId": snapshot_id,
+        }
+
+        response = self._make_rpc_call("rollback", params)
+
+        if "error" in response:
+            print(f"Error rolling back to {snapshot_id}: {response['error']}")
+            return False
+
+        return True
+
+    def assume_transition(self, transition_id: int, timeout: int) -> bool:
         """Assume a transition and check if it's enabled."""
         params = {
             "sessionId": self.session_id,
@@ -284,9 +299,6 @@ class ApalacheExplorer:
             "checkEnabled": True,
             "timeoutSec": timeout
         }
-
-        if snapshot_id != None:
-            params['rollbackToSnapshotId'] = snapshot_id
 
         response = self._make_rpc_call("assumeTransition", params)
 
@@ -360,8 +372,8 @@ class ApalacheExplorer:
                 return False
 
             # Load specification
-            params = self.load_spec(sources, invariants, view)
-            if not params:
+            spec_params = self.load_spec(sources, invariants, view)
+            if not spec_params:
                 return False
 
             print(f"\nStarting exploration (<= {max_runs} runs, <= {max_steps} steps each)...")
@@ -380,10 +392,10 @@ class ApalacheExplorer:
                     # Determine available transitions based on current step
                     if self.nsteps == 0:
                         # Use Init transitions
-                        max_transitions_to_try = params['ninit']
+                        max_transitions_to_try = spec_params['ninit']
                     else:
                         # Use Next transitions
-                        max_transitions_to_try = params['nnext']
+                        max_transitions_to_try = spec_params['nnext']
 
                     # Try to find an enabled transition by picking transitions at random
                     ids = list(range(max_transitions_to_try))
@@ -391,8 +403,9 @@ class ApalacheExplorer:
                     while len(ids) > 0 and not transition_found:
                         trans_id = ids[random.randint(0, len(ids) - 1)]
                         ids.remove(trans_id)
-                        snapshot_id = params['snapshot_id'] if self.nsteps == 0 else None
-                        if self.assume_transition(snapshot_id, trans_id, timeout):
+                        if self.nsteps == 0:
+                            self.rollback(spec_params['snapshot_id'])
+                        if self.assume_transition(trans_id, timeout):
                             transition_found = True
 
                     if not transition_found:
@@ -408,7 +421,7 @@ class ApalacheExplorer:
 
                     # Check invariants after each transition
                     violated_invariant = \
-                        self.check_invariants(params['nstate'], params['naction'], timeout)
+                        self.check_invariants(spec_params['nstate'], spec_params['naction'], timeout)
                     if violated_invariant:
                         print(f"\nExploration stopped due to invariant violation: {violated_invariant}")
                         return False

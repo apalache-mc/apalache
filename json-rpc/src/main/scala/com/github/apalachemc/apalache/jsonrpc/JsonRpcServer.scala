@@ -610,6 +610,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.disposeSpec(serviceParams))
 
+          case "rollback" =>
+            new JsonParameterParser(mapper)
+              .parseRollback(paramsNode)
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+                  serviceParams => service.rollback(serviceParams))
+
           case "assumeTransition" =>
             new JsonParameterParser(mapper)
               .parseAssumeTransition(paramsNode)
