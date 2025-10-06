@@ -423,18 +423,13 @@ Given a session identifier, query the current context for values of several kind
    SMT solver.
  - TBD: More kinds to be added in the future.
 
-**Precondition.** This method is successful only if the current context has a
-model. Otherwise, the result is undefined. Below are the conditions under which the
-model is guaranteed to exist:
- - The last method call was `assumeTransition` with the flag `checkEnabled`
-   set to true, and it returned the status `"ENABLED"`. 
- - The last method call was `nextState`, and it was called after
-   `assumeTransition` as above.
- - The last method call was `nextView` (see below), and it returned with the
-   status `"SATISFIED"`.
+**Precondition.** No preconditions.
 
-**Effect.** This method does not change the current model checker context.
-It does not require a rollback.
+**Effect.** This method does expression evaluation internally. Hence, it checks
+the satisfiability of the current context. Hence, multiple calls to `query` may
+produce "garbage" in the SMT context. We believe that this should not affect
+the performance of the solver. If you disagree with this, you can always roll
+back to an earlier snapshot.
 
 Some of the queries require an additional satisfiability check. The parameter
 `timeoutSec` sets the timeout for this check in seconds. If `timeout` is not
