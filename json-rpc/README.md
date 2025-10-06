@@ -87,16 +87,26 @@ be used in subsequent calls to refer to this session.
       <importedModule1InBase64>,
       ...
     ],
-    "init": "optional-initializer-for-constants",
+    "init": "optional-initializer-predicate",
     "next": "optional-transition-predicate",
     "invariants": [
       "invariant 1",
       ...,
       "invariant N"
+    ],
+    "exports": [
+      "exported-operator-1",
+      ...,
+      "exported-operator-M"
     ]
   }
 }
 ```
+
+Note that if you are going to evaluate operators in the subsequent calls,
+you should list them in the `exports` field. Otherwise, the specification
+preprocessor prunes the definitions that are not used by the standard
+operators such as `Init`, `Next`, and the invariants.
 
 **Output:**
 
@@ -110,8 +120,7 @@ be used in subsequent calls to refer to this session.
       "nNextTransitions": number-of-Next-transitions,
       "nStateInvariants": number-of-state-invariants,
       "nActionInvariants": number-of-action-invariants,
-      "nTraceInvariants": number-of-trace-invariants,
-      "hasView": true-if-there-is-a-view-operator
+      "nTraceInvariants": number-of-trace-invariants
     }
   }
 }
@@ -144,7 +153,7 @@ View == <<x < 0, x = 0, x > 0>>
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"], "view": "View"},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"], "exports": ["View"]},"id":1}'
 ```
 
 It should produce the following output:
@@ -161,8 +170,7 @@ It should produce the following output:
       "nNextTransitions": 2,
       "nStateInvariants": 1,
       "nActionInvariants": 0,
-      "nTraceInvariants": 0,
-      "hasView": true
+      "nTraceInvariants": 0
     }
   }
 }
@@ -275,7 +283,6 @@ It produces the following output:
 ```json  
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":0}}
 ```
-
 
 ### 2.4. Method assumeTransition
 
@@ -467,11 +474,18 @@ Given a session identifier, query the current context for values of several kind
  - `"TRACE"`: A concrete trace that follows the symbolic path constructed so far.
    There may be multiple such traces. This call returns the trace that
    was found by the SMT solver.
- - `"VIEW"`: The value of the view operator. The name of this operator must be
-   specified in the `view` field of the `loadSpec` method. There may be multiple
-   such values. This call returns the view of the model that was found by the
-   SMT solver.
- - TBD: More kinds to be added in the future.
+ - `"OPERATOR"`: A value of the operator whose name is given in `operator`. This name
+   must be exported in the `loadSpec` method, unless it is also used in the standard
+   operators such as `Init`, `Next`, and the invariants. The operator `operator`
+   MUST be side-effect free, that is, this operator may not refer to primed variables.
+   Currently, only nullary operators are supported, that is, operators without
+   any parameters.
+
+Importantly, since the values are evaluated for **a model** of the current context,
+the SMT solver may return different models on different calls. Apalache fixes SMT
+seeds to default values, to make the model checker deterministic. You can further
+experiment with different SMT seeds by following the instructions in
+[SMT randomization][].
 
 **Precondition.** No preconditions.
 
@@ -493,6 +507,7 @@ set, or it is set to `0`, then the timeout is infinite.
   "params": {
     "sessionId": "session-identifier",
     "kinds": [ kind1, kind2, ... ],
+    "operator": optional-operator-name,
     "timeoutSec": timeout-in-seconds-or-0
   }
 }
@@ -500,12 +515,16 @@ set, or it is set to `0`, then the timeout is infinite.
 
 **Output:**
 
+The output contains the session identifier, and, depending on the requested
+kinds, the trace (field `trace`) and/or the expression value (field `expr`). Both `trace`
+and `expr` are in the [ITF Format][].
+
 ```json
 {
   "result": {
     "sessionId": "session-identifier",
     "trace": trace-in-itf-or-null,
-    "view": view-in-itf-or-null
+    "operatorValue": expr-in-itf-or-null
   }
 }
 ```
@@ -517,13 +536,13 @@ Execute the following command:
 ```sh
 $ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","kinds":["VIEW"]},"id":5}'
+  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","kinds":["OPERATOR"],"operator":"View"},"id":5}'
 ```
 
 The output is as follows:
 
 ```json
-{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"view":{"#tup":[false,true,false]}}}
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"operatorValue":{"#tup":[false,true,false]}}}
 ```
 
 ### 2.8. Method nextView
@@ -598,3 +617,7 @@ TODO
 [Thomas Pani]: https://thpani.net
 
 [ITF Format]: https://apalache-mc.org/docs/adr/015adr-trace.html
+
+[Apalache IR]: https://apalache-mc.org/docs/adr/005adr-json.html
+
+[SMT randomization]: https://apalache-mc.org/docs/apalache/tuning.html#randomization

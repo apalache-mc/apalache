@@ -150,7 +150,7 @@ class ConfigurationPassImpl @Inject() (
         invariants = options.predicates.invariants,
         cinit = options.predicates.cinit,
         view = options.predicates.view,
-        persistent = List.empty,
+        persistent = options.predicates.persistent,
     )
   }
 

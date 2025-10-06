@@ -75,15 +75,12 @@ case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: Sp
  *   the number of state invariants
  * @param nActionInvariants
  *   the number of action invariants
- * @param hasView
- *   whether a view predicate is present in the specification
  */
 case class SpecParameters(
     nInitTransitions: Int,
     nNextTransitions: Int,
     nStateInvariants: Int,
-    nActionInvariants: Int,
-    hasView: Boolean)
+    nActionInvariants: Int)
 
 /**
  * The result of disposing a specification.
@@ -121,7 +118,7 @@ case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantSta
  *   the ID of the previously loaded specification
  * @param trace
  *   a JSON-encoded trace, if it was requested; otherwise, it is null
- * @param view
- *   a JSON-encoded view, if it was requested; otherwise, it is null
+ * @param operatorValue
+ *   a JSON-encoded result of operator application, if it was requested; otherwise, it is null
  */
-case class QueryResult(sessionId: String, trace: JsonNode, view: JsonNode) extends ExplorationServiceResult
+case class QueryResult(sessionId: String, trace: JsonNode, operatorValue: JsonNode) extends ExplorationServiceResult

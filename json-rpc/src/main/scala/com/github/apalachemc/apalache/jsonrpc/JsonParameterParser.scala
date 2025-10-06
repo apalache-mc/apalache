@@ -161,13 +161,16 @@ class JsonParameterParser(mapper: ObjectMapper) {
     try {
       val applyParams = mapper.treeToValue(params, classOf[QueryParams])
       if (applyParams.sessionId.isEmpty) {
-        return Left("nextStep parameters must contain a non-empty sessionId.")
+        return Left("nextStep parameters must contain a non-empty `sessionId`.")
       }
       if (applyParams.kinds.isEmpty) {
-        return Left("query parameters must contain a non-empty kinds array.")
+        return Left("query parameters must contain a non-empty `kinds` array.")
       }
-      if (applyParams.kinds.exists(k => k != QueryKind.VIEW && k != QueryKind.TRACE)) {
-        return Left("kinds must be either 'VIEW' or 'TRACE'.")
+      if (applyParams.kinds.exists(k => k != QueryKind.OPERATOR && k != QueryKind.TRACE)) {
+        return Left(s"Field `kinds` may contain only: ${QueryKind.OPERATOR} or ${QueryKind.TRACE}.")
+      }
+      if (applyParams.kinds.contains(QueryKind.OPERATOR) && applyParams.operator == "") {
+        return Left(s"Field `operator` must be provided when `kinds` contains '${QueryKind.OPERATOR}'.")
       }
       Right(applyParams)
     } catch {

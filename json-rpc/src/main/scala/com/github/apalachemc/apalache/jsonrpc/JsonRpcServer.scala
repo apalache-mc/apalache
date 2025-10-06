@@ -99,7 +99,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         nNextTransitions = checkerInput.nextTransitions.size,
         nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
         nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
-        hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
 
     logger.info(s"Session=$sessionId Step=0 Snapshot=$snapshotId: Specification ready")
@@ -420,17 +419,22 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
         }
 
-        val traceInJson = if (params.kinds.contains("TRACE")) {
-          getTraceInJson(checkerContext)
-        } else {
-          NullNode.getInstance()
-        }
-        val viewInJson = if (params.kinds.contains("VIEW")) {
-          getViewInJson(checkerContext, params.timeoutSec)
-        } else {
-          NullNode.getInstance()
-        }
-        QueryResult(sessionId, trace = traceInJson, view = viewInJson)
+        val traceInJson =
+          if (params.kinds.contains(QueryKind.TRACE)) {
+            getTraceInJson(checkerContext)
+          } else {
+            NullNode.getInstance()
+          }
+        val viewInJson =
+          if (!params.kinds.contains(QueryKind.OPERATOR)) {
+            NullNode.getInstance()
+          } else {
+            getViewInJson(checkerContext, params.operator, params.timeoutSec) match {
+              case Right(json) => json
+              case Left(msg)   => return Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
+            }
+          }
+        QueryResult(sessionId, trace = traceInJson, operatorValue = viewInJson)
       }
     }
   }
@@ -455,18 +459,35 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
   private def getViewInJson(
       checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
-      timeoutSec: Int): JsonNode = {
-    val viewExpr = checkerContext.checkerInput.verificationConditions.stateView
-    if (viewExpr.isEmpty) {
-      return NullNode.getInstance()
-    }
-    checkerContext.trex.evaluate(timeoutSec, viewExpr.get) match {
-      case None                => NullNode.getInstance()
-      case Some(evaluatedView) =>
-        // Serialize the counterexample to JSON
-        val ujsonTrace = ItfCounterexampleWriter.exprToJson(evaluatedView)
-        // Convert UJSON to Jackson's JsonNode.
-        new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+      operatorName: String,
+      timeoutSec: Int): Either[String, JsonNode] = {
+    checkerContext.checkerInput.persistentDecls.get(operatorName) match {
+      case None =>
+        val msg = "Operator not found: " + operatorName
+        logger.warn(msg)
+        Left(msg)
+
+      case Some(decl) =>
+        val paramsCount = decl.formalParams.size
+        if (paramsCount > 0) {
+          val msg = s"Operators with arguments are not supported yet: $operatorName has $paramsCount parameters"
+          logger.warn(msg)
+          return Left(msg)
+        }
+
+        checkerContext.trex.evaluate(timeoutSec, decl.body) match {
+          case None =>
+            val msg = s"Failed to evaluate $operatorName within $timeoutSec seconds"
+            logger.warn(msg)
+            Left(msg)
+
+          case Some(tlaExpr) =>
+            // Serialize the counterexample to JSON
+            val ujsonExpr = ItfCounterexampleWriter.exprToJson(tlaExpr)
+            // Convert UJSON to Jackson's JsonNode.
+            val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+            Right(mapper.readTree(new StringReader(ujsonExpr.render())))
+        }
     }
   }
 
@@ -503,7 +524,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             predicates = cfg.predicates.copy(
                 behaviorSpec = InitNextSpec(params.init, params.next),
                 invariants = params.invariants,
-                view = params.view,
+                persistent = params.exports,
             ),
         )
       })
