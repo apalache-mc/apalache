@@ -147,8 +147,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    *   either an error or [[AssumeTransitionResult]]
    */
   def assumeTransition(params: AssumeTransitionParams): Either[ServiceError, AssumeTransitionResult] = {
-    val transitionId = params.transitionId
     val sessionId = params.sessionId
+    val transitionId = params.transitionId
     // validate the input parameters
     val validationResult = sessions.get(sessionId) match {
       case Some(injector) =>
@@ -174,19 +174,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           if (!sessions.contains(params.sessionId)) {
             return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
           }
-          var snapshotBeforeId: Integer = -1
-          if (params.rollbackToSnapshotId >= 0) {
-            // try to recover the snapshot
-            val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.rollbackToSnapshotId)
-            if (!recovered) {
-              return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
-                      s"Snapshot not found: ${params.rollbackToSnapshotId} in session $sessionId"))
-            }
-            snapshotBeforeId = params.rollbackToSnapshotId
-          } else {
-            // take a snapshot of the current context
-            snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
-          }
+          // take a snapshot of the current context
+          val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
           // the step number might have changed after recovery, so we re-fetch the transitions
           val stepNo = checkerContext.trex.stepNo
           val transitions = if (stepNo == 0) {
@@ -228,12 +217,53 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                       s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId $status")
                   AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, status)
                 case None =>
-                  // in case of timeout or unknown, we do not rollback the context, but return unknown
+                  // in case of timeout or unknown, we do not roll back the context, but return unknown
                   logger.info(
                       s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
                   AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
               }
             }
+          }
+        }
+      }
+  }
+
+  /**
+   * Rollback to a previously saved snapshot.
+   *
+   * @param params
+   *   the parameters object that contains the session ID and the snapshot ID
+   * @return
+   *   either an error or [[RollbackResult]]
+   */
+  def rollback(params: RollbackParams): Either[ServiceError, RollbackResult] = {
+    val sessionId = params.sessionId
+    // validate the input parameters
+    val validationResult = sessions.get(sessionId) match {
+      case Some(injector) =>
+        // get the checker context from the injector
+        val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+        val checkerContext = checkerModule.modelCheckerContext.get
+        Right(checkerContext)
+
+      case None =>
+        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+    }
+
+    // Perform a rollback.
+    validationResult
+      .flatMap { checkerContext =>
+        withLock(params.sessionId) {
+          if (!sessions.contains(params.sessionId)) {
+            return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+          }
+          // try to recover the snapshot
+          val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
+          if (recovered) {
+            Right(RollbackResult(sessionId, params.snapshotId))
+          } else {
+            Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                    s"Snapshot not found: ${params.snapshotId} in session $sessionId"))
           }
         }
       }

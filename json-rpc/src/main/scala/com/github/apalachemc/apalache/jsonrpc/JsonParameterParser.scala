@@ -82,6 +82,29 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
+   * Parses the parameters for rolling back to an earlier snapshot.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a [[RollbackParams]] instance containing the parsed sources.
+   */
+  def parseRollback(params: TreeNode): Either[String, RollbackParams] = {
+    try {
+      val assumeParams = mapper.treeToValue(params, classOf[RollbackParams])
+      if (assumeParams.sessionId.isEmpty) {
+        return Left("rollback parameters must contain a non-empty sessionId.")
+      }
+      if (assumeParams.snapshotId < 0) {
+        return Left("rollback parameters must contain a non-negative snapshotId.")
+      }
+      Right(assumeParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in rollback: ${e.getMessage}")
+    }
+  }
+
+  /**
    * Parses the parameters for switching to the next step.
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.

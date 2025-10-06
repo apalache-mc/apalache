@@ -19,7 +19,6 @@ object InvariantStatus {
   val SATISFIED = "SATISFIED"
   val VIOLATED = "VIOLATED"
   val UNKNOWN = "UNKNOWN"
-  val TIMEOUT = "TIMEOUT"
 }
 
 /**
@@ -38,6 +37,18 @@ case class AssumeTransitionResult(
     snapshotId: Int,
     transitionId: Int,
     status: TransitionStatus.T)
+    extends ExplorationServiceResult
+
+/**
+ * The result of rolling back to a snapshot.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context after the transition has been assumed.
+ */
+case class RollbackResult(
+    sessionId: String,
+    snapshotId: Int)
     extends ExplorationServiceResult
 
 /**

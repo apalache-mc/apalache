@@ -50,12 +50,21 @@ case class LoadSpecParams(
 case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
 
 /**
+ * Roll back to an earlier snapshot.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context.
+ */
+case class RollbackParams(
+    sessionId: String,
+    snapshotId: Int)
+    extends ExplorationServiceParams
+
+/**
  * Parameters for preparing a symbolic transition in the solver context.
  * @param sessionId
  *   the ID of the previously loaded specification
- * @param rollbackToSnapshotId
- *   the snapshot ID for recovering the context before the transition is assumed. If it is negative, no snapshot
- *   recovery is performed.
  * @param transitionId
  *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
  *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
@@ -68,23 +77,21 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  */
 case class AssumeTransitionParams(
     sessionId: String,
-    rollbackToSnapshotId: Int = -1,
     transitionId: Int,
     checkEnabled: Boolean,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
 
 object AssumeTransitionParams {
-  def apply(sessionId: String, rollbackToSnapshotId: Int, transitionId: Int): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
+  def apply(sessionId: String, transitionId: Int): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled = true, timeoutSec = 0)
   }
 
   def apply(
       sessionId: String,
-      rollbackToSnapshotId: Int,
       transitionId: Int,
       checkEnabled: Boolean): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled, timeoutSec = 0)
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled, timeoutSec = 0)
   }
 }
 
