@@ -4191,3 +4191,13 @@ Specification session disposed
 Stopping Apalache server...
 [1]
 ```
+
+### JSON-RPC: explore Prisoners and query for views
+
+```sh
+$ ../../script/explorer.py --view=View --max-steps=10 --max-runs=10 --seed=200 MC5_Prisoners.tla PrisonersTyped.tla
+...
+View hash: 344bc5b85b9ed354da3efe736761902638e5379dc2a49c00a39aac6d247c11ea
+All invariants satisfied at step 10
+...
+```

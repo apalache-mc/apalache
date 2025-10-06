@@ -12,6 +12,15 @@ object InvariantKind {
 }
 
 /**
+ * The kinds of values to query.
+ */
+object QueryKind {
+  type T = String
+  val VIEW = "VIEW"
+  val TRACE = "TRACE"
+}
+
+/**
  * Parameters for loading a specification in the JSON-RPC server.
  * @param sources
  *   A sequence of specification modules, each encoded in base64. The head must be the root module, and the rest are
@@ -22,12 +31,15 @@ object InvariantKind {
  *   the name of the next-state predicate. Default is "Next".
  * @param invariants
  *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
+ * @param view
+ *   an optional name of a view to preprocess and expose for evaluation. Default is `None`.
  */
 case class LoadSpecParams(
     sources: Seq[String],
     init: String = "Init",
     next: String = "Next",
-    invariants: List[String] = List())
+    invariants: List[String] = List(),
+    view: Option[String] = None)
     extends ExplorationServiceParams
 
 /**
@@ -38,12 +50,21 @@ case class LoadSpecParams(
 case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
 
 /**
+ * Roll back to an earlier snapshot.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context.
+ */
+case class RollbackParams(
+    sessionId: String,
+    snapshotId: Int)
+    extends ExplorationServiceParams
+
+/**
  * Parameters for preparing a symbolic transition in the solver context.
  * @param sessionId
  *   the ID of the previously loaded specification
- * @param rollbackToSnapshotId
- *   the snapshot ID for recovering the context before the transition is assumed. If it is negative, no snapshot
- *   recovery is performed.
  * @param transitionId
  *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
  *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
@@ -56,23 +77,21 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  */
 case class AssumeTransitionParams(
     sessionId: String,
-    rollbackToSnapshotId: Int = -1,
     transitionId: Int,
     checkEnabled: Boolean,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
 
 object AssumeTransitionParams {
-  def apply(sessionId: String, rollbackToSnapshotId: Int, transitionId: Int): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
+  def apply(sessionId: String, transitionId: Int): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled = true, timeoutSec = 0)
   }
 
   def apply(
       sessionId: String,
-      rollbackToSnapshotId: Int,
       transitionId: Int,
       checkEnabled: Boolean): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled, timeoutSec = 0)
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled, timeoutSec = 0)
   }
 }
 
@@ -99,5 +118,20 @@ case class CheckInvariantParams(
     sessionId: String,
     invariantId: Int,
     kind: InvariantKind.T = InvariantKind.STATE,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * Parameters for checking invariants in the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param kinds
+ *   the kinds of the values to query: "VIEW" or "TRACE"
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class QueryParams(
+    sessionId: String,
+    kinds: List[InvariantKind.T] = List(),
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
