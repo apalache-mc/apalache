@@ -217,7 +217,67 @@ It produces an output like this:
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1"}}
 ```
 
-### 2.3. Method assumeTransition
+### 2.3. Method rollback
+
+Rollback the context of a session to an earlier snapshot. The snapshot identifier
+must have been returned by an earlier call.
+
+**Precondition.** The `snapshotId` must have been returned earlier by another method.
+In addition to that, if a snapshot $n$ was returned by a method with the sequence number $i$,
+and the method `rollback` is called with `snapshotId` set to $m$ with the sequence number $j$,
+then there must be no intermediate call to rollback with a snapshot $m < n$ with a sequence
+number $k$ such that $i < k < j$.
+
+**Effect.** The server rolls back the context of the session to the snapshot
+with the given identifier $n$. All snapshots with identifiers greater than $n$ are
+discarded. The snapshot with identifier $n$ remains in the server, so you can
+roll back to it again later.
+
+**Input:**
+
+```json
+{
+  "method": "rollback",
+  "params": {
+    "sessionId": "session-id",
+    "snapshotId": snapshot-id
+  }
+}
+```
+
+**Output:**
+
+A successful rollback returns the session identifier and the snapshot identifier
+that was rolled back to:
+
+```json
+{
+  "result": {
+    "sessionId": "session-id",
+    "snapshotId": snapshot-id
+  }
+}
+```
+
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"rollback","params":{"sessionId":"1","snapshotId":0},"id":2}'
+```
+
+It produces the following output:
+
+```json  
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":0}}
+```
+
+
+### 2.4. Method assumeTransition
 
 Given a session identifier and a transition identifier, prepare this transition in the
 SMT context and assume that this transition holds true. Additionally, if `checkEnabled`
@@ -226,23 +286,14 @@ the current transition prefix, including the supplied transition. The parameter 
 sets the timeout for this check in seconds. If `timeout` is not set, or it is set to `0`, then
 the timeout is infinite.
 
-To avoid an additional call, we also allow `assumeTransition` to roll back the context
-to an earlier snapshot *before* assuming the transition. In this case, the `rollbackToSnapshotId` parameter
-must be set to the identifier of the snapshot to roll back to. If `rollbackToSnapshotId` is negative
-(or not set), then no rollback is performed. When the `rollbackToSnapshotId` is set, the rollback is
-performed unconditionally. You have to be careful about landing in a state with the right
-snapshot.
-
 **Precondition.** This method should be called once before calling `nextState`, unless
 the previous call to `assumeTransition` returned with the status `"DISABLED"`.
 
-**Effect.** If `rollbackToSnapshotId >= 0`, the model checker context is rolled back
-to the snapshot with `rollbackToSnapshotId`. Then, the transition with `transitionId`
-is prepared in the SMT context, and the corresponding constraints are added to the
-context. Unless the method returns with the status `"DISABLED"`, the context remains
-modified after the call. If the method returns with the status `"DISABLED"`, then
-the context is rolled back to the latest snapshot (either the one before the call,
-or the one specified by `rollbackToSnapshotId`).
+**Effect.** The transition with `transitionId` is prepared in the SMT context, and the
+corresponding constraints are added to the context. Unless the method returns with
+the status `"DISABLED"`, the context remains modified after the call. If the method
+returns with the status `"DISABLED"`, then the context is rolled back to the latest
+snapshot.
 
 **Input:**
 
@@ -251,7 +302,6 @@ or the one specified by `rollbackToSnapshotId`).
   "method": "assumeTransition",
   "params": {
     "sessionId": "session-identifier",
-    "rollbackToSnapshotId": optional-snapshot-identifier,
     "transitionId": transition-identifier,
     "checkEnabled": check-if-transition-is-enabled,
     "timeoutSec": timeout-in-seconds-or-0,
@@ -288,7 +338,7 @@ It produces the following output:
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
 ```
 
-### 2.4. Method nextState
+### 2.5. Method nextState
 
 Given a session identifier, switch to the next symbolic state. This method should be called
 only after the `assumeTransition` method was called successfully (with the status `"ENABLED"`
@@ -342,7 +392,7 @@ It produces the following output:
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":3,"newStepNo":1}}
 ```
 
-### 2.5. Method checkInvariant
+### 2.6. Method checkInvariant
 
 Given a session identifier and an invariant identifier, check whether this invariant can be violated
 by a concrete execution that follows the collected symbolic path. The invariant identifier is a number
@@ -410,7 +460,7 @@ The output is as follows:
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","invariantStatus":"SATISFIED"}}
 ```
 
-### 2.6. Method query
+### 2.7. Method query
 
 Given a session identifier, query the current context for values of several kinds:
 
@@ -476,7 +526,7 @@ The output is as follows:
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"view":{"#tup":[false,true,false]}}}
 ```
 
-### 2.7. Method nextView
+### 2.8. Method nextView
 
 **NOT IMPLEMENTED YET**
 
