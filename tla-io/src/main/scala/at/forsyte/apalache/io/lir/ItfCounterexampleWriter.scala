@@ -91,11 +91,16 @@ object ItfCounterexampleWriter {
 
   private def stateToJson(state: Map[String, TlaEx], index: Int): ujson.Value = {
     val meta = ujson.Obj(INDEX_FIELD -> ujson.Num(index))
-    val map = state.toList.sortBy(_._1).map(p => (p._1, exToJson(p._2)))
+    val map = state.toList.sortBy(_._1).map(p => (p._1, exprToJson(p._2)))
     ujson.Obj(META_FIELD -> meta, map: _*)
   }
 
-  private def exToJson: TlaEx => ujson.Value = {
+  /**
+   * Convert an individual TLA+ expression to its JSON representation in the ITF format.
+   * @return
+   *   a function that converts TLA+ expressions to JSON values
+   */
+  def exprToJson: TlaEx => ujson.Value = {
     case ValEx(TlaInt(num)) =>
       ujson.Obj(BIG_INT_FIELD -> ujson.Str(num.toString(10)))
 
@@ -108,27 +113,27 @@ object ItfCounterexampleWriter {
     case ex @ OperEx(TlaFunOper.tuple, args @ _*) =>
       ex.typeTag match {
         case Typed(SeqT1(_)) =>
-          ujson.Arr(args.map(exToJson): _*)
+          ujson.Arr(args.map(exprToJson): _*)
 
         case _ =>
-          ujson.Obj(TUP_FIELD -> ujson.Arr(args.map(exToJson): _*))
+          ujson.Obj(TUP_FIELD -> ujson.Arr(args.map(exprToJson): _*))
       }
 
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
-      ujson.Obj(SET_FIELD -> ujson.Arr(args.map(exToJson): _*))
+      ujson.Obj(SET_FIELD -> ujson.Arr(args.map(exprToJson): _*))
 
     case OperEx(TlaFunOper.rec, args @ _*) =>
       val (keyEs, valuesEs) = deinterleave(args)
       val keys = keyEs.collect { case ValEx(TlaStr(s)) => s }
-      val values = valuesEs.map(exToJson)
+      val values = valuesEs.map(exprToJson)
       ujson.Obj.from(keys.zip(values))
 
     case OperEx(VariantOper.variant, ValEx(TlaStr(tagName)), valueEx) =>
-      ujson.Obj(TAG_FIELD -> ujson.Str(tagName), VALUE_FIELD -> exToJson(valueEx))
+      ujson.Obj(TAG_FIELD -> ujson.Str(tagName), VALUE_FIELD -> exprToJson(valueEx))
 
     case OperEx(ApalacheOper.setAsFun, OperEx(TlaSetOper.enumSet, args @ _*)) =>
       val keyValueArrays = args.collect { case OperEx(TlaFunOper.tuple, key, value) =>
-        ujson.Arr(exToJson(key), exToJson(value))
+        ujson.Arr(exprToJson(key), exprToJson(value))
       }
       ujson.Obj(MAP_FIELD -> ujson.Arr(keyValueArrays: _*))
 

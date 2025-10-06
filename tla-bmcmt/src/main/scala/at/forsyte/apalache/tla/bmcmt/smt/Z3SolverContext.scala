@@ -173,6 +173,8 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     // Try to obtain the lock, to let the statistics thread finish its work.
     // If it is stuck for some reason, continue after the timeout in any case.
     statisticsLock.tryLock(2 * config.z3StatsSec, java.util.concurrent.TimeUnit.SECONDS)
+    // try to interrupt the current tactic
+    z3context.interrupt()
     try {
       if (config.debug) {
         printStatistics()
@@ -389,6 +391,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
    * Evaluate a ground TLA+ expression in the current model, which is available after a call to sat(). This method
    * assumes that the outcome is one of the basic types: a Boolean, integer, or a cell constant. If not, it throws
    * SmtEncodingException.
+   *
+   * This method is quite restricted in its behavior. If you want to extract a ground expression of an arena cell, use
+   * [[at.forsyte.apalache.tla.bmcmt.SymbStateDecoder]].
    *
    * @param ex
    *   an expression to evaluate

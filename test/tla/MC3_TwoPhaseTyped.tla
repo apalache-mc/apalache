@@ -14,4 +14,32 @@ VARIABLES
   msgs
 
 INSTANCE TwoPhaseTyped
+
+\* Count the number of replicas that map to a value (Parikh image).
+\* @type: (RM -> a) => (a -> Int);
+CountImg(f) ==
+    LET V == {f[id]: id \in RM} IN
+    [ v \in V |-> Cardinality({ id \in RM: f[id] = v })]
+
+
+View == <<
+    CountImg(rmState),
+    tmState
+>>
+
+\* find an example of TM aborting
+TMAbortedEx ==
+    tmState /= "aborted"
+
+\* find an example of TM committing
+TMCommittedEx ==
+    tmState /= "committed"
+
+\* find an example of all RMs aborted
+RMAllAbortedEx ==
+    ~(\A rm \in RM: rmState[rm] = "aborted")
+
+\* find an example of all RMs committing
+RMAllCommittedEx ==
+    ~(\A rm \in RM: rmState[rm] = "committed")
 ===============================================================================
