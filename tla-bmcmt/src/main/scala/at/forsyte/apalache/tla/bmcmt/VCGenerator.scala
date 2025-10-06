@@ -15,7 +15,8 @@ import scala.collection.immutable.SortedMap
 /**
  * Generator of verification conditions. In the current implementation, VCGenerator takes an invariant candidate,
  * decomposes the invariant into smaller invariant candidates and produces negations of the invariant candidates. In the
- * future, we would temporal formulas as well.
+ * future, we would decompose temporal formulas as well. In addition to that, VCGenerator can normalize a state view,
+ * if it is present.
  *
  * @author
  *   Igor Konnov
