@@ -16,10 +16,12 @@ object InvariantKind {
  */
 object QueryKind {
   type T = String
+
   /**
    * Evaluate a nullary operator in the current state.
    */
   val OPERATOR = "OPERATOR"
+
   /**
    * Extract an execution trace.
    */
@@ -139,8 +141,8 @@ case class CheckInvariantParams(
  *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
  */
 case class QueryParams(
-                        sessionId: String,
-                        kinds: List[InvariantKind.T] = List(),
-                        operator: String = "",
-                        timeoutSec: Int = 0)
+    sessionId: String,
+    kinds: List[InvariantKind.T] = List(),
+    operator: String = "",
+    timeoutSec: Int = 0)
     extends ExplorationServiceParams

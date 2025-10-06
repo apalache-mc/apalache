@@ -522,13 +522,13 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to rack specification predicates */
   case class Predicates(
-                         behaviorSpec: BehaviorSpec,
-                         cinit: Option[String],
-                         invariants: List[String],
-                         temporalProps: List[String],
-                         tlcConfig: Option[(TlcConfig, File)],
-                         view: Option[String],
-                         persistent: List[String])
+      behaviorSpec: BehaviorSpec,
+      cinit: Option[String],
+      invariants: List[String],
+      temporalProps: List[String],
+      tlcConfig: Option[(TlcConfig, File)],
+      view: Option[String],
+      persistent: List[String])
       extends OptionGroup
 
   // The `Predicates` option group loads configurations both from the usual
@@ -576,7 +576,7 @@ object OptionGroup extends LazyLogging {
                   temporalProps = checker.temporalPropsOrDefault,
                   tlcConfig = None,
                   view = checker.view,
-                  persistent = List()
+                  persistent = List(),
               ))
 
         case Some(fname) =>
@@ -605,7 +605,7 @@ object OptionGroup extends LazyLogging {
               temporalProps = temporalProps,
               tlcConfig = Some((tlcConfig, fname)),
               view = checker.view,
-              persistent = List()
+              persistent = List(),
           )
       }
     }

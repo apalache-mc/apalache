@@ -1,7 +1,6 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.io.ConfigManager
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
