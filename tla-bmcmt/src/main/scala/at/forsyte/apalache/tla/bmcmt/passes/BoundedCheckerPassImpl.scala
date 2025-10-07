@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
-import at.forsyte.apalache.infra.passes.FineTuningParser
+import at.forsyte.apalache.infra.passes.{DerivedPredicates, FineTuningParser}
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.options.Algorithm.Remote
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
@@ -18,7 +18,7 @@ import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred,
 }
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
@@ -34,6 +34,7 @@ import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 @Singleton()
 class BoundedCheckerPassImpl @Inject() (
     options: OptionGroup.HasChecker,
+    derivedPreds: DerivedPredicates,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
@@ -69,7 +70,22 @@ class BoundedCheckerPassImpl @Inject() (
     val verificationConditions =
       CheckerInputVC(invariantsAndNegations.toList, actionInvariantsAndNegations.toList,
           traceInvariantsAndNegations.toList, optView)
-    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, verificationConditions)
+    // Map the names of the persistent operator definitions to their declarations.
+    // For example, this is useful for evaluating views.
+    val persistentDefs = derivedPreds.persistent.foldLeft(Map.empty[String, TlaOperDecl]) { case (m, name) =>
+      module.operDeclarations
+        .find(_.name == name)
+        .map(d => m + (name -> d))
+        .getOrElse(m)
+    }
+    val input = new CheckerInput(
+        module,
+        initTrans.toList,
+        nextTrans.toList,
+        cinitP,
+        verificationConditions,
+        persistentDefs,
+    )
     val stepsBound = options.checker.length
     val debug = options.common.debug
     val tuning = options.checker.tuning

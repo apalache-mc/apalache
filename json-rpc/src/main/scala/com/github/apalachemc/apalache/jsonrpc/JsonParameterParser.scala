@@ -43,7 +43,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
    * @return
-   *   Either an error message or a [[DisposeSpecParams]] instance containing the parsed sources.
+   *   Either an error message or a [[DisposeSpecParams]] instance.
    */
   def parseDisposeSpec(params: TreeNode): Either[String, DisposeSpecParams] = {
     try {
@@ -63,7 +63,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
    * @return
-   *   Either an error message or a [[AssumeTransitionParams]] instance containing the parsed sources.
+   *   Either an error message or a [[AssumeTransitionParams]] instance.
    */
   def parseAssumeTransition(params: TreeNode): Either[String, AssumeTransitionParams] = {
     try {
@@ -86,7 +86,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
    * @return
-   *   Either an error message or a [[RollbackParams]] instance containing the parsed sources.
+   *   Either an error message or a [[RollbackParams]] instance.
    */
   def parseRollback(params: TreeNode): Either[String, RollbackParams] = {
     try {
@@ -109,7 +109,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
    * @return
-   *   Either an error message or a [[NextStepParams]] instance containing the parsed sources.
+   *   Either an error message or a [[NextStepParams]] instance.
    */
   def parseNextStep(params: TreeNode): Either[String, NextStepParams] = {
     try {
@@ -129,7 +129,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param node
    *   tree node representing the JSON method parameters
    * @return
-   *   Either an error message or a [[CheckInvariantParams]] instance containing the parsed sources.
+   *   Either an error message or a [[CheckInvariantParams]] instance.
    */
   def parseCheckInvariant(node: TreeNode): Either[String, CheckInvariantParams] = {
     try {
@@ -155,19 +155,45 @@ class JsonParameterParser(mapper: ObjectMapper) {
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
    * @return
-   *   Either an error message or a [[QueryParams]] instance containing the parsed sources.
+   *   Either an error message or a [[QueryParams]] instance.
    */
   def parseQuery(params: TreeNode): Either[String, QueryParams] = {
     try {
       val applyParams = mapper.treeToValue(params, classOf[QueryParams])
       if (applyParams.sessionId.isEmpty) {
-        return Left("nextStep parameters must contain a non-empty sessionId.")
+        return Left("nextStep parameters must contain a non-empty `sessionId`.")
       }
       if (applyParams.kinds.isEmpty) {
-        return Left("query parameters must contain a non-empty kinds array.")
+        return Left("query parameters must contain a non-empty `kinds` array.")
       }
-      if (applyParams.kinds.exists(k => k != QueryKind.VIEW && k != QueryKind.TRACE)) {
-        return Left("kinds must be either 'VIEW' or 'TRACE'.")
+      if (applyParams.kinds.exists(k => k != QueryKind.OPERATOR && k != QueryKind.TRACE)) {
+        return Left(s"Field `kinds` may contain only: ${QueryKind.OPERATOR} or ${QueryKind.TRACE}.")
+      }
+      if (applyParams.kinds.contains(QueryKind.OPERATOR) && applyParams.operator == "") {
+        return Left(s"Field `operator` must be provided when `kinds` contains '${QueryKind.OPERATOR}'.")
+      }
+      Right(applyParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in nextStep: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for switching the current symbolic context to the next model.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a [[NextModelParams]] instance.
+   */
+  def parseNextModel(params: TreeNode): Either[String, NextModelParams] = {
+    try {
+      val applyParams = mapper.treeToValue(params, classOf[NextModelParams])
+      if (applyParams.sessionId.isEmpty) {
+        return Left("nextStep parameters must contain a non-empty `sessionId`.")
+      }
+      if (applyParams.operator == "") {
+        return Left(s"Field `operator` must be provided.")
       }
       Right(applyParams)
     } catch {

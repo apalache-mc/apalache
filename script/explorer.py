@@ -182,7 +182,7 @@ class ApalacheExplorer:
             print(f"Error making RPC call to {method}: {e}")
             raise
 
-    def load_spec(self, sources: List[str], invariants: List[str], view: Optional[str]) -> bool:
+    def load_spec(self, sources: List[str], invariants: List[str], exports: List[str]) -> bool:
         """Load a TLA+ specification."""
         print(f"Loading specification from: {', '. join(sources)}")
 
@@ -203,11 +203,9 @@ class ApalacheExplorer:
             "sources": sources_base64,
             "init": "Init",
             "next": "Next",
-            "invariants": invariants
+            "invariants": invariants,
+            "exports": exports,
         }
-
-        if view:
-            params["view"] = view
 
         try:
             response = self._make_rpc_call("loadSpec", params)
@@ -347,21 +345,22 @@ class ApalacheExplorer:
             except Exception as e:
                 print(f"Error disposing specification: {e}")
 
-    def query(self, timeout: int) -> bool:
+    def query(self, operator: str, timeout: int) -> bool:
         """Query against the current context"""
         params = {
-            "sessionId": self.session_id, "timeoutSec": timeout, "kinds": ["VIEW"]
+            "sessionId": self.session_id, "timeoutSec": timeout,
+            "kinds": ["OPERATOR"], "operator": operator,
         }
 
         response = self._make_rpc_call("query", params)
 
         if "error" in response:
-            print(f"Error moving to next step: {response['error']}")
+            print(f"Error in query: {response['error']}")
             return False
 
         result = response["result"]
 
-        return result["view"]
+        return result["operatorValue"]
 
     def explore(self, sources: List[str], invariants: List[str], view: Optional[str],
                 max_steps: int = 20, max_runs: int = 100, timeout: int = 60):
@@ -372,7 +371,7 @@ class ApalacheExplorer:
                 return False
 
             # Load specification
-            spec_params = self.load_spec(sources, invariants, view)
+            spec_params = self.load_spec(sources, invariants, [view] if view else [])
             if not spec_params:
                 return False
 
@@ -427,7 +426,7 @@ class ApalacheExplorer:
                         return False
 
                     if view:
-                        view_val = self.query(timeout)
+                        view_val = self.query(view, timeout)
                         view_hash = hashlib.sha256(pickle.dumps(view_val, protocol=5)).hexdigest()
                         print(f"View hash: {view_hash}")
 

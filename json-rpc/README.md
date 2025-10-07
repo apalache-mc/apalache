@@ -87,16 +87,26 @@ be used in subsequent calls to refer to this session.
       <importedModule1InBase64>,
       ...
     ],
-    "init": "optional-initializer-for-constants",
+    "init": "optional-initializer-predicate",
     "next": "optional-transition-predicate",
     "invariants": [
       "invariant 1",
       ...,
       "invariant N"
+    ],
+    "exports": [
+      "exported-operator-1",
+      ...,
+      "exported-operator-M"
     ]
   }
 }
 ```
+
+Note that if you are going to evaluate operators in the subsequent calls,
+you should list them in the `exports` field. Otherwise, the specification
+preprocessor prunes the definitions that are not used by the standard
+operators such as `Init`, `Next`, and the invariants.
 
 **Output:**
 
@@ -110,8 +120,7 @@ be used in subsequent calls to refer to this session.
       "nNextTransitions": number-of-Next-transitions,
       "nStateInvariants": number-of-state-invariants,
       "nActionInvariants": number-of-action-invariants,
-      "nTraceInvariants": number-of-trace-invariants,
-      "hasView": true-if-there-is-a-view-operator
+      "nTraceInvariants": number-of-trace-invariants
     }
   }
 }
@@ -144,7 +153,7 @@ View == <<x < 0, x = 0, x > 0>>
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"], "view": "View"},"id":1}'
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"], "exports": ["View"]},"id":1}'
 ```
 
 It should produce the following output:
@@ -161,8 +170,7 @@ It should produce the following output:
       "nNextTransitions": 2,
       "nStateInvariants": 1,
       "nActionInvariants": 0,
-      "nTraceInvariants": 0,
-      "hasView": true
+      "nTraceInvariants": 0
     }
   }
 }
@@ -275,7 +283,6 @@ It produces the following output:
 ```json  
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":0}}
 ```
-
 
 ### 2.4. Method assumeTransition
 
@@ -467,11 +474,18 @@ Given a session identifier, query the current context for values of several kind
  - `"TRACE"`: A concrete trace that follows the symbolic path constructed so far.
    There may be multiple such traces. This call returns the trace that
    was found by the SMT solver.
- - `"VIEW"`: The value of the view operator. The name of this operator must be
-   specified in the `view` field of the `loadSpec` method. There may be multiple
-   such values. This call returns the view of the model that was found by the
-   SMT solver.
- - TBD: More kinds to be added in the future.
+ - `"OPERATOR"`: A value of the operator whose name is given in `operator`. This name
+   must be exported in the `loadSpec` method, unless it is also used in the standard
+   operators such as `Init`, `Next`, and the invariants. The operator `operator`
+   MUST be side-effect free, that is, this operator may not refer to primed variables.
+   Currently, only nullary operators are supported, that is, operators without
+   any parameters.
+
+Importantly, since the values are evaluated for **a model** of the current context,
+the SMT solver may return different models on different calls. Apalache fixes SMT
+seeds to default values, to make the model checker deterministic. You can further
+experiment with different SMT seeds by following the instructions in
+[SMT randomization][].
 
 **Precondition.** No preconditions.
 
@@ -493,19 +507,24 @@ set, or it is set to `0`, then the timeout is infinite.
   "params": {
     "sessionId": "session-identifier",
     "kinds": [ kind1, kind2, ... ],
+    "operator": optional-operator-name,
     "timeoutSec": timeout-in-seconds-or-0
   }
 }
 ```
 
 **Output:**
+
+The output contains the session identifier, and, depending on the requested
+kinds, the trace (field `trace`) and/or the expression value (field `expr`). Both `trace`
+and `expr` are in the [ITF Format][].
 
 ```json
 {
   "result": {
     "sessionId": "session-identifier",
     "trace": trace-in-itf-or-null,
-    "view": view-in-itf-or-null
+    "operatorValue": expr-in-itf-or-null
   }
 }
 ```
@@ -517,44 +536,49 @@ Execute the following command:
 ```sh
 $ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","kinds":["VIEW"]},"id":5}'
+  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","kinds":["OPERATOR"],"operator":"View"},"id":5}'
 ```
 
 The output is as follows:
 
 ```json
-{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"view":{"#tup":[false,true,false]}}}
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"operatorValue":{"#tup":[false,true,false]}}}
 ```
 
-### 2.8. Method nextView
+### 2.8. Method nextModel
 
-**NOT IMPLEMENTED YET**
-
-Given a session identifier, find a view that is different from the one in the
+Given a session identifier, find a model that is different from the one in the
 current context. This method requires a call to the SMT solver, so it may take
-some time. The parameter `timeoutSec` sets the timeout for this check in seconds.
-If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
-If `nextView` returns with the status `"SATISFIED"`, then the current context
-has a model, and the view can be obtained by calling the `query` method.
+some time. To distinguish the new model from the previous one, the method
+requires the parameter `operator`, which has exactly the same semantics as in the
+`query` method. The value `x` of `operator` is queried against the current context,
+and the next model is required to have a value `y` for `operator` such that `x != y`.
+That is, the operator must be side-effect free, and it must
+be exported in the `loadSpec` method, unless it is also used in the standard
+operators such as `Init`, `Next`, and the invariants. Currently, only nullary
+operators are supported, that is, operators without any parameters.
 
-**Precondition.** The `loadSpec` method must have been called with the parameter
-`view`. This method is successful only if the current context has a model.
-Otherwise, the result is undefined. For details, see the precondition of the
-`query` method.
+The parameter `timeoutSec` sets the timeout for this check in seconds.
+If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
+If `nextModel` returns with the field `hasNext` set to `"TRUE"`, then the current
+context has a model, and the view can be obtained by calling the `query` method.
+
+**Precondition.** No preconditions.
 
 **Effect.** This method changes the SMT context. It adds a constraint that excludes
-the current value of the view operator. To prevent this constraint from propagating
-into the next states, once you are done with enumerating the views, you should
-roll back to the snapshot before the first call to `nextView` (e.g., to the snapshot
+the current value of the provided operator. To prevent this constraint from propagating
+into the next states, once you are done with enumerating the models, you should
+roll back to the snapshot before the first call to `nextModel` (e.g., to the snapshot
 returned by `nextState`).
 
 **Input:**
 
 ```json
 {
-  "method": "nextView",
+  "method": "nextModel",
   "params": {
     "sessionId": "session-identifier",
+    "operator": <operator-name>,
     "timeoutSec": timeout-in-seconds-or-0
   }
 }
@@ -562,11 +586,28 @@ returned by `nextState`).
 
 **Output:**
 
+The output contains the following fields:
+
+ - The field `sessionId` contains the session that was passed in the input.
+ - The field `hasOld` indicates whether there was a model in the current context.
+   If `hasOld == "TRUE"`, then the field `oldValue` contains the value of the
+   operator in the current model. If `hasOld == "FALSE"`, then there was no model
+   in the current context, and `oldValue == null`. If the solver could not
+   determine whether there is a model, then `hasOld == "UNKNOWN"`, and `oldValue == null`.
+ - The field `hasNext` indicates whether a new model was found. If `hasNext == "TRUE"`,
+   then the current context has a model that is different from the previous one.
+   If `hasNext == "FALSE"`, then there is no new model. If the solver could not
+   determine whether there is a new model, then `hasNext == "UNKNOWN"`.
+ - The field `oldValue` contains the value of the operator in the current model,
+   if such a model exists (i.e., if `hasOld == "TRUE"`). Otherwise, `oldValue == null`.
+
 ```json
 {
   "result": {
     "sessionId": "session-identifier",
-    "status": (SATISFIED|VIOLATED|UNKNOWN)
+    "oldValue": expr-in-itf-or-null,
+    "hasOld": (TRUE|FALSE|UNKNOWN),
+    "hasNext": (TRUE|FALSE|UNKNOWN)
   }
 }
 ```
@@ -578,13 +619,28 @@ Execute the following command:
 ```sh
 $ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"nextView","params":{"sessionId":"1","timeoutSec":10},"id":6}'
+  -d '{"jsonrpc":"2.0","method":"nextModel","params":{"sessionId":"1","operator":"View","timeoutSec":10},"id":6}'
 ```
 
 The output is as follows:
 
 ```json
-TODO
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "result": {
+    "sessionId": "1",
+    "oldValue": {
+      "#tup": [
+        false,
+        true,
+        false
+      ]
+    },
+    "hasOld": "TRUE",
+    "hasNext": "FALSE"
+  }
+}
 ```
 
 [Jetty Server]: https://jetty.org/
@@ -598,3 +654,7 @@ TODO
 [Thomas Pani]: https://thpani.net
 
 [ITF Format]: https://apalache-mc.org/docs/adr/015adr-trace.html
+
+[Apalache IR]: https://apalache-mc.org/docs/adr/005adr-json.html
+
+[SMT randomization]: https://apalache-mc.org/docs/apalache/tuning.html#randomization

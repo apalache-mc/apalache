@@ -13,6 +13,8 @@ import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
+import at.forsyte.apalache.tla.lir.TlaOperDecl
+import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -45,6 +47,9 @@ case class ServiceError(code: Int, message: String)
  * A transition exploration service.
  * @param config
  *   the service configuration, typically, constructed with [[at.forsyte.apalache.io.ConfigManager]].
+ *
+ * @author
+ *   Igor Konnov, 2025
  */
 class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
   // Guice injector instantiated for each session. This injector contains objects that are
@@ -99,7 +104,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         nNextTransitions = checkerInput.nextTransitions.size,
         nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
         nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
-        hasView = checkerInput.verificationConditions.stateView.nonEmpty,
     )
 
     logger.info(s"Session=$sessionId Step=0 Snapshot=$snapshotId: Specification ready")
@@ -420,17 +424,82 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
         }
 
-        val traceInJson = if (params.kinds.contains("TRACE")) {
-          getTraceInJson(checkerContext)
-        } else {
-          NullNode.getInstance()
+        val traceInJson =
+          if (params.kinds.contains(QueryKind.TRACE)) {
+            getTraceInJson(checkerContext)
+          } else {
+            NullNode.getInstance()
+          }
+        val viewInJson =
+          if (!params.kinds.contains(QueryKind.OPERATOR)) {
+            NullNode.getInstance()
+          } else {
+            getViewInJson(checkerContext, params.operator, params.timeoutSec) match {
+              case Right(json) => json
+              case Left(msg)   => return Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
+            }
+          }
+        QueryResult(sessionId, trace = traceInJson, operatorValue = viewInJson)
+      }
+    }
+  }
+
+  /**
+   * Try switching to the next model, if it exists.
+   *
+   * @param params
+   *   the parameters object that contains the session ID
+   * @return
+   *   either an error or [[NextModelResult]]
+   */
+  def nextModel(params: NextModelParams): Either[ServiceError, NextModelResult] = {
+    val sessionId = params.sessionId
+    // validate the input parameters under the global lock
+    val checkerContext =
+      sessions.get(sessionId) match {
+        case Some(injector) =>
+          // get the checker context from the injector
+          val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+          val checkerContext = checkerModule.modelCheckerContext.get
+          checkerContext
+
+        case None =>
+          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+      }
+
+    // Roll to the next step. Make sure that we do not update the SMT context concurrently.
+    withLock(params.sessionId) {
+      if (!sessions.contains(params.sessionId)) {
+        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+      } else {
+        val decl = findOperator(checkerContext, params.operator) match {
+          case Left(msg) => return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
+          case Right(d)  => d
         }
-        val viewInJson = if (params.kinds.contains("VIEW")) {
-          getViewInJson(checkerContext, params.timeoutSec)
-        } else {
-          NullNode.getInstance()
+
+        checkerContext.trex.evaluate(params.timeoutSec, decl.body) match {
+          case None =>
+            // the current context is UNSAT (or timed out)
+            Right(NextModelResult(sessionId, oldValue = NullNode.instance, hasOld = NextModelStatus.FALSE,
+                    hasNext = NextModelStatus.FALSE))
+
+          case Some(oldTlaExpr) =>
+            val assertion = tla.not(tla.eql(tla.unchecked(decl.body), tla.unchecked(oldTlaExpr))).build
+            checkerContext.trex.assertState(assertion)
+            val hasNext =
+              checkerContext.trex
+                .sat(params.timeoutSec)
+                .map(isSat => if (isSat) NextModelStatus.TRUE else NextModelStatus.FALSE)
+                .getOrElse(NextModelStatus.UNKNOWN)
+
+            // Serialize the old operator value to JSON
+            val ujsonExpr = ItfCounterexampleWriter.exprToJson(oldTlaExpr)
+            // Convert UJSON to Jackson's JsonNode.
+            val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+            val oldValueInJson = mapper.readTree(new StringReader(ujsonExpr.render()))
+            Right(NextModelResult(sessionId, oldValue = oldValueInJson, hasOld = NextModelStatus.TRUE,
+                    hasNext = hasNext))
         }
-        QueryResult(sessionId, trace = traceInJson, view = viewInJson)
       }
     }
   }
@@ -455,18 +524,44 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
   private def getViewInJson(
       checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
-      timeoutSec: Int): JsonNode = {
-    val viewExpr = checkerContext.checkerInput.verificationConditions.stateView
-    if (viewExpr.isEmpty) {
-      return NullNode.getInstance()
-    }
-    checkerContext.trex.evaluate(timeoutSec, viewExpr.get) match {
-      case None                => NullNode.getInstance()
-      case Some(evaluatedView) =>
-        // Serialize the counterexample to JSON
-        val ujsonTrace = ItfCounterexampleWriter.exprToJson(evaluatedView)
-        // Convert UJSON to Jackson's JsonNode.
-        new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+      operatorName: String,
+      timeoutSec: Int): Either[String, JsonNode] = {
+    findOperator(checkerContext, operatorName)
+      .flatMap(decl => {
+        checkerContext.trex.evaluate(timeoutSec, decl.body) match {
+          case None =>
+            val msg = s"Failed to evaluate $operatorName within $timeoutSec seconds"
+            logger.warn(msg)
+            Left(msg)
+
+          case Some(tlaExpr) =>
+            // Serialize the counterexample to JSON
+            val ujsonExpr = ItfCounterexampleWriter.exprToJson(tlaExpr)
+            // Convert UJSON to Jackson's JsonNode.
+            val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+            Right(mapper.readTree(new StringReader(ujsonExpr.render())))
+        }
+      })
+  }
+
+  private def findOperator(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+      name: String): Either[String, TlaOperDecl] = {
+    checkerContext.checkerInput.persistentDecls.get(name) match {
+      case None =>
+        val msg = "Operator not found: " + name
+        logger.warn(msg)
+        Left(msg)
+
+      case Some(decl) =>
+        val paramsCount = decl.formalParams.size
+        if (paramsCount > 0) {
+          val msg = s"Operators with arguments are not supported yet: $name has $paramsCount parameters"
+          logger.warn(msg)
+          Left(msg)
+        } else {
+          Right(decl)
+        }
     }
   }
 
@@ -503,7 +598,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             predicates = cfg.predicates.copy(
                 behaviorSpec = InitNextSpec(params.init, params.next),
                 invariants = params.invariants,
-                view = params.view,
+                persistent = params.exports,
             ),
         )
       })
@@ -639,6 +734,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
               .parseQuery(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.query(serviceParams))
+
+          case "nextModel" =>
+            new JsonParameterParser(mapper)
+              .parseNextModel(paramsNode)
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+                  serviceParams => service.nextModel(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))

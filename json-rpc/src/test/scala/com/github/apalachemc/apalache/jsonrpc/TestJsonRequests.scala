@@ -33,7 +33,6 @@ class TestJsonRequests extends AnyFunSuite {
         assert(loadSpecParams.init == "Init", "Unexpected init")
         assert(loadSpecParams.next == "Next", "Unexpected next")
         assert(loadSpecParams.invariants.isEmpty, "Invariants should be empty")
-        assert(loadSpecParams.view.isEmpty, "View should be empty")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }
@@ -45,7 +44,7 @@ class TestJsonRequests extends AnyFunSuite {
     val input =
       s"""{"jsonrpc": "2.0", "method": "loadSpec", "params": { "sources": ["$encodedText"],
          |"init": "MyInit", "next": "MyNext", "invariants": ["inv1", "inv2"],
-         |"view": "MyView"},"id": 1}""".stripMargin
+         |"exports": ["MyView"]},"id": 1}""".stripMargin
     val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
     val inputJson = mapper.readTree(input)
     val parsed = new JsonParameterParser(mapper).parseLoadSpec(inputJson.path("params"))
@@ -55,7 +54,6 @@ class TestJsonRequests extends AnyFunSuite {
         assert(loadSpecParams.init == "MyInit", "Unexpected init")
         assert(loadSpecParams.next == "MyNext", "Unexpected next")
         assert(loadSpecParams.invariants == List("inv1", "inv2"), "Unexpected invariants")
-        assert(loadSpecParams.view.contains("MyView"), "Unexpected view")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }
@@ -132,7 +130,7 @@ class TestJsonRequests extends AnyFunSuite {
         assert(params.checkEnabled, "Expected checkEnabled to be true")
         assert(params.timeoutSec == 600, "Expected timeoutSec to be 600")
       case Left(error) =>
-        fail(s"Failed to load specification: $error")
+        fail(s"Failed: $error")
     }
   }
 
@@ -148,7 +146,7 @@ class TestJsonRequests extends AnyFunSuite {
         assert(params.sessionId == "1a1555f8", "Unexpected session ID")
         assert(params.snapshotId == 3, "Expected rollbackToSnapshotId to be 3")
       case Left(error) =>
-        fail(s"Failed to load specification: $error")
+        fail(s"Failed: $error")
     }
   }
 
@@ -162,7 +160,7 @@ class TestJsonRequests extends AnyFunSuite {
       case Right(params: NextStepParams) =>
         assert(params.sessionId == "1a1555f8", "Unexpected session ID")
       case Left(error) =>
-        fail(s"Failed to load specification: $error")
+        fail(s"Failed: $error")
     }
   }
 
@@ -180,23 +178,25 @@ class TestJsonRequests extends AnyFunSuite {
         assert(params.invariantId == 3, "Unexpected invariantId")
         assert(params.timeoutSec == 300, "Expected timeoutSec to be 300")
       case Left(error) =>
-        fail(s"Failed to load specification: $error")
+        fail(s"Failed: $error")
     }
   }
 
   test("parse QueryParams") {
     val input =
       s"""{"jsonrpc": "2.0", "method": "query",
-         |"params": { "sessionId": "1a1555f8", "kinds": ["VIEW", "TRACE"] }, "id": 1}""".stripMargin
+         |"params": { "sessionId": "1a1555f8", "kinds": ["OPERATOR", "TRACE"], "operator": "View" },
+         |"id": 1}""".stripMargin
     val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
     val inputJson = mapper.readTree(input)
     val parsed = new JsonParameterParser(mapper).parseQuery(inputJson.path("params"))
     parsed match {
       case Right(params: QueryParams) =>
         assert(params.sessionId == "1a1555f8", "Unexpected session ID")
-        assert(params.kinds == List(QueryKind.VIEW, QueryKind.TRACE), "Unexpected kinds")
+        assert(params.kinds == List(QueryKind.OPERATOR, QueryKind.TRACE), "Unexpected kinds")
+        assert(params.operator != "", "Expected `operator` to be defined")
       case Left(error) =>
-        fail(s"Failed to load specification: $error")
+        fail(s"Failed: $error")
     }
   }
 }
