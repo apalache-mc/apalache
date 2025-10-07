@@ -205,6 +205,29 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
+  test("sequence 0-0-0 then nextModel x 2") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    for (_ <- 0 until 3) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    // the first call to nextModel gives us "false"
+    service.nextModel(NextModelParams(sessionId = sessionId, operator = "View")) match {
+      case Right(NextModelResult(newSessionId, oldValue, hasOld, hasNext)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after nextModel")
+        assert(oldValue.toString == """false""", "View should be false at x=3")
+        assert(hasOld == NextModelStatus.YES, "There is old model")
+        assert(hasNext == NextModelStatus.NO, "There is no next model")
+
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
   test("sequence 0-0-0-0-rollback-0-0-0-0") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     val sessionId = specResult.sessionId

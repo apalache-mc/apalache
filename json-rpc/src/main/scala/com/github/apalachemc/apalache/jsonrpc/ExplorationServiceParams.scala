@@ -130,7 +130,7 @@ case class CheckInvariantParams(
     extends ExplorationServiceParams
 
 /**
- * Parameters for checking invariants in the current state or transition.
+ * Parameters for querying against the current state or transition.
  * @param sessionId
  *   the ID of the previously loaded specification
  * @param kinds
@@ -143,6 +143,21 @@ case class CheckInvariantParams(
 case class QueryParams(
     sessionId: String,
     kinds: List[InvariantKind.T] = List(),
+    operator: String = "",
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * Parameters for checking invariants in the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param operator
+ *   the operator name to differentiate from the current model
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class NextModelParams(
+    sessionId: String,
     operator: String = "",
     timeoutSec: Int = 0)
     extends ExplorationServiceParams

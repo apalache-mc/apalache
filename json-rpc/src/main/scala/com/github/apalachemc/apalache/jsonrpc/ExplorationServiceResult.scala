@@ -21,6 +21,13 @@ object InvariantStatus {
   val UNKNOWN = "UNKNOWN"
 }
 
+object NextModelStatus {
+  type T = String
+  val YES = "YES"
+  val NO = "NO"
+  val UNKNOWN = "UNKNOWN"
+}
+
 /**
  * The result of preparing a symbolic transition.
  * @param sessionId
@@ -94,7 +101,7 @@ case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
  * @param sessionId
  *   the ID of the previously loaded specification
  * @param snapshotId
- *   the snapshot ID for recovering the context right after loading the specification.
+ *   the snapshot ID for recovering the context right after taking the next step.
  * @param newStepNo
  *   the number of the new step
  */
@@ -122,3 +129,18 @@ case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantSta
  *   a JSON-encoded result of operator application, if it was requested; otherwise, it is null
  */
 case class QueryResult(sessionId: String, trace: JsonNode, operatorValue: JsonNode) extends ExplorationServiceResult
+
+/**
+ * The result of finding the next model.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param oldValue
+ *   a JSON-encoded result of operator application, for the model before changing it; otherwise, it is null
+ * @param hasOld
+ *  the status of finding the model before switching to next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a timeout)
+ * @param hasNext
+ *  the status of finding the next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a timeout)
+ */
+case class NextModelResult(sessionId: String, oldValue: JsonNode,
+                           hasOld: NextModelStatus.T, hasNext: NextModelStatus.T)
+  extends ExplorationServiceResult

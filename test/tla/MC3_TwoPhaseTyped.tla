@@ -24,7 +24,8 @@ CountImg(f) ==
 
 View == <<
     CountImg(rmState),
-    tmState
+    tmState,
+    tmPrepared
 >>
 
 \* find an example of TM aborting
