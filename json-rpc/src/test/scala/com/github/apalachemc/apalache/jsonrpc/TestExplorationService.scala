@@ -218,8 +218,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       case Right(NextModelResult(newSessionId, oldValue, hasOld, hasNext)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after nextModel")
         assert(oldValue.toString == """false""", "View should be false at x=3")
-        assert(hasOld == NextModelStatus.YES, "There is old model")
-        assert(hasNext == NextModelStatus.NO, "There is no next model")
+        assert(hasOld == NextModelStatus.TRUE, "There is old model")
+        assert(hasNext == NextModelStatus.FALSE, "There is no next model")
 
       case Right(result) =>
         fail(s"Unexpected result: $result")

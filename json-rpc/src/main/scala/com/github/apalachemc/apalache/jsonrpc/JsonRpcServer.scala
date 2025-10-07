@@ -480,8 +480,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         checkerContext.trex.evaluate(params.timeoutSec, decl.body) match {
           case None =>
             // the current context is UNSAT (or timed out)
-            Right(NextModelResult(sessionId, oldValue = NullNode.instance, hasOld = NextModelStatus.NO,
-                    hasNext = NextModelStatus.NO))
+            Right(NextModelResult(sessionId, oldValue = NullNode.instance, hasOld = NextModelStatus.FALSE,
+                    hasNext = NextModelStatus.FALSE))
 
           case Some(oldTlaExpr) =>
             val assertion = tla.not(tla.eql(tla.unchecked(decl.body), tla.unchecked(oldTlaExpr))).build
@@ -489,7 +489,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             val hasNext =
               checkerContext.trex
                 .sat(params.timeoutSec)
-                .map(isSat => if (isSat) NextModelStatus.YES else NextModelStatus.NO)
+                .map(isSat => if (isSat) NextModelStatus.TRUE else NextModelStatus.FALSE)
                 .getOrElse(NextModelStatus.UNKNOWN)
 
             // Serialize the old operator value to JSON
@@ -497,7 +497,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             // Convert UJSON to Jackson's JsonNode.
             val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
             val oldValueInJson = mapper.readTree(new StringReader(ujsonExpr.render()))
-            Right(NextModelResult(sessionId, oldValue = oldValueInJson, hasOld = NextModelStatus.YES,
+            Right(NextModelResult(sessionId, oldValue = oldValueInJson, hasOld = NextModelStatus.TRUE,
                     hasNext = hasNext))
         }
       }

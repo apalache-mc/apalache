@@ -23,8 +23,8 @@ object InvariantStatus {
 
 object NextModelStatus {
   type T = String
-  val YES = "YES"
-  val NO = "NO"
+  val TRUE = "TRUE"
+  val FALSE = "FALSE"
   val UNKNOWN = "UNKNOWN"
 }
 

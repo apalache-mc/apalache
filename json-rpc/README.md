@@ -558,8 +558,8 @@ operators are supported, that is, operators without any parameters.
 
 The parameter `timeoutSec` sets the timeout for this check in seconds.
 If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
-If `nextModel` returns with the status `"SATISFIED"`, then the current context
-has a model, and the view can be obtained by calling the `query` method.
+If `nextModel` returns with the field `hasNext` set to `"TRUE"`, then the current
+context has a model, and the view can be obtained by calling the `query` method.
 
 **Precondition.** No preconditions.
 
@@ -588,24 +588,24 @@ The output contains the following fields:
 
  - The field `sessionId` contains the session that was passed in the input.
  - The field `hasOld` indicates whether there was a model in the current context.
-   If `hasOld == "YES"`, then the field `oldValue` contains the value of the
-   operator in the current model. If `hasOld == "NO"`, then there was no model
+   If `hasOld == "TRUE"`, then the field `oldValue` contains the value of the
+   operator in the current model. If `hasOld == "FALSE"`, then there was no model
    in the current context, and `oldValue == null`. If the solver could not
    determine whether there is a model, then `hasOld == "UNKNOWN"`, and `oldValue == null`.
- - The field `hasNext` indicates whether a new model was found. If `hasNext == "YES"`,
+ - The field `hasNext` indicates whether a new model was found. If `hasNext == "TRUE"`,
    then the current context has a model that is different from the previous one.
-   If `hasNext == "NO"`, then there is no new model. If the solver could not
+   If `hasNext == "FALSE"`, then there is no new model. If the solver could not
    determine whether there is a new model, then `hasNext == "UNKNOWN"`.
  - The field `oldValue` contains the value of the operator in the current model,
-   if such a model exists (i.e., if `hasOld == "YES"`). Otherwise, `oldValue == null`.
+   if such a model exists (i.e., if `hasOld == "TRUE"`). Otherwise, `oldValue == null`.
 
 ```json
 {
   "result": {
     "sessionId": "session-identifier",
     "oldValue": expr-in-itf-or-null,
-    "hasOld": (YES|NO|UNKNOWN),
-    "hasNext": (YES|NO|UNKNOWN)
+    "hasOld": (TRUE|FALSE|UNKNOWN),
+    "hasNext": (TRUE|FALSE|UNKNOWN)
   }
 }
 ```
@@ -635,8 +635,8 @@ The output is as follows:
         false
       ]
     },
-    "hasOld": "YES",
-    "hasNext": "NO"
+    "hasOld": "TRUE",
+    "hasNext": "FALSE"
   }
 }
 ```
