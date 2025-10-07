@@ -137,10 +137,14 @@ case class QueryResult(sessionId: String, trace: JsonNode, operatorValue: JsonNo
  * @param oldValue
  *   a JSON-encoded result of operator application, for the model before changing it; otherwise, it is null
  * @param hasOld
- *  the status of finding the model before switching to next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a timeout)
+ *   the status of finding the model before switching to next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a
+ *   timeout)
  * @param hasNext
- *  the status of finding the next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a timeout)
+ *   the status of finding the next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a timeout)
  */
-case class NextModelResult(sessionId: String, oldValue: JsonNode,
-                           hasOld: NextModelStatus.T, hasNext: NextModelStatus.T)
-  extends ExplorationServiceResult
+case class NextModelResult(
+    sessionId: String,
+    oldValue: JsonNode,
+    hasOld: NextModelStatus.T,
+    hasNext: NextModelStatus.T)
+    extends ExplorationServiceResult
