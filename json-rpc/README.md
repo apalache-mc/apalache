@@ -551,7 +551,9 @@ Given a session identifier, find a model that is different from the one in the
 current context. This method requires a call to the SMT solver, so it may take
 some time. To distinguish the new model from the previous one, the method
 requires the parameter `operator`, which has exactly the same semantics as in the
-`query` method. That is, the operator must be side-effect free, and it must
+`query` method. The value `x` of `operator` is queried against the current context,
+and the next model is required to have a value `y` for `operator` such that `x != y`.
+That is, the operator must be side-effect free, and it must
 be exported in the `loadSpec` method, unless it is also used in the standard
 operators such as `Init`, `Next`, and the invariants. Currently, only nullary
 operators are supported, that is, operators without any parameters.
