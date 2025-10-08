@@ -41,7 +41,6 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         assert(params.nNextTransitions == 2, "Should have two next transitions")
         assert(params.nStateInvariants == 0, "Should have no state invariants")
         assert(params.nActionInvariants == 0, "Should have no action invariants")
-        assert(!params.hasView, "Should have no view")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -57,7 +56,6 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         assert(params.nNextTransitions == 2, "Should have two next transitions")
         assert(params.nStateInvariants == 3, "Should have 3 invariants")
         assert(params.nActionInvariants == 1, "Should have 1 action invariant")
-        assert(!params.hasView, "Should have no view")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -66,14 +64,13 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("load spec with a view") {
-    service.loadSpec(LoadSpecParams(sources = Seq(spec1), view = Some("View"))) match {
+    service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))) match {
       case Right(LoadSpecResult(sessionId, _, params)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
         assert(params.nInitTransitions == 1, "Should have one initial transition")
         assert(params.nNextTransitions == 2, "Should have two next transitions")
         assert(params.nStateInvariants == 0, "Should have 0 state invariants")
         assert(params.nActionInvariants == 0, "Should have 0 action invariants")
-        assert(params.hasView, "Should have a view")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -182,24 +179,48 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   }
 
   test("sequence 0-0-0 then query") {
-    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), view = Some("View"))).toOption.get
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
     val sessionId = specResult.sessionId
     val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
     for (_ <- 0 until 3) {
       assert(service.assumeTransition(t0).isRight)
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     }
-    service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE, QueryKind.VIEW))) match {
-      case Right(QueryResult(newSessionId, trace, view)) =>
+    service
+      .query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE, QueryKind.OPERATOR),
+              operator = "View")) match {
+      case Right(QueryResult(newSessionId, trace, expr)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after querying")
-        assert(!view.isNull, "View should not be empty")
-        assert(view.toString == """false""", "View should be false at x=3")
+        assert(expr.toString == """false""", "View should be false at x=3")
         assert(!trace.isNull, "Trace should not be empty")
         val states = trace.get("states")
         assert(states.size() == 3)
         assert(states.get(0).toString == """{"#meta":{"index":0},"x":{"#bigint":"0"}}""")
         assert(states.get(1).toString == """{"#meta":{"index":1},"x":{"#bigint":"1"}}""")
         assert(states.get(2).toString == """{"#meta":{"index":2},"x":{"#bigint":"2"}}""")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
+  test("sequence 0-0-0 then nextModel x 2") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    for (_ <- 0 until 3) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    // the first call to nextModel gives us "false"
+    service.nextModel(NextModelParams(sessionId = sessionId, operator = "View")) match {
+      case Right(NextModelResult(newSessionId, oldValue, hasOld, hasNext)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after nextModel")
+        assert(oldValue.toString == """false""", "View should be false at x=3")
+        assert(hasOld == NextModelStatus.TRUE, "There is old model")
+        assert(hasNext == NextModelStatus.FALSE, "There is no next model")
+
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>

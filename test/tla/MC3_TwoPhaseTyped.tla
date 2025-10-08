@@ -21,10 +21,23 @@ CountImg(f) ==
     LET V == {f[id]: id \in RM} IN
     [ v \in V |-> Cardinality({ id \in RM: f[id] = v })]
 
+\* the least precise view, which leads to the fastest findings
+View1 ==
+    CountImg(rmState)
 
-View == <<
+\* probably, the optimal view
+View2 == <<
     CountImg(rmState),
-    tmState
+    tmState,
+    tmPrepared
+>>
+
+\* very precise view with symmetry reduction
+View3 == <<
+    CountImg(rmState),
+    tmState,
+    tmPrepared,
+    msgs
 >>
 
 \* find an example of TM aborting
