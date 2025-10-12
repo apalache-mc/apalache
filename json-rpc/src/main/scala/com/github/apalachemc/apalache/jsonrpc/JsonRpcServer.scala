@@ -623,6 +623,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
  */
 @WebServlet(urlPatterns = Array("/rpc"), asyncSupported = true)
 class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyLogging {
+
   /** The maximum number of threads to allow in the pool */
   val MAX_POOL_SIZE = 1024
 
