@@ -623,10 +623,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
  */
 @WebServlet(urlPatterns = Array("/rpc"), asyncSupported = true)
 class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyLogging {
-
-  /** The number of threads to keep in the pool */
-  val CORE_POOL_SIZE = 16
-
   /** The maximum number of threads to allow in the pool */
   val MAX_POOL_SIZE = 1024
 
@@ -638,7 +634,9 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
 
   // Our own bounded pool, to avoid blocking Jetty threads
   private val executor = new ThreadPoolExecutor(
-      CORE_POOL_SIZE,
+      // The core pool size is about the number of the logical cores.
+      // Since the most tasks are CPU-bound (z3), we do not need more threads.
+      Runtime.getRuntime.availableProcessors(),
       MAX_POOL_SIZE,
       KEEP_ALIVE_SEC,
       TimeUnit.SECONDS,
