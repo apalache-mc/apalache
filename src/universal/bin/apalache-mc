@@ -2,10 +2,9 @@
 #
 # Run the APALACHE model checker
 #
-# NOTE: The primary intended use for this script is to be copied into the
-# packaged produced.
+# @dev: This script is copied from `src/universal/bin/apalache-mc` during packaging.
 #
-# Igor Konnov, Shon Feder 2018-2022
+# Igor Konnov, Shon Feder 2018-2025
 
 # See https://sipb.mit.edu/doc/safe-shell/
 set -euf -o pipefail
@@ -22,6 +21,7 @@ DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 
 APALACHE_JAR=${APALACHE_JAR:-"$DIR/../lib/apalache.jar"}
 JVM_ARGS=${JVM_ARGS:-""}
+JVM_GC_ARGS=${JVM_GC_ARGS:-""}
 
 if ! test -f "$APALACHE_JAR"
 then
@@ -36,6 +36,16 @@ if ! [[ "$JVM_ARGS" =~ -Xmx || "$JVM_ARGS" =~ -XX:MaxRAMPercentage ]]
 then
     # If not, set our default heap size
     JVM_ARGS="${JVM_ARGS} -Xmx4096m"
+fi
+
+if [ -z "$JVM_GC_ARGS" ]
+then
+    # We have to periodically garbage collect, as JVM and Z3 may compete for memory.
+    # By default, JVM does not free memory unless it hits the limits.
+    # As a result, there may be not enough memory left for Z3.
+    # This is especially relevant for the server instances, which may process
+    # multiple model checking requests concurrently.
+    JVM_GC_ARGS="${JVM_GC_ARGS} -XX:+UseG1GC -XX:G1PeriodicGCInterval=600000 -XX:+G1PeriodicGCInvokesConcurrent"
 fi
 
 # Avoid SANY concurrency issues: https://github.com/tlaplus/tlaplus/issues/688
@@ -58,4 +68,4 @@ fi
 # Run with `exec` to replace the PID, rather than running in a subshell.
 # This saves one process, and ensures signals are sent to the replacement process
 # C.f. https://github.com/sbt/sbt-native-packager/blob/e72f2f45b8cab5881add1cd62743bfc69c2b9b4d/src/main/resources/com/typesafe/sbt/packager/archetypes/scripts/bash-template#L141-L142
-exec java $JVM_ARGS -Djava.io.tmpdir=$JAVA_IO_TMPDIR -jar "$APALACHE_JAR" "$@"
+exec java $JVM_ARGS $JVM_GC_ARGS -Djava.io.tmpdir=$JAVA_IO_TMPDIR -jar "$APALACHE_JAR" "$@"
