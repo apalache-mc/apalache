@@ -76,9 +76,9 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       val elemPtrs = arena.getHasPtr(cell).filter(inSet)
       val decodedElems = elemPtrs.map(p => decodeCellToTlaEx(arena, p.elem).build)
       // try to normalize the set for better user experience
-      val niceElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr).map(tla.unchecked)
-      if (niceElems.isEmpty) tla.emptySet(elemT)
-      else tla.enumSet(niceElems: _*)
+      val sortedElems = decodedElems.distinct.sortWith(SymbStateDecoder.compareTlaExByStr).map(tla.unchecked)
+      if (sortedElems.isEmpty) tla.emptySet(elemT)
+      else tla.enumSet(sortedElems: _*)
 
     case FinFunSetT(_, _) =>
       val fromSet = decodeCellToTlaEx(arena, arena.getDom(cell))
@@ -172,7 +172,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       cell: ArenaCell,
       fieldTypes: SortedMap[String, TlaType1]): BuilderT =
     tla.rowRec(None,
-        fieldTypes.keySet.toList.map { k =>
+        fieldTypes.keySet.toList.sorted.map { k =>
           k -> decodeCellToTlaEx(arena, recordOps.getField(arena, cell, k))
         }: _*)
 
@@ -238,6 +238,7 @@ class SymbStateDecoder(solverContext: SolverContext, rewriter: SymbStateRewriter
       .filter(isInRelation)
       .foldLeft(Map.empty[TlaEx, TlaEx])(decodePair)
       .toSeq
+      .sortWith { case ((k1, _), (k2, _)) => SymbStateDecoder.compareTlaExByStr(k1, k2) }
       .map { case (k, v) => tla.tuple(tla.unchecked(k), tla.unchecked(v)) }
 
     val set =
