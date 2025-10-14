@@ -24,7 +24,7 @@ fi
 # invalid user permissions on generated files
 cmd="docker run \
     -e OUT_DIR -e WRITE_INTERMEDIATE -e SMT_ENCODING \
-    -e JVM_ARGS \
+    -e JVM_ARGS -e JVM_GC_ARGS \
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
     --rm \
     -v $(pwd):/var/apalache \
