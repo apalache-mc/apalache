@@ -648,6 +648,8 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
         t
       },
   )
+  logger.info("Created thread pool with core pool size %d, max pool size %d, keep alive %d sec"
+        .format(Runtime.getRuntime.availableProcessors(), MAX_POOL_SIZE, KEEP_ALIVE_SEC))
   // data mapper for JSON serialization/deserialization
   // using Jackson with Scala module for better compatibility with case classes
   private val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
