@@ -636,7 +636,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
   // Our own bounded pool, to avoid blocking Jetty threads
   private val executor = new ThreadPoolExecutor(
       // The core pool size is about the number of the logical cores.
-      // Since the most tasks are CPU-bound (z3), we do not need more threads.
+      // Since most tasks are CPU-bound (z3), we do not need more threads.
       Runtime.getRuntime.availableProcessors(),
       MAX_POOL_SIZE,
       KEEP_ALIVE_SEC,
