@@ -61,6 +61,7 @@ then
     echo "# Tool home: $DIR"
     echo "# Package:   $APALACHE_JAR"
     echo "# JVM args: $JVM_ARGS"
+    echo "# JVM GC args: $JVM_GC_ARGS"
     echo "# -Djava.io.tmpdir: $JAVA_IO_TMPDIR"
     echo "#"
 fi
