@@ -97,9 +97,9 @@ $ apalache-mc help
 We can set some JVM args and still have the default max heap size supplied.
 
 ```sh
-$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc version --debug
+$ JVM_ARGS="-Xms1m" apalache-mc version --debug
 ...
-# JVM args: -Xms1m -XX:+UseSerialGC -Xmx4096m
+# JVM args: -Xms1m -Xmx4096m
 ...
 ```
 
@@ -109,6 +109,17 @@ If we set the max heap size (with `-Xmx`) it will override the default max heap 
 $ JVM_ARGS="-Xmx16m" apalache-mc version --debug
 ...
 # JVM args: -Xmx16m
+...
+```
+
+### executable responds to JVM_GC_ARGS environment variable
+
+We can set some JVM args and still have the default max heap size supplied.
+
+```sh
+$ JVM_GC_ARGS="-XX:+UseSerialGC" apalache-mc version --debug
+...
+# JVM GC args: -XX:+UseSerialGC
 ...
 ```
 
