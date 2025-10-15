@@ -177,7 +177,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         withLock(params.sessionId) {
           if (!sessions.contains(params.sessionId)) {
             return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
-              s"Session not found: ${params.sessionId}"))
+                    s"Session not found: ${params.sessionId}"))
           }
           // take a snapshot of the current context
           val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
@@ -261,7 +261,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         withLock(params.sessionId) {
           if (!sessions.contains(params.sessionId)) {
             return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
-              s"Session not found: ${params.sessionId}"))
+                    s"Session not found: ${params.sessionId}"))
           }
           // try to recover the snapshot
           val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
@@ -304,7 +304,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           {
             if (!sessions.contains(params.sessionId)) {
               return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
-                s"Session not found: ${params.sessionId}"))
+                      s"Session not found: ${params.sessionId}"))
             }
             val stepBeforeNo = checkerContext.trex.stepNo
             checkerContext.trex.nextState()
@@ -354,7 +354,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     withLock(params.sessionId) {
       validationResult.map { checkerContext =>
         if (!sessions.contains(params.sessionId)) {
-          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: ${params.sessionId}"))
+          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                  s"Session not found: ${params.sessionId}"))
         }
         // take a snapshot of the current context
         val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
@@ -424,7 +425,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     withLock(params.sessionId) {
       validationResult.map { checkerContext =>
         if (!sessions.contains(params.sessionId)) {
-          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: ${params.sessionId}"))
+          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                  s"Session not found: ${params.sessionId}"))
         }
 
         val traceInJson =
