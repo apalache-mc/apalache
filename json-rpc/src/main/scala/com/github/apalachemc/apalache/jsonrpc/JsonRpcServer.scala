@@ -136,7 +136,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           logger.info(s"Session ${params.sessionId}: Disposed.")
           Right(DisposeSpecResult(params.sessionId))
         case None =>
-          Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+          Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: ${params.sessionId}"))
       }
 
     result
@@ -168,7 +168,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         }
 
       case None =>
-        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
     }
 
     // Prepare the transition. Make sure that we do not update the SMT context concurrently.
@@ -176,7 +176,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       .map { checkerContext =>
         withLock(params.sessionId) {
           if (!sessions.contains(params.sessionId)) {
-            return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+            return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                    s"Session not found: ${params.sessionId}"))
           }
           // take a snapshot of the current context
           val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
@@ -251,7 +252,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         Right(checkerContext)
 
       case None =>
-        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
     }
 
     // Perform a rollback.
@@ -259,7 +260,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       .flatMap { checkerContext =>
         withLock(params.sessionId) {
           if (!sessions.contains(params.sessionId)) {
-            return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+            return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                    s"Session not found: ${params.sessionId}"))
           }
           // try to recover the snapshot
           val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
@@ -292,7 +294,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         Right(checkerContext)
 
       case None =>
-        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
     }
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
@@ -301,7 +303,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         .map { checkerContext =>
           {
             if (!sessions.contains(params.sessionId)) {
-              return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+              return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                      s"Session not found: ${params.sessionId}"))
             }
             val stepBeforeNo = checkerContext.trex.stepNo
             checkerContext.trex.nextState()
@@ -344,14 +347,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         }
 
       case None =>
-        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
     }
 
     // Check the invariant
     withLock(params.sessionId) {
       validationResult.map { checkerContext =>
         if (!sessions.contains(params.sessionId)) {
-          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                  s"Session not found: ${params.sessionId}"))
         }
         // take a snapshot of the current context
         val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
@@ -414,14 +418,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         Right(checkerContext)
 
       case None =>
-        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
     }
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
     withLock(params.sessionId) {
       validationResult.map { checkerContext =>
         if (!sessions.contains(params.sessionId)) {
-          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                  s"Session not found: ${params.sessionId}"))
         }
 
         val traceInJson =
@@ -464,13 +469,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext
 
         case None =>
-          return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: $sessionId"))
+          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
       }
 
     // Roll to the next step. Make sure that we do not update the SMT context concurrently.
     withLock(params.sessionId) {
       if (!sessions.contains(params.sessionId)) {
-        Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Session not found: ${params.sessionId}"))
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: ${params.sessionId}"))
       } else {
         val decl = findOperator(checkerContext, params.operator) match {
           case Left(msg) => return Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
