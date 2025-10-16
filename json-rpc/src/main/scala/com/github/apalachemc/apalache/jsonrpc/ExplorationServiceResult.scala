@@ -2,6 +2,8 @@ package com.github.apalachemc.apalache.jsonrpc
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import scala.collection.immutable.SortedSet
+
 /**
  * All kinds of the results that the exploration service can return.
  */
@@ -71,23 +73,30 @@ case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: Sp
     extends ExplorationServiceResult
 
 /**
+ * Metadata that is attached to actions and invariants.
+ * @param index the index of the action or invariant, starting from 0
+ * @param labels the set of labels that are attached to the action or invariant
+ */
+case class SpecEntryMetadata(index: Int, labels: SortedSet[String])
+
+/**
  * Specification parameters that are needed for symbolic path exploration. These numbers may be different from what the
  * user expects by reading the specification, as transitions and invariants are decomposed.
  *
- * @param nInitTransitions
- *   the number of initial symbolic transitions
- * @param nNextTransitions
- *   the number of next symbolic transitions
- * @param nStateInvariants
- *   the number of state invariants
- * @param nActionInvariants
- *   the number of action invariants
+ * @param initTransitions
+ *   metadata for the initial symbolic transitions
+ * @param nextTransitions
+ *   metadata for the next-state symbolic transitions
+ * @param stateInvariants
+ *   metadata for the state invariants
+ * @param actionInvariants
+ *   metadata for the action invariants
  */
 case class SpecParameters(
-    nInitTransitions: Int,
-    nNextTransitions: Int,
-    nStateInvariants: Int,
-    nActionInvariants: Int)
+    initTransitions: Seq[SpecEntryMetadata],
+    nextTransitions: Seq[SpecEntryMetadata],
+    stateInvariants: Seq[SpecEntryMetadata],
+    actionInvariants: Seq[SpecEntryMetadata])
 
 /**
  * The result of disposing a specification.

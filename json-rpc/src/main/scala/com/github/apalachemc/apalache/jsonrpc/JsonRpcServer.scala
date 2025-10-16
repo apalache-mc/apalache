@@ -13,6 +13,7 @@ import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
+import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaOperDecl
 import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
@@ -100,10 +101,18 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     // produce the specification parameters for remote exploration
     val specParameters = SpecParameters(
-        nInitTransitions = checkerInput.initTransitions.size,
-        nNextTransitions = checkerInput.nextTransitions.size,
-        nStateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.size,
-        nActionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.size,
+        initTransitions = checkerInput.initTransitions.zipWithIndex.map { case (e, i) =>
+          SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+        },
+        nextTransitions = checkerInput.nextTransitions.zipWithIndex.map { case (e, i) =>
+          SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+        },
+        stateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.zipWithIndex.map {
+          case ((e, _), i) => SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+        },
+        actionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.zipWithIndex.map {
+          case ((e, _), i) => SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+        },
     )
 
     logger.info(s"Session=$sessionId Step=0 Snapshot=$snapshotId: Specification ready")
@@ -516,7 +525,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    *   a JSON-encoded trace
    */
   private def getTraceInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): JsonNode = {
-    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs.
+    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs,
+    // as reported by loadSpec.
     val path = checkerContext.trex.decodedExecution().path
     val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
         path.map(_ => SortedSet[String]()).toIndexedSeq, ())

@@ -6,6 +6,8 @@ import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.immutable.SortedSet
+
 @RunWith(classOf[JUnitRunner])
 class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   private val spec1 =
@@ -14,14 +16,14 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       |VARIABLE
       |  \* @type: Int;
       |  x
-      |Init == x = 0
+      |Init == I:: x = 0
       |Next ==
-      |  \/ x < 3  /\ x' = x + 1
-      |  \/ x > -3 /\ x' = x - 1
-      |Inv1 == x >= -3
-      |Inv2 == x <= 3
-      |Inv3 == x /= 0
-      |Inv4 == x' - x = 1 \/ x' - x = -1
+      |  \/ A:: x < 3  /\ x' = x + 1
+      |  \/ B:: x > -3 /\ x' = x - 1
+      |Inv1 == I1:: x >= -3
+      |Inv2 == I2:: x <= 3
+      |Inv3 == I3:: x /= 0
+      |Inv4 == I4:: x' - x = 1 \/ x' - x = -1
       |View == (x = 0)
       |=====================
       """.stripMargin
@@ -37,10 +39,13 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     service.loadSpec(LoadSpecParams(sources = Seq(spec1))) match {
       case Right(LoadSpecResult(sessionId, _, params)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
-        assert(params.nInitTransitions == 1, "Should have one initial transition")
-        assert(params.nNextTransitions == 2, "Should have two next transitions")
-        assert(params.nStateInvariants == 0, "Should have no state invariants")
-        assert(params.nActionInvariants == 0, "Should have no action invariants")
+        assert(params.initTransitions.size == 1, "Should have one initial transition")
+        assert(params.initTransitions == Seq(SpecEntryMetadata(index=0, labels=SortedSet("I"))))
+        assert(params.nextTransitions.size == 2, "Should have two next transitions")
+        assert(params.nextTransitions == Seq(SpecEntryMetadata(index=0, labels=SortedSet("A")),
+          SpecEntryMetadata(index=1, labels=SortedSet("B"))))
+        assert(params.stateInvariants.isEmpty, "Should have no state invariants")
+        assert(params.actionInvariants.isEmpty, "Should have no action invariants")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -52,10 +57,16 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     service.loadSpec(LoadSpecParams(sources = Seq(spec1), invariants = List("Inv1", "Inv2", "Inv3", "Inv4"))) match {
       case Right(LoadSpecResult(sessionId, _, params)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
-        assert(params.nInitTransitions == 1, "Should have one initial transition")
-        assert(params.nNextTransitions == 2, "Should have two next transitions")
-        assert(params.nStateInvariants == 3, "Should have 3 invariants")
-        assert(params.nActionInvariants == 1, "Should have 1 action invariant")
+        assert(params.initTransitions.size == 1, "Should have one initial transition")
+        assert(params.nextTransitions.size == 2, "Should have two next transitions")
+        val meta1 = SpecEntryMetadata(index=0, labels=SortedSet("I1"))
+        val meta2 = SpecEntryMetadata(index=1, labels=SortedSet("I2"))
+        val meta3 = SpecEntryMetadata(index=2, labels=SortedSet("I3"))
+        assert(params.stateInvariants.size == 3, "Should have 3 invariants")
+        assert(params.stateInvariants == Seq(meta1, meta2, meta3))
+        assert(params.actionInvariants.size == 1, "Should have 1 action invariant")
+        val meta4 = SpecEntryMetadata(index=0, labels=SortedSet("I4"))
+        assert(params.actionInvariants == Seq(meta4))
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -67,10 +78,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))) match {
       case Right(LoadSpecResult(sessionId, _, params)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
-        assert(params.nInitTransitions == 1, "Should have one initial transition")
-        assert(params.nNextTransitions == 2, "Should have two next transitions")
-        assert(params.nStateInvariants == 0, "Should have 0 state invariants")
-        assert(params.nActionInvariants == 0, "Should have 0 action invariants")
+        assert(params.initTransitions.size == 1, "Should have one initial transition")
+        assert(params.nextTransitions.size == 2, "Should have two next transitions")
+        assert(params.stateInvariants.isEmpty, "Should have 0 state invariants")
+        assert(params.actionInvariants.isEmpty, "Should have 0 action invariants")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>

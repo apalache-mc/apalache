@@ -227,10 +227,10 @@ class ApalacheExplorer:
             print(f"Action invariants: {spec_params['nActionInvariants']}")
 
             return {
-                'ninit': spec_params['nInitTransitions'],
-                'nnext': spec_params['nNextTransitions'],
-                'nstate': spec_params['nStateInvariants'],
-                'naction': spec_params['nActionInvariants'],
+                'ninit': len(spec_params['initTransitions']),
+                'nnext': len(spec_params['nextTransitions']),
+                'nstate': len(spec_params['stateInvariants']),
+                'naction': len(spec_params['actionInvariants']),
                 'snapshot_id': self.current_snapshot_id
             }
 
