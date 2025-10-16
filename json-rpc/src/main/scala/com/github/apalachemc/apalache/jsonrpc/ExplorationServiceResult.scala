@@ -74,8 +74,10 @@ case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: Sp
 
 /**
  * Metadata that is attached to actions and invariants.
- * @param index the index of the action or invariant, starting from 0
- * @param labels the set of labels that are attached to the action or invariant
+ * @param index
+ *   the index of the action or invariant, starting from 0
+ * @param labels
+ *   the set of labels that are attached to the action or invariant
  */
 case class SpecEntryMetadata(index: Int, labels: SortedSet[String])
 

@@ -102,16 +102,16 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     // produce the specification parameters for remote exploration
     val specParameters = SpecParameters(
         initTransitions = checkerInput.initTransitions.zipWithIndex.map { case (e, i) =>
-          SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+          SpecEntryMetadata(index = i, labels = SortedSet(TlaExUtil.findLabels(e): _*))
         },
         nextTransitions = checkerInput.nextTransitions.zipWithIndex.map { case (e, i) =>
-          SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+          SpecEntryMetadata(index = i, labels = SortedSet(TlaExUtil.findLabels(e): _*))
         },
         stateInvariants = checkerInput.verificationConditions.stateInvariantsAndNegations.zipWithIndex.map {
-          case ((e, _), i) => SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+          case ((e, _), i) => SpecEntryMetadata(index = i, labels = SortedSet(TlaExUtil.findLabels(e): _*))
         },
         actionInvariants = checkerInput.verificationConditions.actionInvariantsAndNegations.zipWithIndex.map {
-          case ((e, _), i) => SpecEntryMetadata(index=i, labels=SortedSet(TlaExUtil.findLabels(e) :_*))
+          case ((e, _), i) => SpecEntryMetadata(index = i, labels = SortedSet(TlaExUtil.findLabels(e): _*))
         },
     )
 

@@ -40,10 +40,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       case Right(LoadSpecResult(sessionId, _, params)) =>
         assert(sessionId.nonEmpty, "Session ID should not be empty")
         assert(params.initTransitions.size == 1, "Should have one initial transition")
-        assert(params.initTransitions == Seq(SpecEntryMetadata(index=0, labels=SortedSet("I"))))
+        assert(params.initTransitions == Seq(SpecEntryMetadata(index = 0, labels = SortedSet("I"))))
         assert(params.nextTransitions.size == 2, "Should have two next transitions")
-        assert(params.nextTransitions == Seq(SpecEntryMetadata(index=0, labels=SortedSet("A")),
-          SpecEntryMetadata(index=1, labels=SortedSet("B"))))
+        assert(params.nextTransitions == Seq(SpecEntryMetadata(index = 0, labels = SortedSet("A")),
+            SpecEntryMetadata(index = 1, labels = SortedSet("B"))))
         assert(params.stateInvariants.isEmpty, "Should have no state invariants")
         assert(params.actionInvariants.isEmpty, "Should have no action invariants")
       case Right(result) =>
@@ -59,13 +59,13 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         assert(sessionId.nonEmpty, "Session ID should not be empty")
         assert(params.initTransitions.size == 1, "Should have one initial transition")
         assert(params.nextTransitions.size == 2, "Should have two next transitions")
-        val meta1 = SpecEntryMetadata(index=0, labels=SortedSet("I1"))
-        val meta2 = SpecEntryMetadata(index=1, labels=SortedSet("I2"))
-        val meta3 = SpecEntryMetadata(index=2, labels=SortedSet("I3"))
+        val meta1 = SpecEntryMetadata(index = 0, labels = SortedSet("I1"))
+        val meta2 = SpecEntryMetadata(index = 1, labels = SortedSet("I2"))
+        val meta3 = SpecEntryMetadata(index = 2, labels = SortedSet("I3"))
         assert(params.stateInvariants.size == 3, "Should have 3 invariants")
         assert(params.stateInvariants == Seq(meta1, meta2, meta3))
         assert(params.actionInvariants.size == 1, "Should have 1 action invariant")
-        val meta4 = SpecEntryMetadata(index=0, labels=SortedSet("I4"))
+        val meta4 = SpecEntryMetadata(index = 0, labels = SortedSet("I4"))
         assert(params.actionInvariants == Seq(meta4))
       case Right(result) =>
         fail(s"Unexpected result: $result")
