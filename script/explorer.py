@@ -221,16 +221,20 @@ class ApalacheExplorer:
 
             print(f"Specification loaded successfully!")
             print(f"Session ID: {self.session_id}")
-            print(f"Initial transitions: {spec_params['nInitTransitions']}")
-            print(f"Next transitions: {spec_params['nNextTransitions']}")
-            print(f"State invariants: {spec_params['nStateInvariants']}")
-            print(f"Action invariants: {spec_params['nActionInvariants']}")
+            initTransitions = spec_params['initTransitions']
+            nextTransitions = spec_params['nextTransitions']
+            stateInvariants = spec_params['stateInvariants']
+            actionInvariants = spec_params['actionInvariants']
+            print(f"Initial transitions: {len(initTransitions)}")
+            print(f"Next transitions: {len(nextTransitions)}")
+            print(f"State invariants: {len(stateInvariants)}")
+            print(f"Action invariants: {len(actionInvariants)}")
 
             return {
-                'ninit': len(spec_params['initTransitions']),
-                'nnext': len(spec_params['nextTransitions']),
-                'nstate': len(spec_params['stateInvariants']),
-                'naction': len(spec_params['actionInvariants']),
+                'ninit': len(initTransitions),
+                'nnext': len(nextTransitions),
+                'nstate': len(stateInvariants),
+                'naction': len(actionInvariants),
                 'snapshot_id': self.current_snapshot_id
             }
 
