@@ -116,13 +116,21 @@ operators such as `Init`, `Next`, and the invariants.
     "sessionId": "unique-session-identifier",
     "snapshotId": snapshot-identifier-after-loading-the-spec,
     "specParameters": {
-      "nInitTransitions": number-of-Init-transitions,
-      "nNextTransitions": number-of-Next-transitions,
-      "nStateInvariants": number-of-state-invariants,
-      "nActionInvariants": number-of-action-invariants,
-      "nTraceInvariants": number-of-trace-invariants
+      "initTransitions": init-metadata,
+      "nextTransitions": next-metadata,
+      "stateInvariants": state-invariants-metadata,
+      "actionInvariants": action-invariants-metadata,
     }
   }
+}
+```
+
+The metadata entries look like:
+
+```json
+{
+  "index": i,
+  "labels": ["label1", "label2", ...]
 }
 ```
 
@@ -144,9 +152,9 @@ EXTENDS Integers
 VARIABLE
   \* @type: Int;
   x
-Init == x = 0
-Next == (x < 3 /\\ x' = x + 1) \\/ (x > -3 /\\ x' = x - 1)
-Inv3 == x /= 0
+Init == I:: x = 0
+Next == (A:: (x < 3 /\\ x' = x + 1)) \\/ (B:: (x > -3 /\\ x' = x - 1))
+Inv3 == Inv:: x /= 0
 \* @type: () => <<Bool, Bool, Bool>>;
 View == <<x < 0, x = 0, x > 0>>
 =====================
@@ -163,14 +171,21 @@ It should produce the following output:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "sessionId": "1",
+    "sessionId": "2",
     "snapshotId": 0,
     "specParameters": {
-      "nInitTransitions": 1,
-      "nNextTransitions": 2,
-      "nStateInvariants": 1,
-      "nActionInvariants": 0,
-      "nTraceInvariants": 0
+      "initTransitions": [
+        { "index": 0, "labels": [ "I" ] }
+      ],
+      "nextTransitions": [
+        { "index": 0, "labels": [ "A" ] },
+        { "index": 1, "labels": [ "B" ]
+        }
+      ],
+      "stateInvariants": [
+        { "index": 0, "labels": [ "Inv" ] }
+      ],
+      "actionInvariants": []
     }
   }
 }
