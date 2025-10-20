@@ -14,7 +14,7 @@ When provided with a TLA+ specification, follow these rules:
 
 The following terms are accepted by Apalache as types:
 
- - `UPPER_CASE_IDENT`: An unintepreted type.
+ - `UPPER_CASE_IDENT`: An uninterpreted type.
  - `Int`: Integer numbers.
  - `Str`: Strings.
  - `Bool`: Boolean values.
@@ -195,7 +195,7 @@ provides the necessary operators to work with variants.
 If the specification contains variants (tagged unions), it is customary to define
 the constructors and accessors for the variants in the `typedefs.tla` file.
 
-** Example:**
+**Example:**
 
 ```tla
 --------------------------------- MODULE typedefs -----------------------------
@@ -285,7 +285,7 @@ In `MySpec.tla`:
 \* ...
 
 Message ==
-  ({ MkPrepared(rm): r \in RM }
+  ({ MkPrepared(r): r \in RM }
    \union
    { MkCommit, MkAbort })
    
