@@ -14,7 +14,9 @@ class SymbTransGenerator(tracker: TransformationTracker) {
 
   private[assignments] object helperFunctions {
     type AssignmentSelections = Set[SortedSet[UID]]
+    type SortedAssignmentSelections = SortedSet[SortedSet[UID]]
     type SelMapType = SortedMap[UID, AssignmentSelections]
+    type SortedSelMapType = SortedMap[UID, SortedAssignmentSelections]
     type letInMapType = SortedMap[String, (UID, SelMapType)]
 
     def allCombinations[ValType](p_sets: Seq[Set[SortedSet[ValType]]]): Set[SortedSet[ValType]] = {
@@ -289,10 +291,11 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     def getTransitions(
         ex: TlaEx,
         strategy: StrategyType,
-        selections: SelMapType): Seq[SymbTrans] =
-      selections(ex.ID).map { s =>
+        selections: SortedSelMapType): Seq[SymbTrans] = {
+      selections(ex.ID).toSeq.map { s =>
         (mkOrdered(s, strategy), sliceWith(s, selections)(ex))
-      }.toSeq
+      }
+    }
   }
 
   /**
@@ -334,9 +337,34 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     val allSizes = selections(transformed.ID).map(s => s.size)
     assert(allSizes.size == 1)
 
+    // now, it is quite important to sort the selections, to have a deterministic output
+    val sortedSelections = selections.map {
+      case (uid, selSet) =>
+        (uid, SortedSet.empty[SortedSet[UID]](Ordering.fromLessThan(selectionLt)) ++ selSet)
+    }
+
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */
-    // FIXME: this is non-deterministic as it iterates over a set and introduces new UIDs
-    getTransitions(transformed, newStrat, selections)
+    getTransitions(transformed, newStrat, sortedSelections)
   }
 
+  // A comparator for two selections. We do not use it by default, as it would probably be too slow.
+  // We only use it in the end to sort the final selections.
+  private def selectionLt(s1: SortedSet[UID], s2: SortedSet[UID]): Boolean = {
+    if (s1.size < s2.size) {
+      true
+    } else if (s1.size > s2.size) {
+      false
+    } else {
+      // compare the ids lexicographically
+      for ((uid1, uid2) <- s1.zip(s2)) {
+        if (uid1 < uid2) {
+          return true
+        } else if (uid1 > uid2) {
+          return false
+        }
+      }
+
+      false
+    }
+  }
 }
