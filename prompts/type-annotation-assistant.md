@@ -26,7 +26,7 @@ The following terms are accepted by Apalache as types:
    e.g., `<<Int, Str>>`, `<<Set(Int), Bool, Str>>`.
  - `{ key_1: T_1, ..., key_n: T_N }`: A record with fields `key_1` to `key_n` of types `T_1` to `T_n`,
    e.g., `{ name: Str, age: Int }`, `{ id: Int, tags: Set(Str), active: Bool }`.
- - `Tag1(T_1) | ... | TagN(T_N)`: A tagged union with tags `Tag1` to `TagN` and
+ - `Tag1(T_1) | ... | TagN(T_N)`: A variant (tagged union) with tags `Tag1` to `TagN` and
    associated types `T_1` to `T_N`, e.g., `Some(Int) | None(UNIT)`, `Success(Str) | Error(Str)`.
  - `(T_1, ..., T_n) => T`: An operator of `n` arguments of types `T_1` to `T_n`
    returning a value of type `T`, e.g., `(Int, Str) => Bool`, `(Set(Int), Set(Int), Int) => Int`.
@@ -35,7 +35,7 @@ The following terms are accepted by Apalache as types:
 
 Below are the examples of TLA+ expressions and their types:
 
- - `0_OF_A`, `1_OF_A`, `3_OF_B` are of uninterpreted type `A`,
+ - `0_OF_A`, `1_OF_A`, `3_OF_A` are of uninterpreted type `A`,
    whereas `alice_OF_USER`, `bob_OF_USER` are of uninterpreted type `USER`.
  - `42`, `-42` are of type `Int`.
  - `"hello"` and `""` are of type `Str`.
@@ -55,13 +55,15 @@ Below are the examples of TLA+ expressions and their types:
  - `[i \in {1, 2, 3} |-> TRUE]` is of type `Int -> Bool`.
  - `[s \in {"a", "b", "c"} |-> s]` is of type `Str -> Str`.
  - `[x \in {1, 2, 3} |-> x * x]` is of type `Int -> Int`.
- - `[name: "Alice", age: 30]` is of type `{ name: Str, age: Int }`.
+ - `[name |-> "Alice", age |-> 30]` is of type `{ name: Str, age: Int }`.
+ - `[name: {"Alice", "Bob"}, age: {30, 40}]` is of type `Set({ name: Str, age: Int })`.
  - `Some(42) | None(UNIT)` is of type `Some(Int) | None(UNIT)`.
 
 ### Rule 3
 
-TLA+ constants (within the `CONSTANT` or `CONSTANTS` section) and variables (within the `VARIABLE` or `VARIABLES`
-section) must be annotated with their types using the `\* @type: T;` annotation syntax.
+TLA+ constants (within the `CONSTANT` or `CONSTANTS` section) and variables
+(within the `VARIABLE` or `VARIABLES` section) must be annotated with their
+types using the `\* @type: T;` annotation syntax.
 
 **Example:**
 
@@ -87,9 +89,10 @@ add a type annotation to this operator using the `\* @type: T;` annotation synta
 **Example:**
 
 ```tla
-\* The empty set {} is type-ambiguous without the type annotation:
+(* The empty set {} is type-ambiguous without the type annotation:
    It may be treated as a set of any type. By providing a type annotation,
    we resolve the type ambiguity.
+ *)
 \* @type: Set(Int);
 EmptySetOfInts == {}
 ```
@@ -126,9 +129,11 @@ operator using the `\* @type: T;` annotation syntax.
 
 ```tla
 MyDefinition ==
-    \* The expression below is type-ambiguous without the type annotation:
-       It may be treated either as a tuple, or a sequence. By providing a type
-       annotation, we resolve the type ambiguity.
+    (*
+      The expression below is type-ambiguous without the type annotation:
+      It may be treated either as a tuple, or a sequence. By providing a type
+      annotation, we resolve the type ambiguity.
+     *)  
     LET \* @type: <<Int, Int>>;
         Pair == <<1, 2>>
     IN
@@ -233,10 +238,10 @@ AsD2(msg) == VariantGetUnsafe("D", msg)
 
 ### Rule 12
 
-The untyped TLA+ specifications often contain unions of records with different fields.
-To type-annotate such unions, use variants. For this, introduce a type alias for the variant
-in the `typedefs.tla` file, and then use the variant constructors to build values
-of this variant type.
+The untyped TLA+ specifications often contain unions of records with different
+fields. To type-annotate such unions, use variants. For this, introduce a type
+alias for the variant in the `typedefs.tla` file, and then use the variant
+constructors to build values of this variant type.
 
 **Input example:**
 
