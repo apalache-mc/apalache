@@ -4,7 +4,9 @@ import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{TlaEx, _}
 import at.forsyte.apalache.tla.lir.storage.BodyMap
-import at.forsyte.apalache.tla.lir.transformations.standard.{DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed}
+import at.forsyte.apalache.tla.lir.transformations.standard.{
+  DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
+}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
 import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}

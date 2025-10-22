@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.lir.storage
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
 
-import scala.collection.immutable.{HashMap, SortedMap}
+import scala.collection.immutable.SortedMap
 
 // Igor@02.11.2019: why is it an object, not a class? You even have a constructor here, called newMap.
 // TODO: refactor into a class.

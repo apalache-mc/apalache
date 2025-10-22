@@ -292,6 +292,10 @@ class SymbTransGenerator(tracker: TransformationTracker) {
         ex: TlaEx,
         strategy: StrategyType,
         selections: SortedSelMapType): Seq[SymbTrans] = {
+      // It is crucial to have selections sorted here, to have a deterministic output.
+      // Otherwise, `sliceWith` produces UIDs in different orders on different runs.
+      // As a result, multiple runs of the same spec would produce different orderings of transitions,
+      // which is highly undesirable.
       selections(ex.ID).toSeq.map { s =>
         (mkOrdered(s, strategy), sliceWith(s, selections)(ex))
       }
@@ -338,9 +342,8 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     assert(allSizes.size == 1)
 
     // now, it is quite important to sort the selections, to have a deterministic output
-    val sortedSelections = selections.map {
-      case (uid, selSet) =>
-        (uid, SortedSet.empty[SortedSet[UID]](Ordering.fromLessThan(selectionLt)) ++ selSet)
+    val sortedSelections = selections.map { case (uid, selSet) =>
+      (uid, SortedSet.empty[SortedSet[UID]](Ordering.fromLessThan(selectionLt)) ++ selSet)
     }
 
     /** We restrict the formula to each equivalence class (defined by an assignment selection) */

@@ -49,14 +49,14 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val s32 = Set(SortedSet(3), SortedSet(4))
     val s33 = Set(SortedSet(5), SortedSet(6))
     val expected3 = Set(
-      SortedSet(1, 3, 5),
-      SortedSet(1, 3, 6),
-      SortedSet(1, 4, 5),
-      SortedSet(1, 4, 6),
-      SortedSet(2, 3, 5),
-      SortedSet(2, 3, 6),
-      SortedSet(2, 4, 5),
-      SortedSet(2, 4, 6),
+        SortedSet(1, 3, 5),
+        SortedSet(1, 3, 6),
+        SortedSet(1, 4, 5),
+        SortedSet(1, 4, 6),
+        SortedSet(2, 3, 5),
+        SortedSet(2, 3, 6),
+        SortedSet(2, 4, 5),
+        SortedSet(2, 4, 6),
     )
     val actual3 = allCombinations(Seq(s31, s32, s33))
 
@@ -111,10 +111,10 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val possibleAssgnsY = Seq(SortedSet(yasgn11.ID), SortedSet(yasgn12.ID))
 
     val possibleAssgnsXY = Seq(
-      SortedSet(xasgn11.ID, yasgn11.ID),
-      SortedSet(xasgn11.ID, yasgn12.ID),
-      SortedSet(xasgn12.ID, yasgn11.ID),
-      SortedSet(xasgn12.ID, yasgn12.ID),
+        SortedSet(xasgn11.ID, yasgn11.ID),
+        SortedSet(xasgn11.ID, yasgn12.ID),
+        SortedSet(xasgn12.ID, yasgn11.ID),
+        SortedSet(xasgn12.ID, yasgn12.ID),
     )
 
     val selections1 = possibleAssgnsX.map { fromPossiblity(ex1, _) }
@@ -149,8 +149,8 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val possibleAssgnsX2 = Seq(SortedSet(xasgn21.ID))
 
     val possibleAssgnsXY2 = Seq(
-      SortedSet(xasgn21.ID, yasgn21.ID),
-      SortedSet(xasgn21.ID, yasgn22.ID),
+        SortedSet(xasgn21.ID, yasgn21.ID),
+        SortedSet(xasgn21.ID, yasgn22.ID),
     )
 
     val selections4 = possibleAssgnsX2.map {
