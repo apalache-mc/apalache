@@ -75,14 +75,10 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
           case Left(error) =>
             fail(s"Failed to load specification: $error")
         }
-      assert(firstSpec.initTransitions == nextSpec.initTransitions,
-        s"Initial transitions differ on iteration $i")
-      assert(firstSpec.nextTransitions == nextSpec.nextTransitions,
-        s"Next transitions differ on iteration $i")
-      assert(firstSpec.stateInvariants == nextSpec.stateInvariants,
-        s"State invariants differ on iteration $i")
-      assert(firstSpec.actionInvariants == nextSpec.actionInvariants,
-        s"Action invariants differ on iteration $i")
+      assert(firstSpec.initTransitions == nextSpec.initTransitions, s"Initial transitions differ on iteration $i")
+      assert(firstSpec.nextTransitions == nextSpec.nextTransitions, s"Next transitions differ on iteration $i")
+      assert(firstSpec.stateInvariants == nextSpec.stateInvariants, s"State invariants differ on iteration $i")
+      assert(firstSpec.actionInvariants == nextSpec.actionInvariants, s"Action invariants differ on iteration $i")
     }
   }
 
