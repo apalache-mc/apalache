@@ -19,17 +19,19 @@ class SymbTransGenerator(tracker: TransformationTracker) {
     type SortedSelMapType = SortedMap[UID, SortedAssignmentSelections]
     type letInMapType = SortedMap[String, (UID, SelMapType)]
 
-    def allCombinations[ValType](p_sets: Seq[Set[SortedSet[ValType]]]): Set[SortedSet[ValType]] = {
+    def allCombinations(p_sets: Seq[AssignmentSelections]): AssignmentSelections = {
       if (p_sets.isEmpty)
-        Set.empty[SortedSet[ValType]]
+        Set.empty[SortedSet[UID]]
       else if (p_sets.length == 1)
         p_sets.head
       else {
-        val one = p_sets.head
-        val rest = allCombinations(p_sets.tail)
+        val head: AssignmentSelections = p_sets.head
+        val tail: AssignmentSelections = allCombinations(p_sets.tail)
 
-        (for { s <- one } yield rest.map(st => st ++ s))
-          .fold(Set.empty[SortedSet[ValType]])(_ ++ _)
+        // extend every assignment selection in tail with every assignment selection in head
+        val extended = for { s <- head } yield tail.map(st => st ++ s)
+        // now, flatten the extended sets
+        extended.fold(Set.empty[SortedSet[UID]])(_ ++ _)
       }
     }
 
