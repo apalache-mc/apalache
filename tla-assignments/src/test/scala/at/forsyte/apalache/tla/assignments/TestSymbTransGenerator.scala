@@ -25,38 +25,39 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
   test("Test allCombinations") {
 
-    assert(allCombinations[Int](Seq[Set[SortedSet[Int]]]()).isEmpty)
+    assert(allCombinations(Seq[AssignmentSelections]()).isEmpty)
 
-    val empty = Set[SortedSet[Int]]()
+    val empty = Set[SortedSet[UID]]()
     assert(allCombinations(Seq(empty)) == empty)
 
-    val s11 = Set(SortedSet(1))
-    val s12 = Set(SortedSet(2))
-    val expected1 = Set(SortedSet(1, 2))
-    val actual1 = allCombinations[Int](Seq(s11, s12))
+    val N = 10
+    val uids = Range(1, N).map(_ => UID.unique).toList
+    val s11 = Set(SortedSet(uids(1)))
+    val s12 = Set(SortedSet(uids(2)))
+    val expected1 = Set(SortedSet(uids(1), uids(2)))
+    val actual1 = allCombinations(Seq(s11, s12))
 
     assert(expected1 == actual1)
 
-    val N = 10
-    val oneToN = Range(1, N).to(SortedSet)
+    val oneToN = Range(1, N).map(_ => UID.unique).to(SortedSet)
     val ss = oneToN.toSeq.map { x => Set(SortedSet(x)) }
     val expected2 = Set(oneToN)
-    val actual2 = allCombinations[Int](ss)
+    val actual2 = allCombinations(ss)
 
     assert(expected2 == actual2)
 
-    val s31 = Set(SortedSet(1), SortedSet(2))
-    val s32 = Set(SortedSet(3), SortedSet(4))
-    val s33 = Set(SortedSet(5), SortedSet(6))
+    val s31 = Set(SortedSet(uids(1)), SortedSet(uids(2)))
+    val s32 = Set(SortedSet(uids(3)), SortedSet(uids(4)))
+    val s33 = Set(SortedSet(uids(5)), SortedSet(uids(6)))
     val expected3 = Set(
-        SortedSet(1, 3, 5),
-        SortedSet(1, 3, 6),
-        SortedSet(1, 4, 5),
-        SortedSet(1, 4, 6),
-        SortedSet(2, 3, 5),
-        SortedSet(2, 3, 6),
-        SortedSet(2, 4, 5),
-        SortedSet(2, 4, 6),
+        SortedSet(uids(1), uids(3), uids(5)),
+        SortedSet(uids(1), uids(3), uids(6)),
+        SortedSet(uids(1), uids(4), uids(5)),
+        SortedSet(uids(1), uids(4), uids(6)),
+        SortedSet(uids(2), uids(3), uids(5)),
+        SortedSet(uids(2), uids(3), uids(6)),
+        SortedSet(uids(2), uids(4), uids(5)),
+        SortedSet(uids(2), uids(4), uids(6)),
     )
     val actual3 = allCombinations(Seq(s31, s32, s33))
 

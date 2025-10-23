@@ -9,6 +9,8 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 
 /**
  * Constructs symbolic transitions from an assignment strategy.
+ * In the intermediate computations, we use sets of assignment selections to avoid sorting overhead.
+ * The final result is sorted to produce deterministic results.
  */
 class SymbTransGenerator(tracker: TransformationTracker) {
 
@@ -295,7 +297,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
      * @return
      *   A sequence of pairs of ordered assignment selections and their symbolic transitions.
      */
-    def getTransitions(
+    private[SymbTransGenerator] def getTransitions(
         ex: TlaEx,
         strategy: StrategyType,
         selections: SortedSelMapType): Seq[SymbTrans] = {

@@ -36,9 +36,6 @@ object UID {
    */
   private val nextId: AtomicLong = new AtomicLong(1)
 
-  // TODO: remove this method in the future, as it allows one to work around uniqueness
-  def apply(id: Long) = new UID(id)
-
   /**
    * A unique id that is used as a null identifier.
    */
