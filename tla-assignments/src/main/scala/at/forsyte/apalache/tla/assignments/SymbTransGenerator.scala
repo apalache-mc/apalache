@@ -8,9 +8,8 @@ import at.forsyte.apalache.tla.lir.values.TlaBool
 import scala.collection.immutable.{SortedMap, SortedSet}
 
 /**
- * Constructs symbolic transitions from an assignment strategy.
- * In the intermediate computations, we use sets of assignment selections to avoid sorting overhead.
- * The final result is sorted to produce deterministic results.
+ * Constructs symbolic transitions from an assignment strategy. In the intermediate computations, we use sets of
+ * assignment selections to avoid sorting overhead. The final result is sorted to produce deterministic results.
  */
 class SymbTransGenerator(tracker: TransformationTracker) {
 
