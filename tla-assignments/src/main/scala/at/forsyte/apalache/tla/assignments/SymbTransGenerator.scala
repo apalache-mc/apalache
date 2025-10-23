@@ -13,11 +13,16 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 class SymbTransGenerator(tracker: TransformationTracker) {
 
   private[assignments] object helperFunctions {
+    // assignment selections as used in the intermediate computations, to avoid sorting overhead
     type AssignmentSelections = Set[SortedSet[UID]]
+    // sorted assignment selections for the final output, to produce deterministic results
     type SortedAssignmentSelections = SortedSet[SortedSet[UID]]
+    // assignment selections assigned to operator definitions, unsorted
     type SelMapType = SortedMap[UID, AssignmentSelections]
+    // assignment selections assigned to operator definitions, sorted
     type SortedSelMapType = SortedMap[UID, SortedAssignmentSelections]
-    type letInMapType = SortedMap[String, (UID, SelMapType)]
+    // assignment selections assigned to LET-IN defined operators, unsorted
+    type LetInMapType = SortedMap[String, (UID, SelMapType)]
 
     def allCombinations(p_sets: Seq[AssignmentSelections]): AssignmentSelections = {
       if (p_sets.isEmpty)
@@ -59,7 +64,7 @@ class SymbTransGenerator(tracker: TransformationTracker) {
      * @return
      *   A mapping of the form [e.ID |-> { B \cap A | B \in Branches( e ) } | e \in Sub(ex)]
      */
-    def allSelections(ex: TlaEx, letInMap: letInMapType = SortedMap.empty): SelMapType = ex match {
+    def allSelections(ex: TlaEx, letInMap: LetInMapType = SortedMap.empty): SelMapType = ex match {
 
       /** Base case, assignments */
       case e @ OperEx(ApalacheOper.assign, _, _) =>
