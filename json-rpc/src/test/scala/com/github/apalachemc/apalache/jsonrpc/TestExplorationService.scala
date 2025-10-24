@@ -53,6 +53,35 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
+  test("load spec multiple times") {
+    // load the same spec multiple times to make sure that the order of transitions is stable
+    val firstSpec =
+      service.loadSpec(LoadSpecParams(sources = Seq(spec1))) match {
+        case Right(LoadSpecResult(_, _, params)) =>
+          params
+        case Right(result) =>
+          fail(s"Unexpected result: $result")
+        case Left(error) =>
+          fail(s"Failed to load specification: $error")
+      }
+
+    for (i <- 1 to 20) {
+      val nextSpec =
+        service.loadSpec(LoadSpecParams(sources = Seq(spec1))) match {
+          case Right(LoadSpecResult(_, _, params)) =>
+            params
+          case Right(result) =>
+            fail(s"Unexpected result: $result")
+          case Left(error) =>
+            fail(s"Failed to load specification: $error")
+        }
+      assert(firstSpec.initTransitions == nextSpec.initTransitions, s"Initial transitions differ on iteration $i")
+      assert(firstSpec.nextTransitions == nextSpec.nextTransitions, s"Next transitions differ on iteration $i")
+      assert(firstSpec.stateInvariants == nextSpec.stateInvariants, s"State invariants differ on iteration $i")
+      assert(firstSpec.actionInvariants == nextSpec.actionInvariants, s"Action invariants differ on iteration $i")
+    }
+  }
+
   test("load spec with invariants") {
     service.loadSpec(LoadSpecParams(sources = Seq(spec1), invariants = List("Inv1", "Inv2", "Inv3", "Inv4"))) match {
       case Right(LoadSpecResult(sessionId, _, params)) =>

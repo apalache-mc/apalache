@@ -11,6 +11,8 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, Transfo
 import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
 import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
 
+import scala.collection.immutable.SortedMap
+
 /**
  * Given a module m, with global operators F1,...,Fn, Inliner performs the following transformation:
  *   - For each i, replaces all application instances Fi(a1i, ..., aki) in m, where Fi(p1i,...,pki) == ei, with
@@ -246,7 +248,7 @@ class Inliner(
 object Inliner {
 
   type Scope = BodyMap
-  def emptyScope: Scope = Map.empty
+  def emptyScope: Scope = SortedMap.empty
 
   type DeclFilter = TlaOperDecl => Boolean
 

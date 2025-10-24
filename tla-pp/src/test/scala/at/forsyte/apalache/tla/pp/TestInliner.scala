@@ -12,6 +12,8 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.immutable.SortedMap
+
 @RunWith(classOf[JUnitRunner])
 class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
@@ -55,7 +57,7 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val expectedBody = tla.plus(tla.name("x").as(IntT1), tla.int(1).as(IntT1)).as(IntT1)
 
-    val scope = Map(ADecl.name -> ADecl)
+    val scope = SortedMap(ADecl.name -> ADecl)
 
     val actualBody = inlinerKeepNullary.transform(scope)(AApp)
 
@@ -272,7 +274,7 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val ex = tla.appOp(tla.name("A").as(AType), tla.appOp(tla.name("B").as(BType)).as(IntT1)).as(IntT1)
 
-    val scope = Map(ADecl.name -> ADecl, BDecl.name -> BDecl)
+    val scope = SortedMap(ADecl.name -> ADecl, BDecl.name -> BDecl)
 
     val actual = inlinerKeepNullary.transform(scope)(ex)
 
@@ -342,7 +344,7 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
 
     val expected = tla.plus(tla.name("x").as(IntT1), tla.int(1).as(IntT1)).as(IntT1)
 
-    val scope = Map("A" -> ADecl) // we know no inlining is needed in ADecl, so we can manually build scope
+    val scope = SortedMap("A" -> ADecl) // we know no inlining is needed in ADecl, so we can manually build scope
 
     val actual = inlinerKeepNullary.transform(scope)(ex)
 
