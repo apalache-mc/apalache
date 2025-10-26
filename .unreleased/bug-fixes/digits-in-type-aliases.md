@@ -1,0 +1,1 @@
+ - Fix the type aliases parser to allow for digits (#3199)
