@@ -182,6 +182,18 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert("$lowercase" == name)
   }
 
+  test("uint32 = Int") {
+    // lower case and digits should also work
+    val (name, _) = DefaultType1Parser.parseAlias("uint32 = Int")
+    assert("$uint32" == name)
+  }
+
+  test("camelCase32 = Int") {
+    // camel case and digits should also work
+    val (name, _) = DefaultType1Parser.parseAlias("camelCase32 = Int")
+    assert("$camelCase32" == name)
+  }
+
   test("Set(ENTRY)") {
     val result = DefaultType1Parser.parseType("Set(ENTRY)")
     assert(SetT1(ConstT1("ENTRY")) == result)

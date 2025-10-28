@@ -151,11 +151,11 @@ class LazyEquality(rewriter: SymbStateRewriter)
             mkRecordEq(state, left, right)
 
           case (CellTFrom(RecRowT1(RowT1(fieldTypes, None))), CellTFrom(RecRowT1(RowT1(fieldTypes2, None)))) =>
-            assert(fieldTypes == fieldTypes2)
+            assert(fieldTypes == fieldTypes2, s"Non-matching field types: $fieldTypes != $fieldTypes2")
             mkRowRecordEq(state, fieldTypes, left, right)
 
           case (CellTFrom(VariantT1(RowT1(options1, None))), CellTFrom(VariantT1(RowT1(options2, None)))) =>
-            assert(options1 == options2)
+            assert(options1 == options2, s"Non-matching variant options: $options1 != $options2")
             mkVariantEq(state, options1, left, right)
 
           case (CellTFrom(TupT1(_ @_*)), CellTFrom(TupT1(_ @_*))) =>

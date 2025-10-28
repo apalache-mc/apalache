@@ -11,6 +11,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.pp.{Inliner, TlaInputError}
 
+import scala.collection.immutable.SortedMap
+
 /**
  * Rewriting rule for MkSeq. This rule is similar to [[FoldSeqRule]].
  *
@@ -41,7 +43,7 @@ class MkSeqRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) exte
       // expressions are transient, we don't need tracking
       val inliner = new Inliner(new IdleTracker, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
-      val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
+      val seededScope: Inliner.Scope = SortedMap(opDecl.name -> opDecl)
 
       def mkElem(state: SymbState, index: Int): (SymbState, ArenaCell) = {
         // get the cell for the index
