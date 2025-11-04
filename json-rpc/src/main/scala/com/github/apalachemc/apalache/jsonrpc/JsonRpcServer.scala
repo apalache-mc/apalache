@@ -529,7 +529,10 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       timeoutSec: Int): JsonNode = {
     checkerContext.trex.sat(timeoutSec) match {
       case Some(isSat) =>
-        if (isSat) {
+        if (!isSat) {
+          // no trace
+          NullNode.getInstance()
+        } else {
           // extract the trace
           // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs,
           // as reported by loadSpec.
@@ -541,9 +544,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
           // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
           new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
-        } else {
-          // no trace
-          NullNode.getInstance()
         }
 
       case None =>
