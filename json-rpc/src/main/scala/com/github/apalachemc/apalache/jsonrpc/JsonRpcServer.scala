@@ -392,7 +392,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.trex.sat(params.timeoutSec) match {
             case Some(isSat) =>
               if (isSat) {
-                (InvariantStatus.VIOLATED, getTraceInJson(checkerContext))
+                (InvariantStatus.VIOLATED, getTraceInJson(checkerContext, params.timeoutSec))
               } else {
                 (InvariantStatus.SATISFIED, NullNode.getInstance())
               }
@@ -440,7 +440,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
         val traceInJson =
           if (params.kinds.contains(QueryKind.TRACE)) {
-            getTraceInJson(checkerContext)
+            getTraceInJson(checkerContext, params.timeoutSec)
           } else {
             NullNode.getInstance()
           }
@@ -524,17 +524,32 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @return
    *   a JSON-encoded trace
    */
-  private def getTraceInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): JsonNode = {
-    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs,
-    // as reported by loadSpec.
-    val path = checkerContext.trex.decodedExecution().path
-    val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
-        path.map(_ => SortedSet[String]()).toIndexedSeq, ())
-    // Serialize the counterexample to JSON
-    val ujsonTrace =
-      ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
-    // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
-    new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+  private def getTraceInJson(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+      timeoutSec: Int): JsonNode = {
+    checkerContext.trex.sat(timeoutSec) match {
+      case Some(isSat) =>
+        if (isSat) {
+          // extract the trace
+          // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs,
+          // as reported by loadSpec.
+          val path = checkerContext.trex.decodedExecution().path
+          val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
+              path.map(_ => SortedSet[String]()).toIndexedSeq, ())
+          // Serialize the counterexample to JSON
+          val ujsonTrace =
+            ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
+          // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
+          new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+        } else {
+          // no trace
+          NullNode.getInstance()
+        }
+
+      case None =>
+        // unknown
+        NullNode.getInstance()
+    }
   }
 
   private def getViewInJson(
