@@ -245,6 +245,21 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
     }
   }
 
+  test("query to construct model") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE))) match {
+      case Right(QueryResult(newSessionId, trace, expr)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after querying")
+        assert(expr.isNull, "Expr should be null")
+        assert(!trace.isNull, "Trace should not be empty")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
   test("sequence 0-0-0 then nextModel x 2") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
     val sessionId = specResult.sessionId
