@@ -4,12 +4,10 @@ import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.{TlaEx, _}
 import at.forsyte.apalache.tla.lir.storage.BodyMap
-import at.forsyte.apalache.tla.lir.transformations.standard.{
-  DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed,
-}
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeclarationSorter, DeepCopy, IncrementalRenaming, ReplaceFixed}
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
-import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
 
 import scala.collection.immutable.SortedMap
 
@@ -96,31 +94,45 @@ class Inliner(
   private def nonNullaryFilter(d: TlaOperDecl): Boolean =
     !keepNullaryMono || isPolyTag(d.typeTag) || d.formalParams.nonEmpty
 
-  // Given a declaration (possibly holding a polymorphic type) and a monotyped target, computes
-  // a substitution of the two. A substitution is assumed to exist, otherwise TypingException is thrown.
-  private def getSubstitution(targetType: TlaType1, decl: TlaOperDecl): (Substitution, TlaType1) = {
-    val genericType = decl.typeTag.asTlaType1()
-    val maxUsedVar = Math.max(genericType.usedNames.foldLeft(0)(Math.max), targetType.usedNames.foldLeft(0)(Math.max))
-    new TypeUnifier(new TypeVarPool(maxUsedVar + 1)).unify(Substitution.empty, genericType, targetType) match {
-      case None =>
-        throw new TypingException(
-            s"Inliner: Unable to unify generic signature $genericType of ${decl.name} with the concrete type $targetType",
-            decl.ID)
+  // Given a declaration `callee` (possibly holding a polymorphic type) and the type at a call site,
+  // which can also be a polytype, computes a substitution of the two. A substitution is assumed to exist,
+  // otherwise TypingException is thrown.
+  private def getSubstitution(callSiteType: TlaType1, callee: TlaOperDecl): (Substitution, TlaType1) = {
+    val calleeType = callee.typeTag.asTlaType1()
+    // To fix transitive inlining of polymorphic operators, rename all type variables in `callee`
+    // to fresh ones, so these type variables have indices larger than those in `callSiteType`.
+    // The unification algorithm prefers to keep type variables with smaller indices,
+    // so this ensures that type variables from `callSiteType` are kept.
+    // See the issue #3204.
+    val maxUsedVar = ((calleeType.usedNames ++ callSiteType.usedNames) ++ Set(0)).max
+    val typeVarPool = new TypeVarPool(maxUsedVar + 1)
+    val calleeSub = Substitution(calleeType.usedNames.map(v => EqClass(v) -> typeVarPool.fresh).toMap)
+    val calleeTypeRenamed = calleeSub.subRec(calleeType)
 
-      case Some(pair) => pair
+    new TypeUnifier(typeVarPool).unify(Substitution.empty, callSiteType, calleeTypeRenamed) match {
+      case None =>
+        throw new TypingException(s"Inliner: Unable to unify the signature $calleeType of ${callee.name} "
+              + "with the type $callSiteType at call site", callee.ID)
+
+      case Some((unifierSub, unifiedType)) =>
+        // Now, we have to add the renamed type variables back to the substitution.
+        // To this end, we compose `calleeSub` with `unifierSub`.
+        // Not that we are not merging them. Otherwise, the type variables of `callee` might take over.
+        val composed = Substitution(calleeSub.mapping ++ unifierSub.mapping)
+        (composed, composed.subRec(unifiedType))
     }
   }
 
-  // Assume an operator declaration named name is in scope.
+  // Assume an operator declaration named `name` is in scope.
   // Creates a fresh copy of the operator body and replaces formal parameter instances with the argument instances.
   private def instantiateWithArgs(scope: Scope)(nameEx: NameEx, args: Seq[TlaEx]): TlaEx = {
     val name = nameEx.name
-    val decl = scope(name)
+    val callee = scope(name)
 
-    val freshBody = deepCopy(decl.body)
+    val freshBody = deepCopy(callee.body)
 
     // All formal parameters get instantiated at once, to avoid parameter-name issues, see #1903
-    val paramMap = decl.formalParams
+    val paramMap = callee.formalParams
       .zip(args)
       .map({ case (OperParam(name, _), arg) =>
         name -> arg
@@ -140,14 +152,16 @@ class Inliner(
     // To cover both cases at once, we run an additional transform on the replaced body
     val newBody = transform(scope)(replacedBody)
 
-    // Note: it can happen that the new body and the decl have desynced types (poly vs mono).
-    // We fix that below with type unification.
-    // If the operator has a parametric signature, we have to substitute type parameters with concrete parameters
-    // 1. Unify the operator type with the arguments.
-    // 2. Apply the resulting substitution to the types in all subexpressions.
-    val actualType = nameEx.typeTag.asTlaType1()
+    // Note: it can happen that the type at the call site and the type of `callee` have different types,
+    // e.g., the `callee` has a more general polytype, or they are both polytypes.
+    // We fix that below with type unification:
+    //  1. Unify the operator type with the arguments.
+    //  2. Apply the resulting substitution to the types in all subexpressions.
+    //  3. Importantly, we prefer the type variables of the call site, as they are the type variables of
+    //     the caller context.
+    val callSiteType = nameEx.typeTag.asTlaType1()
 
-    val (substitution, _) = getSubstitution(actualType, decl)
+    val (substitution, _) = getSubstitution(callSiteType, callee)
 
     if (substitution.isEmpty) newBody
     else new TypeSubstitutor(tracker, substitution)(newBody)
@@ -155,13 +169,13 @@ class Inliner(
 
   // Assume name is in scope. Creates a local LET-IN for pass-by-name operators.
   private def embedPassByName(scope: Scope)(nameEx: NameEx): TlaEx = {
-    val decl = scope(nameEx.name)
+    val callee = scope(nameEx.name)
 
     // like in instantiateWithArgs, we compare the declaration type to the expected monotype
-    val freshBody = deepCopy(decl.body)
+    val freshBody = deepCopy(callee.body)
     val monoOperType = nameEx.typeTag.asTlaType1()
 
-    val (substitution, tp) = getSubstitution(monoOperType, decl)
+    val (substitution, tp) = getSubstitution(monoOperType, callee)
 
     val tpTag = Typed(tp)
 
@@ -170,8 +184,8 @@ class Inliner(
       else new TypeSubstitutor(tracker, substitution)(freshBody)
 
     // To make a local definition, we use a fresh name, derived from the original name, but renamed to get a fresh $N
-    val newName = renaming.apply(NameEx(decl.name)(decl.typeTag)).asInstanceOf[NameEx].name
-    val newLocalDecl = TlaOperDecl(newName, decl.formalParams, newBody)(tpTag)
+    val newName = renaming.apply(NameEx(callee.name)(callee.typeTag)).asInstanceOf[NameEx].name
+    val newLocalDecl = TlaOperDecl(newName, callee.formalParams, newBody)(tpTag)
 
     LetInEx(NameEx(newName)(tpTag), newLocalDecl)(tpTag)
   }
