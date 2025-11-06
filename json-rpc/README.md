@@ -2,7 +2,7 @@
 
 **Authors:** [Igor Konnov][] and [Thomas Pani][]
 
-A simple JSON-RPC server module for Apalache. This is work in progress:
+A simple JSON-RPC server module for Apalache. **This is work in progress.**
 
 This server is not meant to be a replacement for the current gRPC server (SHAI).
 Rather, it is a lightweight alternative that can be used for symbolic
@@ -41,7 +41,7 @@ exploration of TLA+ specifications.
     - [Jetty Server][]. Yes, it is about 30 years old.
       It works. It is fast, simple, reliable, maintained, and is well-documented.
     - [Jackson][]. It is fast, simple, reliable, maintained, and is well-documented.
-      It uses plain-old Java objects, and it supports basic Scala types. No super-advanced
+      It uses plain-old Java objects, and it supports basic Scala types. No advanced
       FP here.
 
 ## 2. JSON-RPC methods
@@ -57,6 +57,10 @@ In the JSON format below, we write `"${placeholders}"` to indicate values that
 should be replaced with actual values. They have to be of proper types, e.g.,
 strings, numbers, booleans, arrays, or objects. We write them in quotes to
 produce valid JSON snippets.
+
+Some of the methods accept and return traces and expressions in the
+[ITF Format][]. You can use the [itf-py][] library to produce and parse
+such traces and expressions in Python.
 
 **Running the server.** To try the examples below, you need to start the server
 first:
@@ -663,6 +667,73 @@ The output is as follows:
 }
 ```
 
+### 2.9. Method assumeState
+
+Given a session identifier and concrete equalities `x = e` over a subset of the state
+variables, add the equality constraints to the SMT context. The expressions in the
+right-hand sides are given as expressions in the [ITF Format][].
+
+Additionally, if `checkEnabled` is set to `true`, the server checks, whether there is a
+state that is reachable via the current transition prefix, including the added
+constraints. The parameter `timeoutSec` sets the timeout for this check in seconds.
+If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
+
+**Precondition.** The call to `assumeState` can be made only after at least single
+call to `assumeTransition` and `nextStep`.
+
+**Effect.** The concrete equalities are translated as SMT equality constraints in
+the current context against the current symbolic state (sometimes, called a frame).
+These constraints do not override the existing assignments in the context. Rather,
+they pose additional constraints on top of the existing ones.
+
+**Input:**
+
+```json
+{
+  "method": "assumeState",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "checkEnabled": "${boolean-flag}",
+    "timeoutSec": "${timeout-in-seconds-or-0}",
+    "equalities": {
+      "${var-1}": "${expr-in-itf}",
+      "...": "...",
+      "${var-k}": "${expr-in-itf}"
+    }
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "status": "ENABLED|DISABLED|UNKNOWN"
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"assumeState",
+       "params":{"sessionId":"1","checkEnabled":true,"equalities": {"x":{"#bigint":"1"}}},"id":4}'
+```
+
+It produces the following output:
+
+```json  
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":3,"status":"ENABLED"}}
+```
+
+
 [Jetty Server]: https://jetty.org/
 
 [Jackson]: https://github.com/FasterXML/jackson
@@ -678,3 +749,5 @@ The output is as follows:
 [Apalache IR]: https://apalache-mc.org/docs/adr/005adr-json.html
 
 [SMT randomization]: https://apalache-mc.org/docs/apalache/tuning.html#randomization
+
+[itf-py]: https://github.com/konnov/itf-py/
