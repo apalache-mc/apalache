@@ -6,7 +6,7 @@ package at.forsyte.apalache.io.json
  * @tparam T
  *   Any class extending JsonRepresentation
  */
-trait JsonFactory[T <: JsonRepresentation] {
+trait JsonFromScalaFactory[T <: JsonRepresentation] {
   def mkObj(fields: (String, T)*): T
   def fromInt(int: Int): T
   def fromStr(str: String): T

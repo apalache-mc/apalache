@@ -20,7 +20,7 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
  * { "type": "Int", "kind": "ValEx", "value": { "kind": TlaInt, "value": 2 } } ] }
  */
 class TlaToJson[T <: JsonRepresentation](
-    factory: JsonFactory[T],
+    factory: JsonFromScalaFactory[T],
     locatorOpt: Option[SourceLocator] = None,
   )(implicit typeTagPrinter: TypeTagPrinter)
     extends JsonEncoder[T] {

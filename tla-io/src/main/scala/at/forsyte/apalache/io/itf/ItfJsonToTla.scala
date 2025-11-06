@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFactory}
+import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFromJsonFactory}
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
@@ -15,53 +15,75 @@ import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
  * @author
  *   Jure Kukovec
  */
-class ItfToTla[T <: JsonRepresentation](
-    scalaFactory: ScalaFactory[T]) {
+class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T]) {
 
-  // Since we want to use Either, but scalaFactory methods throw, we try-catch and wrap in Left/Right
-  private def thrownToEither[K, V, E](eBuilder: String => E, method: K => V)(arg: K): Either[E, V] = try {
-    Right(method(arg))
-  } catch {
-    case e: JsonDeserializationError => Left(eBuilder(e.getMessage))
-  }
-
-  private def asStr(json: T): Either[ItfFormatError, String] = thrownToEither(ItfFormatError, scalaFactory.asStr)(json)
-  private def asInt(json: T): Either[ItfFormatError, Int] = thrownToEither(ItfFormatError, scalaFactory.asInt)(json)
-  private def asBool(json: T): Either[ItfFormatError, Boolean] =
-    thrownToEither(ItfFormatError, scalaFactory.asBool)(json)
-  private def asSeq(json: T): Either[ItfFormatError, Seq[T]] = thrownToEither(ItfFormatError, scalaFactory.asSeq)(json)
-
-  private def eitherSeq[V](seq: Seq[Either[ItfError, V]]): Either[ItfError, Seq[V]] = {
-    val lefts = seq.collect { case Left(x) => x }
-    val rights = seq.collect { case Right(x) => x }
-    lefts match {
-      case Seq()  => Right(rights)
-      case Seq(l) => Left(l)
-      case _      => Left(MultipleErrors(lefts))
-    }
-  }
-
-  // A requirement, meant to be used as _ <- requirement(b,e). Either-approach replacement for `if (!b) throw e`
-  private def requirement(condition: Boolean, errIfNotCond: ItfError): Either[ItfError, Unit] =
-    Either.cond(condition, (), errIfNotCond)
+  /**
+   * Parses the trace from ITF JSON into a sequence of states.
+   * @param json
+   *   a JSON object representing an ITF trace
+   * @return
+   *   either an error or the parsed trace
+   */
+  def parseTrace(json: T): Either[Exception, IndexedSeq[Trace.State]] = for {
+    typesMap <- parseHeaderAndVarTypes(json)
+    varSet = typesMap.keySet
+    statesJsonSeq <- json
+      .getFieldOpt(STATES_FIELD)
+      .toRight(ItfFormatError(s"ITF JSON must declare a $STATES_FIELD field."))
+    states <- asSeq(statesJsonSeq)
+    trace <- eitherSeq(states.map { stateJson =>
+      for {
+        // find the variable names present in this state
+        varsInState <- stateJson.allFieldsOpt.toRight(ItfFormatError(s"State must be an object."))
+        // make sure that no extra variables are present
+        _ <- {
+          val undeclared = (varsInState -- varSet) - META_FIELD // #meta is the only extra field allowed in states
+          requirement(
+              undeclared.isEmpty,
+              ItfFormatError(s"Undeclared variable(s) present in state: ${undeclared.mkString(", ")}."),
+          )
+        }
+        // make sure that no variables are missing
+        _ <- {
+          val missing = varSet -- varsInState
+          requirement(
+              missing.isEmpty,
+              ItfFormatError(s"Variable(s) missing from state: ${missing.mkString(", ")}."),
+          )
+        }
+        // build a TLA+ value for each variable
+        mapSeq <- eitherSeq(
+            typesMap.toSeq.map { case (varName, varT) =>
+              parseItfValueToTlaExpr(stateJson.getFieldOpt(varName).get, varT).map { bi =>
+                varName -> bi.build
+              }
+            }
+        )
+      } yield mapSeq.toMap
+    })
+  } yield IndexedSeq.from(trace)
 
   /**
    * Checks that the Apalache-specific ITF requirements are met, as defined in ADR15. If yes, returns a mapping from
    * variables to their types in a Right(_), or an error-wrapping Left(_) otherwise.
    */
-  private[itf] def validateShapeAndGetTypes(json: T): Either[ItfError, Map[String, TlaType1]] = for {
+  private[itf] def parseHeaderAndVarTypes(json: T): Either[ItfError, Map[String, TlaType1]] = for {
+    // ADR-15 declares "#meta" as an optional field, but we need it for type annotations.
+    // So we have to require it here. There is a section in ADR-15 that mandates it for Apalache.
     meta <- json
       .getFieldOpt(META_FIELD)
-      .toRight(ItfFormatError(s"ITF JSON must declare a $META_FIELD field."))
+      .toRight(ItfFormatError(s"ITF JSON must have the field $META_FIELD: { $VAR_TYPES_FIELD: {...}, ... }."))
     varTypes <- meta
       .getFieldOpt(VAR_TYPES_FIELD)
-      .toRight(ItfFormatError(s"$META_FIELD must be an object with a $VAR_TYPES_FIELD field."))
+      .toRight(ItfFormatError(s"$META_FIELD must be of shape { $VAR_TYPES_FIELD: {...}, ... }."))
     varTypesKeys <- varTypes.allFieldsOpt.toRight(ItfFormatError(s"$VAR_TYPES_FIELD must be an object."))
+    // make sure that the field "vars" is present
     vars <- json
       .getFieldOpt(VARS_FIELD)
       .toRight(ItfFormatError(s"ITF JSON must declare a $VARS_FIELD field."))
     varSeq <- asSeq(vars)
     varSet <- eitherSeq(varSeq.map(asStr)).map(_.toSet)
+    // check whether all variables have type annotations
     _ <- {
       val untaggedVars = varSet -- varTypesKeys
       requirement(
@@ -69,21 +91,29 @@ class ItfToTla[T <: JsonRepresentation](
           ItfFormatError(s"Missing type annotations in $VAR_TYPES_FIELD for ${untaggedVars.mkString(", ")}."),
       )
     }
+    // check that no extra variables are tagged with types
     _ <- {
       val spuriouslyTaggedVars = varTypesKeys -- varSet
       requirement(
           spuriouslyTaggedVars.isEmpty,
-          ItfFormatError(s"Spurious type annotations in $VAR_TYPES_FIELD for ${spuriouslyTaggedVars.mkString(", ")}."),
+          ItfFormatError(
+              s"Found type annotations in $VAR_TYPES_FIELD for unknown variables ${spuriouslyTaggedVars.mkString(", ")}."),
       )
     }
-    typeMapAsSeq <- eitherSeq(varTypesKeys.toSeq.map { k =>
+    // parse the type annotations
+    typeMapAsSeq <- eitherSeq(varTypesKeys.toSeq.map { varName =>
       for {
         typeStringJson <- varTypes
-          .getFieldOpt(k)
-          .toRight(ItfFormatError(s"$VAR_TYPES_FIELD must contain an entry for $k."))
+          .getFieldOpt(varName)
+          .toRight(ItfFormatError(s"$VAR_TYPES_FIELD must contain an entry for variable $varName."))
         typeString <- asStr(typeStringJson)
-        tt1 <- thrownToEither(ItfContentError, DefaultType1Parser.parseType)(typeString)
-      } yield k -> tt1
+        variableType <-
+          try {
+            Right(DefaultType1Parser.parseType(typeString))
+          } catch {
+            case e: JsonDeserializationError => Left(ItfContentError(e.getMessage))
+          }
+      } yield (varName -> variableType)
     })
 
   } yield typeMapAsSeq.toMap
@@ -100,19 +130,24 @@ class ItfToTla[T <: JsonRepresentation](
           Left[ItfError, TBuilderInstruction](ItfContentError(s"Unserializable value $str is disallowed.")))
     )
 
-  // Note: attemptUnserializable + getOrElse is future-proof, and allows us to eventually case-match
-  // unserializable values.
-
-  // TODO: We currently don't check the key shape against any sort of pattern.
-  // Technically, "_-?*+" is a valid record field, as far as this code is concerned.
-  // We should change this to check against the valid TLA identifier pattern.
-  private def isValidIdentifier(s: String): Boolean = true
-
-  private[itf] def typeDrivenBuild(json: T, tt1: TlaType1): Either[ItfError, TBuilderInstruction] =
+  /**
+   * Parses an ITF JSON value into a TLA+ expression, given its type. More specifically, it constructs a
+   * `TBuilderInstruction`.
+   * @param json
+   *   a JSON object representing an ITF value
+   * @param tt1
+   *   the expected type of the ITF value
+   * @return
+   *   either an error or the TLA+ expression constructed via TLA+ builder
+   */
+  private[itf] def parseItfValueToTlaExpr(json: T, tt1: TlaType1): Either[ItfError, TBuilderInstruction] = {
+    // Note: attemptUnserializable + getOrElse is future-proof, and allows us to eventually case-match
+    // unserializable values.
     attemptUnserializable(json).getOrElse {
       tt1 match {
         case BoolT1 =>
           asBool(json).map { tla.bool }
+
         case StrT1 =>
           asStr(json).flatMap { s =>
             Either.cond(
@@ -121,27 +156,29 @@ class ItfToTla[T <: JsonRepresentation](
                 ItfContentError(s"$s is annotated as a string, but has the value of an uninterpreted literal."),
             )
           }
+
         case ct: ConstT1 =>
           for {
-            raw <- asStr(json)
+            rawString <- asStr(json)
             // ConstT1-type literals must adhere to the pattern regex
             typeIndex <- ModelValueHandler
-              .typeAndIndex(raw)
+              .typeAndIndex(rawString)
               .toRight(
-                  ItfContentError(s"$raw is annotated as an uninterpreted literal, but has string form.")
+                  ItfContentError(s"$rawString is annotated as an uninterpreted literal, but has string form.")
               )
             (constT, idx) = typeIndex
             // The pattern-suffix must also match the declared type
             _ <- requirement(
                 ct == constT,
-                ItfContentError(s"$raw is annotated as $ct but has a $constT value."),
+                ItfContentError(s"$rawString is annotated as $ct but has a $constT value."),
             )
           } yield tla.const(idx, constT)
+
         case IntT1 =>
           // Big integers are written as strings, not JS integers
           if (json.allFieldsOpt.contains(Set(BIG_INT_FIELD))) {
-            asStr(json.getFieldOpt(BIG_INT_FIELD).get).map { bi =>
-              tla.int(BigInt(bi))
+            asStr(json.getFieldOpt(BIG_INT_FIELD).get).map { bigint =>
+              tla.int(BigInt(bigint))
             }
           } else {
             // We keep this case for the backwards compatibility with the older versions of ITF.
@@ -153,11 +190,11 @@ class ItfToTla[T <: JsonRepresentation](
           for {
             elems <- asSeq(json)
             args <- eitherSeq(
-                elems.map { typeDrivenBuild(_, elemT) }
+                elems.map { parseItfValueToTlaExpr(_, elemT) }
             )
-          } yield
-            if (args.isEmpty) tla.emptySeq(elemT)
-            else tla.seq(args: _*)
+          } yield {
+            if (args.isEmpty) tla.emptySeq(elemT) else tla.seq(args: _*)
+          }
 
         case RecT1(fieldTypes) =>
           val keys = fieldTypes.keySet
@@ -178,14 +215,14 @@ class ItfToTla[T <: JsonRepresentation](
             )
             recElems <-
               eitherSeq(
-                  fields.toSeq.map { k =>
+                  fields.toSeq.map { key =>
                     for {
                       _ <- requirement(
-                          isValidIdentifier(k),
-                          ItfContentError(s"Record key $k is not a valid TLA+ identifier."),
+                          isValidIdentifier(key),
+                          ItfContentError(s"Record key $key is not a valid TLA+ identifier."),
                       )
-                      bi <- typeDrivenBuild(json.getFieldOpt(k).get, fieldTypes(k))
-                    } yield k -> bi
+                      bi <- parseItfValueToTlaExpr(json.getFieldOpt(key).get, fieldTypes(key))
+                    } yield key -> bi
                   }
               )
             // Records must contain at least 1 kv pair
@@ -207,11 +244,11 @@ class ItfToTla[T <: JsonRepresentation](
             typeLen = elems.length
             _ <- requirement(
                 valLen == typeLen,
-                ItfContentError("s\"Tuple value and type have $valLen and $typeLen elements respectively.\""),
+                ItfContentError(s"\"Tuple value and type have $valLen and $typeLen elements respectively.\""),
             )
             args <- eitherSeq(
                 tupSeq.zip(elems).map { case (elemJson, elemT) =>
-                  typeDrivenBuild(elemJson, elemT)
+                  parseItfValueToTlaExpr(elemJson, elemT)
                 }
             )
           } yield tla.tuple(args: _*)
@@ -224,13 +261,14 @@ class ItfToTla[T <: JsonRepresentation](
             )
             setSeq <- asSeq(json.getFieldOpt(SET_FIELD).get)
             args <- eitherSeq(
-                setSeq.map { typeDrivenBuild(_, elemT) }
+                setSeq.map { parseItfValueToTlaExpr(_, elemT) }
             )
             // Empty collections have special builder ctors
           } yield args match {
             case Seq() => tla.emptySet(elemT)
             case seq   => tla.enumSet(seq: _*)
           }
+
         case FunT1(argT, resT) =>
           for {
             _ <- requirement(
@@ -249,8 +287,8 @@ class ItfToTla[T <: JsonRepresentation](
                             s"Function entries must be 2-element arrays. Found entry with ${pairArray.length} elements."),
                     )
                     Seq(kJson, vJson) = pairArray
-                    k <- typeDrivenBuild(kJson, argT)
-                    v <- typeDrivenBuild(vJson, resT)
+                    k <- parseItfValueToTlaExpr(kJson, argT)
+                    v <- parseItfValueToTlaExpr(vJson, resT)
                   } yield tla.tuple(k, v)
                 }
             )
@@ -263,42 +301,63 @@ class ItfToTla[T <: JsonRepresentation](
             // We leave it to the SetAsFun rule to handle key-duplication
             tla.setAsFun(set)
           }
+
         case _ =>
           Left(ItfContentError(s"Type $tt1 does not match any of the permitted ITF value types."))
       }
     }
+  }
 
-  def getTrace(json: T): Either[Exception, IndexedSeq[Trace.State]] = for {
-    typesMap <- validateShapeAndGetTypes(json)
-    varSet = typesMap.keySet
-    statesJsonSeq <- json
-      .getFieldOpt(STATES_FIELD)
-      .toRight(ItfFormatError(s"ITF JSON must declare a $STATES_FIELD field."))
-    states <- asSeq(statesJsonSeq)
-    trace <- eitherSeq(states.map(stateJson =>
-          for {
-            varsInState <- stateJson.allFieldsOpt.toRight(ItfFormatError(s"State must be an object."))
-            _ <- {
-              val undeclared = (varsInState -- varSet) - META_FIELD // #meta is the only extra field allowed in states
-              requirement(
-                  undeclared.isEmpty,
-                  ItfFormatError(s"Undeclared variable(s) present in state: ${undeclared.mkString(", ")}."),
-              )
-            }
-            _ <- {
-              val missing = varSet -- varsInState
-              requirement(
-                  missing.isEmpty,
-                  ItfFormatError(s"Variable(s) missing from state: ${missing.mkString(", ")}."),
-              )
-            }
-            mapSeq <- eitherSeq(
-                typesMap.toSeq.map { case (varName, varT) =>
-                  typeDrivenBuild(stateJson.getFieldOpt(varName).get, varT).map { bi =>
-                    varName -> bi.build
-                  }
-                }
-            )
-          } yield mapSeq.toMap))
-  } yield IndexedSeq.from(trace)
+  /**
+   * Check a requirement and produce an error as `Left(...)`; otherwise, produce `()`. This is meant to be used as
+   * `_ <- requirement(b, e)` instead of `if (!b) throw e`.
+   */
+  private def requirement(condition: Boolean, errIfNotCond: ItfError): Either[ItfError, Unit] = {
+    Either.cond(condition, (), errIfNotCond)
+  }
+
+  private def asStr(json: T): Either[ItfFormatError, String] = {
+    try {
+      Right(scalaFactory.asStr(json))
+    } catch {
+      case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
+    }
+  }
+
+  private def asInt(json: T): Either[ItfFormatError, Int] = {
+    try {
+      Right(scalaFactory.asInt(json))
+    } catch {
+      case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
+    }
+  }
+
+  private def asBool(json: T): Either[ItfFormatError, Boolean] = {
+    try {
+      Right(scalaFactory.asBool(json))
+    } catch {
+      case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
+    }
+  }
+
+  private def asSeq(json: T): Either[ItfFormatError, Seq[T]] = {
+    try {
+      Right(scalaFactory.asSeq(json))
+    } catch {
+      case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
+    }
+  }
+
+  private def eitherSeq[V](seq: Seq[Either[ItfError, V]]): Either[ItfError, Seq[V]] = {
+    val lefts = seq.collect { case Left(x) => x }
+    val rights = seq.collect { case Right(x) => x }
+    lefts match {
+      case Seq()  => Right(rights)
+      case Seq(l) => Left(l)
+      case _      => Left(MultipleErrors(lefts))
+    }
+  }
+
+  // TLA+ identifiers must start with a letter or underscore, followed by any number of letters, digits, or underscores.
+  private def isValidIdentifier(s: String): Boolean = s.matches("[A-Za-z_][A-Za-z0-9_]*")
 }

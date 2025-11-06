@@ -1,5 +1,6 @@
 package at.forsyte.apalache.io.json
 
+import at.forsyte.apalache.io.json.impl.BuilderCallByName
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -23,7 +24,7 @@ import scala.util.{Failure, Success, Try}
  *   Jure Kukovec
  */
 class JsonToTlaViaBuilder[T <: JsonRepresentation](
-    scalaFactory: ScalaFactory[T],
+    scalaFactory: ScalaFromJsonFactory[T],
     sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
