@@ -1,1 +1,0 @@
- - Fix the JSON-RPC method `query` to call `sat` first (#3205)
