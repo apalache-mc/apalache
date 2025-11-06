@@ -1,5 +1,6 @@
-package at.forsyte.apalache.io.json
+package at.forsyte.apalache.io.json.impl
 
+import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaType1, ValEx, VariantT1}
