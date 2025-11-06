@@ -1,1 +1,0 @@
- - Fix transitive inlining of polymorphic Quint definitions (#3207)

@@ -1,1 +1,0 @@
-- Process and print labels in transitions and invariants (#3167)
