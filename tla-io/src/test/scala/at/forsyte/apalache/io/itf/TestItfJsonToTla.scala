@@ -127,7 +127,6 @@ class TestItfJsonToTla extends AnyFunSuite {
   }
 
   test("typeDrivenBuild - BoolT1") {
-
     val tru = UJsonRep(Bool(true))
 
     assert(
@@ -159,11 +158,9 @@ class TestItfJsonToTla extends AnyFunSuite {
       itfToTla.parseItfValueToTlaExpr(cake, StrT1).map(_.build).contains(tla.str("cake").build),
       "expected successful parsing of string value with StrT1 type"
     )
-
   }
 
   test("typeDrivenBuild - ConstT1") {
-
     val oneOfA = UJsonRep(Str("1_OF_A"))
 
     assert(
@@ -180,10 +177,10 @@ class TestItfJsonToTla extends AnyFunSuite {
         itfToTla.parseItfValueToTlaExpr(oneOfA, ConstT1("A")).map(_.build).contains(tla.const("1", ConstT1("A")).build),
         "expected successful parsing of const value with matching ConstT1 type"
     )
-
   }
 
   private val one: UJsonRep = UJsonRep(Num(1))
+
   test("typeDrivenBuild - intT1") {
     assert(
       itfToTla.parseItfValueToTlaExpr(one, StrT1).isLeft,
@@ -206,7 +203,6 @@ class TestItfJsonToTla extends AnyFunSuite {
       itfToTla.parseItfValueToTlaExpr(bigOne, IntT1).map(_.build).contains(tla.int(1).build),
       "expected successful parsing of big integer value with IntT1 type"
     )
-
   }
 
   test("typeDrivenBuild - SeqT1") {
@@ -303,7 +299,6 @@ class TestItfJsonToTla extends AnyFunSuite {
                 .build),
       "expected successful parsing of record with matching RecT1 type"
     )
-
   }
 
   test("typeDrivenBuild - TupT1") {
@@ -340,7 +335,6 @@ class TestItfJsonToTla extends AnyFunSuite {
         itfToTla.parseItfValueToTlaExpr(tupOneA, tupT).map(_.build).contains(tla.tuple(tla.int(1), tla.str("A")).build),
         "expected successful parsing of tuple with matching TupT1 type"
     )
-
   }
 
   test("typeDrivenBuild - SetT1") {
@@ -387,7 +381,6 @@ class TestItfJsonToTla extends AnyFunSuite {
       itfToTla.parseItfValueToTlaExpr(junkSet, setT).isLeft,
       "expected error when parsing set with extra fields"
     )
-
   }
 
   test("typeDrivenBuild - FunT1") {
@@ -436,7 +429,6 @@ class TestItfJsonToTla extends AnyFunSuite {
                 .build),
       "expected successful parsing of identity function with FunT1 type"
     )
-
   }
 
   test("getTrace") {
@@ -565,7 +557,5 @@ class TestItfJsonToTla extends AnyFunSuite {
               )),
       "expected successful parsing of trace with two states"
     )
-
   }
-
 }
