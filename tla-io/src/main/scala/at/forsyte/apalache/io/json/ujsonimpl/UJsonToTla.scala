@@ -8,4 +8,4 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
  * A json decoder, using the UJson representation
  */
 class UJsonToTla(sourceStoreOpt: Option[SourceStore] = None)(implicit typeTagReader: TypeTagReader)
-    extends JsonToTla[UJsonRep](UJsonScalaFromJsonFactory, sourceStoreOpt)(typeTagReader)
+    extends JsonToTla[UJsonRep](UJsonScalaFromJsonAdapter, sourceStoreOpt)(typeTagReader)

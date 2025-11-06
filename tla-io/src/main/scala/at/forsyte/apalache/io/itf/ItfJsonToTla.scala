@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFromJsonFactory}
+import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFromJsonAdapter}
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
  * @author
  *   Jure Kukovec
  */
-class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T]) {
+class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T]) {
 
   /**
    * Parses the trace from ITF JSON into a sequence of states.
@@ -318,7 +318,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asStr(json: T): Either[ItfFormatError, String] = {
     try {
-      Right(scalaFactory.asStr(json))
+      Right(scalaAdapter.asStr(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }
@@ -326,7 +326,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asInt(json: T): Either[ItfFormatError, Int] = {
     try {
-      Right(scalaFactory.asInt(json))
+      Right(scalaAdapter.asInt(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }
@@ -334,7 +334,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asBool(json: T): Either[ItfFormatError, Boolean] = {
     try {
-      Right(scalaFactory.asBool(json))
+      Right(scalaAdapter.asBool(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }
@@ -342,7 +342,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asSeq(json: T): Either[ItfFormatError, Seq[T]] = {
     try {
-      Right(scalaFactory.asSeq(json))
+      Right(scalaAdapter.asSeq(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }

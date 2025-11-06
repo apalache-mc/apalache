@@ -152,6 +152,8 @@ lazy val tla_io = (project in file("tla-io"))
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.pureConfig,
+          Deps.jacksonDatabind,
+          Deps.jacksonModuleScala,
       ),
   )
 
