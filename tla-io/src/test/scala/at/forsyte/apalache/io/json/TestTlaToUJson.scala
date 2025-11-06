@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.impl.TlaToUJson
+import at.forsyte.apalache.io.json.impl.ujson.TlaToUJson
 import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaAssumeDecl, TlaConstDecl, TlaDecl, TlaEx, TlaVarDecl, TypeTag}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}

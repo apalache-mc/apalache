@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.tracee._
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.ConfigurationError
-import at.forsyte.apalache.io.json.impl.DefaultTagReader
+import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.assignments.{AssignmentOperatorIntroduction, ModuleAdapter}
 import at.forsyte.apalache.tla.imp.findBodyOf
@@ -37,7 +37,7 @@ class TraceePassImpl @Inject() (
   override def execute(module: TlaModule): PassResult = {
 
     val traceSource = options.tracee.trace
-    val traceReader = new UJsonTraceReader(Some(sourceStore), DefaultTagReader)
+    val traceReader = new UJsonTraceReader(Some(sourceStore), DefaultTagJsonReader)
 
     val trace = traceReader.convert(traceReader.read(traceSource))
     if (trace.isEmpty) {

@@ -1,10 +1,10 @@
-package at.forsyte.apalache.io.json.impl
+package at.forsyte.apalache.io.json.impl.ujson
 
 import at.forsyte.apalache.io.json.TlaToJson
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.io.lir.TypeTagPrinter
-import at.forsyte.apalache.tla.lir.storage.SourceLocator
 import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as implicit parameter to JsonTlaWRiter
+import at.forsyte.apalache.tla.lir.storage.SourceLocator // Required as implicit parameter to JsonTlaWRiter
 
 /**
  * A json encoder, using the UJson representation

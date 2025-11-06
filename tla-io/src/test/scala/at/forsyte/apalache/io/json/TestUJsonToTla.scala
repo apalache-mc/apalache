@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.ujson.{TlaToUJson, UJsonToTla}
+import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
 import at.forsyte.apalache.io.lir.{TlaType1PrinterPredefs, TypeTagReader}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
@@ -15,7 +16,7 @@ import org.scalatestplus.scalacheck.Checkers
 @RunWith(classOf[JUnitRunner])
 class TestUJsonToTla extends AnyFunSuite with Checkers {
   import TlaType1PrinterPredefs._
-  implicit val reader: TypeTagReader = DefaultTagReader
+  implicit val reader: TypeTagReader = DefaultTagJsonReader
 
   val dec = new UJsonToTla(sourceStoreOpt = None)
   val enc = new TlaToUJson(locatorOpt = None)
@@ -104,11 +105,11 @@ class TestUJsonToTla extends AnyFunSuite with Checkers {
 
     // No throw
     valid.foreach { s =>
-      DefaultTagReader.apply(s)
+      DefaultTagJsonReader.apply(s)
     }
     invalid.foreach { s =>
       assertThrows[JsonDeserializationError] {
-        DefaultTagReader.apply(s)
+        DefaultTagJsonReader.apply(s)
       }
     }
 

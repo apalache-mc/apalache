@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.{TypeTag, Typed, Untyped}
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1ParseError}
 
-object DefaultTagReader extends TypeTagReader {
+object DefaultTagJsonReader extends TypeTagReader {
   override def apply(tagStr: String): TypeTag = {
     tagStr match {
       case "Untyped" => Untyped
@@ -18,7 +18,6 @@ object DefaultTagReader extends TypeTagReader {
                 s"Error in type annotation: Expected Type1 expression or 'Untyped', found: $s"
             )
         }
-
     }
   }
 }

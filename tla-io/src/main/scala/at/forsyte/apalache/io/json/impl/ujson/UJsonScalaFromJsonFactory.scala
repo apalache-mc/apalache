@@ -1,4 +1,4 @@
-package at.forsyte.apalache.io.json.impl
+package at.forsyte.apalache.io.json.impl.ujson
 
 import at.forsyte.apalache.io.json.{JsonDeserializationError, ScalaFromJsonFactory}
 
