@@ -6,7 +6,7 @@ package at.forsyte.apalache.io.json
  * This follows the GoF Adapter pattern, converting the interface of JsonRepresentation
  * into Scala primitive types that clients expect.
  *
- * Inverse to JsonFromScalaFactory, i.e. as{X}(JsonFromScalaFactory.from{X}(v: X)) == v,
+ * Inverse to ScalaToJsonAdapter, i.e. as{X}(ScalaToJsonAdapter.from{X}(v: X)) == v,
  * for X = Int/Str/Bool/Iterable
  *
  * @tparam T

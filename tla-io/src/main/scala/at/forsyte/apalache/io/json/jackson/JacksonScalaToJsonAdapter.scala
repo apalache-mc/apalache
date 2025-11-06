@@ -1,19 +1,20 @@
 package at.forsyte.apalache.io.json.jackson
 
-import at.forsyte.apalache.io.json.JsonFromScalaFactory
+import at.forsyte.apalache.io.json.ScalaToJsonAdapter
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.databind.node.{ArrayNode, ObjectNode}
 
 /**
- * Factory for the JacksonRep variant of JsonRepresentation
+ * Adapter for converting Scala primitives to JacksonRep.
  */
-object JacksonFromScalaFactory extends JsonFromScalaFactory[JacksonRep] {
+object JacksonScalaToJsonAdapter extends ScalaToJsonAdapter[JacksonRep] {
   private val mapper = new ObjectMapper()
 
   override def mkObj(fields: (String, JacksonRep)*): JacksonRep = {
     val objectNode: ObjectNode = mapper.createObjectNode()
     fields.foreach { case (key, rep) =>
       objectNode.set[JsonNode](key, rep.value)
+      ()
     }
     JacksonRep(objectNode)
   }
@@ -36,4 +37,5 @@ object JacksonFromScalaFactory extends JsonFromScalaFactory[JacksonRep] {
     JacksonRep(arrayNode)
   }
 }
+
 

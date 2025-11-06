@@ -1,12 +1,12 @@
 package at.forsyte.apalache.io.json.ujsonimpl
 
-import at.forsyte.apalache.io.json.JsonFromScalaFactory
+import at.forsyte.apalache.io.json.ScalaToJsonAdapter
 import ujson._
 
 /**
- * Factory for the UJsonRep variant of JsonRepresentation
+ * Adapter for converting Scala primitives to UJsonRep.
  */
-object UJsonFromScalaFactory extends JsonFromScalaFactory[UJsonRep] {
+object UJsonScalaToJsonAdapter extends ScalaToJsonAdapter[UJsonRep] {
   import scala.language.implicitConversions
 
   implicit private def readVal(rep: UJsonRep): Value = rep.value
@@ -29,3 +29,4 @@ object UJsonFromScalaFactory extends JsonFromScalaFactory[UJsonRep] {
 
   override def fromIterable(trv: Iterable[UJsonRep]): UJsonRep = Value.JsonableSeq(trv)
 }
+
