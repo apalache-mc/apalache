@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.node.{ArrayNode, ObjectNode}
 /**
  * Adapter for converting Scala primitives to JacksonRep.
  */
-object JacksonScalaToJsonAdapter extends ScalaToJsonAdapter[JacksonRep] {
+object ScalaToJacksonAdapter extends ScalaToJsonAdapter[JacksonRep] {
   private val mapper = new ObjectMapper()
 
   override def mkObj(fields: (String, JacksonRep)*): JacksonRep = {

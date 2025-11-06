@@ -9,10 +9,10 @@ import org.scalatestplus.junit.JUnitRunner
 class TestJacksonAdapters extends AnyFunSuite {
 
   test("JacksonScalaToJsonAdapter creates objects") {
-    val obj = JacksonScalaToJsonAdapter.mkObj(
-      "name" -> JacksonScalaToJsonAdapter.fromStr("Alice"),
-      "age" -> JacksonScalaToJsonAdapter.fromInt(30),
-      "active" -> JacksonScalaToJsonAdapter.fromBool(true)
+    val obj = ScalaToJacksonAdapter.mkObj(
+      "name" -> ScalaToJacksonAdapter.fromStr("Alice"),
+      "age" -> ScalaToJacksonAdapter.fromInt(30),
+      "active" -> ScalaToJacksonAdapter.fromBool(true)
     )
 
     assert(obj.value.isObject, "expected object node")
@@ -20,49 +20,49 @@ class TestJacksonAdapters extends AnyFunSuite {
   }
 
   test("JacksonScalaToJsonAdapter creates arrays") {
-    val arr = JacksonScalaToJsonAdapter.fromIterable(Seq(
-      JacksonScalaToJsonAdapter.fromInt(1),
-      JacksonScalaToJsonAdapter.fromInt(2),
-      JacksonScalaToJsonAdapter.fromInt(3)
+    val arr = ScalaToJacksonAdapter.fromIterable(Seq(
+      ScalaToJacksonAdapter.fromInt(1),
+      ScalaToJacksonAdapter.fromInt(2),
+      ScalaToJacksonAdapter.fromInt(3)
     ))
 
     assert(arr.value.isArray, "expected array node")
   }
 
   test("JacksonScalaFromJsonAdapter extracts integers") {
-    val json = JacksonScalaToJsonAdapter.fromInt(42)
-    assert(JacksonScalaFromJsonAdapter.asInt(json) == 42, "expected integer value 42")
+    val json = ScalaToJacksonAdapter.fromInt(42)
+    assert(ScalaFromJacksonAdapter.asInt(json) == 42, "expected integer value 42")
   }
 
   test("JacksonScalaFromJsonAdapter extracts strings") {
-    val json = JacksonScalaToJsonAdapter.fromStr("hello")
-    assert(JacksonScalaFromJsonAdapter.asStr(json) == "hello", "expected string value 'hello'")
+    val json = ScalaToJacksonAdapter.fromStr("hello")
+    assert(ScalaFromJacksonAdapter.asStr(json) == "hello", "expected string value 'hello'")
   }
 
   test("JacksonScalaFromJsonAdapter extracts booleans") {
-    val json = JacksonScalaToJsonAdapter.fromBool(true)
-    assert(JacksonScalaFromJsonAdapter.asBool(json), "expected boolean value true")
+    val json = ScalaToJacksonAdapter.fromBool(true)
+    assert(ScalaFromJacksonAdapter.asBool(json), "expected boolean value true")
   }
 
   test("JacksonScalaFromJsonAdapter extracts arrays") {
-    val json = JacksonScalaToJsonAdapter.fromIterable(Seq(
-      JacksonScalaToJsonAdapter.fromInt(1),
-      JacksonScalaToJsonAdapter.fromInt(2)
+    val json = ScalaToJacksonAdapter.fromIterable(Seq(
+      ScalaToJacksonAdapter.fromInt(1),
+      ScalaToJacksonAdapter.fromInt(2)
     ))
-    val seq = JacksonScalaFromJsonAdapter.asSeq(json)
+    val seq = ScalaFromJacksonAdapter.asSeq(json)
     assert(seq.length == 2, "expected sequence of length 2")
   }
 
   test("JacksonScalaFromJsonAdapter throws error on type mismatch") {
-    val json = JacksonScalaToJsonAdapter.fromStr("not an int")
+    val json = ScalaToJacksonAdapter.fromStr("not an int")
     assertThrows[JsonDeserializationError] {
-      JacksonScalaFromJsonAdapter.asInt(json)
+      ScalaFromJacksonAdapter.asInt(json)
     }
   }
 
   test("JacksonRep getFieldOpt works correctly") {
-    val obj = JacksonScalaToJsonAdapter.mkObj(
-      "x" -> JacksonScalaToJsonAdapter.fromInt(10)
+    val obj = ScalaToJacksonAdapter.mkObj(
+      "x" -> ScalaToJacksonAdapter.fromInt(10)
     )
 
     assert(obj.getFieldOpt("x").isDefined, "expected field 'x' to be present")

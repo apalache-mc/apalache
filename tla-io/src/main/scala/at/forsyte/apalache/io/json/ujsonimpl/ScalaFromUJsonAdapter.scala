@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.json.{JsonDeserializationError, ScalaFromJsonAdapt
 /**
  * Adapter for extracting Scala primitives from UJsonRep.
  */
-object UJsonScalaFromJsonAdapter extends ScalaFromJsonAdapter[UJsonRep] {
+object ScalaFromUJsonAdapter extends ScalaFromJsonAdapter[UJsonRep] {
   override def asInt(json: UJsonRep): Int =
     json.value.numOpt.map { _.toInt }.getOrElse {
       throw new JsonDeserializationError("Not an integer.")

@@ -6,7 +6,7 @@ import ujson._
 /**
  * Adapter for converting Scala primitives to UJsonRep.
  */
-object UJsonScalaToJsonAdapter extends ScalaToJsonAdapter[UJsonRep] {
+object ScalaToUJsonAdapter extends ScalaToJsonAdapter[UJsonRep] {
   import scala.language.implicitConversions
 
   implicit private def readVal(rep: UJsonRep): Value = rep.value

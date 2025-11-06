@@ -16,7 +16,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestJacksonItfIntegration extends AnyFunSuite {
 
   test("parse ITF trace from Jackson JSON string") {
-    val itfParser = new ItfJsonToTla(JacksonScalaFromJsonAdapter)
+    val itfParser = new ItfJsonToTla(ScalaFromJacksonAdapter)
 
     val itfJson = """{
       "#meta": {
@@ -59,34 +59,34 @@ class TestJacksonItfIntegration extends AnyFunSuite {
   }
 
   test("create ITF trace programmatically using Jackson") {
-    val itfParser = new ItfJsonToTla(JacksonScalaFromJsonAdapter)
+    val itfParser = new ItfJsonToTla(ScalaFromJacksonAdapter)
 
-    val meta = JacksonScalaToJsonAdapter.mkObj(
-      "format-description" -> JacksonScalaToJsonAdapter.fromStr("Example ITF trace"),
-      "varTypes" -> JacksonScalaToJsonAdapter.mkObj(
-        "x" -> JacksonScalaToJsonAdapter.fromStr("Int"),
-        "y" -> JacksonScalaToJsonAdapter.fromStr("Str")
+    val meta = ScalaToJacksonAdapter.mkObj(
+      "format-description" -> ScalaToJacksonAdapter.fromStr("Example ITF trace"),
+      "varTypes" -> ScalaToJacksonAdapter.mkObj(
+        "x" -> ScalaToJacksonAdapter.fromStr("Int"),
+        "y" -> ScalaToJacksonAdapter.fromStr("Str")
       )
     )
 
-    val vars = JacksonScalaToJsonAdapter.fromIterable(Seq(
-      JacksonScalaToJsonAdapter.fromStr("x"),
-      JacksonScalaToJsonAdapter.fromStr("y")
+    val vars = ScalaToJacksonAdapter.fromIterable(Seq(
+      ScalaToJacksonAdapter.fromStr("x"),
+      ScalaToJacksonAdapter.fromStr("y")
     ))
 
-    val state1 = JacksonScalaToJsonAdapter.mkObj(
-      "x" -> JacksonScalaToJsonAdapter.fromInt(1),
-      "y" -> JacksonScalaToJsonAdapter.fromStr("hello")
+    val state1 = ScalaToJacksonAdapter.mkObj(
+      "x" -> ScalaToJacksonAdapter.fromInt(1),
+      "y" -> ScalaToJacksonAdapter.fromStr("hello")
     )
 
-    val state2 = JacksonScalaToJsonAdapter.mkObj(
-      "x" -> JacksonScalaToJsonAdapter.fromInt(2),
-      "y" -> JacksonScalaToJsonAdapter.fromStr("world")
+    val state2 = ScalaToJacksonAdapter.mkObj(
+      "x" -> ScalaToJacksonAdapter.fromInt(2),
+      "y" -> ScalaToJacksonAdapter.fromStr("world")
     )
 
-    val states = JacksonScalaToJsonAdapter.fromIterable(Seq(state1, state2))
+    val states = ScalaToJacksonAdapter.fromIterable(Seq(state1, state2))
 
-    val itfTrace = JacksonScalaToJsonAdapter.mkObj(
+    val itfTrace = ScalaToJacksonAdapter.mkObj(
       "#meta" -> meta,
       "vars" -> vars,
       "states" -> states

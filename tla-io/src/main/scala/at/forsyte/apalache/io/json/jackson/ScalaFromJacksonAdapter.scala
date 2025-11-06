@@ -6,7 +6,7 @@ import scala.jdk.CollectionConverters._
 /**
  * Adapter for extracting Scala primitives from JacksonRep.
  */
-object JacksonScalaFromJsonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
+object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
   override def asInt(json: JacksonRep): Int = {
     if (json.value.isInt) {
       json.value.asInt()
