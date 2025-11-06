@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tracee
 
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.SourceOption._
-import at.forsyte.apalache.io.itf.ItfToTla
+import at.forsyte.apalache.io.itf.ItfJsonToTla
 import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TypeTagReader
@@ -27,7 +27,7 @@ import scala.util.{Failure, Success, Try}
  */
 class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagReader) extends TraceReader[UJsonRep] {
   private val builder = new UJsonToTlaViaBuilder(sourceStoreOpt)(tagReader)
-  private val itfToTla = new ItfToTla[UJsonRep](UJsonScalaFactory)
+  private val itfToTla = new ItfJsonToTla[UJsonRep](UJsonScalaFactory)
 
   type TraceUJson = TraceJson[UJsonRep]
 
@@ -61,7 +61,7 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
       throw new JsonDeserializationError(s"Provided JSON does not comply with the ITF format.")
     }
 
-  private def convertITF(json: UJsonRep): StateSeq = itfToTla.getTrace(json) match {
+  private def convertITF(json: UJsonRep): StateSeq = itfToTla.parseTrace(json) match {
     case Right(trace) => trace
     case Left(err)    => throw err
   }
