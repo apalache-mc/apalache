@@ -724,13 +724,13 @@ Execute the following command:
 $ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"assumeState",
-       "params":{"sessionId":"1","checkEnabled":true,"equalities": {"x":{"#bigint":"1"}}},"id":4}'
+       "params":{"sessionId":"1","checkEnabled":true,"equalities": {"x":{"#bigint":"0"}}},"id":4}'
 ```
 
 It produces the following output:
 
 ```json  
-{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":3,"status":"ENABLED"}}
+{"jsonrpc":"2.0","id":4,"result":{"sessionId":"1","snapshotId":5,"status":"ENABLED"}}
 ```
 
 
