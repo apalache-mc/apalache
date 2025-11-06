@@ -18,7 +18,7 @@ import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.ujson.TlaToUJson
+import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 
 /**
  * Provides the [[CmdExecutorService]]

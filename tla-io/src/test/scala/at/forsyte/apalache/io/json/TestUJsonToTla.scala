@@ -1,7 +1,6 @@
 package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.impl.ujson.{TlaToUJson, UJsonToTla}
-import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.ujsonimpl.{TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.{TlaType1PrinterPredefs, TypeTagReader}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._

@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.tracee._
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.ConfigurationError
-import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.assignments.{AssignmentOperatorIntroduction, ModuleAdapter}
 import at.forsyte.apalache.tla.imp.findBodyOf

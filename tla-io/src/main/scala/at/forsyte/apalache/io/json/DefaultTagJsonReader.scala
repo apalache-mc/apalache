@@ -1,8 +1,7 @@
-package at.forsyte.apalache.io.json.impl
+package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.tla.lir.{TypeTag, Typed, Untyped}
 import at.forsyte.apalache.io.lir.TypeTagReader
+import at.forsyte.apalache.tla.lir.{TypeTag, Typed, Untyped}
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1ParseError}
 
 object DefaultTagJsonReader extends TypeTagReader {

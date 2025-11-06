@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.tooling.opt
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
 import at.forsyte.apalache.infra.passes.options._
-import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
 import at.forsyte.apalache.tla.tracee.UJsonTraceReader
 import org.backuity.clist._

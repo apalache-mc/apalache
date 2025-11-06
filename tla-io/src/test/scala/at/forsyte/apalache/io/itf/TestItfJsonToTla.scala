@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.impl.ujson.{UJsonRep, UJsonScalaFromJsonFactory}
+import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, UJsonScalaFromJsonFactory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith

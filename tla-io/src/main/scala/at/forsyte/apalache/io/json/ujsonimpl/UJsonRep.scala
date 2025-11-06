@@ -1,7 +1,7 @@
-package at.forsyte.apalache.io.json.impl.ujson
+package at.forsyte.apalache.io.json.ujsonimpl
 
 import at.forsyte.apalache.io.json.JsonRepresentation
-import at.forsyte.apalache.io.json.impl.ujson
+import at.forsyte.apalache.io.json.impl.ujsonimpl
 
 /**
  * A JsonRepresentation, using the ujson library. Wraps a ujson.Value

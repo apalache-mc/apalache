@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.ujson.{TlaToUJson, UJsonToTla}
-import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.ujsonimpl.{TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore

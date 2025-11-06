@@ -1,4 +1,4 @@
-package at.forsyte.apalache.io.json.impl.ujson
+package at.forsyte.apalache.io.json.ujsonimpl
 
 import at.forsyte.apalache.io.json.TlaToJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer

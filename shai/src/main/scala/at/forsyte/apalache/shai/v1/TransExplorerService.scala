@@ -26,7 +26,7 @@ import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.json.impl.ujson.TlaToUJson
+import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.passes.imp.ParserModule
 
 // TODO The connection type will become enriched with more structure

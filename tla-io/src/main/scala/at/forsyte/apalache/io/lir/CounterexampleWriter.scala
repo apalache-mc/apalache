@@ -1,7 +1,7 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.io.OutputManager
-import at.forsyte.apalache.io.json.impl.ujson.TlaToUJson
+import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._

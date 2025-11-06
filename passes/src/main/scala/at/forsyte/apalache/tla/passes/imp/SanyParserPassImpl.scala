@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.passes.imp
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.{PassFailure, PassResult}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.DefaultTagJsonReader
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
@@ -21,7 +20,8 @@ import scala.util.Failure
 import scala.util.Success
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.io.annotations.AnnotationParserError
-import at.forsyte.apalache.io.json.impl.ujson.{UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, UJsonToTla}
 import at.forsyte.apalache.io.quint.{Quint, QuintOutput}
 
 /**
