@@ -53,6 +53,11 @@ See the [JSON-RPC specification][] for more details. It is real short.
 
 This is work in progress. More methods to be added in the future.
 
+In the JSON format below, we write `"${placeholders}"` to indicate values that
+should be replaced with actual values. They have to be of proper types, e.g.,
+strings, numbers, booleans, arrays, or objects. We write them in quotes to
+produce valid JSON snippets.
+
 **Running the server.** To try the examples below, you need to start the server
 first:
 
@@ -83,21 +88,21 @@ be used in subsequent calls to refer to this session.
   "method": "loadSpec",
   "params": {
     "sources": [
-      <rootModuleInBase64>,
-      <importedModule1InBase64>,
-      ...
+      "${root-module-in-base64}",
+      "${imported-module1-in-base64}",
+      "..."
     ],
-    "init": "optional-initializer-predicate",
-    "next": "optional-transition-predicate",
+    "init": "${optional-initializer-predicate}",
+    "next": "${optional-transition-predicate}",
     "invariants": [
-      "invariant 1",
-      ...,
-      "invariant N"
+      "${invariant-1}",
+      "...",
+      "${invariant-N}"
     ],
     "exports": [
-      "exported-operator-1",
-      ...,
-      "exported-operator-M"
+      "${exported-operator-1}",
+      "...",
+      "${exported-operator-M}"
     ]
   }
 }
@@ -113,13 +118,13 @@ operators such as `Init`, `Next`, and the invariants.
 ```json
 {
   "result": {
-    "sessionId": "unique-session-identifier",
-    "snapshotId": snapshot-identifier-after-loading-the-spec,
+    "sessionId": "${unique-session-identifier}",
+    "snapshotId": "${snapshot-identifier-after-loading-the-spec}",
     "specParameters": {
-      "initTransitions": init-metadata,
-      "nextTransitions": next-metadata,
-      "stateInvariants": state-invariants-metadata,
-      "actionInvariants": action-invariants-metadata,
+      "initTransitions": "${init-metadata}",
+      "nextTransitions": "${next-metadata}",
+      "stateInvariants": "${state-invariants-metadata}",
+      "actionInvariants": "${action-invariants-metadata}"
     }
   }
 }
@@ -129,8 +134,8 @@ The metadata entries look like:
 
 ```json
 {
-  "index": i,
-  "labels": ["label1", "label2", ...]
+  "index": "${integer-index}",
+  "labels": ["label1", "label2", "..."]
 }
 ```
 
@@ -206,7 +211,7 @@ session identifier. No further calls should be made with this session identifier
 {
   "method": "disposeSpec",
   "params": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -219,7 +224,7 @@ This identifier cannot be used in the future calls.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -262,8 +267,8 @@ roll back to it again later.
 {
   "method": "rollback",
   "params": {
-    "sessionId": "session-id",
-    "snapshotId": snapshot-id
+    "sessionId": "${session-id}",
+    "snapshotId": "${snapshot-id}"
   }
 }
 ```
@@ -276,8 +281,8 @@ that was rolled back to:
 ```json
 {
   "result": {
-    "sessionId": "session-id",
-    "snapshotId": snapshot-id
+    "sessionId": "${session-id}",
+    "snapshotId": "${snapshot-id}"
   }
 }
 ```
@@ -323,10 +328,10 @@ snapshot.
 {
   "method": "assumeTransition",
   "params": {
-    "sessionId": "session-identifier",
-    "transitionId": transition-identifier,
-    "checkEnabled": check-if-transition-is-enabled,
-    "timeoutSec": timeout-in-seconds-or-0,
+    "sessionId": "${session-identifier}",
+    "transitionId": "${integer-transition-identifier}",
+    "checkEnabled": "${boolean-flag}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -336,9 +341,9 @@ snapshot.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "snapshotId": new-snapshot-id,
-    "transitionId": transition-identifier,
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "transitionId": "${integer-transition-identifier}",
     "status": "ENABLED|DISABLED|UNKNOWN"
   }
 }
@@ -381,7 +386,7 @@ new constraints, `nextStep` takes a new snapshot.
 {
   "method": "nextState",
   "params": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -391,9 +396,9 @@ new constraints, `nextStep` takes a new snapshot.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "snapshotId": new-snapshot-id,
-    "newStepNo": new-step-number
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "newStepNo": "${new-step-number}"
   }
 }
 ```
@@ -446,10 +451,10 @@ checking the invariant, the context is rolled back to the state before the call.
 {
   "method": "checkInvariant",
   "params": {
-    "sessionId": "session-identifier",
-    "invariantId": invariant-identifier,
+    "sessionId": "${session-identifier}",
+    "invariantId": "${integer-invariant-identifier}",
     "kind": "STATE|ACTION",
-    "timeoutSec": timeout-in-seconds-or-0
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -459,9 +464,9 @@ checking the invariant, the context is rolled back to the state before the call.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
+    "sessionId": "${session-identifier}",
     "invariantStatus": "SATISFIED|VIOLATED|UNKNOWN",
-    "trace": trace-in-itf-or-null,
+    "trace": "${trace-in-itf-or-null}"
   }
 }
 ```
@@ -520,10 +525,10 @@ set, or it is set to `0`, then the timeout is infinite.
 {
   "method": "query",
   "params": {
-    "sessionId": "session-identifier",
-    "kinds": [ kind1, kind2, ... ],
-    "operator": optional-operator-name,
-    "timeoutSec": timeout-in-seconds-or-0
+    "sessionId": "${session-identifier}",
+    "kinds": [ "${kind1}", "${kind2}", "..." ],
+    "operator": "${optional-operator-name}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -537,9 +542,9 @@ and `expr` are in the [ITF Format][].
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "trace": trace-in-itf-or-null,
-    "operatorValue": expr-in-itf-or-null
+    "sessionId": "${session-identifier}",
+    "trace": "${trace-in-itf-or-null}",
+    "operatorValue": "${expr-in-itf-or-null}"
   }
 }
 ```
@@ -592,9 +597,9 @@ returned by `nextState`).
 {
   "method": "nextModel",
   "params": {
-    "sessionId": "session-identifier",
-    "operator": <operator-name>,
-    "timeoutSec": timeout-in-seconds-or-0
+    "sessionId": "${session-identifier}",
+    "operator": "${operator-name}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -619,10 +624,10 @@ The output contains the following fields:
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "oldValue": expr-in-itf-or-null,
-    "hasOld": (TRUE|FALSE|UNKNOWN),
-    "hasNext": (TRUE|FALSE|UNKNOWN)
+    "sessionId": "${session-identifier}",
+    "oldValue": "${expr-in-itf-or-null}",
+    "hasOld": "TRUE|FALSE|UNKNOWN",
+    "hasNext": "TRUE|FALSE|UNKNOWN"
   }
 }
 ```
