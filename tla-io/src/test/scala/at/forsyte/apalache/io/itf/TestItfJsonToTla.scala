@@ -14,64 +14,62 @@ class TestItfJsonToTla extends AnyFunSuite {
 
   import ujson._
 
-  test("validateShapeAndGetTypes") {
-
+  test("parseHeaderAndVarTypes on empty input") {
     val empty = UJsonRep(Obj())
-    assert {
-      itfToTla.parseHeaderAndVarTypes(empty).isLeft
-    }
+    assert(itfToTla.parseHeaderAndVarTypes(empty).isLeft, "expected failure on empty input")
+  }
 
+  test("parseHeaderAndVarTypes on missing vars field") {
     val metaEmpty = UJsonRep(Obj(META_FIELD -> Obj()))
-    assert {
-      itfToTla.parseHeaderAndVarTypes(metaEmpty).isLeft
-    }
+    assert(itfToTla.parseHeaderAndVarTypes(metaEmpty).isLeft, "expected failure on missing vars field")
+  }
 
+  test("parseHeaderAndVarTypes on var types field that is not an object") {
     val typesNotObj = UJsonRep(
-        Obj(
-            META_FIELD ->
-              Obj(
-                  VAR_TYPES_FIELD -> 42
-              ),
-            VARS_FIELD -> Arr(),
-        )
+      Obj(
+        META_FIELD ->
+          Obj(
+            VAR_TYPES_FIELD -> 42
+          ),
+        VARS_FIELD -> Arr(),
+      )
     )
+    assert(itfToTla.parseHeaderAndVarTypes(typesNotObj).isLeft,
+      "expected failure on var types field that is not an object")
+  }
 
-    assert {
-      itfToTla.parseHeaderAndVarTypes(typesNotObj).isLeft
-    }
-
+  test("parseHeaderAndVarTypes on empty vars array") {
     val noVars = UJsonRep(
-        Obj(
-            META_FIELD ->
+      Obj(
+        META_FIELD ->
+          Obj(
+            VAR_TYPES_FIELD ->
               Obj(
-                  VAR_TYPES_FIELD ->
-                    Obj(
-                        "x" -> "Int"
-                    )
-              ),
-            VARS_FIELD ->
-              Arr(), // empty
-        )
+                "x" -> "Int"
+              )
+          ),
+        VARS_FIELD ->
+          Arr(), // empty
+      )
     )
+    assert(itfToTla.parseHeaderAndVarTypes(noVars).isLeft, "expected failure on empty vars array")
+  }
 
-    assert {
-      itfToTla.parseHeaderAndVarTypes(noVars).isLeft
-    }
-
+  test("parseHeaderAndVarTypes on missing types mapping") {
     val noTypes = UJsonRep(
-        Obj(
-            META_FIELD ->
-              Obj(
-                  VAR_TYPES_FIELD -> Obj() // empty
-              ),
-            VARS_FIELD -> Arr("x"),
-        )
+      Obj(
+        META_FIELD ->
+          Obj(
+            VAR_TYPES_FIELD -> Obj() // empty
+          ),
+        VARS_FIELD -> Arr("x"),
+      )
     )
 
-    assert {
-      itfToTla.parseHeaderAndVarTypes(noTypes).isLeft
-    }
+    assert(itfToTla.parseHeaderAndVarTypes(noTypes).isLeft, "expected failure on missing the types mapping")
+  }
 
+  test("parseHeaderAndVarTypes on correct input") {
     val correct = UJsonRep(
         Obj(
             META_FIELD ->
@@ -86,48 +84,46 @@ class TestItfJsonToTla extends AnyFunSuite {
         )
     )
 
-    assert {
-      itfToTla
-        .parseHeaderAndVarTypes(correct)
-        .contains(
-            Map(
-                "x" -> IntT1,
-                "y" -> FunT1(StrT1, BoolT1),
-            )
-        )
-    }
-
+    assert(
+        itfToTla
+          .parseHeaderAndVarTypes(correct)
+          .contains(
+              Map(
+                  "x" -> IntT1,
+                  "y" -> FunT1(StrT1, BoolT1),
+              )
+          ),
+        "expected success on correct input",
+    )
   }
 
   test("attemptUnserializable") {
+    val emptyObject = UJsonRep(Obj())
+    assert(itfToTla.attemptUnserializable(emptyObject).isEmpty, "expected None on empty object")
+  }
 
-    val notUS = UJsonRep(Obj())
-
-    assert(itfToTla.attemptUnserializable(notUS).isEmpty)
-
-    def singleUS(v: String): UJsonRep = UJsonRep(
+  test("attemptUnserializable on bogus unserializable values") {
+    def unserializable(v: String): UJsonRep = UJsonRep(
         Obj(
             UNSERIALIZABLE_FIELD -> v
         )
     )
 
-    val bogusUS = singleUS("") // illegal identifier
+    val emptyString = unserializable("") // illegal identifier
+    assert(
+      itfToTla.attemptUnserializable(emptyString).exists(_.isLeft),
+        "expected error on bogus unserializable value",
+    )
 
-    assert {
-      itfToTla.attemptUnserializable(bogusUS).exists(_.isLeft)
-    }
+    assert(
+      itfToTla.attemptUnserializable(unserializable("Int")).exists(_.isLeft),
+        "expected error on unserializable Int",
+    )
 
-    val int = singleUS("Int")
-
-    assert {
-      itfToTla.attemptUnserializable(int).exists(_.isLeft)
-    }
-
-    val nat = singleUS("Nat")
-
-    assert {
-      itfToTla.attemptUnserializable(nat).exists(_.isLeft)
-    }
+    assert(
+      itfToTla.attemptUnserializable(unserializable("Nat")).exists(_.isLeft),
+        "expected error on unserializable Nat",
+    )
   }
 
   test("typeDrivenBuild - BoolT1") {
