@@ -126,7 +126,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - BoolT1") {
+  test("parseItfValueToTlaExpr - BoolT1") {
     val tru = UJsonRep(Bool(true))
 
     assert(
@@ -141,7 +141,7 @@ class TestItfJsonToTla extends AnyFunSuite {
 
   }
 
-  test("typeDrivenBuild - StrT1") {
+  test("parseItfValueToTlaExpr - StrT1") {
     val cake = UJsonRep(Str("cake"))
 
     assert(
@@ -160,7 +160,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - ConstT1") {
+  test("parseItfValueToTlaExpr - ConstT1") {
     val oneOfA = UJsonRep(Str("1_OF_A"))
 
     assert(
@@ -181,7 +181,7 @@ class TestItfJsonToTla extends AnyFunSuite {
 
   private val one: UJsonRep = UJsonRep(Num(1))
 
-  test("typeDrivenBuild - intT1") {
+  test("parseItfValueToTlaExpr - intT1") {
     assert(
         itfToTla.parseItfValueToTlaExpr(one, StrT1).isLeft,
         "expected error when parsing integer value with StrT1 type",
@@ -205,7 +205,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - SeqT1") {
+  test("parseItfValueToTlaExpr - SeqT1") {
     val emptySeq = UJsonRep(Arr())
 
     assert(
@@ -246,7 +246,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - RecT1") {
+  test("parseItfValueToTlaExpr - RecT1") {
     val emptyRec = UJsonRep(Obj())
 
     assert(
@@ -301,7 +301,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - TupT1") {
+  test("parseItfValueToTlaExpr - TupT1") {
     val tupOneA = UJsonRep(
         Obj(
             TUP_FIELD ->
@@ -337,7 +337,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - SetT1") {
+  test("parseItfValueToTlaExpr - SetT1") {
     val emptySet = UJsonRep(Obj(SET_FIELD -> Arr()))
 
     val setT = SetT1(BoolT1)
@@ -383,7 +383,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - FunT1") {
+  test("parseItfValueToTlaExpr - FunT1") {
     val emptyFun = UJsonRep(Obj(MAP_FIELD -> Arr()))
 
     val funT = FunT1(IntT1, IntT1)
@@ -431,7 +431,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("getTrace") {
+  test("parseTrace") {
     val noStates = UJsonRep(
         Obj(
             META_FIELD ->
