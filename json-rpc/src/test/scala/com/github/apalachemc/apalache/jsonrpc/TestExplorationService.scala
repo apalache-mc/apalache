@@ -224,8 +224,13 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
 
   test("assumeTransition; nextStep; assumeState") {
     val valueAndStatusTable: TableFor2[Int, AssumptionStatus.T] =
-      Table(("x", "status"), (0, AssumptionStatus.ENABLED), (1, AssumptionStatus.DISABLED),
-          (2, AssumptionStatus.DISABLED), (100, AssumptionStatus.DISABLED))
+      Table(
+          ("x", "status"),
+          (0, AssumptionStatus.ENABLED),
+          (1, AssumptionStatus.DISABLED),
+          (2, AssumptionStatus.DISABLED),
+          (100, AssumptionStatus.DISABLED),
+      )
 
     forAll(valueAndStatusTable) { (valueOfX: Int, expectedStatus: AssumptionStatus.T) =>
       val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get

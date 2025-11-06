@@ -62,34 +62,34 @@ class TestJacksonItfIntegration extends AnyFunSuite {
     val itfParser = new ItfJsonToTla(ScalaFromJacksonAdapter)
 
     val meta = ScalaToJacksonAdapter.mkObj(
-      "format-description" -> ScalaToJacksonAdapter.fromStr("Example ITF trace"),
-      "varTypes" -> ScalaToJacksonAdapter.mkObj(
-        "x" -> ScalaToJacksonAdapter.fromStr("Int"),
-        "y" -> ScalaToJacksonAdapter.fromStr("Str")
-      )
+        "format-description" -> ScalaToJacksonAdapter.fromStr("Example ITF trace"),
+        "varTypes" -> ScalaToJacksonAdapter.mkObj(
+            "x" -> ScalaToJacksonAdapter.fromStr("Int"),
+            "y" -> ScalaToJacksonAdapter.fromStr("Str"),
+        ),
     )
 
     val vars = ScalaToJacksonAdapter.fromIterable(Seq(
-      ScalaToJacksonAdapter.fromStr("x"),
-      ScalaToJacksonAdapter.fromStr("y")
-    ))
+            ScalaToJacksonAdapter.fromStr("x"),
+            ScalaToJacksonAdapter.fromStr("y"),
+        ))
 
     val state1 = ScalaToJacksonAdapter.mkObj(
-      "x" -> ScalaToJacksonAdapter.fromInt(1),
-      "y" -> ScalaToJacksonAdapter.fromStr("hello")
+        "x" -> ScalaToJacksonAdapter.fromInt(1),
+        "y" -> ScalaToJacksonAdapter.fromStr("hello"),
     )
 
     val state2 = ScalaToJacksonAdapter.mkObj(
-      "x" -> ScalaToJacksonAdapter.fromInt(2),
-      "y" -> ScalaToJacksonAdapter.fromStr("world")
+        "x" -> ScalaToJacksonAdapter.fromInt(2),
+        "y" -> ScalaToJacksonAdapter.fromStr("world"),
     )
 
     val states = ScalaToJacksonAdapter.fromIterable(Seq(state1, state2))
 
     val itfTrace = ScalaToJacksonAdapter.mkObj(
-      "#meta" -> meta,
-      "vars" -> vars,
-      "states" -> states
+        "#meta" -> meta,
+        "vars" -> vars,
+        "states" -> states,
     )
 
     val result = itfParser.parseTrace(itfTrace)
@@ -107,4 +107,3 @@ class TestJacksonItfIntegration extends AnyFunSuite {
     assert(traceState1("y") == tla.str("world").build, "expected y='world' in state 1")
   }
 }
-

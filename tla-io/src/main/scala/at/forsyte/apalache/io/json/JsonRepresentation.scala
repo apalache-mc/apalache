@@ -5,6 +5,7 @@ package at.forsyte.apalache.io.json
  * method, to be used when performing IO.
  */
 trait JsonRepresentation {
+
   /** The type used to represent JSON */
   type Value
 

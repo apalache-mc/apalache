@@ -29,4 +29,3 @@ object ScalaToUJsonAdapter extends ScalaToJsonAdapter[UJsonRep] {
 
   override def fromIterable(trv: Iterable[UJsonRep]): UJsonRep = Value.JsonableSeq(trv)
 }
-

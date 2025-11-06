@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, ScalaFromUJsonAdapter}
+import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRep}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
@@ -592,7 +592,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     val extraVar = UJsonRep(
         Obj(
             "x" -> 1,
-            "y" -> "hello" // y has no type annotation in varTypes
+            "y" -> "hello", // y has no type annotation in varTypes
         )
     )
 
@@ -607,7 +607,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     val typeMismatch = UJsonRep(
         Obj(
             "x" -> "not an int",
-            "y" -> "hello"
+            "y" -> "hello",
         )
     )
 
@@ -623,7 +623,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         Obj(
             "x" -> 42,
             "y" -> "hello",
-            "z" -> true
+            "z" -> true,
         )
     )
 
@@ -641,13 +641,13 @@ class TestItfJsonToTla extends AnyFunSuite {
     val varTypes = Map(
         "rec" -> RecT1("a" -> IntT1, "b" -> StrT1),
         "seq" -> SeqT1(IntT1),
-        "set" -> SetT1(BoolT1)
+        "set" -> SetT1(BoolT1),
     )
     val validState = UJsonRep(
         Obj(
             "rec" -> Obj("a" -> 1, "b" -> "test"),
             "seq" -> Arr(1, 2, 3),
-            "set" -> Obj(SET_FIELD -> Arr(true, false))
+            "set" -> Obj(SET_FIELD -> Arr(true, false)),
         )
     )
 

@@ -45,4 +45,3 @@ sealed case class JacksonRep(value: JsonNode) extends JsonRepresentation {
 object JacksonRep {
   private val mapper = new ObjectMapper()
 }
-

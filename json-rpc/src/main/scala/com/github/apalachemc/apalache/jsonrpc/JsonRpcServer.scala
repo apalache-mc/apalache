@@ -382,8 +382,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           val stepNo = checkerContext.trex.stepNo
           if (!params.checkEnabled) {
             // if we do not check satisfiability, we assume that the transition is enabled
-            logger.info(
-              s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState UNKNOWN")
+            logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState UNKNOWN")
             AssumeStateResult(sessionId, snapshotAfterId, AssumptionStatus.UNKNOWN)
           } else {
             // check satisfiability
@@ -393,14 +392,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                   snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
                 }
                 val status = if (isSat) AssumptionStatus.ENABLED else AssumptionStatus.DISABLED
-                logger.info(
-                  s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState $status")
+                logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState $status")
                 AssumeStateResult(sessionId, snapshotBeforeId, status)
 
               case None =>
                 // in case of timeout or unknown, we do not roll back the context, but return unknown
-                logger.info(
-                  s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState UNKNOWN")
+                logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState UNKNOWN")
                 AssumeStateResult(sessionId, snapshotAfterId, AssumptionStatus.UNKNOWN)
             }
           }

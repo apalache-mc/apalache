@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.SourceOption._
 import at.forsyte.apalache.io.itf.ItfJsonToTla
 import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, ScalaFromUJsonAdapter, UJsonToTlaViaBuilder}
+import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRep, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}

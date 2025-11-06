@@ -27,4 +27,3 @@ object ScalaFromUJsonAdapter extends ScalaFromJsonAdapter[UJsonRep] {
       }
       .toSeq
 }
-

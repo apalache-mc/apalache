@@ -37,5 +37,3 @@ object ScalaToJacksonAdapter extends ScalaToJsonAdapter[JacksonRep] {
     JacksonRep(arrayNode)
   }
 }
-
-

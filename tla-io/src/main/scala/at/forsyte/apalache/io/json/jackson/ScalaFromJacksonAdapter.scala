@@ -39,5 +39,3 @@ object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
     }
   }
 }
-
-

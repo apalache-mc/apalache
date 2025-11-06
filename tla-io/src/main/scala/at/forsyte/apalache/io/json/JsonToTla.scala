@@ -12,8 +12,9 @@ import scala.util.Success
 import scala.util.Failure
 
 /**
- * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp. ScalaFromJsonAdapter
- * implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X = TlaEx/TlaDecl/TlaModule
+ * A semi-abstraction of a json decoder. It is independent of the concrete JsonRepresentation, resp.
+ * ScalaFromJsonAdapter implementation. Inverse to TlaToJson, i.e. as{X}( TlaToJson( a : X) ) == a, where X =
+ * TlaEx/TlaDecl/TlaModule
  *
  * @tparam T
  *   Any class extending JsonRepresentation

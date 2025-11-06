@@ -10,9 +10,9 @@ class TestJacksonAdapters extends AnyFunSuite {
 
   test("JacksonScalaToJsonAdapter creates objects") {
     val obj = ScalaToJacksonAdapter.mkObj(
-      "name" -> ScalaToJacksonAdapter.fromStr("Alice"),
-      "age" -> ScalaToJacksonAdapter.fromInt(30),
-      "active" -> ScalaToJacksonAdapter.fromBool(true)
+        "name" -> ScalaToJacksonAdapter.fromStr("Alice"),
+        "age" -> ScalaToJacksonAdapter.fromInt(30),
+        "active" -> ScalaToJacksonAdapter.fromBool(true),
     )
 
     assert(obj.value.isObject, "expected object node")
@@ -21,10 +21,10 @@ class TestJacksonAdapters extends AnyFunSuite {
 
   test("JacksonScalaToJsonAdapter creates arrays") {
     val arr = ScalaToJacksonAdapter.fromIterable(Seq(
-      ScalaToJacksonAdapter.fromInt(1),
-      ScalaToJacksonAdapter.fromInt(2),
-      ScalaToJacksonAdapter.fromInt(3)
-    ))
+            ScalaToJacksonAdapter.fromInt(1),
+            ScalaToJacksonAdapter.fromInt(2),
+            ScalaToJacksonAdapter.fromInt(3),
+        ))
 
     assert(arr.value.isArray, "expected array node")
   }
@@ -46,9 +46,9 @@ class TestJacksonAdapters extends AnyFunSuite {
 
   test("JacksonScalaFromJsonAdapter extracts arrays") {
     val json = ScalaToJacksonAdapter.fromIterable(Seq(
-      ScalaToJacksonAdapter.fromInt(1),
-      ScalaToJacksonAdapter.fromInt(2)
-    ))
+            ScalaToJacksonAdapter.fromInt(1),
+            ScalaToJacksonAdapter.fromInt(2),
+        ))
     val seq = ScalaFromJacksonAdapter.asSeq(json)
     assert(seq.length == 2, "expected sequence of length 2")
   }
@@ -62,11 +62,10 @@ class TestJacksonAdapters extends AnyFunSuite {
 
   test("JacksonRep getFieldOpt works correctly") {
     val obj = ScalaToJacksonAdapter.mkObj(
-      "x" -> ScalaToJacksonAdapter.fromInt(10)
+        "x" -> ScalaToJacksonAdapter.fromInt(10)
     )
 
     assert(obj.getFieldOpt("x").isDefined, "expected field 'x' to be present")
     assert(obj.getFieldOpt("y").isEmpty, "expected field 'y' to be absent")
   }
 }
-
