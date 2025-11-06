@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFactory}
+import at.forsyte.apalache.io.json.impl.{UJsonRep, UJsonScalaFromJsonFactory}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
@@ -10,7 +10,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestItfJsonToTla extends AnyFunSuite {
 
-  val itfToTla = new ItfJsonToTla(UJsonScalaFactory)
+  val itfToTla = new ItfJsonToTla(UJsonScalaFromJsonFactory)
 
   import ujson._
 

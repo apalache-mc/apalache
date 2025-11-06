@@ -1,11 +1,11 @@
 package at.forsyte.apalache.io.json.impl
 
-import at.forsyte.apalache.io.json.{JsonDeserializationError, ScalaFactory}
+import at.forsyte.apalache.io.json.{JsonDeserializationError, ScalaFromJsonFactory}
 
 /**
  * ScalaFactory for the UJsonRep variant of JsonRepresentation
  */
-object UJsonScalaFactory extends ScalaFactory[UJsonRep] {
+object UJsonScalaFromJsonFactory extends ScalaFromJsonFactory[UJsonRep] {
   override def asInt(json: UJsonRep): Int =
     json.value.numOpt.map { _.toInt }.getOrElse {
       throw new JsonDeserializationError("Not an integer.")

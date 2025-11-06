@@ -12,7 +12,7 @@ import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer // Required as 
 class TlaToUJson(
     locatorOpt: Option[SourceLocator] = None
   )(implicit typeTagPrinter: TypeTagPrinter)
-    extends TlaToJson[UJsonRep](UJsonFactory, locatorOpt)(typeTagPrinter)
+    extends TlaToJson[UJsonRep](UJsonFromScalaFactory, locatorOpt)(typeTagPrinter)
 
 object TlaToUJson {
   def apply(module: TlaModule): ujson.Value = (new TlaToUJson()).makeRoot(Seq(module)).value

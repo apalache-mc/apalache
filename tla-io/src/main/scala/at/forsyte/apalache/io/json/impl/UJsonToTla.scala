@@ -8,4 +8,4 @@ import at.forsyte.apalache.io.lir.TypeTagReader
  * A json decoder, using the UJson representation
  */
 class UJsonToTla(sourceStoreOpt: Option[SourceStore] = None)(implicit typeTagReader: TypeTagReader)
-    extends JsonToTla[UJsonRep](UJsonScalaFactory, sourceStoreOpt)(typeTagReader)
+    extends JsonToTla[UJsonRep](UJsonScalaFromJsonFactory, sourceStoreOpt)(typeTagReader)

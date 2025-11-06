@@ -19,8 +19,8 @@ import scala.util.Failure
  *   Any class extending JsonRepresentation
  */
 class JsonToTla[T <: JsonRepresentation](
-    scalaFactory: ScalaFactory[T],
-    sourceStoreOpt: Option[SourceStore] = None,
+                                          scalaFactory: ScalaFromJsonFactory[T],
+                                          sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
 

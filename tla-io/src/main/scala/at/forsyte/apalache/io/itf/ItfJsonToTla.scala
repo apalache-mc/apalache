@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFactory}
+import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFromJsonFactory}
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
  * @author
  *   Jure Kukovec
  */
-class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFactory[T]) {
+class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T]) {
 
   /**
    * Parses the trace from ITF JSON into a sequence of states.
