@@ -558,4 +558,125 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of trace with two states",
     )
   }
+
+  test("parseState - not an object") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1)
+    val notAnObject = UJsonRep(Arr(1, 2, 3))
+
+    assert(
+        itfToTla.parseState(varTypes, notAnObject).isLeft,
+        "expected error when parsing state that is not an object",
+    )
+  }
+
+  test("parseState - missing variable in JSON (produces partial state)") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1)
+    val missingVar = UJsonRep(
+        Obj(
+            "x" -> 1
+            // "y" is missing - parseState doesn't validate this, only parses what's present
+        )
+    )
+
+    val result = itfToTla.parseState(varTypes, missingVar)
+
+    assert(result.isRight, "expected successful parsing of partial state")
+    val state = result.toOption.get
+    assert(state.contains("x"), "expected x to be present")
+    assert(!state.contains("y"), "expected y to be absent")
+    assert(state("x") == tla.int(1).build, "expected x to be 1")
+  }
+
+  test("parseState - variable with no type annotation") {
+    val varTypes = Map("x" -> IntT1)
+    val extraVar = UJsonRep(
+        Obj(
+            "x" -> 1,
+            "y" -> "hello" // y has no type annotation in varTypes
+        )
+    )
+
+    assert(
+        itfToTla.parseState(varTypes, extraVar).isLeft,
+        "expected error when parsing state with unannotated variable",
+    )
+  }
+
+  test("parseState - type mismatch") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1)
+    val typeMismatch = UJsonRep(
+        Obj(
+            "x" -> "not an int",
+            "y" -> "hello"
+        )
+    )
+
+    assert(
+        itfToTla.parseState(varTypes, typeMismatch).isLeft,
+        "expected error when parsing state with type mismatch",
+    )
+  }
+
+  test("parseState - successful parsing with simple types") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1, "z" -> BoolT1)
+    val validState = UJsonRep(
+        Obj(
+            "x" -> 42,
+            "y" -> "hello",
+            "z" -> true
+        )
+    )
+
+    val result = itfToTla.parseState(varTypes, validState)
+
+    assert(result.isRight, "expected successful parsing of valid state")
+    val state = result.toOption.get
+
+    assert(state("x") == tla.int(42).build, "expected x to be 42")
+    assert(state("y") == tla.str("hello").build, "expected y to be 'hello'")
+    assert(state("z") == tla.bool(true).build, "expected z to be true")
+  }
+
+  test("parseState - successful parsing with complex types") {
+    val varTypes = Map(
+        "rec" -> RecT1("a" -> IntT1, "b" -> StrT1),
+        "seq" -> SeqT1(IntT1),
+        "set" -> SetT1(BoolT1)
+    )
+    val validState = UJsonRep(
+        Obj(
+            "rec" -> Obj("a" -> 1, "b" -> "test"),
+            "seq" -> Arr(1, 2, 3),
+            "set" -> Obj(SET_FIELD -> Arr(true, false))
+        )
+    )
+
+    val result = itfToTla.parseState(varTypes, validState)
+
+    assert(result.isRight, "expected successful parsing of state with complex types")
+    val state = result.toOption.get
+
+    assert(
+        state("rec") == tla.rec("a" -> tla.int(1), "b" -> tla.str("test")).build,
+        "expected rec to match",
+    )
+    assert(
+        state("seq") == tla.seq(Seq[BigInt](1, 2, 3).map(tla.int): _*).build,
+        "expected seq to match",
+    )
+    assert(
+        state("set") == tla.enumSet(tla.bool(true), tla.bool(false)).build,
+        "expected set to match",
+    )
+  }
+
+  test("parseState - empty state") {
+    val varTypes = Map.empty[String, TlaType1]
+    val emptyState = UJsonRep(Obj())
+
+    val result = itfToTla.parseState(varTypes, emptyState)
+
+    assert(result.isRight, "expected successful parsing of empty state")
+    assert(result.toOption.get.isEmpty, "expected empty state map")
+  }
 }
