@@ -169,7 +169,8 @@ class TestItfJsonToTla extends AnyFunSuite {
       itfToTla.parseItfValueToTlaExpr(oneOfA, ConstT1("B")).isLeft
     }
 
-    assert(itfToTla.parseItfValueToTlaExpr(oneOfA, ConstT1("A")).map(_.build).contains(tla.const("1", ConstT1("A")).build))
+    assert(
+        itfToTla.parseItfValueToTlaExpr(oneOfA, ConstT1("A")).map(_.build).contains(tla.const("1", ConstT1("A")).build))
 
   }
 
@@ -291,7 +292,8 @@ class TestItfJsonToTla extends AnyFunSuite {
       itfToTla.parseItfValueToTlaExpr(tupOneA, TupT1(IntT1, StrT1, BoolT1)).isLeft
     }
 
-    assert(itfToTla.parseItfValueToTlaExpr(tupOneA, tupT).map(_.build).contains(tla.tuple(tla.int(1), tla.str("A")).build))
+    assert(
+        itfToTla.parseItfValueToTlaExpr(tupOneA, tupT).map(_.build).contains(tla.tuple(tla.int(1), tla.str("A")).build))
 
   }
 

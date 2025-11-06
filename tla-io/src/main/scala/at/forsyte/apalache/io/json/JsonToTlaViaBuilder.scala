@@ -23,8 +23,8 @@ import scala.util.{Failure, Success, Try}
  *   Jure Kukovec
  */
 class JsonToTlaViaBuilder[T <: JsonRepresentation](
-                                                    scalaFactory: ScalaFromJsonFactory[T],
-                                                    sourceStoreOpt: Option[SourceStore] = None,
+    scalaFactory: ScalaFromJsonFactory[T],
+    sourceStoreOpt: Option[SourceStore] = None,
   )(implicit typeTagReader: TypeTagReader)
     extends JsonDecoder[T] {
   private def getOrThrow(json: T, fieldName: String): T =
