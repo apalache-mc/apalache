@@ -6,8 +6,10 @@ import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
-import at.forsyte.apalache.tla.typecomp.{TBuilderContext, TBuilderInstruction, TBuilderInternalState, TBuilderScopeException, TBuilderTypeException}
-import at.forsyte.apalache.tla.types.{ModelValueHandler, tla}
+import at.forsyte.apalache.tla.typecomp.{
+  TBuilderContext, TBuilderInstruction, TBuilderInternalState, TBuilderScopeException, TBuilderTypeException,
+}
+import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
 
 import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
