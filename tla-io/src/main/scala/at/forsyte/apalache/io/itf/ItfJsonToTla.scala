@@ -130,14 +130,6 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFactory[T]) {
           Left[ItfError, TBuilderInstruction](ItfContentError(s"Unserializable value $str is disallowed.")))
     )
 
-  // Note: attemptUnserializable + getOrElse is future-proof, and allows us to eventually case-match
-  // unserializable values.
-
-  // TODO: We currently don't check the key shape against any sort of pattern.
-  // Technically, "_-?*+" is a valid record field, as far as this code is concerned.
-  // We should change this to check against the valid TLA identifier pattern.
-  private def isValidIdentifier(s: String): Boolean = true
-
   /**
    * Parses an ITF JSON value into a TLA+ expression, given its type. More specifically, it constructs a
    * `TBuilderInstruction`.
@@ -149,6 +141,8 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFactory[T]) {
    *   either an error or the TLA+ expression constructed via TLA+ builder
    */
   private[itf] def parseItfValueToTlaExpr(json: T, tt1: TlaType1): Either[ItfError, TBuilderInstruction] = {
+    // Note: attemptUnserializable + getOrElse is future-proof, and allows us to eventually case-match
+    // unserializable values.
     attemptUnserializable(json).getOrElse {
       tt1 match {
         case BoolT1 =>
@@ -363,4 +357,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFactory[T]) {
       case _      => Left(MultipleErrors(lefts))
     }
   }
+
+  // TLA+ identifiers must start with a letter or underscore, followed by any number of letters, digits, or underscores.
+  private def isValidIdentifier(s: String): Boolean = s.matches("[A-Za-z_][A-Za-z0-9_]*")
 }
