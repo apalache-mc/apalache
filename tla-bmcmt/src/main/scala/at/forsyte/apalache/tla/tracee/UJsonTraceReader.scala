@@ -25,7 +25,8 @@ import scala.util.{Failure, Success, Try}
  * @author
  *   Jure Kukovec
  */
-class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagReader) extends TraceReader[UJsonRepresentation] {
+class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagReader)
+    extends TraceReader[UJsonRepresentation] {
   private val builder = new UJsonToTlaViaBuilder(sourceStoreOpt)(tagReader)
   private val itfToTla = new ItfJsonToTla[UJsonRepresentation](ScalaFromUJsonAdapter)
 

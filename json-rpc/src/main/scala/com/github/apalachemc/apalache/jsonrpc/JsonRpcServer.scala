@@ -350,7 +350,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.checkerInput.rootModule.varDeclarations
             .map(d => d.name -> d.typeTag.asTlaType1())
             .toMap
-        new ItfJsonToTla(ScalaFromJacksonAdapter).parseState(varTypes, new JacksonRepresentation(params.equalities)) match {
+        new ItfJsonToTla(ScalaFromJacksonAdapter)
+          .parseState(varTypes, new JacksonRepresentation(params.equalities)) match {
           case Right(equalities) =>
             Right((checkerContext, varTypes, equalities))
           case Left(msg) =>
