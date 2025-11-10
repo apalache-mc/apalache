@@ -7,33 +7,33 @@ import com.fasterxml.jackson.databind.node.{ArrayNode, ObjectNode}
 /**
  * Adapter for converting Scala primitives to JacksonRep.
  */
-object ScalaToJacksonAdapter extends ScalaToJsonAdapter[JacksonRep] {
+object ScalaToJacksonAdapter extends ScalaToJsonAdapter[JacksonRepresentation] {
   private val mapper = new ObjectMapper()
 
-  override def mkObj(fields: (String, JacksonRep)*): JacksonRep = {
+  override def mkObj(fields: (String, JacksonRepresentation)*): JacksonRepresentation = {
     val objectNode: ObjectNode = mapper.createObjectNode()
     fields.foreach { case (key, rep) =>
       objectNode.set[JsonNode](key, rep.value)
       ()
     }
-    JacksonRep(objectNode)
+    JacksonRepresentation(objectNode)
   }
 
-  override def fromInt(int: Int): JacksonRep = {
-    JacksonRep(mapper.valueToTree(int))
+  override def fromInt(int: Int): JacksonRepresentation = {
+    JacksonRepresentation(mapper.valueToTree(int))
   }
 
-  override def fromStr(str: String): JacksonRep = {
-    JacksonRep(mapper.valueToTree(str))
+  override def fromStr(str: String): JacksonRepresentation = {
+    JacksonRepresentation(mapper.valueToTree(str))
   }
 
-  override def fromBool(bool: Boolean): JacksonRep = {
-    JacksonRep(mapper.valueToTree(bool))
+  override def fromBool(bool: Boolean): JacksonRepresentation = {
+    JacksonRepresentation(mapper.valueToTree(bool))
   }
 
-  override def fromIterable(trv: Iterable[JacksonRep]): JacksonRep = {
+  override def fromIterable(trv: Iterable[JacksonRepresentation]): JacksonRepresentation = {
     val arrayNode: ArrayNode = mapper.createArrayNode()
     trv.foreach(rep => arrayNode.add(rep.value))
-    JacksonRep(arrayNode)
+    JacksonRepresentation(arrayNode)
   }
 }

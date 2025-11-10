@@ -9,4 +9,4 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
  *   Jure Kukovec
  */
 class UJsonToTlaViaBuilder(sourceStoreOpt: Option[SourceStore] = None)(implicit typeTagReader: TypeTagReader)
-    extends JsonToTlaViaBuilder[UJsonRep](ScalaFromUJsonAdapter, sourceStoreOpt)(typeTagReader)
+    extends JsonToTlaViaBuilder[UJsonRepresentation](ScalaFromUJsonAdapter, sourceStoreOpt)(typeTagReader)

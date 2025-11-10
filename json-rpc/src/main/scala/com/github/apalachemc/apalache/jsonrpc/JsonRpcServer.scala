@@ -9,7 +9,7 @@ import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.io.itf.ItfJsonToTla
-import at.forsyte.apalache.io.json.jackson.{JacksonRep, ScalaFromJacksonAdapter}
+import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter}
 import at.forsyte.apalache.io.lir.{ItfCounterexampleWriter, Trace}
 import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
@@ -350,7 +350,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.checkerInput.rootModule.varDeclarations
             .map(d => d.name -> d.typeTag.asTlaType1())
             .toMap
-        new ItfJsonToTla(ScalaFromJacksonAdapter).parseState(varTypes, new JacksonRep(params.equalities)) match {
+        new ItfJsonToTla(ScalaFromJacksonAdapter).parseState(varTypes, new JacksonRepresentation(params.equalities)) match {
           case Right(equalities) =>
             Right((checkerContext, varTypes, equalities))
           case Left(msg) =>

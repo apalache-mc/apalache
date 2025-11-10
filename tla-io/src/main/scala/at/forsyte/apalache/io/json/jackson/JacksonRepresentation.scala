@@ -8,12 +8,12 @@ import scala.jdk.CollectionConverters._
 /**
  * A JsonRepresentation using Jackson's JsonNode.
  */
-sealed case class JacksonRep(value: JsonNode) extends JsonRepresentation {
+sealed case class JacksonRepresentation(value: JsonNode) extends JsonRepresentation {
   type Value = JsonNode
 
   /** Pretty print the JSON representation */
   override def toString: String = {
-    JacksonRep.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value)
+    JacksonRepresentation.mapper.writerWithDefaultPrettyPrinter().writeValueAsString(value)
   }
 
   /**
@@ -23,7 +23,7 @@ sealed case class JacksonRep(value: JsonNode) extends JsonRepresentation {
    */
   override def getFieldOpt(fieldName: String): Option[this.type] = {
     if (value.isObject && value.has(fieldName)) {
-      Some(JacksonRep(value.get(fieldName)).asInstanceOf[JacksonRep.this.type])
+      Some(JacksonRepresentation(value.get(fieldName)).asInstanceOf[JacksonRepresentation.this.type])
     } else {
       None
     }
@@ -42,6 +42,6 @@ sealed case class JacksonRep(value: JsonNode) extends JsonRepresentation {
   }
 }
 
-object JacksonRep {
+object JacksonRepresentation {
   private val mapper = new ObjectMapper()
 }

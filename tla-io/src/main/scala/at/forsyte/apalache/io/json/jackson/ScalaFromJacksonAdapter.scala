@@ -6,8 +6,8 @@ import scala.jdk.CollectionConverters._
 /**
  * Adapter for extracting Scala primitives from JacksonRep.
  */
-object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
-  override def asInt(json: JacksonRep): Int = {
+object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRepresentation] {
+  override def asInt(json: JacksonRepresentation): Int = {
     if (json.value.isInt) {
       json.value.asInt()
     } else {
@@ -15,7 +15,7 @@ object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
     }
   }
 
-  override def asStr(json: JacksonRep): String = {
+  override def asStr(json: JacksonRepresentation): String = {
     if (json.value.isTextual) {
       json.value.asText()
     } else {
@@ -23,7 +23,7 @@ object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
     }
   }
 
-  override def asBool(json: JacksonRep): Boolean = {
+  override def asBool(json: JacksonRepresentation): Boolean = {
     if (json.value.isBoolean) {
       json.value.asBoolean()
     } else {
@@ -31,9 +31,9 @@ object ScalaFromJacksonAdapter extends ScalaFromJsonAdapter[JacksonRep] {
     }
   }
 
-  override def asSeq(json: JacksonRep): Seq[JacksonRep] = {
+  override def asSeq(json: JacksonRepresentation): Seq[JacksonRepresentation] = {
     if (json.value.isArray) {
-      json.value.elements().asScala.map(JacksonRep(_)).toSeq
+      json.value.elements().asScala.map(JacksonRepresentation(_)).toSeq
     } else {
       throw new JsonDeserializationError("Not an array.")
     }

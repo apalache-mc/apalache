@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator // Required as implicit
 class TlaToUJson(
     locatorOpt: Option[SourceLocator] = None
   )(implicit typeTagPrinter: TypeTagPrinter)
-    extends TlaToJson[UJsonRep](ScalaToUJsonAdapter, locatorOpt)(typeTagPrinter)
+    extends TlaToJson[UJsonRepresentation](ScalaToUJsonAdapter, locatorOpt)(typeTagPrinter)
 
 object TlaToUJson {
   def apply(module: TlaModule): ujson.Value = (new TlaToUJson()).makeRoot(Seq(module)).value

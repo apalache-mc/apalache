@@ -41,7 +41,7 @@ class TestJacksonItfIntegration extends AnyFunSuite {
 
     val mapper = new ObjectMapper()
     val jsonNode = mapper.readTree(itfJson)
-    val jacksonRep = JacksonRep(jsonNode)
+    val jacksonRep = JacksonRepresentation(jsonNode)
 
     val result = itfParser.parseTrace(jacksonRep)
 
