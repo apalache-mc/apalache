@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, UJsonScalaFromJsonFactory}
+import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRepresentation}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
@@ -10,22 +10,22 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestItfJsonToTla extends AnyFunSuite {
 
-  val itfToTla = new ItfJsonToTla(UJsonScalaFromJsonFactory)
+  val itfToTla = new ItfJsonToTla(ScalaFromUJsonAdapter)
 
   import ujson._
 
   test("parseHeaderAndVarTypes on empty input") {
-    val empty = UJsonRep(Obj())
+    val empty = UJsonRepresentation(Obj())
     assert(itfToTla.parseHeaderAndVarTypes(empty).isLeft, "expected failure on empty input")
   }
 
   test("parseHeaderAndVarTypes on missing vars field") {
-    val metaEmpty = UJsonRep(Obj(META_FIELD -> Obj()))
+    val metaEmpty = UJsonRepresentation(Obj(META_FIELD -> Obj()))
     assert(itfToTla.parseHeaderAndVarTypes(metaEmpty).isLeft, "expected failure on missing vars field")
   }
 
   test("parseHeaderAndVarTypes on var types field that is not an object") {
-    val typesNotObj = UJsonRep(
+    val typesNotObj = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -39,7 +39,7 @@ class TestItfJsonToTla extends AnyFunSuite {
   }
 
   test("parseHeaderAndVarTypes on empty vars array") {
-    val noVars = UJsonRep(
+    val noVars = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -56,7 +56,7 @@ class TestItfJsonToTla extends AnyFunSuite {
   }
 
   test("parseHeaderAndVarTypes on missing types mapping") {
-    val noTypes = UJsonRep(
+    val noTypes = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -70,7 +70,7 @@ class TestItfJsonToTla extends AnyFunSuite {
   }
 
   test("parseHeaderAndVarTypes on correct input") {
-    val correct = UJsonRep(
+    val correct = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -98,12 +98,12 @@ class TestItfJsonToTla extends AnyFunSuite {
   }
 
   test("attemptUnserializable") {
-    val emptyObject = UJsonRep(Obj())
+    val emptyObject = UJsonRepresentation(Obj())
     assert(itfToTla.attemptUnserializable(emptyObject).isEmpty, "expected None on empty object")
   }
 
   test("attemptUnserializable on bogus unserializable values") {
-    def unserializable(v: String): UJsonRep = UJsonRep(
+    def unserializable(v: String): UJsonRepresentation = UJsonRepresentation(
         Obj(
             UNSERIALIZABLE_FIELD -> v
         )
@@ -126,8 +126,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - BoolT1") {
-    val tru = UJsonRep(Bool(true))
+  test("parseItfValueToTlaExpr - BoolT1") {
+    val tru = UJsonRepresentation(Bool(true))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(tru, IntT1).isLeft,
@@ -141,8 +141,8 @@ class TestItfJsonToTla extends AnyFunSuite {
 
   }
 
-  test("typeDrivenBuild - StrT1") {
-    val cake = UJsonRep(Str("cake"))
+  test("parseItfValueToTlaExpr - StrT1") {
+    val cake = UJsonRepresentation(Str("cake"))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(cake, IntT1).isLeft,
@@ -160,8 +160,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - ConstT1") {
-    val oneOfA = UJsonRep(Str("1_OF_A"))
+  test("parseItfValueToTlaExpr - ConstT1") {
+    val oneOfA = UJsonRepresentation(Str("1_OF_A"))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(oneOfA, StrT1).isLeft,
@@ -179,9 +179,9 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  private val one: UJsonRep = UJsonRep(Num(1))
+  private val one: UJsonRepresentation = UJsonRepresentation(Num(1))
 
-  test("typeDrivenBuild - intT1") {
+  test("parseItfValueToTlaExpr - intT1") {
     assert(
         itfToTla.parseItfValueToTlaExpr(one, StrT1).isLeft,
         "expected error when parsing integer value with StrT1 type",
@@ -192,7 +192,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of integer value with IntT1 type",
     )
 
-    val bigOne = UJsonRep(Obj(BIG_INT_FIELD -> "1"))
+    val bigOne = UJsonRepresentation(Obj(BIG_INT_FIELD -> "1"))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(bigOne, StrT1).isLeft,
@@ -205,8 +205,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - SeqT1") {
-    val emptySeq = UJsonRep(Arr())
+  test("parseItfValueToTlaExpr - SeqT1") {
+    val emptySeq = UJsonRepresentation(Arr())
 
     assert(
         itfToTla.parseItfValueToTlaExpr(emptySeq, FunT1(IntT1, IntT1)).isLeft,
@@ -228,7 +228,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of empty array as SeqT1 with complex type",
     )
 
-    val oneTwoThree = UJsonRep(Arr(1, 2, 3))
+    val oneTwoThree = UJsonRepresentation(Arr(1, 2, 3))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(oneTwoThree, FunT1(IntT1, IntT1)).isLeft,
@@ -246,8 +246,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - RecT1") {
-    val emptyRec = UJsonRep(Obj())
+  test("parseItfValueToTlaExpr - RecT1") {
+    val emptyRec = UJsonRepresentation(Obj())
 
     assert(
         itfToTla.parseItfValueToTlaExpr(emptyRec, RecT1()).isLeft,
@@ -264,7 +264,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected error when parsing empty object with SeqT1 type",
     )
 
-    val xyRec = UJsonRep(
+    val xyRec = UJsonRepresentation(
         Obj(
             "x" -> 1,
             "y" -> "abc",
@@ -301,8 +301,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - TupT1") {
-    val tupOneA = UJsonRep(
+  test("parseItfValueToTlaExpr - TupT1") {
+    val tupOneA = UJsonRepresentation(
         Obj(
             TUP_FIELD ->
               Arr(1, "A")
@@ -337,8 +337,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - SetT1") {
-    val emptySet = UJsonRep(Obj(SET_FIELD -> Arr()))
+  test("parseItfValueToTlaExpr - SetT1") {
+    val emptySet = UJsonRepresentation(Obj(SET_FIELD -> Arr()))
 
     val setT = SetT1(BoolT1)
 
@@ -357,7 +357,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of empty set with SetT1 type",
     )
 
-    val boolSet = UJsonRep(Obj(SET_FIELD -> Arr(true, false)))
+    val boolSet = UJsonRepresentation(Obj(SET_FIELD -> Arr(true, false)))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(boolSet, SetT1(IntT1)).isLeft,
@@ -372,7 +372,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of boolean set with SetT1(BoolT1) type",
     )
 
-    val junkSet = UJsonRep(Obj(
+    val junkSet = UJsonRepresentation(Obj(
             SET_FIELD -> Arr(true, false),
             "foo" -> "bar",
         ))
@@ -383,8 +383,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("typeDrivenBuild - FunT1") {
-    val emptyFun = UJsonRep(Obj(MAP_FIELD -> Arr()))
+  test("parseItfValueToTlaExpr - FunT1") {
+    val emptyFun = UJsonRepresentation(Obj(MAP_FIELD -> Arr()))
 
     val funT = FunT1(IntT1, IntT1)
 
@@ -408,7 +408,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of empty function with FunT1 type",
     )
 
-    val id12 = UJsonRep(
+    val id12 = UJsonRepresentation(
         Obj(MAP_FIELD ->
           Arr(Arr(1, 1), Arr(2, 2)))
     )
@@ -431,8 +431,8 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("getTrace") {
-    val noStates = UJsonRep(
+  test("parseTrace") {
+    val noStates = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -447,7 +447,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected error when parsing trace without states field",
     )
 
-    val malformedStates = UJsonRep(
+    val malformedStates = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -463,7 +463,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected error when parsing trace with malformed states field",
     )
 
-    val missingVar = UJsonRep(
+    val missingVar = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -483,7 +483,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected error when parsing trace with missing variable in state",
     )
 
-    val spuriousVar = UJsonRep(
+    val spuriousVar = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -505,7 +505,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected error when parsing trace with spurious variable in state",
     )
 
-    val correctEmpty = UJsonRep(
+    val correctEmpty = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -521,7 +521,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of trace with empty states array",
     )
 
-    val correctLen2 = UJsonRep(
+    val correctLen2 = UJsonRepresentation(
         Obj(
             META_FIELD ->
               Obj(
@@ -557,5 +557,126 @@ class TestItfJsonToTla extends AnyFunSuite {
               )),
         "expected successful parsing of trace with two states",
     )
+  }
+
+  test("parseState - not an object") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1)
+    val notAnObject = UJsonRepresentation(Arr(1, 2, 3))
+
+    assert(
+        itfToTla.parseState(varTypes, notAnObject).isLeft,
+        "expected error when parsing state that is not an object",
+    )
+  }
+
+  test("parseState - missing variable in JSON (produces partial state)") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1)
+    val missingVar = UJsonRepresentation(
+        Obj(
+            "x" -> 1
+            // "y" is missing - parseState doesn't validate this, only parses what's present
+        )
+    )
+
+    val result = itfToTla.parseState(varTypes, missingVar)
+
+    assert(result.isRight, "expected successful parsing of partial state")
+    val state = result.toOption.get
+    assert(state.contains("x"), "expected x to be present")
+    assert(!state.contains("y"), "expected y to be absent")
+    assert(state("x") == tla.int(1).build, "expected x to be 1")
+  }
+
+  test("parseState - variable with no type annotation") {
+    val varTypes = Map("x" -> IntT1)
+    val extraVar = UJsonRepresentation(
+        Obj(
+            "x" -> 1,
+            "y" -> "hello", // y has no type annotation in varTypes
+        )
+    )
+
+    assert(
+        itfToTla.parseState(varTypes, extraVar).isLeft,
+        "expected error when parsing state with unannotated variable",
+    )
+  }
+
+  test("parseState - type mismatch") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1)
+    val typeMismatch = UJsonRepresentation(
+        Obj(
+            "x" -> "not an int",
+            "y" -> "hello",
+        )
+    )
+
+    assert(
+        itfToTla.parseState(varTypes, typeMismatch).isLeft,
+        "expected error when parsing state with type mismatch",
+    )
+  }
+
+  test("parseState - successful parsing with simple types") {
+    val varTypes = Map("x" -> IntT1, "y" -> StrT1, "z" -> BoolT1)
+    val validState = UJsonRepresentation(
+        Obj(
+            "x" -> 42,
+            "y" -> "hello",
+            "z" -> true,
+        )
+    )
+
+    val result = itfToTla.parseState(varTypes, validState)
+
+    assert(result.isRight, "expected successful parsing of valid state")
+    val state = result.toOption.get
+
+    assert(state("x") == tla.int(42).build, "expected x to be 42")
+    assert(state("y") == tla.str("hello").build, "expected y to be 'hello'")
+    assert(state("z") == tla.bool(true).build, "expected z to be true")
+  }
+
+  test("parseState - successful parsing with complex types") {
+    val varTypes = Map(
+        "rec" -> RecT1("a" -> IntT1, "b" -> StrT1),
+        "seq" -> SeqT1(IntT1),
+        "set" -> SetT1(BoolT1),
+    )
+    val validState = UJsonRepresentation(
+        Obj(
+            "rec" -> Obj("a" -> 1, "b" -> "test"),
+            "seq" -> Arr(1, 2, 3),
+            "set" -> Obj(SET_FIELD -> Arr(true, false)),
+        )
+    )
+
+    val result = itfToTla.parseState(varTypes, validState)
+
+    assert(result.isRight, "expected successful parsing of state with complex types")
+    val state = result.toOption.get
+
+    assert(
+        state("rec") == tla.rec("a" -> tla.int(1), "b" -> tla.str("test")).build,
+        "expected rec to match",
+    )
+    assert(
+        state("seq") == tla.seq(Seq[BigInt](1, 2, 3).map(tla.int): _*).build,
+        "expected seq to match",
+    )
+    assert(
+        state("set") == tla.enumSet(tla.bool(true), tla.bool(false)).build,
+        "expected set to match",
+    )
+  }
+
+  test("parseState - empty state") {
+    val varTypes = Map.empty[String, TlaType1]
+    val emptyState = UJsonRepresentation(Obj())
+
+    val result = itfToTla.parseState(varTypes, emptyState)
+
+    assert(result.isRight, "expected successful parsing of empty state")
+    assert(result.toOption.get.isEmpty, "expected empty state map")
   }
 }

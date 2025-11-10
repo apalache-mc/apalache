@@ -21,7 +21,7 @@ import scala.util.Success
 import at.forsyte.apalache.tla.imp.SanyException
 import at.forsyte.apalache.io.annotations.AnnotationParserError
 import at.forsyte.apalache.io.json.DefaultTagJsonReader
-import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, UJsonToTla}
+import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRepresentation, UJsonToTla}
 import at.forsyte.apalache.io.quint.{Quint, QuintOutput}
 
 /**
@@ -53,7 +53,7 @@ class SanyParserPassImpl @Inject() (
         case Format.Json =>
           for {
             str <- source.getContent
-            json <- Try(UJsonRep(ujson.read(str)))
+            json <- Try(UJsonRepresentation(ujson.read(str)))
             tla <- new UJsonToTla(Some(sourceStore))(DefaultTagJsonReader).fromSingleModule(json)
           } yield tla
         case _ => throw new IllegalArgumentException(s"loadFromJsonSource called with non Json SourceOption ${source}")

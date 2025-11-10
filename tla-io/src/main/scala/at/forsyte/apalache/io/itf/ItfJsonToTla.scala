@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.itf
 
-import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFromJsonFactory}
+import at.forsyte.apalache.io.json.{JsonDeserializationError, JsonRepresentation, ScalaFromJsonAdapter}
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
@@ -15,7 +15,30 @@ import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
  * @author
  *   Jure Kukovec
  */
-class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T]) {
+class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T]) {
+
+  /**
+   * Parse a single state from ITF JSON into a mapping from variable names to TLA+ expressions.
+   * @param varTypes
+   *   variable types
+   * @param jsonValue
+   *   json value that represents a state
+   * @return
+   *   either an error or the parsed state
+   */
+  def parseState(varTypes: Map[String, TlaType1], jsonValue: T): Either[ItfError, Trace.State] = for {
+    varsInState <- jsonValue.allFieldsOpt.toRight(ItfFormatError(s"State must be an object."))
+    // build a TLA+ value for each variable
+    mapSeq <- eitherSeq((varsInState - META_FIELD).toSeq.map { varName =>
+      varTypes
+        .get(varName)
+        .toRight(ItfFormatError(s"Variable $varName has no type annotation."))
+        .flatMap { varType =>
+          parseItfValueToTlaExpr(jsonValue.getFieldOpt(varName).get, varType)
+            .map { exprBuilderInst => varName -> exprBuilderInst.build }
+        }
+    })
+  } yield mapSeq.toMap
 
   /**
    * Parses the trace from ITF JSON into a sequence of states.
@@ -25,8 +48,8 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
    *   either an error or the parsed trace
    */
   def parseTrace(json: T): Either[Exception, IndexedSeq[Trace.State]] = for {
-    typesMap <- parseHeaderAndVarTypes(json)
-    varSet = typesMap.keySet
+    varTypes <- parseHeaderAndVarTypes(json)
+    varSet = varTypes.keySet
     statesJsonSeq <- json
       .getFieldOpt(STATES_FIELD)
       .toRight(ItfFormatError(s"ITF JSON must declare a $STATES_FIELD field."))
@@ -52,14 +75,8 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
           )
         }
         // build a TLA+ value for each variable
-        mapSeq <- eitherSeq(
-            typesMap.toSeq.map { case (varName, varT) =>
-              parseItfValueToTlaExpr(stateJson.getFieldOpt(varName).get, varT).map { bi =>
-                varName -> bi.build
-              }
-            }
-        )
-      } yield mapSeq.toMap
+        state <- parseState(varTypes, stateJson)
+      } yield state
     })
   } yield IndexedSeq.from(trace)
 
@@ -318,7 +335,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asStr(json: T): Either[ItfFormatError, String] = {
     try {
-      Right(scalaFactory.asStr(json))
+      Right(scalaAdapter.asStr(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }
@@ -326,7 +343,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asInt(json: T): Either[ItfFormatError, Int] = {
     try {
-      Right(scalaFactory.asInt(json))
+      Right(scalaAdapter.asInt(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }
@@ -334,7 +351,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asBool(json: T): Either[ItfFormatError, Boolean] = {
     try {
-      Right(scalaFactory.asBool(json))
+      Right(scalaAdapter.asBool(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }
@@ -342,7 +359,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaFactory: ScalaFromJsonFactory[T
 
   private def asSeq(json: T): Either[ItfFormatError, Seq[T]] = {
     try {
-      Right(scalaFactory.asSeq(json))
+      Right(scalaAdapter.asSeq(json))
     } catch {
       case e: JsonDeserializationError => Left(ItfFormatError(e.getMessage))
     }

@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.SourceOption._
 import at.forsyte.apalache.io.itf.ItfJsonToTla
 import at.forsyte.apalache.io.json.JsonDeserializationError
-import at.forsyte.apalache.io.json.ujsonimpl.{UJsonRep, UJsonScalaFromJsonFactory, UJsonToTlaViaBuilder}
+import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRepresentation, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TypeTagReader
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
@@ -25,15 +25,16 @@ import scala.util.{Failure, Success, Try}
  * @author
  *   Jure Kukovec
  */
-class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagReader) extends TraceReader[UJsonRep] {
+class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagReader)
+    extends TraceReader[UJsonRepresentation] {
   private val builder = new UJsonToTlaViaBuilder(sourceStoreOpt)(tagReader)
-  private val itfToTla = new ItfJsonToTla[UJsonRep](UJsonScalaFromJsonFactory)
+  private val itfToTla = new ItfJsonToTla[UJsonRepresentation](ScalaFromUJsonAdapter)
 
-  type TraceUJson = TraceJson[UJsonRep]
+  type TraceUJson = TraceJson[UJsonRepresentation]
 
   // Rethrow as JsonDeserializationError if unable to read
-  private def tryRead(readable: ujson.Readable): UJsonRep = Try(ujson.read(readable)) match {
-    case Success(ujsonVal)  => UJsonRep(ujsonVal)
+  private def tryRead(readable: ujson.Readable): UJsonRepresentation = Try(ujson.read(readable)) match {
+    case Success(ujsonVal)  => UJsonRepresentation(ujsonVal)
     case Failure(exception) =>
       throw new JsonDeserializationError(s"Unable to read $readable as JSON.", exception)
   }
@@ -56,12 +57,12 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
     case ApalacheJson(json) => getLengthApalacheJson(json)
   }
 
-  private def getLengthITF(json: UJsonRep): Int =
-    json.getFieldOpt("states").map(seqJSON => UJsonScalaFromJsonFactory.asSeq(seqJSON).length).getOrElse {
+  private def getLengthITF(json: UJsonRepresentation): Int =
+    json.getFieldOpt("states").map(seqJSON => ScalaFromUJsonAdapter.asSeq(seqJSON).length).getOrElse {
       throw new JsonDeserializationError(s"Provided JSON does not comply with the ITF format.")
     }
 
-  private def convertITF(json: UJsonRep): StateSeq = itfToTla.parseTrace(json) match {
+  private def convertITF(json: UJsonRepresentation): StateSeq = itfToTla.parseTrace(json) match {
     case Right(trace) => trace
     case Left(err)    => throw err
   }
@@ -71,13 +72,13 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
     case _ => throw new JsonDeserializationError(s"Cannot read variable assignment from $ex.")
   }
 
-  private def convertApalacheJson(json: UJsonRep): StateSeq = {
+  private def convertApalacheJson(json: UJsonRepresentation): StateSeq = {
     val operDecls = for {
       modules <- json.getFieldOpt("modules")
-      decls <- UJsonScalaFromJsonFactory.asSeq(modules).head.getFieldOpt("declarations")
+      decls <- ScalaFromUJsonAdapter.asSeq(modules).head.getFieldOpt("declarations")
     } yield {
       // drop CInit (head) and Inv (last)
-      UJsonScalaFromJsonFactory.asSeq(decls).tail.dropRight(1).toIndexedSeq.map { decl =>
+      ScalaFromUJsonAdapter.asSeq(decls).tail.dropRight(1).toIndexedSeq.map { decl =>
         builder.asTlaDecl(decl).asInstanceOf[TlaOperDecl]
       }
     }
@@ -102,11 +103,11 @@ class UJsonTraceReader(sourceStoreOpt: Option[SourceStore], tagReader: TypeTagRe
       }
   }
 
-  private def getLengthApalacheJson(json: UJsonRep): Int = {
+  private def getLengthApalacheJson(json: UJsonRepresentation): Int = {
     val lenOpt = for {
       modules <- json.getFieldOpt("modules")
-      decls <- UJsonScalaFromJsonFactory.asSeq(modules).head.getFieldOpt("declarations")
-    } yield UJsonScalaFromJsonFactory.asSeq(decls).length - 2 // we need len-2 for CInit (head) and Inv (last)
+      decls <- ScalaFromUJsonAdapter.asSeq(modules).head.getFieldOpt("declarations")
+    } yield ScalaFromUJsonAdapter.asSeq(decls).length - 2 // we need len-2 for CInit (head) and Inv (last)
 
     lenOpt.getOrElse {
       throw new JsonDeserializationError(s"Provided JSON does not comply with the Apalache JSON format.")
