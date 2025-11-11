@@ -372,6 +372,9 @@ object SparseTupT1 {
  *
  * @param fieldTypes
  *   a sorted map from field names to their types
+ *
+ * @deprecated This type is superseded by RecRowT1 defined in ADR-014. It is kept only for backward compatibility.
+ *             This type will be removed in future versions.
  */
 case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
   override def toString: String = {
