@@ -321,7 +321,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
 
         case variantT @ VariantT1(row) =>
           for {
-            // Variants must have both #tag and value fields
+            // Variants must have both tag and value fields
             fields <- json.allFieldsOpt.toRight(ItfFormatError(s"Variant must be a JSON object."))
             _ <- requirement(
                 fields.contains(TAG_FIELD),
