@@ -15837,7 +15837,7 @@ proposed solution is backwards-compatible with TLC, as we are proposing the
 default untyped implementation for the operators.</p>
 <h1><a class="header" href="#adr-015-informal-trace-format-in-json" id="adr-015-informal-trace-format-in-json">ADR-015: Informal Trace Format in JSON</a></h1>
 <table><thead><tr><th>authors</th><th>proposed by</th><th align="right">last revised</th></tr></thead><tbody>
-<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2025-07-28</td></tr>
+<tr><td>Igor Konnov</td><td>Vitor Enes, Andrey Kupriyanov</td><td align="right">2025-11-11</td></tr>
 </tbody></table>
 <p><strong>Table of Contents</strong></p>
 <ul>
@@ -15859,6 +15859,8 @@ TLA+ and can be easily integrated into other tools.</p>
 <p><strong>Rev. 2023-09-14.</strong> Each integer value <code>num</code> is now represented as <code>{ #bigint: &quot;num&quot; }</code>.
 The use of JSON numbers is not allowed anymore. This simplifies custom parsers for ITF,
 see <a href="adr/015adr-trace.html#consequences">Consequences</a>.</p>
+<p><strong>Rev. 2025-11-11.</strong> Added clarification about serializing values of variant type.
+No change in behavior.</p>
 <h2><a class="header" href="#implementations" id="implementations">Implementations</a></h2>
 <ul>
 <li><a href="https://github.com/konnov/itf-py">itf-py</a>: a Python library for (de-)serializing ITF traces</li>
@@ -16124,16 +16126,17 @@ specified in the field <code>vars</code>. Each state must define a value for eve
 <p>A JSON string literal, e.g., <code>&quot;hello&quot;</code>. TLA+ strings are written as strings in this format.</p>
 </li>
 <li>
+<p>An Apalache value of uninterpreted type is simply written as a JSON string.
+For example, the value <code>u_OF_UNIT</code> of type <code>UNIT</code> is written as <code>&quot;u_OF_UNIT&quot;</code>.
+Similarly, the value <code>c1_OF_PERSON</code> of type <code>PERSON</code> is written as <code>&quot;c1_OF_PERSON&quot;</code>.</p>
+</li>
+<li>
 <p>A big integer of the following form: <code>{ &quot;#bigint&quot;: &quot;[-][0-9]+&quot; }</code>. We are using this format, as many JSON parsers
 impose limits on integer values, see <a href="https://datatracker.ietf.org/doc/html/rfc7159.html">RFC7159</a>. Big and small integers <em>must be</em>
 written in this format.</p>
 </li>
 <li>
 <p>A list of the form <code>[ &lt;expr&gt;, ..., &lt;expr&gt; ]</code>. A list is just a JSON array. TLA+ sequences are written as lists in this format.</p>
-</li>
-<li>
-<p>A record of the form <code>{ &quot;field1&quot;: &lt;expr&gt;, ..., &quot;fieldN&quot;: &lt;expr&gt; }</code>. A record is just a JSON object. Field names should not start with <code>#</code>
-and hence should not pose any collision with other constructs. TLA+ records are written as records in this format.</p>
 </li>
 <li>
 <p>A tuple of the form <code>{ &quot;#tup&quot;: [ &lt;expr&gt;, ..., &lt;expr&gt; ] }</code>. There is no strict rule about when to use sequences or tuples. Apalache differentiates
@@ -16148,6 +16151,16 @@ interpret sets as lists.</p>
 <p>A map of the form <code>{ &quot;#map&quot;: [ [ &lt;expr&gt;, &lt;expr&gt; ], ..., [ &lt;expr&gt;, &lt;expr&gt; ] ] }</code>. That is, a map holds a JSON array of two-element arrays. Each two-element array <code>p</code> is interpreted as follows: <code>p[0]</code> is the map key and
 <code>p[1]</code> is the map value. Importantly, a key may be an arbitrary expression. It does not have to be a string or an integer. TLA+ functions are written as maps
 in this format.</p>
+</li>
+<li>
+<p>A record of the form <code>{ &quot;field1&quot;: &lt;expr&gt;, ..., &quot;fieldN&quot;: &lt;expr&gt; }</code>. A record is just a JSON object. Field names should not start with <code>#</code>
+and hence should not pose any collision with other constructs. TLA+ records are written as records in this format.</p>
+</li>
+<li>
+<p>A variant value of the form <code>{ &quot;tag&quot;: &quot;&lt;tag&gt;&quot;, &quot;value&quot;: &lt;expr&gt; }</code>. A variant is an object with two fields:
+<code>tag</code> and <code>value</code>. The <code>tag</code> field holds a string that identifies the variant case, whereas the <code>value</code> field holds
+the value associated with the variant case. The <code>value</code> may be of any type. Usually, <code>value</code> is a record or
+a value of an uninterpreted type, e.g., <code>u_OF_UNIT</code>. </p>
 </li>
 <li>
 <p>An expression that cannot be serialized: <code>{ &quot;#unserializable&quot;: &quot;&lt;string representation&gt;&quot; }</code>. For instance, the set of all integers is represented with
