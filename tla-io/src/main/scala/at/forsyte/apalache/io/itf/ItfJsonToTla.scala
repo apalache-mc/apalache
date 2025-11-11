@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
  * @tparam T
  *   Any class extending JsonRepresentation
  * @author
- *   Jure Kukovec
+ *   Jure Kukovec, Igor Konnov, Claude Sonnet 4.5 (2025)
  */
 class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T]) {
 
@@ -318,6 +318,31 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
             // We leave it to the SetAsFun rule to handle key-duplication
             tla.setAsFun(set)
           }
+
+        case variantT @ VariantT1(row) =>
+          for {
+            // Variants must have both tag and value fields
+            fields <- json.allFieldsOpt.toRight(ItfFormatError(s"Variant must be a JSON object."))
+            _ <- requirement(
+                fields.contains(TAG_FIELD),
+                ItfFormatError(s"Variant-type annotated values must declare a \"$TAG_FIELD\" field."),
+            )
+            _ <- requirement(
+                fields.contains(VALUE_FIELD),
+                ItfFormatError(s"Variant-type annotated values must declare a \"$VALUE_FIELD\" field."),
+            )
+            // Get the tag name
+            tag <- asStr(json.getFieldOpt(TAG_FIELD).get)
+            // Find the type for this tag in the variant type
+            tagType <- row.fieldTypes
+              .get(tag)
+              .toRight(
+                  ItfContentError(s"Tag \"$tag\" is not present in variant type $variantT.")
+              )
+            // Parse the value with the tag's type
+            valueJson = json.getFieldOpt(VALUE_FIELD).get
+            value <- parseItfValueToTlaExpr(valueJson, tagType)
+          } yield tla.variant(tag, value, variantT)
 
         case _ =>
           Left(ItfContentError(s"Type $tt1 does not match any of the permitted ITF value types."))
