@@ -337,7 +337,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
             tagType <- row.fieldTypes
               .get(tag)
               .toRight(
-                  ItfContentError(s"Tag \"$tag\" is not present in variant type $variantT."),
+                  ItfContentError(s"Tag \"$tag\" is not present in variant type $variantT.")
               )
             // Parse the value with the tag's type
             valueJson = json.getFieldOpt(VALUE_FIELD).get
