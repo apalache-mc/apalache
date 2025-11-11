@@ -247,7 +247,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
                 recElems.nonEmpty,
                 ItfFormatError(s"Records may not be empty."),
             )
-          } yield tla.rec(recElems: _*)
+          } yield tla.rowRec(None, recElems: _*)
 
         case TupT1(elems @ _*) =>
           for {
