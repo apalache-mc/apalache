@@ -4,6 +4,7 @@ import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRepres
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.types.tla
+import TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -288,18 +289,22 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected error when parsing record with mismatched RecRowT1 type (extra field)",
     )
 
+    val errorOrRecord = itfToTla
+      .parseItfValueToTlaExpr(xyRec, xyRecT)
+      .map(_.build)
+
     assert(
-        itfToTla
-          .parseItfValueToTlaExpr(xyRec, xyRecT)
-          .map(_.build)
-          .contains(tla
-                .rec(
-                    "x" -> tla.int(1),
-                    "y" -> tla.str("abc"),
-                )
-                .build),
+        errorOrRecord.contains(tla
+              .rec(
+                  "x" -> tla.int(1),
+                  "y" -> tla.str("abc"),
+              )
+              .build),
         "expected successful parsing of record with matching RecRowT1 type",
     )
+    errorOrRecord.foreach { expr =>
+      assert(expr.typeTag.asTlaType1() == xyRecT)
+    }
   }
 
   test("parseItfValueToTlaExpr - TupT1") {
