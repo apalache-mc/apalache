@@ -179,16 +179,16 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  private val one: UJsonRepresentation = UJsonRepresentation(Num(1))
+  private val num_1: UJsonRepresentation = UJsonRepresentation(Num(1))
 
   test("parseItfValueToTlaExpr - intT1") {
     assert(
-        itfToTla.parseItfValueToTlaExpr(one, StrT1).isLeft,
+        itfToTla.parseItfValueToTlaExpr(num_1, StrT1).isLeft,
         "expected error when parsing integer value with StrT1 type",
     )
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(one, IntT1).map(_.build).contains(tla.int(1).build),
+        itfToTla.parseItfValueToTlaExpr(num_1, IntT1).map(_.build).contains(tla.int(1).build),
         "expected successful parsing of integer value with IntT1 type",
     )
 
@@ -312,7 +312,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     val tupT = TupT1(IntT1, StrT1)
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(one, tupT).isLeft,
+        itfToTla.parseItfValueToTlaExpr(num_1, tupT).isLeft,
         "expected error when parsing integer value with TupT1 type",
     )
 
@@ -343,7 +343,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     val setT = SetT1(BoolT1)
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(one, setT).isLeft,
+        itfToTla.parseItfValueToTlaExpr(num_1, setT).isLeft,
         "expected error when parsing integer value with SetT1 type",
     )
 
@@ -389,7 +389,7 @@ class TestItfJsonToTla extends AnyFunSuite {
     val funT = FunT1(IntT1, IntT1)
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(one, funT).isLeft,
+        itfToTla.parseItfValueToTlaExpr(num_1, funT).isLeft,
         "expected error when parsing integer value with FunT1 type",
     )
 
@@ -428,6 +428,60 @@ class TestItfJsonToTla extends AnyFunSuite {
                     ))
                 .build),
         "expected successful parsing of identity function with FunT1 type",
+    )
+  }
+
+  test("parseItfValueToTlaExpr - VariantT1") {
+    val variantA = UJsonRepresentation(
+        Obj(
+            "tag" -> "A",
+            "value" -> 42,
+        )
+    )
+
+    val variantT = VariantT1(RowT1("A" -> IntT1, "B" -> StrT1))
+
+    assert(
+        itfToTla.parseItfValueToTlaExpr(num_1, variantT).isLeft,
+        "expected error when parsing (incorrect) integer value with VariantT1 type",
+    )
+
+    assert(
+        itfToTla.parseItfValueToTlaExpr(variantA, IntT1).isLeft,
+        "expected error when parsing variant with (incorrect) IntT1 type",
+    )
+
+    assert(
+        itfToTla.parseItfValueToTlaExpr(variantA, VariantT1(RowT1("B" -> StrT1))).isLeft,
+        "expected error when parsing variant A with type that only has B tag",
+    )
+
+    assert(
+        itfToTla.parseItfValueToTlaExpr(variantA, VariantT1(RowT1("A" -> StrT1))).isLeft,
+        "expected error when parsing variant A with mismatched value type (Str vs. Int)",
+    )
+
+    assert(
+        itfToTla
+          .parseItfValueToTlaExpr(variantA, variantT)
+          .map(_.build)
+          .contains(tla.variant("A", tla.int(42), variantT).build),
+        "expected successful parsing of variant A with matching VariantT1 type",
+    )
+
+    val variantB = UJsonRepresentation(
+        Obj(
+            "tag" -> "B",
+            "value" -> "hello",
+        )
+    )
+
+    assert(
+        itfToTla
+          .parseItfValueToTlaExpr(variantB, variantT)
+          .map(_.build)
+          .contains(tla.variant("B", tla.str("hello"), variantT).build),
+        "expected successful parsing of variant B with matching VariantT1 type",
     )
   }
 
