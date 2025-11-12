@@ -213,8 +213,8 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
             if (args.isEmpty) tla.emptySeq(elemT) else tla.seq(args: _*)
           }
 
-        case RecT1(fieldTypes) =>
-          val keys = fieldTypes.keySet
+        case RecRowT1(row) =>
+          val keys = row.fieldTypes.keySet
           for {
             fields <- json.allFieldsOpt.toRight(ItfFormatError(s"Record must be a JSON object."))
             missing = keys -- fields
@@ -238,7 +238,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
                           isValidIdentifier(key),
                           ItfContentError(s"Record key $key is not a valid TLA+ identifier."),
                       )
-                      bi <- parseItfValueToTlaExpr(json.getFieldOpt(key).get, fieldTypes(key))
+                      bi <- parseItfValueToTlaExpr(json.getFieldOpt(key).get, row.fieldTypes(key))
                     } yield key -> bi
                   }
               )
@@ -247,7 +247,7 @@ class ItfJsonToTla[T <: JsonRepresentation](scalaAdapter: ScalaFromJsonAdapter[T
                 recElems.nonEmpty,
                 ItfFormatError(s"Records may not be empty."),
             )
-          } yield tla.rec(recElems: _*)
+          } yield tla.rowRec(None, recElems: _*)
 
         case TupT1(elems @ _*) =>
           for {

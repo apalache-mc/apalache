@@ -2,7 +2,9 @@ package at.forsyte.apalache.io.itf
 
 import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRepresentation}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.types.tla
+import TypedPredefs._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -222,7 +224,7 @@ class TestItfJsonToTla extends AnyFunSuite {
         "expected successful parsing of empty array as SeqT1(StrT1)",
     )
 
-    val tt = FunT1(RecT1("x" -> SetT1(BoolT1)), SeqT1(TupT1(ConstT1("X"))))
+    val tt = FunT1(RecRowT1(RowT1("x" -> SetT1(BoolT1))), SeqT1(TupT1(ConstT1("X"))))
     assert(
         itfToTla.parseItfValueToTlaExpr(emptySeq, SeqT1(tt)).map(_.build).contains(tla.emptySeq(tt).build),
         "expected successful parsing of empty array as SeqT1 with complex type",
@@ -246,17 +248,17 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
   }
 
-  test("parseItfValueToTlaExpr - RecT1") {
+  test("parseItfValueToTlaExpr - RecRowT1") {
     val emptyRec = UJsonRepresentation(Obj())
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(emptyRec, RecT1()).isLeft,
-        "expected error when parsing empty object as empty RecT1",
+        itfToTla.parseItfValueToTlaExpr(emptyRec, RecRowT1(RowT1())).isLeft,
+        "expected error when parsing empty object as empty RecRowT1",
     )
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(emptyRec, RecT1("x" -> IntT1)).isLeft,
-        "expected error when parsing empty object with non-empty RecT1 type",
+        itfToTla.parseItfValueToTlaExpr(emptyRec, RecRowT1(RowT1("x" -> IntT1))).isLeft,
+        "expected error when parsing empty object with non-empty RecRowT1 type",
     )
 
     assert(
@@ -270,7 +272,7 @@ class TestItfJsonToTla extends AnyFunSuite {
             "y" -> "abc",
         )
     )
-    val xyRecT = RecT1("x" -> IntT1, "y" -> StrT1)
+    val xyRecT = RecRowT1(RowT1("x" -> IntT1, "y" -> StrT1))
 
     assert(
         itfToTla.parseItfValueToTlaExpr(xyRec, IntT1).isLeft,
@@ -278,27 +280,31 @@ class TestItfJsonToTla extends AnyFunSuite {
     )
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(xyRec, RecT1()).isLeft,
-        "expected error when parsing record with empty RecT1 type",
+        itfToTla.parseItfValueToTlaExpr(xyRec, RecRowT1(RowT1())).isLeft,
+        "expected error when parsing record with empty RecRowT1 type",
     )
 
     assert(
-        itfToTla.parseItfValueToTlaExpr(xyRec, RecT1("x" -> IntT1, "y" -> StrT1, "z" -> IntT1)).isLeft,
-        "expected error when parsing record with mismatched RecT1 type (extra field)",
+        itfToTla.parseItfValueToTlaExpr(xyRec, RecRowT1(RowT1("x" -> IntT1, "y" -> StrT1, "z" -> IntT1))).isLeft,
+        "expected error when parsing record with mismatched RecRowT1 type (extra field)",
     )
 
+    val errorOrRecord = itfToTla
+      .parseItfValueToTlaExpr(xyRec, xyRecT)
+      .map(_.build)
+
     assert(
-        itfToTla
-          .parseItfValueToTlaExpr(xyRec, xyRecT)
-          .map(_.build)
-          .contains(tla
-                .rec(
-                    "x" -> tla.int(1),
-                    "y" -> tla.str("abc"),
-                )
-                .build),
-        "expected successful parsing of record with matching RecT1 type",
+        errorOrRecord.contains(tla
+              .rec(
+                  "x" -> tla.int(1),
+                  "y" -> tla.str("abc"),
+              )
+              .build),
+        "expected successful parsing of record with matching RecRowT1 type",
     )
+    errorOrRecord.foreach { expr =>
+      assert(expr.typeTag.asTlaType1() == xyRecT)
+    }
   }
 
   test("parseItfValueToTlaExpr - TupT1") {
@@ -483,6 +489,76 @@ class TestItfJsonToTla extends AnyFunSuite {
           .contains(tla.variant("B", tla.str("hello"), variantT).build),
         "expected successful parsing of variant B with matching VariantT1 type",
     )
+  }
+
+  test("regression test for record and variant types") {
+    val exprText = """
+      |{
+      |  "rcvd": {
+      |    "destIp": "172.20.0.10",
+      |    "destPort": {"#bigint": "69"},
+      |    "payload": {
+      |      "tag": "RRQ",
+      |      "value": {
+      |        "filename": "file1",
+      |        "mode": "octet",
+      |        "opcode": {"#bigint": "1"},
+      |        "options": {"#map": [["timeout", {"#bigint": "1"}]]}
+      |      }
+      |    },
+      |    "srcIp": "172.20.0.11",
+      |    "srcPort": {"#bigint": "1024"}
+      |  },
+      |  "sent": {
+      |    "srcIp": "172.20.0.10",
+      |    "srcPort": {"#bigint": "1024"},
+      |    "destIp": "172.20.0.11",
+      |    "destPort": {"#bigint": "1024"},
+      |    "payload": {
+      |      "tag": "OACK",
+      |      "value": {
+      |        "opcode": {"#bigint": "6"},
+      |        "options": {"#map": [["timeout", {"#bigint": "1"}]]}
+      |      }
+      |    }
+      |  }
+      |}
+      |""".stripMargin
+
+    val typeText = """
+    |{
+    |  rcvd: {
+    |    destIp: Str,
+    |    destPort: Int,
+    |    payload:
+    |      ACK({ blockNum: Int, opcode: Int })
+    |      | DATA({ blockNum: Int, data: Int, opcode: Int })
+    |      | ERROR({ errorCode: Int, msg: Str, opcode: Int })
+    |      | OACK({ opcode: Int, options: (Str -> Int) })
+    |      | RRQ({ filename: Str, mode: Str, opcode: Int, options: (Str -> Int) })
+    |      | WRQ({ filename: Str, mode: Str, opcode: Int, options: (Str -> Int) }),
+    |    srcIp: Str,
+    |    srcPort: Int
+    |  },
+    |  sent: {
+    |    destIp: Str,
+    |    destPort: Int,
+    |     payload:
+    |       ACK({ blockNum: Int, opcode: Int })
+    |       | DATA({ blockNum: Int, data: Int, opcode: Int })
+    |       | ERROR({ errorCode: Int, msg: Str, opcode: Int })
+    |       | OACK({ opcode: Int, options: (Str -> Int) })
+    |       | RRQ({ filename: Str, mode: Str, opcode: Int, options: (Str -> Int) })
+    |       | WRQ({ filename: Str, mode: Str, opcode: Int, options: (Str -> Int) }),
+    |    srcIp: Str,
+    |    srcPort: Int
+    |  }
+    |}""".stripMargin
+
+    val json = ujson.read(exprText)
+    val recordType = DefaultType1Parser(typeText)
+    val result = itfToTla.parseItfValueToTlaExpr(UJsonRepresentation(json), recordType)
+    assert(result.isRight, s"expected successful parsing of complex variant, got $result")
   }
 
   test("parseTrace") {
@@ -693,7 +769,7 @@ class TestItfJsonToTla extends AnyFunSuite {
 
   test("parseState - successful parsing with complex types") {
     val varTypes = Map(
-        "rec" -> RecT1("a" -> IntT1, "b" -> StrT1),
+        "rec" -> RecRowT1(RowT1("a" -> IntT1, "b" -> StrT1)),
         "seq" -> SeqT1(IntT1),
         "set" -> SetT1(BoolT1),
     )
