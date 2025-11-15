@@ -230,9 +230,10 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                     snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
                   }
                   val status = if (isSat) AssumptionStatus.ENABLED else AssumptionStatus.DISABLED
+                  val returnedSnapshotId = if (!isSat) snapshotBeforeId else snapshotAfterId
                   logger.info(
-                      s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId $status")
-                  AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, status)
+                      s"Session=$sessionId Step=$stepNo Snapshot=$returnedSnapshotId: transition $transitionId $status")
+                  AssumeTransitionResult(sessionId, returnedSnapshotId, transitionId, status)
                 case None =>
                   // in case of timeout or unknown, we do not roll back the context, but return unknown
                   logger.info(
@@ -393,8 +394,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                   snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
                 }
                 val status = if (isSat) AssumptionStatus.ENABLED else AssumptionStatus.DISABLED
-                logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState $status")
-                AssumeStateResult(sessionId, snapshotBeforeId, status)
+                val returnedSnapshotId = if (!isSat) snapshotBeforeId else snapshotAfterId
+                logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$returnedSnapshotId: assumeState $status")
+                AssumeStateResult(sessionId, returnedSnapshotId, status)
 
               case None =>
                 // in case of timeout or unknown, we do not roll back the context, but return unknown
