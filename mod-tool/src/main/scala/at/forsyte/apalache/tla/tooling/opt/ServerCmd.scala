@@ -38,13 +38,14 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
     val cfg = configuration.get
     val options = OptionGroup.WithServer(cfg).get
 
-    logger.info(s"Starting ${options.server.serverType} server on ${options.server.hostname}:${options.server.port}...")
     options.server.serverType match {
       case Config.CheckerServer() =>
+        logger.info(s"Starting checker server on port ${options.server.port} (hostname is ignored)...")
         val server = shai.v1.RpcServer(options.server.port)
         server.main(Array())
 
       case Config.ExplorerServer() =>
+        logger.info(s"Starting explorer server on ${options.server.hostname}:${options.server.port}...")
         JsonRpcServerApp.run(configuration, options.server.hostname, options.server.port)
     }
 

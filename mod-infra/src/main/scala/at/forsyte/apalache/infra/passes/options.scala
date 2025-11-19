@@ -247,7 +247,7 @@ object Config {
    * Configuration of the server
    *
    * @param hostname
-   *   the hostname to serve requests from
+   *   the hostname to serve requests from (only applies to the explorer server type; ignored for the checker server)
    * @param port
    *   the port to serve requests from
    * @param serverType

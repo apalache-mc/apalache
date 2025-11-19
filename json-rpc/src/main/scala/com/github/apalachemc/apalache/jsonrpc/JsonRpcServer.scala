@@ -897,8 +897,15 @@ object JsonRpcServerApp {
   }
 
   def main(args: Array[String]): Unit = {
-    val hostname = if (args.length >= 1) args(0) else "localhost"
-    val port = if (args.length >= 2) args(1).toInt else 8822
+    // Backward compatibility: if only one argument and it's an integer, treat as port (old behavior)
+    val (hostname, port) =
+      if (args.length == 1 && Try(args(0).toInt).isSuccess) {
+        ("localhost", args(0).toInt)
+      } else {
+        val h = if (args.length >= 1) args(0) else "localhost"
+        val p = if (args.length >= 2) args(1).toInt else 8822
+        (h, p)
+      }
     val cfg = ConfigManager("{common.command: 'server'}")
     run(cfg, hostname, port)
   }
