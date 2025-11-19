@@ -2,7 +2,7 @@
 
 | authors                                | proposed by                   | last revised |
 | -------------------------------------- | ----------------------------  |-------------:|
-| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov |   2025-07-28 |
+| Igor Konnov                            | Vitor Enes, Andrey Kupriyanov |   2025-11-11 |
 
 **Table of Contents**
 
@@ -27,6 +27,9 @@ TLA+ and can be easily integrated into other tools.
 **Rev. 2023-09-14.** Each integer value `num` is now represented as `{ #bigint: "num" }`.
 The use of JSON numbers is not allowed anymore. This simplifies custom parsers for ITF,
 see [Consequences](#consequences).
+
+**Rev. 2025-11-11.** Added clarification about serializing values of variant type.
+No change in behavior.
 
 ## Implementations
 
@@ -290,17 +293,18 @@ specified in the field `vars`. Each state must define a value for every specifie
 `<expr>` is one of the following:
 
 1. A JSON Boolean: either `false` or `true`.
-
+   
 1. A JSON string literal, e.g., `"hello"`. TLA+ strings are written as strings in this format.
+
+1. An Apalache value of uninterpreted type is simply written as a JSON string.
+   For example, the value `u_OF_UNIT` of type `UNIT` is written as `"u_OF_UNIT"`.
+   Similarly, the value `c1_OF_PERSON` of type `PERSON` is written as `"c1_OF_PERSON"`.
 
 1. A big integer of the following form: `{ "#bigint": "[-][0-9]+" }`. We are using this format, as many JSON parsers
    impose limits on integer values, see [RFC7159][]. Big and small integers *must be*
    written in this format.
 
 1. A list of the form `[ <expr>, ..., <expr> ]`. A list is just a JSON array. TLA+ sequences are written as lists in this format.
-
-1. A record of the form `{ "field1": <expr>, ..., "fieldN": <expr> }`. A record is just a JSON object. Field names should not start with `#`
-   and hence should not pose any collision with other constructs. TLA+ records are written as records in this format.
 
 1. A tuple of the form `{ "#tup": [ <expr>, ..., <expr> ] }`. There is no strict rule about when to use sequences or tuples. Apalache differentiates
    between tuples and sequences, and it may produce both forms of expressions.
@@ -313,6 +317,14 @@ specified in the field `vars`. Each state must define a value for every specifie
    ] }`. That is, a map holds a JSON array of two-element arrays. Each two-element array `p` is interpreted as follows: `p[0]` is the map key and
    `p[1]` is the map value. Importantly, a key may be an arbitrary expression. It does not have to be a string or an integer. TLA+ functions are written as maps
    in this format.
+
+1. A record of the form `{ "field1": <expr>, ..., "fieldN": <expr> }`. A record is just a JSON object. Field names should not start with `#`
+   and hence should not pose any collision with other constructs. TLA+ records are written as records in this format.
+
+1. A variant value of the form `{ "tag": "<tag>", "value": <expr> }`. A variant is an object with two fields:
+   `tag` and `value`. The `tag` field holds a string that identifies the variant case, whereas the `value` field holds
+   the value associated with the variant case. The `value` may be of any type. Usually, `value` is a record or
+   a value of an uninterpreted type, e.g., `u_OF_UNIT`. 
 
 1. An expression that cannot be serialized: `{ "#unserializable": "<string
 representation>" }`. For instance, the set of all integers is represented with

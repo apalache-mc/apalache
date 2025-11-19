@@ -20,17 +20,17 @@ import at.forsyte.apalache.tla.lir.storage.SourceLocator
  * { "type": "Int", "kind": "ValEx", "value": { "kind": TlaInt, "value": 2 } } ] }
  */
 class TlaToJson[T <: JsonRepresentation](
-    factory: JsonFromScalaFactory[T],
+    adapter: ScalaToJsonAdapter[T],
     locatorOpt: Option[SourceLocator] = None,
   )(implicit typeTagPrinter: TypeTagPrinter)
     extends JsonEncoder[T] {
   import TlaToJson._
 
-  implicit def liftString: String => T = factory.fromStr
+  implicit def liftString: String => T = adapter.fromStr
 
-  implicit def liftInt: Int => T = factory.fromInt
+  implicit def liftInt: Int => T = adapter.fromInt
 
-  implicit def liftBool: Boolean => T = factory.fromBool
+  implicit def liftBool: Boolean => T = adapter.fromBool
 
   /**
    * If a SourceLocator is given, prepare a `sourceFieldName` field, holding a JSON with file & position info, in
@@ -41,13 +41,13 @@ class TlaToJson[T <: JsonRepresentation](
       locator
         .sourceOf(identifiable.ID)
         .map { sourceLoc =>
-          factory.mkObj(
+          adapter.mkObj(
               "filename" -> sourceLoc.filename,
-              "from" -> factory.mkObj(
+              "from" -> adapter.mkObj(
                   "line" -> sourceLoc.region.start.line,
                   "column" -> sourceLoc.region.start.column,
               ),
-              "to" -> factory.mkObj(
+              "to" -> adapter.mkObj(
                   "line" -> sourceLoc.region.end.line,
                   "column" -> sourceLoc.region.end.column,
               ),
@@ -57,7 +57,7 @@ class TlaToJson[T <: JsonRepresentation](
           "UNKNOWN" // Locator is given, but doesn't know the source
         }
     }
-    factory.mkObj((locFieldOpt.map { sourceFieldName -> _ }) ++: fields: _*)
+    adapter.mkObj((locFieldOpt.map { sourceFieldName -> _ }) ++: fields: _*)
   }
 
   override def apply(ex: TlaEx): T = {
@@ -73,47 +73,47 @@ class TlaToJson[T <: JsonRepresentation](
       case ValEx(value) =>
         val inner = value match {
           case TlaStr(strValue) =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaStr",
                 "value" -> strValue,
             )
           case TlaDecimal(decValue) =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaDecimal",
                 "value" -> decValue.toString(), // let the parser care when reading
             )
           case TlaInt(bigIntValue) =>
             val intVal: T =
               if (bigIntValue.isValidInt) liftInt(bigIntValue.toInt)
-              else factory.mkObj("bigInt" -> bigIntValue.toString())
-            factory.mkObj(
+              else adapter.mkObj("bigInt" -> bigIntValue.toString())
+            adapter.mkObj(
                 kindFieldName -> "TlaInt",
                 "value" -> intVal,
             )
           case TlaBool(boolValue) =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaBool",
                 "value" -> boolValue,
             )
           case TlaBoolSet =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaBoolSet"
             )
           case TlaIntSet =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaIntSet"
             )
           case TlaStrSet =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaStrSet"
             )
           case TlaNatSet =>
-            factory.mkObj(
+            adapter.mkObj(
                 kindFieldName -> "TlaNatSet"
             )
           case _ =>
             // unsupported TlaReal
-            factory.mkObj()
+            adapter.mkObj()
         }
         withLoc(
             typeFieldName -> typeTagPrinter(ex.typeTag),
@@ -127,7 +127,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "OperEx",
             "oper" -> oper.name,
-            "args" -> factory.fromIterable(argJsons),
+            "args" -> adapter.fromIterable(argJsons),
         )
       case LetInEx(body, decls @ _*) =>
         val bodyJson = apply(body)
@@ -136,11 +136,11 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(ex.typeTag),
             kindFieldName -> "LetInEx",
             "body" -> bodyJson,
-            "decls" -> factory.fromIterable(declJsons),
+            "decls" -> adapter.fromIterable(declJsons),
         )
 
       case NullEx =>
-        factory.mkObj(kindFieldName -> "NullEx")
+        adapter.mkObj(kindFieldName -> "NullEx")
     }
   }
 
@@ -173,7 +173,7 @@ class TlaToJson[T <: JsonRepresentation](
       case decl @ TlaOperDecl(name, formalParams, body) =>
         val bodyJson = apply(body)
         val paramsJsons = formalParams.map { case OperParam(paramName, arity) =>
-          factory.mkObj(
+          adapter.mkObj(
               kindFieldName -> "OperParam",
               "name" -> paramName,
               "arity" -> arity,
@@ -183,7 +183,7 @@ class TlaToJson[T <: JsonRepresentation](
             typeFieldName -> typeTagPrinter(decl.typeTag),
             kindFieldName -> "TlaOperDecl",
             "name" -> name,
-            "formalParams" -> factory.fromIterable(paramsJsons),
+            "formalParams" -> adapter.fromIterable(paramsJsons),
             "isRecursive" -> decl.isRecursive,
             "body" -> bodyJson,
         )
@@ -204,20 +204,20 @@ class TlaToJson[T <: JsonRepresentation](
 
   override def apply(module: TlaModule): T = {
     val declJsons = module.declarations.map(apply)
-    factory.mkObj(
+    adapter.mkObj(
         kindFieldName -> "TlaModule",
         "name" -> module.name,
-        "declarations" -> factory.fromIterable(declJsons),
+        "declarations" -> adapter.fromIterable(declJsons),
     )
   }
 
   override def makeRoot(modules: Iterable[TlaModule]): T = {
     val moduleJsons = modules.map(apply)
-    factory.mkObj(
+    adapter.mkObj(
         "name" -> "ApalacheIR",
         versionFieldName -> JsonVersion.current,
         "description" -> "https://apalache-mc.org/docs/adr/005adr-json.html",
-        "modules" -> factory.fromIterable(moduleJsons),
+        "modules" -> adapter.fromIterable(moduleJsons),
     )
   }
 }
