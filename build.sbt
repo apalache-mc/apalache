@@ -423,6 +423,9 @@ docker / dockerfile := {
     run("apt", "update")
     run("apt", "install", "-y", "sudo")
 
+    // Expose the standard Apalache server port
+    expose(8822)
+
     entryPoint("/opt/apalache/bin/run-in-docker-container")
   }
 }
