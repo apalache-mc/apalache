@@ -246,12 +246,15 @@ object Config {
   /**
    * Configuration of the server
    *
+   * @param hostname
+   *  the hostname to serve requests from
    * @param port
    *   the port to serve requests from
    * @param serverType
    *   the type of server to run, either an explorer or a checker server
    */
   case class Server(
+      hostname: Option[String] = Some("localhost"),
       port: Option[Int] = Some(8822),
       serverType: ServerType = CheckerServer())
       extends Config[Server] {
@@ -724,12 +727,14 @@ object OptionGroup extends LazyLogging {
 
   /** Options used to configure the server */
   case class Server(
+      hostname: String,
       port: Int,
       serverType: ServerType = CheckerServer())
       extends OptionGroup
 
   object Server extends Configurable[Config.Server, Server] {
     def apply(server: Config.Server): Try[Server] = for {
+      hostname <- server.hostname.toTry("server.hostname")
       port <- server.port.toTry("server.port")
       serverType = server.serverType match {
         case _: CheckerServer  => CheckerServer()
@@ -738,6 +743,7 @@ object OptionGroup extends LazyLogging {
           throw new PassOptionException(s"Unexpected server type: ${unknown.toString}")
       }
     } yield Server(
+        hostname = hostname,
         port = port,
         serverType = serverType,
     )

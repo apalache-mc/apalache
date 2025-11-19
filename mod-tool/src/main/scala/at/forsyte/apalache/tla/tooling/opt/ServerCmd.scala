@@ -11,6 +11,9 @@ import scala.util.Try
 
 class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode") with LazyLogging {
 
+  var hostname: Option[String] = opt[Option[String]](
+      description = "the hostname served by the RPC server, default: localhost (only works in explorer)")
+
   var port: Option[Int] = opt[Option[Int]](
       description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)", useEnv = true)
 
@@ -27,7 +30,7 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
           logger.warn(s"Invalid server type: $invalid, using default (checker)")
           Config.CheckerServer()
       }
-      cfg.copy(server = Config.Server(port, serverType = selectedServerType))
+      cfg.copy(server = Config.Server(hostname, port, serverType = selectedServerType))
     }
   }
 
@@ -35,13 +38,14 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
     val cfg = configuration.get
     val options = OptionGroup.WithServer(cfg).get
 
-    logger.info(s"Starting ${options.server.serverType} server on port ${options.server.port}...")
+    logger.info(s"Starting ${options.server.serverType} server on ${options.server.hostname}:${options.server.port}...")
     options.server.serverType match {
       case Config.CheckerServer() =>
         val server = shai.v1.RpcServer(options.server.port)
         server.main(Array())
+
       case Config.ExplorerServer() =>
-        JsonRpcServerApp.run(configuration, options.server.port)
+        JsonRpcServerApp.run(configuration, options.server.hostname, options.server.port)
     }
 
     Right("Server terminated")

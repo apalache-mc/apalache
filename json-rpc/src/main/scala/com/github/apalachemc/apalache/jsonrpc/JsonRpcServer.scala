@@ -30,6 +30,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 
 import java.io.StringReader
+import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.{Lock, ReentrantLock}
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
@@ -881,8 +882,8 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
 }
 
 object JsonRpcServerApp {
-  def run(config: Try[ApalacheConfig], port: Int): Unit = {
-    val server = new Server(port)
+  def run(config: Try[ApalacheConfig], hostname: String, port: Int): Unit = {
+    val server = new Server(new InetSocketAddress(hostname, port))
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")
     server.setHandler(context)
@@ -891,13 +892,14 @@ object JsonRpcServerApp {
     context.addServlet(new ServletHolder(new JsonRpcServlet(service)), "/rpc")
 
     server.start()
-    println(s"JSON-RPC server running on http://localhost:$port/rpc")
+    println(s"JSON-RPC server running on http://$hostname:$port/rpc")
     server.join()
   }
 
   def main(args: Array[String]): Unit = {
-    val port = if (args.nonEmpty) args(0).toInt else 8822
+    val hostname = if (args.length >= 1) args(0) else "localhost"
+    val port = if (args.length >= 2) args(1).toInt else 8822
     val cfg = ConfigManager("{common.command: 'server'}")
-    run(cfg, port)
+    run(cfg, hostname, port)
   }
 }
