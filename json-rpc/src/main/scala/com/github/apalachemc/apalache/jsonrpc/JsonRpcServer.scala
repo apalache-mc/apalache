@@ -69,7 +69,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
   /**
    * A trivial health check.
-   * @return "OK"
+   * @return
+   *   `{ "status": "OK" }`
    */
   def health(): Either[ServiceError, ExplorationServiceResult] = {
     Right(HealthCheckResult("OK"))

@@ -43,6 +43,8 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
     service.health() match {
       case Right(HealthCheckResult(status)) =>
         assert(status == "OK", s"Expected health status to be OK, found $status")
+      case Right(_) =>
+        fail("Unexpected health check result")
       case Left(error) =>
         fail(s"Health check failed: $error")
     }
