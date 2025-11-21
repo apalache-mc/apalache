@@ -69,6 +69,40 @@ first:
 $ ../bin/apalache-mc server --server-type=explorer
 ```
 
+### 2.0. Method health
+
+This is a diagnostic method that checks whether the server is alive.
+
+**Effect.** No effect. The server just responds with `"OK"`.
+
+**Input:**
+
+```json
+{
+    "method": "health",
+    "params": {},
+    "id": "${request-id}"
+}
+```
+
+**Output:**
+
+```json
+{
+    "result": { "status": "OK" }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"health","params":{},"id":1}'
+```
+
 ### 2.1. Method loadSpec
 
 Load a TLA+ specification from a list of base64-encoded source files.

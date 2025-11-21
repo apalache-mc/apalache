@@ -68,6 +68,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   private val snapshots: CheckerSnapshotsPerSession = new CheckerSnapshotsPerSession()
 
   /**
+   * A trivial health check.
+   * @return
+   *   `{ "status": "OK" }`
+   */
+  def health(): Either[ServiceError, ExplorationServiceResult] = {
+    Right(HealthCheckResult("OK"))
+  }
+
+  /**
    * Loads a specification based on the provided parameters.
    * @param params
    *   parsed loading parameters
@@ -806,6 +815,9 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
       try {
         // Dispatch methods manually
         method match {
+          case "health" =>
+            service.health()
+
           case "loadSpec" =>
             new JsonParameterParser(mapper)
               .parseLoadSpec(paramsNode)
