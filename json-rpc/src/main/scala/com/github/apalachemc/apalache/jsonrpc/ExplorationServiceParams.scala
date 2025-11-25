@@ -1,5 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
+import com.fasterxml.jackson.databind.JsonNode
+
 sealed abstract class ExplorationServiceParams
 
 /**
@@ -161,3 +163,33 @@ case class NextModelParams(
     operator: String = "",
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
+
+/**
+ * Parameters for preparing a symbolic transition in the solver context.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param equalities
+ *   a JSON-encoded list of equalities to assume in the current state (in the ITF format)
+ * @param checkEnabled
+ *   whether to check if the transition is enabled. If `false`, the transition is prepared and assumed, but no
+ *   satisfiability is checked
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
+ *   if `checkEnabled` is `false`.
+ */
+case class AssumeStateParams(
+    sessionId: String,
+    equalities: JsonNode,
+    checkEnabled: Boolean,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+object AssumeStateParams {
+  def apply(
+      sessionId: String,
+      equalities: JsonNode,
+      checkEnabled: Boolean = true,
+      timeoutSec: Int = 0): AssumeStateParams = {
+    new AssumeStateParams(sessionId, equalities, checkEnabled, timeoutSec)
+  }
+}

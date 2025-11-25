@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.json
 
-import at.forsyte.apalache.io.json.impl.TlaToUJson
+import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.io.lir.TlaWriter

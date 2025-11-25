@@ -8,6 +8,8 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.io.itf.ItfJsonToTla
+import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter}
 import at.forsyte.apalache.io.lir.{ItfCounterexampleWriter, Trace}
 import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
@@ -16,6 +18,7 @@ import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaOperDecl
 import at.forsyte.apalache.tla.types.tla
+import at.forsyte.apalache.tla.lir.TypedPredefs._
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -63,6 +66,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   private val lastSessionId: AtomicInteger = new AtomicInteger(0)
   // A snapshot manager.
   private val snapshots: CheckerSnapshotsPerSession = new CheckerSnapshotsPerSession()
+
+  /**
+   * A trivial health check.
+   * @return
+   *   `{ "status": "OK" }`
+   */
+  def health(): Either[ServiceError, ExplorationServiceResult] = {
+    Right(HealthCheckResult("OK"))
+  }
 
   /**
    * Loads a specification based on the provided parameters.
@@ -209,7 +221,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
             snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
             logger.info(
                 s"Session=$sessionId Step=$stepNo Snapshot=$snapshotBeforeId: transition $transitionId DISABLED")
-            AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, TransitionStatus.DISABLED)
+            AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, AssumptionStatus.DISABLED)
           } else {
             // assume that this transition takes place
             checkerContext.trex.assumeTransition(transitionId)
@@ -218,7 +230,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
               // if we do not check satisfiability, we assume that the transition is enabled
               logger.info(
                   s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
-              AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
+              AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, AssumptionStatus.UNKNOWN)
             } else {
               // check satisfiability
               checkerContext.trex.sat(params.timeoutSec) match {
@@ -226,15 +238,16 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                   if (!isSat) {
                     snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
                   }
-                  val status = if (isSat) TransitionStatus.ENABLED else TransitionStatus.DISABLED
+                  val status = if (isSat) AssumptionStatus.ENABLED else AssumptionStatus.DISABLED
+                  val returnedSnapshotId = if (!isSat) snapshotBeforeId else snapshotAfterId
                   logger.info(
-                      s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId $status")
-                  AssumeTransitionResult(sessionId, snapshotBeforeId, transitionId, status)
+                      s"Session=$sessionId Step=$stepNo Snapshot=$returnedSnapshotId: transition $transitionId $status")
+                  AssumeTransitionResult(sessionId, returnedSnapshotId, transitionId, status)
                 case None =>
                   // in case of timeout or unknown, we do not roll back the context, but return unknown
                   logger.info(
                       s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: transition $transitionId UNKNOWN")
-                  AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, TransitionStatus.UNKNOWN)
+                  AssumeTransitionResult(sessionId, snapshotAfterId, transitionId, AssumptionStatus.UNKNOWN)
               }
             }
           }
@@ -327,6 +340,84 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   }
 
   /**
+   * Assume state constraints in the solver context.
+   *
+   * @param params
+   *   the parameters object that contains the session ID and the transition ID
+   * @return
+   *   either an error or [[AssumeStateResult]]
+   */
+  def assumeState(params: AssumeStateParams): Either[ServiceError, AssumeStateResult] = {
+    val sessionId = params.sessionId
+    // validate the input parameters
+    val validationResult = sessions.get(sessionId) match {
+      case Some(injector) =>
+        // get the checker context from the injector
+        val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+        val checkerContext = checkerModule.modelCheckerContext.get
+        // parse the JSON value into a state
+        val varTypes =
+          checkerContext.checkerInput.rootModule.varDeclarations
+            .map(d => d.name -> d.typeTag.asTlaType1())
+            .toMap
+        new ItfJsonToTla(ScalaFromJacksonAdapter)
+          .parseState(varTypes, new JacksonRepresentation(params.equalities)) match {
+          case Right(equalities) =>
+            Right((checkerContext, varTypes, equalities))
+          case Left(msg) =>
+            Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Failed to parse the state: $msg"))
+        }
+
+      case None =>
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
+    }
+
+    // Upload the equalities. Make sure that we do not update the SMT context concurrently.
+    validationResult
+      .map { case (checkerContext, varTypes, equalities) =>
+        withLock(params.sessionId) {
+          if (!sessions.contains(params.sessionId)) {
+            return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND,
+                    s"Session not found: ${params.sessionId}"))
+          }
+          // take a snapshot of the current context
+          val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
+          // upload the equalities into the SMT context
+          for ((varName, valueExpr) <- equalities) {
+            checkerContext.trex.assertState(
+                tla.eql(tla.name(varName, varTypes(varName)), tla.unchecked(valueExpr)).build)
+          }
+          // take a snapshot after assuming the state
+          val snapshotAfterId = snapshots.takeSnapshot(sessionId, checkerContext)
+          // check whether the context is still satisfiable
+          val stepNo = checkerContext.trex.stepNo
+          if (!params.checkEnabled) {
+            // if we do not check satisfiability, we assume that the transition is enabled
+            logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState UNKNOWN")
+            AssumeStateResult(sessionId, snapshotAfterId, AssumptionStatus.UNKNOWN)
+          } else {
+            // check satisfiability
+            checkerContext.trex.sat(params.timeoutSec) match {
+              case Some(isSat) =>
+                if (!isSat) {
+                  snapshots.recoverSnapshot(sessionId, checkerContext, snapshotBeforeId)
+                }
+                val status = if (isSat) AssumptionStatus.ENABLED else AssumptionStatus.DISABLED
+                val returnedSnapshotId = if (!isSat) snapshotBeforeId else snapshotAfterId
+                logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$returnedSnapshotId: assumeState $status")
+                AssumeStateResult(sessionId, returnedSnapshotId, status)
+
+              case None =>
+                // in case of timeout or unknown, we do not roll back the context, but return unknown
+                logger.info(s"Session=$sessionId Step=$stepNo Snapshot=$snapshotAfterId: assumeState UNKNOWN")
+                AssumeStateResult(sessionId, snapshotAfterId, AssumptionStatus.UNKNOWN)
+            }
+          }
+        }
+      }
+  }
+
+  /**
    * Check the invariants against the current SMT context.
    * @param params
    *   checking parameters
@@ -392,7 +483,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.trex.sat(params.timeoutSec) match {
             case Some(isSat) =>
               if (isSat) {
-                (InvariantStatus.VIOLATED, getTraceInJson(checkerContext))
+                (InvariantStatus.VIOLATED, getTraceInJson(checkerContext, params.timeoutSec))
               } else {
                 (InvariantStatus.SATISFIED, NullNode.getInstance())
               }
@@ -440,7 +531,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
         val traceInJson =
           if (params.kinds.contains(QueryKind.TRACE)) {
-            getTraceInJson(checkerContext)
+            getTraceInJson(checkerContext, params.timeoutSec)
           } else {
             NullNode.getInstance()
           }
@@ -524,17 +615,32 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @return
    *   a JSON-encoded trace
    */
-  private def getTraceInJson(checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot]): JsonNode = {
-    // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs,
-    // as reported by loadSpec.
-    val path = checkerContext.trex.decodedExecution().path
-    val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
-        path.map(_ => SortedSet[String]()).toIndexedSeq, ())
-    // Serialize the counterexample to JSON
-    val ujsonTrace =
-      ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
-    // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
-    new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+  private def getTraceInJson(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+      timeoutSec: Int): JsonNode = {
+    checkerContext.trex.sat(timeoutSec) match {
+      case Some(isSat) =>
+        if (!isSat) {
+          // no trace
+          NullNode.getInstance()
+        } else {
+          // extract the trace
+          // We do not extract any labels. The remote client should be able to reconstruct them from the transition IDs,
+          // as reported by loadSpec.
+          val path = checkerContext.trex.decodedExecution().path
+          val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
+              path.map(_ => SortedSet[String]()).toIndexedSeq, ())
+          // Serialize the counterexample to JSON
+          val ujsonTrace =
+            ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
+          // Unfortunately, ujsonTrace is in UJSON, and we need Jackson's JsonNode.
+          new ObjectMapper().registerModule(DefaultScalaModule).readTree(new StringReader(ujsonTrace.render()))
+        }
+
+      case None =>
+        // unknown
+        NullNode.getInstance()
+    }
   }
 
   private def getViewInJson(
@@ -709,6 +815,9 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
       try {
         // Dispatch methods manually
         method match {
+          case "health" =>
+            service.health()
+
           case "loadSpec" =>
             new JsonParameterParser(mapper)
               .parseLoadSpec(paramsNode)
@@ -732,6 +841,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
               .parseAssumeTransition(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.assumeTransition(serviceParams))
+
+          case "assumeState" =>
+            new JsonParameterParser(mapper)
+              .parseAssumeState(paramsNode)
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+                  serviceParams => service.assumeState(serviceParams))
 
           case "nextStep" =>
             new JsonParameterParser(mapper)

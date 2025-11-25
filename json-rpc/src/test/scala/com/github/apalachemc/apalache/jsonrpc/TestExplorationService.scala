@@ -1,15 +1,19 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.io.ConfigManager
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.prop.TableFor2
 import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.immutable.SortedSet
 
 @RunWith(classOf[JUnitRunner])
-class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
+class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaCheckPropertyChecks {
   private val spec1 =
     """---- MODULE Inc ----
       |EXTENDS Integers
@@ -33,6 +37,17 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
   before {
     val config = ConfigManager("{common.command: 'server'}")
     service = new ExplorationService(config)
+  }
+
+  test("health check") {
+    service.health() match {
+      case Right(HealthCheckResult(status)) =>
+        assert(status == "OK", s"Expected health status to be OK, found $status")
+      case Right(_) =>
+        fail("Unexpected health check result")
+      case Left(error) =>
+        fail(s"Health check failed: $error")
+    }
   }
 
   test("load spec") {
@@ -142,7 +157,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == specResult.sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(status == TransitionStatus.ENABLED, "Transition should be enabled after assumption")
+        assert(status == AssumptionStatus.ENABLED, "Transition should be enabled after assumption")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -174,7 +189,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
           assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
           assert(transitionId == 0, "Transition ID should match the assumed transition")
-          assert(status == TransitionStatus.ENABLED, "Transition should be enabled")
+          assert(status == AssumptionStatus.ENABLED, "Transition should be enabled")
           assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
 
         case Left(error) =>
@@ -185,7 +200,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(status == TransitionStatus.DISABLED, "Transition should be disabled")
+        assert(status == AssumptionStatus.DISABLED, "Transition should be disabled")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -210,11 +225,43 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(status == TransitionStatus.ENABLED, "Transition should be enabled")
+        assert(status == AssumptionStatus.ENABLED, "Transition should be enabled")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
         fail(s"Failed to assume transition: $error")
+    }
+  }
+
+  test("assumeTransition; nextStep; assumeState") {
+    val valueAndStatusTable: TableFor2[Int, AssumptionStatus.T] =
+      Table(
+          ("x", "status"),
+          (0, AssumptionStatus.ENABLED),
+          (1, AssumptionStatus.DISABLED),
+          (2, AssumptionStatus.DISABLED),
+          (100, AssumptionStatus.DISABLED),
+      )
+
+    forAll(valueAndStatusTable) { (valueOfX: Int, expectedStatus: AssumptionStatus.T) =>
+      val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
+      assert(service
+            .assumeTransition(AssumeTransitionParams(sessionId = specResult.sessionId, transitionId = 0))
+            .isRight, "Assuming transition 0 should succeed")
+      assert(service.nextStep(NextStepParams(sessionId = specResult.sessionId)).isRight, "Next step should succeed")
+      // parse equalities into JsonNode
+      val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+      val equalitiesJson = mapper.readTree(s"""{ "x": { "#bigint": "$valueOfX" } }""")
+
+      service.assumeState(AssumeStateParams(sessionId = specResult.sessionId, equalitiesJson)) match {
+        case Right(AssumeStateResult(newSessionId, _, status)) =>
+          assert(newSessionId == specResult.sessionId, "Session ID should remain the same after assuming state")
+          assert(status == expectedStatus, s"Expected context status to be $expectedStatus, found $status")
+        case Right(result) =>
+          fail(s"Unexpected result: $result")
+        case Left(error) =>
+          fail(s"Failed to assume state: $error")
+      }
     }
   }
 
@@ -238,6 +285,21 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         assert(states.get(0).toString == """{"#meta":{"index":0},"x":{"#bigint":"0"}}""")
         assert(states.get(1).toString == """{"#meta":{"index":1},"x":{"#bigint":"1"}}""")
         assert(states.get(2).toString == """{"#meta":{"index":2},"x":{"#bigint":"2"}}""")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
+  test("query to construct model") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE))) match {
+      case Right(QueryResult(newSessionId, trace, expr)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after querying")
+        assert(expr.isNull, "Expr should be null")
+        assert(!trace.isNull, "Trace should not be empty")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -278,7 +340,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
         case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
           assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
           assert(transitionId == 0, "Transition ID should match the assumed transition")
-          assert(status == TransitionStatus.ENABLED, "Transition should be enabled")
+          assert(status == AssumptionStatus.ENABLED, "Transition should be enabled")
           assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
 
         case Left(error) =>
@@ -290,7 +352,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
       case Right(AssumeTransitionResult(newSessionId, _, transitionId, status)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after assuming transition")
         assert(transitionId == 0, "Transition ID should match the assumed transition")
-        assert(status == TransitionStatus.DISABLED, "Transition should be disabled")
+        assert(status == AssumptionStatus.DISABLED, "Transition should be disabled")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -304,12 +366,12 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter {
 
     val paramsRecover = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
     // Init$0
-    assert(service.assumeTransition(paramsRecover).map(_.status == TransitionStatus.ENABLED) == Right(true),
+    assert(service.assumeTransition(paramsRecover).map(_.status == AssumptionStatus.ENABLED) == Right(true),
         "After recovery, transition 0 should be enabled")
     assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     // Next$0 three times
     for (i <- 1 until 4) {
-      assert(service.assumeTransition(params).map(_.status == TransitionStatus.ENABLED) == Right(true),
+      assert(service.assumeTransition(params).map(_.status == AssumptionStatus.ENABLED) == Right(true),
           s"Transition 0 is disabled when i=$i")
       assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
     }
