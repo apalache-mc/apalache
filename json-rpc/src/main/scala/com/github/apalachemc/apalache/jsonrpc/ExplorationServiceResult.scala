@@ -30,6 +30,8 @@ object NextModelStatus {
   val UNKNOWN = "UNKNOWN"
 }
 
+case class HealthCheckResult(status: String) extends ExplorationServiceResult
+
 /**
  * The result of preparing a symbolic transition.
  * @param sessionId
