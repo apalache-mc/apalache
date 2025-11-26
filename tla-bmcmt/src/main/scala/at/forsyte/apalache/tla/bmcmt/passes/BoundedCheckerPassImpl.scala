@@ -162,7 +162,7 @@ class BoundedCheckerPassImpl @Inject() (
     val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
     val checker = new SeqModelChecker[SnapshotT](ctx)
     val outcome = checker.run()
-    rewriter.dispose()
+    filteredTrex.dispose()
     logger.info(s"The outcome is: " + outcome)
     outcome
   }
