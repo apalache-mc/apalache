@@ -134,6 +134,31 @@ class TestJsonRequests extends AnyFunSuite {
     }
   }
 
+  test("parse AssumeStateParams with all parameters") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "assumeState",
+         |"params": { "sessionId": "1a1555f8",
+         |"checkEnabled": true, "timeoutSec": 600,
+         |"equalities": {"msg": "hello", "x": {"#bigint": "42"}}
+         |}, "id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseAssumeState(inputJson.path("params"))
+    parsed match {
+      case Right(params: AssumeStateParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.checkEnabled, "Expected checkEnabled to be true")
+        assert(params.timeoutSec == 600, "Expected timeoutSec to be 600")
+        assert(params.equalities.size() == 2, "Expected 2 equalities")
+        val msg = params.equalities.get("msg")
+        assert(msg.isTextual && msg.asText() == "hello", "Unexpected value for msg")
+        val x = params.equalities.get("x")
+        assert(x.isObject && x.path("#bigint").asText() == "42", "Unexpected value for x")
+      case Left(error) =>
+        fail(s"Failed: $error")
+    }
+  }
+
   test("parse RollbackParams with all parameters") {
     val input =
       s"""{"jsonrpc": "2.0", "method": "rollback",

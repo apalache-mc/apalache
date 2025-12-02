@@ -35,6 +35,10 @@ class TypeUnifier(varPool: TypeVarPool) {
    * is the solution set showing how to unify lhs and rhs and t is the type resulting from successfully unifying lhs and
    * rhs using mgu. Note that apart from variable substitution, our unification also involves merging record types. When
    * there is no unifier, it returns None.
+   *
+   * <b>WARNING:</b> When two type variables are unified into a single equivalence class, the variable with the
+   * <i>smaller</i> index becomes the representative of the class. Thus, unification may substitute `b` with `a`, but
+   * never `a` with `b`. This property MUST be preserved, as the calling code relies on it.
    */
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
     // Copy the equivalence classes and the mapping from the substitution.

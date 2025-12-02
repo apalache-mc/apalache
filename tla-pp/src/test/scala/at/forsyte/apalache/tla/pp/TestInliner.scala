@@ -3,6 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.types.{tla => ttla}
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -11,11 +12,13 @@ import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.scalatest.prop.TableFor2
 
 import scala.collection.immutable.SortedMap
 
 @RunWith(classOf[JUnitRunner])
-class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
+class TestInliner extends AnyFunSuite with BeforeAndAfterEach with ScalaCheckPropertyChecks {
 
   import Inliner.Scope
 
@@ -351,4 +354,95 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == actual)
   }
 
+  val typeVariableOrders: TableFor2[Int, Int] = Table(("a", "b"), (0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1))
+
+  test("Unify generic definitions under various type variable namings") {
+    // Regression test for the issue #3204:
+    // Inliner failed to unify generics definitions under certain type variable namings.
+    forAll(typeVariableOrders) { (indexOfA: Int, indexOfB: Int) =>
+      // P(x) == { x }; Q(y) == P(y); x' := Q({}) ~~> x' := { {} }
+      val a = VarT1(indexOfA)
+      val b = VarT1(indexOfB)
+      // \* @type: a => Set(a);
+      // P(x) == { x }
+      val PBody = ttla.enumSet(ttla.name("x", a))
+      val PDecl = ttla.decl("P", PBody, (OperParam("x"), a))
+      // \* @type: b => b;
+      // Q(y) == P(y)
+      val PTypeInQ = OperT1(Seq(b), SetT1(b))
+      val QBody = ttla.appOp(ttla.name("P", PTypeInQ), ttla.name("y", b))
+      val QDecl = ttla.decl("Q", QBody, (OperParam("y"), b))
+
+      // @type: () => Bool;
+      // X() == x' := Q({})
+      val intSetSet = SetT1(SetT1(IntT1))
+      val bodyOfX =
+        ttla.assign(ttla.prime(ttla.name("x", intSetSet)),
+            ttla
+              .appOp(
+                  ttla.name("Q", OperT1(Seq(SetT1(IntT1)), SetT1(SetT1(IntT1)))),
+                  ttla.emptySet(IntT1),
+              ))
+      val declOfX = ttla.decl("X", bodyOfX)
+
+      val decls = List(PDecl, QDecl, declOfX)
+      val inputModule = mkModule(decls: _*)
+      val outputModule = inlinerKeepNullary.transformModule(inputModule)
+      val actualBodyOfX = outputModule.declarations(2).asInstanceOf[TlaOperDecl].body
+
+      // extract the type of {{}}
+      val typeOfEmptySet = actualBodyOfX.asInstanceOf[OperEx].args(1).typeTag
+      assert(typeOfEmptySet == Typed(SetT1(SetT1(IntT1))))
+    }
+  }
+
+  test("Unify generic definitions under various type variable namings in LET-IN") {
+    // Regression test for the issue #3204:
+    // Inliner failed to unify generics definitions under certain type variable namings.
+    // This is the LET-IN version of the previous test.
+    forAll(typeVariableOrders) { (indexOfA: Int, indexOfB: Int) =>
+      // X ==
+      //   LET P(x) == { x }
+      //     Q(y) == P(y)
+      //   IN
+      //   x' := Q({}) ~~> x' := { {} }
+      val a = VarT1(indexOfA)
+      val b = VarT1(indexOfB)
+      // \* @type: a => Set(a);
+      // P(x) == { x }
+      val PBody = ttla.enumSet(ttla.name("x", a))
+      val PDecl = ttla.decl("P", PBody, (OperParam("x"), a))
+      // \* @type: b => b;
+      // Q(y) == P(y)
+      val PTypeInQ = OperT1(Seq(b), SetT1(b))
+      val QBody = ttla.appOp(ttla.name("P", PTypeInQ), ttla.name("y", b))
+      val QDecl = ttla.decl("Q", QBody, (OperParam("y"), b))
+
+      // @type: () => Bool;
+      // X() ==
+      //   LET P(x) == { x }
+      //       Q(y) == P(y)
+      //   IN
+      //   x' := Q({})
+      val intSetSet = SetT1(SetT1(IntT1))
+      val bodyOfX =
+        ttla.assign(ttla.prime(ttla.name("x", intSetSet)),
+            ttla
+              .appOp(
+                  ttla.name("Q", OperT1(Seq(SetT1(IntT1)), SetT1(SetT1(IntT1)))),
+                  ttla.emptySet(IntT1),
+              ))
+      val xUnderLetIn = ttla.letIn(ttla.letIn(bodyOfX, QDecl), PDecl)
+      val declOfX = ttla.decl("X", xUnderLetIn)
+
+      val decls = List(declOfX)
+      val inputModule = mkModule(decls: _*)
+      val outputModule = inlinerKeepNullary.transformModule(inputModule)
+      val actualBodyOfX = outputModule.declarations.head.asInstanceOf[TlaOperDecl].body
+
+      // extract the type of {{}}
+      val typeOfEmptySet = actualBodyOfX.asInstanceOf[OperEx].args(1).typeTag
+      assert(typeOfEmptySet == Typed(SetT1(SetT1(IntT1))))
+    }
+  }
 }

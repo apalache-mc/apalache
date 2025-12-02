@@ -1,6 +1,44 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.52.1 - 2025-11-21
+
+### Features
+
+- Add the JSON RPC method "health" (#3223)
+
+## 0.52.0 - 2025-11-19
+
+### Features
+
+- Add the method `assumeState` of JSON RPC
+- Add the missing case of deserializing variants from ITF JSON (#3215)
+
+### Bug fixes
+
+- Fix resulting snapshots in `assumeTransition` and `assumeState` (#3219)
+- Fix the ITF deserializer to use the modern record types (#3216)
+
+## 0.51.1 - 2025-11-06
+
+## 0.51.0 - 2025-11-06
+
+### Features
+
+- Sort relations in the counterexamples (#3182)
+- Printing labels in the TLA+ counterexamples
+- Add `JVM_GC_ARGS` and default GC settings in `apalache-mc` (#3185)
+- Add `prompts/type-annotation-assistant.md` for AI-assisted type    annotations (#3194)
+- Translate `val __label_Foo = true; e` in Quint to `Foo:: e` in TLA+ (#3168)
+- Process and print labels in transitions and invariants (#3167)
+
+### Bug fixes
+
+- Fix the type aliases parser to allow for digits (#3199)
+- Fix the JSON-RPC method `query` to call `sat` first (#3205)
+- Stable order on the transitions as produced with assignment finder (#3198)
+- Fix transitive inlining of polymorphic Quint definitions (#3207)
+
 ## 0.50.3 - 2025-09-04
 
 ### Bug fixes

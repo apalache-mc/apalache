@@ -9,7 +9,7 @@ import scala.collection.immutable.SortedSet
  */
 sealed abstract class ExplorationServiceResult
 
-object TransitionStatus {
+object AssumptionStatus {
   type T = String
   val ENABLED = "ENABLED"
   val DISABLED = "DISABLED"
@@ -30,6 +30,8 @@ object NextModelStatus {
   val UNKNOWN = "UNKNOWN"
 }
 
+case class HealthCheckResult(status: String) extends ExplorationServiceResult
+
 /**
  * The result of preparing a symbolic transition.
  * @param sessionId
@@ -45,7 +47,22 @@ case class AssumeTransitionResult(
     sessionId: String,
     snapshotId: Int,
     transitionId: Int,
-    status: TransitionStatus.T)
+    status: AssumptionStatus.T)
+    extends ExplorationServiceResult
+
+/**
+ * The result of assuming state constraints.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context after the transition has been assumed.
+ * @param status
+ *   status of the transition: "ENABLED", "DISABLED", or "UNKNOWN"
+ */
+case class AssumeStateResult(
+    sessionId: String,
+    snapshotId: Int,
+    status: AssumptionStatus.T)
     extends ExplorationServiceResult
 
 /**
