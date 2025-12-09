@@ -24,6 +24,7 @@ import random
 import subprocess
 import sys
 import time
+import hashlib, pickle
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -181,7 +182,7 @@ class ApalacheExplorer:
             print(f"Error making RPC call to {method}: {e}")
             raise
 
-    def load_spec(self, sources: List[str], invariants: List[str]) -> bool:
+    def load_spec(self, sources: List[str], invariants: List[str], exports: List[str]) -> bool:
         """Load a TLA+ specification."""
         print(f"Loading specification from: {', '. join(sources)}")
 
@@ -202,7 +203,8 @@ class ApalacheExplorer:
             "sources": sources_base64,
             "init": "Init",
             "next": "Next",
-            "invariants": invariants
+            "invariants": invariants,
+            "exports": exports,
         }
 
         try:
@@ -219,16 +221,20 @@ class ApalacheExplorer:
 
             print(f"Specification loaded successfully!")
             print(f"Session ID: {self.session_id}")
-            print(f"Initial transitions: {spec_params['nInitTransitions']}")
-            print(f"Next transitions: {spec_params['nNextTransitions']}")
-            print(f"State invariants: {spec_params['nStateInvariants']}")
-            print(f"Action invariants: {spec_params['nActionInvariants']}")
+            initTransitions = spec_params['initTransitions']
+            nextTransitions = spec_params['nextTransitions']
+            stateInvariants = spec_params['stateInvariants']
+            actionInvariants = spec_params['actionInvariants']
+            print(f"Initial transitions: {len(initTransitions)}")
+            print(f"Next transitions: {len(nextTransitions)}")
+            print(f"State invariants: {len(stateInvariants)}")
+            print(f"Action invariants: {len(actionInvariants)}")
 
             return {
-                'ninit': spec_params['nInitTransitions'],
-                'nnext': spec_params['nNextTransitions'],
-                'nstate': spec_params['nStateInvariants'],
-                'naction': spec_params['nActionInvariants'],
+                'ninit': len(initTransitions),
+                'nnext': len(nextTransitions),
+                'nstate': len(stateInvariants),
+                'naction': len(actionInvariants),
                 'snapshot_id': self.current_snapshot_id
             }
 
@@ -272,7 +278,22 @@ class ApalacheExplorer:
 
         return None
 
-    def assume_transition(self, snapshot_id: Optional[int], transition_id: int, timeout: int) -> bool:
+    def rollback(self, snapshot_id: int) -> bool:
+        """Roll back to an earlier snapshot."""
+        params = {
+            "sessionId": self.session_id,
+            "snapshotId": snapshot_id,
+        }
+
+        response = self._make_rpc_call("rollback", params)
+
+        if "error" in response:
+            print(f"Error rolling back to {snapshot_id}: {response['error']}")
+            return False
+
+        return True
+
+    def assume_transition(self, transition_id: int, timeout: int) -> bool:
         """Assume a transition and check if it's enabled."""
         params = {
             "sessionId": self.session_id,
@@ -280,9 +301,6 @@ class ApalacheExplorer:
             "checkEnabled": True,
             "timeoutSec": timeout
         }
-
-        if snapshot_id != None:
-            params['rollbackToSnapshotId'] = snapshot_id
 
         response = self._make_rpc_call("assumeTransition", params)
 
@@ -331,7 +349,24 @@ class ApalacheExplorer:
             except Exception as e:
                 print(f"Error disposing specification: {e}")
 
-    def explore(self, sources: List[str], invariants: List[str],
+    def query(self, operator: str, timeout: int) -> bool:
+        """Query against the current context"""
+        params = {
+            "sessionId": self.session_id, "timeoutSec": timeout,
+            "kinds": ["OPERATOR"], "operator": operator,
+        }
+
+        response = self._make_rpc_call("query", params)
+
+        if "error" in response:
+            print(f"Error in query: {response['error']}")
+            return False
+
+        result = response["result"]
+
+        return result["operatorValue"]
+
+    def explore(self, sources: List[str], invariants: List[str], view: Optional[str],
                 max_steps: int = 20, max_runs: int = 100, timeout: int = 60):
         """Main exploration loop."""
         try:
@@ -340,8 +375,8 @@ class ApalacheExplorer:
                 return False
 
             # Load specification
-            params = self.load_spec(sources, invariants)
-            if not params:
+            spec_params = self.load_spec(sources, invariants, [view] if view else [])
+            if not spec_params:
                 return False
 
             print(f"\nStarting exploration (<= {max_runs} runs, <= {max_steps} steps each)...")
@@ -360,10 +395,10 @@ class ApalacheExplorer:
                     # Determine available transitions based on current step
                     if self.nsteps == 0:
                         # Use Init transitions
-                        max_transitions_to_try = params['ninit']
+                        max_transitions_to_try = spec_params['ninit']
                     else:
                         # Use Next transitions
-                        max_transitions_to_try = params['nnext']
+                        max_transitions_to_try = spec_params['nnext']
 
                     # Try to find an enabled transition by picking transitions at random
                     ids = list(range(max_transitions_to_try))
@@ -371,8 +406,9 @@ class ApalacheExplorer:
                     while len(ids) > 0 and not transition_found:
                         trans_id = ids[random.randint(0, len(ids) - 1)]
                         ids.remove(trans_id)
-                        snapshot_id = params['snapshot_id'] if self.nsteps == 0 else None
-                        if self.assume_transition(snapshot_id, trans_id, timeout):
+                        if self.nsteps == 0:
+                            self.rollback(spec_params['snapshot_id'])
+                        if self.assume_transition(trans_id, timeout):
                             transition_found = True
 
                     if not transition_found:
@@ -388,10 +424,15 @@ class ApalacheExplorer:
 
                     # Check invariants after each transition
                     violated_invariant = \
-                        self.check_invariants(params['nstate'], params['naction'], timeout)
+                        self.check_invariants(spec_params['nstate'], spec_params['naction'], timeout)
                     if violated_invariant:
                         print(f"\nExploration stopped due to invariant violation: {violated_invariant}")
                         return False
+
+                    if view:
+                        view_val = self.query(view, timeout)
+                        view_hash = hashlib.sha256(pickle.dumps(view_val, protocol=5)).hexdigest()
+                        print(f"View hash: {view_hash}")
 
                     print(f"All invariants satisfied at step {self.nsteps}")
 
@@ -422,6 +463,7 @@ Examples:
 
     parser.add_argument("sources", nargs="+", help="TLA+ specification files")
     parser.add_argument("--inv", type=str, default="Inv", help="Invariant to check (default: Inv)")
+    parser.add_argument("--view", type=str, default=None, help="View to report")
     parser.add_argument("--port", type=int, default=8822, help="Server port (default: 8822)")
     parser.add_argument("--max-steps", type=int, default=20,
                        help="Maximum steps to explore per run (default: 20)")
@@ -447,7 +489,8 @@ Examples:
 
     # Create explorer and run
     explorer = ApalacheExplorer(port=args.port)
-    success = explorer.explore(args.sources, [args.inv], args.max_steps, args.max_runs, args.timeout)
+    success = explorer.explore(args.sources, [args.inv], args.view,
+                               args.max_steps, args.max_runs, args.timeout)
 
     return 0 if success else 1
 

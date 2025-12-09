@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong
  * @param id
  *   the value of the identifier.
  */
-class UID protected (val id: Long) extends Serializable {
+class UID protected (val id: Long) extends Serializable with Ordered[UID] {
 
   override def hashCode(): Int = id.hashCode()
 
@@ -19,6 +19,10 @@ class UID protected (val id: Long) extends Serializable {
     case that: UID =>
       id == that.id
     case _ => false
+  }
+
+  override def compare(that: UID): Int = {
+    this.id.compareTo(that.id)
   }
 
   override def toString: String = id.toString
@@ -31,9 +35,6 @@ object UID {
    * 0. By using AtomicLong, we make sure that unique() is assigning unique identifiers in the concurrent setting.
    */
   private val nextId: AtomicLong = new AtomicLong(1)
-
-  // TODO: remove this method in the future, as it allows one to work around uniqueness
-  def apply(id: Long) = new UID(id)
 
   /**
    * A unique id that is used as a null identifier.

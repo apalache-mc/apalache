@@ -9,6 +9,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.types.{tlaU => tla}
 
+import scala.collection.immutable.SortedMap
+
 /**
  * Rewriting rule for FoldSet. Similar to Cardinality, we need to consider element set presence and multiplicity.
  *
@@ -69,7 +71,7 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       // expressions are transient, we don't need tracking
       val inliner = new Inliner(new IdleTracker, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
-      val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
+      val seededScope: Inliner.Scope = SortedMap(opDecl.name -> opDecl)
 
       // To implement the FoldSet rule, we fold over the collection of set member cells.
       // At each one, we perform conditional application, i.e., the partial result is a cell that

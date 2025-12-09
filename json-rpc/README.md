@@ -2,7 +2,7 @@
 
 **Authors:** [Igor Konnov][] and [Thomas Pani][]
 
-A simple JSON-RPC server module for Apalache. This is work in progress:
+A simple JSON-RPC server module for Apalache. **This is work in progress.**
 
 This server is not meant to be a replacement for the current gRPC server (SHAI).
 Rather, it is a lightweight alternative that can be used for symbolic
@@ -41,7 +41,7 @@ exploration of TLA+ specifications.
     - [Jetty Server][]. Yes, it is about 30 years old.
       It works. It is fast, simple, reliable, maintained, and is well-documented.
     - [Jackson][]. It is fast, simple, reliable, maintained, and is well-documented.
-      It uses plain-old Java objects, and it supports basic Scala types. No super-advanced
+      It uses plain-old Java objects, and it supports basic Scala types. No advanced
       FP here.
 
 ## 2. JSON-RPC methods
@@ -53,6 +53,56 @@ See the [JSON-RPC specification][] for more details. It is real short.
 
 This is work in progress. More methods to be added in the future.
 
+In the JSON format below, we write `"${placeholders}"` to indicate values that
+should be replaced with actual values. They have to be of proper types, e.g.,
+strings, numbers, booleans, arrays, or objects. We write them in quotes to
+produce valid JSON snippets.
+
+Some of the methods accept and return traces and expressions in the
+[ITF Format][]. You can use the [itf-py][] library to produce and parse
+such traces and expressions in Python.
+
+**Running the server.** To try the examples below, you need to start the server
+first:
+
+```sh
+$ ../bin/apalache-mc server --server-type=explorer
+```
+
+### 2.0. Method health
+
+This is a diagnostic method that checks whether the server is alive.
+
+**Effect.** No effect. The server just responds with `"OK"`.
+
+**Input:**
+
+```json
+{
+    "method": "health",
+    "params": {},
+    "id": "${request-id}"
+}
+```
+
+**Output:**
+
+```json
+{
+    "result": { "status": "OK" }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"health","params":{},"id":1}'
+```
+
 ### 2.1. Method loadSpec
 
 Load a TLA+ specification from a list of base64-encoded source files.
@@ -63,6 +113,12 @@ However, it may consume a lot of memory when checking the specification
 in the subsequent calls. Hence, you should be mindful of the memory
 when loading multiple specifications in different sessions.
 
+**Effect.** The server creates a new session and stores all the necessary
+state in memory. The specification is loaded, parsed, type-checked,
+preprocessed, etc. If there is a constant initializer, it is applied to the
+SMT context. The server returns a unique session identifier, which should
+be used in subsequent calls to refer to this session.
+
 **Input:**
 
 ```json
@@ -70,37 +126,54 @@ when loading multiple specifications in different sessions.
   "method": "loadSpec",
   "params": {
     "sources": [
-      <rootModuleInBase64>,
-      <importedModule1InBase64>,
-      ...
+      "${root-module-in-base64}",
+      "${imported-module1-in-base64}",
+      "..."
     ],
-    "init": "optional-initializer-for-constants",
-    "next": "optional-transition-predicate",
+    "init": "${optional-initializer-predicate}",
+    "next": "${optional-transition-predicate}",
     "invariants": [
-      "invariant 1",
-      ...,
-      "invariant N"
+      "${invariant-1}",
+      "...",
+      "${invariant-N}"
+    ],
+    "exports": [
+      "${exported-operator-1}",
+      "...",
+      "${exported-operator-M}"
     ]
   }
 }
 ```
+
+Note that if you are going to evaluate operators in the subsequent calls,
+you should list them in the `exports` field. Otherwise, the specification
+preprocessor prunes the definitions that are not used by the standard
+operators such as `Init`, `Next`, and the invariants.
 
 **Output:**
 
 ```json
 {
   "result": {
-    "sessionId": "unique-session-identifier",
-    "snapshotId": snapshot-identifier-after-loading-the-spec,
+    "sessionId": "${unique-session-identifier}",
+    "snapshotId": "${snapshot-identifier-after-loading-the-spec}",
     "specParameters": {
-      "nInitTransitions": number-of-Init-transitions,
-      "nNextTransitions": number-of-Next-transitions,
-      "nStateInvariants": number-of-state-invariants,
-      "nActionInvariants": number-of-action-invariants,
-      "nTraceInvariants": number-of-trace-invariants,
-      "hasView": true-if-there-is-a-view-operator
+      "initTransitions": "${init-metadata}",
+      "nextTransitions": "${next-metadata}",
+      "stateInvariants": "${state-invariants-metadata}",
+      "actionInvariants": "${action-invariants-metadata}"
     }
   }
+}
+```
+
+The metadata entries look like:
+
+```json
+{
+  "index": "${integer-index}",
+  "labels": ["label1", "label2", "..."]
 }
 ```
 
@@ -113,34 +186,49 @@ usually needed for symbolic exploration.
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-SPEC=`cat <<EOF | base64
+$ SPEC=`cat <<EOF | base64
 ---- MODULE Inc ----
 EXTENDS Integers
 VARIABLE
   \* @type: Int;
   x
-Init == x = 0
-Next == (x < 3 /\\ x' = x + 1) \\/ (x > -3 /\\ x' = x - 1)
-Inv3 == x /= 0
+Init == I:: x = 0
+Next == (A:: (x < 3 /\\ x' = x + 1)) \\/ (B:: (x > -3 /\\ x' = x - 1))
+Inv3 == Inv:: x /= 0
+\* @type: () => <<Bool, Bool, Bool>>;
+View == <<x < 0, x = 0, x > 0>>
 =====================
 EOF`
 curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"]},"id":1}' 2>/dev/null | jq
+  -d '{"jsonrpc":"2.0","method":"loadSpec","params":{"sources": [ "'${SPEC}'" ], "invariants": ["Inv3"], "exports": ["View"]},"id":1}'
+```
+
+It should produce the following output:
+
+```json
 {
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "sessionId": "1",
+    "sessionId": "2",
     "snapshotId": 0,
     "specParameters": {
-      "nInitTransitions": 1,
-      "nNextTransitions": 2,
-      "nStateInvariants": 1,
-      "nActionInvariants": 0,
-      "nTraceInvariants": 0,
-      "hasView": false
+      "initTransitions": [
+        { "index": 0, "labels": [ "I" ] }
+      ],
+      "nextTransitions": [
+        { "index": 0, "labels": [ "A" ] },
+        { "index": 1, "labels": [ "B" ]
+        }
+      ],
+      "stateInvariants": [
+        { "index": 0, "labels": [ "Inv" ] }
+      ],
+      "actionInvariants": []
     }
   }
 }
@@ -152,13 +240,16 @@ Dispose the state that is associated with a session, including the SMT solver.
 You should call this method when you are done with the session. The session
 identifier must have been returned by the `loadSpec` method in an earlier call.
 
+**Effect.** The server removes all the state that is associated with the
+session identifier. No further calls should be made with this session identifier.
+
 **Input:**
 
 ```json
 {
   "method": "disposeSpec",
   "params": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -171,20 +262,87 @@ This identifier cannot be used in the future calls.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
 -H "Content-Type: application/json" \
 -d '{"jsonrpc":"2.0","method":"disposeSpec","params":{"sessionId": "1"},"id":2}'
 ```
 
-### 2.3. Method assumeTransition
+It produces an output like this:
+
+```json
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1"}}
+```
+
+### 2.3. Method rollback
+
+Rollback the context of a session to an earlier snapshot. The snapshot identifier
+must have been returned by an earlier call.
+
+**Precondition.** The `snapshotId` must have been returned earlier by another method.
+In addition to that, if a snapshot $n$ was returned by a method with the sequence number $i$,
+and the method `rollback` is called with `snapshotId` set to $m$ with the sequence number $j$,
+then there must be no intermediate call to rollback with a snapshot $m < n$ with a sequence
+number $k$ such that $i < k < j$.
+
+**Effect.** The server rolls back the context of the session to the snapshot
+with the given identifier $n$. All snapshots with identifiers greater than $n$ are
+discarded. The snapshot with identifier $n$ remains in the server, so you can
+roll back to it again later.
+
+**Input:**
+
+```json
+{
+  "method": "rollback",
+  "params": {
+    "sessionId": "${session-id}",
+    "snapshotId": "${snapshot-id}"
+  }
+}
+```
+
+**Output:**
+
+A successful rollback returns the session identifier and the snapshot identifier
+that was rolled back to:
+
+```json
+{
+  "result": {
+    "sessionId": "${session-id}",
+    "snapshotId": "${snapshot-id}"
+  }
+}
+```
+
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"rollback","params":{"sessionId":"1","snapshotId":0},"id":2}'
+```
+
+It produces the following output:
+
+```json  
+{"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":0}}
+```
+
+### 2.4. Method assumeTransition
 
 Given a session identifier and a transition identifier, prepare this transition in the
 SMT context and assume that this transition holds true. Additionally, if `checkEnabled`
@@ -193,11 +351,13 @@ the current transition prefix, including the supplied transition. The parameter 
 sets the timeout for this check in seconds. If `timeout` is not set, or it is set to `0`, then
 the timeout is infinite.
 
-To avoid an additional call, we also allow `assumeTransition` to roll back the context
-to an earlier snapshot *before* assuming the transition. In this case, the `rollbackToSnapshotId` parameter
-must be set to the identifier of the snapshot to roll back to. If `rollbackToSnapshotId` is negative
-(or not set), then no rollback is performed. When the `rollbackToSnapshotId` is set, the rollback is
-performed unconditionally. You have to be careful about landing in a state with the right
+**Precondition.** This method should be called once before calling `nextState`, unless
+the previous call to `assumeTransition` returned with the status `"DISABLED"`.
+
+**Effect.** The transition with `transitionId` is prepared in the SMT context, and the
+corresponding constraints are added to the context. Unless the method returns with
+the status `"DISABLED"`, the context remains modified after the call. If the method
+returns with the status `"DISABLED"`, then the context is rolled back to the latest
 snapshot.
 
 **Input:**
@@ -206,11 +366,10 @@ snapshot.
 {
   "method": "assumeTransition",
   "params": {
-    "sessionId": "session-identifier",
-    "rollbackToSnapshotId": optional-snapshot-identifier,
-    "transitionId": transition-identifier,
-    "checkEnabled": check-if-transition-is-enabled,
-    "timeoutSec": timeout-in-seconds-or-0,
+    "sessionId": "${session-identifier}",
+    "transitionId": "${integer-transition-identifier}",
+    "checkEnabled": "${boolean-flag}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -220,9 +379,9 @@ snapshot.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "rollbackToSnapshotId": snapshot-identifier-after-assuming-transition,
-    "transitionId": transition-identifier,
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "transitionId": "${integer-transition-identifier}",
     "status": "ENABLED|DISABLED|UNKNOWN"
   }
 }
@@ -230,18 +389,34 @@ snapshot.
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"assumeTransition","params":{"sessionId":"1","transitionId":0,"checkEnabled":true},"id":2}'
+```
+
+It produces the following output:
+
+```json  
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
 ```
 
-### 2.4. Method nextState
+### 2.5. Method nextState
 
 Given a session identifier, switch to the next symbolic state. This method should be called
 only after the `assumeTransition` method was called successfully (with the status `"ENABLED"`
 or `"UNKNOWN"`).
+
+**Precondition.** This method should be called after `assumeTransition` that returned with the status
+`"ENABLED"` or `"UNKNOWN"`. If the last call to `assumeTransition` returned with the status
+`"DISABLED"`, then `nextState` produces an error.
+
+**Effect.** This method renamed the primed states variables such `x'` to unprimed variables
+such as `x`. It does not add any new constraints to the SMT context. Hence, if the constraints
+were satisfiable before the call, they remain satisfiable after the call. To accommodate for
+new constraints, `nextStep` takes a new snapshot.
 
 **Input:**
 
@@ -249,7 +424,7 @@ or `"UNKNOWN"`).
 {
   "method": "nextState",
   "params": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -259,23 +434,30 @@ or `"UNKNOWN"`).
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "snapshotId": snapshot-id-after-assuming-transition,
-    "newStepNo": new-step-number
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "newStepNo": "${new-step-number}"
   }
 }
 ```
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"nextStep","params":{"sessionId":"1"},"id":3}'
+```
+
+It produces the following output:
+
+```json
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":3,"newStepNo":1}}
 ```
 
-### 2.5. Method checkInvariant
+### 2.6. Method checkInvariant
 
 Given a session identifier and an invariant identifier, check whether this invariant can be violated
 by a concrete execution that follows the collected symbolic path. The invariant identifier is a number
@@ -294,16 +476,23 @@ then the timeout is infinite.
 If the invariant is violated, then `invariantStatus` is set to `"VIOLATED"`, and the `trace` field contains a concrete
 execution that violates the invariant. This field encodes a trace in the [ITF Format][].
 
+**Precondition.** State invariants must be checked after `nextState`, and action
+invariants must be checked between a call to `assumeTransition` and a subsequent
+call to `nextState`.
+
+**Effect.** This method temporarily changes the model checker context. After
+checking the invariant, the context is rolled back to the state before the call.
+
 **Input:**
 
 ```json
 {
   "method": "checkInvariant",
   "params": {
-    "sessionId": "session-identifier",
-    "invariantId": invariant-identifier,
+    "sessionId": "${session-identifier}",
+    "invariantId": "${integer-invariant-identifier}",
     "kind": "STATE|ACTION",
-    "timeoutSec": timeout-in-seconds-or-0
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -313,21 +502,271 @@ execution that violates the invariant. This field encodes a trace in the [ITF Fo
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
+    "sessionId": "${session-identifier}",
     "invariantStatus": "SATISFIED|VIOLATED|UNKNOWN",
-    "trace": trace-in-itf-or-null,
+    "trace": "${trace-in-itf-or-null}"
   }
 }
 ```
 
 **Example**:
 
+Execute the following command:
+
 ```sh
-curl -X POST http://localhost:8822/rpc \
+$ curl -X POST http://localhost:8822/rpc \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"checkInvariant","params":{"sessionId":"1","invariantId":0},"id":3}'
+```
+
+The output is as follows:
+
+```json
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","invariantStatus":"SATISFIED"}}
 ```
+
+### 2.7. Method query
+
+Given a session identifier, query the current context for values of several kinds:
+
+ - `"TRACE"`: A concrete trace that follows the symbolic path constructed so far.
+   There may be multiple such traces. This call returns the trace that
+   was found by the SMT solver.
+ - `"OPERATOR"`: A value of the operator whose name is given in `operator`. This name
+   must be exported in the `loadSpec` method, unless it is also used in the standard
+   operators such as `Init`, `Next`, and the invariants. The operator `operator`
+   MUST be side-effect free, that is, this operator may not refer to primed variables.
+   Currently, only nullary operators are supported, that is, operators without
+   any parameters.
+
+Importantly, since the values are evaluated for **a model** of the current context,
+the SMT solver may return different models on different calls. Apalache fixes SMT
+seeds to default values, to make the model checker deterministic. You can further
+experiment with different SMT seeds by following the instructions in
+[SMT randomization][].
+
+**Precondition.** No preconditions.
+
+**Effect.** This method does expression evaluation internally. Hence, it checks
+the satisfiability of the current context. Hence, multiple calls to `query` may
+produce "garbage" in the SMT context. We believe that this should not affect
+the performance of the solver. If you disagree with this, you can always roll
+back to an earlier snapshot.
+
+Some of the queries require an additional satisfiability check. The parameter
+`timeoutSec` sets the timeout for this check in seconds. If `timeout` is not
+set, or it is set to `0`, then the timeout is infinite.
+
+**Input:**
+
+```json
+{
+  "method": "query",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "kinds": [ "${kind1}", "${kind2}", "..." ],
+    "operator": "${optional-operator-name}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
+  }
+}
+```
+
+**Output:**
+
+The output contains the session identifier, and, depending on the requested
+kinds, the trace (field `trace`) and/or the expression value (field `expr`). Both `trace`
+and `expr` are in the [ITF Format][].
+
+```json
+{
+  "result": {
+    "sessionId": "${session-identifier}",
+    "trace": "${trace-in-itf-or-null}",
+    "operatorValue": "${expr-in-itf-or-null}"
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"query","params":{"sessionId":"1","kinds":["OPERATOR"],"operator":"View"},"id":5}'
+```
+
+The output is as follows:
+
+```json
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"operatorValue":{"#tup":[false,true,false]}}}
+```
+
+### 2.8. Method nextModel
+
+Given a session identifier, find a model that is different from the one in the
+current context. This method requires a call to the SMT solver, so it may take
+some time. To distinguish the new model from the previous one, the method
+requires the parameter `operator`, which has exactly the same semantics as in the
+`query` method. The value `x` of `operator` is queried against the current context,
+and the next model is required to have a value `y` for `operator` such that `x != y`.
+That is, the operator must be side-effect free, and it must
+be exported in the `loadSpec` method, unless it is also used in the standard
+operators such as `Init`, `Next`, and the invariants. Currently, only nullary
+operators are supported, that is, operators without any parameters.
+
+The parameter `timeoutSec` sets the timeout for this check in seconds.
+If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
+If `nextModel` returns with the field `hasNext` set to `"TRUE"`, then the current
+context has a model, and the view can be obtained by calling the `query` method.
+
+**Precondition.** No preconditions.
+
+**Effect.** This method changes the SMT context. It adds a constraint that excludes
+the current value of the provided operator. To prevent this constraint from propagating
+into the next states, once you are done with enumerating the models, you should
+roll back to the snapshot before the first call to `nextModel` (e.g., to the snapshot
+returned by `nextState`).
+
+**Input:**
+
+```json
+{
+  "method": "nextModel",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "operator": "${operator-name}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
+  }
+}
+```
+
+**Output:**
+
+The output contains the following fields:
+
+ - The field `sessionId` contains the session that was passed in the input.
+ - The field `hasOld` indicates whether there was a model in the current context.
+   If `hasOld == "TRUE"`, then the field `oldValue` contains the value of the
+   operator in the current model. If `hasOld == "FALSE"`, then there was no model
+   in the current context, and `oldValue == null`. If the solver could not
+   determine whether there is a model, then `hasOld == "UNKNOWN"`, and `oldValue == null`.
+ - The field `hasNext` indicates whether a new model was found. If `hasNext == "TRUE"`,
+   then the current context has a model that is different from the previous one.
+   If `hasNext == "FALSE"`, then there is no new model. If the solver could not
+   determine whether there is a new model, then `hasNext == "UNKNOWN"`.
+ - The field `oldValue` contains the value of the operator in the current model,
+   if such a model exists (i.e., if `hasOld == "TRUE"`). Otherwise, `oldValue == null`.
+
+```json
+{
+  "result": {
+    "sessionId": "${session-identifier}",
+    "oldValue": "${expr-in-itf-or-null}",
+    "hasOld": "TRUE|FALSE|UNKNOWN",
+    "hasNext": "TRUE|FALSE|UNKNOWN"
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"nextModel","params":{"sessionId":"1","operator":"View","timeoutSec":10},"id":6}'
+```
+
+The output is as follows:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "result": {
+    "sessionId": "1",
+    "oldValue": {
+      "#tup": [
+        false,
+        true,
+        false
+      ]
+    },
+    "hasOld": "TRUE",
+    "hasNext": "FALSE"
+  }
+}
+```
+
+### 2.9. Method assumeState
+
+Given a session identifier and concrete equalities `x = e` over a subset of the state
+variables, add the equality constraints to the SMT context. The expressions in the
+right-hand sides are given as expressions in the [ITF Format][].
+
+Additionally, if `checkEnabled` is set to `true`, the server checks, whether there is a
+state that is reachable via the current transition prefix, including the added
+constraints. The parameter `timeoutSec` sets the timeout for this check in seconds.
+If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
+
+**Precondition.** The call to `assumeState` can be made only after at least single
+call to `assumeTransition` and `nextStep`.
+
+**Effect.** The concrete equalities are translated as SMT equality constraints in
+the current context against the current symbolic state (sometimes, called a frame).
+These constraints do not override the existing assignments in the context. Rather,
+they pose additional constraints on top of the existing ones.
+
+**Input:**
+
+```json
+{
+  "method": "assumeState",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "checkEnabled": "${boolean-flag}",
+    "timeoutSec": "${timeout-in-seconds-or-0}",
+    "equalities": {
+      "${var-1}": "${expr-in-itf}",
+      "...": "...",
+      "${var-k}": "${expr-in-itf}"
+    }
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "status": "ENABLED|DISABLED|UNKNOWN"
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"assumeState",
+       "params":{"sessionId":"1","checkEnabled":true,"equalities": {"x":{"#bigint":"0"}}},"id":4}'
+```
+
+It produces the following output:
+
+```json  
+{"jsonrpc":"2.0","id":4,"result":{"sessionId":"1","snapshotId":5,"status":"ENABLED"}}
+```
+
 
 [Jetty Server]: https://jetty.org/
 
@@ -340,3 +779,9 @@ curl -X POST http://localhost:8822/rpc \
 [Thomas Pani]: https://thpani.net
 
 [ITF Format]: https://apalache-mc.org/docs/adr/015adr-trace.html
+
+[Apalache IR]: https://apalache-mc.org/docs/adr/005adr-json.html
+
+[SMT randomization]: https://apalache-mc.org/docs/apalache/tuning.html#randomization
+
+[itf-py]: https://github.com/konnov/itf-py/

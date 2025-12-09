@@ -110,6 +110,20 @@ class ConstrainedTransitionExecutor[ExecutorContext](trex: TransitionExecutor[Ex
 
   override def assertState(assertion: TlaEx): Unit = trex.assertState(assertion)
 
+  /**
+   * Evaluate a TLA+ expression against the current SMT model.
+   *
+   * @param timeoutSec
+   *   timeout in seconds to evaluate the expression
+   * @param expr
+   *   an expression that refers to constants and/or state variables
+   * @return
+   *   the evaluated expression that refers to constants only
+   */
+  override def evaluate(timeoutSec: Int, expr: TlaEx): Option[TlaEx] = {
+    trex.evaluate(timeoutSec, expr)
+  }
+
   override def sat(timeoutSec: Int): Option[Boolean] = trex.sat(timeoutSec)
 
   override def decodedExecution(): DecodedExecution = trex.decodedExecution()

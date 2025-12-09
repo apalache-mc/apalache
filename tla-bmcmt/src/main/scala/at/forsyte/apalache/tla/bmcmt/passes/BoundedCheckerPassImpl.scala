@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
-import at.forsyte.apalache.infra.passes.FineTuningParser
+import at.forsyte.apalache.infra.passes.{DerivedPredicates, FineTuningParser}
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.infra.passes.options.Algorithm.Remote
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.search._
-import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
+import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig, SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
@@ -18,7 +18,7 @@ import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.{
   IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred,
 }
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
@@ -34,6 +34,7 @@ import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 @Singleton()
 class BoundedCheckerPassImpl @Inject() (
     options: OptionGroup.HasChecker,
+    derivedPreds: DerivedPredicates,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
@@ -69,7 +70,22 @@ class BoundedCheckerPassImpl @Inject() (
     val verificationConditions =
       CheckerInputVC(invariantsAndNegations.toList, actionInvariantsAndNegations.toList,
           traceInvariantsAndNegations.toList, optView)
-    val input = new CheckerInput(module, initTrans.toList, nextTrans.toList, cinitP, verificationConditions)
+    // Map the names of the persistent operator definitions to their declarations.
+    // For example, this is useful for evaluating views.
+    val persistentDefs = derivedPreds.persistent.foldLeft(Map.empty[String, TlaOperDecl]) { case (m, name) =>
+      module.operDeclarations
+        .find(_.name == name)
+        .map(d => m + (name -> d))
+        .getOrElse(m)
+    }
+    val input = new CheckerInput(
+        module,
+        initTrans.toList,
+        nextTrans.toList,
+        cinitP,
+        verificationConditions,
+        persistentDefs,
+    )
     val stepsBound = options.checker.length
     val debug = options.common.debug
     val tuning = options.checker.tuning
@@ -191,7 +207,8 @@ class BoundedCheckerPassImpl @Inject() (
       input: CheckerInput,
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
-    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+    // In contrast to the local instances, we are not recording the SMT constraints.
+    val solverContext: SolverContext = new Z3SolverContext(solverConfig)
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case SMTEncoding.OOPSLA19 =>

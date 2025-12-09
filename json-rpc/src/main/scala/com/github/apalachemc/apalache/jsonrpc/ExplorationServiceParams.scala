@@ -1,5 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
+import com.fasterxml.jackson.databind.JsonNode
+
 sealed abstract class ExplorationServiceParams
 
 /**
@@ -9,6 +11,23 @@ object InvariantKind {
   type T = String
   val STATE = "STATE"
   val ACTION = "ACTION"
+}
+
+/**
+ * The kinds of values to query.
+ */
+object QueryKind {
+  type T = String
+
+  /**
+   * Evaluate a nullary operator in the current state.
+   */
+  val OPERATOR = "OPERATOR"
+
+  /**
+   * Extract an execution trace.
+   */
+  val TRACE = "TRACE"
 }
 
 /**
@@ -22,12 +41,15 @@ object InvariantKind {
  *   the name of the next-state predicate. Default is "Next".
  * @param invariants
  *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
+ * @param exports
+ *   the names of the operators that can be used in evaluations, e.g., `query`. Default is an empty list.
  */
 case class LoadSpecParams(
     sources: Seq[String],
     init: String = "Init",
     next: String = "Next",
-    invariants: List[String] = List())
+    invariants: List[String] = List(),
+    exports: List[String] = List())
     extends ExplorationServiceParams
 
 /**
@@ -38,12 +60,21 @@ case class LoadSpecParams(
 case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
 
 /**
+ * Roll back to an earlier snapshot.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context.
+ */
+case class RollbackParams(
+    sessionId: String,
+    snapshotId: Int)
+    extends ExplorationServiceParams
+
+/**
  * Parameters for preparing a symbolic transition in the solver context.
  * @param sessionId
  *   the ID of the previously loaded specification
- * @param rollbackToSnapshotId
- *   the snapshot ID for recovering the context before the transition is assumed. If it is negative, no snapshot
- *   recovery is performed.
  * @param transitionId
  *   the number of transition to prepare, starting from 0. On step 0, it must be in the range `[0, nInitTransitions)`,
  *   on step 1 and later, it must be in the range `[0, nNextTransitions)`.
@@ -56,23 +87,21 @@ case class DisposeSpecParams(sessionId: String) extends ExplorationServiceParams
  */
 case class AssumeTransitionParams(
     sessionId: String,
-    rollbackToSnapshotId: Int = -1,
     transitionId: Int,
     checkEnabled: Boolean,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
 
 object AssumeTransitionParams {
-  def apply(sessionId: String, rollbackToSnapshotId: Int, transitionId: Int): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled = true, timeoutSec = 0)
+  def apply(sessionId: String, transitionId: Int): AssumeTransitionParams = {
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled = true, timeoutSec = 0)
   }
 
   def apply(
       sessionId: String,
-      rollbackToSnapshotId: Int,
       transitionId: Int,
       checkEnabled: Boolean): AssumeTransitionParams = {
-    new AssumeTransitionParams(sessionId, rollbackToSnapshotId, transitionId, checkEnabled, timeoutSec = 0)
+    new AssumeTransitionParams(sessionId, transitionId, checkEnabled, timeoutSec = 0)
   }
 }
 
@@ -101,3 +130,66 @@ case class CheckInvariantParams(
     kind: InvariantKind.T = InvariantKind.STATE,
     timeoutSec: Int = 0)
     extends ExplorationServiceParams
+
+/**
+ * Parameters for querying against the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param kinds
+ *   the kinds of the values to query: "VIEW" or "TRACE"
+ * @param operator
+ *   an optional operator name
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class QueryParams(
+    sessionId: String,
+    kinds: List[InvariantKind.T] = List(),
+    operator: String = "",
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * Parameters for checking invariants in the current state or transition.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param operator
+ *   the operator name to differentiate from the current model
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class NextModelParams(
+    sessionId: String,
+    operator: String = "",
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * Parameters for preparing a symbolic transition in the solver context.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param equalities
+ *   a JSON-encoded list of equalities to assume in the current state (in the ITF format)
+ * @param checkEnabled
+ *   whether to check if the transition is enabled. If `false`, the transition is prepared and assumed, but no
+ *   satisfiability is checked
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used. This parameter is ignored
+ *   if `checkEnabled` is `false`.
+ */
+case class AssumeStateParams(
+    sessionId: String,
+    equalities: JsonNode,
+    checkEnabled: Boolean,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+object AssumeStateParams {
+  def apply(
+      sessionId: String,
+      equalities: JsonNode,
+      checkEnabled: Boolean = true,
+      timeoutSec: Int = 0): AssumeStateParams = {
+    new AssumeStateParams(sessionId, equalities, checkEnabled, timeoutSec)
+  }
+}

@@ -82,9 +82,11 @@ class TransitionPassImpl @Inject() (
     val vcDeclarations = tlaModule.declarations.filter(NormalizedNames.isVC)
     // In case verification conditions weren't generated yet, keep the raw invariants
     val vcDeclarationsOrInvariants = if (vcDeclarations.isEmpty) invDeclarations else vcDeclarations
+    // Remember to add persistent operators, if any
+    val persistentDecls = tlaModule.declarations.filter(d => derivedPreds.persistent.contains(d.name))
 
     val newDecls = tlaModule.constDeclarations ++ tlaModule.varDeclarations ++ tlaModule.assumeDeclarations ++
-      cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarationsOrInvariants
+      cinitDeclarations ++ initDeclarations ++ nextDeclarations ++ vcDeclarationsOrInvariants ++ persistentDecls
 
     logger.info(s"  > Applying unique renaming")
     val outModule = incrementalRenaming.renameInModule(new TlaModule(tlaModule.name, newDecls))

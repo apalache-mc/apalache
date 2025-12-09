@@ -2,13 +2,13 @@ package at.forsyte.apalache.tla.lir.storage
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
 
-import scala.collection.immutable.HashMap
+import scala.collection.immutable.SortedMap
 
 // Igor@02.11.2019: why is it an object, not a class? You even have a constructor here, called newMap.
 // TODO: refactor into a class.
 // TODO: refactor the map to Map[String, TlaOperDecl], remove unnecessary generalization
 object BodyMapFactory {
-  def newMap: BodyMap = new HashMap[BodyMapKey, BodyMapVal]
+  def newMap: BodyMap = SortedMap.empty[BodyMapKey, BodyMapVal]
 
   def makeFromDecl(decl: TlaDecl, initial: BodyMap = newMap): BodyMap =
     decl match {

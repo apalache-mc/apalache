@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.tooling.opt
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
 import at.forsyte.apalache.infra.passes.options._
-import at.forsyte.apalache.io.json.impl.DefaultTagReader
+import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
 import at.forsyte.apalache.tla.tracee.UJsonTraceReader
 import org.backuity.clist._
@@ -27,7 +27,7 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
     arg[List[String]](name = "expressions",
         description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
 
-  private val traceReader = new UJsonTraceReader(None, DefaultTagReader)
+  private val traceReader = new UJsonTraceReader(None, DefaultTagJsonReader)
 
   private def getLenFromFile(src: SourceOption): Int = {
     val ujson = traceReader.read(src)

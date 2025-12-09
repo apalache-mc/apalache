@@ -15,7 +15,8 @@ import scala.collection.immutable.SortedMap
 /**
  * Generator of verification conditions. In the current implementation, VCGenerator takes an invariant candidate,
  * decomposes the invariant into smaller invariant candidates and produces negations of the invariant candidates. In the
- * future, we would temporal formulas as well.
+ * future, we would decompose temporal formulas as well. In addition to that, VCGenerator can normalize a state view, if
+ * it is present.
  *
  * @author
  *   Igor Konnov
@@ -29,12 +30,10 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
    *   an input module
    * @param invName
    *   name of an invariant
-   * @param optViewName
-   *   optional name of a state view
    * @return
    *   a transformed module
    */
-  def gen(module: TlaModule, invName: String, optViewName: Option[String] = None): TlaModule = {
+  def genInv(module: TlaModule, invName: String): TlaModule = {
     val levelFinder = new TlaLevelFinder(module)
 
     val newModule =
@@ -86,27 +85,37 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
           throw new TlaInputError(s"Invariant candidate $invName not found", None)
       }
 
-    if (optViewName.isEmpty) {
-      newModule
-    } else {
-      newModule.declarations.find(d => optViewName.contains(d.name)) match {
-        case Some(decl @ TlaOperDecl(name, params, body)) =>
-          if (params.nonEmpty) {
-            val msg = s"Expected state view $name to have no parameters, found: ${params.size} parameters"
-            throw new MalformedTlaError(msg, body)
-          }
-          val copy = DeepCopy(tracker)
-          val viewDecl =
-            TlaOperDecl(NormalizedNames.VC_VIEW, params, copy.deepCopyEx(body))(decl.typeTag)
-          TlaModule(newModule.name, newModule.declarations :+ viewDecl)
+    newModule
+  }
 
-        case Some(decl @ _) =>
-          val msg = s"Expected state view ${decl.name} to be an operator, found: " + decl
-          throw new MalformedTlaError(msg, NullEx)
+  /**
+   * Given a module and the name of a view operator, normalize this operator as `VCView\$0` in the module.
+   *
+   * @param module
+   *   an input module
+   * @param viewName
+   *   name of the view operator
+   * @return
+   *   a transformed module
+   */
+  def genView(module: TlaModule, viewName: String): TlaModule = {
+    module.declarations.find(d => d.name == viewName) match {
+      case Some(decl @ TlaOperDecl(name, params, body)) =>
+        if (params.nonEmpty) {
+          val msg = s"Expected state view $name to have no parameters, found: ${params.size} parameters"
+          throw new MalformedTlaError(msg, body)
+        }
+        val copy = DeepCopy(tracker)
+        val viewDecl =
+          TlaOperDecl(NormalizedNames.VC_VIEW, params, copy.deepCopyEx(body))(decl.typeTag)
+        TlaModule(module.name, module.declarations :+ viewDecl)
 
-        case None =>
-          throw new MalformedTlaError(s"State view ${optViewName.get} not found", NullEx)
-      }
+      case Some(decl @ _) =>
+        val msg = s"Expected state view ${decl.name} to be an operator, found: " + decl
+        throw new MalformedTlaError(msg, NullEx)
+
+      case None =>
+        throw new MalformedTlaError(s"State view $viewName not found", NullEx)
     }
   }
 

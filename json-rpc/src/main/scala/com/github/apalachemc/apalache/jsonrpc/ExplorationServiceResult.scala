@@ -2,12 +2,14 @@ package com.github.apalachemc.apalache.jsonrpc
 
 import com.fasterxml.jackson.databind.JsonNode
 
+import scala.collection.immutable.SortedSet
+
 /**
  * All kinds of the results that the exploration service can return.
  */
 sealed abstract class ExplorationServiceResult
 
-object TransitionStatus {
+object AssumptionStatus {
   type T = String
   val ENABLED = "ENABLED"
   val DISABLED = "DISABLED"
@@ -19,8 +21,16 @@ object InvariantStatus {
   val SATISFIED = "SATISFIED"
   val VIOLATED = "VIOLATED"
   val UNKNOWN = "UNKNOWN"
-  val TIMEOUT = "TIMEOUT"
 }
+
+object NextModelStatus {
+  type T = String
+  val TRUE = "TRUE"
+  val FALSE = "FALSE"
+  val UNKNOWN = "UNKNOWN"
+}
+
+case class HealthCheckResult(status: String) extends ExplorationServiceResult
 
 /**
  * The result of preparing a symbolic transition.
@@ -37,7 +47,34 @@ case class AssumeTransitionResult(
     sessionId: String,
     snapshotId: Int,
     transitionId: Int,
-    status: TransitionStatus.T)
+    status: AssumptionStatus.T)
+    extends ExplorationServiceResult
+
+/**
+ * The result of assuming state constraints.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context after the transition has been assumed.
+ * @param status
+ *   status of the transition: "ENABLED", "DISABLED", or "UNKNOWN"
+ */
+case class AssumeStateResult(
+    sessionId: String,
+    snapshotId: Int,
+    status: AssumptionStatus.T)
+    extends ExplorationServiceResult
+
+/**
+ * The result of rolling back to a snapshot.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID for recovering the context after the transition has been assumed.
+ */
+case class RollbackResult(
+    sessionId: String,
+    snapshotId: Int)
     extends ExplorationServiceResult
 
 /**
@@ -53,26 +90,32 @@ case class LoadSpecResult(sessionId: String, snapshotId: Int, specParameters: Sp
     extends ExplorationServiceResult
 
 /**
+ * Metadata that is attached to actions and invariants.
+ * @param index
+ *   the index of the action or invariant, starting from 0
+ * @param labels
+ *   the set of labels that are attached to the action or invariant
+ */
+case class SpecEntryMetadata(index: Int, labels: SortedSet[String])
+
+/**
  * Specification parameters that are needed for symbolic path exploration. These numbers may be different from what the
  * user expects by reading the specification, as transitions and invariants are decomposed.
  *
- * @param nInitTransitions
- *   the number of initial symbolic transitions
- * @param nNextTransitions
- *   the number of next symbolic transitions
- * @param nStateInvariants
- *   the number of state invariants
- * @param nActionInvariants
- *   the number of action invariants
- * @param hasView
- *   whether a view predicate is present in the specification
+ * @param initTransitions
+ *   metadata for the initial symbolic transitions
+ * @param nextTransitions
+ *   metadata for the next-state symbolic transitions
+ * @param stateInvariants
+ *   metadata for the state invariants
+ * @param actionInvariants
+ *   metadata for the action invariants
  */
 case class SpecParameters(
-    nInitTransitions: Int,
-    nNextTransitions: Int,
-    nStateInvariants: Int,
-    nActionInvariants: Int,
-    hasView: Boolean)
+    initTransitions: Seq[SpecEntryMetadata],
+    nextTransitions: Seq[SpecEntryMetadata],
+    stateInvariants: Seq[SpecEntryMetadata],
+    actionInvariants: Seq[SpecEntryMetadata])
 
 /**
  * The result of disposing a specification.
@@ -86,7 +129,7 @@ case class DisposeSpecResult(sessionId: String) extends ExplorationServiceResult
  * @param sessionId
  *   the ID of the previously loaded specification
  * @param snapshotId
- *   the snapshot ID for recovering the context right after loading the specification.
+ *   the snapshot ID for recovering the context right after taking the next step.
  * @param newStepNo
  *   the number of the new step
  */
@@ -102,4 +145,34 @@ case class NextStepResult(sessionId: String, snapshotId: Int, newStepNo: Int) ex
  *   a JSON-encoded error trace that shows how the invariant is violated; it is null, if the invariant is not violated
  */
 case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantStatus.T, trace: JsonNode)
+    extends ExplorationServiceResult
+
+/**
+ * The result of querying the current symbolic context.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param trace
+ *   a JSON-encoded trace, if it was requested; otherwise, it is null
+ * @param operatorValue
+ *   a JSON-encoded result of operator application, if it was requested; otherwise, it is null
+ */
+case class QueryResult(sessionId: String, trace: JsonNode, operatorValue: JsonNode) extends ExplorationServiceResult
+
+/**
+ * The result of finding the next model.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param oldValue
+ *   a JSON-encoded result of operator application, for the model before changing it; otherwise, it is null
+ * @param hasOld
+ *   the status of finding the model before switching to next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a
+ *   timeout)
+ * @param hasNext
+ *   the status of finding the next model: "YES", "NO", or "UNKNOWN" (e.g., in case of a timeout)
+ */
+case class NextModelResult(
+    sessionId: String,
+    oldValue: JsonNode,
+    hasOld: NextModelStatus.T,
+    hasNext: NextModelStatus.T)
     extends ExplorationServiceResult
