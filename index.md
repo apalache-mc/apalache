@@ -8,8 +8,10 @@
 [Installation][] • [Manual][] • [Releases][] • [Chat][] • [Contribute][]
 {: style="font-size: 1.2em; text-align: center;"}
 
+Contact person: [Igor Konnov][].
+
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
-[Microsoft Z3][]. Currently, Apalache supports three approaches of analyzing
+[Microsoft Z3][]. Currently, Apalache supports four approaches of analyzing
 TLA<sup>+</sup> specifications:
 
  1. Randomized symbolic execution to reason about **some** executions up to
@@ -20,6 +22,9 @@ TLA<sup>+</sup> specifications:
  
  1. Inductiveness checking to reason about **all** executions of **all**
  lengths.
+
+ 1. Write your own **exploration scripts** over symbolic actions,
+ including the feedback from the implementation.
 
 To understand, how these three approaches play together, see the
 [[blogpost]][Ben-Or] on Model checking safety of Ben-Or's Byzantine consensus
@@ -42,6 +47,9 @@ In addition to TLA<sup>+</sup>, Apalache power ups the following projects:
    Atomkraft uses Apalache as a backend model checker.
 
 ## Success stories
+
+- Specification and Formal Verification via Inductive Invariants of the
+Aztec Governance Protocol [[blogpost]][aztec-gov] (2025)
 
 - Specification and Model-checking of the ZKsync Governance Protocol
 [[blogpost]][zksync] (2024)
@@ -67,6 +75,9 @@ To read an academic papers about the theory behind Apalache, check our [paper at
 OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 
 ## Talks
+
+- [Specification and Model-checking of the ZKsync Governance Protocol](https://konnov.phd/posts/dss2024/).
+  DeFi Security Summit 2024 (November 2024).
 
 - [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
     Interchain Conversations 2020 (December 2020).
@@ -99,6 +110,7 @@ OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 [Features]: ./docs/apalache/features.html
 [Installation]: ./docs/apalache/installation/index.html
 [Leslie Lamport's page on TLA+]: http://lamport.azurewebsites.net/tla/tla.html
+[Igor Konnov]: https://konnov.phd
 [Manual]: ./docs
 [Microsoft Z3]: https://github.com/Z3Prover/z3
 [Releases]: https://github.com/apalache-mc/apalache/releases
@@ -108,6 +120,7 @@ OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 [Quint language]: https://quint-lang.org/
 [Ben-Or]: https://protocols-made-fun.com/specification/modelchecking/tlaplus/apalache/2024/11/03/ben-or.html
 [zksync]: https://protocols-made-fun.com/zksync/matterlabs/quint/specification/modelchecking/2024/09/12/zksync-governance.html
+[aztec-gov]: https://protocols-made-fun.com/quint/2025/12/09/aztec-governance.html
 [chonkybft]: https://protocols-made-fun.com/consensus/matterlabs/quint/specification/modelchecking/2024/07/29/chonkybft.html
 [tendermint]: https://github.com/cometbft/cometbft/blob/main/spec/light-client/accountability/Synopsis.md
 [light-client]: https://github.com/cometbft/cometbft/blob/main/spec/light-client/README.md
