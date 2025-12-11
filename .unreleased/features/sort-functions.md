@@ -1,1 +1,0 @@
-- Sort relations in the counterexamples (#3182)

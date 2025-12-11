@@ -35,4 +35,7 @@ object JsonRpcCodes {
    * server-errors (-32000 to -32099).
    */
   val SERVER_ERROR_MAX = -32000
+
+  /** This error code must be used when a request is associated with a non-existing session */
+  val SERVER_ERROR_SESSION_NOT_FOUND = -32404
 }

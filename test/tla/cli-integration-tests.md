@@ -97,9 +97,9 @@ $ apalache-mc help
 We can set some JVM args and still have the default max heap size supplied.
 
 ```sh
-$ JVM_ARGS="-Xms1m -XX:+UseSerialGC" apalache-mc version --debug
+$ JVM_ARGS="-Xms1m" apalache-mc version --debug
 ...
-# JVM args: -Xms1m -XX:+UseSerialGC -Xmx4096m
+# JVM args: -Xms1m -Xmx4096m
 ...
 ```
 
@@ -109,6 +109,17 @@ If we set the max heap size (with `-Xmx`) it will override the default max heap 
 $ JVM_ARGS="-Xmx16m" apalache-mc version --debug
 ...
 # JVM args: -Xmx16m
+...
+```
+
+### executable responds to JVM_GC_ARGS environment variable
+
+We can set some JVM args and still have the default max heap size supplied.
+
+```sh
+$ JVM_GC_ARGS="-XX:+UseSerialGC" apalache-mc version --debug
+...
+# JVM GC args: -XX:+UseSerialGC
 ...
 ```
 
@@ -4195,9 +4206,9 @@ Stopping Apalache server...
 ### JSON-RPC: explore Prisoners and query for views
 
 ```sh
-$ ../../script/explorer.py --view=View --max-steps=10 --max-runs=10 --seed=200 MC5_Prisoners.tla PrisonersTyped.tla
+$ ../../script/explorer.py --view=View --max-steps=10 --max-runs=10 --seed=200 MC5_Prisoners.tla PrisonersTyped.tla | sed 's/[0-9a-f]\{64\}/VIEW_HASH/g'
 ...
-View hash: a7e180bd72bed7e84c36a13060227ed70000fe76abc611729810da36d97fe7c8
+View hash: VIEW_HASH
 All invariants satisfied at step 10
 ...
 ```

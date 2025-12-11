@@ -82,6 +82,26 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
+   * Parses the parameters for assuming state constraints in the JSON-RPC server.
+   * @param params
+   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   * @return
+   *   Either an error message or a [[AssumeStateParams]] instance.
+   */
+  def parseAssumeState(params: TreeNode): Either[String, AssumeStateParams] = {
+    try {
+      val assumeParams = mapper.treeToValue(params, classOf[AssumeStateParams])
+      if (assumeParams.sessionId.isEmpty) {
+        return Left("assumeState parameters must contain a non-empty sessionId.")
+      }
+      Right(assumeParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in assumeState: ${e.getMessage}")
+    }
+  }
+
+  /**
    * Parses the parameters for rolling back to an earlier snapshot.
    * @param params
    *   The "params" field from a JSON-RPC request, expected to be a TreeNode.

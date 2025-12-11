@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.19"
+    lazy val logbackVersion = "1.5.21"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -20,8 +20,8 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.11.0" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.12.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.20.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.13.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.21.0"
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
@@ -50,8 +50,8 @@ object Dependencies {
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
     // json-rpc dependencies
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.1.0" % Provided
-    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2"
-    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.0"
+    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.4"
+    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.1"
     val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.26"
     val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.26"
   }

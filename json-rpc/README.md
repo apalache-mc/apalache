@@ -2,7 +2,7 @@
 
 **Authors:** [Igor Konnov][] and [Thomas Pani][]
 
-A simple JSON-RPC server module for Apalache. This is work in progress:
+A simple JSON-RPC server module for Apalache. **This is work in progress.**
 
 This server is not meant to be a replacement for the current gRPC server (SHAI).
 Rather, it is a lightweight alternative that can be used for symbolic
@@ -41,7 +41,7 @@ exploration of TLA+ specifications.
     - [Jetty Server][]. Yes, it is about 30 years old.
       It works. It is fast, simple, reliable, maintained, and is well-documented.
     - [Jackson][]. It is fast, simple, reliable, maintained, and is well-documented.
-      It uses plain-old Java objects, and it supports basic Scala types. No super-advanced
+      It uses plain-old Java objects, and it supports basic Scala types. No advanced
       FP here.
 
 ## 2. JSON-RPC methods
@@ -53,11 +53,54 @@ See the [JSON-RPC specification][] for more details. It is real short.
 
 This is work in progress. More methods to be added in the future.
 
+In the JSON format below, we write `"${placeholders}"` to indicate values that
+should be replaced with actual values. They have to be of proper types, e.g.,
+strings, numbers, booleans, arrays, or objects. We write them in quotes to
+produce valid JSON snippets.
+
+Some of the methods accept and return traces and expressions in the
+[ITF Format][]. You can use the [itf-py][] library to produce and parse
+such traces and expressions in Python.
+
 **Running the server.** To try the examples below, you need to start the server
 first:
 
 ```sh
 $ ../bin/apalache-mc server --server-type=explorer
+```
+
+### 2.0. Method health
+
+This is a diagnostic method that checks whether the server is alive.
+
+**Effect.** No effect. The server just responds with `"OK"`.
+
+**Input:**
+
+```json
+{
+    "method": "health",
+    "params": {},
+    "id": "${request-id}"
+}
+```
+
+**Output:**
+
+```json
+{
+    "result": { "status": "OK" }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"health","params":{},"id":1}'
 ```
 
 ### 2.1. Method loadSpec
@@ -83,21 +126,21 @@ be used in subsequent calls to refer to this session.
   "method": "loadSpec",
   "params": {
     "sources": [
-      <rootModuleInBase64>,
-      <importedModule1InBase64>,
-      ...
+      "${root-module-in-base64}",
+      "${imported-module1-in-base64}",
+      "..."
     ],
-    "init": "optional-initializer-predicate",
-    "next": "optional-transition-predicate",
+    "init": "${optional-initializer-predicate}",
+    "next": "${optional-transition-predicate}",
     "invariants": [
-      "invariant 1",
-      ...,
-      "invariant N"
+      "${invariant-1}",
+      "...",
+      "${invariant-N}"
     ],
     "exports": [
-      "exported-operator-1",
-      ...,
-      "exported-operator-M"
+      "${exported-operator-1}",
+      "...",
+      "${exported-operator-M}"
     ]
   }
 }
@@ -113,16 +156,24 @@ operators such as `Init`, `Next`, and the invariants.
 ```json
 {
   "result": {
-    "sessionId": "unique-session-identifier",
-    "snapshotId": snapshot-identifier-after-loading-the-spec,
+    "sessionId": "${unique-session-identifier}",
+    "snapshotId": "${snapshot-identifier-after-loading-the-spec}",
     "specParameters": {
-      "nInitTransitions": number-of-Init-transitions,
-      "nNextTransitions": number-of-Next-transitions,
-      "nStateInvariants": number-of-state-invariants,
-      "nActionInvariants": number-of-action-invariants,
-      "nTraceInvariants": number-of-trace-invariants
+      "initTransitions": "${init-metadata}",
+      "nextTransitions": "${next-metadata}",
+      "stateInvariants": "${state-invariants-metadata}",
+      "actionInvariants": "${action-invariants-metadata}"
     }
   }
+}
+```
+
+The metadata entries look like:
+
+```json
+{
+  "index": "${integer-index}",
+  "labels": ["label1", "label2", "..."]
 }
 ```
 
@@ -144,9 +195,9 @@ EXTENDS Integers
 VARIABLE
   \* @type: Int;
   x
-Init == x = 0
-Next == (x < 3 /\\ x' = x + 1) \\/ (x > -3 /\\ x' = x - 1)
-Inv3 == x /= 0
+Init == I:: x = 0
+Next == (A:: (x < 3 /\\ x' = x + 1)) \\/ (B:: (x > -3 /\\ x' = x - 1))
+Inv3 == Inv:: x /= 0
 \* @type: () => <<Bool, Bool, Bool>>;
 View == <<x < 0, x = 0, x > 0>>
 =====================
@@ -163,14 +214,21 @@ It should produce the following output:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "sessionId": "1",
+    "sessionId": "2",
     "snapshotId": 0,
     "specParameters": {
-      "nInitTransitions": 1,
-      "nNextTransitions": 2,
-      "nStateInvariants": 1,
-      "nActionInvariants": 0,
-      "nTraceInvariants": 0
+      "initTransitions": [
+        { "index": 0, "labels": [ "I" ] }
+      ],
+      "nextTransitions": [
+        { "index": 0, "labels": [ "A" ] },
+        { "index": 1, "labels": [ "B" ]
+        }
+      ],
+      "stateInvariants": [
+        { "index": 0, "labels": [ "Inv" ] }
+      ],
+      "actionInvariants": []
     }
   }
 }
@@ -191,7 +249,7 @@ session identifier. No further calls should be made with this session identifier
 {
   "method": "disposeSpec",
   "params": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -204,7 +262,7 @@ This identifier cannot be used in the future calls.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -247,8 +305,8 @@ roll back to it again later.
 {
   "method": "rollback",
   "params": {
-    "sessionId": "session-id",
-    "snapshotId": snapshot-id
+    "sessionId": "${session-id}",
+    "snapshotId": "${snapshot-id}"
   }
 }
 ```
@@ -261,8 +319,8 @@ that was rolled back to:
 ```json
 {
   "result": {
-    "sessionId": "session-id",
-    "snapshotId": snapshot-id
+    "sessionId": "${session-id}",
+    "snapshotId": "${snapshot-id}"
   }
 }
 ```
@@ -308,10 +366,10 @@ snapshot.
 {
   "method": "assumeTransition",
   "params": {
-    "sessionId": "session-identifier",
-    "transitionId": transition-identifier,
-    "checkEnabled": check-if-transition-is-enabled,
-    "timeoutSec": timeout-in-seconds-or-0,
+    "sessionId": "${session-identifier}",
+    "transitionId": "${integer-transition-identifier}",
+    "checkEnabled": "${boolean-flag}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -321,9 +379,9 @@ snapshot.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "snapshotId": new-snapshot-id,
-    "transitionId": transition-identifier,
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "transitionId": "${integer-transition-identifier}",
     "status": "ENABLED|DISABLED|UNKNOWN"
   }
 }
@@ -366,7 +424,7 @@ new constraints, `nextStep` takes a new snapshot.
 {
   "method": "nextState",
   "params": {
-    "sessionId": "session-identifier"
+    "sessionId": "${session-identifier}"
   }
 }
 ```
@@ -376,9 +434,9 @@ new constraints, `nextStep` takes a new snapshot.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "snapshotId": new-snapshot-id,
-    "newStepNo": new-step-number
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "newStepNo": "${new-step-number}"
   }
 }
 ```
@@ -431,10 +489,10 @@ checking the invariant, the context is rolled back to the state before the call.
 {
   "method": "checkInvariant",
   "params": {
-    "sessionId": "session-identifier",
-    "invariantId": invariant-identifier,
+    "sessionId": "${session-identifier}",
+    "invariantId": "${integer-invariant-identifier}",
     "kind": "STATE|ACTION",
-    "timeoutSec": timeout-in-seconds-or-0
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -444,9 +502,9 @@ checking the invariant, the context is rolled back to the state before the call.
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
+    "sessionId": "${session-identifier}",
     "invariantStatus": "SATISFIED|VIOLATED|UNKNOWN",
-    "trace": trace-in-itf-or-null,
+    "trace": "${trace-in-itf-or-null}"
   }
 }
 ```
@@ -505,10 +563,10 @@ set, or it is set to `0`, then the timeout is infinite.
 {
   "method": "query",
   "params": {
-    "sessionId": "session-identifier",
-    "kinds": [ kind1, kind2, ... ],
-    "operator": optional-operator-name,
-    "timeoutSec": timeout-in-seconds-or-0
+    "sessionId": "${session-identifier}",
+    "kinds": [ "${kind1}", "${kind2}", "..." ],
+    "operator": "${optional-operator-name}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -522,9 +580,9 @@ and `expr` are in the [ITF Format][].
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "trace": trace-in-itf-or-null,
-    "operatorValue": expr-in-itf-or-null
+    "sessionId": "${session-identifier}",
+    "trace": "${trace-in-itf-or-null}",
+    "operatorValue": "${expr-in-itf-or-null}"
   }
 }
 ```
@@ -577,9 +635,9 @@ returned by `nextState`).
 {
   "method": "nextModel",
   "params": {
-    "sessionId": "session-identifier",
-    "operator": <operator-name>,
-    "timeoutSec": timeout-in-seconds-or-0
+    "sessionId": "${session-identifier}",
+    "operator": "${operator-name}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
 ```
@@ -604,10 +662,10 @@ The output contains the following fields:
 ```json
 {
   "result": {
-    "sessionId": "session-identifier",
-    "oldValue": expr-in-itf-or-null,
-    "hasOld": (TRUE|FALSE|UNKNOWN),
-    "hasNext": (TRUE|FALSE|UNKNOWN)
+    "sessionId": "${session-identifier}",
+    "oldValue": "${expr-in-itf-or-null}",
+    "hasOld": "TRUE|FALSE|UNKNOWN",
+    "hasNext": "TRUE|FALSE|UNKNOWN"
   }
 }
 ```
@@ -643,6 +701,73 @@ The output is as follows:
 }
 ```
 
+### 2.9. Method assumeState
+
+Given a session identifier and concrete equalities `x = e` over a subset of the state
+variables, add the equality constraints to the SMT context. The expressions in the
+right-hand sides are given as expressions in the [ITF Format][].
+
+Additionally, if `checkEnabled` is set to `true`, the server checks, whether there is a
+state that is reachable via the current transition prefix, including the added
+constraints. The parameter `timeoutSec` sets the timeout for this check in seconds.
+If `timeout` is not set, or it is set to `0`, then the timeout is infinite.
+
+**Precondition.** The call to `assumeState` can be made only after at least single
+call to `assumeTransition` and `nextStep`.
+
+**Effect.** The concrete equalities are translated as SMT equality constraints in
+the current context against the current symbolic state (sometimes, called a frame).
+These constraints do not override the existing assignments in the context. Rather,
+they pose additional constraints on top of the existing ones.
+
+**Input:**
+
+```json
+{
+  "method": "assumeState",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "checkEnabled": "${boolean-flag}",
+    "timeoutSec": "${timeout-in-seconds-or-0}",
+    "equalities": {
+      "${var-1}": "${expr-in-itf}",
+      "...": "...",
+      "${var-k}": "${expr-in-itf}"
+    }
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id}",
+    "status": "ENABLED|DISABLED|UNKNOWN"
+  }
+}
+```
+
+**Example**:
+
+Execute the following command:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"assumeState",
+       "params":{"sessionId":"1","checkEnabled":true,"equalities": {"x":{"#bigint":"0"}}},"id":4}'
+```
+
+It produces the following output:
+
+```json  
+{"jsonrpc":"2.0","id":4,"result":{"sessionId":"1","snapshotId":5,"status":"ENABLED"}}
+```
+
+
 [Jetty Server]: https://jetty.org/
 
 [Jackson]: https://github.com/FasterXML/jackson
@@ -658,3 +783,5 @@ The output is as follows:
 [Apalache IR]: https://apalache-mc.org/docs/adr/005adr-json.html
 
 [SMT randomization]: https://apalache-mc.org/docs/apalache/tuning.html#randomization
+
+[itf-py]: https://github.com/konnov/itf-py/

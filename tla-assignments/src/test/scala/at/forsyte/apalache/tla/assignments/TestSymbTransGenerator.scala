@@ -9,6 +9,8 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.immutable.{SortedMap, SortedSet}
+
 @RunWith(classOf[JUnitRunner])
 class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
@@ -23,38 +25,39 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
   test("Test allCombinations") {
 
-    assert(allCombinations[Int](Seq.empty[Set[Set[Int]]]).isEmpty)
+    assert(allCombinations(Seq[AssignmentSelections]()).isEmpty)
 
-    val empty = Set.empty[Set[Int]]
+    val empty = Set[SortedSet[UID]]()
     assert(allCombinations(Seq(empty)) == empty)
 
-    val s11 = Set(Set(1))
-    val s12 = Set(Set(2))
-    val expected1 = Set(Set(1, 2))
-    val actual1 = allCombinations[Int](Seq(s11, s12))
+    val N = 10
+    val uids = Range(1, N).map(_ => UID.unique).toList
+    val s11 = Set(SortedSet(uids(1)))
+    val s12 = Set(SortedSet(uids(2)))
+    val expected1 = Set(SortedSet(uids(1), uids(2)))
+    val actual1 = allCombinations(Seq(s11, s12))
 
     assert(expected1 == actual1)
 
-    val N = 10
-    val oneToN = Range(1, N).toSet
-    val ss = oneToN.toSeq.map { x => Set(Set(x)) }
+    val oneToN = Range(1, N).map(_ => UID.unique).to(SortedSet)
+    val ss = oneToN.toSeq.map { x => Set(SortedSet(x)) }
     val expected2 = Set(oneToN)
-    val actual2 = allCombinations[Int](ss)
+    val actual2 = allCombinations(ss)
 
     assert(expected2 == actual2)
 
-    val s31 = Set(Set(1), Set(2))
-    val s32 = Set(Set(3), Set(4))
-    val s33 = Set(Set(5), Set(6))
+    val s31 = Set(SortedSet(uids(1)), SortedSet(uids(2)))
+    val s32 = Set(SortedSet(uids(3)), SortedSet(uids(4)))
+    val s33 = Set(SortedSet(uids(5)), SortedSet(uids(6)))
     val expected3 = Set(
-        Set(1, 3, 5),
-        Set(1, 3, 6),
-        Set(1, 4, 5),
-        Set(1, 4, 6),
-        Set(2, 3, 5),
-        Set(2, 3, 6),
-        Set(2, 4, 5),
-        Set(2, 4, 6),
+        SortedSet(uids(1), uids(3), uids(5)),
+        SortedSet(uids(1), uids(3), uids(6)),
+        SortedSet(uids(1), uids(4), uids(5)),
+        SortedSet(uids(1), uids(4), uids(6)),
+        SortedSet(uids(2), uids(3), uids(5)),
+        SortedSet(uids(2), uids(3), uids(6)),
+        SortedSet(uids(2), uids(4), uids(5)),
+        SortedSet(uids(2), uids(4), uids(6)),
     )
     val actual3 = allCombinations(Seq(s31, s32, s33))
 
@@ -71,8 +74,8 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val ex13 = or(ex11, ex12)
       .typed(BoolT1)
 
-    val sel1: SelMapType = Map(
-        ex13.ID -> Set(Set(ex11.ID), Set(ex12.ID))
+    val sel1: SelMapType = SortedMap(
+        ex13.ID -> Set(SortedSet(ex11.ID), SortedSet(ex12.ID))
     )
 
     val expected1 = Set(ex11.ID, ex12.ID)
@@ -81,10 +84,10 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     assert(expected1 == actual1)
   }
 
-  def fromPossiblity(ex: TlaEx, asgn: Set[UID]): (TlaEx, SelMapType, Set[UID]) = {
+  def fromPossiblity(ex: TlaEx, asgn: SortedSet[UID]): (TlaEx, SelMapType, SortedSet[UID]) = {
     val tr = AssignmentOperatorIntroduction(asgn, new IdleTracker)
     val trEx = tr(ex)
-    (trEx, allSelections(trEx, Map.empty), asgn.map(tr.getReplacements))
+    (trEx, allSelections(trEx, SortedMap.empty), asgn.map(tr.getReplacements))
   }
 
   test("Test allSelections") {
@@ -104,15 +107,15 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
     val ex3 = and(ex1, ex2).as(Bool)
 
-    val possibleAssgnsX = Seq(Set(xasgn11.ID), Set(xasgn12.ID))
+    val possibleAssgnsX = Seq(SortedSet(xasgn11.ID), SortedSet(xasgn12.ID))
 
-    val possibleAssgnsY = Seq(Set(yasgn11.ID), Set(yasgn12.ID))
+    val possibleAssgnsY = Seq(SortedSet(yasgn11.ID), SortedSet(yasgn12.ID))
 
     val possibleAssgnsXY = Seq(
-        Set(xasgn11.ID, yasgn11.ID),
-        Set(xasgn11.ID, yasgn12.ID),
-        Set(xasgn12.ID, yasgn11.ID),
-        Set(xasgn12.ID, yasgn12.ID),
+        SortedSet(xasgn11.ID, yasgn11.ID),
+        SortedSet(xasgn11.ID, yasgn12.ID),
+        SortedSet(xasgn12.ID, yasgn11.ID),
+        SortedSet(xasgn12.ID, yasgn12.ID),
     )
 
     val selections1 = possibleAssgnsX.map { fromPossiblity(ex1, _) }
@@ -144,11 +147,11 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val ex7 = or(ex5, ex6).as(Bool)
     val ex8 = letIn(ex7, xDecl).as(Bool)
 
-    val possibleAssgnsX2 = Seq(Set(xasgn21.ID))
+    val possibleAssgnsX2 = Seq(SortedSet(xasgn21.ID))
 
     val possibleAssgnsXY2 = Seq(
-        Set(xasgn21.ID, yasgn21.ID),
-        Set(xasgn21.ID, yasgn22.ID),
+        SortedSet(xasgn21.ID, yasgn21.ID),
+        SortedSet(xasgn21.ID, yasgn22.ID),
     )
 
     val selections4 = possibleAssgnsX2.map {
@@ -237,7 +240,7 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
 
     val selection = Set(asgn.ID)
     val tr = AssignmentOperatorIntroduction(selection, new IdleTracker)
-    val allSelectionsMade = allSelections(tr(next), Map.empty)
+    val allSelectionsMade = allSelections(tr(next), SortedMap.empty)
 
     val sliced = sliceWith(selection.map(tr.getReplacements), allSelectionsMade)(next)
 

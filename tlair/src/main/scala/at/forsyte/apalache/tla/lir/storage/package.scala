@@ -8,7 +8,7 @@ package object storage {
 
   type BodyMapKey = String
   type BodyMapVal = TlaOperDecl
-  type BodyMap = immutable.Map[BodyMapKey, BodyMapVal]
+  type BodyMap = immutable.SortedMap[BodyMapKey, BodyMapVal]
 
   type SourceMap = immutable.Map[UID, SourceLocation]
   // SourceMap is used to track, for each TlaEx in the original (unmodified) intermediate expression obtained by importing,
