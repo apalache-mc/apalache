@@ -646,7 +646,7 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
           val quintType = getTypeFromLookupTable(id).recoverWith { case err: QuintIRParseError =>
             Failure(new QuintIRParseError(
                     s"While converting operator application of defined operator '${definedOpName}' to arguments ${args}: ${err
-                    .getMessage()}"))
+                        .getMessage()}"))
           }.get
           val operType = typeConv.convert(quintType)
           val oper = tla.name(definedOpName, operType)
