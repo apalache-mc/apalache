@@ -5,17 +5,17 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
 // https://github.com/marcuslonnberg/sbt-docker
 addSbtPlugin("se.marcuslonnberg" % "sbt-docker" % "1.11.0")
 // https://github.com/scoverage/sbt-scoverage
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.0")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.4")
 // https://github.com/sbt/sbt-buildinfo
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.13.1")
 // https://github.com/sbt/sbt-native-packager
-addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.4")
+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.7")
 // https://scalacenter.github.io/scalafix/docs/users/installation.html
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.4")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.5")
 // https://scalapb.github.io/zio-grpc/docs/installation
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 // https://github.com/sbt/sbt-unidoc
-addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.6.0")
+addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.6.1")
 
 // See https://github.com/scalapb/zio-grpc/blob/master/examples/routeguide/project/plugins.sbt
 val zioGrpcVersion = "0.5.3"
