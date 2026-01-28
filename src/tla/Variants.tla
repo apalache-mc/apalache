@@ -9,7 +9,7 @@
  * variants.
  *
  * Igor Konnov, Informal Systems, 2021-2022
- * Igor Konnov, 2026
+ * Igor Konnov, konnov.phd, 2026
  *)
 
 (**
