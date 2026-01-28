@@ -29,11 +29,11 @@ test/mdx-test.py
 Each section, demarcated by headings, can be run selectively by supplying an
 argument that matches the heading.
 
-E.g., to run just the test for the `version` command, run
+E.g., to run just the test for TLC help, run
 
 <!-- $MDX skip -->
 ```sh
-test/mdx-test.py "executable prints version"
+test/mdx-test.py "TLC prints help"
 ```
 
 **NOTE**: This only runs code blocks directly in the named section, and will not
@@ -64,7 +64,7 @@ test/tla
 
 Since `tla2tools.jar` has been changing under the same version number for over
 four years, we download it every time. This goes against [Semantic
-Versioning](https://semver.org/)), but we cannot enforce good practices at
+Versioning](https://semver.org/), but we cannot enforce good practices at
 other organizations.
 
 ```sh
