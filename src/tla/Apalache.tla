@@ -8,7 +8,8 @@
  * encoded inside Apalache. For the moment, these operators are mirrored in
  * the class at.forsyte.apalache.tla.lir.oper.ApalacheOper.
  *                                                                          
- * Igor Konnov, Jure Kukovec, Informal Systems 2020-2022                    
+ * Igor Konnov, Jure Kukovec, Informal Systems 2020-2022
+ * Igor Konnov, 2026
  *)
 
 (**
@@ -77,6 +78,9 @@ SetAsFun(__S) ==
 LOCAL INSTANCE Integers
 MkSeq(__N, __F(_)) ==
     \* This is the TLC implementation. Apalache does it differently.
+    \* If __F is not defined on i \in 1..__N, TLC fails.
+    \* Apalache evaluates symbolically. This is why definitions
+    \* like `FunAsSeq` work.
     [ __i \in (1..__N) |-> __F(__i) ]
 
 \* required by our default definition of FoldSeq and FunAsSeq
