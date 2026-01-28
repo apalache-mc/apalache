@@ -68,7 +68,7 @@ Versioning](https://semver.org/)), but we cannot enforce good practices at
 other organizations.
 
 ```sh
-$ wget https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar
+$ wget https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
 ...
 ```
 
