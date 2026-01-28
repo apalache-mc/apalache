@@ -9,7 +9,7 @@
  * the class at.forsyte.apalache.tla.lir.oper.ApalacheOper.
  *                                                                          
  * Igor Konnov, Jure Kukovec, Informal Systems 2020-2022
- * Igor Konnov, 2026
+ * Igor Konnov, konnov.phd, 2026
  *)
 
 (**

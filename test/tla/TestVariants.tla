@@ -4,7 +4,7 @@
  * We introduce a trivial state machine and write tests as state invariants.
  *
  * Igor Konnov, Informal Systems, 2022
- * Igor Konnov, 2026
+ * Igor Konnov, konnov.phd, 2026
  *)
 
 EXTENDS Integers, FiniteSets, Apalache, Variants
