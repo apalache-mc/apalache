@@ -5783,17 +5783,17 @@ may only appear in temporal properties, not in e.g. actions.</p>
 <h2><a class="header" href="#recursive-operators-and-functions" id="recursive-operators-and-functions">Recursive operators and functions</a></h2>
 <p>While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache from version <code>0.23.1</code> onward,
 and suggest the use of fold operators, described in <a href="apalache/principles/./folds.html">Folding sets and sequences</a> instead: </p>
-<pre><code class="language-tla"> * Similar to Skolem, this has to be done carefully. Apalache automatically
- * places this hint by static analysis.
- *)
-ConstCardinality(__cardExpr) == __cardExpr
-
+<pre><code class="language-tla">
 (**
+ * A hint to the model checker to replace its argument Cardinality(S) &gt;= k
+ * with a series of existential quantifiers for a constant k.
+ * Similar to Skolem, this has to be done carefully. Apalache automatically
+ * places this hint by static analysis.
 
-    THEN __v
-    ELSE LET __w == CHOOSE __x \in __S: TRUE IN
-         LET __T == __S \ {__w} IN
-         ApaFoldSet(__Op, __Op(__v,__w), __T)
+ *)
+RECURSIVE ApaFoldSet(_, _, _)
+ApaFoldSet(__Op(_,_), __v, __S) ==
+    IF __S = {}
 </code></pre>
 <p>These operators are treated by Apalache in a more efficient manner than
 recursive operators. They always take at most <code>|S|</code> or <code>Len(seq)</code> steps to evaluate and require no additional annotations.</p>
