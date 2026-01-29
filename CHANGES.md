@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.52.2 - 2026-01-29
+
+### Bug fixes
+
+- Make Variants compatible with TLC (#3255)
+
 ## 0.52.1 - 2025-11-21
 
 ### Features
