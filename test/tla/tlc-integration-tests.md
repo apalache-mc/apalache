@@ -33,7 +33,7 @@ E.g., to run just the test for TLC help, run
 
 <!-- $MDX skip -->
 ```sh
-test/mdx-test.py "TLC prints help"
+./mdx-test.py --test_file tla/tlc-integration-tests.md "TLC prints help"
 ```
 
 **NOTE**: This only runs code blocks directly in the named section, and will not
@@ -42,11 +42,11 @@ include execution of blocks in nested subsections.
 ### Run all tests in sections matching a pattern
 
 The matching is based on (perl) pattern matching. E.g., you can run all the
-tests in sections that include the string `"executable"` in their headings with
+tests in sections that include the string `"TLC"` in their headings with
 
 <!-- $MDX skip -->
 ```sh
-test/mdx-test.py executable
+./mdx-test.py --test_file tla/tlc-integration-tests.md TLC
 ```
 
 ## test environment
