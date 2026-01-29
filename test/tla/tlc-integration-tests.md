@@ -98,3 +98,13 @@ Model checking completed. No error has been found.
 ...
 ```
 
+
+
+### noop (array-encoding)
+
+We need this section for `make integration` go through
+
+```sh
+$ true
+```
+
