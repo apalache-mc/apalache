@@ -781,6 +781,10 @@ class TestQuintEx extends AnyFunSuite {
     assert(convert(Q.app("strongFair", Q.tt, Q.name)(QuintBoolT())) == "SF_n(TRUE)")
   }
 
+  test("can convert leadsTo operator") {
+    assert(convert(Q.app("leadsTo", Q.tt, Q.tt)(QuintBoolT())) == "TRUE \u21DD TRUE")
+  }
+
   test("can convert polymorphic operator applied polymorphically") {
     // We define a polymorphic operator, using type variable `a`
     val a = QuintVarT("a")
