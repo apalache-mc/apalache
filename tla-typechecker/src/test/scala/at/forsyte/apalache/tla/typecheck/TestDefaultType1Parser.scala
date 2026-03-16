@@ -336,8 +336,10 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
   test("variant regression") {
     // a real test case that failed
     val text = "A(Int) | RecvNotification({election: Int, x: Int})"
-    // no exception
-    val _ = parser.parseType(text)
+    val result = parser.parseType(text)
+    val recvRow = RecRowT1(RowT1("election" -> IntT1, "x" -> IntT1))
+    val expected = VariantT1(RowT1("A" -> IntT1, "RecvNotification" -> recvRow))
+    assert(expected == result)
   }
 
   test("variant tags may start with reserved type keyword prefixes") {

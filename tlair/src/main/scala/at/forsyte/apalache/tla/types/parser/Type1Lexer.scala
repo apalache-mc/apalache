@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.types.parser
 
 import java.io.Reader
+import java.util.regex.Pattern
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 
@@ -60,7 +61,7 @@ private[parser] object Type1Lexer extends RegexParsers {
   }
 
   private def wholeKeyword(keyword: String): Regex = {
-    s"$keyword(?![A-Za-z0-9_])".r
+    (Pattern.quote(keyword) + "(?![A-Za-z0-9_])").r
   }
 
   private def int: Parser[INT] = {
