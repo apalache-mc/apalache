@@ -341,15 +341,7 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
   }
 
   test("variant tags may start with reserved type keyword prefixes") {
-    val tags = Seq(
-        "IntFoo",
-        "RealBar",
-        "BoolBaz",
-        "StrQux",
-        "SetX",
-        "SeqThing",
-        "VariantAlt",
-        "RecTag")
+    val tags = Seq("IntFoo", "RealBar", "BoolBaz", "StrQux", "SetX", "SeqThing", "VariantAlt", "RecTag")
     val text = tags.map(tag => s"$tag(Int)").mkString(" | ")
     val result = parser.parseType(text)
     val options = tags.map(tag => (tag, IntT1: TlaType1))
