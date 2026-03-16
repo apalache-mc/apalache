@@ -59,36 +59,40 @@ private[parser] object Type1Lexer extends RegexParsers {
     """"[^"]*"""".r ^^ { str => STR_LITERAL(str.substring(1, str.length - 1)) }
   }
 
+  private def wholeKeyword(keyword: String): Regex = {
+    s"$keyword(?![A-Za-z0-9_])".r
+  }
+
   private def int: Parser[INT] = {
-    "Int".r ^^ { _ => INT() }
+    wholeKeyword("Int") ^^ { _ => INT() }
   }
 
   private def real: Parser[REAL] = {
-    "Real".r ^^ { _ => REAL() }
+    wholeKeyword("Real") ^^ { _ => REAL() }
   }
 
   private def bool: Parser[BOOL] = {
-    "Bool".r ^^ { _ => BOOL() }
+    wholeKeyword("Bool") ^^ { _ => BOOL() }
   }
 
   private def str: Parser[STR] = {
-    "Str".r ^^ { _ => STR() }
+    wholeKeyword("Str") ^^ { _ => STR() }
   }
 
   private def set: Parser[SET] = {
-    "Set".r ^^ { _ => SET() }
+    wholeKeyword("Set") ^^ { _ => SET() }
   }
 
   private def seq: Parser[SEQ] = {
-    "Seq".r ^^ { _ => SEQ() }
+    wholeKeyword("Seq") ^^ { _ => SEQ() }
   }
 
   private def variant: Parser[VARIANT] = {
-    "Variant".r ^^ { _ => VARIANT() }
+    wholeKeyword("Variant") ^^ { _ => VARIANT() }
   }
 
   private def rec: Parser[RECORD] = {
-    "Rec".r ^^ { _ => RECORD() }
+    wholeKeyword("Rec") ^^ { _ => RECORD() }
   }
 
   private def rightArrow: Parser[RIGHT_ARROW] = {
