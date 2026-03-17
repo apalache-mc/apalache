@@ -195,10 +195,14 @@ jobs:
         if: runner.os == 'macOS'
         uses: ocaml/setup-ocaml@v3
         with:
-          ocaml-compiler: 5
+          # Use OCaml 4.14 for compatibility with mdx 2.1.0
+          ocaml-compiler: "4.14.x"
       - name: Install ocaml-mdx
         if: runner.os == 'macOS'
-        run: opam install mdx --yes
+        # Pin mdx 2.1.0: newer versions have broken ellipsis matching
+        # (https://github.com/realworldocaml/mdx/issues/428),
+        # matching the version pinned in flake.nix.
+        run: opam install mdx.2.1.0 --yes
       - name: Install Python dependencies
         if: runner.os == 'macOS'
         run: |
