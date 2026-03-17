@@ -193,3 +193,21 @@ object AssumeStateParams {
     new AssumeStateParams(sessionId, equalities, checkEnabled, timeoutSec)
   }
 }
+
+/**
+ * A method invocation to be executed inside applyInOrder.
+ * @param method
+ *   the name of an exploration method
+ * @param params
+ *   a JSON object with method-specific parameters; the enclosing sessionId is injected by the server
+ */
+case class ApplyInOrderCall(method: String, params: JsonNode)
+
+/**
+ * Parameters for executing multiple stateful operations in one ordered request.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param calls
+ *   stateful exploration calls to execute sequentially under a single session lock
+ */
+case class ApplyInOrderParams(sessionId: String, calls: List[ApplyInOrderCall]) extends ExplorationServiceParams

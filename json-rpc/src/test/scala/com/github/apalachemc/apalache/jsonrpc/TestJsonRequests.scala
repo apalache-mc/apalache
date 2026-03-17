@@ -224,4 +224,26 @@ class TestJsonRequests extends AnyFunSuite {
         fail(s"Failed: $error")
     }
   }
+
+  test("parse ApplyInOrderParams") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "applyInOrder",
+         |"params": { "sessionId": "1a1555f8",
+         |  "calls": [
+         |    { "method": "nextStep", "params": {} },
+         |    { "method": "query", "params": { "kinds": ["TRACE"] } }
+         |  ]
+         |}, "id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseApplyInOrder(inputJson.path("params"))
+    parsed match {
+      case Right(params: ApplyInOrderParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.calls.map(_.method) == List("nextStep", "query"), "Unexpected step methods")
+        assert(params.calls(0).params.isObject, "Expected step params to be an object")
+      case Left(error) =>
+        fail(s"Failed: $error")
+    }
+  }
 }
