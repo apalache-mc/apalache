@@ -161,11 +161,17 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            max-jobs = 2
+            build-cores = 1
+            min-free = 536870912
       - name: Build dev-shell
         run: nix develop -c bash -c exit
+        env:
+          NIX_BUILD_CORES: 1
       - name: Build and run integration tests
         run: nix develop -c make integration
         env:
+          NIX_BUILD_CORES: 1
           SMT_ENCODING: ${{ matrix.smt-encoding }}
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
