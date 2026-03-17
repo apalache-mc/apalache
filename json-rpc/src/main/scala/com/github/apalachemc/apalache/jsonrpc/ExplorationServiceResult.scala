@@ -107,8 +107,8 @@ case class SpecEntryMetadata(index: Int, labels: SortedSet[String])
 /**
  * Specification parameters that are needed for symbolic path exploration.
  *
- * These entries may differ from what a user expects by reading the specification,
- * as transitions and invariants are decomposed during preprocessing.
+ * These entries may differ from what a user expects by reading the specification, as transitions and invariants are
+ * decomposed during preprocessing.
  *
  * @param initTransitions
  *   metadata for the initial symbolic transitions

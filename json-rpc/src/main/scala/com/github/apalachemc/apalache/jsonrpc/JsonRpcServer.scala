@@ -294,14 +294,14 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         .toMap
       equalities <- new ItfJsonToTla(ScalaFromJacksonAdapter)
         .parseState(varTypes, new JacksonRepresentation(params.equalities))
-        .left.map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Failed to parse the state: $msg"))
+        .left
+        .map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, s"Failed to parse the state: $msg"))
       result <- withSessionLock(sessionId) { checkerContext =>
         // take a snapshot of the current context
         val snapshotBeforeId = snapshots.takeSnapshot(sessionId, checkerContext)
         // upload the equalities into the SMT context
         equalities.foreach { case (varName, valueExpr) =>
-          checkerContext.trex.assertState(
-              tla.eql(tla.name(varName, varTypes(varName)), tla.unchecked(valueExpr)).build)
+          checkerContext.trex.assertState(tla.eql(tla.name(varName, varTypes(varName)), tla.unchecked(valueExpr)).build)
         }
         // take a snapshot after assuming the state
         val snapshotAfterId = snapshots.takeSnapshot(sessionId, checkerContext)
@@ -411,8 +411,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       for {
         viewInJson <-
           if (!params.kinds.contains(QueryKind.OPERATOR)) Right(NullNode.getInstance(): JsonNode)
-          else getViewInJson(checkerContext, params.operator, params.timeoutSec)
-            .left.map(msg => ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
+          else
+            getViewInJson(checkerContext, params.operator, params.timeoutSec).left.map(msg =>
+              ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
       } yield QueryResult(params.sessionId, trace = traceInJson, operatorValue = viewInJson)
     }
 
@@ -426,8 +427,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    */
   def nextModel(params: NextModelParams): Either[ServiceError, NextModelResult] =
     withSessionLock(params.sessionId) { checkerContext =>
-      findOperator(checkerContext, params.operator)
-        .left.map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
+      findOperator(checkerContext, params.operator).left
+        .map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
         .map { decl =>
           checkerContext.trex.evaluate(params.timeoutSec, decl.body) match {
             case None =>
@@ -498,11 +499,12 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       method: String,
       paramsNode: JsonNode): Either[ServiceError, ExplorationServiceResult] = {
 
-    def dispatch[P](parse: JsonNode => Either[String, P])(
-        handle: P => Either[ServiceError, _ <: ExplorationServiceResult]
-    ): Either[ServiceError, ExplorationServiceResult] =
-      parse(paramsNode)
-        .left.map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
+    def dispatch[P](
+        parse: JsonNode => Either[String, P]
+      )(handle: P => Either[ServiceError,
+            _ <: ExplorationServiceResult]): Either[ServiceError, ExplorationServiceResult] =
+      parse(paramsNode).left
+        .map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
         .flatMap(handle)
 
     method match {
@@ -623,8 +625,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
   /** Look up the session's checker context, or return a ServiceError. */
   private def getCheckerContext(
-      sessionId: String
-  ): Either[ServiceError, ModelCheckerContext[IncrementalExecutionContextSnapshot]] =
+      sessionId: String): Either[ServiceError, ModelCheckerContext[IncrementalExecutionContextSnapshot]] =
     sessions.get(sessionId) match {
       case Some(injector) =>
         Right(injector.getInstance(classOf[BoundedCheckerPassImpl]).modelCheckerContext.get)
@@ -633,12 +634,13 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
 
   /**
-   * Acquire the session lock, re-validate the session, retrieve the checker context,
-   * and execute the callback. This eliminates the repeated validate-lock-revalidate pattern.
+   * Acquire the session lock, re-validate the session, retrieve the checker context, and execute the callback. This
+   * eliminates the repeated validate-lock-revalidate pattern.
    */
-  private def withSessionLock[T](sessionId: String)(
-      callback: ModelCheckerContext[IncrementalExecutionContextSnapshot] => Either[ServiceError, T]
-  ): Either[ServiceError, T] =
+  private def withSessionLock[T](
+      sessionId: String
+    )(callback: ModelCheckerContext[IncrementalExecutionContextSnapshot] => Either[ServiceError,
+          T]): Either[ServiceError, T] =
     for {
       _ <- getCheckerContext(sessionId) // validate session exists before locking
       result <- withLock(sessionId) {
@@ -692,7 +694,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
       },
   )
   logger.info(s"Created thread pool with core pool size ${Runtime.getRuntime.availableProcessors()}, " +
-      s"max pool size $MAX_POOL_SIZE, keep alive $KEEP_ALIVE_SEC sec")
+    s"max pool size $MAX_POOL_SIZE, keep alive $KEEP_ALIVE_SEC sec")
   // data mapper for JSON serialization/deserialization
   // using Jackson with Scala module for better compatibility with case classes
   private val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
@@ -732,28 +734,29 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
     responseJson.put("jsonrpc", "2.0")
     responseJson.set("id", id)
 
-    def dispatch[P](parse: JsonNode => Either[String, P])(
-        handle: P => Either[ServiceError, _ <: ExplorationServiceResult]
-    ): Either[ServiceError, ExplorationServiceResult] =
-      parse(paramsNode)
-        .left.map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
+    def dispatch[P](
+        parse: JsonNode => Either[String, P]
+      )(handle: P => Either[ServiceError,
+            _ <: ExplorationServiceResult]): Either[ServiceError, ExplorationServiceResult] =
+      parse(paramsNode).left
+        .map(msg => ServiceError(JsonRpcCodes.INVALID_PARAMS, msg))
         .flatMap(handle)
 
     val errorOrResult: Either[ServiceError, ExplorationServiceResult] =
       try {
         method match {
-          case "health"            => service.health()
-          case "loadSpec"          => dispatch(parser.parseLoadSpec)(service.loadSpec)
-          case "disposeSpec"       => dispatch(parser.parseDisposeSpec)(service.disposeSpec)
-          case "rollback"          => dispatch(parser.parseRollback)(service.rollback)
-          case "assumeTransition"  => dispatch(parser.parseAssumeTransition)(service.assumeTransition)
-          case "assumeState"       => dispatch(parser.parseAssumeState)(service.assumeState)
-          case "nextStep"          => dispatch(parser.parseNextStep)(service.nextStep)
-          case "checkInvariant"    => dispatch(parser.parseCheckInvariant)(service.checkInvariant)
-          case "query"             => dispatch(parser.parseQuery)(service.query)
-          case "nextModel"         => dispatch(parser.parseNextModel)(service.nextModel)
-          case "applyInOrder"      => dispatch(parser.parseApplyInOrder)(service.applyInOrder)
-          case _ => Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
+          case "health"           => service.health()
+          case "loadSpec"         => dispatch(parser.parseLoadSpec)(service.loadSpec)
+          case "disposeSpec"      => dispatch(parser.parseDisposeSpec)(service.disposeSpec)
+          case "rollback"         => dispatch(parser.parseRollback)(service.rollback)
+          case "assumeTransition" => dispatch(parser.parseAssumeTransition)(service.assumeTransition)
+          case "assumeState"      => dispatch(parser.parseAssumeState)(service.assumeState)
+          case "nextStep"         => dispatch(parser.parseNextStep)(service.nextStep)
+          case "checkInvariant"   => dispatch(parser.parseCheckInvariant)(service.checkInvariant)
+          case "query"            => dispatch(parser.parseQuery)(service.query)
+          case "nextModel"        => dispatch(parser.parseNextModel)(service.nextModel)
+          case "applyInOrder"     => dispatch(parser.parseApplyInOrder)(service.applyInOrder)
+          case _                  => Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
         }
       } catch {
         case ex: Exception =>
