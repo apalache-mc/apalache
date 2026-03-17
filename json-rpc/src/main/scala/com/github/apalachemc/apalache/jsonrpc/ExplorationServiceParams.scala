@@ -201,7 +201,7 @@ object AssumeStateParams {
  * @param params
  *   a JSON object with method-specific parameters; the enclosing sessionId is injected by the server
  */
-case class ApplyInOrderStep(method: String, params: JsonNode)
+case class ApplyInOrderCall(method: String, params: JsonNode)
 
 /**
  * Parameters for executing multiple stateful operations in one ordered request.
@@ -210,4 +210,4 @@ case class ApplyInOrderStep(method: String, params: JsonNode)
  * @param calls
  *   stateful exploration calls to execute sequentially under a single session lock
  */
-case class ApplyInOrderParams(sessionId: String, calls: List[ApplyInOrderStep]) extends ExplorationServiceParams
+case class ApplyInOrderParams(sessionId: String, calls: List[ApplyInOrderCall]) extends ExplorationServiceParams

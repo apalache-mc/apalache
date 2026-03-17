@@ -185,17 +185,17 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
         ApplyInOrderParams(
             sessionId = specResult.sessionId,
             calls = List(
-                ApplyInOrderStep(
+                ApplyInOrderCall(
                     method = "assumeTransition",
                     params = new ObjectMapper()
                       .registerModule(DefaultScalaModule)
                       .readTree("""{ "transitionId": 0, "checkEnabled": true, "timeoutSec": 10 }"""),
                 ),
-                ApplyInOrderStep(
+                ApplyInOrderCall(
                     method = "nextStep",
                     params = new ObjectMapper().registerModule(DefaultScalaModule).readTree("""{}"""),
                 ),
-                ApplyInOrderStep(
+                ApplyInOrderCall(
                     method = "query",
                     params = new ObjectMapper()
                       .registerModule(DefaultScalaModule)
@@ -220,13 +220,13 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
         ApplyInOrderParams(
             sessionId = specResult.sessionId,
             calls = List(
-                ApplyInOrderStep(
+                ApplyInOrderCall(
                     method = "assumeTransition",
                     params = new ObjectMapper()
                       .registerModule(DefaultScalaModule)
                       .readTree("""{ "transitionId": 100, "checkEnabled": true, "timeoutSec": 10 }"""),
                 ),
-                ApplyInOrderStep(
+                ApplyInOrderCall(
                     method = "nextStep",
                     params = new ObjectMapper().registerModule(DefaultScalaModule).readTree("""{}"""),
                 ),

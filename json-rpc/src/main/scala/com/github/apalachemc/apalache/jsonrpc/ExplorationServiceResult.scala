@@ -195,7 +195,7 @@ case class NextModelResult(
  * @param error
  *   the step error; null on success
  */
-case class ApplyInOrderStepResult(
+case class ApplyInOrderCallResult(
     ok: Boolean,
     method: String,
     result: JsonNode = NullNode.getInstance(),
@@ -206,4 +206,4 @@ case class ApplyInOrderStepResult(
  * @param calls
  *   ordered per-call results; execution stops at the first failing call
  */
-case class ApplyInOrderResult(calls: Seq[ApplyInOrderStepResult]) extends ExplorationServiceResult
+case class ApplyInOrderResult(calls: Seq[ApplyInOrderCallResult]) extends ExplorationServiceResult

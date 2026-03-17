@@ -465,7 +465,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     withSessionLock(sessionId) { _ =>
       // Process steps sequentially, stopping at the first failure.
-      val callResults = params.calls.foldLeft(List.empty[ApplyInOrderStepResult]) { (acc, call) =>
+      val callResults = params.calls.foldLeft(List.empty[ApplyInOrderCallResult]) { (acc, call) =>
         // If a previous call failed, skip remaining calls and return the accumulated results.
         if (acc.exists(!_.ok)) {
           acc
@@ -477,9 +477,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
               val errorNode = mapper.createObjectNode()
               errorNode.put("code", error.code)
               errorNode.put("message", error.message)
-              ApplyInOrderStepResult(ok = false, method = call.method, error = errorNode)
+              ApplyInOrderCallResult(ok = false, method = call.method, error = errorNode)
             case Right(result) =>
-              ApplyInOrderStepResult(
+              ApplyInOrderCallResult(
                   ok = true,
                   method = call.method,
                   result = mapper.valueToTree[JsonNode](result),
