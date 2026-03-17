@@ -201,11 +201,14 @@ jobs:
         run: opam install mdx --yes
       - name: Install Python dependencies
         if: runner.os == 'macOS'
-        run: pip3 install requests
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install requests
       - name: Build and run integration tests
         if: runner.os == 'macOS'
         run: |
           eval $(opam env)
+          source .venv/bin/activate
           source .envrc
           make integration
         env:
