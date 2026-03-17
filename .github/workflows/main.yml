@@ -144,7 +144,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sbt-
             ${{ runner.os }}-
+
+      # ── Nix-based path (Linux only) ──────────────────────────────────────────
       - name: Cache nix store
+        if: runner.os == 'Linux'
         # Workaround for cache action not playing well with permissions
         # See https://github.com/actions/cache/issues/324
         uses: john-shaffer/cache@59429c0461095f341a8cf7388e5d3aef37b95edd
@@ -157,21 +160,55 @@ jobs:
             ${{ runner.os }}-nix-
             ${{ runner.os }}-
       - name: Install Nix
+        if: runner.os == 'Linux'
         uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            max-jobs = 2
-            build-cores = 1
-            min-free = 536870912
       - name: Build dev-shell
+        if: runner.os == 'Linux'
         run: nix develop -c bash -c exit
-        env:
-          NIX_BUILD_CORES: 1
       - name: Build and run integration tests
+        if: runner.os == 'Linux'
         run: nix develop -c make integration
         env:
-          NIX_BUILD_CORES: 1
+          SMT_ENCODING: ${{ matrix.smt-encoding }}
+          TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
+
+      # ── Direct path (macOS only, no Nix) ─────────────────────────────────────
+      - name: Set up JDK 17
+        if: runner.os == 'macOS'
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Coursier setup
+        if: runner.os == 'macOS'
+        uses: coursier/setup-action@v1
+        with:
+          jvm: temurin:1.17
+          apps: sbt
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
+        if: runner.os == 'macOS'
+      - name: Set up OCaml
+        if: runner.os == 'macOS'
+        uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: 5
+      - name: Install ocaml-mdx
+        if: runner.os == 'macOS'
+        run: opam install mdx --yes
+      - name: Install Python dependencies
+        if: runner.os == 'macOS'
+        run: pip3 install requests
+      - name: Build and run integration tests
+        if: runner.os == 'macOS'
+        run: |
+          eval $(opam env)
+          source .envrc
+          make integration
+        env:
           SMT_ENCODING: ${{ matrix.smt-encoding }}
           TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
 
