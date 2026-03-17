@@ -36,6 +36,7 @@ import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable
 import scala.collection.immutable.SortedSet
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Try
 
 /**
@@ -610,6 +611,123 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   }
 
   /**
+   * Execute a sequence of stateful operations under a single session lock.
+   *
+   * @param params
+   *   apply-in-order parameters
+   * @return
+   *   ordered per-step results; execution stops at the first failing step
+   */
+  def applyInOrder(params: ApplyInOrderParams): Either[ServiceError, ApplyInOrderResult] = {
+    val parser = new JsonParameterParser(new ObjectMapper().registerModule(DefaultScalaModule))
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val sessionId = params.sessionId
+
+    val validationResult =
+      sessions.get(sessionId) match {
+        case Some(injector) =>
+          val checkerModule = injector.getInstance(classOf[BoundedCheckerPassImpl])
+          Right(checkerModule.modelCheckerContext.get)
+        case None =>
+          Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
+      }
+
+    withLock(sessionId) {
+      validationResult.map { _ =>
+        if (!sessions.contains(sessionId)) {
+          return Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
+        }
+
+        val stepResults = ArrayBuffer[ApplyInOrderStepResult]()
+        var keepRunning = true
+        params.calls.foreach { step =>
+          if (keepRunning) {
+            val paramsNode = step.params.deepCopy[JsonNode]()
+            paramsNode.asInstanceOf[ObjectNode].put("sessionId", sessionId)
+            val stepResult =
+              dispatchStep(parser, step.method, paramsNode) match {
+                case Left(error) =>
+                  val errorNode = mapper.createObjectNode()
+                  errorNode.put("code", error.code)
+                  errorNode.put("message", error.message)
+                  keepRunning = false
+                  ApplyInOrderStepResult(ok = false, method = step.method, error = errorNode)
+                case Right(result) =>
+                  ApplyInOrderStepResult(
+                      ok = true,
+                      method = step.method,
+                      result = mapper.valueToTree[JsonNode](result),
+                  )
+              }
+            stepResults += stepResult
+          }
+        }
+
+        ApplyInOrderResult(stepResults.toSeq)
+      }
+    }
+  }
+
+  private def dispatchStep(
+      parser: JsonParameterParser,
+      method: String,
+      paramsNode: JsonNode): Either[ServiceError, ExplorationServiceResult] = {
+    method match {
+      case "assumeTransition" =>
+        parser
+          .parseAssumeTransition(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => assumeTransition(serviceParams),
+          )
+      case "assumeState" =>
+        parser
+          .parseAssumeState(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => assumeState(serviceParams),
+          )
+      case "nextStep" =>
+        parser
+          .parseNextStep(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => nextStep(serviceParams),
+          )
+      case "query" =>
+        parser
+          .parseQuery(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => query(serviceParams),
+          )
+      case "checkInvariant" =>
+        parser
+          .parseCheckInvariant(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => checkInvariant(serviceParams),
+          )
+      case "nextModel" =>
+        parser
+          .parseNextModel(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => nextModel(serviceParams),
+          )
+      case "rollback" =>
+        parser
+          .parseRollback(paramsNode)
+          .fold(
+              errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+              serviceParams => rollback(serviceParams),
+          )
+      case _ =>
+        Left(ServiceError(JsonRpcCodes.INVALID_REQUEST, s"Unsupported applyInOrder method: $method"))
+    }
+  }
+
+  /**
    * Extract a trace from the transition executor and serialize it to Jackson JSON.
    *
    * @return
@@ -871,6 +989,12 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
               .parseNextModel(paramsNode)
               .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
                   serviceParams => service.nextModel(serviceParams))
+
+          case "applyInOrder" =>
+            new JsonParameterParser(mapper)
+              .parseApplyInOrder(paramsNode)
+              .fold(errorMessage => Left(ServiceError(JsonRpcCodes.INVALID_PARAMS, errorMessage)),
+                  serviceParams => service.applyInOrder(serviceParams))
 
           case _ =>
             Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))

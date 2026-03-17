@@ -642,6 +642,115 @@ returned by `nextState`).
 }
 ```
 
+### 2.9. Method applyInOrder
+
+For stateful exploration workloads, standard JSON-RPC batch arrays are not a good
+fit: JSON-RPC does not require ordered execution, while Apalache exploration is
+session- and snapshot-sensitive. The `applyInOrder` method executes several
+stateful exploration steps sequentially under a single session lock and returns
+ordered per-step results in one HTTP round trip.
+
+`applyInOrder` is intended for the same session-local methods that are already
+available as individual JSON-RPC calls:
+
+- `"assumeTransition"`
+- `"assumeState"`
+- `"nextStep"`
+- `"query"`
+- `"checkInvariant"`
+- `"nextModel"`
+- `"rollback"`
+
+The enclosing request carries the `sessionId`. Each step carries only
+method-specific parameters.
+
+**Input:**
+
+```json
+{
+  "method": "applyInOrder",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "calls": [
+      {
+        "method": "assumeTransition",
+        "params": {
+          "transitionId": 0,
+          "checkEnabled": true,
+          "timeoutSec": 10
+        }
+      },
+      {
+        "method": "nextStep",
+        "params": {}
+      },
+      {
+        "method": "query",
+        "params": {
+          "kinds": ["OPERATOR"],
+          "operator": "View",
+          "timeoutSec": 10
+        }
+      }
+    ]
+  }
+}
+```
+
+**Output:**
+
+Each entry in `result.calls` is either a successful result with `ok = true` and
+`result`, or the first failing step with `ok = false` and `error`. Execution
+stops at the first failing step.
+
+```json
+{
+  "result": {
+    "calls": [
+      {
+        "ok": true,
+        "method": "assumeTransition",
+        "result": {
+          "sessionId": "${session-identifier}",
+          "snapshotId": "${snapshot-id}",
+          "transitionId": 0,
+          "status": "ENABLED"
+        },
+        "error": null
+      },
+      {
+        "ok": true,
+        "method": "nextStep",
+        "result": {
+          "sessionId": "${session-identifier}",
+          "snapshotId": "${snapshot-id}",
+          "newStepNo": 1
+        },
+        "error": null
+      },
+      {
+        "ok": true,
+        "method": "query",
+        "result": {
+          "sessionId": "${session-identifier}",
+          "trace": null,
+          "operatorValue": "${expr-in-itf-or-null}"
+        },
+        "error": null
+      }
+    ]
+  }
+}
+```
+
+**Example**:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"applyInOrder","params":{"sessionId":"1","calls":[{"method":"assumeTransition","params":{"transitionId":0,"checkEnabled":true,"timeoutSec":10}},{"method":"nextStep","params":{}},{"method":"query","params":{"kinds":["OPERATOR"],"operator":"View","timeoutSec":10}}]},"id":7}'
+```
+
 **Output:**
 
 The output contains the following fields:
