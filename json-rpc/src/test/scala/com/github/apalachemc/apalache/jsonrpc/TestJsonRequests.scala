@@ -175,6 +175,40 @@ class TestJsonRequests extends AnyFunSuite {
     }
   }
 
+  test("parse CompactParams") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "compact",
+         |"params": { "sessionId": "1a1555f8", "snapshotId": 5, "timeoutSec": 120 }, "id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseCompact(inputJson.path("params"))
+    parsed match {
+      case Right(params: CompactParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.snapshotId == 5, "Expected snapshotId to be 5")
+        assert(params.timeoutSec == 120, "Expected timeoutSec to be 120")
+      case Left(error) =>
+        fail(s"Failed: $error")
+    }
+  }
+
+  test("parse CompactParams with default timeoutSec") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "compact",
+         |"params": { "sessionId": "1a1555f8", "snapshotId": 0 }, "id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseCompact(inputJson.path("params"))
+    parsed match {
+      case Right(params: CompactParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.snapshotId == 0, "Expected snapshotId to be 0")
+        assert(params.timeoutSec == 0, "Expected timeoutSec to be 0")
+      case Left(error) =>
+        fail(s"Failed: $error")
+    }
+  }
+
   test("parse nextState") {
     val input =
       s"""{"jsonrpc": "2.0", "method": "nextState", "params": { "sessionId": "1a1555f8" }, "id": 1}""".stripMargin

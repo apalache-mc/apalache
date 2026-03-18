@@ -17,6 +17,7 @@ class JsonParameterParser(mapper: ObjectMapper) {
       "checkInvariant",
       "nextModel",
       "rollback",
+      "compact",
   )
 
   /**
@@ -129,6 +130,29 @@ class JsonParameterParser(mapper: ObjectMapper) {
     } catch {
       case e: Exception =>
         Left(s"Parse error in rollback: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for compacting the symbolic trace.
+   * @param params
+   *   the `params` field from a JSON-RPC request
+   * @return
+   *   either an error message or a [[CompactParams]] instance
+   */
+  def parseCompact(params: TreeNode): Either[String, CompactParams] = {
+    try {
+      val compactParams = mapper.treeToValue(params, classOf[CompactParams])
+      if (compactParams.sessionId.isEmpty) {
+        return Left("compact parameters must contain a non-empty sessionId.")
+      }
+      if (compactParams.snapshotId < 0) {
+        return Left("compact parameters must contain a non-negative snapshotId.")
+      }
+      Right(compactParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in compact: ${e.getMessage}")
     }
   }
 
