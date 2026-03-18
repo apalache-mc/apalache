@@ -257,6 +257,74 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     }
 
   /**
+   * Compact the current symbolic trace by extracting the last concrete state, reverting to a given snapshot, and
+   * asserting the extracted state values as equality constraints.
+   *
+   * This effectively replaces a long symbolic trace with a single concrete state, resetting the solver complexity.
+   *
+   * @param params
+   *   the parameters object that contains the session ID, the snapshot ID to revert to, and the timeout
+   * @return
+   *   either an error or [[CompactResult]]
+   */
+  def compact(params: CompactParams): Either[ServiceError, CompactResult] = {
+    val sessionId = params.sessionId
+
+    for {
+      checkerContext <- getCheckerContext(sessionId)
+      varTypes = checkerContext.checkerInput.rootModule.varDeclarations
+        .map(d => d.name -> d.typeTag.asTlaType1())
+        .toMap
+      result <- withSessionLock(sessionId) { checkerContext =>
+        // 1. Ensure the current context is satisfiable so we can decode a model
+        checkerContext.trex.sat(params.timeoutSec) match {
+          case Some(false) =>
+            Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, "Cannot compact: current context is unsatisfiable"))
+
+          case None =>
+            Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR,
+                    "Cannot compact: satisfiability check timed out or returned unknown"))
+
+          case Some(true) =>
+            // 2. Decode the execution and extract the last state
+            val decodedPath = checkerContext.trex.decodedExecution().path
+            if (decodedPath.isEmpty) {
+              Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, "Cannot compact: decoded execution path is empty"))
+            } else {
+              val lastState = decodedPath.last.assignments
+
+              // 3. Revert to the given snapshot
+              val recovered = snapshots.recoverSnapshot(sessionId, checkerContext, params.snapshotId)
+              if (!recovered) {
+                Left(ServiceError(JsonRpcCodes.INVALID_PARAMS,
+                        s"Snapshot not found: ${params.snapshotId} in session $sessionId"))
+              } else {
+                // 4. Build a synthetic transition that assigns each state variable to its decoded value.
+                //    This creates proper variable bindings via the standard prepareTransition flow,
+                //    unlike assertState which requires existing bindings.
+                val assignmentExprs = lastState.map { case (varName, valueExpr) =>
+                  tla.assign(tla.prime(tla.name(varName, varTypes(varName))), tla.unchecked(valueExpr))
+                }.toSeq
+                val syntheticTransition = tla.and(assignmentExprs: _*).build
+
+                checkerContext.trex.prepareTransition(0, syntheticTransition)
+                checkerContext.trex.assumeTransition(0)
+                checkerContext.trex.nextState()
+
+                // 5. Take a new snapshot
+                val newSnapshotId = snapshots.takeSnapshot(sessionId, checkerContext)
+                logger.info(
+                    s"Session=$sessionId Snapshot=$newSnapshotId: Compacted trace by reverting to ${params.snapshotId}")
+
+                Right(CompactResult(sessionId, newSnapshotId))
+              }
+            }
+        }
+      }
+    } yield result
+  }
+
+  /**
    * Switch to the next step.
    *
    * @param params
@@ -515,6 +583,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       case "checkInvariant"   => dispatch(parser.parseCheckInvariant)(checkInvariant)
       case "nextModel"        => dispatch(parser.parseNextModel)(nextModel)
       case "rollback"         => dispatch(parser.parseRollback)(rollback)
+      case "compact"          => dispatch(parser.parseCompact)(compact)
       case _ => Left(ServiceError(JsonRpcCodes.INVALID_REQUEST, s"Unsupported applyInOrder method: $method"))
     }
   }
@@ -755,6 +824,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
           case "checkInvariant"   => dispatch(parser.parseCheckInvariant)(service.checkInvariant)
           case "query"            => dispatch(parser.parseQuery)(service.query)
           case "nextModel"        => dispatch(parser.parseNextModel)(service.nextModel)
+          case "compact"          => dispatch(parser.parseCompact)(service.compact)
           case "applyInOrder"     => dispatch(parser.parseApplyInOrder)(service.applyInOrder)
           case _                  => Left(ServiceError(JsonRpcCodes.METHOD_NOT_FOUND, s"Method not found: $method"))
         }

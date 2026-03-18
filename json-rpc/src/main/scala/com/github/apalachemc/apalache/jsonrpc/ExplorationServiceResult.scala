@@ -84,6 +84,18 @@ case class RollbackResult(
     extends ExplorationServiceResult
 
 /**
+ * The result of compacting the current symbolic trace.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the new snapshot ID after compaction
+ */
+case class CompactResult(
+    sessionId: String,
+    snapshotId: Int)
+    extends ExplorationServiceResult
+
+/**
  * The result of loading a specification.
  * @param sessionId
  *   the new session ID

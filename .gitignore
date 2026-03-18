@@ -33,3 +33,4 @@ metals.sbt
 
 # Python virtual environment
 .venv/
+_run

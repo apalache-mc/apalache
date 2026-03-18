@@ -195,6 +195,21 @@ object AssumeStateParams {
 }
 
 /**
+ * Parameters for compacting the current symbolic trace.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID to revert to after extracting the last state
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class CompactParams(
+    sessionId: String,
+    snapshotId: Int,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
  * A method invocation to be executed inside applyInOrder.
  * @param method
  *   the name of an exploration method
