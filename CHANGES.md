@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.55.0 - 2026-03-18
+
+### Features
+
+- Add `compact` JSON-RPC method that extracts the last concrete state, reverts to a given snapshot and re-asserts it as a synthetic transition, resetting solver complexity after long symbolic explorations #3285
+
 ## 0.54.0 - 2026-03-18
 
 ## 0.52.3 - 2026-03-17
