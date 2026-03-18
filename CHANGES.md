@@ -1,6 +1,8 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.54.0 - 2026-03-18
+
 ## 0.52.3 - 2026-03-17
 
 ### Features
