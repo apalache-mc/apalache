@@ -626,24 +626,26 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    */
   private def getLastStateInJson(
       checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
-      timeoutSec: Int): JsonNode =
+      timeoutSec: Int): JsonNode = {
     checkerContext.trex.sat(timeoutSec) match {
       case Some(true) =>
-        val path = checkerContext.trex.decodedExecution().path
-        val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
-            path.map(_ => SortedSet[String]()).toIndexedSeq, ())
-        if (counterexample.states.isEmpty) {
+        val path = checkerContext.trex.decodedExecution().path.toSeq
+        if (path.isEmpty) {
           NullNode.getInstance()
         } else {
-          // Merge constInit and varInit for the first state, consistent with mkJson
-          val state0 = counterexample.states match {
-            case constInit +: Seq()          => constInit
-            case constInit +: initState +: _ => constInit ++ initState
-            case _                           => Map.empty[String, at.forsyte.apalache.tla.lir.TlaEx]
-          }
-          val mappedStates = state0 +: counterexample.states.drop(2)
-          val lastIndex = mappedStates.length - 1
-          val lastState = mappedStates.last
+          val (lastState, lastIndex) =
+            path match {
+              case constInit +: Seq() =>
+                (constInit.assignments, 0)
+
+              case constInit +: initState +: _ =>
+                (constInit.assignments ++ (initState.assignments), 0)
+
+              case longer =>
+                val lastIndex = path.length - 1
+                (longer(lastIndex).assignments, lastIndex)
+            }
+
           // Serialize the single state in the same format as ItfCounterexampleWriter.stateToJson
           val meta = ujson.Obj(at.forsyte.apalache.io.itf.INDEX_FIELD -> ujson.Num(lastIndex))
           val fields = lastState.toList.sortBy(_._1).map(p => (p._1, ItfCounterexampleWriter.exprToJson(p._2)))
@@ -654,6 +656,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       case _ =>
         NullNode.getInstance()
     }
+  }
 
   private def getViewInJson(
       checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
