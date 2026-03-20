@@ -179,6 +179,70 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
     }
   }
 
+  test("applyInOrder executes steps sequentially") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    service.applyInOrder(
+        ApplyInOrderParams(
+            sessionId = specResult.sessionId,
+            calls = List(
+                ApplyInOrderCall(
+                    method = "assumeTransition",
+                    params = new ObjectMapper()
+                      .registerModule(DefaultScalaModule)
+                      .readTree("""{ "transitionId": 0, "checkEnabled": true, "timeoutSec": 10 }"""),
+                ),
+                ApplyInOrderCall(
+                    method = "nextStep",
+                    params = new ObjectMapper().registerModule(DefaultScalaModule).readTree("""{}"""),
+                ),
+                ApplyInOrderCall(
+                    method = "query",
+                    params = new ObjectMapper()
+                      .registerModule(DefaultScalaModule)
+                      .readTree("""{ "kinds": ["OPERATOR"], "operator": "View", "timeoutSec": 10 }"""),
+                ),
+            ),
+        )
+    ) match {
+      case Right(ApplyInOrderResult(calls)) =>
+        assert(calls.size == 3, "Expected three call results")
+        assert(calls.forall(_.ok), "Expected all call results to succeed")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"applyInOrder failed: $error")
+    }
+  }
+
+  test("applyInOrder stops at the first failing step") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
+    service.applyInOrder(
+        ApplyInOrderParams(
+            sessionId = specResult.sessionId,
+            calls = List(
+                ApplyInOrderCall(
+                    method = "assumeTransition",
+                    params = new ObjectMapper()
+                      .registerModule(DefaultScalaModule)
+                      .readTree("""{ "transitionId": 100, "checkEnabled": true, "timeoutSec": 10 }"""),
+                ),
+                ApplyInOrderCall(
+                    method = "nextStep",
+                    params = new ObjectMapper().registerModule(DefaultScalaModule).readTree("""{}"""),
+                ),
+            ),
+        )
+    ) match {
+      case Right(ApplyInOrderResult(calls)) =>
+        assert(calls.size == 1, "Expected execution to stop after the first failing call")
+        assert(!calls.head.ok, "Expected the first call to fail")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"applyInOrder failed: $error")
+    }
+  }
+
   test("sequence 0-0-0-0-0 (disabled)") {
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
     val sessionId = specResult.sessionId
@@ -424,6 +488,78 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
         fail(s"Unexpected result: $result")
       case Left(error) =>
         fail(s"Failed to check invariants: $error")
+    }
+  }
+
+  test("compact after several steps resets symbolic trace") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    val initialSnapshotId = specResult.snapshotId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+
+    // Run Init + 3 steps of Next$0: x goes 0 -> 1 -> 2 -> 3
+    for (_ <- 0 until 4) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+
+    // Compact by reverting to the initial snapshot.
+    // Compact internally applies a synthetic transition (prepareTransition + assumeTransition + nextState),
+    // so after compact we are at step 1 and can apply Next transitions.
+    service.compact(CompactParams(sessionId = sessionId, snapshotId = initialSnapshotId)) match {
+      case Right(CompactResult(returnedSessionId, newSnapshotId)) =>
+        assert(returnedSessionId == sessionId, "Session ID should remain the same after compaction")
+        assert(newSnapshotId > initialSnapshotId, "New snapshot ID should be greater than the initial one")
+
+        // After compaction, we are at step 1 with x = 3 (the decoded last state).
+        // Transition 0 (A:: x < 3) should be DISABLED since 3 < 3 is false.
+        // Transition 1 (B:: x > -3) should be ENABLED since 3 > -3 is true.
+        val t1 = AssumeTransitionParams(sessionId = sessionId, transitionId = 1, checkEnabled = true)
+        service.assumeTransition(t1) match {
+          case Right(AssumeTransitionResult(_, _, _, status)) =>
+            assert(status == AssumptionStatus.ENABLED, "Transition 1 (B) should be enabled at x=3")
+          case Left(error) =>
+            fail(s"Failed to assume transition after compaction: $error")
+        }
+        assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight,
+            "Should be able to nextStep after compaction")
+
+        // Query the trace to verify the state after compaction + one more step.
+        // After B (x' = x - 1), x should be 2.
+        service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE))) match {
+          case Right(QueryResult(_, trace, _)) =>
+            assert(!trace.isNull, "Trace should not be null after compaction and further exploration")
+            val states = trace.get("states")
+            // After compact (synthetic init setting x=3) + one Next step, there should be 2 states
+            assert(states.size() == 2, s"Expected 2 states, got ${states.size()}")
+          case Right(result) =>
+            fail(s"Unexpected query result: $result")
+          case Left(error) =>
+            fail(s"Failed to query after compaction: $error")
+        }
+
+      case Right(result) =>
+        fail(s"Unexpected compact result: $result")
+      case Left(error) =>
+        fail(s"Failed to compact: $error")
+    }
+  }
+
+  test("compact with invalid snapshot returns error") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+
+    // Run one step
+    assert(service.assumeTransition(t0).isRight)
+    assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+
+    // Try to compact with a non-existent snapshot
+    service.compact(CompactParams(sessionId = sessionId, snapshotId = 9999)) match {
+      case Left(error) =>
+        assert(error.message.contains("Snapshot not found"), "Expected snapshot not found error")
+      case Right(_) =>
+        fail("Expected error for invalid snapshot ID")
     }
   }
 }
