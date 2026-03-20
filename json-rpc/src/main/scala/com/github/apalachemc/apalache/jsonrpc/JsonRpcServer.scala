@@ -27,7 +27,10 @@ import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
+import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
+import org.eclipse.jetty.compression.server.CompressionHandler
+import org.eclipse.jetty.compression.gzip.GzipCompression
+import org.eclipse.jetty.compression.zstandard.ZstandardCompression
 
 import java.io.StringReader
 import java.util.concurrent.atomic.AtomicInteger
@@ -476,13 +479,16 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       val traceInJson =
         if (params.kinds.contains(QueryKind.TRACE)) getTraceInJson(checkerContext, params.timeoutSec)
         else NullNode.getInstance()
+      val stateInJson =
+        if (params.kinds.contains(QueryKind.STATE)) getLastStateInJson(checkerContext, params.timeoutSec)
+        else NullNode.getInstance()
       for {
         viewInJson <-
           if (!params.kinds.contains(QueryKind.OPERATOR)) Right(NullNode.getInstance(): JsonNode)
           else
             getViewInJson(checkerContext, params.operator, params.timeoutSec).left.map(msg =>
               ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
-      } yield QueryResult(params.sessionId, trace = traceInJson, operatorValue = viewInJson)
+      } yield QueryResult(params.sessionId, trace = traceInJson, state = stateInJson, operatorValue = viewInJson)
     }
 
   /**
@@ -614,6 +620,49 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         // no trace or unknown
         NullNode.getInstance()
     }
+
+  /**
+   * Extract only the last state from the transition executor and serialize it to Jackson JSON.
+   *
+   * @return
+   *   a JSON-encoded last state
+   */
+  private def getLastStateInJson(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+      timeoutSec: Int): JsonNode = {
+    checkerContext.trex.sat(timeoutSec) match {
+      case Some(true) =>
+        val path = checkerContext.trex.decodedExecution().path.toSeq
+        if (path.isEmpty) {
+          NullNode.getInstance()
+        } else {
+          val (lastState, lastIndex) =
+            path match {
+              case constInit +: Seq() =>
+                // Only constInit, no further states
+                (constInit.assignments, 0)
+
+              case constInit +: initState +: Seq() =>
+                // Exactly constInit + initState: merge them (consistent with mkJson)
+                (constInit.assignments ++ initState.assignments, 0)
+
+              case _ =>
+                // 3+ states: the last state needs no merging; index accounts for
+                // the first two being collapsed into one (mapped length = path.length - 1)
+                (path.last.assignments, path.length - 2)
+            }
+
+          // Serialize the single state in the same format as ItfCounterexampleWriter.stateToJson
+          val meta = ujson.Obj(at.forsyte.apalache.io.itf.INDEX_FIELD -> ujson.Num(lastIndex))
+          val fields = lastState.toList.sortBy(_._1).map(p => (p._1, ItfCounterexampleWriter.exprToJson(p._2)))
+          val ujsonState = ujson.Obj(at.forsyte.apalache.io.itf.META_FIELD -> meta, fields: _*)
+          ujsonToJackson(ujsonState)
+        }
+
+      case _ =>
+        NullNode.getInstance()
+    }
+  }
 
   private def getViewInJson(
       checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
@@ -843,17 +892,34 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
 }
 
 object JsonRpcServerApp {
+
+  /** Minimum response size in bytes to apply compression. Smaller payloads are sent uncompressed. */
+  private val MIN_COMPRESS_SIZE = 512
+
   def run(config: Try[ApalacheConfig], port: Int): Unit = {
     val server = new Server(port)
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")
-    server.setHandler(context)
 
     val service = new ExplorationService(config)
     context.addServlet(new ServletHolder(new JsonRpcServlet(service)), "/rpc")
 
+    // Wrap the servlet context with a CompressionHandler that supports gzip and zstd.
+    // Compression implementations are registered explicitly so we can set minCompressSize.
+    // The handler transparently compresses responses (when Accept-Encoding is set)
+    // and decompresses requests (when Content-Encoding is set).
+    val compressionHandler = new CompressionHandler()
+    val gzip = new GzipCompression()
+    gzip.setMinCompressSize(MIN_COMPRESS_SIZE)
+    compressionHandler.putCompression(gzip)
+    val zstd = new ZstandardCompression()
+    zstd.setMinCompressSize(MIN_COMPRESS_SIZE)
+    compressionHandler.putCompression(zstd)
+    compressionHandler.setHandler(context)
+    server.setHandler(compressionHandler)
+
     server.start()
-    println(s"JSON-RPC server running on http://localhost:$port/rpc")
+    println(s"JSON-RPC server running on http://localhost:$port/rpc (gzip+zstd compression enabled)")
     server.join()
   }
 
