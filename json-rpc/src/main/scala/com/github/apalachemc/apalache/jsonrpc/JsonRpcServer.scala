@@ -476,13 +476,16 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
       val traceInJson =
         if (params.kinds.contains(QueryKind.TRACE)) getTraceInJson(checkerContext, params.timeoutSec)
         else NullNode.getInstance()
+      val stateInJson =
+        if (params.kinds.contains(QueryKind.STATE)) getLastStateInJson(checkerContext, params.timeoutSec)
+        else NullNode.getInstance()
       for {
         viewInJson <-
           if (!params.kinds.contains(QueryKind.OPERATOR)) Right(NullNode.getInstance(): JsonNode)
           else
             getViewInJson(checkerContext, params.operator, params.timeoutSec).left.map(msg =>
               ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
-      } yield QueryResult(params.sessionId, trace = traceInJson, operatorValue = viewInJson)
+      } yield QueryResult(params.sessionId, trace = traceInJson, state = stateInJson, operatorValue = viewInJson)
     }
 
   /**
@@ -612,6 +615,39 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
       case _ =>
         // no trace or unknown
+        NullNode.getInstance()
+    }
+
+  /**
+   * Extract only the last state from the transition executor and serialize it to Jackson JSON.
+   *
+   * @return
+   *   a JSON-encoded last state
+   */
+  private def getLastStateInJson(
+      checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
+      timeoutSec: Int): JsonNode =
+    checkerContext.trex.sat(timeoutSec) match {
+      case Some(true) =>
+        val path = checkerContext.trex.decodedExecution().path
+        val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
+            path.map(_ => SortedSet[String]()).toIndexedSeq, ())
+        if (counterexample.states.isEmpty) {
+          NullNode.getInstance()
+        } else {
+          // Merge constInit and varInit for the first state, consistent with mkJson
+          val state0 = counterexample.states match {
+            case constInit +: Seq()          => constInit
+            case constInit +: initState +: _ => constInit ++ initState
+            case _                           => Map.empty[String, at.forsyte.apalache.tla.lir.TlaEx]
+          }
+          val mappedStates = state0 +: counterexample.states.drop(2)
+          val lastIndex = mappedStates.length - 1
+          val ujsonState = ItfCounterexampleWriter.stateToJson(mappedStates.last, lastIndex)
+          ujsonToJackson(ujsonState)
+        }
+
+      case _ =>
         NullNode.getInstance()
     }
 

@@ -173,10 +173,17 @@ case class CheckInvariantResult(sessionId: String, invariantStatus: InvariantSta
  *   the ID of the previously loaded specification
  * @param trace
  *   a JSON-encoded trace, if it was requested; otherwise null
+ * @param state
+ *   a JSON-encoded last state of the decoded trace, if it was requested; otherwise null
  * @param operatorValue
  *   a JSON-encoded operator result, if it was requested; otherwise null
  */
-case class QueryResult(sessionId: String, trace: JsonNode, operatorValue: JsonNode) extends ExplorationServiceResult
+case class QueryResult(
+    sessionId: String,
+    trace: JsonNode,
+    state: JsonNode,
+    operatorValue: JsonNode)
+    extends ExplorationServiceResult
 
 /**
  * The result of finding the next model.

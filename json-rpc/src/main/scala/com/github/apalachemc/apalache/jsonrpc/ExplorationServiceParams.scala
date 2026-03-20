@@ -28,6 +28,12 @@ object QueryKind {
    * Extract an execution trace.
    */
   val TRACE = "TRACE"
+
+  /**
+   * Extract only the last state of the decoded execution trace. This is useful when the full trace is too large, and
+   * the client only needs the most recent state.
+   */
+  val STATE = "STATE"
 }
 
 /**
