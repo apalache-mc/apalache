@@ -892,6 +892,7 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
 }
 
 object JsonRpcServerApp {
+
   /** Minimum response size in bytes to apply compression. Smaller payloads are sent uncompressed. */
   private val MIN_COMPRESS_SIZE = 512
 
