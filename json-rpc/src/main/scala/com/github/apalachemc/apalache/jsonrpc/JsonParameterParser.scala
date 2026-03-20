@@ -218,8 +218,9 @@ class JsonParameterParser(mapper: ObjectMapper) {
       if (applyParams.kinds.isEmpty) {
         return Left("query parameters must contain a non-empty `kinds` array.")
       }
-      if (applyParams.kinds.exists(k => k != QueryKind.OPERATOR && k != QueryKind.TRACE)) {
-        return Left(s"Field `kinds` may contain only: ${QueryKind.OPERATOR} or ${QueryKind.TRACE}.")
+      if (applyParams.kinds.exists(k => k != QueryKind.OPERATOR && k != QueryKind.TRACE && k != QueryKind.STATE)) {
+        return Left(
+            s"Field `kinds` may contain only: ${QueryKind.OPERATOR}, ${QueryKind.TRACE}, or ${QueryKind.STATE}.")
       }
       if (applyParams.kinds.contains(QueryKind.OPERATOR) && applyParams.operator == "") {
         return Left(s"Field `operator` must be provided when `kinds` contains '${QueryKind.OPERATOR}'.")

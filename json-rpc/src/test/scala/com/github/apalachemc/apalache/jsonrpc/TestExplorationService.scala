@@ -340,10 +340,11 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
     service
       .query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE, QueryKind.OPERATOR),
               operator = "View")) match {
-      case Right(QueryResult(newSessionId, trace, expr)) =>
+      case Right(QueryResult(newSessionId, trace, state, expr)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after querying")
         assert(expr.toString == """false""", "View should be false at x=3")
         assert(!trace.isNull, "Trace should not be empty")
+        assert(state.isNull, "State should be null when STATE kind is not requested")
         val states = trace.get("states")
         assert(states.size() == 3)
         assert(states.get(0).toString == """{"#meta":{"index":0},"x":{"#bigint":"0"}}""")
@@ -360,10 +361,78 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
     val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
     val sessionId = specResult.sessionId
     service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE))) match {
-      case Right(QueryResult(newSessionId, trace, expr)) =>
+      case Right(QueryResult(newSessionId, trace, state, expr)) =>
         assert(newSessionId == sessionId, "Session ID should remain the same after querying")
         assert(expr.isNull, "Expr should be null")
+        assert(state.isNull, "State should be null when STATE kind is not requested")
         assert(!trace.isNull, "Trace should not be empty")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
+  test("sequence 0-0-0 then query STATE") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    for (_ <- 0 until 3) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    service
+      .query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.STATE))) match {
+      case Right(QueryResult(newSessionId, trace, state, expr)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after querying")
+        assert(trace.isNull, "Trace should be null when TRACE kind is not requested")
+        assert(expr.isNull, "Expr should be null when OPERATOR kind is not requested")
+        assert(!state.isNull, "State should not be null when STATE kind is requested")
+        assert(state.toString == """{"#meta":{"index":2},"x":{"#bigint":"2"}}""",
+            "State should be the last state in the trace")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
+  test("sequence 0-0-0 then query STATE and OPERATOR") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1), exports = List("View"))).toOption.get
+    val sessionId = specResult.sessionId
+    val t0 = AssumeTransitionParams(sessionId = sessionId, transitionId = 0, checkEnabled = true)
+    for (_ <- 0 until 3) {
+      assert(service.assumeTransition(t0).isRight)
+      assert(service.nextStep(NextStepParams(sessionId = sessionId)).isRight)
+    }
+    service
+      .query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.STATE, QueryKind.OPERATOR),
+              operator = "View")) match {
+      case Right(QueryResult(newSessionId, trace, state, expr)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after querying")
+        assert(trace.isNull, "Trace should be null when TRACE kind is not requested")
+        assert(!state.isNull, "State should not be null when STATE kind is requested")
+        assert(state.toString == """{"#meta":{"index":2},"x":{"#bigint":"2"}}""",
+            "State should be the last state in the trace")
+        assert(expr.toString == """false""", "View should be false at x=3")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to query: $error")
+    }
+  }
+
+  test("query STATE to construct model") {
+    val specResult = service.loadSpec(LoadSpecParams(sources = Seq(spec1))).toOption.get
+    val sessionId = specResult.sessionId
+    service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.STATE))) match {
+      case Right(QueryResult(newSessionId, trace, state, expr)) =>
+        assert(newSessionId == sessionId, "Session ID should remain the same after querying")
+        assert(trace.isNull, "Trace should be null")
+        assert(expr.isNull, "Expr should be null")
+        assert(!state.isNull, "State should not be null")
+        // Before any transition, the state is the pre-init state (empty bindings)
+        assert(state.toString == """{"#meta":{"index":0}}""")
       case Right(result) =>
         fail(s"Unexpected result: $result")
       case Left(error) =>
@@ -527,7 +596,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
         // Query the trace to verify the state after compaction + one more step.
         // After B (x' = x - 1), x should be 2.
         service.query(QueryParams(sessionId = sessionId, kinds = List(QueryKind.TRACE))) match {
-          case Right(QueryResult(_, trace, _)) =>
+          case Right(QueryResult(_, trace, _, _)) =>
             assert(!trace.isNull, "Trace should not be null after compaction and further exploration")
             val states = trace.get("states")
             // After compact (synthetic init setting x=3) + one Next step, there should be 2 states

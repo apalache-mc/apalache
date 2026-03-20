@@ -532,6 +532,10 @@ Given a session identifier, query the current context for values of several kind
  - `"TRACE"`: A concrete trace that follows the symbolic path constructed so far.
    There may be multiple such traces. This call returns the trace that
    was found by the SMT solver.
+ - `"STATE"`: The last state of the concrete trace that follows the symbolic path
+   constructed so far. This is useful when the full trace would produce a very
+   large JSON payload, and the client only needs the most recent state.
+   The result is a single ITF state object (not the full trace envelope).
  - `"OPERATOR"`: A value of the operator whose name is given in `operator`. This name
    must be exported in the `loadSpec` method, unless it is also used in the standard
    operators such as `Init`, `Next`, and the invariants. The operator `operator`
@@ -574,14 +578,16 @@ set, or it is set to `0`, then the timeout is infinite.
 **Output:**
 
 The output contains the session identifier, and, depending on the requested
-kinds, the trace (field `trace`) and/or the expression value (field `expr`). Both `trace`
-and `expr` are in the [ITF Format][].
+kinds, the trace (field `trace`), the last state (field `state`),
+and/or the expression value (field `operatorValue`). The fields `trace`,
+`state`, and `operatorValue` are in the [ITF Format][].
 
 ```json
 {
   "result": {
     "sessionId": "${session-identifier}",
     "trace": "${trace-in-itf-or-null}",
+    "state": "${last-state-in-itf-or-null}",
     "operatorValue": "${expr-in-itf-or-null}"
   }
 }
@@ -600,7 +606,7 @@ $ curl -X POST http://localhost:8822/rpc \
 The output is as follows:
 
 ```json
-{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"operatorValue":{"#tup":[false,true,false]}}}
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"state":null,"operatorValue":{"#tup":[false,true,false]}}}
 ```
 
 ### 2.8. Method nextModel
@@ -735,6 +741,7 @@ stops at the first failing step.
         "result": {
           "sessionId": "${session-identifier}",
           "trace": null,
+          "state": null,
           "operatorValue": "${expr-in-itf-or-null}"
         },
         "error": null
