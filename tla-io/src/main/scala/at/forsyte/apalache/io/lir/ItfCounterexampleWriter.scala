@@ -89,7 +89,17 @@ object ItfCounterexampleWriter {
     if (names.isEmpty) None else Some(ujson.Arr(names: _*))
   }
 
-  private def stateToJson(state: Map[String, TlaEx], index: Int): ujson.Value = {
+  /**
+   * Convert a single state (variable assignments) to its JSON representation in the ITF format.
+   *
+   * @param state
+   *   the variable assignments for the state
+   * @param index
+   *   the index of the state in the trace
+   * @return
+   *   a JSON representation of the state
+   */
+  def stateToJson(state: Map[String, TlaEx], index: Int): ujson.Value = {
     val meta = ujson.Obj(INDEX_FIELD -> ujson.Num(index))
     val map = state.toList.sortBy(_._1).map(p => (p._1, exprToJson(p._2)))
     ujson.Obj(META_FIELD -> meta, map: _*)
