@@ -633,18 +633,21 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         if (path.isEmpty) {
           NullNode.getInstance()
         } else {
-          val (lastState, lastIndex) =
-            path match {
-              case constInit +: Seq() =>
-                (constInit.assignments, 0)
+        val (lastState, lastIndex) =
+          path match {
+            case constInit +: Seq() =>
+              // Only constInit, no further states
+              (constInit.assignments, 0)
 
-              case constInit +: initState +: _ =>
-                (constInit.assignments ++ (initState.assignments), 0)
+            case constInit +: initState +: Seq() =>
+              // Exactly constInit + initState: merge them (consistent with mkJson)
+              (constInit.assignments ++ initState.assignments, 0)
 
-              case longer =>
-                val lastIndex = path.length - 1
-                (longer(lastIndex).assignments, lastIndex)
-            }
+            case _ =>
+              // 3+ states: the last state needs no merging; index accounts for
+              // the first two being collapsed into one (mapped length = path.length - 1)
+              (path.last.assignments, path.length - 2)
+          }
 
           // Serialize the single state in the same format as ItfCounterexampleWriter.stateToJson
           val meta = ujson.Obj(at.forsyte.apalache.io.itf.INDEX_FIELD -> ujson.Num(lastIndex))
