@@ -643,7 +643,11 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           }
           val mappedStates = state0 +: counterexample.states.drop(2)
           val lastIndex = mappedStates.length - 1
-          val ujsonState = ItfCounterexampleWriter.stateToJson(mappedStates.last, lastIndex)
+          val lastState = mappedStates.last
+          // Serialize the single state in the same format as ItfCounterexampleWriter.stateToJson
+          val meta = ujson.Obj(at.forsyte.apalache.io.itf.INDEX_FIELD -> ujson.Num(lastIndex))
+          val fields = lastState.toList.sortBy(_._1).map(p => (p._1, ItfCounterexampleWriter.exprToJson(p._2)))
+          val ujsonState = ujson.Obj(at.forsyte.apalache.io.itf.META_FIELD -> meta, fields: _*)
           ujsonToJackson(ujsonState)
         }
 
