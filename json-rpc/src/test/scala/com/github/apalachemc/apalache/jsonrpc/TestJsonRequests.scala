@@ -259,6 +259,41 @@ class TestJsonRequests extends AnyFunSuite {
     }
   }
 
+  test("parse QueryParams with STATE kind") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "query",
+         |"params": { "sessionId": "1a1555f8", "kinds": ["STATE"] },
+         |"id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseQuery(inputJson.path("params"))
+    parsed match {
+      case Right(params: QueryParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.kinds == List(QueryKind.STATE), "Unexpected kinds")
+      case Left(error) =>
+        fail(s"Failed: $error")
+    }
+  }
+
+  test("parse QueryParams with STATE and OPERATOR kinds") {
+    val input =
+      s"""{"jsonrpc": "2.0", "method": "query",
+         |"params": { "sessionId": "1a1555f8", "kinds": ["STATE", "OPERATOR"], "operator": "View" },
+         |"id": 1}""".stripMargin
+    val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
+    val inputJson = mapper.readTree(input)
+    val parsed = new JsonParameterParser(mapper).parseQuery(inputJson.path("params"))
+    parsed match {
+      case Right(params: QueryParams) =>
+        assert(params.sessionId == "1a1555f8", "Unexpected session ID")
+        assert(params.kinds == List(QueryKind.STATE, QueryKind.OPERATOR), "Unexpected kinds")
+        assert(params.operator != "", "Expected `operator` to be defined")
+      case Left(error) =>
+        fail(s"Failed: $error")
+    }
+  }
+
   test("parse ApplyInOrderParams") {
     val input =
       s"""{"jsonrpc": "2.0", "method": "applyInOrder",
