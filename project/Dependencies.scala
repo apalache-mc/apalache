@@ -49,11 +49,11 @@ object Dependencies {
     val scalapbRuntime =
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
     // json-rpc dependencies
-    val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.1.0" % Provided
+    val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
     val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.1"
-    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.26"
-    val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.26"
+    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "12.0.21"
+    val jettyServlet = "org.eclipse.jetty.ee10" % "jetty-ee10-servlet" % "12.0.21"
   }
 
   // Test only depenendencies
