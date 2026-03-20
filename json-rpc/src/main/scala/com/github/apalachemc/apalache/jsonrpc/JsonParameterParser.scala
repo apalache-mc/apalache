@@ -9,14 +9,23 @@ import com.fasterxml.jackson.databind.ObjectMapper
  *   An instance of ObjectMapper for converting JSON values.
  */
 class JsonParameterParser(mapper: ObjectMapper) {
+  private val applyInOrderMethods = Set(
+      "assumeTransition",
+      "assumeState",
+      "nextStep",
+      "query",
+      "checkInvariant",
+      "nextModel",
+      "rollback",
+      "compact",
+  )
 
   /**
-   * Parses the parameters for loading a specification. The expected format is a JSON object with a "sources" field,
-   * which is a sequence of pairs, where each pair consists of a name and a base64-encoded content.
+   * Parses the parameters for loading a specification.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[LoadSpecParams]] instance containing the parsed sources.
+   *   either an error message or a [[LoadSpecParams]] instance
    */
   def parseLoadSpec(params: TreeNode): Either[String, LoadSpecParams] = {
     try {
@@ -39,11 +48,11 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
-   * Parses the parameters for disposing a session in the JSON-RPC server.
+   * Parses the parameters for disposing a session.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[DisposeSpecParams]] instance.
+   *   either an error message or a [[DisposeSpecParams]] instance
    */
   def parseDisposeSpec(params: TreeNode): Either[String, DisposeSpecParams] = {
     try {
@@ -59,11 +68,11 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
-   * Parses the parameters for preparing a transition in the JSON-RPC server.
+   * Parses the parameters for preparing a transition.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[AssumeTransitionParams]] instance.
+   *   either an error message or an [[AssumeTransitionParams]] instance
    */
   def parseAssumeTransition(params: TreeNode): Either[String, AssumeTransitionParams] = {
     try {
@@ -82,11 +91,11 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
-   * Parses the parameters for assuming state constraints in the JSON-RPC server.
+   * Parses the parameters for assuming state constraints.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[AssumeStateParams]] instance.
+   *   either an error message or an [[AssumeStateParams]] instance
    */
   def parseAssumeState(params: TreeNode): Either[String, AssumeStateParams] = {
     try {
@@ -104,9 +113,9 @@ class JsonParameterParser(mapper: ObjectMapper) {
   /**
    * Parses the parameters for rolling back to an earlier snapshot.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[RollbackParams]] instance.
+   *   either an error message or a [[RollbackParams]] instance
    */
   def parseRollback(params: TreeNode): Either[String, RollbackParams] = {
     try {
@@ -125,11 +134,34 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
+   * Parses the parameters for compacting the symbolic trace.
+   * @param params
+   *   the `params` field from a JSON-RPC request
+   * @return
+   *   either an error message or a [[CompactParams]] instance
+   */
+  def parseCompact(params: TreeNode): Either[String, CompactParams] = {
+    try {
+      val compactParams = mapper.treeToValue(params, classOf[CompactParams])
+      if (compactParams.sessionId.isEmpty) {
+        return Left("compact parameters must contain a non-empty sessionId.")
+      }
+      if (compactParams.snapshotId < 0) {
+        return Left("compact parameters must contain a non-negative snapshotId.")
+      }
+      Right(compactParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in compact: ${e.getMessage}")
+    }
+  }
+
+  /**
    * Parses the parameters for switching to the next step.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[NextStepParams]] instance.
+   *   either an error message or a [[NextStepParams]] instance
    */
   def parseNextStep(params: TreeNode): Either[String, NextStepParams] = {
     try {
@@ -145,11 +177,11 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
-   * Parses the parameters for checking invariants against the symbolic state.
+   * Parses the parameters for checking invariants.
    * @param node
-   *   tree node representing the JSON method parameters
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[CheckInvariantParams]] instance.
+   *   either an error message or a [[CheckInvariantParams]] instance
    */
   def parseCheckInvariant(node: TreeNode): Either[String, CheckInvariantParams] = {
     try {
@@ -171,11 +203,11 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
-   * Parses the parameters for querying the current symbolic context.
+   * Parses the parameters for querying the symbolic context.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[QueryParams]] instance.
+   *   either an error message or a [[QueryParams]] instance
    */
   def parseQuery(params: TreeNode): Either[String, QueryParams] = {
     try {
@@ -186,8 +218,9 @@ class JsonParameterParser(mapper: ObjectMapper) {
       if (applyParams.kinds.isEmpty) {
         return Left("query parameters must contain a non-empty `kinds` array.")
       }
-      if (applyParams.kinds.exists(k => k != QueryKind.OPERATOR && k != QueryKind.TRACE)) {
-        return Left(s"Field `kinds` may contain only: ${QueryKind.OPERATOR} or ${QueryKind.TRACE}.")
+      if (applyParams.kinds.exists(k => k != QueryKind.OPERATOR && k != QueryKind.TRACE && k != QueryKind.STATE)) {
+        return Left(
+            s"Field `kinds` may contain only: ${QueryKind.OPERATOR}, ${QueryKind.TRACE}, or ${QueryKind.STATE}.")
       }
       if (applyParams.kinds.contains(QueryKind.OPERATOR) && applyParams.operator == "") {
         return Left(s"Field `operator` must be provided when `kinds` contains '${QueryKind.OPERATOR}'.")
@@ -200,11 +233,11 @@ class JsonParameterParser(mapper: ObjectMapper) {
   }
 
   /**
-   * Parses the parameters for switching the current symbolic context to the next model.
+   * Parses the parameters for switching to the next model.
    * @param params
-   *   The "params" field from a JSON-RPC request, expected to be a TreeNode.
+   *   the `params` field from a JSON-RPC request
    * @return
-   *   Either an error message or a [[NextModelParams]] instance.
+   *   either an error message or a [[NextModelParams]] instance
    */
   def parseNextModel(params: TreeNode): Either[String, NextModelParams] = {
     try {
@@ -219,6 +252,37 @@ class JsonParameterParser(mapper: ObjectMapper) {
     } catch {
       case e: Exception =>
         Left(s"Parse error in nextStep: ${e.getMessage}")
+    }
+  }
+
+  /**
+   * Parses the parameters for applying several stateful calls in order.
+   * @param params
+   *   the `params` field from a JSON-RPC request
+   * @return
+   *   either an error message or an [[ApplyInOrderParams]] instance
+   */
+  def parseApplyInOrder(params: TreeNode): Either[String, ApplyInOrderParams] = {
+    try {
+      val applyParams = mapper.treeToValue(params, classOf[ApplyInOrderParams])
+      if (applyParams.sessionId.isEmpty) {
+        return Left("applyInOrder parameters must contain a non-empty sessionId.")
+      }
+      if (applyParams.calls.isEmpty) {
+        return Left("applyInOrder parameters must contain a non-empty calls array.")
+      }
+      applyParams.calls.foreach { step =>
+        if (!applyInOrderMethods.contains(step.method)) {
+          return Left(s"Unsupported applyInOrder method: ${step.method}.")
+        }
+        if (step.params == null || !step.params.isObject) {
+          return Left(s"Parameters for applyInOrder step '${step.method}' must be a JSON object.")
+        }
+      }
+      Right(applyParams)
+    } catch {
+      case e: Exception =>
+        Left(s"Parse error in applyInOrder: ${e.getMessage}")
     }
   }
 }

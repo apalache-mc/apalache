@@ -30,3 +30,7 @@ metals.sbt
 
 # Ignore MacOS files
 .DS_Store
+
+# Python virtual environment
+.venv/
+_run

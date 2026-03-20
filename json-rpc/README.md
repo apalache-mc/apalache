@@ -8,6 +8,24 @@ This server is not meant to be a replacement for the current gRPC server (SHAI).
 Rather, it is a lightweight alternative that can be used for symbolic
 exploration of TLA+ specifications.
 
+## Table of Contents
+
+- [1. Design principles](#1-design-principles)
+- [2. Compression](#2-compression)
+- [3. JSON-RPC methods](#3-json-rpc-methods)
+  - [3.0. Method health](#30-method-health)
+  - [3.1. Method loadSpec](#31-method-loadspec)
+  - [3.2. Method disposeSpec](#32-method-disposespec)
+  - [3.3. Method rollback](#33-method-rollback)
+  - [3.4. Method assumeTransition](#34-method-assumetransition)
+  - [3.5. Method nextState](#35-method-nextstate)
+  - [3.6. Method checkInvariant](#36-method-checkinvariant)
+  - [3.7. Method query](#37-method-query)
+  - [3.8. Method nextModel](#38-method-nextmodel)
+  - [3.9. Method applyInOrder](#39-method-applyinorder)
+  - [3.10. Method assumeState](#310-method-assumestate)
+  - [3.11. Method compact](#311-method-compact)
+
 ## 1. Design principles
 
 - The server is designed for running on a local machine:
@@ -44,7 +62,39 @@ exploration of TLA+ specifications.
       It uses plain-old Java objects, and it supports basic Scala types. No advanced
       FP here.
 
-## 2. JSON-RPC methods
+## 2. Compression
+
+The server supports transparent **gzip** and **Zstandard (zstd)** compression
+for both requests and responses via standard HTTP content negotiation:
+
+- **Response compression**: Send `Accept-Encoding: gzip` or
+  `Accept-Encoding: zstd` in your request headers. Responses larger than 512
+  bytes will be compressed accordingly. The server sets `Content-Encoding` in
+  the response to indicate the encoding used.
+
+- **Request decompression**: Send a compressed request body and set
+  `Content-Encoding: gzip` or `Content-Encoding: zstd` in your request headers.
+  The server decompresses the body transparently.
+
+**Examples with `curl`:**
+
+```sh
+# gzip-compressed response
+$ curl --compressed -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"health","params":{},"id":1}'
+
+# zstd-compressed response
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -H "Accept-Encoding: zstd" \
+  -d '{"jsonrpc":"2.0","method":"health","params":{},"id":1}'
+```
+
+Clients that do not send `Accept-Encoding` receive uncompressed responses, so
+existing integrations continue to work without changes.
+
+## 3. JSON-RPC methods
 
 In the following, we only describe successful responses. If an error occurs,
 the server will return a JSON object with the `error` field, which contains
@@ -69,7 +119,7 @@ first:
 $ ../bin/apalache-mc server --server-type=explorer
 ```
 
-### 2.0. Method health
+### 3.0. Method health
 
 This is a diagnostic method that checks whether the server is alive.
 
@@ -103,7 +153,7 @@ $ curl -X POST http://localhost:8822/rpc \
   -d '{"jsonrpc":"2.0","method":"health","params":{},"id":1}'
 ```
 
-### 2.1. Method loadSpec
+### 3.1. Method loadSpec
 
 Load a TLA+ specification from a list of base64-encoded source files.
 The server will parse the specification and store all the necessary
@@ -234,7 +284,7 @@ It should produce the following output:
 }
 ```
 
-### 2.2. Method disposeSpec
+### 3.2. Method disposeSpec
 
 Dispose the state that is associated with a session, including the SMT solver.
 You should call this method when you are done with the session. The session
@@ -283,7 +333,7 @@ It produces an output like this:
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1"}}
 ```
 
-### 2.3. Method rollback
+### 3.3. Method rollback
 
 Rollback the context of a session to an earlier snapshot. The snapshot identifier
 must have been returned by an earlier call.
@@ -342,7 +392,7 @@ It produces the following output:
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":0}}
 ```
 
-### 2.4. Method assumeTransition
+### 3.4. Method assumeTransition
 
 Given a session identifier and a transition identifier, prepare this transition in the
 SMT context and assume that this transition holds true. Additionally, if `checkEnabled`
@@ -403,7 +453,7 @@ It produces the following output:
 {"jsonrpc":"2.0","id":2,"result":{"sessionId":"1","snapshotId":1,"transitionId":0,"status":"ENABLED"}}
 ```
 
-### 2.5. Method nextState
+### 3.5. Method nextState
 
 Given a session identifier, switch to the next symbolic state. This method should be called
 only after the `assumeTransition` method was called successfully (with the status `"ENABLED"`
@@ -457,7 +507,7 @@ It produces the following output:
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":3,"newStepNo":1}}
 ```
 
-### 2.6. Method checkInvariant
+### 3.6. Method checkInvariant
 
 Given a session identifier and an invariant identifier, check whether this invariant can be violated
 by a concrete execution that follows the collected symbolic path. The invariant identifier is a number
@@ -525,13 +575,17 @@ The output is as follows:
 {"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","invariantStatus":"SATISFIED"}}
 ```
 
-### 2.7. Method query
+### 3.7. Method query
 
 Given a session identifier, query the current context for values of several kinds:
 
  - `"TRACE"`: A concrete trace that follows the symbolic path constructed so far.
    There may be multiple such traces. This call returns the trace that
    was found by the SMT solver.
+ - `"STATE"`: The last state of the concrete trace that follows the symbolic path
+   constructed so far. This is useful when the full trace would produce a very
+   large JSON payload, and the client only needs the most recent state.
+   The result is a single ITF state object (not the full trace envelope).
  - `"OPERATOR"`: A value of the operator whose name is given in `operator`. This name
    must be exported in the `loadSpec` method, unless it is also used in the standard
    operators such as `Init`, `Next`, and the invariants. The operator `operator`
@@ -574,14 +628,16 @@ set, or it is set to `0`, then the timeout is infinite.
 **Output:**
 
 The output contains the session identifier, and, depending on the requested
-kinds, the trace (field `trace`) and/or the expression value (field `expr`). Both `trace`
-and `expr` are in the [ITF Format][].
+kinds, the trace (field `trace`), the last state (field `state`),
+and/or the expression value (field `operatorValue`). The fields `trace`,
+`state`, and `operatorValue` are in the [ITF Format][].
 
 ```json
 {
   "result": {
     "sessionId": "${session-identifier}",
     "trace": "${trace-in-itf-or-null}",
+    "state": "${last-state-in-itf-or-null}",
     "operatorValue": "${expr-in-itf-or-null}"
   }
 }
@@ -600,10 +656,10 @@ $ curl -X POST http://localhost:8822/rpc \
 The output is as follows:
 
 ```json
-{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"operatorValue":{"#tup":[false,true,false]}}}
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","trace":null,"state":null,"operatorValue":{"#tup":[false,true,false]}}}
 ```
 
-### 2.8. Method nextModel
+### 3.8. Method nextModel
 
 Given a session identifier, find a model that is different from the one in the
 current context. This method requires a call to the SMT solver, so it may take
@@ -640,6 +696,117 @@ returned by `nextState`).
     "timeoutSec": "${timeout-in-seconds-or-0}"
   }
 }
+```
+
+### 3.9. Method applyInOrder
+
+For stateful exploration workloads, standard JSON-RPC batch arrays are not a good
+fit: JSON-RPC does not require ordered execution, while Apalache exploration is
+session- and snapshot-sensitive. The `applyInOrder` method executes several
+stateful exploration steps sequentially under a single session lock and returns
+ordered per-step results in one HTTP round trip.
+
+`applyInOrder` is intended for the same session-local methods that are already
+available as individual JSON-RPC calls:
+
+- `"assumeTransition"`
+- `"assumeState"`
+- `"nextStep"`
+- `"query"`
+- `"checkInvariant"`
+- `"nextModel"`
+- `"rollback"`
+- `"compact"`
+
+The enclosing request carries the `sessionId`. Each step carries only
+method-specific parameters.
+
+**Input:**
+
+```json
+{
+  "method": "applyInOrder",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "calls": [
+      {
+        "method": "assumeTransition",
+        "params": {
+          "transitionId": 0,
+          "checkEnabled": true,
+          "timeoutSec": 10
+        }
+      },
+      {
+        "method": "nextStep",
+        "params": {}
+      },
+      {
+        "method": "query",
+        "params": {
+          "kinds": ["OPERATOR"],
+          "operator": "View",
+          "timeoutSec": 10
+        }
+      }
+    ]
+  }
+}
+```
+
+**Output:**
+
+Each entry in `result.calls` is either a successful result with `ok = true` and
+`result`, or the first failing step with `ok = false` and `error`. Execution
+stops at the first failing step.
+
+```json
+{
+  "result": {
+    "calls": [
+      {
+        "ok": true,
+        "method": "assumeTransition",
+        "result": {
+          "sessionId": "${session-identifier}",
+          "snapshotId": "${snapshot-id}",
+          "transitionId": 0,
+          "status": "ENABLED"
+        },
+        "error": null
+      },
+      {
+        "ok": true,
+        "method": "nextStep",
+        "result": {
+          "sessionId": "${session-identifier}",
+          "snapshotId": "${snapshot-id}",
+          "newStepNo": 1
+        },
+        "error": null
+      },
+      {
+        "ok": true,
+        "method": "query",
+        "result": {
+          "sessionId": "${session-identifier}",
+          "trace": null,
+          "state": null,
+          "operatorValue": "${expr-in-itf-or-null}"
+        },
+        "error": null
+      }
+    ]
+  }
+}
+```
+
+**Example**:
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"applyInOrder","params":{"sessionId":"1","calls":[{"method":"assumeTransition","params":{"transitionId":0,"checkEnabled":true,"timeoutSec":10}},{"method":"nextStep","params":{}},{"method":"query","params":{"kinds":["OPERATOR"],"operator":"View","timeoutSec":10}}]},"id":7}'
 ```
 
 **Output:**
@@ -701,7 +868,7 @@ The output is as follows:
 }
 ```
 
-### 2.9. Method assumeState
+### 3.10. Method assumeState
 
 Given a session identifier and concrete equalities `x = e` over a subset of the state
 variables, add the equality constraints to the SMT context. The expressions in the
@@ -765,6 +932,68 @@ It produces the following output:
 
 ```json  
 {"jsonrpc":"2.0","id":4,"result":{"sessionId":"1","snapshotId":5,"status":"ENABLED"}}
+```
+
+### 3.11. Method compact
+
+Given a session identifier and a snapshot identifier, compact the current symbolic
+trace. The method queries the SMT solver for a concrete model of the current context,
+extracts the last state from the decoded execution trace, rolls back to the given
+snapshot, and asserts the extracted state values as equality constraints on the state
+variables. This effectively replaces a long symbolic trace with a single concrete
+state, resetting the solver complexity. This is useful after 200–300 symbolic steps,
+when the accumulated constraints begin to slow down the solver.
+
+**Precondition.** The current context must be satisfiable (i.e., there must be a
+valid model). The `snapshotId` must have been returned by an earlier method call.
+The parameter `timeoutSec` sets the timeout for the satisfiability check; if `0` or
+unset, the timeout is infinite.
+
+**Effect.** The method decodes the last state from the current execution trace,
+rolls back the context to `snapshotId` (discarding all later snapshots), asserts
+`var = value` equalities for each state variable using the decoded values, and
+takes a new snapshot. The symbolic trace history is forgotten; only the concrete
+last state is preserved as constraints.
+
+**Input:**
+
+```json
+{
+  "method": "compact",
+  "params": {
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${snapshot-id-to-revert-to}",
+    "timeoutSec": "${timeout-in-seconds-or-0}"
+  }
+}
+```
+
+**Output:**
+
+```json
+{
+  "result": {
+    "sessionId": "${session-identifier}",
+    "snapshotId": "${new-snapshot-id-after-compaction}"
+  }
+}
+```
+
+**Example**:
+
+Execute the following command (assuming a session has been loaded and several
+transitions have been applied):
+
+```sh
+$ curl -X POST http://localhost:8822/rpc \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"compact","params":{"sessionId":"1","snapshotId":0},"id":5}'
+```
+
+It produces an output like this:
+
+```json
+{"jsonrpc":"2.0","id":5,"result":{"sessionId":"1","snapshotId":1}}
 ```
 
 
