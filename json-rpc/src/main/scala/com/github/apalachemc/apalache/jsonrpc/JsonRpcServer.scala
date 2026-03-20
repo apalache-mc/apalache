@@ -27,7 +27,7 @@ import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
+import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
 
 import java.io.StringReader
 import java.util.concurrent.atomic.AtomicInteger
