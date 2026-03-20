@@ -9,6 +9,7 @@
  * variants.
  *
  * Igor Konnov, Informal Systems, 2021-2022
+ * Igor Konnov, konnov.phd, 2026
  *)
 
 (**
@@ -32,8 +33,9 @@ UNIT == "U_OF_UNIT"
  *   (Str, a) => Tag(a) | b
  *)
 Variant(__tagName, __value) ==
-    \* default untyped implementation
-    [ tag |-> __tagName, value |-> __value ]
+    \* Default untyped implementation.
+    \* See the discussion in https://github.com/tlaplus/tlaplus/pull/1284
+    [ t \in { __tagName } |-> __value ]
 
 (**
  * Filter a set of variants with the provided tag value.
@@ -48,7 +50,7 @@ Variant(__tagName, __value) ==
  *)
 VariantFilter(__tagName, __S) ==
     \* default untyped implementation
-    { __d.value : __d \in { __e \in __S: __e.tag = __tagName } }
+    { __f[__tagName]: __f \in { __e \in __S: __tagName \in DOMAIN __e } }
 
 (**
  * Get the tag name that is associated with a variant.
@@ -62,7 +64,7 @@ VariantFilter(__tagName, __S) ==
  *)
 VariantTag(__variant) ==
     \* default untyped implementation
-    __variant.tag
+    CHOOSE __tag \in DOMAIN __variant: TRUE
 
 (**
  * Return the value associated with the tag, when the tag equals to __tagName.
@@ -79,8 +81,8 @@ VariantTag(__variant) ==
  *)
 VariantGetOrElse(__tagName, __variant, __defaultValue) ==
     \* default untyped implementation
-    IF __variant.tag = __tagName
-    THEN __variant.value
+    IF __tagName \in DOMAIN __variant
+    THEN __variant[__tagName]
     ELSE __defaultValue
 
 
@@ -100,6 +102,6 @@ VariantGetOrElse(__tagName, __variant, __defaultValue) ==
  *)
 VariantGetUnsafe(__tagName, __variant) ==
     \* the default untyped implementation
-    __variant.value
+    __variant[__tagName]
 
 ===============================================================================

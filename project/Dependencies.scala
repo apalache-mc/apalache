@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.25"
+    lazy val logbackVersion = "1.5.32"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -49,11 +49,15 @@ object Dependencies {
     val scalapbRuntime =
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
     // json-rpc dependencies
-    val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.1.0" % Provided
-    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.1"
-    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.1"
-    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.26"
-    val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.26"
+    lazy val jettyVersion = "12.1.7"
+    val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
+    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
+    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.2"
+    val jettyServer = "org.eclipse.jetty" % "jetty-server" % jettyVersion
+    val jettyServlet = "org.eclipse.jetty.ee10" % "jetty-ee10-servlet" % jettyVersion
+    val jettyCompressionServer = "org.eclipse.jetty.compression" % "jetty-compression-server" % jettyVersion
+    val jettyCompressionGzip = "org.eclipse.jetty.compression" % "jetty-compression-gzip" % jettyVersion
+    val jettyCompressionZstandard = "org.eclipse.jetty.compression" % "jetty-compression-zstandard" % jettyVersion
   }
 
   // Test only depenendencies

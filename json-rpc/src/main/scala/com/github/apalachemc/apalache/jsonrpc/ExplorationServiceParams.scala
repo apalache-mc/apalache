@@ -28,6 +28,12 @@ object QueryKind {
    * Extract an execution trace.
    */
   val TRACE = "TRACE"
+
+  /**
+   * Extract only the last state of the decoded execution trace. This is useful when the full trace is too large, and
+   * the client only needs the most recent state.
+   */
+  val STATE = "STATE"
 }
 
 /**
@@ -193,3 +199,36 @@ object AssumeStateParams {
     new AssumeStateParams(sessionId, equalities, checkEnabled, timeoutSec)
   }
 }
+
+/**
+ * Parameters for compacting the current symbolic trace.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param snapshotId
+ *   the snapshot ID to revert to after extracting the last state
+ * @param timeoutSec
+ *   the timeout in seconds for checking satisfiability. If `0`, the default timeout is used.
+ */
+case class CompactParams(
+    sessionId: String,
+    snapshotId: Int,
+    timeoutSec: Int = 0)
+    extends ExplorationServiceParams
+
+/**
+ * A method invocation to be executed inside applyInOrder.
+ * @param method
+ *   the name of an exploration method
+ * @param params
+ *   a JSON object with method-specific parameters; the enclosing sessionId is injected by the server
+ */
+case class ApplyInOrderCall(method: String, params: JsonNode)
+
+/**
+ * Parameters for executing multiple stateful operations in one ordered request.
+ * @param sessionId
+ *   the ID of the previously loaded specification
+ * @param calls
+ *   stateful exploration calls to execute sequentially under a single session lock
+ */
+case class ApplyInOrderParams(sessionId: String, calls: List[ApplyInOrderCall]) extends ExplorationServiceParams

@@ -250,6 +250,9 @@ lazy val json_rpc = (project in file("json-rpc"))
           Deps.jacksonModuleScala,
           Deps.jettyServer,
           Deps.jettyServlet,
+          Deps.jettyCompressionServer,
+          Deps.jettyCompressionGzip,
+          Deps.jettyCompressionZstandard,
       ),
   )
 
