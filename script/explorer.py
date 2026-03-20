@@ -172,7 +172,13 @@ class ApalacheExplorer:
             response = requests.post(
                 self.base_url,
                 json=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    # Request gzip-compressed responses from the server.
+                    # The requests library decompresses gzip transparently.
+                    # For zstd, install the 'zstandard' package and use a custom transport adapter.
+                    "Accept-Encoding": "gzip",
+                },
                 stream=True,
                 timeout=(10, None)
             )

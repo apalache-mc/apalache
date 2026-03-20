@@ -1,6 +1,32 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.56.0 - 2026-03-20
+
+### Features
+
+- Upgrade Jetty from 11 to 12.1.7 (EE10) and align Jakarta Servlet API to 6.0
+- Add gzip and Zstandard (zstd) compression support to the JSON-RPC server. Upgrade Jetty from 12.0.21 to 12.1.7 and use the new CompressionHandler for transparent HTTP content negotiation via Accept-Encoding / Content-Encoding (#3290).
+- Add `STATE` query kind to the JSON-RPC `query` method. When `kinds` includes `"STATE"`, the result contains a `state` field with only the last state of the decoded trace (a single ITF state object), instead of the entire trace. This significantly reduces JSON payload size for long symbolic explorations #3288.
+
+## 0.55.0 - 2026-03-18
+
+### Features
+
+- Add `compact` JSON-RPC method that extracts the last concrete state, reverts to a given snapshot and re-asserts it as a synthetic transition, resetting solver complexity after long symbolic explorations #3285
+
+## 0.54.0 - 2026-03-18
+
+## 0.52.3 - 2026-03-17
+
+### Features
+
+- Add the ordered JSON-RPC method `applyInOrder` for running several stateful exploration operations in one request, together with JSON-RPC documentation for its request and per-step response format (#3280).
+
+### Bug fixes
+
+- Fix Type1Lexer to properly tokenize 'RecvNotification' #3278
+
 ## 0.52.2 - 2026-01-29
 
 ### Bug fixes
