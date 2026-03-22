@@ -208,4 +208,14 @@ class TestPrinter extends AnyFunSuite with TestingPredefs {
     val d = TlaOperDecl("Foo", List(OperParam("Bar", 1)), ValEx(TlaInt(1)))
     assert("Foo(Bar(_)) ≜ 1" == UTFPrinter(d))
   }
+
+  // regression: LET-IN in the OTHER branch of CASE must be parenthesized.
+  // Without parens, `CASE p -> a [] OTHER -> LET c == 1 IN c` re-parses any
+  // following `/\ b` as inside the LET scope rather than outside the CASE.
+  test("LET-IN in CASE OTHER branch is parenthesized") {
+    val decl = TlaOperDecl("c", List(), ValEx(TlaInt(1)))
+    val letInEx = tla.letIn(tla.appOp(tla.name("c")), decl)
+    val caseEx = tla.caseOther(letInEx, n_p, n_a)
+    assert(toUtf(caseEx).contains("OTHER → (LET c"))
+  }
 }

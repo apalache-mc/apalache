@@ -1025,6 +1025,19 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert(stringWriter.toString.contains("(LET c =="))
   }
 
+  // regression: LET-IN in the OTHER branch of CASE must be parenthesized.
+  // Without parens, `CASE p -> a [] OTHER -> LET c == 1 IN c` re-parses any
+  // following `/\ b` as inside the LET scope rather than outside the CASE.
+  test("LET-IN in CASE OTHER branch is parenthesized") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    val decl = TlaOperDecl("c", List(), int(1))
+    val letInEx = letIn(appDecl(decl), decl)
+    val caseEx = caseOther(letInEx, bool(true), name("a"))
+    writer.write(caseEx)
+    printWriter.flush()
+    assert(stringWriter.toString.contains("OTHER -> (LET c =="))
+  }
+
   private def smiley(funT1: FunT1, key: TlaEx, value: TlaEx): TlaEx = {
     val smileyType = OperT1(Seq(funT1.arg, funT1.res), funT1)
     OperEx(TlaOper.apply, NameEx(":>")(Typed(smileyType)), key, value)(Typed(funT1))
