@@ -17,7 +17,6 @@ import at.forsyte.apalache.shai.v1.transExplorer.{
   TransExplorerErrorType, ZioTransExplorer,
 }
 import at.forsyte.apalache.infra.passes.options.SourceOption
-import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.tla.lir.TlaModule
 import io.grpc.Status
@@ -27,6 +26,7 @@ import zio.{Ref, ZEnv, ZIO}
 import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.passes.imp.ParserModule
 
 // TODO The connection type will become enriched with more structure
@@ -180,8 +180,8 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
               output = Output(Some(new java.io.File("."))),
           )
         }
-        PassChainExecutor
-          .run(new ParserModule(options))
+        PassChainExecutor(new ParserModule(options))
+          .run()
           .left
           .map { err =>
             TransExplorerError(errorType = TransExplorerErrorType.PASS_FAILURE, data = ujson.write(err))

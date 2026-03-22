@@ -93,7 +93,7 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
    *   is disabled
    */
   override def prepareTransition(transitionNo: Int, transitionEx: TlaEx): Boolean = {
-    assert(controlState == Preparing())
+    assert(controlState == Preparing(), "Expected the executor to be in Preparing state, found: " + controlState)
     if (preparedTransitions.contains(transitionNo)) {
       throw new IllegalStateException(s"prepareTransition is called for $transitionNo two times")
     }
@@ -219,6 +219,33 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
   }
 
   /**
+   * Evaluate a TLA+ expression against the current SMT model.
+   *
+   * @param timeoutSec
+   *   timeout in seconds to evaluate the expression
+   * @param expr
+   *   an expression that refers to constants and/or state variables
+   * @return
+   *   the evaluated expression that refers to constants only
+   */
+  override def evaluate(timeoutSec: Int, expr: TlaEx): Option[TlaEx] = {
+    val nextState = ctx.rewriter.rewriteUntilDone(lastState.setRex(expr))
+    val decoder = new SymbStateDecoder(ctx.solver, ctx.rewriter)
+    val result =
+      sat(timeoutSec) match {
+        case Some(true) => {
+          Some(decoder.decodeCellToTlaEx(nextState.arena, nextState.asCell))
+        }
+        case Some(false) => None
+        case None        => None
+      }
+    // Even though we do not need this expression anymore,
+    // we have to update the arena, to avoid rewriter's corruption.
+    lastState = nextState.setRex(lastState.ex)
+    result
+  }
+
+  /**
    * Pick non-deterministically one transition among the transitions that are prepared in the current step. Further,
    * assume that the picked transition has fired. This method must be called after at least one call to
    * prepareTransition.
@@ -322,16 +349,23 @@ class TransitionExecutorImpl[ExecCtxT](consts: Set[String], vars: Set[String], c
     ctx.rewriter.solverContext.satOrTimeout(timeoutSec)
   }
 
+  /**
+   * Produce a concrete execution from the SMT model.
+   *
+   * @return
+   *   the decoded execution
+   */
   override def decodedExecution(): DecodedExecution = {
     val decoder = new SymbStateDecoder(ctx.solver, ctx.rewriter)
 
-    def decodePair(binding: Binding, oracle: Oracle): (Map[String, TlaEx], Int) = {
+    def decodePair(binding: Binding, oracle: Oracle): DecodedState = {
       val transitionNo = oracle.evalPosition(ctx.solver, lastState)
       val decodedState = decoder.decodeStateVariables(lastState.setBinding(binding))
-      (decodedState, transitionNo)
+      // we do not return labels here, as we do not have access to the transition definitions
+      DecodedState(decodedState, transitionNo)
     }
 
-    new DecodedExecution(execution.path.map(p => decodePair(p._1, p._2)))
+    DecodedExecution(execution.path.map(p => decodePair(p._1, p._2)))
   }
 
   /**

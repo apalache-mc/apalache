@@ -28,6 +28,8 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 // Since we need access to the statefull uniqeLambdaName, this class must be
 // defined in the Quint class rather than in its companion object (like the toTlaType class)
 class Quint(quintOutput: QuintOutput) extends LazyLogging {
+  // the name prefix that is used to introduce expression labels
+  final private val LABEL_PREFIX = "__label_"
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val typeConv = new QuintTypeConverter
   private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}
@@ -645,7 +647,7 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
           val quintType = getTypeFromLookupTable(id).recoverWith { case err: QuintIRParseError =>
             Failure(new QuintIRParseError(
                     s"While converting operator application of defined operator '${definedOpName}' to arguments ${args}: ${err
-                    .getMessage()}"))
+                        .getMessage()}"))
           }.get
           val operType = typeConv.convert(quintType)
           val oper = tla.name(definedOpName, operType)
@@ -684,6 +686,14 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
 
     case invalidValue =>
       throw new QuintIRParseError(s"nondet keyword used to bind invalid value ${invalidValue}")
+  }
+
+  // Translate Quint expression `val __label_Foo = true; scope` into TLA+ `Label(e, "Foo")`.
+  private def labelledExpression(opDef: QuintDef.QuintOpDef, expr: QuintEx): NullaryOpReader[TBuilderInstruction] = {
+    val labelName = opDef.name.stripPrefix(LABEL_PREFIX)
+    for {
+      tlaExpr <- tlaExpression(expr)
+    } yield tla.label(tlaExpr, labelName)
   }
 
   private val opDefConverter: QuintDef.QuintOpDef => NullaryOpReader[(TBuilderOperDeclInstruction, Option[String])] = {
@@ -739,6 +749,8 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
         }
       case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
         nondetBinding(binding, scope)
+      case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.name.startsWith(LABEL_PREFIX) =>
+        labelledExpression(binding, scope)
       case QuintLet(_, opDef, expr) =>
         opDefConverter(opDef).flatMap { case (tlaOpDef, nullaryName) =>
           tlaExpression(expr)

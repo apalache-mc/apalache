@@ -10,6 +10,8 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.pp.Inliner
 
+import scala.collection.immutable.SortedMap
+
 /**
  * Rewriting rule for FoldSeq, which implements left-fold over sequences. Unlike FoldSet, we do not need to consider
  * overapproximations or exclude duplicate elements.
@@ -57,7 +59,7 @@ class FoldSeqRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       // expressions are transient, we don't need tracking
       val inliner = new Inliner(new IdleTracker, renaming)
       // We can make the scope directly, since InlinePass already ensures all is well.
-      val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
+      val seededScope: Inliner.Scope = SortedMap(opDecl.name -> opDecl)
 
       def binOp(state: SymbState, elem: ArenaCell): SymbState = {
         // the state holds the cell representing the accumulated result

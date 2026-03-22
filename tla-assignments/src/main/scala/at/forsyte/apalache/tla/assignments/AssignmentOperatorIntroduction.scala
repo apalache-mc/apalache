@@ -24,6 +24,10 @@ class AssignmentOperatorIntroduction(
       uidReplacementMap += ex.ID -> ret.ID
       ret
 
+    case ex @ OperEx(TlaOper.label, body, labelArgs @ _*) =>
+      val newBody = transform(body)
+      if (body == newBody) ex else OperEx(TlaOper.label, newBody +: labelArgs: _*)(ex.typeTag)
+
     case ex @ OperEx(op, args @ _*) =>
       val newArgs = args.map(transform)
       if (args == newArgs) ex else OperEx(op, newArgs: _*)(ex.typeTag)

@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.18"
+    lazy val logbackVersion = "1.5.32"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -20,13 +20,13 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.11.0" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.12.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.20.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.13.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.21.0"
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
     val logbackCore = "ch.qos.logback" % "logback-core" % logbackVersion
-    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
+    val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6"
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.9"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
@@ -35,8 +35,8 @@ object Dependencies {
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.7.4").from(
         "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar")
-    val ujson = "com.lihaoyi" %% "ujson" % "4.2.1"
-    val upickle = "com.lihaoyi" %% "upickle" % "4.2.1"
+    val ujson = "com.lihaoyi" %% "ujson" % "4.3.2"
+    val upickle = "com.lihaoyi" %% "upickle" % "4.3.2"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
@@ -49,18 +49,22 @@ object Dependencies {
     val scalapbRuntime =
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
     // json-rpc dependencies
-    val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.1.0" % Provided
-    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.19.2"
-    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.19.2"
-    val jettyServer = "org.eclipse.jetty" % "jetty-server" % "11.0.26"
-    val jettyServlet = "org.eclipse.jetty" % "jetty-servlet" % "11.0.26"
+    lazy val jettyVersion = "12.1.7"
+    val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
+    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
+    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.2"
+    val jettyServer = "org.eclipse.jetty" % "jetty-server" % jettyVersion
+    val jettyServlet = "org.eclipse.jetty.ee10" % "jetty-ee10-servlet" % jettyVersion
+    val jettyCompressionServer = "org.eclipse.jetty.compression" % "jetty-compression-server" % jettyVersion
+    val jettyCompressionGzip = "org.eclipse.jetty.compression" % "jetty-compression-gzip" % jettyVersion
+    val jettyCompressionZstandard = "org.eclipse.jetty.compression" % "jetty-compression-zstandard" % jettyVersion
   }
 
   // Test only depenendencies
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
-    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.18.1" % Test
+    val scalacheck = "org.scalacheck" %% "scalacheck" % "1.19.0" % Test
     val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 
     val scalaTestVersion = "3.2.15"

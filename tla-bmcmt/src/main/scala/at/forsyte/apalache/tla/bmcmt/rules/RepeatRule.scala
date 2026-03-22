@@ -9,6 +9,8 @@ import at.forsyte.apalache.tla.lir.values.TlaInt
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.types.{tlaU => tla}
 
+import scala.collection.immutable.SortedMap
+
 /**
  * Rewriting rule for Repeat. This rule is similar to [[FoldSeqRule]].
  *
@@ -54,7 +56,7 @@ class RepeatRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ext
           // expressions are transient, we don't need tracking
           val inliner = new Inliner(new IdleTracker, renaming)
           // We can make the scope directly, since InlinePass already ensures all is well.
-          val seededScope: Inliner.Scope = Map(opDecl.name -> opDecl)
+          val seededScope: Inliner.Scope = SortedMap(opDecl.name -> opDecl)
 
           // To implement the Repeat rule, we generate a sequence of cells.
           // At each step, we perform one application of the operator

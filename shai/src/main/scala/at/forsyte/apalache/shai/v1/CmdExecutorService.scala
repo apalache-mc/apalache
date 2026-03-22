@@ -9,7 +9,6 @@ import zio.ZIO
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
 import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.io.json.impl.TlaToUJson
 import at.forsyte.apalache.shai.v1.cmdExecutor.{
   Cmd, CmdError, CmdErrorType, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor,
 }
@@ -19,6 +18,7 @@ import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -90,7 +90,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       }
 
       tlaModule <-
-        try { PassChainExecutor.run(toolModule).left.map(passErr) }
+        try { PassChainExecutor(toolModule).run().left.map(passErr) }
         catch {
           case err: Throwable => Left(throwableErr(err))
         }

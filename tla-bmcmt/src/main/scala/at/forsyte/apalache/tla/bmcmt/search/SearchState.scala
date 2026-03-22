@@ -1,6 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.tla.bmcmt.{Checker, Counterexample}
+import at.forsyte.apalache.io.lir.Trace
+import at.forsyte.apalache.tla.bmcmt.Checker
+import at.forsyte.apalache.tla.lir.TlaEx
+
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -19,7 +22,7 @@ class SearchState(params: ModelCheckerParams) {
   private var _result: CheckerResult = NoError()
   private var _nFoundErrors: Int = 0
   private var _nTimeouts: Int = 0
-  private val _counterexamples: ListBuffer[Counterexample] = ListBuffer.empty
+  private val _counterexamples: ListBuffer[Trace[TlaEx]] = ListBuffer.empty
   private var _nRunsLeft: Int =
     if (params.isRandomSimulation) params.nSimulationRuns else 1
 

@@ -182,6 +182,18 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert("$lowercase" == name)
   }
 
+  test("uint32 = Int") {
+    // lower case and digits should also work
+    val (name, _) = DefaultType1Parser.parseAlias("uint32 = Int")
+    assert("$uint32" == name)
+  }
+
+  test("camelCase32 = Int") {
+    // camel case and digits should also work
+    val (name, _) = DefaultType1Parser.parseAlias("camelCase32 = Int")
+    assert("$camelCase32" == name)
+  }
+
   test("Set(ENTRY)") {
     val result = DefaultType1Parser.parseType("Set(ENTRY)")
     assert(SetT1(ConstT1("ENTRY")) == result)
@@ -319,6 +331,23 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     val a = parser("a")
     val variant = VariantT1(RowT1(VarT1("b"), "Tag" -> a))
     assert(OperT1(Seq(a), variant) == result)
+  }
+
+  test("variant regression") {
+    // a real test case that failed
+    val text = "A(Int) | RecvNotification({election: Int, x: Int})"
+    val result = parser.parseType(text)
+    val recvRow = RecRowT1(RowT1("election" -> IntT1, "x" -> IntT1))
+    val expected = VariantT1(RowT1("A" -> IntT1, "RecvNotification" -> recvRow))
+    assert(expected == result)
+  }
+
+  test("variant tags may start with reserved type keyword prefixes") {
+    val tags = Seq("IntFoo", "RealBar", "BoolBaz", "StrQux", "SetX", "SeqThing", "VariantAlt", "RecTag")
+    val text = tags.map(tag => s"$tag(Int)").mkString(" | ")
+    val result = parser.parseType(text)
+    val options = tags.map(tag => (tag, IntT1: TlaType1))
+    assert(VariantT1(RowT1(options: _*)) == result)
   }
 
   test("filter over variant set") {

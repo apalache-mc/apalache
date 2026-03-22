@@ -37,11 +37,11 @@ class RpcServer(override val port: Int) extends ServerMain with LazyLogging {
   // This is needed even if the type below is omitted / inferred.
   import scala.language.existentials
 
-  // Set max inbound message size to 64MB
+  // Set max inbound message size to 1G
   // Fixes `io.grpc.StatusRuntimeException: RESOURCE_EXHAUSTED: gRPC message exceeds maximum size`:
   // https://github.com/apalache-mc/apalache/issues/2622
   override def builder: (x0) forSome { type x0 <: ServerBuilder[x0] } =
-    super.builder.maxInboundMessageSize(64 * 1024 * 1024)
+    super.builder.maxInboundMessageSize(1024 * 1024 * 1024)
 
   override def run(args: List[String]) = {
     myAppLogic.catchAll { t =>

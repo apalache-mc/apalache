@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.trex.DecodedExecution
-import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.io.lir.Trace
+import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
  * Observe [[SeqModelChecker]]. State changes in model checker state are reported via callbacks.
@@ -18,7 +18,7 @@ trait ModelCheckerListener {
    */
   // For more on possible trace invariant violations, see the private method `SeqModelChecker.applyTraceInv`
   def onCounterexample(
-      counterexample: Counterexample,
+      counterexample: Trace[TlaEx],
       errorIndex: Int): Unit
 
   /**
@@ -32,7 +32,6 @@ trait ModelCheckerListener {
    *   The example number (likely [[search.SearchState.nRunsLeft]])
    */
   def onExample(
-      rootModule: TlaModule,
-      trace: DecodedExecution,
+      example: Trace[Unit],
       exampleIndex: Int): Unit
 }

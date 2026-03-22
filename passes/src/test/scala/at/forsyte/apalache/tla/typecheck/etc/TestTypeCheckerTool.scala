@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.json.impl.{DefaultTagReader, TlaToUJson, UJsonToTla}
+import at.forsyte.apalache.io.json.DefaultTagJsonReader
+import at.forsyte.apalache.io.json.ujsonimpl.{TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -145,7 +146,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
       // but no type errors
     }
 
-    val dec = new UJsonToTla(sourceStoreOpt = None)(DefaultTagReader)
+    val dec = new UJsonToTla(sourceStoreOpt = None)(DefaultTagJsonReader)
     val enc = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer)
 
     whenExecuting(listener) {

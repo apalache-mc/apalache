@@ -20,7 +20,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "2.13.17"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
@@ -152,6 +152,8 @@ lazy val tla_io = (project in file("tla-io"))
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.pureConfig,
+          Deps.jacksonDatabind,
+          Deps.jacksonModuleScala,
       ),
   )
 
@@ -248,6 +250,9 @@ lazy val json_rpc = (project in file("json-rpc"))
           Deps.jacksonModuleScala,
           Deps.jettyServer,
           Deps.jettyServlet,
+          Deps.jettyCompressionServer,
+          Deps.jettyCompressionGzip,
+          Deps.jettyCompressionZstandard,
       ),
   )
 

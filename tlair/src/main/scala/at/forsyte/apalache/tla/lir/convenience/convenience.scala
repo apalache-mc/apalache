@@ -2,13 +2,24 @@ package at.forsyte.apalache.tla.lir
 
 /**
  * Convenient shortcuts and definitions, mostly used in tests. Import them, when needed.
+ *
+ * <b>This package is deprecated</b>. Use the typed builder in `at.forsyte.apalache.tla.types.tla` instead.
  */
 package object convenience {
 
   /**
-   * A short-hand to the instance of Builder, so one can type more naturally, e.g.:
+   * <b>Deprecation warning:</b> If you are writing new code, use the typed builder:
    *
    * {{{
+   * import at.forsyte.apalache.tla.types.tla
+   *
+   * tla.plus(tla.int(2), tla.int(3))
+   * }}}
+   *
+   * <b>Legacy documentation:</b> A short-hand to the instance of Builder, so one can type more naturally, e.g.:
+   *
+   * {{{
+   * import at.forsyte.apalache.tla.lir.convenience.tla
    * tla.plus(tla.int(2), tla.int(3))
    * }}}
    *
@@ -17,9 +28,6 @@ package object convenience {
    * {{{
    * import at.forsyte.apalache.tla.lir.convenience.tla._
    * }}}
-   *
-   * <b>Warning:</b> you should prefer using the instance of the typed builder, which is accessible via
-   * `at.forsyte.apalache.tla.types.tla`` in the package `tla-types`.
    */
   val tla: Builder = new Builder()
 }

@@ -12,7 +12,7 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestSmtFreeSTE extends AnyFunSuite with TestingPredefs {
 
-  val sourceLoc = new SourceLocator(Map.empty, new ChangeListener)
+  val sourceLoc = SourceLocator(Map.empty, new ChangeListener)
 
   val ste = new SmtFreeSymbolicTransitionExtractor(TrackerWithListeners(), sourceLoc)
 
@@ -118,6 +118,20 @@ class TestSmtFreeSTE extends AnyFunSuite with TestingPredefs {
     val strat = ste.getStrategy(vars, ex)
 
     assert(strat == Seq(asgn1.ID, asgn2.ID))
+  }
+
+  test("Disjunction with labels") {
+    // Labels should be transparent
+    // L1: x' = 1 \/ L2: x' = 2
+    val assignment1 = tla.primeEq(n_x, tla.int(1)).untyped()
+    val labelledAssign1 = tla.label(assignment1, "L1").untyped()
+    val assignment2 = tla.primeEq(n_x, tla.int(2)).untyped()
+    val labelledAssign2 = tla.label(assignment2, "L2").untyped()
+    val ex = tla.or(labelledAssign1, labelledAssign2).untyped()
+    val vars = Set("x")
+    val strat = ste.getStrategy(vars, ex)
+    // the assignments are correctly identified
+    assert(strat == Seq(assignment1.ID, assignment2.ID))
   }
 
   test("Use before assignment") {

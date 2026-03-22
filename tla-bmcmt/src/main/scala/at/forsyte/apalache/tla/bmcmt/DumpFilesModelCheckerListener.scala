@@ -1,10 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.lir.CounterexampleWriter
-import at.forsyte.apalache.tla.bmcmt.trex.DecodedExecution
+import at.forsyte.apalache.io.lir.{CounterexampleWriter, Trace}
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.{BoolT1, TlaModule}
+import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
 import com.typesafe.scalalogging.LazyLogging
 
 /**
@@ -20,17 +19,16 @@ import com.typesafe.scalalogging.LazyLogging
  */
 object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLogging {
 
-  override def onCounterexample(counterexample: Counterexample, errorIndex: Int): Unit = {
+  override def onCounterexample(counterexample: Trace[TlaEx], errorIndex: Int): Unit = {
     dump(counterexample, errorIndex, "violation")
   }
 
-  override def onExample(rootModule: TlaModule, trace: DecodedExecution, exampleIndex: Int): Unit = {
-    val counterexample = Counterexample(rootModule, trace, tla.bool(true).as(BoolT1))
-    dump(counterexample, exampleIndex, "example")
+  override def onExample(counterexample: Trace[Unit], exampleIndex: Int): Unit = {
+    dump(counterexample.copy[TlaEx](data = tla.bool(true).as(BoolT1)), exampleIndex, "example")
   }
 
   private def dump(
-      counterexample: Counterexample,
+      counterexample: Trace[TlaEx],
       index: Int,
       prefix: String): Unit = {
     def dump(suffix: String): List[String] = {
@@ -40,9 +38,7 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
       CounterexampleWriter.writeAllFormats(
           prefix,
           suffix,
-          counterexample.module,
-          counterexample.invViolated,
-          counterexample.states,
+          counterexample,
       )
     }
 

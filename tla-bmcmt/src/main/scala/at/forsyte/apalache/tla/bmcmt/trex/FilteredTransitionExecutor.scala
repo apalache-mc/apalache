@@ -115,6 +115,20 @@ class FilteredTransitionExecutor[SnapshotT](stepFilter: String, invFilter: Strin
   override def assumeTransition(transitionNo: Int): Unit = trex.assumeTransition(transitionNo)
 
   /**
+   * Evaluate a TLA+ expression against the current SMT model.
+   *
+   * @param timeoutSec
+   *   timeout in seconds to evaluate the expression
+   * @param expr
+   *   an expression that refers to constants and/or state variables
+   * @return
+   *   the evaluated expression that refers to constants only
+   */
+  override def evaluate(timeoutSec: Int, expr: TlaEx): Option[TlaEx] = {
+    trex.evaluate(timeoutSec, expr)
+  }
+
+  /**
    * Push an assertion about the current controlState.
    *
    * @param assertion

@@ -1,6 +1,88 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.56.0 - 2026-03-20
+
+### Features
+
+- Upgrade Jetty from 11 to 12.1.7 (EE10) and align Jakarta Servlet API to 6.0
+- Add gzip and Zstandard (zstd) compression support to the JSON-RPC server. Upgrade Jetty from 12.0.21 to 12.1.7 and use the new CompressionHandler for transparent HTTP content negotiation via Accept-Encoding / Content-Encoding (#3290).
+- Add `STATE` query kind to the JSON-RPC `query` method. When `kinds` includes `"STATE"`, the result contains a `state` field with only the last state of the decoded trace (a single ITF state object), instead of the entire trace. This significantly reduces JSON payload size for long symbolic explorations #3288.
+
+## 0.55.0 - 2026-03-18
+
+### Features
+
+- Add `compact` JSON-RPC method that extracts the last concrete state, reverts to a given snapshot and re-asserts it as a synthetic transition, resetting solver complexity after long symbolic explorations #3285
+
+## 0.54.0 - 2026-03-18
+
+## 0.52.3 - 2026-03-17
+
+### Features
+
+- Add the ordered JSON-RPC method `applyInOrder` for running several stateful exploration operations in one request, together with JSON-RPC documentation for its request and per-step response format (#3280).
+
+### Bug fixes
+
+- Fix Type1Lexer to properly tokenize 'RecvNotification' #3278
+
+## 0.52.2 - 2026-01-29
+
+### Bug fixes
+
+- Make Variants compatible with TLC (#3255)
+
+## 0.52.1 - 2025-11-21
+
+### Features
+
+- Add the JSON RPC method "health" (#3223)
+
+## 0.52.0 - 2025-11-19
+
+### Features
+
+- Add the method `assumeState` of JSON RPC
+- Add the missing case of deserializing variants from ITF JSON (#3215)
+
+### Bug fixes
+
+- Fix resulting snapshots in `assumeTransition` and `assumeState` (#3219)
+- Fix the ITF deserializer to use the modern record types (#3216)
+
+## 0.51.1 - 2025-11-06
+
+## 0.51.0 - 2025-11-06
+
+### Features
+
+- Sort relations in the counterexamples (#3182)
+- Printing labels in the TLA+ counterexamples
+- Add `JVM_GC_ARGS` and default GC settings in `apalache-mc` (#3185)
+- Add `prompts/type-annotation-assistant.md` for AI-assisted type    annotations (#3194)
+- Translate `val __label_Foo = true; e` in Quint to `Foo:: e` in TLA+ (#3168)
+- Process and print labels in transitions and invariants (#3167)
+
+### Bug fixes
+
+- Fix the type aliases parser to allow for digits (#3199)
+- Fix the JSON-RPC method `query` to call `sat` first (#3205)
+- Stable order on the transitions as produced with assignment finder (#3198)
+- Fix transitive inlining of polymorphic Quint definitions (#3207)
+
+## 0.50.3 - 2025-09-04
+
+### Bug fixes
+
+- Fix `Apalache!Gen` of functions (#3158)
+
+## 0.50.2 - 2025-09-02
+
+### Bug fixes
+
+- Bump GRPC message size to 1 GB (#3155)
+
 ## 0.50.1 - 2025-08-27
 
 ### Breaking changes

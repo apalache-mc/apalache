@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
+import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule, TlaOperDecl}
 
 /**
  * Input to ModelChecker. We assume that this input is prepared by TransitionPass.
@@ -18,6 +18,8 @@ import at.forsyte.apalache.tla.lir.{TlaEx, TlaModule}
  *   An optional initializer of CONSTANTS (over their primed versions).
  * @param verificationConditions
  *   Verification conditions (invariants).
+ * @param persistentDecls
+ *   A map of operator names to their declarations.
  * @author
  *   Igor Konnov
  */
@@ -26,4 +28,5 @@ class CheckerInput(
     val initTransitions: List[TlaEx],
     val nextTransitions: List[TlaEx],
     val constInitPrimed: Option[TlaEx],
-    val verificationConditions: CheckerInputVC) {}
+    val verificationConditions: CheckerInputVC,
+    val persistentDecls: Map[String, TlaOperDecl] = Map.empty) {}

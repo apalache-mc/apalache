@@ -191,12 +191,13 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, renaming)
     }
 
-    val ctx = new IncrementalExecutionContext(rewriter)
-    val trex = new TransitionExecutorImpl(checkerParams.consts, checkerParams.vars, ctx)
+    val exeCtx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(checkerParams.consts, checkerParams.vars, exeCtx)
 
     // run the model checker with listener
     val listener = new CollectCounterexamplesModelCheckerListener()
-    val checker = new SeqModelChecker(checkerParams, checkerInput, trex, Seq(listener))
+    val mcCtx = ModelCheckerContext(checkerParams, checkerInput, trex, Seq(listener))
+    val checker = new SeqModelChecker(mcCtx)
 
     // check the outcome
     checker.run() match {
@@ -204,7 +205,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         // extract witness expression from the counterexample
         assert(listener.counterExamples.length == 1) // () --(init transition)--> initial state
         val cex = listener.counterExamples.head.states
-        val (_, binding) = cex.last // initial state binding
+        val binding = cex.last // initial state binding
         Right(binding)
 
       case outcome => Left(outcome)

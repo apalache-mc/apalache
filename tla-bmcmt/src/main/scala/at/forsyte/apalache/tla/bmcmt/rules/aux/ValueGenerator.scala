@@ -259,11 +259,14 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         // create a relation cell
         nextState = nextState.updateArena(_.appendCell(SetT1(TupT1(funType.arg, funType.res))))
         val relationCell = nextState.arena.topCell
-        // we just add the pairs, but do not restrict their membership, as the generator is free to produce a set
-        // that is an arbitrary subset of the pairs
-        nextState = nextState.updateArena(_.appendHas(relationCell, pairs.map { FixedElemPtr }: _*))
 
+        // For Gen, not all elements necessarily belong to the relation, so we should not use FixedElemPtr.
+        // Instead, the pointers should have unconstrained SMT constants as conditions.
+        // We can just use the edge predicate directly for those.
+        val elemPtrs = pairs.map(pair => SmtExprElemPtr(pair, tla.selectInSet(pair.toBuilder, relationCell.toBuilder)))
+        nextState = nextState.updateArena(a => a.appendHas(relationCell, elemPtrs: _*))
         nextState = nextState.updateArena(_.setCdm(funCell, relationCell))
+
         // Require that if two arguments belong to the domain, they are distinct.
         // This will guarantee that we define a function, not an arbitrary relation.
         // Note that we cannot simply require that all arguments are distinct,

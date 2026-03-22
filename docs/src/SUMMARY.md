@@ -76,7 +76,7 @@
     - [Higher-order operators definitions](./lang/user/higher-order-operators.md)
     - [Anonymous operator definitions](./lang/user/lambdas.md)
     - [Local operator definitions](./lang/user/local-operators.md)
-- [Modules, Extends, and Instances]()
+- [Modules, Extends, and Instances](./lang/modules.md)
 
 # Idiomatic TLA+
 

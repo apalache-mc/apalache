@@ -5,6 +5,8 @@ import at.forsyte.apalache.tla.lir.storage.{BodyMap, BodyMapFactory, SourceLocat
 import at.forsyte.apalache.tla.lir.{LetInEx, NameEx, OperEx, TlaEx}
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 
+import scala.collection.immutable.SortedMap
+
 /**
  * Performs the complete procedure of finding symbolic transitions from the TLA+ implementation.
  *
@@ -115,6 +117,11 @@ class SmtFreeSymbolicTransitionExtractor(
       // if no exception is thrown, continue in subEx
       getStrategyOptInternal(currentState, operMap)(subEx)
 
+    /** a label, e.g., L1(x, y) :: e */
+    case OperEx(TlaOper.label, body, _*) =>
+      // Just recurse into the body
+      getStrategyOptInternal(currentState, operMap)(body)
+
     /** ITE */
     case OperEx(TlaControlOper.ifThenElse, assignmentFreeCond, thenAndElse @ _*) =>
       // We need to check that assignmentFreeCond does not contain unassigned primes.
@@ -160,7 +167,7 @@ class SmtFreeSymbolicTransitionExtractor(
     case _ => currentState
   }
 
-  def getStrategy(vars: Set[String], actionEx: TlaEx, operMap: BodyMap = Map.empty): StrategyType = {
+  def getStrategy(vars: Set[String], actionEx: TlaEx, operMap: BodyMap = SortedMap.empty): StrategyType = {
     // The strategy can be extracted from the state obtained by starting from the initial state, where
     //   - all variables in `vars` are unassigned
     //   - no partial strategy has been found

@@ -3,12 +3,22 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.lir.TlaEx
 
 /**
- * A symbolic execution that has been decoded from an SMT model.
+ * A concrete state that has been decoded from an SMT model.
+ *
+ * @param assignments
+ *   variable bindings for all the state variables
+ * @param transitionNo
+ *   the number of the transition that led to this state
+ */
+case class DecodedState(assignments: Map[String, TlaEx], transitionNo: Int)
+
+/**
+ * A concrete execution that has been decoded from an SMT model.
  *
  * @param path
- *   the sequence of variables bindings and transition numbers, from the initial state to the final state
+ *   the sequence of decoded states, from the initial state to the final state
  *
  * @author
  *   Igor Konnov
  */
-class DecodedExecution(val path: List[(Map[String, TlaEx], Int)])
+case class DecodedExecution(path: List[DecodedState])

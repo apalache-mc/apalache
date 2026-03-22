@@ -1,5 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.lir.Trace
+import at.forsyte.apalache.tla.lir.TlaEx
+
 object Checker {
 
   /**
@@ -38,7 +41,7 @@ object Checker {
     override val isOk: Boolean = true
   }
 
-  case class Error(nerrors: Int, counterexamples: Seq[Counterexample]) extends CheckerResult {
+  case class Error(nerrors: Int, counterexamples: Seq[Trace[TlaEx]]) extends CheckerResult {
     override def toString: String = s"Error"
 
     override val isOk: Boolean = false
@@ -47,7 +50,7 @@ object Checker {
   /**
    * An execution cannot be extended. We interpret it as a deadlock.
    */
-  case class Deadlock(counterexample: Option[Counterexample]) extends CheckerResult {
+  case class Deadlock(counterexample: Option[Trace[TlaEx]]) extends CheckerResult {
     override def toString: String = "Deadlock"
 
     override val isOk: Boolean = false

@@ -2,12 +2,20 @@
 (*
  * Functional tests for operators over variants.
  * We introduce a trivial state machine and write tests as state invariants.
+ *
+ * Igor Konnov, Informal Systems, 2022
+ * Igor Konnov, konnov.phd, 2026
  *)
 
 EXTENDS Integers, FiniteSets, Apalache, Variants
 
-Init == TRUE
-Next == TRUE
+VARIABLE
+    \* This is needed for Apalache to work
+    \* @type: Int;
+    x
+
+Init == x = 0
+Next == UNCHANGED x
 
 (* DEFINITIONS *)
 
@@ -38,7 +46,11 @@ TestVariantTag ==
 
 TestVariantGetUnsafe ==
     \* The unsafe version gives us only a type guarantee.
-    VariantGetUnsafe("A", VarB) \in Int
+    /\ VariantGetUnsafe("A", VarA) = 1
+    \* TLC fails on the expression below.
+    \* Apalache works, as the second condition holds true.
+    \*/\ \/ VariantTag(VarB) = "A"
+    \*   \/ VariantGetUnsafe("B", VarB) \in Int
 
 TestVariantGetOrElse ==
     \* When the tag name is different from the actual one, return the default value.
