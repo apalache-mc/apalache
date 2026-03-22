@@ -52,7 +52,7 @@ object Dependencies {
     lazy val jettyVersion = "12.1.7"
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
-    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.2"
+    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.21.2"
     val jettyServer = "org.eclipse.jetty" % "jetty-server" % jettyVersion
     val jettyServlet = "org.eclipse.jetty.ee10" % "jetty-ee10-servlet" % jettyVersion
     val jettyCompressionServer = "org.eclipse.jetty.compression" % "jetty-compression-server" % jettyVersion
