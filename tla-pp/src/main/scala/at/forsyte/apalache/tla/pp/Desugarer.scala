@@ -17,7 +17,11 @@ import at.forsyte.apalache.tla.typecomp.ScopedBuilder
  *   Igor Konnov, Jure Kukovec
  */
 @Singleton
-class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: TransformationTracker)
+class Desugarer(
+    gen: UniqueNameGenerator,
+    stateVariables: Set[String],
+    tracker: TransformationTracker,
+    operDefs: Map[String, TlaEx] = Map.empty)
     extends TlaExTransformation {
 
   override def apply(expr: TlaEx): TlaEx = {
@@ -189,6 +193,13 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
 
     case ValEx(_) =>
       Seq() // no point in priming literals
+
+    // Look up nullary operator definitions to expand grouped-variable UNCHANGED.
+    // For example, if myList1 == <<myVar1, myVar2>> and vars == <<myList1, myList2>>,
+    // then UNCHANGED vars should be expanded to UNCHANGED <<myVar1, myVar2, myVar3, myVar4>>.
+    // See: https://github.com/apalache-mc/apalache/issues/3143
+    case OperEx(TlaOper.apply, NameEx(name)) if operDefs.contains(name) =>
+      flattenTuplesInUnchanged(operDefs(name))
 
     case _ =>
       // in general, UNCHANGED e becomes e' = e
@@ -437,5 +448,13 @@ class Desugarer(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: 
 object Desugarer {
   def apply(gen: UniqueNameGenerator, stateVariables: Set[String], tracker: TransformationTracker): Desugarer = {
     new Desugarer(gen, stateVariables, tracker)
+  }
+
+  def apply(
+      gen: UniqueNameGenerator,
+      stateVariables: Set[String],
+      tracker: TransformationTracker,
+      operDefs: Map[String, TlaEx]): Desugarer = {
+    new Desugarer(gen, stateVariables, tracker, operDefs)
   }
 }
