@@ -529,7 +529,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin select operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA2(__quint_var0, __QUINT_LAMBDA1) ≜ IF LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__QUINT_LAMBDA1) THEN (Append(__quint_var0, __QUINT_LAMBDA1)) ELSE __quint_var0 IN __QUINT_LAMBDA2, <<>>, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA2(__quint_var0, __QUINT_LAMBDA1) ≜ IF (LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__QUINT_LAMBDA1)) THEN (Append(__quint_var0, __QUINT_LAMBDA1)) ELSE __quint_var0 IN __QUINT_LAMBDA2, <<>>, <<1, 2, 3>>)"
     assert(convert(Q.selectGreaterThanZero) == expected)
   }
 
@@ -652,9 +652,9 @@ class TestQuintEx extends AnyFunSuite {
         Q.lam(Seq("_" -> QuintVarT("t")), Q._2, QuintIntT()), // Default case
     )(typ)
     val expected =
-      """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42)))
-         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42)))
-         |☐ OTHER → LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2({})""".stripMargin
+      """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → (LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42))))
+         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → (LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42))))
+         |☐ OTHER → (LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2({}))""".stripMargin
         .replace('\n', ' ')
     assert(convert(quintMatch) == expected)
   }
@@ -707,9 +707,22 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin setBy operator") {
     val expected = """
         |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
-        |[__quint_var0() EXCEPT ![<<1>>] = LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1])]
+        |[__quint_var0() EXCEPT ![<<1>>] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
         """.stripMargin.linesIterator.mkString(" ").trim
     assert(convert(Q.setByExpression) == expected)
+  }
+
+  test("setBy in conjunction is parenthesized to prevent LET-IN scope extension through /\\ conjuncts") {
+    // Use eq(setBy(...), map) as first conjunct to get LET-IN inside a conjunction
+    val setByEq = Q.app("eq", Q.setByExpression, Q.intMap)(QuintBoolT())
+    val conjunction = Q.app("and", setByEq, Q.tt)(QuintBoolT())
+    val result = convert(conjunction)
+    // In TLA+, `LET c == f IN expr` scope extends as far right as possible, so
+    // `f' = LET c == f IN [...] /\ g' = g` parses as
+    // `f' = LET c == f IN ([...] /\ g' = g)`.
+    // The printer wraps nested LET-IN in parens to make the intended grouping explicit.
+    assert(result.contains("(LET __quint_var"))
+    assert(result.endsWith("\u2227 TRUE"))
   }
 
   test("can convert builtin put operator application") {
@@ -786,6 +799,10 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert strongFair operator") {
     assert(convert(Q.app("strongFair", Q.tt, Q.name)(QuintBoolT())) == "SF_n(TRUE)")
+  }
+
+  test("can convert leadsTo operator") {
+    assert(convert(Q.app("leadsTo", Q.tt, Q.tt)(QuintBoolT())) == "TRUE \u21DD TRUE")
   }
 
   test("can convert polymorphic operator applied polymorphically") {
