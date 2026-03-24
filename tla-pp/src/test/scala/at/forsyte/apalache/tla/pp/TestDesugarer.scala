@@ -531,6 +531,94 @@ class TestDesugarer extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected.eqTyped(sugarFree))
   }
 
+  test("unfold UNCHANGED with operator references to grouped variables (issue #3143)") {
+    // Regression test for https://github.com/apalache-mc/apalache/issues/3143
+    // Given:
+    //   myList1 == <<x, y>>
+    //   myList2 == <<z>>
+    //   vars == <<myList1, myList2>>
+    //   UNCHANGED vars
+    // The desugarer should expand the operator references and produce x' := x /\ y' := y /\ z' := z
+    val ii2T = TupT1(IntT1, IntT1)
+    val b1T = TupT1(BoolT1)
+    val myList1Body: TlaEx =
+      tla.tuple(tla.name("x").as(IntT1), tla.name("y").as(IntT1)).as(ii2T)
+    val myList2Body: TlaEx =
+      tla.tuple(tla.name("z").as(BoolT1)).as(b1T)
+    val varsBody: TlaEx = tla
+      .tuple(
+          tla.appOp(tla.name("myList1").as(ii2T)).as(ii2T),
+          tla.appOp(tla.name("myList2").as(b1T)).as(b1T),
+      )
+      .as(TupT1(ii2T, b1T))
+    val operDefs: Map[String, TlaEx] = Map(
+        "myList1" -> myList1Body,
+        "myList2" -> myList2Body,
+        "vars" -> varsBody,
+    )
+
+    val desugarerWithOps = new Desugarer(gen, varNames, new IdleTracker(), operDefs)
+
+    // UNCHANGED vars, where vars is an operator reference
+    val varsT = TupT1(ii2T, b1T)
+    val input: TlaEx =
+      tla
+        .unchanged(tla.appOp(tla.name("vars").as(varsT)).as(varsT))
+        .as(BoolT1)
+    val output = desugarerWithOps.transform(input)
+
+    def asgnPrime(name: String, t: TlaType1) = {
+      def nEx = tla.name(name).as(t)
+      tla.assign(tla.prime(nEx).as(t), nEx).as(BoolT1)
+    }
+    val expected: TlaEx =
+      tla
+        .and(
+            asgnPrime("x", IntT1),
+            asgnPrime("y", IntT1),
+            asgnPrime("z", BoolT1),
+        )
+        .as(BoolT1)
+    assert(expected.eqTyped(output))
+  }
+
+  test("unfold UNCHANGED with single-level operator reference (issue #3143)") {
+    // Given:
+    //   vars == <<x, y, z>>
+    //   UNCHANGED vars
+    // The desugarer should expand the operator reference and produce x' := x /\ y' := y /\ z' := z
+    val varsT = TupT1(IntT1, IntT1, BoolT1)
+    val varsBody: TlaEx =
+      tla
+        .tuple(tla.name("x").as(IntT1), tla.name("y").as(IntT1), tla.name("z").as(BoolT1))
+        .as(varsT)
+    val operDefs: Map[String, TlaEx] = Map(
+        "vars" -> varsBody
+    )
+
+    val desugarerWithOps = new Desugarer(gen, varNames, new IdleTracker(), operDefs)
+
+    val input: TlaEx =
+      tla
+        .unchanged(tla.appOp(tla.name("vars").as(varsT)).as(varsT))
+        .as(BoolT1)
+    val output = desugarerWithOps.transform(input)
+
+    def asgnPrime(name: String, t: TlaType1) = {
+      def nEx = tla.name(name).as(t)
+      tla.assign(tla.prime(nEx).as(t), nEx).as(BoolT1)
+    }
+    val expected: TlaEx =
+      tla
+        .and(
+            asgnPrime("x", IntT1),
+            asgnPrime("y", IntT1),
+            asgnPrime("z", BoolT1),
+        )
+        .as(BoolT1)
+    assert(expected.eqTyped(output))
+  }
+
   test("""rewrite UNCHANGED <<>> to TRUE""") {
     // this is a regression for issue #375
     // input: << >>
