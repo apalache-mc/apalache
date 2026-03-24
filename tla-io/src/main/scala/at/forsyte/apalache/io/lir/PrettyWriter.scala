@@ -332,7 +332,14 @@ class PrettyWriter(
           if (otherEx == NullEx) {
             pairs
           } else {
-            pairs :+ group("OTHER" <> nest(line <> "->" <> space <> exToDoc(prec, otherEx, nameResolver)))
+            // LetInEx needs explicit parenthesization: caseWithOther.precedence is (0, 0),
+            // so wrapWithParen never wraps when called from here, but LET-IN scope extends
+            // as far right as possible and would swallow any following /\ outside the CASE.
+            val otherDoc = otherEx match {
+              case LetInEx(_, _*) => parens(exToDoc(prec, otherEx, nameResolver))
+              case _              => exToDoc(prec, otherEx, nameResolver)
+            }
+            pairs :+ group("OTHER" <> nest(line <> "->" <> space <> otherDoc))
           }
 
         val doc = group(text("CASE") <> nest(space <> folddoc(pairsWithOther.toList, _ <> line <> "[]" <> space <> _)))
@@ -521,8 +528,14 @@ class PrettyWriter(
           group("LET" <> space <> declToDoc(d) <> line <> "IN")
         }
 
-        group(ssep(decls.map(eachDecl).toList, line) <>
+        val doc = group(ssep(decls.map(eachDecl).toList, line) <>
           line <> exToDoc((0, 0), body, nameResolver))
+        // Wrap in parens when nested inside another expression. In TLA+,
+        // `LET c == f IN expr` scope extends as far right as possible, so
+        // `f' = LET c == f IN [...] /\ g' = g` parses as
+        // `f' = LET c == f IN ([...] /\ g' = g)`. Parens make the intended
+        // grouping explicit.
+        wrapWithParen(parentPrecedence, (0, 0), doc)
 
       case expr => throw new PrettyPrinterError(s"PrettyPrinter failed toDoc conversion on expression ${expr}")
     }

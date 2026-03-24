@@ -82,6 +82,7 @@ object UTFPrinter extends Printer {
 
     def opApp(p_ex: TlaEx): String = {
       p_ex match {
+        case LetInEx(_, _*)                                                  => "(%s)".format(apply(p_ex))
         case OperEx(TlaSetOper.enumSet | TlaSetOper.in | TlaFunOper.app, _*) => apply(p_ex)
         case OperEx(_, args @ _*) if args.size > 1                           => "(%s)".format(apply(p_ex))
         case _                                                               => apply(p_ex)
@@ -150,7 +151,7 @@ object UTFPrinter extends Printer {
 
           case TlaControlOper.caseNoOther   => "CASE %s".format(opAppStrPairs(args))
           case TlaControlOper.caseWithOther =>
-            "CASE %s %s OTHER %s %s".format(opAppStrPairs(args.tail), m_box, m_rarrow, args.head)
+            "CASE %s %s OTHER %s %s".format(opAppStrPairs(args.tail), m_box, m_rarrow, opApp(args.head))
           case TlaControlOper.ifThenElse => mkOpApp("IF %s THEN %s ELSE %s", args: _*)
 
           case TlaTempOper.AA             => mkOpApp("[%s]%%s . %%s".format(m_forall), args: _*)
