@@ -535,6 +535,18 @@ The outcome is: NoError
 EXITCODE: OK
 ```
 
+### check Unchanged3143.tla reports no error: regression for issue 3143 (array-encoding)
+
+Grouped-variable UNCHANGED with nested operator references should be properly expanded.
+
+```sh
+$ apalache-mc check --length=1 Unchanged3143.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check ExistTuple476.tla reports no error: regression for issue 476 (array-encoding)
 
 ```sh
