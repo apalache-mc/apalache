@@ -1,1 +1,0 @@
-Add support for the `leadsTo` operator when translating Quint to TLA+
