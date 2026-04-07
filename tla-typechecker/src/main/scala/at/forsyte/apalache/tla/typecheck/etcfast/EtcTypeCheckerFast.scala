@@ -15,18 +15,23 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
   private val globalVars = new mutable.HashMap[Int, TVar]()
   private val pendingApps = mutable.ArrayBuffer[PendingApp]()
+  private val watchedTypes = mutable.LinkedHashMap[UID, (ExactRef, () => TlaType1)]()
+  private val protectedTypes = mutable.HashMap[UID, TlaType1]()
   private var tempVarNo = -1
 
   override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
     listener = typeListener
     globalVars.clear()
     pendingApps.clear()
+    watchedTypes.clear()
+    protectedTypes.clear()
     tempVarNo = -1
     try {
       val rootType = infer(initialEnv(rootCtx), level = 0, rootEx, expected = None)
+      watchType(rootEx.sourceRef, rootType)
       resolvePendingApps(failOnAmbiguity = true)
       val exactType = export(rootType)
-      onTypeFound(rootEx.sourceRef, exactType)
+      flushWatchedTypes()
       Some(exactType)
     } catch {
       case _: UnwindException => None
@@ -41,13 +46,15 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private def infer(env: FastEnv, level: Int, ex: EtcExpr, expected: Option[FType]): FType = {
     ex match {
       case EtcConst(polytype) =>
-        fromExternalType(polytype, shareUnquantified = true)
+        val inferred = fromExternalType(polytype, shareUnquantified = true)
+        watchType(ex.sourceRef, inferred)
+        inferred
 
       case EtcTypeDecl(name, declaredType, scopedEx) =>
         val quantified = declaredType.usedNames
         val declaredScheme = fromExternalScheme(TlaType1Scheme(declaredType, quantified), shareUnquantified = true)
         if (quantified.isEmpty) {
-          onTypeFound(ex.sourceRef, declaredType)
+          watchFixedType(ex.sourceRef, declaredType, protect = declaredType.isInstanceOf[OperT1])
         }
         infer(env.withBinding(name, declaredScheme), level, scopedEx, expected)
 
@@ -55,7 +62,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         env.types.get(name) match {
           case Some(scheme) =>
             val inferred = instantiate(scheme, level)
-            onTypeFound(ex.sourceRef, export(inferred))
+            watchType(ex.sourceRef, inferred)
             inferred
 
           case None =>
@@ -70,7 +77,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         env.types.get(name.name) match {
           case Some(scheme) =>
             val instantiatedType = instantiate(scheme, level)
-            onTypeFound(name.sourceRef, export(instantiatedType))
+            watchType(name.sourceRef, instantiatedType)
             inferApp(env, level, appEx, Seq(export(instantiatedType)), args.toList, expected, Some(name.sourceRef))
 
           case None =>
@@ -82,7 +89,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         val (extEnv, paramTypes) = translateBinders(env, level, binders.toList)
         val bodyType = infer(extEnv, level, scopedEx, expected.collect { case FOper(_, res) => res })
         val operType = FOper(paramTypes, bodyType)
-        onTypeFound(ex.sourceRef, export(operType))
+        watchType(ex.sourceRef, operType)
         operType
 
       case letEx @ EtcLet(name, defEx @ EtcAbs(defBody, binders @ _*), scopedEx) =>
@@ -148,7 +155,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           }
         }
 
-        onTypeFound(defEx.sourceRef, principalDefType)
+        watchFixedType(defEx.sourceRef, principalDefType, protect = true)
         infer(env.withBinding(name, generalized), level, scopedEx, expected)
 
       case EtcLet(_, _, _) =>
@@ -188,10 +195,9 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         case _: TypeMismatchException =>
           onArgsMatchError(export(operType))
       }
-      args.zip(argTypes).foreach { case (arg, argType) => onTypeFound(arg.sourceRef, export(argType)) }
-      operatorNameRef.foreach(ref => onTypeFound(ref, export(operType)))
-      val exactResult = export(resType)
-      onTypeFound(appEx.sourceRef, exactResult)
+      args.zip(argTypes).foreach { case (arg, argType) => watchType(arg.sourceRef, argType) }
+      operatorNameRef.foreach(ref => watchType(ref, operType))
+      watchType(appEx.sourceRef, resType)
       resType
     } else {
       val compatible = compatibleOverloads(operTypes, argTypes, resType, level)
@@ -202,7 +208,9 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
         case Seq() =>
           val argOrArgs = pluralArgs(argTypes.length)
-          onTypeError(appEx.sourceRef, s"No matching signature for $argOrArgs ${evaluatedArgTypes}")
+          val defaultMessage = s"No matching signature for $argOrArgs ${evaluatedArgTypes}"
+          val specificMessage = appEx.explain(Nil, evaluatedArgTypes)
+          onTypeError(appEx.sourceRef, specificMessage.getOrElse(defaultMessage))
           throw new UnwindException
 
         case many =>
@@ -254,10 +262,10 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           onTypeError(setEx.sourceRef, "Expected a set. Found: " + export(setType))
           throw new UnwindException
       }
-      onTypeFound(setEx.sourceRef, export(FSet(elemType)))
+      watchType(setEx.sourceRef, FSet(elemType))
     }
     binders.zip(elemVars).foreach { case ((name, _), elemType) =>
-      onTypeFound(name.sourceRef, export(elemType))
+      watchType(name.sourceRef, elemType)
     }
     val binderSchemes = binders.map(_._1.name).zip(elemVars.map(FastScheme(_, Set.empty)))
     (env.withBindings(binderSchemes), elemVars)
@@ -450,17 +458,44 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           SparseTupT1(SortedMap(fields.toSeq.map { case (k, v) => k -> loop(v) }: _*))
         case FRec(fields) =>
           RecT1(SortedMap(fields.toSeq.map { case (k, v) => k -> loop(v) }: _*))
-        case FRow(fields, tail) =>
-          RowT1(SortedMap(fields.toSeq.map { case (k, v) => k -> loop(v) }: _*),
-              tail.map(v => loop(v).asInstanceOf[VarT1]))
+        case row: FRow =>
+          exportRow(row)
         case FRecRow(row) =>
-          RecRowT1(loop(row).asInstanceOf[RowT1])
+          RecRowT1(exportRow(row))
         case FVariant(row) =>
-          VariantT1(loop(row).asInstanceOf[RowT1])
+          VariantT1(exportRow(row))
       }
     }
 
     loop(tp)
+  }
+
+  private def exportRow(row: FRow): RowT1 = {
+    def loop(current: FRow, acc: SortedMap[String, TlaType1]): RowT1 = {
+      val exportedFields = acc ++ SortedMap(current.fields.toSeq.map { case (k, v) => k -> export(v) }: _*)
+      current.tail.map(prune) match {
+        case None =>
+          RowT1(exportedFields, None)
+
+        case Some(v: TVar) if v.link.isEmpty =>
+          RowT1(exportedFields, Some(VarT1(exportedVarNoInRow(v, exportedFields))))
+
+        case Some(next: FRow) =>
+          loop(next, exportedFields)
+
+        case Some(other) =>
+          throw new IllegalStateException("Expected an open row tail variable or a row, found: " + export(other))
+      }
+    }
+
+    loop(row, SortedMap.empty)
+  }
+
+  private def exportedVarNoInRow(v: TVar, rowFields: SortedMap[String, TlaType1]): Int = {
+    canonicalPositiveIdOf(v).getOrElse {
+      val rowMax = rowFields.values.flatMap(_.usedNames).foldLeft(0)(Math.max)
+      math.max(globalVars.keysIterator.filter(_ >= 0).foldLeft(0)(Math.max), rowMax) + math.abs(v.id)
+    }
   }
 
   private def canonicalPositiveIdOf(v: TVar): Option[Int] = {
@@ -542,13 +577,17 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     }
   }
 
-  private def snapshot(): Map[Int, Option[FType]] = {
-    globalVars.iterator.map { case (id, tv) => id -> tv.link }.toMap
+  private def snapshot(): Map[Int, TVarState] = {
+    globalVars.iterator.map { case (id, tv) => id -> TVarState(tv.link, tv.level, tv.canonicalPositiveId) }.toMap
   }
 
-  private def rollback(snapshot: Map[Int, Option[FType]]): Unit = {
+  private def rollback(snapshot: Map[Int, TVarState]): Unit = {
     globalVars.foreach { case (id, tv) =>
-      tv.link = snapshot.getOrElse(id, tv.link)
+      snapshot.get(id).foreach { saved =>
+        tv.link = saved.link
+        tv.level = saved.level
+        tv.canonicalPositiveId = saved.canonicalPositiveId
+      }
     }
   }
 
@@ -597,9 +636,9 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         onTypeError(appEx.sourceRef, specificMessage.getOrElse(defaultMessage))
         throw new UnwindException
     }
-    args.zip(argTypes).foreach { case (arg, argType) => onTypeFound(arg.sourceRef, export(argType)) }
-    operatorNameRef.foreach(ref => onTypeFound(ref, export(operType)))
-    onTypeFound(appEx.sourceRef, export(resType))
+    args.zip(argTypes).foreach { case (arg, argType) => watchType(arg.sourceRef, argType) }
+    operatorNameRef.foreach(ref => watchType(ref, operType))
+    watchType(appEx.sourceRef, resType)
   }
 
   private def resolvePendingApps(failOnAmbiguity: Boolean): Unit = {
@@ -623,7 +662,9 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           case Seq() =>
             val evalArgTypes = pending.argTypes.map(export)
             val argOrArgs = pluralArgs(pending.argTypes.length)
-            onTypeError(pending.appEx.sourceRef, s"No matching signature for $argOrArgs $evalArgTypes")
+            val defaultMessage = s"No matching signature for $argOrArgs $evalArgTypes"
+            val specificMessage = pending.appEx.explain(Nil, evalArgTypes)
+            onTypeError(pending.appEx.sourceRef, specificMessage.getOrElse(defaultMessage))
             throw new UnwindException
 
           case many =>
@@ -865,15 +906,39 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         FSparseTup(SortedMap(fields.toSeq.map { case (k, v) => k -> cloneType(v, cache, preserveShared, quantified, level) }: _*))
       case FRec(fields) =>
         FRec(SortedMap(fields.toSeq.map { case (k, v) => k -> cloneType(v, cache, preserveShared, quantified, level) }: _*))
-      case FRow(fields, tail) =>
-        FRow(SortedMap(fields.toSeq.map { case (k, v) => k -> cloneType(v, cache, preserveShared, quantified, level) }: _*),
-            tail.map(v => cloneType(v, cache, preserveShared, quantified, level).asInstanceOf[TVar]))
+      case row: FRow =>
+        cloneRow(row, cache, preserveShared, quantified, level)
       case FRecRow(row) =>
-        FRecRow(cloneType(row, cache, preserveShared, quantified, level).asInstanceOf[FRow])
+        FRecRow(cloneRow(row, cache, preserveShared, quantified, level))
       case FVariant(row) =>
-        FVariant(cloneType(row, cache, preserveShared, quantified, level).asInstanceOf[FRow])
+        FVariant(cloneRow(row, cache, preserveShared, quantified, level))
       case other =>
         other
+    }
+  }
+
+  private def cloneRow(
+      row: FRow,
+      cache: mutable.HashMap[Int, TVar],
+      preserveShared: Boolean,
+      quantified: Set[Int],
+      level: Int): FRow = {
+    val clonedFields =
+      SortedMap(row.fields.toSeq.map { case (k, v) => k -> cloneType(v, cache, preserveShared, quantified, level) }: _*)
+
+    row.tail.map(prune) match {
+      case None =>
+        FRow(clonedFields, None)
+
+      case Some(tv: TVar) if tv.link.isEmpty =>
+        FRow(clonedFields, Some(cloneType(tv, cache, preserveShared, quantified, level).asInstanceOf[TVar]))
+
+      case Some(next: FRow) =>
+        val clonedNext = cloneRow(next, cache, preserveShared, quantified, level)
+        FRow(clonedFields ++ clonedNext.fields, clonedNext.tail)
+
+      case Some(other) =>
+        throw new IllegalStateException("Expected a row tail variable or row, found: " + other)
     }
   }
 
@@ -883,6 +948,31 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         listener.onTypeFound(ref, tt)
       case _ =>
     }
+  }
+
+  private def watchType(sourceRef: EtcRef, tp: FType): Unit = {
+    sourceRef match {
+      case ref: ExactRef =>
+        if (!protectedTypes.contains(ref.tlaId)) {
+          watchedTypes.update(ref.tlaId, (ref, () => export(tp)))
+        }
+      case _ =>
+    }
+  }
+
+  private def watchFixedType(sourceRef: EtcRef, tp: TlaType1, protect: Boolean = false): Unit = {
+    sourceRef match {
+      case ref: ExactRef =>
+        if (protect) {
+          protectedTypes.update(ref.tlaId, tp)
+        }
+        watchedTypes.update(ref.tlaId, (ref, () => tp))
+      case _ =>
+    }
+  }
+
+  private def flushWatchedTypes(): Unit = {
+    watchedTypes.values.foreach { case (ref, mkType) => listener.onTypeFound(ref, mkType()) }
   }
 
   private def onTypeError(sourceRef: EtcRef, message: String): Unit = {
@@ -940,6 +1030,7 @@ object EtcTypeCheckerFast {
 
   private class TypeMismatchException extends RuntimeException
   protected class UnwindException extends RuntimeException
+  private case class TVarState(link: Option[FType], level: Int, canonicalPositiveId: Option[Int])
 
   private def mergeCanonicalPositiveIds(left: TVar, right: TVar): Option[Int] = {
     (left.canonicalPositiveId.orElse(Option.when(left.id >= 0)(left.id)),

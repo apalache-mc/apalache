@@ -83,7 +83,7 @@ class ToEtcExpr(
       mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
     }
 
-    findTypeFromTagOrAnnotation(decl) match {
+    findOperDeclType(decl) match {
       case Some(tt) =>
         // case 1: the definition is either annotated with a java-like annotation in a comment, or tagged with TlaType1
         val fixedType = fixLazyAnnotation(decl, tt)
@@ -93,6 +93,20 @@ class ToEtcExpr(
       case None =>
         // case 2: no type annotation
         mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
+    }
+  }
+
+  private def findOperDeclType(decl: TlaOperDecl): Option[TlaType1] = {
+    typeAnnotations.get(decl.ID).map { tt =>
+      val (substituted, _) = aliasSubstitution(tt)
+      renameVars(substituted)
+    } orElse {
+      decl.typeTag match {
+        case Typed(tt: TlaType1) if decl.formalParams.isEmpty || tt.isInstanceOf[OperT1] =>
+          Some(tt)
+        case _ =>
+          None
+      }
     }
   }
 
