@@ -17,8 +17,7 @@ import scala.collection.immutable.SortedMap
  *   optional pre-computed map from every variable index to its representative. When absent it is assumed every key in
  *   `mapping` is its own representative (i.e. all classes are singletons).
  */
-class Substitution(val mapping: Map[Int, TlaType1],
-    precomputedVarToClass: Option[Map[Int, Int]] = None) {
+class Substitution(val mapping: Map[Int, TlaType1], precomputedVarToClass: Option[Map[Int, Int]] = None) {
   import Substitution.SUB_LIMIT
 
   // Map every variable to its representative. For singleton classes the representative equals the variable itself.
@@ -53,7 +52,7 @@ class Substitution(val mapping: Map[Int, TlaType1],
         // This avoids needing multiple subRec iterations for chains like a→b→c→Int.
         @tailrec def resolve(n: Int, followed: Boolean): (TlaType1, Boolean) = {
           varToClass.get(n) match {
-            case None => (VarT1(n), followed)
+            case None       => (VarT1(n), followed)
             case Some(repr) =>
               mapping(repr) match {
                 case VarT1(n2) if n2 != n && varToClass.contains(n2) =>
@@ -214,8 +213,7 @@ class Substitution(val mapping: Map[Int, TlaType1],
       if (members.size == 1) VarT1(repr).toString
       else members.map(VarT1(_).toString).mkString("{", ", ", "}")
     }
-    "Sub{%s}".format(
-        String.join(", ", mapping.toSeq.map(p => "[%s] -> %s".format(clsStr(p._1), p._2)): _*))
+    "Sub{%s}".format(String.join(", ", mapping.toSeq.map(p => "[%s] -> %s".format(clsStr(p._1), p._2)): _*))
   }
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Substitution]

@@ -97,17 +97,20 @@ class ToEtcExpr(
   }
 
   private def findOperDeclType(decl: TlaOperDecl): Option[TlaType1] = {
-    typeAnnotations.get(decl.ID).map { tt =>
-      val (substituted, _) = aliasSubstitution(tt)
-      renameVars(substituted)
-    } orElse {
-      decl.typeTag match {
-        case Typed(tt: TlaType1) if decl.formalParams.isEmpty || tt.isInstanceOf[OperT1] =>
-          Some(tt)
-        case _ =>
-          None
+    typeAnnotations
+      .get(decl.ID)
+      .map { tt =>
+        val (substituted, _) = aliasSubstitution(tt)
+        renameVars(substituted)
       }
-    }
+      .orElse {
+        decl.typeTag match {
+          case Typed(tt: TlaType1) if decl.formalParams.isEmpty || tt.isInstanceOf[OperT1] =>
+            Some(tt)
+          case _ =>
+            None
+        }
+      }
   }
 
   // We let the user to write a instead of () => a for nullary operators. This method fixes such a lazy annotation.

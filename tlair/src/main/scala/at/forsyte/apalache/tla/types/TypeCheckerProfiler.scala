@@ -48,9 +48,12 @@ object TypeCheckerProfiler {
   def report(): String = {
     val sb = new StringBuilder
     sb.append("=== Type Checker Profile ===\n")
-    sb.append(f"TypeUnifier.unify():  calls=$unifyCallCount, totalMs=${unifyTotalNanos / 1e6}%.1f, maxMs=${unifyMaxNanos / 1e6}%.3f\n")
-    sb.append(f"Substitution.subRec(): calls=$subRecCallCount, totalIters=$subRecTotalIterations, maxIters=$subRecMaxIterations\n")
-    sb.append(f"ConstraintSolver.solvePartially(): calls=$solvePartiallyCallCount, totalLoopIters=$solvePartiallyTotalLoopIterations\n")
+    sb.append(
+        f"TypeUnifier.unify():  calls=$unifyCallCount, totalMs=${unifyTotalNanos / 1e6}%.1f, maxMs=${unifyMaxNanos / 1e6}%.3f\n")
+    sb.append(
+        f"Substitution.subRec(): calls=$subRecCallCount, totalIters=$subRecTotalIterations, maxIters=$subRecMaxIterations\n")
+    sb.append(
+        f"ConstraintSolver.solvePartially(): calls=$solvePartiallyCallCount, totalLoopIters=$solvePartiallyTotalLoopIterations\n")
     sb.append(f"isFreeVar(): calls=$isFreeVarCallCount\n")
     if (subRecCallCount > 0) {
       sb.append(f"  avg subRec iterations: ${subRecTotalIterations.toDouble / subRecCallCount}%.2f\n")

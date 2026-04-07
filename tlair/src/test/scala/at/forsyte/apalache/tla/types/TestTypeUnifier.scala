@@ -386,7 +386,8 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   // regression
   test("merge equivalence classes of a -> b, b -> a") {
     val expectedSub = Substitution.fromEqClasses(EqClass(Set(0, 1)) -> VarT1(0))
-    val result = unifier.unify(Substitution.fromEqClasses(EqClass(0) -> VarT1("b"), EqClass(1) -> VarT1("a")), VarT1("a"), VarT1("b"))
+    val result = unifier
+      .unify(Substitution.fromEqClasses(EqClass(0) -> VarT1("b"), EqClass(1) -> VarT1("a")), VarT1("a"), VarT1("b"))
     assert(result.contains((expectedSub, VarT1(0))))
   }
 

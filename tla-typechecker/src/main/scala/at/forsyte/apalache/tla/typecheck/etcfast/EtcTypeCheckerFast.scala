@@ -2,7 +2,9 @@ package at.forsyte.apalache.tla.typecheck.etcfast
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.typecheck.etc.{EtcAbs, EtcApp, EtcAppByName, EtcBuilder, EtcConst, EtcExpr, EtcLet, EtcName, EtcRef, EtcTypeDecl, ExactRef}
+import at.forsyte.apalache.tla.typecheck.etc.{
+  EtcAbs, EtcApp, EtcAppByName, EtcBuilder, EtcConst, EtcExpr, EtcLet, EtcName, EtcRef, EtcTypeDecl, ExactRef,
+}
 import at.forsyte.apalache.tla.types.TypeUnifier
 import at.forsyte.apalache.tla.types.TypeVarPool
 
@@ -12,41 +14,39 @@ import scala.collection.mutable
 /**
  * A fast implementation of ETC based on a single live Hindley-Milner style inference state.
  *
- * Unlike the legacy ETC solver, this checker does not collect a large constraint set and then
- * repeatedly replay substitutions over it. Instead, it traverses the translated `EtcExpr` tree,
- * allocates internal type variables on demand, and mutates one shared inference state as new
- * equalities become known.
+ * Unlike the legacy ETC solver, this checker does not collect a large constraint set and then repeatedly replay
+ * substitutions over it. Instead, it traverses the translated `EtcExpr` tree, allocates internal type variables on
+ * demand, and mutates one shared inference state as new equalities become known.
  *
- * Internally, type variables behave like standard HM variables with links, levels, and pruning.
- * Pruning performs path compression, while generalization/instantiation are implemented by cloning
- * or sharing pieces of the live type graph. This is the main reason the checker avoids the
- * substitution-heavy behavior that made the original ETC implementation slow on large specs.
+ * Internally, type variables behave like standard HM variables with links, levels, and pruning. Pruning performs path
+ * compression, while generalization/instantiation are implemented by cloning or sharing pieces of the live type graph.
+ * This is the main reason the checker avoids the substitution-heavy behavior that made the original ETC implementation
+ * slow on large specs.
  *
- * Apalache-specific ambiguities still require special handling. Tuple-vs-sequence, function-vs-
- * record, rows, and overloaded built-ins are represented as pending overloaded applications and
- * revisited to a fixpoint when later constraints refine the argument or result types.
+ * Apalache-specific ambiguities still require special handling. Tuple-vs-sequence, function-vs- record, rows, and
+ * overloaded built-ins are represented as pending overloaded applications and revisited to a fixpoint when later
+ * constraints refine the argument or result types.
  *
  * The checker also preserves legacy ETC compatibility at the boundary:
- * - exported type variables prefer the smallest positive index in an equivalence class
- * - all user-visible types are still reported as `TlaType1`
- * - listener callbacks remain the main way to recover types for later passes
- * - failed operator definitions emit the legacy follow-up error "Error when computing the type of X"
+ *   - exported type variables prefer the smallest positive index in an equivalence class
+ *   - all user-visible types are still reported as `TlaType1`
+ *   - listener callbacks remain the main way to recover types for later passes
+ *   - failed operator definitions emit the legacy follow-up error "Error when computing the type of X"
  *
- * A small amount of bookkeeping exists only for downstream compatibility. Watched types delay
- * listener callbacks until exported types are stable, and protected types prevent wrapper
- * expressions from overwriting declaration/operator types that share the same UID in the ETC
- * encoding.
+ * A small amount of bookkeeping exists only for downstream compatibility. Watched types delay listener callbacks until
+ * exported types are stable, and protected types prevent wrapper expressions from overwriting declaration/operator
+ * types that share the same UID in the ETC encoding.
  *
- * The implementation is intentionally self-contained inside `etcfast`. It reuses the public
- * `TypeChecker` contract and external `TlaType1` model, but it does not reuse the old replay-based
- * solver architecture from `etc`.
+ * The implementation is intentionally self-contained inside `etcfast`. It reuses the public `TypeChecker` contract and
+ * external `TlaType1` model, but it does not reuse the old replay-based solver architecture from `etc`.
  *
  * @param varPool
  *   the pool used for externally visible fresh type variables
  * @param inferPolytypes
  *   whether LET-polymorphism is allowed to infer polymorphic user definitions
  *
- * @author Codex + GPT 5.4 Medium
+ * @author
+ *   Codex + GPT 5.4 Medium
  */
 class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) extends TypeChecker with EtcBuilder {
   import EtcTypeCheckerFast._
@@ -85,7 +85,11 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   }
 
   /** Infer the internal type of an ETC expression under the current environment and expectation. */
-  private def infer(env: FastEnv, level: Int, ex: EtcExpr, expected: Option[FType]): FType = {
+  private def infer(
+      env: FastEnv,
+      level: Int,
+      ex: EtcExpr,
+      expected: Option[FType]): FType = {
     ex match {
       case EtcConst(polytype) =>
         val inferred = fromExternalType(polytype, shareUnquantified = true)
@@ -108,7 +112,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
             inferred
 
           case None =>
-            onTypeError(ex.sourceRef, s"No annotation found for $name. Make sure that you've put one in front of $name.")
+            onTypeError(ex.sourceRef,
+                s"No annotation found for $name. Make sure that you've put one in front of $name.")
             throw new UnwindException
         }
 
@@ -120,7 +125,15 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           case Some(scheme) =>
             val instantiatedType = instantiate(scheme, level)
             watchType(name.sourceRef, instantiatedType)
-            inferApp(env, level, appEx, Seq(exportType(instantiatedType)), args.toList, expected, Some(name.sourceRef))
+            inferApp(
+                env,
+                level,
+                appEx,
+                Seq(exportType(instantiatedType)),
+                args.toList,
+                expected,
+                Some(name.sourceRef),
+            )
 
           case None =>
             onTypeError(ex.sourceRef, s"The operator $name is used before it is defined.")
@@ -150,7 +163,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
                   unify(paramType, annotParam)
                 } catch {
                   case _: TypeMismatchException =>
-                    onTypeError(defEx.sourceRef, s"Mismatch in parameter ${pname.name}. Found: ${exportType(paramType)}")
+                    onTypeError(defEx.sourceRef,
+                        s"Mismatch in parameter ${pname.name}. Found: ${exportType(paramType)}")
                     throw new UnwindException
                 }
               }
@@ -186,14 +200,16 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
               case op: OperT1 => op
               case someType   => OperT1(Seq(), someType)
             }
-            new TypeUnifier(varPool).unify(at.forsyte.apalache.tla.types.Substitution.empty, inferredType, userType) match {
+            new TypeUnifier(varPool)
+              .unify(at.forsyte.apalache.tla.types.Substitution.empty, inferredType, userType) match {
               case None =>
                 val msg = s"Contradiction in the type solver: $inferredType and $userType should be unifiable"
                 throw new TypingException(msg, letEx.sourceRef.tlaId)
 
               case Some((_, unifiedType)) =>
                 if (unifiedType.usedNames.size < userType.usedNames.size) {
-                  onTypeWarn(letEx.sourceRef, s"$name's type annotation $userType is too general, inferred: $inferredType")
+                  onTypeWarn(letEx.sourceRef,
+                      s"$name's type annotation $userType is too general, inferred: $inferredType")
                 }
             }
           }
@@ -238,7 +254,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       throw new UnwindException
     }
 
-      if (operTypes.length == 1) {
+    if (operTypes.length == 1) {
       val operType = fromExternalType(operTypes.head, shareUnquantified = true)
       try {
         unify(operType, appliedOperType)
@@ -272,7 +288,11 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   }
 
   /** Build the operator scheme expected for a LET-bound declaration from an annotation or fresh variables. */
-  private def annotationToOperScheme(env: FastEnv, level: Int, name: String, arity: Int): FastScheme = {
+  private def annotationToOperScheme(
+      env: FastEnv,
+      level: Int,
+      name: String,
+      arity: Int): FastScheme = {
     env.types.get(name) match {
       case Some(scheme) =>
         prune(scheme.principal) match {
@@ -306,7 +326,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
   /** Infer binder domain types, enforce set membership, and extend the environment with bound variables. */
   private def translateBinders(env: FastEnv, level: Int, binders: List[(EtcName, EtcExpr)]): (FastEnv, Seq[FType]) = {
-      val setTypes = binders.map { case (_, setEx) => infer(env, level, setEx, None) }
+    val setTypes = binders.map { case (_, setEx) => infer(env, level, setEx, None) }
     val elemVars = binders.map(_ => freshVar(level))
     binders.zip(setTypes.zip(elemVars)).foreach { case ((_, setEx), (setType, elemType)) =>
       try {
@@ -334,7 +354,13 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
   /** Instantiate a scheme by cloning its quantified variables at the requested HM level. */
   private def instantiate(scheme: FastScheme, level: Int): FType = {
-    cloneType(scheme.principal, mutable.HashMap.empty, preserveShared = false, quantified = scheme.quantified, level = level)
+    cloneType(
+        scheme.principal,
+        mutable.HashMap.empty,
+        preserveShared = false,
+        quantified = scheme.quantified,
+        level = level,
+    )
   }
 
   /** Compute the free variables of a scheme after removing the quantified variables. */
@@ -403,7 +429,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         case RealT1     => FReal
         case StrT1      => FStr
         case c: ConstT1 => FConst(c.name)
-        case VarT1(no) =>
+        case VarT1(no)  =>
           if (shareUnquantified) {
             globalVars.getOrElseUpdate(no, TVar(no, 0, None, Some(no)))
           } else {
@@ -445,7 +471,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         case RealT1     => FReal
         case StrT1      => FStr
         case c: ConstT1 => FConst(c.name)
-        case VarT1(no) =>
+        case VarT1(no)  =>
           cache.getOrElseUpdate(no, freshTempVar(level, Some(no)))
         case SetT1(elem) =>
           FSet(convert(elem, cache))
@@ -486,10 +512,10 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           v.id
         } else {
           tempVarRenaming.getOrElseUpdate(v.id, {
-            val fresh = nextFreshNo
-            nextFreshNo += 1
-            fresh
-          })
+                val fresh = nextFreshNo
+                nextFreshNo += 1
+                fresh
+              })
         }
       }
     }
@@ -498,18 +524,18 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       prune(term) match {
         case v: TVar =>
           cache.getOrElseUpdate(v.id, {
-            v.link match {
-              case Some(target) => loop(target)
-              case None         => VarT1(exportedVarNo(v))
-            }
-          })
-        case FInt         => IntT1
-        case FBool        => BoolT1
-        case FReal        => RealT1
-        case FStr         => StrT1
-        case FConst(name) => ConstT1(name)
-        case FSet(elem)   => SetT1(loop(elem))
-        case FSeq(elem)   => SeqT1(loop(elem))
+                v.link match {
+                  case Some(target) => loop(target)
+                  case None         => VarT1(exportedVarNo(v))
+                }
+              })
+        case FInt           => IntT1
+        case FBool          => BoolT1
+        case FReal          => RealT1
+        case FStr           => StrT1
+        case FConst(name)   => ConstT1(name)
+        case FSet(elem)     => SetT1(loop(elem))
+        case FSeq(elem)     => SeqT1(loop(elem))
         case FFun(arg, res) =>
           FunT1(loop(arg), loop(res))
         case FOper(args, res) =>
@@ -671,10 +697,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     signatures.filter { sig =>
       val checkpoint = snapshot()
       val localSig = freshExternalType(sig, level)
-      val localApplied = FOper(argTypes.map(cloneType(_, mutable.HashMap.empty, preserveShared = true)), cloneType(
-          resType,
-          mutable.HashMap.empty,
-          preserveShared = true))
+      val localApplied = FOper(argTypes.map(cloneType(_, mutable.HashMap.empty, preserveShared = true)),
+          cloneType(resType, mutable.HashMap.empty, preserveShared = true))
       val ok =
         try {
           unify(localSig, localApplied)
@@ -724,13 +748,15 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         val compatible = compatibleOverloads(pending.signatures, pending.argTypes, pending.resType, pending.level)
         compatible match {
           case Seq(sig) =>
-            commitResolvedOverload(sig,
+            commitResolvedOverload(
+                sig,
                 pending.argTypes,
                 pending.resType,
                 pending.level,
                 pending.args,
                 pending.operatorNameRef,
-                pending.appEx)
+                pending.appEx,
+            )
             progress = true
 
           case Seq() =>
@@ -767,13 +793,13 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private def unify(left: FType, right: FType): Unit = {
     (prune(left), prune(right)) match {
       case (l: TVar, r: TVar) if l.id == r.id =>
-      case (l: TVar, other) =>
+      case (l: TVar, other)                   =>
         bindVar(l, other)
       case (other, r: TVar) =>
         bindVar(r, other)
       case (FInt, FInt) | (FBool, FBool) | (FReal, FReal) | (FStr, FStr) =>
-      case (FConst(l), FConst(r)) if l == r =>
-      case (FSet(le), FSet(re)) =>
+      case (FConst(l), FConst(r)) if l == r                              =>
+      case (FSet(le), FSet(re))                                          =>
         unify(le, re)
       case (FSeq(le), FSeq(re)) =>
         unify(le, re)
@@ -789,7 +815,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         val jointKeys = lfields.keySet ++ rfields.keySet
         jointKeys.foreach {
           case key if lfields.contains(key) && rfields.contains(key) => unify(lfields(key), rfields(key))
-          case _ =>
+          case _                                                     =>
         }
       case (l @ FSparseTup(_), FTup(relems)) =>
         val total = FSparseTup(SortedMap(relems.zipWithIndex.map { case (t, i) => (i + 1) -> t }: _*))
@@ -800,7 +826,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         val jointKeys = lfields.keySet ++ rfields.keySet
         jointKeys.foreach {
           case key if lfields.contains(key) && rfields.contains(key) => unify(lfields(key), rfields(key))
-          case _ =>
+          case _                                                     =>
         }
       case (FRow(lfields, ltail), FRow(rfields, rtail)) =>
         unifyRows(lfields, rfields, ltail, rtail)
@@ -821,7 +847,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private def bindVar(variable: TVar, other: FType): Unit = {
     val prunedOther = prune(other)
     prunedOther match {
-      case otherVar: TVar if otherVar.id == variable.id =>
+      case otherVar: TVar if otherVar.id == variable.id                     =>
       case otherVar: TVar if otherVar.link.isEmpty && variable.link.isEmpty =>
         val (winner, loser) = if (variable.id < otherVar.id) (variable, otherVar) else (otherVar, variable)
         winner.level = math.min(winner.level, loser.level)
@@ -983,9 +1009,13 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       case FTup(elems) =>
         FTup(elems.map(cloneType(_, cache, preserveShared, quantified, level)))
       case FSparseTup(fields) =>
-        FSparseTup(SortedMap(fields.toSeq.map { case (k, v) => k -> cloneType(v, cache, preserveShared, quantified, level) }: _*))
+        FSparseTup(SortedMap(fields.toSeq.map { case (k, v) =>
+          k -> cloneType(v, cache, preserveShared, quantified, level)
+        }: _*))
       case FRec(fields) =>
-        FRec(SortedMap(fields.toSeq.map { case (k, v) => k -> cloneType(v, cache, preserveShared, quantified, level) }: _*))
+        FRec(SortedMap(fields.toSeq.map { case (k, v) =>
+          k -> cloneType(v, cache, preserveShared, quantified, level)
+        }: _*))
       case row: FRow =>
         cloneRow(row, cache, preserveShared, quantified, level)
       case FRecRow(row) =>
@@ -1066,18 +1096,25 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 }
 
 object EtcTypeCheckerFast {
+
   /** Internal type language used by the fast inference engine. */
-  private sealed trait FType
+  sealed private trait FType
+
   /** Internal integer type constant. */
   private case object FInt extends FType
+
   /** Internal boolean type constant. */
   private case object FBool extends FType
+
   /** Internal real type constant. */
   private case object FReal extends FType
+
   /** Internal string type constant. */
   private case object FStr extends FType
+
   /** Internal uninterpreted type constant. */
   private case class FConst(name: String) extends FType
+
   /** Mutable HM type variable with a level, a union-find style link, and canonical id provenance. */
   private case class TVar(
       id: Int,
@@ -1085,24 +1122,34 @@ object EtcTypeCheckerFast {
       var link: Option[FType] = None,
       var canonicalPositiveId: Option[Int] = None)
       extends FType
+
   /** Internal set type. */
   private case class FSet(elem: FType) extends FType
+
   /** Internal sequence type. */
   private case class FSeq(elem: FType) extends FType
+
   /** Internal function type. */
   private case class FFun(arg: FType, res: FType) extends FType
+
   /** Internal operator type. */
   private case class FOper(args: Seq[FType], res: FType) extends FType
+
   /** Internal tuple type. */
   private case class FTup(elems: Seq[FType]) extends FType
+
   /** Internal sparse tuple type. */
   private case class FSparseTup(fields: SortedMap[Int, FType]) extends FType
+
   /** Internal closed record type. */
   private case class FRec(fields: SortedMap[String, FType]) extends FType
+
   /** Internal open row fragment. */
   private case class FRow(fields: SortedMap[String, FType], tail: Option[TVar]) extends FType
+
   /** Internal record row wrapper. */
   private case class FRecRow(row: FRow) extends FType
+
   /** Internal variant row wrapper. */
   private case class FVariant(row: FRow) extends FType
 
@@ -1118,8 +1165,10 @@ object EtcTypeCheckerFast {
 
   /** Internal type scheme with explicit quantified variable ids. */
   private case class FastScheme(principal: FType, quantified: Set[Int])
+
   /** Immutable type environment used during recursive inference. */
   private class FastEnv(val types: Map[String, FastScheme]) {
+
     /** Extend the environment with one binding. */
     def withBinding(name: String, scheme: FastScheme): FastEnv =
       new FastEnv(types + (name -> scheme))
@@ -1131,8 +1180,10 @@ object EtcTypeCheckerFast {
 
   /** Internal signal for unification failures. */
   private class TypeMismatchException extends RuntimeException
+
   /** Internal signal for user-facing type-check failures that should stop inference. */
   protected class UnwindException extends RuntimeException
+
   /** Snapshot of mutable variable state used by overload probing. */
   private case class TVarState(link: Option[FType], level: Int, canonicalPositiveId: Option[Int])
 

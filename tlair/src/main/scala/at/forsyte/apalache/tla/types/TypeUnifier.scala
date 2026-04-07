@@ -486,7 +486,7 @@ class TypeUnifier(varPool: TypeVarPool) {
     val rv = find(v)
     val rr = find(repr)
     if (rv != rr) {
-      parent(rv) = rr  // force repr to be the root
+      parent(rv) = rr // force repr to be the root
     }
   }
 
