@@ -337,9 +337,9 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         case c: ConstT1 => FConst(c.name)
         case VarT1(no) =>
           if (shareUnquantified) {
-            globalVars.getOrElseUpdate(no, TVar(no, 0))
+            globalVars.getOrElseUpdate(no, TVar(no, 0, None, Some(no)))
           } else {
-            cache.getOrElseUpdate(no, TVar(no, 0))
+            cache.getOrElseUpdate(no, TVar(no, 0, None, Some(no)))
           }
         case SetT1(elem) =>
           FSet(convert(elem, cache))
@@ -377,7 +377,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         case StrT1      => FStr
         case c: ConstT1 => FConst(c.name)
         case VarT1(no) =>
-          cache.getOrElseUpdate(no, freshTempVar(level))
+          cache.getOrElseUpdate(no, freshTempVar(level, Some(no)))
         case SetT1(elem) =>
           FSet(convert(elem, cache))
         case SeqT1(elem) =>
@@ -408,17 +408,19 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private def export(tp: FType): TlaType1 = {
     val cache = mutable.HashMap[Int, TlaType1]()
     val tempVarRenaming = mutable.HashMap[Int, Int]()
-    var nextFreshNo = globalVars.keysIterator.filter(_ >= 0).foldLeft(0)(Math.max) + 1
+    var nextFreshNo = math.max(globalVars.keysIterator.filter(_ >= 0).foldLeft(0)(Math.max), maxCanonicalId(tp)) + 1
 
-    def exportedVarNo(id: Int): Int = {
-      if (id >= 0) {
-        id
-      } else {
-        tempVarRenaming.getOrElseUpdate(id, {
-          val fresh = nextFreshNo
-          nextFreshNo += 1
-          fresh
-        })
+    def exportedVarNo(v: TVar): Int = {
+      canonicalPositiveIdOf(v).getOrElse {
+        if (v.id >= 0) {
+          v.id
+        } else {
+          tempVarRenaming.getOrElseUpdate(v.id, {
+            val fresh = nextFreshNo
+            nextFreshNo += 1
+            fresh
+          })
+        }
       }
     }
 
@@ -428,7 +430,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           cache.getOrElseUpdate(v.id, {
             v.link match {
               case Some(target) => loop(target)
-              case None         => VarT1(exportedVarNo(v.id))
+              case None         => VarT1(exportedVarNo(v))
             }
           })
         case FInt         => IntT1
@@ -461,17 +463,68 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     loop(tp)
   }
 
+  private def canonicalPositiveIdOf(v: TVar): Option[Int] = {
+    prune(v) match {
+      case root: TVar =>
+        root.canonicalPositiveId.orElse(Option.when(root.id >= 0)(root.id))
+      case _ =>
+        None
+    }
+  }
+
+  private def maxCanonicalId(tp: FType): Int = {
+    val seen = mutable.Set[Int]()
+    var maxId = 0
+
+    def loop(term: FType): Unit = {
+      prune(term) match {
+        case v: TVar =>
+          if (!seen.contains(v.id)) {
+            seen += v.id
+            canonicalPositiveIdOf(v).foreach(id => if (id > maxId) maxId = id)
+          }
+        case FSet(elem) =>
+          loop(elem)
+        case FSeq(elem) =>
+          loop(elem)
+        case FFun(arg, res) =>
+          loop(arg)
+          loop(res)
+        case FOper(args, res) =>
+          args.foreach(loop)
+          loop(res)
+        case FTup(elems) =>
+          elems.foreach(loop)
+        case FSparseTup(fields) =>
+          fields.values.foreach(loop)
+        case FRec(fields) =>
+          fields.values.foreach(loop)
+        case FRow(fields, tail) =>
+          fields.values.foreach(loop)
+          tail.foreach(loop)
+        case FRecRow(row) =>
+          loop(row)
+        case FVariant(row) =>
+          loop(row)
+        case _ =>
+      }
+    }
+
+    loop(tp)
+    maxId
+  }
+
   private def freshVar(level: Int): TVar = {
     val id = varPool.fresh.no
-    val variable = TVar(id, level)
+    val variable = TVar(id, level, None, Some(id))
     globalVars.getOrElseUpdate(id, variable)
     variable
   }
 
-  private def freshTempVar(level: Int): TVar = {
+  private def freshTempVar(level: Int, canonicalPositiveId: Option[Int] = None): TVar = {
     val id = tempVarNo
     tempVarNo -= 1
-    TVar(id, level)
+    TVar(id, level, None, canonicalPositiveId)
   }
 
   private def prune(tp: FType): FType = {
@@ -655,6 +708,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       case otherVar: TVar if otherVar.link.isEmpty && variable.link.isEmpty =>
         val (winner, loser) = if (variable.id < otherVar.id) (variable, otherVar) else (otherVar, variable)
         winner.level = math.min(winner.level, loser.level)
+        winner.canonicalPositiveId = mergeCanonicalPositiveIds(winner, loser)
         loser.link = Some(winner)
       case _ =>
         if (occurs(variable, prunedOther, mutable.Set.empty)) {
@@ -849,7 +903,12 @@ object EtcTypeCheckerFast {
   private case object FReal extends FType
   private case object FStr extends FType
   private case class FConst(name: String) extends FType
-  private case class TVar(id: Int, var level: Int, var link: Option[FType] = None) extends FType
+  private case class TVar(
+      id: Int,
+      var level: Int,
+      var link: Option[FType] = None,
+      var canonicalPositiveId: Option[Int] = None)
+      extends FType
   private case class FSet(elem: FType) extends FType
   private case class FSeq(elem: FType) extends FType
   private case class FFun(arg: FType, res: FType) extends FType
@@ -881,4 +940,14 @@ object EtcTypeCheckerFast {
 
   private class TypeMismatchException extends RuntimeException
   protected class UnwindException extends RuntimeException
+
+  private def mergeCanonicalPositiveIds(left: TVar, right: TVar): Option[Int] = {
+    (left.canonicalPositiveId.orElse(Option.when(left.id >= 0)(left.id)),
+        right.canonicalPositiveId.orElse(Option.when(right.id >= 0)(right.id))) match {
+      case (Some(l), Some(r)) => Some(math.min(l, r))
+      case (Some(l), None)    => Some(l)
+      case (None, Some(r))    => Some(r)
+      case (None, None)       => None
+    }
+  }
 }

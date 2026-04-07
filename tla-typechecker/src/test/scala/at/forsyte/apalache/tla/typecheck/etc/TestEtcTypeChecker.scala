@@ -204,6 +204,21 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
     }
   }
 
+  test("prefers smaller type variable indices") {
+    val oper = parser("b => a")
+    val arg = mkUniqConst(parser("a"))
+    val app = mkUniqApp(Seq(oper), arg)
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("a"))
+      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("a"))
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, app)
+      assert(computed.contains(parser("a")))
+    }
+  }
+
   test("one resolved, one unresolved") {
     val operTypes = Seq(parser("Int => a"), parser("Int => Bool"))
     val arg = mkUniqConst(IntT1)
