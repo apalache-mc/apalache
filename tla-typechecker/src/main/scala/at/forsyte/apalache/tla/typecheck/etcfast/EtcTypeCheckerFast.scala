@@ -70,7 +70,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       val rootType = infer(initialEnv(rootCtx), level = 0, rootEx, expected = None)
       watchType(rootEx.sourceRef, rootType)
       resolvePendingApps(failOnAmbiguity = true)
-      val exactType = export(rootType)
+      val exactType = exportType(rootType)
       flushWatchedTypes()
       Some(exactType)
     } catch {
@@ -120,7 +120,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           case Some(scheme) =>
             val instantiatedType = instantiate(scheme, level)
             watchType(name.sourceRef, instantiatedType)
-            inferApp(env, level, appEx, Seq(export(instantiatedType)), args.toList, expected, Some(name.sourceRef))
+            inferApp(env, level, appEx, Seq(exportType(instantiatedType)), args.toList, expected, Some(name.sourceRef))
 
           case None =>
             onTypeError(ex.sourceRef, s"The operator $name is used before it is defined.")
@@ -150,13 +150,13 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
                   unify(paramType, annotParam)
                 } catch {
                   case _: TypeMismatchException =>
-                    onTypeError(defEx.sourceRef, s"Mismatch in parameter ${pname.name}. Found: ${export(paramType)}")
+                    onTypeError(defEx.sourceRef, s"Mismatch in parameter ${pname.name}. Found: ${exportType(paramType)}")
                     throw new UnwindException
                 }
               }
 
             case other =>
-              throw new IllegalStateException("Expected an operator type, found: " + export(other))
+              throw new IllegalStateException("Expected an operator type, found: " + exportType(other))
           }
 
           val defBodyType = infer(extEnv, level + 1, defBody, expectedRes)
@@ -165,14 +165,14 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
             unify(operScheme.principal, defType)
           } catch {
             case _: TypeMismatchException =>
-              val expected = export(operScheme.principal)
-              val found = export(defType)
+              val expected = exportType(operScheme.principal)
+              val found = exportType(defType)
               onTypeError(defEx.sourceRef, s"Expected $expected in $name. Found: $found")
               throw new UnwindException
           }
 
           resolvePendingApps(failOnAmbiguity = true)
-          val principalDefType = export(defType)
+          val principalDefType = exportType(defType)
           val generalized = generalizeAgainstEnv(env, defType)
           if (!inferPolytypes && generalized.quantified.nonEmpty) {
             onTypeError(ex.sourceRef,
@@ -182,7 +182,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
           env.types.get(name).foreach { userScheme =>
             val inferredType = principalDefType
-            val userType = export(userScheme.principal) match {
+            val userType = exportType(userScheme.principal) match {
               case op: OperT1 => op
               case someType   => OperT1(Seq(), someType)
             }
@@ -227,7 +227,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     val appliedOperType = FOper(argTypes, resType)
     expected.foreach(unify(resType, _))
 
-    def evaluatedArgTypes: List[TlaType1] = argTypes.map(export)
+    def evaluatedArgTypes: List[TlaType1] = argTypes.map(exportType)
 
     def onArgsMatchError(sig: TlaType1): Nothing = {
       val argOrArgs = pluralArgs(argTypes.length)
@@ -244,7 +244,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         unify(operType, appliedOperType)
       } catch {
         case _: TypeMismatchException =>
-          onArgsMatchError(export(operType))
+          onArgsMatchError(exportType(operType))
       }
       args.zip(argTypes).foreach { case (arg, argType) => watchType(arg.sourceRef, argType) }
       operatorNameRef.foreach(ref => watchType(ref, operType))
@@ -276,8 +276,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     env.types.get(name) match {
       case Some(scheme) =>
         prune(scheme.principal) match {
-          case op: FOper => instantiateSchemeAsMonotype(scheme, level + 1, expectedArity = Some(op.args.length))
-          case other     => FastScheme(FOper(Seq.empty, instantiate(scheme, level + 1)), Set.empty)
+          case op: FOper => instantiateSchemeAsMonotype(scheme, level + 1, Some(op.args.length))
+          case _         => FastScheme(FOper(Seq.empty, instantiate(scheme, level + 1)), Set.empty)
         }
 
       case None =>
@@ -288,7 +288,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   }
 
   /** Instantiate a scheme and require the instantiated value to be an operator with the expected arity. */
-  private def instantiateSchemeAsMonotype(scheme: FastScheme, level: Int, expectedArity: Option[Int] = None): FastScheme = {
+  private def instantiateSchemeAsMonotype(scheme: FastScheme, level: Int, expectedArity: Option[Int]): FastScheme = {
     val principal = instantiate(scheme, level)
     principal match {
       case op: FOper =>
@@ -313,7 +313,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         unify(setType, FSet(elemType))
       } catch {
         case _: TypeMismatchException =>
-          onTypeError(setEx.sourceRef, "Expected a set. Found: " + export(setType))
+          onTypeError(setEx.sourceRef, "Expected a set. Found: " + exportType(setType))
           throw new UnwindException
       }
       watchType(setEx.sourceRef, FSet(elemType))
@@ -475,7 +475,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   }
 
   /** Export an internal type graph back to a stable `TlaType1` value. */
-  private def export(tp: FType): TlaType1 = {
+  private def exportType(tp: FType): TlaType1 = {
     val cache = mutable.HashMap[Int, TlaType1]()
     val tempVarRenaming = mutable.HashMap[Int, Int]()
     var nextFreshNo = math.max(globalVars.keysIterator.filter(_ >= 0).foldLeft(0)(Math.max), maxCanonicalId(tp)) + 1
@@ -535,7 +535,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   /** Export a possibly linked row type into the canonical `RowT1` representation. */
   private def exportRow(row: FRow): RowT1 = {
     def loop(current: FRow, acc: SortedMap[String, TlaType1]): RowT1 = {
-      val exportedFields = acc ++ SortedMap(current.fields.toSeq.map { case (k, v) => k -> export(v) }: _*)
+      val exportedFields = acc ++ SortedMap(current.fields.toSeq.map { case (k, v) => k -> exportType(v) }: _*)
       current.tail.map(prune) match {
         case None =>
           RowT1(exportedFields, None)
@@ -547,7 +547,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           loop(next, exportedFields)
 
         case Some(other) =>
-          throw new IllegalStateException("Expected an open row tail variable or a row, found: " + export(other))
+          throw new IllegalStateException("Expected an open row tail variable or a row, found: " + exportType(other))
       }
     }
 
@@ -624,7 +624,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   }
 
   /** Allocate a fresh temporary variable used for local probes that must not escape directly. */
-  private def freshTempVar(level: Int, canonicalPositiveId: Option[Int] = None): TVar = {
+  private def freshTempVar(level: Int, canonicalPositiveId: Option[Int]): TVar = {
     val id = tempVarNo
     tempVarNo -= 1
     TVar(id, level, None, canonicalPositiveId)
@@ -701,11 +701,11 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       unify(operType, FOper(argTypes, resType))
     } catch {
       case _: TypeMismatchException =>
-        val evalArgTypes = argTypes.map(export)
+        val evalArgTypes = argTypes.map(exportType)
         val argOrArgs = pluralArgs(argTypes.length)
         val defaultMessage =
-          s"An operator with the signature ${export(operType)} cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
-        val specificMessage = appEx.explain(List(export(operType)), evalArgTypes)
+          s"An operator with the signature ${exportType(operType)} cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
+        val specificMessage = appEx.explain(List(exportType(operType)), evalArgTypes)
         onTypeError(appEx.sourceRef, specificMessage.getOrElse(defaultMessage))
         throw new UnwindException
     }
@@ -734,7 +734,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
             progress = true
 
           case Seq() =>
-            val evalArgTypes = pending.argTypes.map(export)
+            val evalArgTypes = pending.argTypes.map(exportType)
             val argOrArgs = pluralArgs(pending.argTypes.length)
             val defaultMessage = s"No matching signature for $argOrArgs $evalArgTypes"
             val specificMessage = pending.appEx.explain(Nil, evalArgTypes)
@@ -751,7 +751,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
     if (failOnAmbiguity && pendingApps.nonEmpty) {
       pendingApps.foreach { pending =>
-        val evalArgTypes = pending.argTypes.map(export)
+        val evalArgTypes = pending.argTypes.map(exportType)
         val argOrArgs = pluralArgs(pending.argTypes.length)
         val sepSigs = String.join(" or ", pending.signatures.map(_.toString): _*)
         val defaultMessage =
@@ -1023,28 +1023,19 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     }
   }
 
-  /** Forward a discovered type to the listener immediately when the source ref is exact. */
-  private def onTypeFound(sourceRef: EtcRef, tt: TlaType1): Unit = {
-    sourceRef match {
-      case ref: ExactRef =>
-        listener.onTypeFound(ref, tt)
-      case _ =>
-    }
-  }
-
   /** Register a lazily exported type for a source node so callbacks happen after the type stabilizes. */
   private def watchType(sourceRef: EtcRef, tp: FType): Unit = {
     sourceRef match {
       case ref: ExactRef =>
         if (!protectedTypes.contains(ref.tlaId)) {
-          watchedTypes.update(ref.tlaId, (ref, () => export(tp)))
+          watchedTypes.update(ref.tlaId, (ref, () => exportType(tp)))
         }
       case _ =>
     }
   }
 
   /** Register a fixed exported type, optionally protecting the UID from later wrapper overwrites. */
-  private def watchFixedType(sourceRef: EtcRef, tp: TlaType1, protect: Boolean = false): Unit = {
+  private def watchFixedType(sourceRef: EtcRef, tp: TlaType1, protect: Boolean): Unit = {
     sourceRef match {
       case ref: ExactRef =>
         if (protect) {
