@@ -1060,7 +1060,7 @@ class ToEtcExpr(
   }
 
   private def renameVars(tt: TlaType1): TlaType1 = {
-    val varRenamingMap = tt.usedNames.toSeq.map(v => EqClass(v) -> varPool.fresh)
+    val varRenamingMap = tt.usedNames.toSeq.map(v => v -> varPool.fresh)
     Substitution(varRenamingMap: _*).sub(tt)._1
   }
 }

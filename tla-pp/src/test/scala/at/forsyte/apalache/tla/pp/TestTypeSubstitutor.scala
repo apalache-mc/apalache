@@ -33,7 +33,7 @@ class TestTypeSubstitutor extends AnyFunSuite with BeforeAndAfterEach {
 
   test("""a name""") {
     val input = name("x").typed(VarT1(0))
-    val sub = Substitution(EqClass(0) -> parser("Int -> Int"))
+    val sub = Substitution.fromEqClasses(EqClass(0) -> parser("Int -> Int"))
     val output = new TypeSubstitutor(new IdleTracker, sub)(input)
     val expected = tla.name("x").typed(parser("Int -> Int"))
     assert(expected.eqTyped(output))
@@ -41,28 +41,28 @@ class TestTypeSubstitutor extends AnyFunSuite with BeforeAndAfterEach {
 
   test("""an integer""") {
     val input = int(1).typed(parser("Int"))
-    val sub = Substitution(EqClass(0) -> parser("Int -> Int"))
+    val sub = Substitution.fromEqClasses(EqClass(0) -> parser("Int -> Int"))
     val output = new TypeSubstitutor(new IdleTracker, sub)(input)
     assert(input.eqTyped(output))
   }
 
   test("""a Boolean""") {
     val input = bool(true).typed(parser("Bool"))
-    val sub = Substitution(EqClass(0) -> parser("Int -> Int"))
+    val sub = Substitution.fromEqClasses(EqClass(0) -> parser("Int -> Int"))
     val output = new TypeSubstitutor(new IdleTracker, sub)(input)
     assert(input.eqTyped(output))
   }
 
   test("""a string""") {
     val input = str("abc").typed(parser("Str"))
-    val sub = Substitution(EqClass(0) -> parser("Int -> Int"))
+    val sub = Substitution.fromEqClasses(EqClass(0) -> parser("Int -> Int"))
     val output = new TypeSubstitutor(new IdleTracker, sub)(input)
     assert(input.eqTyped(output))
   }
 
   test("""an operator""") {
     val input = appOp(name("F") ? "F", name("x") ? "a").typed(types, "aa")
-    val sub = Substitution(EqClass(0) -> parser("Int -> Int"))
+    val sub = Substitution.fromEqClasses(EqClass(0) -> parser("Int -> Int"))
     val output = new TypeSubstitutor(new IdleTracker, sub)(input)
     val expected = appOp(name("F") ? "Fii", name("x") ? "ii").typed(types, "ii2")
     assert(expected.eqTyped(output))
@@ -76,7 +76,7 @@ class TestTypeSubstitutor extends AnyFunSuite with BeforeAndAfterEach {
     val declOfF = declOp("F", pair, OperParam("x")).typedOperDecl(types, "F")
     // LET F(x) == <<x, x>> IN F(x)
     val input = letIn(FofX, declOfF).typed(types, "aa")
-    val sub = Substitution(EqClass(0) -> parser("Int -> Int"))
+    val sub = Substitution.fromEqClasses(EqClass(0) -> parser("Int -> Int"))
     val output = new TypeSubstitutor(new IdleTracker, sub)(input)
     // concrete types
     val concreteFofX = appOp(name("F") ? "Fii", name("x") ? "ii") ? "ii2"

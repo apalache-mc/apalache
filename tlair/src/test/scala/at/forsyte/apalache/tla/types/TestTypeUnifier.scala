@@ -81,44 +81,44 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   test("unifying polytypes") {
     assert(unifier
           .unify(Substitution.empty, VarT1(0), IntT1)
-          .contains((Substitution(EqClass(0) -> IntT1), IntT1)))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> IntT1), IntT1)))
     assert(unifier
           .unify(Substitution.empty, FunT1(VarT1(0), IntT1), FunT1(BoolT1, VarT1(1)))
-          .contains((Substitution(EqClass(0) -> BoolT1, EqClass(1) -> IntT1), FunT1(BoolT1, IntT1))))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> BoolT1, EqClass(1) -> IntT1), FunT1(BoolT1, IntT1))))
     assert(unifier
           .unify(Substitution.empty, VarT1(0), ConstT1("ID"))
-          .contains((Substitution(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
     assert(unifier
           .unify(Substitution.empty, ConstT1("ID"), VarT1(0))
-          .contains((Substitution(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> ConstT1("ID")), ConstT1("ID"))))
 
     val rec1 = parser("[foo: Bool]")
     val rec2 = parser("[bar: Int]")
     val rec3 = parser("[foo: Bool, bar: Int]")
     assert(unifier
-          .unify(Substitution(EqClass(0) -> rec1), VarT1(0), rec2)
-          .contains((Substitution(EqClass(0) -> rec3), rec3)))
+          .unify(Substitution.fromEqClasses(EqClass(0) -> rec1), VarT1(0), rec2)
+          .contains((Substitution.fromEqClasses(EqClass(0) -> rec3), rec3)))
   }
 
   test("unifying tricky polytypes") {
     assert(unifier
           .unify(Substitution.empty, VarT1(0), VarT1(0))
-          .contains((Substitution(EqClass(0) -> VarT1(0)), VarT1(0))))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> VarT1(0)), VarT1(0))))
     assert(unifier
-          .unify(Substitution(EqClass(0) -> IntT1), VarT1(0), VarT1(0))
-          .contains((Substitution(EqClass(0) -> IntT1), IntT1)))
+          .unify(Substitution.fromEqClasses(EqClass(0) -> IntT1), VarT1(0), VarT1(0))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> IntT1), IntT1)))
     assert(unifier
           .unify(Substitution.empty, VarT1(0), VarT1(1))
-          .contains((Substitution(EqClass(Set(0, 1)) -> VarT1(0)), VarT1(0))))
+          .contains((Substitution.fromEqClasses(EqClass(Set(0, 1)) -> VarT1(0)), VarT1(0))))
     assert(unifier
-          .unify(Substitution(EqClass(1) -> IntT1), VarT1(0), VarT1(1))
-          .contains((Substitution(EqClass(Set(0, 1)) -> IntT1), IntT1)))
+          .unify(Substitution.fromEqClasses(EqClass(1) -> IntT1), VarT1(0), VarT1(1))
+          .contains((Substitution.fromEqClasses(EqClass(Set(0, 1)) -> IntT1), IntT1)))
     // unify <<a, b>> and <<b, a>>
     assert(unifier
           .unify(Substitution.empty, parser("<<a, b>>"), parser("<<b, a>>"))
-          .contains((Substitution(EqClass(Set(0, 1)) -> VarT1(0)), parser("<<a, a>>"))))
+          .contains((Substitution.fromEqClasses(EqClass(Set(0, 1)) -> VarT1(0)), parser("<<a, a>>"))))
     // there is no problem with the cycle a -> b -> c -> a
-    val expectedSub = Substitution(EqClass(Set(0, 1, 2)) -> VarT1(0))
+    val expectedSub = Substitution.fromEqClasses(EqClass(Set(0, 1, 2)) -> VarT1(0))
     assert(unifier
           .unify(Substitution.empty, parser("<<a, b, c>>"), parser("<<b, c, a>>"))
           .contains((expectedSub, parser("<<a, a, a>>"))))
@@ -127,13 +127,13 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   test("unifying Seq(a) and Seq(Int)") {
     assert(unifier
           .unify(Substitution.empty, SeqT1(VarT1(0)), SeqT1(IntT1))
-          .contains((Substitution(EqClass(0) -> IntT1), SeqT1(IntT1))))
+          .contains((Substitution.fromEqClasses(EqClass(0) -> IntT1), SeqT1(IntT1))))
   }
 
   test("unifying a => Set(a) and Int => b") {
     assert(unifier
           .unify(Substitution.empty, OperT1(Seq(VarT1(0)), SetT1(VarT1(0))), OperT1(Seq(IntT1), VarT1(1)))
-          .contains((Substitution(EqClass(0) -> IntT1, EqClass(1) -> SetT1(VarT1(0))),
+          .contains((Substitution.fromEqClasses(EqClass(0) -> IntT1, EqClass(1) -> SetT1(VarT1(0))),
                   OperT1(Seq(IntT1), SetT1(IntT1)))))
   }
 
@@ -143,7 +143,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
   }
 
   test("unifying with transitivity") {
-    val expectedSubstitution = Substitution(EqClass(Set(1, 2)) -> parser("PERSON"))
+    val expectedSubstitution = Substitution.fromEqClasses(EqClass(Set(1, 2)) -> parser("PERSON"))
     assert(unifier
           .unify(Substitution.empty, parser("Set(b) -> Set(b)"), parser("Set(c) -> Set(PERSON)"))
           .contains((expectedSubstitution, parser("Set(PERSON) -> Set(PERSON)"))))
@@ -151,9 +151,9 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
 
   // regression
   test("unifying variables via sets") {
-    val sub = Substitution(EqClass(1003) -> SetT1(VarT1(0)), EqClass(1004) -> SetT1(VarT1(1005)))
+    val sub = Substitution.fromEqClasses(EqClass(1003) -> SetT1(VarT1(0)), EqClass(1004) -> SetT1(VarT1(1005)))
     val expected =
-      Substitution(EqClass(Set(1003, 1004)) -> SetT1(VarT1(0)), EqClass(Set(0, 1005)) -> VarT1(0))
+      Substitution.fromEqClasses(EqClass(Set(1003, 1004)) -> SetT1(VarT1(0)), EqClass(Set(0, 1005)) -> VarT1(0))
     assert(unifier
           .unify(sub, VarT1(1004), VarT1(1003))
           .contains((expected, SetT1(VarT1(0)))))
@@ -161,12 +161,12 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
 
   // regression
   test("unifying variables via operators") {
-    val sub = Substitution(
+    val sub = Substitution.fromEqClasses(
         EqClass(Set(1000, 1004)) -> VarT1(1000),
         EqClass(1005) -> OperT1(Seq(VarT1(1000)), VarT1(1001)),
         EqClass(1006) -> VarT1(1000),
     ) ////
-    val expected = Substitution(
+    val expected = Substitution.fromEqClasses(
         EqClass(Set(1000, 1001, 1004, 1006)) -> VarT1(1000),
         EqClass(1005) -> OperT1(Seq(VarT1(1000)), VarT1(1000)),
     ) ////
@@ -179,7 +179,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val row1 = parser("(| |)")
     val row2 = parser("(| d |)")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(d.no)) -> RowT1()
     ) ///
     val result = unifier.unify(Substitution(), row1, row2)
@@ -198,7 +198,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val row1 = parser("(| c |)")
     val row2 = parser("(| field1: Int | d |)")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> parser("(| field1: Int | d |)"),
         EqClass(Set(d.no)) -> d,
     ) ///
@@ -212,7 +212,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val fresh = VarT1(FIRST_VAR)
     val row1 = parser("(| field1: Int | field2: Str | c |)")
     val row2 = parser("(| field3: Bool | d |)")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> RowT1(fresh, "field3" -> BoolT1),
         EqClass(Set(d.no)) -> RowT1(fresh, "field1" -> IntT1, "field2" -> StrT1),
         EqClass(Set(fresh.no)) -> fresh,
@@ -225,7 +225,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val row1 = parser("(| field2: Str | d |)")
     val row2 = parser("(| field1: Int | field2: Str | field3: Bool |)")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(d.no)) -> parser("(| field1: Int | field3: Bool |)")
     ) ///
     val result = unifier.unify(Substitution(), row1, row2)
@@ -236,7 +236,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val row1 = parser("(| field1: Int | field2: Str |)")
     val row2 = parser("(| field2: Str | d |)")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(d.no)) -> parser("(| field1: Int |)")
     ) ///
     val result = unifier.unify(Substitution(), row1, row2)
@@ -248,7 +248,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val row1 = parser("(| c |)")
     val row2 = parser("(| d |)")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no, d.no)) -> c
     ) ///
     val result = unifier.unify(Substitution(), row1, row2)
@@ -260,7 +260,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val row1 = parser("(| c |)")
     val row2 = parser("(| d |)")
-    val inputSub = Substitution(
+    val inputSub = Substitution.fromEqClasses(
         EqClass(c.no) -> parser("(| field1: Int |)"),
         EqClass(d.no) -> parser("(| field1: Bool |)"),
     )
@@ -294,7 +294,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val rec1 = parser("{ field1: Int, c }")
     val rec2 = parser("{ field2: Str, d }")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> parser("(| field2: Str | a100 |)"),
         EqClass(Set(d.no)) -> parser("(| field1: Int | a100 |)"),
         EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
@@ -308,7 +308,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val rec1 = parser("{ field2: c, d }")
     val rec2 = parser("{ field2: Str, field3: Bool }")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> parser("Str"),
         EqClass(Set(d.no)) -> parser("(| field3: Bool |)"),
     ) ///
@@ -335,7 +335,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val variant1 = parser("""Tag1({ field1: Int }) | c""")
     val variant2 = parser("""Tag2({ field2: Str }) | d""")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> parser("""(| Tag2: { field2: Str } | a100 |)"""),
         EqClass(Set(d.no)) -> parser("""(| Tag1: { field1: Int } | a100 |)"""),
         EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
@@ -350,7 +350,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val variant1 = parser("""Variant(c)""")
     val variant2 = parser("""Tag2({ field2: Str }) | d""")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> parser("""(| Tag2: { field2: Str } | d |)"""),
         EqClass(Set(d.no)) -> d,
     ) ///
@@ -366,7 +366,7 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
     val d = VarT1("d")
     val variant1 = parser("""Tag1({ field1: Int }) | c""")
     val variant2 = parser("""Tag2({ field1: Str }) | d""")
-    val expectedSub = Substitution(
+    val expectedSub = Substitution.fromEqClasses(
         EqClass(Set(c.no)) -> parser("""(| Tag2: { field1: Str } | a100 |)"""),
         EqClass(Set(d.no)) -> parser("""(| Tag1: { field1: Int } | a100 |)"""),
         EqClass(Set(FIRST_VAR)) -> VarT1(FIRST_VAR),
@@ -385,8 +385,8 @@ class TestTypeUnifier extends AnyFunSuite with EasyMockSugar with BeforeAndAfter
 
   // regression
   test("merge equivalence classes of a -> b, b -> a") {
-    val expectedSub = Substitution(EqClass(Set(0, 1)) -> VarT1(0))
-    val result = unifier.unify(Substitution(EqClass(0) -> VarT1("b"), EqClass(1) -> VarT1("a")), VarT1("a"), VarT1("b"))
+    val expectedSub = Substitution.fromEqClasses(EqClass(Set(0, 1)) -> VarT1(0))
+    val result = unifier.unify(Substitution.fromEqClasses(EqClass(0) -> VarT1("b"), EqClass(1) -> VarT1("a")), VarT1("a"), VarT1("b"))
     assert(result.contains((expectedSub, VarT1(0))))
   }
 

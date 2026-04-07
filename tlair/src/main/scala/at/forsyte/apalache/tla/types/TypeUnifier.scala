@@ -4,6 +4,7 @@ import at.forsyte.apalache.tla.lir._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedMap
+import scala.collection.mutable
 
 /**
  * <p>A unification solver for the TlaType1 system. Note that our subtyping relation unifies records and sparse tuples
@@ -22,13 +23,25 @@ import scala.collection.immutable.SortedMap
  *   Igor Konnov
  */
 class TypeUnifier(varPool: TypeVarPool) {
-  // A variable is mapped to its equivalence class. By default, a variable sits in the singleton equivalence class
-  // of its own. When two variables are unified, they are merged in the same equivalence class.
-  private var varToClass: Map[Int, EqClass] = Map.empty
-  // A partial solution to the unification problem is stored here during unification.
-  // Importantly, instead of mapping a variable to a type, we map an equivalence class to a type.
-  // By doing so, we make sure that equivalent variables are mapped to the same type.
-  private var solution: Map[EqClass, TlaType1] = Map.empty
+  // Union-find state. parent(i) == i means i is a root (representative of its class).
+  // rank(i) is used for union-by-rank to keep trees shallow.
+  // Initial capacity; grown dynamically.
+  private var parent: Array[Int] = new Array[Int](64)
+  private var rank: Array[Int] = new Array[Int](64)
+
+  // The set of variable indices that have been registered in this run of unifyImpl.
+  // Only these indices have valid parent/rank entries. Used for efficient reset.
+  private val activeVars: mutable.HashSet[Int] = new mutable.HashSet[Int]()
+
+  // Partial solution: representative variable index → assigned type.
+  // Using a mutable HashMap to avoid repeated Map copy allocations.
+  private val solution: mutable.HashMap[Int, TlaType1] = new mutable.HashMap[Int, TlaType1]()
+
+  // Initialise arrays: every slot points to itself (self-root).
+  locally {
+    var i = 0
+    while (i < parent.length) { parent(i) = i; i += 1 }
+  }
 
   /**
    * Try to unify lhs and rhs by starting with the given substitution. If successful, it returns Some(mgu, t), where mgu
@@ -41,40 +54,63 @@ class TypeUnifier(varPool: TypeVarPool) {
    * never `a` with `b`. This property MUST be preserved, as the calling code relies on it.
    */
   def unify(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
-    // Copy the equivalence classes and the mapping from the substitution.
-    // It is important to introduce fresh copies of the classes, as they may be merged in the unification process.
-    solution = Map.empty
-    varToClass = Map.empty
+    val startNanos = if (TypeCheckerProfiler.enabled) System.nanoTime() else 0L
+    try {
+      unifyImpl(substitution, lhs, rhs)
+    } finally {
+      if (TypeCheckerProfiler.enabled) {
+        val elapsed = System.nanoTime() - startNanos
+        TypeCheckerProfiler.unifyCallCount += 1
+        TypeCheckerProfiler.unifyTotalNanos += elapsed
+        if (elapsed > TypeCheckerProfiler.unifyMaxNanos) TypeCheckerProfiler.unifyMaxNanos = elapsed
+      }
+    }
+  }
+
+  private def unifyImpl(substitution: Substitution, lhs: TlaType1, rhs: TlaType1): Option[(Substitution, TlaType1)] = {
+    // Reset state from any previous call.
+    // Only visit activeVars to avoid O(capacity) work when capacity >> active vars.
+    for (v <- activeVars) {
+      parent(v) = v
+      rank(v) = 0
+    }
+    activeVars.clear()
+    solution.clear()
+
+    // Reconstruct union-find from the incoming substitution's varToClass map.
+    // varToClassMap maps every variable (representatives and class members) to its representative.
+    for ((v, repr) <- substitution.varToClassMap) {
+      registerVar(v)
+      registerVar(repr)
+      if (v != repr) unionByRepr(v, repr)
+    }
+    // Load solution types for each representative.
     var usedVars = lhs.usedNames ++ rhs.usedNames
-    for ((cls, tp) <- substitution.mapping) {
-      val copy = cls.copy()
-      solution += copy -> tp
-      varToClass ++= copy.typeVars.map(_ -> copy)
+    for ((repr, tp) <- substitution.mapping) {
+      solution(repr) = tp
       usedVars ++= tp.usedNames
     }
 
-    // Introduce an equivalence class for every used variable that does not have a class assigned yet.
-    // This simplifies the algorithm, as we don't have to check, whether a variable has been assigned a class.
+    // Introduce equivalence classes for variables from lhs/rhs/solution not yet in the substitution.
     for (v <- usedVars) {
-      if (!varToClass.contains(v)) {
-        val cls = EqClass(v)
-        varToClass += v -> cls
-        // point to the variable itself
-        solution += cls -> VarT1(v)
+      if (!activeVars.contains(v)) {
+        registerVar(v)
+        solution(v) = VarT1(v) // free variable: maps to itself until unified
       }
     }
 
-    // try to unify
-    val result =
-      compute(lhs, rhs).flatMap { unifiedType =>
-        // use only the representative variables of every equivalence class
-        val canonical = mkCanonicalSub
-        val substitution = new Substitution(solution.view.mapValues(tt => canonical.sub(tt)._1).toMap)
-        Some((substitution, substitution.sub(unifiedType)._1))
-      }
-    // help GC to clean up later
-    solution = Map.empty
-    varToClass = Map.empty
+    // Try to unify lhs with rhs.
+    val result = compute(lhs, rhs).flatMap { unifiedType =>
+      val canonical = mkCanonicalSub
+      val newMapping = solution.map { case (repr, tt) => repr -> canonical.sub(tt)._1 }.toMap
+      val vtc = activeVars.map(v => v -> find(v)).toMap
+      val newSub = new Substitution(newMapping, Some(vtc))
+      Some((newSub, newSub.sub(unifiedType)._1))
+    }
+    // Help GC: clear mutable state before returning.
+    solution.clear()
+    for (v <- activeVars) { parent(v) = v; rank(v) = 0 }
+    activeVars.clear()
     result
   }
 
@@ -99,22 +135,22 @@ class TypeUnifier(varPool: TypeVarPool) {
   // and there should be no unifier.
   private def unifyVarWithNonVarTerm(typeVar: Int, typeTerm: TlaType1): Option[TlaType1] = {
     // Note that `typeTerm` is not a variable.
-    val varClass = varToClass(typeVar)
-    if (doesUseClass(typeTerm, varClass)) {
+    val varRepr = find(typeVar)
+    if (doesUseRepr(typeTerm, varRepr)) {
       // No unifier: `typeTerm` refers to a variable in the equivalence class of `typeVar`.
       None
     } else {
       // this variable is associated with an equivalence class, unify the class with `typeTerm`
-      solution(varClass) match {
+      solution(varRepr) match {
         case VarT1(_) =>
           // an equivalence class of free variables, just assign `typeTerm` to this class
-          solution += varClass -> typeTerm
+          solution(varRepr) = typeTerm
           Some(typeTerm)
 
         case nonVar =>
           // unify `typeTerm` with the term assigned to the equivalence class, if possible
           val unifier = compute(nonVar, typeTerm)
-          unifier.foreach { t => solution += varClass -> t }
+          unifier.foreach { t => solution(varRepr) = t }
           unifier
       }
     }
@@ -143,9 +179,9 @@ class TypeUnifier(varPool: TypeVarPool) {
 
       case (VarT1(lname), VarT1(rname)) =>
         if (lname != rname) {
-          mergeClasses(lname, rname)
+          mergeReprs(lname, rname)
         } else {
-          Some(VarT1(lname))
+          Some(VarT1(find(lname)))
         }
 
       case (VarT1(name), other) =>
@@ -307,7 +343,7 @@ class TypeUnifier(varPool: TypeVarPool) {
           None
         } else {
           // apply the computed substitution to obtain the whole row
-          asRow(Some(Substitution(solution).sub(RowT1(lfields, lvar))._1))
+          asRow(Some(mkCurrentSub().sub(RowT1(lfields, lvar))._1))
         }
       } else {
         // the general case: some fields are shared
@@ -347,69 +383,125 @@ class TypeUnifier(varPool: TypeVarPool) {
   }
 
   // merge two equivalence classes of two variables, if possible
-  private def mergeClasses(lvar: Int, rvar: Int): Option[TlaType1] = {
-    // merge two equivalence classes, if possible
-    val lcls = varToClass(lvar)
-    val rcls = varToClass(rvar)
-    if (lcls == rcls) {
-      // always pick the variable with the minimal index as the representative
-      Some(VarT1(lcls.reprVar))
+  private def mergeReprs(lvar: Int, rvar: Int): Option[TlaType1] = {
+    val lrepr = find(lvar)
+    val rrepr = find(rvar)
+    if (lrepr == rrepr) {
+      // already in the same class; return the representative
+      Some(VarT1(lrepr))
     } else {
       // try to merge the classes
-      val lterm = solution(lcls)
-      val rterm = solution(rcls)
-      lcls.typeVars ++= rcls.typeVars
-      // Move the variables of the right class to the left class and remove the right class.
-      // This is safe, because terms never access the classes directly, but refer to them via variables.
-      rcls.typeVars.foreach { v => varToClass += v -> lcls }
-      solution -= rcls
+      val lterm = solution(lrepr)
+      val rterm = solution(rrepr)
+      // union: smaller index is always the winner (representative)
+      val (winner, loser) = if (lrepr < rrepr) (lrepr, rrepr) else (rrepr, lrepr)
+      // Merge in union-find
+      parent(loser) = winner
+      if (rank(winner) == rank(loser)) rank(winner) += 1
+      // Remove the loser's solution entry; winner keeps its entry
+      solution.remove(loser)
       // if the assigned terms unify, add the unifier as a solution
       val unified = compute(lterm, rterm)
-      unified.foreach { u => solution += lcls -> u }
+      // After recursive compute, winner may have been merged into a smaller root.
+      // Use find(winner) to always update the actual current root.
+      unified.foreach { u => solution(find(winner)) = u }
       unified
     }
   }
 
-  // Compute the transitive closure of the variables that are used by `tt` and their values that are known from the solution.
-  private def doesUseClass(tt: TlaType1, lookFor: EqClass): Boolean = {
-    def varsToClasses(vars: Set[Int]): Set[EqClass] = {
-      vars.map(varToClass)
-    }
-
-    // look for equivalence classes by simple depth-first search
-    var visited: Set[EqClass] = Set.empty
-    var toVisit = varsToClasses(tt.usedNames)
+  // Compute the transitive closure of the variables that are used by `tt` and their values that are known from
+  // the solution. Returns true if the representative `lookFor` is reachable.
+  private def doesUseRepr(tt: TlaType1, lookFor: Int): Boolean = {
+    var visited: Set[Int] = Set.empty // visited representatives
+    var toVisit: List[Int] = tt.usedNames.iterator.map(find).toList
     while (toVisit.nonEmpty) {
-      val cls = toVisit.head
-      if (cls == lookFor) {
-        // found an occurrence of `lookFor`, return immediately
+      val repr = toVisit.head
+      toVisit = toVisit.tail
+      if (repr == lookFor) {
         return true
       }
-      visited += cls
-      toVisit -= cls
-      val used = varsToClasses(solution(cls).usedNames)
-      toVisit ++= used -- visited
+      if (!visited.contains(repr)) {
+        visited += repr
+        for (v <- solution(repr).usedNames) {
+          val r = find(v)
+          if (!visited.contains(r)) {
+            toVisit = r :: toVisit
+          }
+        }
+      }
     }
-
     false
   }
 
-  // produce a canonical substitution
-  // that replaces every variable of an equivalence class with the largest variable in the class
+  // produce a canonical substitution that maps every variable to its representative (VarT1(find(v)))
   private def mkCanonicalSub: Substitution = {
-    val mapping = solution.keys.toSeq.map { cls =>
-      (cls, VarT1(cls.reprVar))
-    }
-    new Substitution(Map[EqClass, TlaType1](mapping: _*))
+    // mapping: each representative maps to VarT1(representative)
+    val mapping = solution.keys.map(repr => repr -> VarT1(repr)).toMap
+    val vtc = activeVars.map(v => v -> find(v)).toMap
+    new Substitution(mapping, Some(vtc))
+  }
+
+  // Build a Substitution from the current live state (used in unifyRows for partial substitution)
+  private def mkCurrentSub(): Substitution = {
+    val mapping = solution.toMap
+    val vtc = activeVars.map(v => v -> find(v)).toMap
+    new Substitution(mapping, Some(vtc))
   }
 
   // introduce a fresh variable
   private def freshVar(): VarT1 = {
     val fresh = varPool.fresh
-    val cls = EqClass(fresh.no)
-    varToClass += (fresh.no -> cls)
-    solution += (cls -> fresh)
+    registerVar(fresh.no)
+    solution(fresh.no) = fresh // initially maps to itself
     fresh
+  }
+
+  // Ensure the parent/rank arrays are large enough for index `n`.
+  private def ensureCapacity(n: Int): Unit = {
+    if (n >= parent.length) {
+      val newSize = math.max(n + 1, parent.length * 2)
+      val newParent = new Array[Int](newSize)
+      val newRank = new Array[Int](newSize)
+      System.arraycopy(parent, 0, newParent, 0, parent.length)
+      // Initialize new slots to self-parent
+      var i = parent.length
+      while (i < newSize) { newParent(i) = i; i += 1 }
+      parent = newParent
+      rank = newRank
+    }
+  }
+
+  // Register a variable: ensure capacity, mark active, set self-parent if not yet active.
+  private def registerVar(v: Int): Unit = {
+    ensureCapacity(v)
+    if (!activeVars.contains(v)) {
+      activeVars += v
+      // parent(v) = v is already guaranteed: either from initialization or from the reset loop
+    }
+  }
+
+  // Union two variables, forcing the given `repr` to be the root.
+  // Used only during substitution reconstruction in unifyImpl.
+  private def unionByRepr(v: Int, repr: Int): Unit = {
+    val rv = find(v)
+    val rr = find(repr)
+    if (rv != rr) {
+      parent(rv) = rr  // force repr to be the root
+    }
+  }
+
+  // Path-compressing find (iterative to avoid stack overflow on deep chains)
+  private def find(x: Int): Int = {
+    var root = x
+    while (parent(root) != root) root = parent(root)
+    // path compression: point everything on the path to the root
+    var cur = x
+    while (cur != root) {
+      val next = parent(cur)
+      parent(cur) = root
+      cur = next
+    }
+    root
   }
 }
 

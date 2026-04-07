@@ -195,7 +195,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           var instantiatedType = scheme.principalType
           if (scheme.quantifiedVars.nonEmpty) {
             // The type is parametric: instantiate it with new type variables.
-            val varRenamingMap = scheme.quantifiedVars.toSeq.map(v => EqClass(v) -> varPool.fresh)
+            val varRenamingMap = scheme.quantifiedVars.toSeq.map(v => v -> varPool.fresh)
             instantiatedType = Substitution(varRenamingMap: _*).subRec(scheme.principalType)
           }
 
