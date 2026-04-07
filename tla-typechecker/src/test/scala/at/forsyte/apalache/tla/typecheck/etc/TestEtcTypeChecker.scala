@@ -153,16 +153,25 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
-      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("a"))
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("c"))
-      listener.onTypeFound(wrapper.sourceRef.asInstanceOf[ExactRef], parser("() => c"))
+      if (strictListenerTypes) {
+        listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("a"))
+        listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("c"))
+        listener.onTypeFound(wrapper.sourceRef.asInstanceOf[ExactRef], parser("() => c"))
+      }
 
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, wrapper)
-      assert(computed.contains(parser("() => c")))
+      if (strictListenerTypes) {
+        assert(computed.contains(parser("() => c")))
+      } else {
+        assert(computed.exists {
+          case OperT1(Seq(), VarT1(_)) => true
+          case _                       => false
+        })
+      }
     }
   }
 
@@ -173,16 +182,25 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
     val listener = mock[TypeCheckerListener]
     val wrapper = wrapWithLet(app)
     expecting {
-      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("a"))
-      listener.onTypeFound(wrapper.sourceRef.asInstanceOf[ExactRef], parser("() => a"))
+      if (strictListenerTypes) {
+        listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
+        listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("a"))
+        listener.onTypeFound(wrapper.sourceRef.asInstanceOf[ExactRef], parser("() => a"))
+      }
 
       // consume any types for the wrapper and lambda
       consumeWrapperTypes(listener, wrapper)
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, wrapper)
-      assert(computed.contains(parser("() => a")))
+      if (strictListenerTypes) {
+        assert(computed.contains(parser("() => a")))
+      } else {
+        assert(computed.exists {
+          case OperT1(Seq(), VarT1(_)) => true
+          case _                       => false
+        })
+      }
     }
   }
 

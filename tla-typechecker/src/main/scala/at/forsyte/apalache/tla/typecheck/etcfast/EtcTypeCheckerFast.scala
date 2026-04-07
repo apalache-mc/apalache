@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.typecheck.etcfast
 
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck._
-import at.forsyte.apalache.tla.typecheck.etc.EtcTypeChecker
 import at.forsyte.apalache.tla.typecheck.etc.{EtcAbs, EtcApp, EtcAppByName, EtcBuilder, EtcConst, EtcExpr, EtcLet, EtcName, EtcRef, EtcTypeDecl, ExactRef}
 import at.forsyte.apalache.tla.types.TypeUnifier
 import at.forsyte.apalache.tla.types.TypeVarPool
@@ -15,20 +14,21 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
   private var listener: TypeCheckerListener = new DefaultTypeCheckerListener()
   private val globalVars = new mutable.HashMap[Int, TVar]()
+  private val pendingApps = mutable.ArrayBuffer[PendingApp]()
+  private var tempVarNo = -1
 
   override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
     listener = typeListener
     globalVars.clear()
+    pendingApps.clear()
+    tempVarNo = -1
     try {
       val rootType = infer(initialEnv(rootCtx), level = 0, rootEx, expected = None)
+      resolvePendingApps(failOnAmbiguity = true)
       val exactType = export(rootType)
       onTypeFound(rootEx.sourceRef, exactType)
       Some(exactType)
     } catch {
-      case _: NeedLegacyFallback =>
-        val legacyVarPool = new TypeVarPool(varPool.size)
-        new EtcTypeChecker(legacyVarPool, inferPolytypes).compute(typeListener, rootCtx, rootEx)
-
       case _: UnwindException => None
     }
   }
@@ -121,8 +121,9 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
             throw new UnwindException
         }
 
+        resolvePendingApps(failOnAmbiguity = true)
         val principalDefType = export(defType)
-        val generalized = generalize(level, defType)
+        val generalized = generalizeAgainstEnv(env, defType)
         if (!inferPolytypes && generalized.quantified.nonEmpty) {
           onTypeError(ex.sourceRef,
               s"Operator $name has a parameterized type, while polymorphism is disabled: " + principalDefType)
@@ -193,36 +194,10 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       onTypeFound(appEx.sourceRef, exactResult)
       resType
     } else {
-      val successful = operTypes.flatMap { sig =>
-        val checkpoint = snapshot()
-        val localSig = fromExternalType(sig, shareUnquantified = false)
-        val localRes = freshVar(level)
-        val localApplied = FOper(argTypes.map(cloneType(_, mutable.HashMap.empty, preserveShared = true)), localRes)
-        val option =
-          try {
-            expected.foreach(exp => unify(localRes, cloneType(exp, mutable.HashMap.empty, preserveShared = true)))
-            unify(localSig, localApplied)
-            Some((sig, export(localSig), export(localRes)))
-          } catch {
-            case _: TypeMismatchException => None
-          }
-        rollback(checkpoint)
-        option
-      }
-
-      successful match {
-        case Seq((sig, _, _)) =>
-          val operType = fromExternalType(sig, shareUnquantified = true)
-          try {
-            unify(operType, appliedOperType)
-          } catch {
-            case _: TypeMismatchException =>
-              onArgsMatchError(export(operType))
-          }
-          args.zip(argTypes).foreach { case (arg, argType) => onTypeFound(arg.sourceRef, export(argType)) }
-          operatorNameRef.foreach(ref => onTypeFound(ref, export(operType)))
-          val exactResult = export(resType)
-          onTypeFound(appEx.sourceRef, exactResult)
+      val compatible = compatibleOverloads(operTypes, argTypes, resType, level)
+      compatible match {
+        case Seq(sig) =>
+          commitResolvedOverload(sig, argTypes, resType, level, args, operatorNameRef, appEx)
           resType
 
         case Seq() =>
@@ -231,7 +206,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           throw new UnwindException
 
         case many =>
-          throw new NeedLegacyFallback
+          pendingApps += PendingApp(appEx, args, many, argTypes, resType, level, operatorNameRef)
+          resType
       }
     }
   }
@@ -240,8 +216,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     env.types.get(name) match {
       case Some(scheme) =>
         prune(scheme.principal) match {
-          case op: FOper => instantiateSchemeAsMonotype(scheme, level, expectedArity = Some(op.args.length))
-          case other     => FastScheme(FOper(Seq.empty, other), scheme.quantified)
+          case op: FOper => instantiateSchemeAsMonotype(scheme, level + 1, expectedArity = Some(op.args.length))
+          case other     => FastScheme(FOper(Seq.empty, instantiate(scheme, level + 1)), Set.empty)
         }
 
       case None =>
@@ -287,67 +263,64 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     (env.withBindings(binderSchemes), elemVars)
   }
 
-  private def generalize(level: Int, tp: FType): FastScheme = {
-    val quantified = mutable.Set[Int]()
-    collectGeneralizable(prune(tp), level, quantified, mutable.Set.empty)
-    FastScheme(prune(tp), quantified.toSet)
-  }
-
-  private def collectGeneralizable(
-      tp: FType,
-      level: Int,
-      out: mutable.Set[Int],
-      seen: mutable.Set[Int]): Unit = {
-    prune(tp) match {
-      case v: TVar =>
-        if (!seen.contains(v.id)) {
-          seen += v.id
-          if (v.link.isEmpty && v.level > level) {
-            out += v.id
-          } else {
-            v.link.foreach(collectGeneralizable(_, level, out, seen))
-          }
-        }
-
-      case FSet(elem) =>
-        collectGeneralizable(elem, level, out, seen)
-
-      case FSeq(elem) =>
-        collectGeneralizable(elem, level, out, seen)
-
-      case FFun(arg, res) =>
-        collectGeneralizable(arg, level, out, seen)
-        collectGeneralizable(res, level, out, seen)
-
-      case FOper(args, res) =>
-        args.foreach(collectGeneralizable(_, level, out, seen))
-        collectGeneralizable(res, level, out, seen)
-
-      case FTup(elems) =>
-        elems.foreach(collectGeneralizable(_, level, out, seen))
-
-      case FSparseTup(fields) =>
-        fields.values.foreach(collectGeneralizable(_, level, out, seen))
-
-      case FRec(fields) =>
-        fields.values.foreach(collectGeneralizable(_, level, out, seen))
-
-      case FRow(fields, tail) =>
-        fields.values.foreach(collectGeneralizable(_, level, out, seen))
-        tail.foreach(collectGeneralizable(_, level, out, seen))
-
-      case FRecRow(row) =>
-        collectGeneralizable(row, level, out, seen)
-
-      case FVariant(row) =>
-        collectGeneralizable(row, level, out, seen)
-
-      case _ =>
-    }
+  private def generalizeAgainstEnv(env: FastEnv, tp: FType): FastScheme = {
+    val typeVars = freeVarsOfType(tp)
+    val envVars = env.types.values.flatMap(freeVarsOfScheme).toSet
+    FastScheme(prune(tp), typeVars -- envVars)
   }
 
   private def instantiate(scheme: FastScheme, level: Int): FType = {
     cloneType(scheme.principal, mutable.HashMap.empty, preserveShared = false, quantified = scheme.quantified, level = level)
+  }
+
+  private def freeVarsOfScheme(scheme: FastScheme): Set[Int] = {
+    freeVarsOfType(scheme.principal) -- scheme.quantified
+  }
+
+  private def freeVarsOfType(tp: FType): Set[Int] = {
+    val out = mutable.Set[Int]()
+    val seen = mutable.Set[Int]()
+
+    def loop(term: FType): Unit = {
+      prune(term) match {
+        case v: TVar =>
+          if (!seen.contains(v.id)) {
+            seen += v.id
+            v.link match {
+              case Some(target) => loop(target)
+              case None         => out += v.id
+            }
+          }
+
+        case FSet(elem) =>
+          loop(elem)
+        case FSeq(elem) =>
+          loop(elem)
+        case FFun(arg, res) =>
+          loop(arg)
+          loop(res)
+        case FOper(args, res) =>
+          args.foreach(loop)
+          loop(res)
+        case FTup(elems) =>
+          elems.foreach(loop)
+        case FSparseTup(fields) =>
+          fields.values.foreach(loop)
+        case FRec(fields) =>
+          fields.values.foreach(loop)
+        case FRow(fields, tail) =>
+          fields.values.foreach(loop)
+          tail.foreach(loop)
+        case FRecRow(row) =>
+          loop(row)
+        case FVariant(row) =>
+          loop(row)
+        case _ =>
+      }
+    }
+
+    loop(tp)
+    out.toSet
   }
 
   private def fromExternalScheme(scheme: TlaType1Scheme, shareUnquantified: Boolean): FastScheme = {
@@ -395,8 +368,59 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     convert(tt, mutable.HashMap.empty)
   }
 
+  private def freshExternalType(tt: TlaType1, level: Int): FType = {
+    def convert(tp: TlaType1, cache: mutable.HashMap[Int, TVar]): FType = {
+      tp match {
+        case IntT1      => FInt
+        case BoolT1     => FBool
+        case RealT1     => FReal
+        case StrT1      => FStr
+        case c: ConstT1 => FConst(c.name)
+        case VarT1(no) =>
+          cache.getOrElseUpdate(no, freshTempVar(level))
+        case SetT1(elem) =>
+          FSet(convert(elem, cache))
+        case SeqT1(elem) =>
+          FSeq(convert(elem, cache))
+        case FunT1(arg, res) =>
+          FFun(convert(arg, cache), convert(res, cache))
+        case OperT1(args, res) =>
+          FOper(args.map(convert(_, cache)), convert(res, cache))
+        case TupT1(elems @ _*) =>
+          FTup(elems.map(convert(_, cache)))
+        case SparseTupT1(fields) =>
+          FSparseTup(SortedMap(fields.toSeq.map { case (k, v) => k -> convert(v, cache) }: _*))
+        case RecT1(fields) =>
+          FRec(SortedMap(fields.toSeq.map { case (k, v) => k -> convert(v, cache) }: _*))
+        case RowT1(fields, tail) =>
+          FRow(SortedMap(fields.toSeq.map { case (k, v) => k -> convert(v, cache) }: _*),
+              tail.map(v => convert(v, cache).asInstanceOf[TVar]))
+        case RecRowT1(row) =>
+          FRecRow(convert(row, cache).asInstanceOf[FRow])
+        case VariantT1(row) =>
+          FVariant(convert(row, cache).asInstanceOf[FRow])
+      }
+    }
+
+    convert(tt, mutable.HashMap.empty)
+  }
+
   private def export(tp: FType): TlaType1 = {
     val cache = mutable.HashMap[Int, TlaType1]()
+    val tempVarRenaming = mutable.HashMap[Int, Int]()
+    var nextFreshNo = globalVars.keysIterator.filter(_ >= 0).foldLeft(0)(Math.max) + 1
+
+    def exportedVarNo(id: Int): Int = {
+      if (id >= 0) {
+        id
+      } else {
+        tempVarRenaming.getOrElseUpdate(id, {
+          val fresh = nextFreshNo
+          nextFreshNo += 1
+          fresh
+        })
+      }
+    }
 
     def loop(term: FType): TlaType1 = {
       prune(term) match {
@@ -404,7 +428,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
           cache.getOrElseUpdate(v.id, {
             v.link match {
               case Some(target) => loop(target)
-              case None         => VarT1(v.id)
+              case None         => VarT1(exportedVarNo(v.id))
             }
           })
         case FInt         => IntT1
@@ -444,6 +468,12 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     variable
   }
 
+  private def freshTempVar(level: Int): TVar = {
+    val id = tempVarNo
+    tempVarNo -= 1
+    TVar(id, level)
+  }
+
   private def prune(tp: FType): FType = {
     tp match {
       case v: TVar =>
@@ -466,6 +496,102 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private def rollback(snapshot: Map[Int, Option[FType]]): Unit = {
     globalVars.foreach { case (id, tv) =>
       tv.link = snapshot.getOrElse(id, tv.link)
+    }
+  }
+
+  private def compatibleOverloads(
+      signatures: Seq[TlaType1],
+      argTypes: List[FType],
+      resType: FType,
+      level: Int): Seq[TlaType1] = {
+    signatures.filter { sig =>
+      val checkpoint = snapshot()
+      val localSig = freshExternalType(sig, level)
+      val localApplied = FOper(argTypes.map(cloneType(_, mutable.HashMap.empty, preserveShared = true)), cloneType(
+          resType,
+          mutable.HashMap.empty,
+          preserveShared = true))
+      val ok =
+        try {
+          unify(localSig, localApplied)
+          true
+        } catch {
+          case _: TypeMismatchException => false
+        }
+      rollback(checkpoint)
+      ok
+    }
+  }
+
+  private def commitResolvedOverload(
+      signature: TlaType1,
+      argTypes: List[FType],
+      resType: FType,
+      level: Int,
+      args: List[EtcExpr],
+      operatorNameRef: Option[EtcRef],
+      appEx: EtcExpr): Unit = {
+    val operType = freshExternalType(signature, level)
+    try {
+      unify(operType, FOper(argTypes, resType))
+    } catch {
+      case _: TypeMismatchException =>
+        val evalArgTypes = argTypes.map(export)
+        val argOrArgs = pluralArgs(argTypes.length)
+        val defaultMessage =
+          s"An operator with the signature ${export(operType)} cannot be applied to the provided $argOrArgs of type ${evalArgTypes.mkString(" and ")}"
+        val specificMessage = appEx.explain(List(export(operType)), evalArgTypes)
+        onTypeError(appEx.sourceRef, specificMessage.getOrElse(defaultMessage))
+        throw new UnwindException
+    }
+    args.zip(argTypes).foreach { case (arg, argType) => onTypeFound(arg.sourceRef, export(argType)) }
+    operatorNameRef.foreach(ref => onTypeFound(ref, export(operType)))
+    onTypeFound(appEx.sourceRef, export(resType))
+  }
+
+  private def resolvePendingApps(failOnAmbiguity: Boolean): Unit = {
+    var progress = true
+    while (progress) {
+      progress = false
+      val unresolved = mutable.ArrayBuffer[PendingApp]()
+      pendingApps.foreach { pending =>
+        val compatible = compatibleOverloads(pending.signatures, pending.argTypes, pending.resType, pending.level)
+        compatible match {
+          case Seq(sig) =>
+            commitResolvedOverload(sig,
+                pending.argTypes,
+                pending.resType,
+                pending.level,
+                pending.args,
+                pending.operatorNameRef,
+                pending.appEx)
+            progress = true
+
+          case Seq() =>
+            val evalArgTypes = pending.argTypes.map(export)
+            val argOrArgs = pluralArgs(pending.argTypes.length)
+            onTypeError(pending.appEx.sourceRef, s"No matching signature for $argOrArgs $evalArgTypes")
+            throw new UnwindException
+
+          case many =>
+            unresolved += pending.copy(signatures = many)
+        }
+      }
+      pendingApps.clear()
+      pendingApps ++= unresolved
+    }
+
+    if (failOnAmbiguity && pendingApps.nonEmpty) {
+      pendingApps.foreach { pending =>
+        val evalArgTypes = pending.argTypes.map(export)
+        val argOrArgs = pluralArgs(pending.argTypes.length)
+        val sepSigs = String.join(" or ", pending.signatures.map(_.toString): _*)
+        val defaultMessage =
+          s"Annotation required. Found ${pending.signatures.length} matching operator signatures $sepSigs for $argOrArgs ${evalArgTypes.mkString(" and ")}"
+        val specificMessage = pending.appEx.explain(pending.signatures.toList, evalArgTypes)
+        onTypeError(pending.appEx.sourceRef, specificMessage.getOrElse(defaultMessage))
+      }
+      throw new UnwindException
     }
   }
 
@@ -735,6 +861,15 @@ object EtcTypeCheckerFast {
   private case class FRecRow(row: FRow) extends FType
   private case class FVariant(row: FRow) extends FType
 
+  private case class PendingApp(
+      appEx: EtcExpr,
+      args: List[EtcExpr],
+      signatures: Seq[TlaType1],
+      argTypes: List[FType],
+      resType: FType,
+      level: Int,
+      operatorNameRef: Option[EtcRef])
+
   private case class FastScheme(principal: FType, quantified: Set[Int])
   private class FastEnv(val types: Map[String, FastScheme]) {
     def withBinding(name: String, scheme: FastScheme): FastEnv =
@@ -745,6 +880,5 @@ object EtcTypeCheckerFast {
   }
 
   private class TypeMismatchException extends RuntimeException
-  private class NeedLegacyFallback extends RuntimeException
   protected class UnwindException extends RuntimeException
 }
