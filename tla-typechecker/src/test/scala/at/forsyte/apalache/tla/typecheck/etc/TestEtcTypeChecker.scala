@@ -1062,11 +1062,12 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
 
     val listener = mock[TypeCheckerListener]
     expecting {
-      listener.onTypeError(EasyMock.anyObject[EtcRef](),
-          EasyMock.matches("Expected .* in Optional\\. Found: .*"))
+      listener.onTypeError(EasyMock.anyObject[EtcRef](), EasyMock.matches("Expected .* in Optional\\. Found: .*"))
       listener.onTypeError(letIn.sourceRef.asInstanceOf[ExactRef], "Error when computing the type of Optional")
       listener.onTypeFound(EasyMock.eq(sink.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1]).anyTimes()
-      listener.onTypeFound(EasyMock.eq(annotated.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1]).anyTimes()
+      listener
+        .onTypeFound(EasyMock.eq(annotated.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1])
+        .anyTimes()
     }
     whenExecuting(listener) {
       val computed = checker.compute(listener, TypeContext.empty, annotated)
