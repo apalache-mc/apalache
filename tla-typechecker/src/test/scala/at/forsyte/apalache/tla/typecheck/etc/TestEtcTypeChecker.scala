@@ -1029,4 +1029,48 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
       checker.compute(listener, annotations, letFoo)
     }
   }
+
+  test("failed definition reports local error and generic let-in error") {
+    val m = mkUniqName("m")
+    val badValue = mkUniqConst(BoolT1)
+    val eq = mkUniqApp(Seq(parser("(a, a) => Bool")), m, badValue)
+    val lambda = mkUniqAbs(eq)
+    val initName = mkUniqName("Init")
+    val app = mkUniqAppByName(initName)
+    val letIn = mkUniqLet("Init", lambda, app)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeError(letIn.sourceRef.asInstanceOf[ExactRef], "Error when computing the type of Init")
+      consumeWrapperTypes(listener, letIn)
+    }
+    whenExecuting(listener) {
+      val annotations = TypeContext("m" -> TlaType1Scheme(IntT1, Set.empty))
+      val computed = checker.compute(listener, annotations, letIn)
+      assert(computed.isEmpty)
+    }
+  }
+
+  test("failed annotated definition reports mismatch and generic let-in error") {
+    val x = mkUniqName("x")
+    val xDom = mkUniqConst(parser("Set(a)"))
+    val badBody = mkUniqConst(parser("[f: a]"))
+    val lambda = mkUniqAbs(badBody, (x, xDom))
+    val sink = mkUniqConst(BoolT1)
+    val letIn = mkUniqLet("Optional", lambda, sink)
+    val annotated = mkUniqTypeDecl("Optional", parser("(a) => [f: Set(a)]"), letIn)
+
+    val listener = mock[TypeCheckerListener]
+    expecting {
+      listener.onTypeError(EasyMock.anyObject[EtcRef](),
+          EasyMock.matches("Expected .* in Optional\\. Found: .*"))
+      listener.onTypeError(letIn.sourceRef.asInstanceOf[ExactRef], "Error when computing the type of Optional")
+      listener.onTypeFound(EasyMock.eq(sink.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1]).anyTimes()
+      listener.onTypeFound(EasyMock.eq(annotated.sourceRef.asInstanceOf[ExactRef]), EasyMock.anyObject[TlaType1]).anyTimes()
+    }
+    whenExecuting(listener) {
+      val computed = checker.compute(listener, TypeContext.empty, annotated)
+      assert(computed.isEmpty)
+    }
+  }
 }
