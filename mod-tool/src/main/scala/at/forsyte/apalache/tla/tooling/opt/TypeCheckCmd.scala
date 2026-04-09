@@ -38,26 +38,9 @@ class TypeCheckCmd
 
     logger.info("Type checking " + file)
 
-    try {
-      PassChainExecutor(new TypeCheckerModule(options)).run() match {
-        case Right(_)      => Right("Type checker [OK]")
-        case Left(failure) => Left(failure.exitCode, "Type checker [FAILED]")
-      }
-    } finally {
-      forceGc()
-      logger.info(f"Used memory after GC: ${usedMemoryMiB()}%.2f MiB")
+    PassChainExecutor(new TypeCheckerModule(options)).run() match {
+      case Right(_)      => Right("Type checker [OK]")
+      case Left(failure) => Left(failure.exitCode, "Type checker [FAILED]")
     }
-  }
-
-  /** Trigger a full collection cycle before measuring retained heap usage at the end of type checking. */
-  private def forceGc(): Unit = {
-    System.gc()
-    System.gc()
-  }
-
-  /** Measure the currently used Java heap in mebibytes. */
-  private def usedMemoryMiB(): Double = {
-    val runtime = Runtime.getRuntime
-    (runtime.totalMemory - runtime.freeMemory).toDouble / 1024.0 / 1024.0
   }
 }
