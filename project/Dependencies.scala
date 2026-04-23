@@ -67,7 +67,7 @@ object Dependencies {
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.19.0" % Test
     val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 
-    val scalaTestVersion = "3.2.15"
+    val scalaTestVersion = "3.2.20"
     val scalatest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
     val scalatestplusEasymock = "org.scalatestplus" %% "easymock-4-3" % s"${scalaTestVersion}.0" % Test
     val scalatestplusJunit = "org.scalatestplus" %% "junit-4-13" % s"${scalaTestVersion}.0" % Test
