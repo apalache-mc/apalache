@@ -1046,6 +1046,19 @@ The outcome is: ExecutionsTooShort
 EXITCODE: OK
 ```
 
+### check HandshakeWithTypes.tla with length 5 passes via CHECK_DEADLOCK FALSE
+
+The TLC config keyword `CHECK_DEADLOCK FALSE` is honored as if `--no-deadlock`
+had been passed on the CLI. See [#3311](https://github.com/apalache-mc/apalache/issues/3311).
+
+```sh
+$ apalache-mc check --length=5 --config=HandshakeWithTypes_no_deadlock.cfg HandshakeWithTypes.tla | sed 's/I@.*//'
+...
+The outcome is: ExecutionsTooShort
+...
+EXITCODE: OK
+```
+
 ### check trivial violation of FALSE invariant (array-encoding)
 
 ```sh
@@ -4002,7 +4015,6 @@ checker {
     ]
     length=0
     max-error=1
-    no-deadlocks=false
     smt-encoding {
         type=oopsla-19
     }
