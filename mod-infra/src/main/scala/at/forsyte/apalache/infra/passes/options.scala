@@ -940,11 +940,11 @@ object OptionGroup extends LazyLogging {
         checkerCfg: Config.Checker,
         tlcConfig: Option[(TlcConfig, File)]): Config.Checker = {
       tlcConfig.flatMap(_._1.checkDeadlock) match {
-        case None                => {
+        case None => {
           checkerCfg.noDeadlocks match {
             case None =>
-              // Neither the CLI/apalache.cfg nor the TLC config specified a value for deadlock checking, set to true
-              checkerCfg.copy(noDeadlocks = Some(true))
+              // Neither the CLI/apalache.cfg nor the TLC config specified a value for deadlock checking, set to false
+              checkerCfg.copy(noDeadlocks = Some(false))
             case Some(_) =>
               checkerCfg
           }
@@ -962,7 +962,7 @@ object OptionGroup extends LazyLogging {
             case Some(cliNoDeadlocks) =>
               if (cliNoDeadlocks != tlcNoDeadlocks) {
                 logger.warn(
-                  s"  > CHECK_DEADLOCK is set in the TLC config but overridden via the `--no-deadlock` cli option or apalache.cfg; using --no-deadlock=$cliNoDeadlocks")
+                    s"  > CHECK_DEADLOCK is set in the TLC config but overridden via the `--no-deadlock` cli option or apalache.cfg; using --no-deadlock=$cliNoDeadlocks")
               }
               checkerCfg
           }
