@@ -5581,7 +5581,10 @@ View ::=
     &quot;VIEW&quot; ident
 
 // Whether the tools should check for deadlocks.
-// APALACHE IGNORES THIS CONFIGURATION OPTION.
+// In Apalache, &quot;CHECK_DEADLOCK FALSE&quot; is equivalent to passing --no-deadlock,
+// while &quot;CHECK_DEADLOCK TRUE&quot; preserves the default behavior of looking for
+// deadlocks. The CLI flag --no-deadlock (or apalache.cfg) takes precedence
+// over the value declared in the TLC config file.
 CheckDeadlock ::=
     &quot;CHECK_DEADLOCK&quot; (&quot;FALSE&quot; | &quot;TRUE&quot;)
 
