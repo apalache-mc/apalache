@@ -186,7 +186,7 @@ object Config {
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       timeoutSmtSec: Option[Int] = Some(0),
-      noDeadlocks: Option[Boolean] = Some(false),
+      noDeadlocks: Option[Boolean] = None,
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
@@ -704,7 +704,6 @@ object OptionGroup extends LazyLogging {
         algo <- checker.algo.toTry("checker.algo")
         discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
         length <- checker.length.toTry("checker.length")
-        noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
@@ -715,7 +714,8 @@ object OptionGroup extends LazyLogging {
           length = length,
           maxError = maxError,
           timeoutSmtSec = timeoutSmtSec,
-          noDeadlocks = noDeadlocks,
+          // set to true here, check mergeCheckDeadlockFromTlc below
+          noDeadlocks = checker.noDeadlocks.getOrElse(true),
           smtEncoding = smtEncoding,
           tuning = tuning,
       )
@@ -940,7 +940,15 @@ object OptionGroup extends LazyLogging {
         checkerCfg: Config.Checker,
         tlcConfig: Option[(TlcConfig, File)]): Config.Checker = {
       tlcConfig.flatMap(_._1.checkDeadlock) match {
-        case None                => checkerCfg
+        case None                => {
+          checkerCfg.noDeadlocks match {
+            case None =>
+              // Neither the CLI/apalache.cfg nor the TLC config specified a value for deadlock checking, set to true
+              checkerCfg.copy(noDeadlocks = Some(true))
+            case Some(_) =>
+              checkerCfg
+          }
+        }
         case Some(checkDeadlock) =>
           // `checkDeadlock` mirrors TLC's CHECK_DEADLOCK keyword: TRUE means the
           // checker should look for deadlocks (the default), FALSE behaves like
@@ -951,11 +959,11 @@ object OptionGroup extends LazyLogging {
               logger.info(
                   s"  > Using CHECK_DEADLOCK $checkDeadlock from the TLC config (sets --no-deadlock=$tlcNoDeadlocks)")
               checkerCfg.copy(noDeadlocks = Some(tlcNoDeadlocks))
-            case Some(cliNoDeadlocks) if cliNoDeadlocks == tlcNoDeadlocks =>
-              checkerCfg
             case Some(cliNoDeadlocks) =>
-              logger.warn(
+              if (cliNoDeadlocks != tlcNoDeadlocks) {
+                logger.warn(
                   s"  > CHECK_DEADLOCK is set in the TLC config but overridden via the `--no-deadlock` cli option or apalache.cfg; using --no-deadlock=$cliNoDeadlocks")
+              }
               checkerCfg
           }
       }
