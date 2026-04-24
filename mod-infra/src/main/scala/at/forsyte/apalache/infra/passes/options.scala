@@ -186,7 +186,7 @@ object Config {
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       timeoutSmtSec: Option[Int] = Some(0),
-      noDeadlocks: Option[Boolean] = None,
+      noDeadlocks: Option[Boolean] = Some(false),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
