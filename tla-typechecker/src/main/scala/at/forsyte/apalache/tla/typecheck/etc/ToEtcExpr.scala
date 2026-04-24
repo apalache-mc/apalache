@@ -83,7 +83,7 @@ class ToEtcExpr(
       mkLet(BlameRef(id), decl.name, lambda, inScopeEx)
     }
 
-    findTypeFromTagOrAnnotation(decl) match {
+    findOperDeclType(decl) match {
       case Some(tt) =>
         // case 1: the definition is either annotated with a java-like annotation in a comment, or tagged with TlaType1
         val fixedType = fixLazyAnnotation(decl, tt)
@@ -94,6 +94,23 @@ class ToEtcExpr(
         // case 2: no type annotation
         mkLetAbs(decl.ID, this(decl.body), paramsAndDoms: _*)
     }
+  }
+
+  private def findOperDeclType(decl: TlaOperDecl): Option[TlaType1] = {
+    typeAnnotations
+      .get(decl.ID)
+      .map { tt =>
+        val (substituted, _) = aliasSubstitution(tt)
+        renameVars(substituted)
+      }
+      .orElse {
+        decl.typeTag match {
+          case Typed(tt: TlaType1) if decl.formalParams.isEmpty || tt.isInstanceOf[OperT1] =>
+            Some(tt)
+          case _ =>
+            None
+        }
+      }
   }
 
   // We let the user to write a instead of () => a for nullary operators. This method fixes such a lazy annotation.
@@ -1060,7 +1077,7 @@ class ToEtcExpr(
   }
 
   private def renameVars(tt: TlaType1): TlaType1 = {
-    val varRenamingMap = tt.usedNames.toSeq.map(v => EqClass(v) -> varPool.fresh)
+    val varRenamingMap = tt.usedNames.toSeq.map(v => v -> varPool.fresh)
     Substitution(varRenamingMap: _*).sub(tt)._1
   }
 }

@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 }
 import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.pp.Inliner.{DeclFilter, FilterFun}
-import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
 
 import scala.collection.immutable.SortedMap
 
@@ -108,7 +108,7 @@ class Inliner(
     // See the issue #3204.
     val maxUsedVar = ((calleeType.usedNames ++ callSiteType.usedNames) ++ Set(0)).max
     val typeVarPool = new TypeVarPool(maxUsedVar + 1)
-    val calleeSub = Substitution(calleeType.usedNames.map(v => EqClass(v) -> typeVarPool.fresh).toMap)
+    val calleeSub = Substitution(calleeType.usedNames.map(v => v -> typeVarPool.fresh).toMap)
     val calleeTypeRenamed = calleeSub.subRec(calleeType)
 
     new TypeUnifier(typeVarPool).unify(Substitution.empty, callSiteType, calleeTypeRenamed) match {
@@ -119,8 +119,13 @@ class Inliner(
       case Some((unifierSub, unifiedType)) =>
         // Now, we have to add the renamed type variables back to the substitution.
         // To this end, we compose `calleeSub` with `unifierSub`.
-        // Not that we are not merging them. Otherwise, the type variables of `callee` might take over.
-        val composed = Substitution(calleeSub.mapping ++ unifierSub.mapping)
+        // We resolve calleeSub's values through unifierSub so that callee vars (renamed to fresh
+        // indices) don't remain unresolved in the composed substitution. In the Int-keyed Substitution
+        // API, non-representative variables are not keys in the mapping, so a chain c→fresh→Int would
+        // otherwise stall at 'fresh'. Resolving eagerly collapses c→Int directly.
+        // Not merging the substitutions: callee type variables must not take over call-site variables.
+        val resolvedCalleeSub = calleeSub.mapping.view.mapValues(tp => unifierSub.subRec(tp)).toMap
+        val composed = Substitution(resolvedCalleeSub ++ unifierSub.mapping)
         (composed, composed.subRec(unifiedType))
     }
   }
