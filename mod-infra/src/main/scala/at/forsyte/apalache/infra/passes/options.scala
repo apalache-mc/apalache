@@ -704,9 +704,7 @@ object OptionGroup extends LazyLogging {
         algo <- checker.algo.toTry("checker.algo")
         discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
         length <- checker.length.toTry("checker.length")
-        // `noDeadlocks` defaults to `false` when neither the CLI/apalache.cfg nor a TLC
-        // config file sets it (a None value here means "user did not specify").
-        noDeadlocks = checker.noDeadlocks.getOrElse(false)
+        noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
