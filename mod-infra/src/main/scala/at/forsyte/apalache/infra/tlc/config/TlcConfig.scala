@@ -150,6 +150,10 @@ case class ConfigSetValue(elems: ConfigConstExpr*) extends ConfigConstExpr {
  *   A list of temporal properties to check.
  * @param behaviorSpec
  *   A behavior specification. A well-formed config should have one.
+ * @param checkDeadlock
+ *   Whether to check for deadlocks. Mirrors TLC's `CHECK_DEADLOCK` option: `Some(true)` requests deadlock checking,
+ *   `Some(false)` disables it (akin to `--no-deadlock`), and `None` means the option was not specified in the
+ *   configuration file.
  * @author
  *   Igor Konnov
  */
@@ -160,7 +164,8 @@ case class TlcConfig(
     actionConstraints: List[String],
     invariants: List[String],
     temporalProps: List[String],
-    behaviorSpec: BehaviorSpec) {
+    behaviorSpec: BehaviorSpec,
+    checkDeadlock: Option[Boolean] = None) {
 
   def addConstAssignments(moreConstAssignments: Map[String, ConfigConstExpr]): TlcConfig = {
     this.copy(constAssignments = constAssignments ++ moreConstAssignments)
@@ -199,6 +204,16 @@ case class TlcConfig(
     }
   }
 
+  def setCheckDeadlockUnlessUnset(newCheckDeadlock: Option[Boolean]): TlcConfig = {
+    (checkDeadlock, newCheckDeadlock) match {
+      case (Some(a), Some(b)) if a != b =>
+        throw new TlcConfigParseError("Found conflicting CHECK_DEADLOCK declarations: %s and %s".format(a, b),
+            NoPosition)
+      case (None, Some(_)) => this.copy(checkDeadlock = newCheckDeadlock)
+      case _               => this
+    }
+  }
+
   def join(other: TlcConfig): TlcConfig = {
     this
       .addConstReplacements(other.constReplacements)
@@ -208,6 +223,7 @@ case class TlcConfig(
       .addInvariants(other.invariants)
       .addTemporalProps(other.temporalProps)
       .setBehaviorSpecUnlessNull(other.behaviorSpec)
+      .setCheckDeadlockUnlessUnset(other.checkDeadlock)
   }
 }
 
@@ -221,5 +237,6 @@ object TlcConfig {
         invariants = List.empty,
         temporalProps = List.empty,
         behaviorSpec = NullSpec(),
+        checkDeadlock = None,
     )
 }
