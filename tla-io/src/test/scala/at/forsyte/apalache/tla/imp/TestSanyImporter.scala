@@ -1851,6 +1851,40 @@ class TestSanyImporter extends SanyImporterTestBase {
     assert(3 == names.size) // all assumptions must have unique names
   }
 
+  test("issue 3318: named assumption can be used inside an operator definition") {
+    val text =
+      s"""
+         |---- MODULE named_assumption_in_operator ----
+         |VARIABLE
+         |  \\* @type: Int;
+         |  x
+         |
+         |ASSUME NamedAssumption == 1 = 1
+         |
+         |Init == /\\ x = 0
+         |        /\\ NamedAssumption
+         |
+         |Next == UNCHANGED x
+         |
+         |Inv == x = 0
+         |================================
+         |""".stripMargin
+
+    val (rootName, modules) = sanyImporter
+      .loadFromSource(Source.fromString(text))
+
+    assert(1 == modules.size)
+
+    val root = modules(rootName)
+    expectSourceInfoInDefs(root)
+
+    root.declarations.exists {
+      case TlaAssumeDecl(definedName, _) =>
+        definedName.contains("NamedAssumption")
+      case _ => false
+    } shouldBe true
+  }
+
   test("ignore theorems") {
     // this proof is a garbage, just to check, whether the translator works
     val text =

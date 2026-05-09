@@ -284,6 +284,9 @@ class OpApplTranslator(
 
       case ASTConstants.UserDefinedOpKind =>
         translateUserOperator(node)
+
+      case ASTConstants.ThmOrAssumpDefKind =>
+        translateUserOperator(node)
     }
   }
 
