@@ -11,7 +11,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestCaching extends AnyFunSuite with BeforeAndAfterEach {
   private var cacher = new Cacher(new UniqueNameGenerator, TrackerWithListeners())
 
   override def beforeEach(): Unit = {
@@ -20,10 +20,10 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
 
   test("Single expression") {
     val operName = "A"
-    val decl = TlaOperDecl(operName, List("p"),
+    val decl = TlaOperDecl(operName, List(OperParam("p")),
         tla.plus(
-            tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
-            tla.appOp(n_A, tla.minus(name("p"), tla.int(1))),
+            tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(1))),
+            tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(1))),
         ))(Untyped)
 
     decl.isRecursive = true
@@ -36,17 +36,17 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
     val letInEx = asOper.body.asInstanceOf[LetInEx]
 
     assert(letInEx.decls.exists { decl =>
-      (decl.body == tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))).untyped()) &&
+      (decl.body == tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(1))).untyped()) &&
       (letInEx.body == tla.plus(tla.appDecl(decl), tla.appDecl(decl)).untyped())
     })
   }
 
   test("Two expressions") {
     val operName = "A"
-    val decl = TlaOperDecl(operName, List("p"),
+    val decl = TlaOperDecl(operName, List(OperParam("p")),
         tla.plus(
-            tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))),
-            tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2))),
+            tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(1))),
+            tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(2))),
         ))(Untyped)
 
     decl.isRecursive = true
@@ -59,9 +59,9 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
     val letInEx = asOper.body.asInstanceOf[LetInEx]
 
     assert(letInEx.decls.exists { decl1 =>
-      (decl1.body == tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(1))).untyped()) &&
+      (decl1.body == tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(1))).untyped()) &&
       letInEx.decls.exists { decl2 =>
-        (decl2.body == tla.appOp(n_A, tla.minus(tla.name("p"), tla.int(2))).untyped()) &&
+        (decl2.body == tla.appOp(tla.name("A"), tla.minus(tla.name("p"), tla.int(2))).untyped()) &&
         (letInEx.body == tla.plus(tla.appDecl(decl1), tla.appDecl(decl2)).untyped())
       }
     })
@@ -70,7 +70,7 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
   test("Nested") {
     val operName = "A"
     val decl =
-      TlaOperDecl(operName, List("p", "q"), tla.appOp(n_A, tla.appOp(n_A, tla.int(0), tla.name("p")), tla.name("q")))(
+      TlaOperDecl(operName, List(OperParam("p"), OperParam("q")), tla.appOp(tla.name("A"), tla.appOp(tla.name("A"), tla.int(0), tla.name("p")), tla.name("q")))(
           Untyped)
 
     decl.isRecursive = true
@@ -83,9 +83,9 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
     val letInEx = asOper.body.asInstanceOf[LetInEx]
 
     assert(letInEx.decls.exists { decl1 =>
-      (decl1.body == tla.appOp(n_A, tla.int(0), tla.name("p")).untyped()) &&
+      (decl1.body == tla.appOp(tla.name("A"), tla.int(0), tla.name("p")).untyped()) &&
       letInEx.decls.exists { decl2 =>
-        (decl2.body == tla.appOp(n_A, tla.appDecl(decl1), tla.name("q")).untyped()) &&
+        (decl2.body == tla.appOp(tla.name("A"), tla.appDecl(decl1), tla.name("q")).untyped()) &&
         (letInEx.body == tla.appDecl(decl2).untyped())
       }
     })
@@ -96,15 +96,15 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
 
     val operNames = Set("B") // does not contain A
 
-    val declT = tla.declOp("T", tla.appOp(n_T, n_x), "x").untypedOperDecl()
+    val declT = tla.declOp("T", tla.appOp(tla.name("T"), tla.name("x")), OperParam("x")).untypedOperDecl()
     declT.isRecursive = true
 
     val decl = TlaOperDecl(operName, List.empty,
         tla.plus(tla.int(1),
             tla.letIn(
                 tla.plus(
-                    tla.appOp(n_T, tla.int(0)),
-                    tla.appOp(n_B, tla.int(1)),
+                    tla.appOp(tla.name("T"), tla.int(0)),
+                    tla.appOp(tla.name("B"), tla.int(1)),
                 ),
                 declT,
             )))
@@ -121,18 +121,18 @@ class TestCaching extends AnyFunSuite with BeforeAndAfterEach with TestingPredef
     assert(
         asOper.body match {
           case LetInEx(body, declB1) =>
-            declB1.body == tla.appOp(n_B, tla.int(1)).untyped() && (
+            declB1.body == tla.appOp(tla.name("B"), tla.int(1)).untyped() && (
                 body match {
                   case OperEx(TlaArithOper.plus, `one`, LetInEx(letInBody, defs @ _*)) =>
                     (defs.exists { declT0 =>
-                      (declT0.body == tla.appOp(n_T, tla.int(0)).untyped()) &&
+                      (declT0.body == tla.appOp(tla.name("T"), tla.int(0)).untyped()) &&
                       letInBody == tla.plus(tla.appDecl(declT0), tla.appDecl(declB1)).untyped()
                     }) &&
                     (
                         defs.exists { declT =>
                           declT.body match {
                             case LetInEx(tbody, declTx) =>
-                              declTx.body == tla.appOp(n_T, n_x).untyped() &&
+                              declTx.body == tla.appOp(tla.name("T"), tla.name("x")).untyped() &&
                               tbody == tla.appDecl(declTx).untyped()
                             case _ => false
                           }

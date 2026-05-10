@@ -11,27 +11,27 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
-class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
+class TestReplaceFixed extends AnyFunSuite {
   import tla._
 
   def mkTr(replacedEx: TlaEx, newEx: => TlaEx): TlaExTransformation =
     ReplaceFixed(new IdleTracker()).whenEqualsTo(replacedEx, newEx)
 
   test("Basic replacement") {
-    val ex = n_x
-    val tr = mkTr(n_x, n_y)
-    assert(tr(ex) == n_y)
+    val ex = tla.name("x")
+    val tr = mkTr(tla.name("x"), tla.name("y"))
+    assert(tr(ex) == tla.name("y").untyped())
   }
 
   test("Nested replacement") {
-    val ex = tla.plus(n_x, n_z)
-    val tr = mkTr(n_x, n_y)
-    assert(tr(ex) == tla.plus(n_y, n_z).untyped())
+    val ex = tla.plus(tla.name("x"), tla.name("z"))
+    val tr = mkTr(tla.name("x"), tla.name("y"))
+    assert(tr(ex) == tla.plus(tla.name("y"), tla.name("z")).untyped())
   }
 
   test("UID uniqueness") {
-    val ex = tla.plus(n_x, n_x)
-    val tr = mkTr(n_x, NameEx("y"))
+    val ex = tla.plus(tla.name("x"), tla.name("x"))
+    val tr = mkTr(tla.name("x"), NameEx("y"))
 
     val assertCond = tr(ex) match {
       case OperEx(TlaArithOper.plus, y1, y2) =>
@@ -53,35 +53,35 @@ class TestReplaceFixed extends AnyFunSuite with TestingPredefs {
   }
 
   test("Replace in Let-in") {
-    val decl = TlaOperDecl("A", List.empty[OperParam], n_x)
+    val decl = TlaOperDecl("A", List.empty[OperParam], tla.name("x"))
     val ex = tla.letIn(tla.appDecl(decl), decl)
-    val tr = mkTr(n_x, n_y)
-    val expectedDecl = TlaOperDecl("A", List.empty[OperParam], n_y)
+    val tr = mkTr(tla.name("x"), tla.name("y"))
+    val expectedDecl = TlaOperDecl("A", List.empty[OperParam], tla.name("y"))
     val expectedEx = tla.letIn(tla.appDecl(expectedDecl), expectedDecl)
     assert(tr(ex) == expectedEx.untyped())
   }
 
   test("Old test batch") {
-    val transformation = mkTr(n_x, n_y)
-    val pa1 = n_x -> n_y
-    val pa2 = n_z -> n_z
-    val pa3 = prime(n_x).untyped() -> prime(n_y).untyped()
-    val pa4 = ite(n_p, n_x, n_y).untyped() -> ite(n_p, n_y, n_y).untyped()
+    val transformation = mkTr(tla.name("x"), tla.name("y"))
+    val pa1: (TlaEx, TlaEx) = tla.name("x").untyped() -> tla.name("y").untyped()
+    val pa2: (TlaEx, TlaEx) = tla.name("z").untyped() -> tla.name("z").untyped()
+    val pa3 = prime(tla.name("x")).untyped() -> prime(tla.name("y")).untyped()
+    val pa4 = ite(tla.name("p"), tla.name("x"), tla.name("y")).untyped() -> ite(tla.name("p"), tla.name("y"), tla.name("y")).untyped()
     val pa5 = letIn(
-        plus(n_z, appOp(n_A)),
-        declOp("A", n_q).untypedOperDecl(),
+        plus(tla.name("z"), appOp(tla.name("A"))),
+        declOp("A", tla.name("q")).untypedOperDecl(),
     ).untyped() -> letIn(
-        plus(n_z, appOp(n_A)),
-        declOp("A", n_q).untypedOperDecl(),
+        plus(tla.name("z"), appOp(tla.name("A"))),
+        declOp("A", tla.name("q")).untypedOperDecl(),
     ).untyped()
     val pa6 = letIn(
-        enumSet(plus(n_x, appOp(n_A)), appOp(n_B, n_x)),
-        declOp("A", n_x).untypedOperDecl(),
-        declOp("B", n_p, "p").untypedOperDecl(),
+        enumSet(plus(tla.name("x"), appOp(tla.name("A"))), appOp(tla.name("B"), tla.name("x"))),
+        declOp("A", tla.name("x")).untypedOperDecl(),
+        declOp("B", tla.name("p"), OperParam("p")).untypedOperDecl(),
     ).untyped() -> letIn(
-        enumSet(plus(n_y, appOp(n_A)), appOp(n_B, n_y)),
-        declOp("A", n_y).untypedOperDecl(),
-        declOp("B", n_p, "p").untypedOperDecl(),
+        enumSet(plus(tla.name("y"), appOp(tla.name("A"))), appOp(tla.name("B"), tla.name("y"))),
+        declOp("A", tla.name("y")).untypedOperDecl(),
+        declOp("B", tla.name("p"), OperParam("p")).untypedOperDecl(),
     ).untyped()
 
     val expected = Seq(

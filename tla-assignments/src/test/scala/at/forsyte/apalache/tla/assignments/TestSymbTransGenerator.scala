@@ -12,7 +12,7 @@ import org.scalatestplus.junit.JUnitRunner
 import scala.collection.immutable.{SortedMap, SortedSet}
 
 @RunWith(classOf[JUnitRunner])
-class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
+class TestSymbTransGenerator extends AnyFunSuite {
 
   val stg = new SymbTransGenerator(TrackerWithListeners())
 
@@ -232,8 +232,8 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     val asgn = eql(prime(tla.name("x").as(Int)).as(Int), int(1)).as(Bool)
     val xDecl = declOp("X", asgn).as(ToBool)
     val disj = or(
-        and(name("A"), appOp(name("X").as(ToBool)).as(Bool)).as(Bool),
-        and(name("B"), appOp(name("X").as(ToBool)).as(Bool)).as(Bool),
+        and(name("A").as(Bool), appOp(name("X").as(ToBool)).as(Bool)).as(Bool),
+        and(name("B").as(Bool), appOp(name("X").as(ToBool)).as(Bool)).as(Bool),
     ).as(Bool)
 
     val next = letIn(disj, xDecl).as(Bool)
@@ -264,8 +264,8 @@ class TestSymbTransGenerator extends AnyFunSuite with TestingPredefs {
     // the equalities are transformed into assignments
     // \/ (L1:: x' := 1)
     // \/ (L2:: x' := 2)
-    val assign1 = label(assign(prime(name("x")).as(Int), int(1)).as(Bool), "L1").as(Bool)
-    val assign2 = label(assign(prime(name("x")).as(Int), int(2)).as(Bool), "L2").as(Bool)
+    val assign1 = label(assign(prime(name("x").as(Int)).as(Int), int(1)).as(Bool), "L1").as(Bool)
+    val assign2 = label(assign(prime(name("x").as(Int)).as(Int), int(2)).as(Bool), "L2").as(Bool)
     assert(transitions.head._2 == assign1)
     assert(transitions(1)._2 == assign2)
   }

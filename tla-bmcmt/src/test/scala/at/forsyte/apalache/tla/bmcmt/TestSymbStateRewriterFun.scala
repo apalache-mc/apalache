@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 
-trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
+trait TestSymbStateRewriterFun extends RewriterBase {
   private val types =
     Map(
         "b" -> BoolT1,
@@ -63,7 +63,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
     def intSet(i: Int) = enumSet(int(i)).typed(types, "I")
 
     val mapping = ite(
-        eql(name("x"), int(1)) ? "b",
+        eql(name("x") ? "i", int(1)) ? "b",
         intSet(2),
         ite(eql(name("x") ? "i", int(2)) ? "b", intSet(3), intSet(1)) ? "I",
     ).typed(types, "I")
@@ -87,7 +87,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
       .typed(types, "I")
     val mapping = enumSet()
       .typed(types, "I")
-    val fun = funDef(mapping, name("x"), set)
+    val fun = funDef(mapping, name("x") ? "i", set)
       .typed(types, "i_to_I")
     val eq = eql(appFun(fun, int(1)) ? "I", enumSet() ? "I")
       .typed(types, "b")
@@ -174,9 +174,9 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
   test("""f[4]""") { rewriterType: SMTEncoding =>
     val set = enumSet(1.to(4).map(int): _*)
       .typed(types, "I")
-    val mapping = mult(name("x"), int(3))
+    val mapping = mult(name("x") ? "i", int(3))
       .typed(types, "i")
-    val fun = funDef(mapping, name("x"), set)
+    val fun = funDef(mapping, name("x") ? "i", set)
       .typed(types, "i_to_i")
     val app = appFun(fun, int(4))
       .typed(types, "i")
@@ -368,7 +368,7 @@ trait TestSymbStateRewriterFun extends RewriterBase with TestingPredefs {
 
   test("""DOMAIN [x \in {1,2,3} |-> x / 2: ]""") { rewriterType: SMTEncoding =>
     val set = enumSet(int(1), int(2), int(3))
-    val mapping = div(name("x"), int(2))
+    val mapping = div(name("x") ? "i", int(2))
     val fun = funDef(mapping ? "i", name("x") ? "i", set ? "I")
     val domain = dom(fun ? "i_to_i")
     val eq = eql(domain ? "I", set ? "I")

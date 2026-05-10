@@ -11,7 +11,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 
 @RunWith(classOf[JUnitRunner])
-class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach {
 
   private val noTracker = TrackerWithListeners()
   val decisionFn: TlaOperDecl => Boolean = { _ => true }
@@ -35,7 +35,7 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
     val types = Map("i" -> IntT1, "A" -> OperT1(Seq(IntT1), IntT1), "P" -> OperT1(Seq(), IntT1))
     // A(p) == p
     val input = tla
-      .declOp("A", tla.name("p") ? "i", "p")
+      .declOp("A", tla.name("p") ? "i", OperParam("p"))
       .typedOperDecl(types, "A")
 
     // A(p) ==
@@ -78,7 +78,7 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach with T
 
     // A(T(_)) == T(0)
     val input = tla
-      .declOp("A", tla.appOp(n_T, tla.int(0)) ? "i", ("T", 1))
+      .declOp("A", tla.appOp(tla.name("T") ? "T", tla.int(0)) ? "i", OperParam("T", 1))
       .typedOperDecl(types, "A")
 
     val output = parNorm.normalizeDeclaration(input)

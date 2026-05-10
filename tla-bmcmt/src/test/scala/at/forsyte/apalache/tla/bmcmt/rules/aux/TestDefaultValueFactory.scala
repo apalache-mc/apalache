@@ -5,10 +5,10 @@ import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.{BoolT1, TestingPredefs}
+import at.forsyte.apalache.tla.lir.{BoolT1}
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 
-trait TestDefaultValueFactory extends RewriterBase with TestingPredefs {
+trait TestDefaultValueFactory extends RewriterBase {
   private val parser = DefaultType1Parser
 
   test("""create a record""") { rewriterType: SMTEncoding =>
