@@ -5,9 +5,22 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
 import UntypedPredefs._
+import aux._
 
 @RunWith(classOf[JUnitRunner])
 class TestAux extends AnyFunSuite with TestingPredefs {
+  test("Test aux::EoV uses Either") {
+    val success: EoV[Int] = Right(42)
+    val failure: EoV[Int] = Left(new IllegalArgumentException("boom"))
+
+    assert(success == Right(42))
+    assert(success.getOrThrow == 42)
+
+    val err = intercept[IllegalArgumentException] {
+      failure.getOrThrow
+    }
+    assert(err.getMessage == "boom")
+  }
 
   test("Test aux::collectSegments") {
 

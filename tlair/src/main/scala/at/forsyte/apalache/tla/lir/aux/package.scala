@@ -5,7 +5,11 @@ import at.forsyte.apalache.tla.lir.oper._
 // Contains methods and classes used in testing/debugging/experimenting
 package object aux {
 
-  type EoV[T] = ExceptionOrValue[T]
+  type EoV[T] = Either[Exception, T]
+
+  implicit class EoVOps[T](private val eov: EoV[T]) extends AnyVal {
+    def getOrThrow: T = eov.fold(throw _, identity)
+  }
 
   def aggregate[T](
       join: (T, T) => T,
