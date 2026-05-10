@@ -7,7 +7,7 @@ package object aux {
 
   type EoV[T] = Either[Exception, T]
 
-  implicit class EoVOps[T](private val eov: EoV[T]) extends AnyVal {
+  implicit class EoVExtensions[T](private val eov: EoV[T]) extends AnyVal {
     def getOrThrow: T = eov.fold(throw _, identity)
   }
 
