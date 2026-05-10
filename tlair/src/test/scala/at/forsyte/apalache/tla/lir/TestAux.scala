@@ -9,7 +9,7 @@ import aux._
 
 @RunWith(classOf[JUnitRunner])
 class TestAux extends AnyFunSuite with TestingPredefs {
-  test("Test aux::EoV uses Either") {
+  test("aux.EoV uses Either") {
     val success: EoV[Int] = Right(42)
     val failure: EoV[Int] = Left(new IllegalArgumentException("boom"))
 
