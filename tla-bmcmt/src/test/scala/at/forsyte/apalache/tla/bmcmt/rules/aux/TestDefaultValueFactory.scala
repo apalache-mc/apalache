@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.{BoolT1}
+import at.forsyte.apalache.tla.lir.BoolT1
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 
 trait TestDefaultValueFactory extends RewriterBase {

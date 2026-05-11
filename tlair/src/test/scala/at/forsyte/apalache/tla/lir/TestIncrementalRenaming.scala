@@ -73,14 +73,18 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test nameCounterMapFromEx [TlaEx]") {
-    val ex = and(tla.name("x"), tla.name("y"), tla.name("z"), eql(plus(tla.name("t"), tla.name("z")), int(2)))
+    val x = NameEx("x")
+    val y = NameEx("y")
+    val z = NameEx("z")
+    val t = NameEx("t")
+    val ex = and(x, y, z, eql(plus(t, z), int(2)))
 
     assert(nameCounterMapFromEx(takeMax = true)(ex).isEmpty)
 
     val ex2 = and(
         name(makeName("x", 2)),
         name(makeName("y", 8)),
-        tla.name("z"),
+        z,
         eql(
             plus(
                 name(makeName("x", 1)),
@@ -88,7 +92,7 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
             ),
             int(2),
         ),
-        prime(tla.name("x")),
+        prime(x),
         name(makeName("x", 2)),
     )
 
@@ -102,6 +106,8 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test nameCounterMapFromEx [LET-IN TlaDecl]") {
+    val x = NameEx("x")
+    val y = NameEx("y")
     val p1Name = makeName("p", 1)
     val p3Name = makeName("p", 3)
     val p8Name = makeName("p", 8)
@@ -116,7 +122,7 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
                   name(p1Name),
                   int(0),
               ),
-              primeInSingleton(tla.name("x"), name(p1Name)),
+              primeInSingleton(x, name(p1Name)),
           ),
           OperParam(p1Name),
           OperParam(makeName("t", 99), 2), // unused
@@ -133,7 +139,7 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
                       name(s3Name),
                       name(p3Name),
                   ),
-                  tla.name("x"),
+                  x,
               ),
           ),
           OperParam(p3Name),
@@ -162,8 +168,8 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
                           appDecl(yDecl, name(s5Name)),
                       ),
                   ),
-                  tla.name("y"),
-                  appDecl(xDecl, int(0), tla.name("x")),
+                  y,
+                  appDecl(xDecl, int(0), x),
               ),
               yDecl,
           ),
@@ -185,28 +191,34 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test apply: basic") {
-    val ex1: TlaEx = tla.name("x")
+    val x = NameEx("x")
+    val s = NameEx("s")
+    val T = NameEx("T")
+    val ex1: TlaEx = x
     val renamed1 = renaming(ex1)
 
     assert(ex1 == renamed1)
 
-    val ex2 = exists(tla.name("s"), tla.name("T"), tla.name("s"))
+    val ex2 = exists(s, T, s)
     val renamed2 = renaming(ex2)
-    assert(renamed2 == exists(name(makeName("s", 1)), tla.name("T"), name(makeName("s", 1))).untyped())
+    assert(renamed2 == exists(name(makeName("s", 1)), T, name(makeName("s", 1))).untyped())
 
     val renamed2again = renaming(renamed2)
-    assert(renamed2again == exists(name(makeName("s", 2)), tla.name("T"), name(makeName("s", 2))).untyped())
+    assert(renamed2again == exists(name(makeName("s", 2)), T, name(makeName("s", 2))).untyped())
 
   }
 
   test("Test apply: exists/forall") {
+    val x = NameEx("x")
+    val S = NameEx("S")
+    val T = NameEx("T")
     val original =
-      and(exists(tla.name("x"), tla.name("S"), gt(tla.name("x"), int(1))), forall(tla.name("x"), tla.name("T"), lt(tla.name("x"), int(42))))
+      and(exists(x, S, gt(x, int(1))), forall(x, T, lt(x, int(42))))
 
     def expected(offset: Int): TlaEx =
       and(
-          exists(name(makeName("x", offset + 1)), tla.name("S"), gt(name(makeName("x", offset + 1)), int(1))),
-          forall(name(makeName("x", offset + 2)), tla.name("T"), lt(name(makeName("x", offset + 2)), int(42))),
+          exists(name(makeName("x", offset + 1)), S, gt(name(makeName("x", offset + 1)), int(1))),
+          forall(name(makeName("x", offset + 2)), T, lt(name(makeName("x", offset + 2)), int(42))),
       )
 
     val renamed = renaming(original)
@@ -218,16 +230,18 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test apply: filter") {
+    val x = NameEx("x")
+    val S = NameEx("S")
     val original =
       cup(
-          filter(tla.name("x"), tla.name("S"), eql(tla.name("x"), int(1))),
-          filter(tla.name("x"), tla.name("S"), eql(tla.name("x"), int(2))),
+          filter(x, S, eql(x, int(1))),
+          filter(x, S, eql(x, int(2))),
       )
 
     def expected(offset: Int): TlaEx =
       cup(
-          filter(name(makeName("x", offset + 1)), tla.name("S"), eql(name(makeName("x", offset + 1)), int(1))),
-          filter(name(makeName("x", offset + 2)), tla.name("S"), eql(name(makeName("x", offset + 2)), int(2))),
+          filter(name(makeName("x", offset + 1)), S, eql(name(makeName("x", offset + 1)), int(1))),
+          filter(name(makeName("x", offset + 2)), S, eql(name(makeName("x", offset + 2)), int(2))),
       )
 
     val renamed = renaming(original)
@@ -238,18 +252,20 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test apply: LET-IN") {
+    val x = NameEx("x")
+    val S = NameEx("S")
     // LET p(t) == \A x \in S . R(t,x) IN \E x \in S . p(x)
     val original =
       letIn(
-          exists(tla.name("x"), tla.name("S"), appOp(name("p"), tla.name("x"))),
-          declOp("p", forall(tla.name("x"), tla.name("S"), appOp(name("R"), name("t"), tla.name("x"))), OperParam("t")).untypedOperDecl(),
+          exists(x, S, appOp(name("p"), x)),
+          declOp("p", forall(x, S, appOp(name("R"), name("t"), x)), OperParam("t")).untypedOperDecl(),
       )
 
     val expected =
       letIn(
-          exists(name(makeName("x", 2)), tla.name("S"), appOp(name(makeName("p", 1)), name(makeName("x", 2)))),
+          exists(name(makeName("x", 2)), S, appOp(name(makeName("p", 1)), name(makeName("x", 2)))),
           declOp(makeName("p", 1),
-              forall(name(makeName("x", 1)), tla.name("S"), appOp(name("R"), name(makeName("t", 1)), name(makeName("x", 1)))),
+              forall(name(makeName("x", 1)), S, appOp(name("R"), name(makeName("t", 1)), name(makeName("x", 1)))),
               OperParam(makeName("t", 1))).untypedOperDecl(),
       ).untyped()
 
@@ -261,9 +277,9 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
 
     val expected2 =
       letIn(
-          exists(name(makeName("x", 4)), tla.name("S"), appOp(name(makeName("p", 2)), name(makeName("x", 4)))),
+          exists(name(makeName("x", 4)), S, appOp(name(makeName("p", 2)), name(makeName("x", 4)))),
           declOp(makeName("p", 2),
-              forall(name(makeName("x", 3)), tla.name("S"), appOp(name("R"), name(makeName("t", 2)), name(makeName("x", 3)))),
+              forall(name(makeName("x", 3)), S, appOp(name("R"), name(makeName("t", 2)), name(makeName("x", 3)))),
               OperParam(makeName("t", 2))).untypedOperDecl(),
       ).untyped()
 
@@ -383,9 +399,11 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test syncFrom") {
-    val ex = exists(name(makeName("x", 5)), tla.name("S"), tla.name("p"))
+    val S = NameEx("S")
+    val p = NameEx("p")
+    val ex = exists(name(makeName("x", 5)), S, p)
 
-    val expected = exists(name(makeName("x", 6)), tla.name("S"), tla.name("p")).untyped()
+    val expected = exists(name(makeName("x", 6)), S, p).untyped()
 
     renaming.syncFrom(ex)
     val actual = renaming(ex)
@@ -393,19 +411,21 @@ class TestIncrementalRenaming extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Test syncAndNormalizeDs") {
-    val syncEx: TlaEx = exists(name(makeName("x", 99)), tla.name("S"), tla.name("p"))
+    val S = NameEx("S")
+    val p = NameEx("p")
+    val syncEx: TlaEx = exists(name(makeName("x", 99)), S, p)
     renaming.syncFrom(syncEx) // Set x -> 99 in the map
 
-    val ex1: TlaEx = exists(name(makeName("x", 3)), tla.name("S"), tla.name("p"))
-    val ex2: TlaEx = exists(name(makeName("x", 105)), tla.name("S"), tla.name("p"))
+    val ex1: TlaEx = exists(name(makeName("x", 3)), S, p)
+    val ex2: TlaEx = exists(name(makeName("x", 105)), S, p)
 
     val xDecl = declOp("X", ex1).untypedOperDecl()
     val yDecl = declOp("Y", ex2).untypedOperDecl()
 
     val decls = Seq(xDecl, yDecl)
     val expected = Seq(
-        declOp("X", exists(name(makeName("x", 1)), tla.name("S"), tla.name("p"))).untypedOperDecl(),
-        declOp("Y", exists(name(makeName("x", 2)), tla.name("S"), tla.name("p"))).untypedOperDecl(),
+        declOp("X", exists(name(makeName("x", 1)), S, p)).untypedOperDecl(),
+        declOp("Y", exists(name(makeName("x", 2)), S, p)).untypedOperDecl(),
     )
 
     val actual = renaming.syncAndNormalizeDs(decls)

@@ -12,12 +12,18 @@ class TestAux extends AnyFunSuite {
 
   test("Test aux::collectSegments") {
 
-    val ar0Decl1 = TlaOperDecl("X", List.empty, tla.name("x"))
-    val ar0Decl2 = TlaOperDecl("Y", List.empty, tla.name("y"))
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val c = tla.name("c")
+    val x = tla.name("x")
+    val y = tla.name("y")
 
-    val arGe0Decl1 = TlaOperDecl("A", List(OperParam("t")), tla.name("a"))
-    val arGe0Decl2 = TlaOperDecl("B", List(OperParam("t")), tla.name("b"))
-    val arGe0Decl3 = TlaOperDecl("C", List(OperParam("t")), tla.name("c"))
+    val ar0Decl1 = TlaOperDecl("X", List.empty, x)
+    val ar0Decl2 = TlaOperDecl("Y", List.empty, y)
+
+    val arGe0Decl1 = TlaOperDecl("A", List(OperParam("t")), a)
+    val arGe0Decl2 = TlaOperDecl("B", List(OperParam("t")), b)
+    val arGe0Decl3 = TlaOperDecl("C", List(OperParam("t")), c)
 
     val pa1 =
       List(ar0Decl1) ->

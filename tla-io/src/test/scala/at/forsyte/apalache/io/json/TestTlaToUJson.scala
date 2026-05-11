@@ -62,11 +62,12 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Let-In") {
+    val p = tla.name("p")
     // A(p) == p + 1
     val decl = tla
       .declOp(
           "A",
-          tla.plus(tla.name("p"), tla.int(1)),
+          tla.plus(p, tla.int(1)),
           OperParam("p"),
       )
       .untypedOperDecl()
@@ -87,10 +88,11 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Non-operator declarations") {
+    val x = tla.name("x")
     val constDecl = TlaConstDecl("C")
     val varDecl = TlaVarDecl("x")
-    val namedAssumeDecl = TlaAssumeDecl(Some("myAssume"), tla.eql(tla.name("x"), tla.bool(true)))
-    val unnamedAssumeDecl = TlaAssumeDecl(None, tla.eql(tla.name("x"), tla.bool(true)))
+    val namedAssumeDecl = TlaAssumeDecl(Some("myAssume"), tla.eql(x, tla.bool(true)))
+    val unnamedAssumeDecl = TlaAssumeDecl(None, tla.eql(x, tla.bool(true)))
 
     val constJson = getEncVal(constDecl)
     val varJson = getEncVal(varDecl)
@@ -111,15 +113,19 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("Operator declarations") {
+    val A = tla.name("A")
+    val b = tla.name("b")
+    val p = tla.name("p")
+    val T = tla.name("T")
     // T == 1
     val nullary = tla.declOp("T", tla.int(1)).untypedOperDecl()
     // T(p) == p
-    val unary = tla.declOp("T", tla.name("p"), OperParam("p")).untypedOperDecl()
+    val unary = tla.declOp("T", p, OperParam("p")).untypedOperDecl()
     // T(A(_),b) == A(b)
-    val higherOrder = tla.declOp("T", tla.appOp(tla.name("A"), tla.name("b")), OperParam("A", 1), OperParam("b")).untypedOperDecl()
+    val higherOrder = tla.declOp("T", tla.appOp(A, b), OperParam("A", 1), OperParam("b")).untypedOperDecl()
     // RECURSIVE T(_)
     // T(p) == X(p)
-    val recursive = tla.declOp("T", tla.appOp(tla.name("T"), tla.name("p")), OperParam("p")).untypedOperDecl()
+    val recursive = tla.declOp("T", tla.appOp(T, p), OperParam("p")).untypedOperDecl()
     recursive.isRecursive = true
 
     val jsons @ Seq(jsonNullary, jsonUnary, jsonHO, jsonRec) =

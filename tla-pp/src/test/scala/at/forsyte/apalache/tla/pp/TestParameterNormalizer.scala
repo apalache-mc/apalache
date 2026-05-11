@@ -33,9 +33,10 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach {
 
   test("Simple parameter") {
     val types = Map("i" -> IntT1, "A" -> OperT1(Seq(IntT1), IntT1), "P" -> OperT1(Seq(), IntT1))
+    val p = tla.name("p")
     // A(p) == p
     val input = tla
-      .declOp("A", tla.name("p") ? "i", OperParam("p"))
+      .declOp("A", p ? "i", OperParam("p"))
       .typedOperDecl(types, "A")
 
     // A(p) ==
@@ -75,10 +76,11 @@ class TestParameterNormalizer extends AnyFunSuite with BeforeAndAfterEach {
   test("HO parameter") {
     val types =
       Map("i" -> IntT1, "T" -> OperT1(Seq(IntT1), IntT1), "A" -> OperT1(Seq(OperT1(Seq(IntT1), IntT1)), IntT1))
+    val T = tla.name("T")
 
     // A(T(_)) == T(0)
     val input = tla
-      .declOp("A", tla.appOp(tla.name("T") ? "T", tla.int(0)) ? "i", OperParam("T", 1))
+      .declOp("A", tla.appOp(T ? "T", tla.int(0)) ? "i", OperParam("T", 1))
       .typedOperDecl(types, "A")
 
     val output = parNorm.normalizeDeclaration(input)

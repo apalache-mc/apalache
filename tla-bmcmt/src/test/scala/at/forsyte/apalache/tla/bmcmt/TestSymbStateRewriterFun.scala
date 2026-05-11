@@ -57,17 +57,18 @@ trait TestSymbStateRewriterFun extends RewriterBase {
   }
 
   test(""" [x \in {1,2,3} |-> IF x = 1 THEN {2} ELSE IF x = 2 THEN {3} ELSE {1} ]""") { rewriterType: SMTEncoding =>
+    val x = name("x")
     val set = enumSet(1.to(3).map(int): _*)
       .typed(types, "I")
 
     def intSet(i: Int) = enumSet(int(i)).typed(types, "I")
 
     val mapping = ite(
-        eql(name("x") ? "i", int(1)) ? "b",
+        eql(x ? "i", int(1)) ? "b",
         intSet(2),
-        ite(eql(name("x") ? "i", int(2)) ? "b", intSet(3), intSet(1)) ? "I",
+        ite(eql(x ? "i", int(2)) ? "b", intSet(3), intSet(1)) ? "I",
     ).typed(types, "I")
-    val fun = funDef(mapping, name("x") ? "i", set)
+    val fun = funDef(mapping, x ? "i", set)
       .typed(types, "i_to_I")
 
     val state = new SymbState(fun, arena, Binding())
@@ -83,11 +84,12 @@ trait TestSymbStateRewriterFun extends RewriterBase {
   }
 
   test("""[x \in {1,2} |-> {} ][1] = {}""") { rewriterType: SMTEncoding =>
+    val x = name("x")
     val set = enumSet(int(1), int(2))
       .typed(types, "I")
     val mapping = enumSet()
       .typed(types, "I")
-    val fun = funDef(mapping, name("x") ? "i", set)
+    val fun = funDef(mapping, x ? "i", set)
       .typed(types, "i_to_I")
     val eq = eql(appFun(fun, int(1)) ? "I", enumSet() ? "I")
       .typed(types, "b")
@@ -172,11 +174,12 @@ trait TestSymbStateRewriterFun extends RewriterBase {
   }
 
   test("""f[4]""") { rewriterType: SMTEncoding =>
+    val x = name("x")
     val set = enumSet(1.to(4).map(int): _*)
       .typed(types, "I")
-    val mapping = mult(name("x") ? "i", int(3))
+    val mapping = mult(x ? "i", int(3))
       .typed(types, "i")
-    val fun = funDef(mapping, name("x") ? "i", set)
+    val fun = funDef(mapping, x ? "i", set)
       .typed(types, "i_to_i")
     val app = appFun(fun, int(4))
       .typed(types, "i")
@@ -367,9 +370,10 @@ trait TestSymbStateRewriterFun extends RewriterBase {
   }
 
   test("""DOMAIN [x \in {1,2,3} |-> x / 2: ]""") { rewriterType: SMTEncoding =>
+    val x = name("x")
     val set = enumSet(int(1), int(2), int(3))
-    val mapping = div(name("x") ? "i", int(2))
-    val fun = funDef(mapping ? "i", name("x") ? "i", set ? "I")
+    val mapping = div(x ? "i", int(2))
+    val fun = funDef(mapping ? "i", x ? "i", set ? "I")
     val domain = dom(fun ? "i_to_i")
     val eq = eql(domain ? "I", set ? "I")
       .typed(types, "b")

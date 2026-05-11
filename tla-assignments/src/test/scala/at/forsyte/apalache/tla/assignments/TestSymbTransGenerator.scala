@@ -91,10 +91,16 @@ class TestSymbTransGenerator extends AnyFunSuite {
   }
 
   test("Test allSelections") {
-    val xasgn11 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), tla.name("s").as(Int)).as(Bool)
-    val xasgn12 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), int(1)).as(Bool)
-    val yasgn11 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), tla.name("T").as(Int)).as(Bool)
-    val yasgn12 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), tla.name("t").as(Int)).as(Bool)
+    val s = tla.name("s")
+    val T = tla.name("T")
+    val t = tla.name("t")
+    val X = tla.name("X")
+    val x = tla.name("x")
+    val y = tla.name("y")
+    val xasgn11 = tla.eql(tla.prime(x.as(Int)).as(Int), s.as(Int)).as(Bool)
+    val xasgn12 = tla.eql(tla.prime(x.as(Int)).as(Int), int(1)).as(Bool)
+    val yasgn11 = tla.eql(tla.prime(x.as(Int)).as(Int), T.as(Int)).as(Bool)
+    val yasgn12 = tla.eql(tla.prime(x.as(Int)).as(Int), t.as(Int)).as(Bool)
 
     val ex1 =
       ite(
@@ -136,14 +142,14 @@ class TestSymbTransGenerator extends AnyFunSuite {
       assert(s(newEx.ID) == Set(e))
     }
 
-    val xasgn21 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), tla.name("x").as(Int)).as(Bool)
-    val yasgn21 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), tla.name("T").as(Int)).as(Bool)
-    val yasgn22 = tla.eql(tla.prime(tla.name("y").as(Int)).as(Int), tla.name("t").as(Int)).as(Bool)
+    val xasgn21 = tla.eql(tla.prime(x.as(Int)).as(Int), x.as(Int)).as(Bool)
+    val yasgn21 = tla.eql(tla.prime(x.as(Int)).as(Int), T.as(Int)).as(Bool)
+    val yasgn22 = tla.eql(tla.prime(y.as(Int)).as(Int), t.as(Int)).as(Bool)
 
     val ex4 = and(eql(int(0), int(1)).as(Bool), xasgn21).as(Bool)
     val xDecl = declOp("X", ex4).as(OperT1(Seq(), BoolT1))
-    val ex5 = and(yasgn21, tla.appOp(tla.name("X").as(ToBool)).as(Bool)).as(Bool)
-    val ex6 = and(yasgn22, tla.appOp(tla.name("X").as(ToBool)).as(Bool)).as(Bool)
+    val ex5 = and(yasgn21, tla.appOp(X.as(ToBool)).as(Bool)).as(Bool)
+    val ex6 = and(yasgn22, tla.appOp(X.as(ToBool)).as(Bool)).as(Bool)
     val ex7 = or(ex5, ex6).as(Bool)
     val ex8 = letIn(ex7, xDecl).as(Bool)
 
@@ -173,9 +179,10 @@ class TestSymbTransGenerator extends AnyFunSuite {
   }
 
   test("Test ITE with multibranching") {
-    val asgn1 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), int(1)).as(Bool)
-    val asgn2 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), int(2)).as(Bool)
-    val asgn3 = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), int(3)).as(Bool)
+    val x = tla.name("x")
+    val asgn1 = tla.eql(tla.prime(x.as(Int)).as(Int), int(1)).as(Bool)
+    val asgn2 = tla.eql(tla.prime(x.as(Int)).as(Int), int(2)).as(Bool)
+    val asgn3 = tla.eql(tla.prime(x.as(Int)).as(Int), int(3)).as(Bool)
 
     val next = ite(
         tla.bool(true).typed(),
@@ -206,11 +213,15 @@ class TestSymbTransGenerator extends AnyFunSuite {
   }
 
   test("Test LET-IN") {
-    val asgn = tla.eql(tla.prime(tla.name("x").as(Int)).as(Int), int(1)).as(Bool)
+    val A = tla.name("A")
+    val B = tla.name("B")
+    val X = tla.name("X")
+    val x = tla.name("x")
+    val asgn = tla.eql(tla.prime(x.as(Int)).as(Int), int(1)).as(Bool)
     val xDecl = declOp("X", asgn).as(ToBool)
     val disj = or(
-        and(tla.name("A").as(Bool), tla.appOp(tla.name("X").as(ToBool)).as(Bool)).as(Bool),
-        and(tla.name("B").as(Bool), tla.appOp(tla.name("X").as(ToBool)).as(Bool)).as(Bool),
+        and(A.as(Bool), tla.appOp(X.as(ToBool)).as(Bool)).as(Bool),
+        and(B.as(Bool), tla.appOp(X.as(ToBool)).as(Bool)).as(Bool),
     ).as(Bool)
 
     val next = letIn(disj, xDecl).as(Bool)
@@ -222,18 +233,22 @@ class TestSymbTransGenerator extends AnyFunSuite {
     }
     assert(ret.size == 1)
     val declOfX =
-      declOp("X", assign(prime(tla.name("x").as(Int)).as(Int), int(1)).as(Bool)).as(ToBool)
+      declOp("X", assign(prime(x.as(Int)).as(Int), int(1)).as(Bool)).as(ToBool)
     val expected = letIn(disj, declOfX)
       .as(Bool)
     assert(expected == ret.head)
   }
 
   test("Test sliceWith") {
-    val asgn = eql(prime(tla.name("x").as(Int)).as(Int), int(1)).as(Bool)
+    val A = name("A")
+    val B = name("B")
+    val X = name("X")
+    val x = tla.name("x")
+    val asgn = eql(prime(x.as(Int)).as(Int), int(1)).as(Bool)
     val xDecl = declOp("X", asgn).as(ToBool)
     val disj = or(
-        and(name("A").as(Bool), appOp(name("X").as(ToBool)).as(Bool)).as(Bool),
-        and(name("B").as(Bool), appOp(name("X").as(ToBool)).as(Bool)).as(Bool),
+        and(A.as(Bool), appOp(X.as(ToBool)).as(Bool)).as(Bool),
+        and(B.as(Bool), appOp(X.as(ToBool)).as(Bool)).as(Bool),
     ).as(Bool)
 
     val next = letIn(disj, xDecl).as(Bool)
@@ -249,11 +264,12 @@ class TestSymbTransGenerator extends AnyFunSuite {
   }
 
   test("Disjunction with labels") {
+    val x = name("x")
     // \/ (L1: x' = 1)
-    val equality1 = eql(prime(name("x").as(Int)).as(Int), int(1)).as(Bool)
+    val equality1 = eql(prime(x.as(Int)).as(Int), int(1)).as(Bool)
     val labelledEquality1 = label(equality1, "L1").as(Bool)
     //  \/ (L2: x' = 2)
-    val equality2 = eql(prime(name("x").as(Int)).as(Int), int(2)).as(Bool)
+    val equality2 = eql(prime(x.as(Int)).as(Int), int(2)).as(Bool)
     val labelledEquality2 = label(equality2, "L2").as(Bool)
     // next == (L1: x' = 1) \/ (L2: x' = 2)
     val next = or(labelledEquality1, labelledEquality2).as(Bool)
@@ -264,8 +280,8 @@ class TestSymbTransGenerator extends AnyFunSuite {
     // the equalities are transformed into assignments
     // \/ (L1:: x' := 1)
     // \/ (L2:: x' := 2)
-    val assign1 = label(assign(prime(name("x").as(Int)).as(Int), int(1)).as(Bool), "L1").as(Bool)
-    val assign2 = label(assign(prime(name("x").as(Int)).as(Int), int(2)).as(Bool), "L2").as(Bool)
+    val assign1 = label(assign(prime(x.as(Int)).as(Int), int(1)).as(Bool), "L1").as(Bool)
+    val assign2 = label(assign(prime(x.as(Int)).as(Int), int(2)).as(Bool), "L2").as(Bool)
     assert(transitions.head._2 == assign1)
     assert(transitions(1)._2 == assign2)
   }
