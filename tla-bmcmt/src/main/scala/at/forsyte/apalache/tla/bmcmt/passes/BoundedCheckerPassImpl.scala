@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
 import at.forsyte.apalache.tla.bmcmt.search._
-import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig, SolverContext, Z3SolverContext}
+import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig, SolverContext, SolverContextFactory}
 import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
@@ -110,7 +110,13 @@ class BoundedCheckerPassImpl @Inject() (
       case Right(params) => params.map { case (k, v) => (k.substring("z3.".length), v) }
       case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
     }
-    val solverConfig = SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding, smtStatsSec, z3Parameters)
+    val cvc5Parameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith("cvc5."))) match {
+      case Right(params) => params.map { case (k, v) => (k.substring("cvc5.".length), v) }
+      case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
+    }
+    val solverConfig =
+      SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding, smtStatsSec, options.checker.smtSolver,
+          cvc5Parameters, z3Parameters)
 
     val result = options.checker.algo match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
@@ -130,7 +136,7 @@ class BoundedCheckerPassImpl @Inject() (
       input: CheckerInput,
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
-    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+    val solverContext: RecordingSolverContext = RecordingSolverContext.create(None, solverConfig)
 
     val metricProfilerListener =
       if (solverConfig.profile) {
@@ -172,7 +178,7 @@ class BoundedCheckerPassImpl @Inject() (
       input: CheckerInput,
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
-    val solverContext: RecordingSolverContext = RecordingSolverContext.createZ3(None, solverConfig)
+    val solverContext: RecordingSolverContext = RecordingSolverContext.create(None, solverConfig)
 
     if (solverConfig.profile) {
       logger.warn("SMT profiling is enabled, but offline SMT is used. No profiling data will be written.")
@@ -208,7 +214,7 @@ class BoundedCheckerPassImpl @Inject() (
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
     // In contrast to the local instances, we are not recording the SMT constraints.
-    val solverContext: SolverContext = new Z3SolverContext(solverConfig)
+    val solverContext: SolverContext = SolverContextFactory.create(solverConfig)
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case SMTEncoding.OOPSLA19 =>

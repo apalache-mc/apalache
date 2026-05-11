@@ -15,6 +15,7 @@ import java.io.PrintWriter
 import com.typesafe.config.ConfigRenderOptions
 import at.forsyte.apalache.infra.passes.options.SourceOption
 import at.forsyte.apalache.infra.passes.options.Algorithm
+import at.forsyte.apalache.infra.passes.options.SMTSolver
 
 // Provides implicit conversions used when deserializing into configurable values.
 private object Converters {
@@ -40,6 +41,12 @@ private object Converters {
   implicit val algorithmReader: ConfigReader[Algorithm] =
     ConfigReader.fromString[Algorithm](catchReadError(Algorithm.ofString))
   implicit val algorithmWriter: ConfigWriter[Algorithm] = ConfigWriter.toString[Algorithm](_.toString)
+
+  // Conversion for options.SMTSolver, manual conversion here allows
+  // configuration as `smt-solver = z3` instead of `smt-solver = type.z3`
+  implicit val smtSolverReader: ConfigReader[SMTSolver] =
+    ConfigReader.fromString[SMTSolver](catchReadError(SMTSolver.ofString))
+  implicit val smtSolverWriter: ConfigWriter[SMTSolver] = ConfigWriter.toString[SMTSolver](_.toString)
 
   // Derive a reader and writer for SourceOption.Format based on the case object family
   // See https://pureconfig.github.io/docs/overriding-behavior-for-sealed-families.html#sealed-families
