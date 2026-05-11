@@ -122,7 +122,8 @@ The initial implementation should be intentionally conservative:
 4. Keep backend-neutral SMT controls separate from solver-specific options. For example, `smt.randomSeed`,
    `smt.statsSec`, and SMT timeouts are concepts Apalache can define once and map to each backend. Low-level solver
    parameters should remain namespaced, for example `z3.*` and `cvc5.*`.
-5. Build a cross-solver test matrix that runs all existing model-checker and rewriter tests against both Z3 and cvc5.
+5. Add differential property-based tests between Z3 and cvc5 at the `SolverContext` level for operations supported by
+   both implementations.
 6. Use SMT-LIB dumps as a comparison aid.
 
 ## Consequences

@@ -482,15 +482,4 @@ object Cvc5SolverContext {
   private def createId(): Long = {
     nextId.getAndIncrement()
   }
-
-  def isAvailable: Boolean = {
-    try {
-      val termManager = new TermManager()
-      termManager.deletePointer()
-      true
-    } catch {
-      case _: LinkageError =>
-        false
-    }
-  }
 }

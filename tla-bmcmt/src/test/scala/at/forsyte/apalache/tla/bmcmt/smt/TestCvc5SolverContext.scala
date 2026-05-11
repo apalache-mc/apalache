@@ -8,15 +8,10 @@ import at.forsyte.apalache.tla.typecomp._
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestCvc5SolverContext extends AnyFunSuite {
-  private val solverConfig = SolverConfig.default.copy(smtSolver = SMTSolver.CVC5, z3StatsSec = 0)
-
-  override def withFixture(test: NoArgTest) = {
-    assume(Cvc5SolverContext.isAvailable, "cvc5 native libraries are not available on this platform")
-    super.withFixture(test)
-  }
+  private val cvc5Config = SolverConfig.default.copy(smtSolver = SMTSolver.CVC5, z3StatsSec = 0)
 
   test("assert and evaluate an integer cell") {
-    val solver = new Cvc5SolverContext(solverConfig)
+    val solver = new Cvc5SolverContext(cvc5Config)
     try {
       val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
       val x = arena.topCell
@@ -31,7 +26,7 @@ class TestCvc5SolverContext extends AnyFunSuite {
   }
 
   test("push and pop assertions") {
-    val solver = new Cvc5SolverContext(solverConfig)
+    val solver = new Cvc5SolverContext(cvc5Config)
     try {
       val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
       val x = arena.topCell

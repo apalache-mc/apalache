@@ -115,8 +115,16 @@ class BoundedCheckerPassImpl @Inject() (
       case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
     }
     val solverConfig =
-      SolverConfig(debug, smtProfile, smtRandomSeed, smtEncoding, smtStatsSec, options.checker.smtSolver,
-          cvc5Parameters, z3Parameters)
+      SolverConfig(
+          debug,
+          smtProfile,
+          smtRandomSeed,
+          smtEncoding,
+          smtStatsSec,
+          options.checker.smtSolver,
+          cvc5Parameters,
+          z3Parameters,
+      )
 
     val result = options.checker.algo match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)

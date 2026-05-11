@@ -504,6 +504,46 @@ Checker reports no error up to computation length 10
 EXITCODE: OK
 ```
 
+### check Counter.tla with CVC5 reports no error
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
+```
+
+### check Counter.tla with CVC5 finds a counterexample
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=10 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker has found|EXITCODE"
+The outcome is: Error
+Checker has found an error
+EXITCODE: ERROR (12)
+```
+
+### check Counter.tla with CVC5 configured from a file
+
+```sh
+$ printf "checker={length=0,inv=[Inv],smt-solver=cvc5}" > cvc5-config.cfg
+$ apalache-mc check --config-file=cvc5-config.cfg --run-dir=cvc5-configdump-dir --debug Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
+$ grep "smt-solver" cvc5-configdump-dir/application-configs.cfg
+    smt-solver=cvc5
+$ rm -rf cvc5-config.cfg cvc5-configdump-dir
+```
+
+### check Counter.tla with CVC5 configured from the environment
+
+```sh
+$ SMT_SOLVER=cvc5 apalache-mc check --length=0 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
+```
+
 ### check factorization find a counterexample (array-encoding)
 
 ```sh
@@ -4031,6 +4071,7 @@ checker {
     smt-encoding {
         type=oopsla-19
     }
+    smt-solver=z3
     timeout-smt-sec=0
     tuning {
         "search.outputTraces"="false"
