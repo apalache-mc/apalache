@@ -35,6 +35,7 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.scalaz,
     Deps.slf4j,
     Deps.tla2tools,
+    Deps.cvc5,
     Deps.z3,
     Deps.shapeless,
     TestDeps.junit,
