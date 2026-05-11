@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.infra.passes.options.SMTSolver
 
 /**
  * Configuration option to be passed to SolverContext. This class is declared as a case class to enable the concise copy
@@ -11,9 +12,15 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding
  * @param profile
  *   Enable the profile mode (activated with --profile). Report the metrics.
  * @param randomSeed
- *   The random seed to be passed to z3 as :random-seed.
+ *   The random seed to be passed to the SMT solver.
  * @param smtEncoding
  *   The SMT encoding to be used.
+ * @param z3StatsSec
+ *   The interval in seconds at which to print Z3 statistics.
+ * @param smtSolver
+ *   The SMT solver backend to be used.
+ * @param cvc5Params
+ *   The parameters to be passed to cvc5, which must contain proper keys and values.
  * @param z3Params
  *   The parameters to be passed to z3, which must contain proper keys and values.
  *
@@ -26,6 +33,8 @@ sealed case class SolverConfig(
     randomSeed: Int,
     smtEncoding: SMTEncoding,
     z3StatsSec: Int,
+    smtSolver: SMTSolver = SMTSolver.Z3,
+    cvc5Params: Map[String, Object] = Map(),
     z3Params: Map[String, Object] = Map()) {}
 
 object SolverConfig {
@@ -40,6 +49,8 @@ object SolverConfig {
         randomSeed = 0,
         smtEncoding = SMTEncoding.OOPSLA19,
         z3StatsSec = 60,
+        smtSolver = SMTSolver.Z3,
+        cvc5Params = Map(),
         z3Params = Map(),
     )
 }
