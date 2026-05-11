@@ -143,7 +143,12 @@ class TestPrinter extends AnyFunSuite {
 
   test("Test UTF8: TlaArithOper") {}
 
-  test("Test UTF8: TlaSetOper") {}
+  test("Test UTF8: TlaSetOper") {
+    val inEx1: String = toUtf(tla.in(tla.name("a"), tla.name("b")))
+    val inEx2: String = toUtf(tla.and(tla.in(tla.name("a"), tla.name("b")), tla.in(tla.name("c"), tla.name("d"))))
+    assert(inEx1 == "a %s b".format(toUtf.m_in))
+    assert(inEx2 == "a %s b %s c %s d".format(toUtf.m_in, toUtf.m_and, toUtf.m_in))
+  }
 
   test("Test UTF8: TlaAssumeDecl") {
     val x = tla.name("x")
