@@ -3013,6 +3013,16 @@ State 1: state invariant 0 [Inv2] violated.
 EXITCODE: ERROR (12)
 ```
 
+### check InlineAssumptions3318.tla
+
+Regression test for ensuring that assumptions are inlined properly.
+
+```sh
+$ apalache-mc check --inv=Inv InlineAssumptions3318.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
