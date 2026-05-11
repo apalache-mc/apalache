@@ -287,6 +287,11 @@ class OpApplTranslator(
 
       case ASTConstants.ThmOrAssumpDefKind =>
         translateUserOperator(node)
+
+      case _ =>
+        throw new SanyImporterException(
+            s"${oper.getLocation}: Unexpected constant operator: $oper, kind: ${oper.getKind}"
+        )
     }
   }
 
