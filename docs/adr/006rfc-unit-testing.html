@@ -1,66 +1,65 @@
 <!DOCTYPE HTML>
-<html lang="en" class="sidebar-visible no-js light">
+<html lang="en" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>RFC-006: unit tests and property-based tests - Apalache Documentation</title>
-        
-        
 
 
         <!-- Custom HTML head -->
-        
 
-
-        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff" />
+        <meta name="theme-color" content="#ffffff">
 
-        
-        <link rel="icon" href="../favicon.svg">
-        
-        
-        <link rel="shortcut icon" href="../favicon.png">
-        
-        <link rel="stylesheet" href="../css/variables.css">
-        <link rel="stylesheet" href="../css/general.css">
-        <link rel="stylesheet" href="../css/chrome.css">
-        
-        <link rel="stylesheet" href="../css/print.css" media="print">
-        
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
-        
-        <link rel="stylesheet" href="../fonts/fonts.css">
-        
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="../highlight.css">
-        <link rel="stylesheet" href="../tomorrow-night.css">
-        <link rel="stylesheet" href="../ayu-highlight.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        
 
-        
         <!-- MathJax -->
-        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-bcb802fa.js"></script>
     </head>
     <body>
-        <!-- Provide site root to javascript -->
-        <script type="text/javascript">
-            var path_to_root = "../";
-            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
-        </script>
-
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script type="text/javascript">
+        <script>
             try {
-                var theme = localStorage.getItem('mdbook-theme');
-                var sidebar = localStorage.getItem('mdbook-sidebar');
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
 
                 if (theme.startsWith('"') && theme.endsWith('"')) {
                     localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
@@ -73,107 +72,124 @@
         </script>
 
         <!-- Set the theme before any content is loaded, prevents flash -->
-        <script type="text/javascript">
-            var theme;
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
             try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
             if (theme === null || theme === undefined) { theme = default_theme; }
-            var html = document.querySelector('html');
-            html.classList.remove('no-js')
+            const html = document.documentElement;
             html.classList.remove('light')
             html.classList.add(theme);
-            html.classList.add('js');
+            html.classList.add("js");
         </script>
 
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
         <!-- Hide / unhide sidebar before it is displayed -->
-        <script type="text/javascript">
-            var html = document.querySelector('html');
-            var sidebar = 'hidden';
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
             }
-            html.classList.remove('sidebar-visible');
-            html.classList.add("sidebar-" + sidebar);
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
         </script>
 
-        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">Overview</a></li><li class="chapter-item expanded affix "><li class="part-title">Tutorials</li><li class="chapter-item expanded "><a href="../tutorials/index.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../tutorials/entry-tutorial.html"><strong aria-hidden="true">2.</strong> Entry-level Model Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/snowcat-tutorial.html"><strong aria-hidden="true">3.</strong> Type Checker Tutorial</a></li><li class="chapter-item expanded "><a href="../tutorials/pluscal-tutorial.html"><strong aria-hidden="true">4.</strong> Checking Pluscal specifications</a></li><li class="chapter-item expanded "><a href="../tutorials/trail-tips.html"><strong aria-hidden="true">5.</strong> Apalache trail tips: how to check your specs faster</a></li><li class="chapter-item expanded "><a href="../tutorials/symbmc.html"><strong aria-hidden="true">6.</strong> Symbolic Model Checking</a></li><li class="chapter-item expanded "><a href="../tutorials/temporal-properties.html"><strong aria-hidden="true">7.</strong> Specifying temporal properties and understanding counterexamples</a></li><li class="chapter-item expanded affix "><li class="part-title">HOWTOs</li><li class="chapter-item expanded "><a href="../HOWTOs/index.html"><strong aria-hidden="true">8.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../HOWTOs/howto-write-type-annotations.html"><strong aria-hidden="true">9.</strong> How to write type annotations</a></li><li class="chapter-item expanded "><a href="../HOWTOs/uninterpretedTypes.html"><strong aria-hidden="true">10.</strong> How to use uninterpreted types</a></li><li class="chapter-item expanded affix "><li class="part-title">Apalache User Manual</li><li class="chapter-item expanded "><a href="../apalache/index.html"><strong aria-hidden="true">11.</strong> Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/index.html"><strong aria-hidden="true">11.1.</strong> Installation</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/installation/jvm.html"><strong aria-hidden="true">11.1.1.</strong> Prebuilt Packages</a></li><li class="chapter-item expanded "><a href="../apalache/installation/docker.html"><strong aria-hidden="true">11.1.2.</strong> Docker</a></li><li class="chapter-item expanded "><a href="../apalache/installation/source.html"><strong aria-hidden="true">11.1.3.</strong> Build from Source</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/running.html"><strong aria-hidden="true">11.2.</strong> Running the Tool</a></li><li class="chapter-item expanded "><a href="../apalache/example.html"><strong aria-hidden="true">11.3.</strong> An Example TLA+ Specification</a></li><li class="chapter-item expanded "><a href="../apalache/parameters.html"><strong aria-hidden="true">11.4.</strong> Specification Parameters</a></li><li class="chapter-item expanded "><a href="../apalache/principles/index.html"><strong aria-hidden="true">11.5.</strong> Symbolic Model Checking with Apalache</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../apalache/principles/assignments.html"><strong aria-hidden="true">11.5.1.</strong> Assignments and symbolic transitions</a></li><li class="chapter-item expanded "><a href="../apalache/principles/folds.html"><strong aria-hidden="true">11.5.2.</strong> Folding sets and sequences</a></li><li class="chapter-item expanded "><a href="../apalache/principles/invariants.html"><strong aria-hidden="true">11.5.3.</strong> Invariants: State, Action, Trace</a></li><li class="chapter-item expanded "><a href="../apalache/principles/enumeration.html"><strong aria-hidden="true">11.5.4.</strong> Enumeration of counterexamples</a></li><li class="chapter-item expanded "><a href="../apalache/principles/apalache-mod.html"><strong aria-hidden="true">11.5.5.</strong> The Apalache Module</a></li><li class="chapter-item expanded "><a href="../apalache/principles/naturals.html"><strong aria-hidden="true">11.5.6.</strong> Naturals</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/config.html"><strong aria-hidden="true">11.6.</strong> Apalache global configuration file</a></li><li class="chapter-item expanded "><a href="../apalache/statistics.html"><strong aria-hidden="true">11.7.</strong> TLA+ Execution Statistics</a></li><li class="chapter-item expanded "><a href="../apalache/profiling.html"><strong aria-hidden="true">11.8.</strong> Profiling Your Specification</a></li><li class="chapter-item expanded "><a href="../apalache/theory.html"><strong aria-hidden="true">11.9.</strong> Five minutes of theory</a></li></ol></li><li class="chapter-item expanded "><a href="../apalache/tuning.html"><strong aria-hidden="true">12.</strong> Fine Tuning</a></li><li class="chapter-item expanded "><a href="../apalache/tlc-config.html"><strong aria-hidden="true">13.</strong> TLC Configuration Files</a></li><li class="chapter-item expanded "><a href="../apalache/typechecker-snowcat.html"><strong aria-hidden="true">14.</strong> The Snowcat Type Checker</a></li><li class="chapter-item expanded "><a href="../apalache/features.html"><strong aria-hidden="true">15.</strong> Supported Features</a></li><li class="chapter-item expanded "><a href="../apalache/principles/recursive.html"><strong aria-hidden="true">16.</strong> Obsolete: Recursive operators and functions</a></li><li class="chapter-item expanded "><a href="../apalache/known-issues.html"><strong aria-hidden="true">17.</strong> Known Issues</a></li><li class="chapter-item expanded "><a href="../apalache/antipatterns.html"><strong aria-hidden="true">18.</strong> Antipatterns</a></li><li class="chapter-item expanded "><a href="../apalache/preprocessing.html"><strong aria-hidden="true">19.</strong> TLA+ Preprocessing</a></li><li class="chapter-item expanded "><a href="../apalache/assignments-in-depth.html"><strong aria-hidden="true">20.</strong> Assignments and Symbolic Transitions in Depth</a></li><li class="chapter-item expanded "><a href="../apalache/kera.html"><strong aria-hidden="true">21.</strong> KerA: kernel logic of actions</a></li><li class="chapter-item expanded affix "><li class="part-title">TLA+ Language Manual for Engineers</li><li class="chapter-item expanded "><a href="../lang/index.html"><strong aria-hidden="true">22.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../lang/standard-operators.html"><strong aria-hidden="true">23.</strong> The standard operators of TLA+</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/booleans.html"><strong aria-hidden="true">23.1.</strong> Booleans</a></li><li class="chapter-item expanded "><a href="../lang/control-and-nondeterminism.html"><strong aria-hidden="true">23.2.</strong> Control And Nondeterminism</a></li><li class="chapter-item expanded "><a href="../lang/conditionals.html"><strong aria-hidden="true">23.3.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="../lang/integers.html"><strong aria-hidden="true">23.4.</strong> Integers</a></li><li class="chapter-item expanded "><a href="../lang/sets.html"><strong aria-hidden="true">23.5.</strong> Sets</a></li><li class="chapter-item expanded "><a href="../lang/logic.html"><strong aria-hidden="true">23.6.</strong> Logic</a></li><li class="chapter-item expanded "><a href="../lang/functions.html"><strong aria-hidden="true">23.7.</strong> Functions</a></li><li class="chapter-item expanded "><a href="../lang/records.html"><strong aria-hidden="true">23.8.</strong> Records</a></li><li class="chapter-item expanded "><a href="../lang/tuples.html"><strong aria-hidden="true">23.9.</strong> Tuples</a></li><li class="chapter-item expanded "><a href="../lang/sequences.html"><strong aria-hidden="true">23.10.</strong> Sequences</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">23.11.</strong> Bags</div></li></ol></li><li class="chapter-item expanded "><a href="../lang/apalache-extensions.html"><strong aria-hidden="true">24.</strong> Apalache extensions</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/apalache-operators.html"><strong aria-hidden="true">24.1.</strong> Apalache module</a></li><li class="chapter-item expanded "><a href="../lang/variants.html"><strong aria-hidden="true">24.2.</strong> Variants</a></li><li class="chapter-item expanded "><a href="../lang/option-types.html"><strong aria-hidden="true">24.3.</strong> Option types</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/user-operators.html"><strong aria-hidden="true">25.</strong> User-defined operators</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../lang/user/top-level-operators.html"><strong aria-hidden="true">25.1.</strong> Top-level operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/let-in.html"><strong aria-hidden="true">25.2.</strong> LET-IN definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/higher-order-operators.html"><strong aria-hidden="true">25.3.</strong> Higher-order operators definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/lambdas.html"><strong aria-hidden="true">25.4.</strong> Anonymous operator definitions</a></li><li class="chapter-item expanded "><a href="../lang/user/local-operators.html"><strong aria-hidden="true">25.5.</strong> Local operator definitions</a></li></ol></li><li class="chapter-item expanded "><a href="../lang/modules.html"><strong aria-hidden="true">26.</strong> Modules, Extends, and Instances</a></li><li class="chapter-item expanded affix "><li class="part-title">Idiomatic TLA+</li><li class="chapter-item expanded "><a href="../idiomatic/index.html"><strong aria-hidden="true">27.</strong> Introduction</a></li><li class="chapter-item expanded "><a href="../idiomatic/000keep-minimum-state-variables.html"><strong aria-hidden="true">28.</strong> Keep state variables to the minimum</a></li><li class="chapter-item expanded "><a href="../idiomatic/001assignments.html"><strong aria-hidden="true">29.</strong> Update state variables with assignments</a></li><li class="chapter-item expanded "><a href="../idiomatic/002primes.html"><strong aria-hidden="true">30.</strong> Apply primes only to state variables</a></li><li class="chapter-item expanded "><a href="../idiomatic/007if-then-else.html"><strong aria-hidden="true">31.</strong> Use Boolean operators in actions, not IF-THEN-ELSE</a></li><li class="chapter-item expanded "><a href="../idiomatic/003record-sets.html"><strong aria-hidden="true">32.</strong> Avoid sets of mixed records</a></li><li class="chapter-item expanded affix "><li class="part-title">Design Documents</li><li class="chapter-item expanded "><a href="../adr/001rfc-types.html"><strong aria-hidden="true">33.</strong> RFC 001: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/002adr-types.html"><strong aria-hidden="true">34.</strong> ADR-002: types and type annotations</a></li><li class="chapter-item expanded "><a href="../adr/003adr-trex.html"><strong aria-hidden="true">35.</strong> ADR-003: transition executor (TRex)</a></li><li class="chapter-item expanded "><a href="../adr/004adr-annotations.html"><strong aria-hidden="true">36.</strong> ADR-004: code annotations</a></li><li class="chapter-item expanded "><a href="../adr/005adr-json.html"><strong aria-hidden="true">37.</strong> ADR-005: JSON Serialization Format</a></li><li class="chapter-item expanded "><a href="../adr/006rfc-unit-testing.html" class="active"><strong aria-hidden="true">38.</strong> RFC-006: unit tests and property-based tests</a></li><li class="chapter-item expanded "><a href="../adr/007adr-restructuring.html"><strong aria-hidden="true">39.</strong> ADR-007: restructuring</a></li><li class="chapter-item expanded "><a href="../adr/008adr-exceptions.html"><strong aria-hidden="true">40.</strong> ADR-008: exceptions</a></li><li class="chapter-item expanded "><a href="../adr/009adr-outputs.html"><strong aria-hidden="true">41.</strong> ADR-009: outputs</a></li><li class="chapter-item expanded "><a href="../adr/010rfc-transition-explorer.html"><strong aria-hidden="true">42.</strong> RFC-010: Implementation of Transition Exploration Server</a></li><li class="chapter-item expanded "><a href="../adr/011adr-smt-arrays.html"><strong aria-hidden="true">43.</strong> ADR-011: alternative SMT encoding using arrays</a></li><li class="chapter-item expanded "><a href="../adr/012adr-adopt-adr-template.html"><strong aria-hidden="true">44.</strong> ADR-012: Adopt an ADR Template</a></li><li class="chapter-item expanded "><a href="../adr/013adr-configuration.html"><strong aria-hidden="true">45.</strong> ADR-013: Configuration Management Component</a></li><li class="chapter-item expanded "><a href="../adr/014adr-precise-records.html"><strong aria-hidden="true">46.</strong> ADR-014: Precise type inference for records and variants</a></li><li class="chapter-item expanded "><a href="../adr/015adr-trace.html"><strong aria-hidden="true">47.</strong> ADR-015: ITF: informal trace format</a></li><li class="chapter-item expanded "><a href="../adr/016adr-retla.html"><strong aria-hidden="true">48.</strong> ADR-016: ReTLA: Relational TLA</a></li><li class="chapter-item expanded "><a href="../adr/017pdr-temporal.html"><strong aria-hidden="true">49.</strong> PDR-017: Checking temporal properties</a></li><li class="chapter-item expanded "><a href="../adr/018adr-inlining.html"><strong aria-hidden="true">50.</strong> ADR-018: Inlining in Apalache</a></li><li class="chapter-item expanded "><a href="../adr/019adr-harmonize-changelog.html"><strong aria-hidden="true">51.</strong> ADR-019: Harmonize changelog management</a></li><li class="chapter-item expanded "><a href="../adr/020adr-arenas.html"><strong aria-hidden="true">52.</strong> ADR-020: Improving membership in arenas</a></li><li class="chapter-item expanded "><a href="../adr/021rfc-prioritization.html"><strong aria-hidden="true">53.</strong> RFC-021: Prioritization of Work</a></li><li class="chapter-item expanded "><a href="../adr/022adr-unification-of-configs-and-options.html"><strong aria-hidden="true">54.</strong> ADR-022: Unify Configuration Management and &quot;Pass Options&quot;</a></li><li class="chapter-item expanded "><a href="../adr/023adr-trace-evaluation.html"><strong aria-hidden="true">55.</strong> ADR-023: Trace evaluation</a></li><li class="chapter-item expanded "><a href="../adr/024adr-arena-pass.html"><strong aria-hidden="true">56.</strong> ADR-024: Arena computation isolation</a></li></ol>
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
-        <div id="page-wrapper" class="page-wrapper">
+        <div id="mdbook-page-wrapper" class="page-wrapper">
 
             <div class="page">
-                
-                <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
-                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
-                            <i class="fa fa-bars"></i>
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
                         </button>
-                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
-                            <i class="fa fa-paint-brush"></i>
-                        </button>
-                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
                         </ul>
-                        
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
-                            <i class="fa fa-search"></i>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
                         </button>
-                        
                     </div>
 
                     <h1 class="menu-title">Apalache Documentation</h1>
 
                     <div class="right-buttons">
-                        
                         <a href="../print.html" title="Print this book" aria-label="Print this book">
-                            <i id="print-button" class="fa fa-print"></i>
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
-                        
-                        
                         <a href="https://github.com/informalsystems/apalache" title="Git repository" aria-label="Git repository">
-                            <i id="git-repository-button" class="fa fa-github"></i>
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        
+
                     </div>
                 </div>
 
-                
-                <div id="search-wrapper" class="hidden">
-                    <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
                     </form>
-                    <div id="searchresults-outer" class="searchresults-outer hidden">
-                        <div id="searchresults-header" class="searchresults-header"></div>
-                        <ul id="searchresults">
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
                         </ul>
                     </div>
                 </div>
-                
 
                 <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script type="text/javascript">
-                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
                         link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
                     });
                 </script>
 
-                <div id="content" class="content">
+                <div id="mdbook-content" class="content">
                     <main>
-                        <h1><a class="header" href="#rfc-006-unit-testing-and-property-based-testing-of-tla-specifications" id="rfc-006-unit-testing-and-property-based-testing-of-tla-specifications">RFC-006: Unit testing and property-based testing of TLA+ specifications</a></h1>
-<table><thead><tr><th>authors</th><th align="right">revision</th></tr></thead><tbody>
-<tr><td>Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, ...</td><td align="right">2</td></tr>
-</tbody></table>
+                        <h1 id="rfc-006-unit-testing-and-property-based-testing-of-tla-specifications"><a class="header" href="#rfc-006-unit-testing-and-property-based-testing-of-tla-specifications">RFC-006: Unit testing and property-based testing of TLA+ specifications</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>authors</th><th style="text-align: right">revision</th></tr>
+</thead>
+<tbody>
+<tr><td>Igor Konnov, Vitor Enes, Shon Feder, Andrey Kuprianov, …</td><td style="text-align: right">2</td></tr>
+</tbody>
+</table>
+</div>
 <!-- toc -->
 <p><strong>Abstract.</strong> This document discusses a framework for testing TLA+
 specifications. Our first goal is to give the writers of TLA+ specifications an
@@ -184,7 +200,7 @@ specifications, in order to understand them in smaller pieces. These ideas
 have not been implemented yet. We believe that the testing framework will
 enable the users of Apalache and TLC to write and read TLA+ specifications in a
 much more efficient manner than they do it today.</p>
-<h2><a class="header" href="#1-long-rationale" id="1-long-rationale">1. Long rationale</a></h2>
+<h2 id="1-long-rationale"><a class="header" href="#1-long-rationale">1. Long rationale</a></h2>
 <p>TLA+ is a specification language that was designed to be executable inside a
 human brain. Moreover, it was intended to run in the brains that underwent a
 specific software upgrade, called mathematical training. Many years have passed
@@ -224,8 +240,8 @@ we actually can do that. We can probably do it even better by implementing
 <a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>, that is, test parts of our specifications against a
 large set of inputs instead of testing it against a few carefully crafted
 inputs.</p>
-<h2><a class="header" href="#2-a-motivating-example" id="2-a-motivating-example">2. A motivating example</a></h2>
-<p>Let's consider a relatively simple distributed algorithm as an example.  The
+<h2 id="2-a-motivating-example"><a class="header" href="#2-a-motivating-example">2. A motivating example</a></h2>
+<p>Let’s consider a relatively simple distributed algorithm as an example.  The
 repository of <a href="https://github.com/tlaplus/Examples/">TLA+ examples</a> contains the well-known leader election
 algorithm called <a href="https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts">LCR</a> (specified in TLA+ by Stephan Merz). The algorithm is
 over 40 years old, but it is tricky enough to be still interesting. To
@@ -308,7 +324,7 @@ all, whether a few data points are giving us a good confidence.</p>
 protocol. For instance, both Apalache and TLC can run for hours on <a href="https://github.com/tlaplus/Examples/tree/master/specifications/raft">Raft</a>
 without finishing. We should be able to quickly debug our specs like software
 engineers do!</p>
-<h2><a class="header" href="#3-an-approach-to-writing-tests" id="3-an-approach-to-writing-tests">3. An approach to writing tests</a></h2>
+<h2 id="3-an-approach-to-writing-tests"><a class="header" href="#3-an-approach-to-writing-tests">3. An approach to writing tests</a></h2>
 <p><em>What we describe below has not been implemented yet. Apalache has all the
 necessary ingredients for implementing this approach. We are asking for your
 input to find an ergonomic approach to testing TLA+ specifications.  Many of
@@ -333,7 +349,7 @@ in TLA+. These operators are somewhat similar to regular expressions,
 but they are more powerful, as they reason about infinite executions.</p>
 </li>
 </ul>
-<h3><a class="header" href="#31-testing-stateless-operators" id="31-testing-stateless-operators">3.1. Testing stateless operators</a></h3>
+<h3 id="31-testing-stateless-operators"><a class="header" href="#31-testing-stateless-operators">3.1. Testing stateless operators</a></h3>
 <p>Consider the following auxiliary operator in the specification:</p>
 <pre><code class="language-tla">succ(n) == IF n=N THEN 1 ELSE n+1  \* successor along the ring
 </code></pre>
@@ -363,17 +379,17 @@ tests by default, if no test name is specified. Also, we have to initialize the
 constants with <code>ConstInit</code>, which we specify with the annotation
 <code>@require(ConstInit)</code>.</p>
 <p><a id="testAction"></a></p>
-<h3><a class="header" href="#32-testing-actions" id="32-testing-actions">3.2. Testing actions</a></h3>
+<h3 id="32-testing-actions"><a class="header" href="#32-testing-actions">3.2. Testing actions</a></h3>
 <p>Testing stateless operators is nice. However, TLA+ is built around the concept
 of a state machine. Hence, we believe that most of the testing activity will be
 centered around TLA+ actions. For instance, the <a href="https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts">LCR</a> specification has two
-actions: <code>n0</code> and <code>n1</code>. Let's have a look at <code>n0</code>:</p>
-<pre><code class="language-tla">n0(self) == /\ pc[self] = &quot;n0&quot;
+actions: <code>n0</code> and <code>n1</code>. Let’s have a look at <code>n0</code>:</p>
+<pre><code class="language-tla">n0(self) == /\ pc[self] = "n0"
             /\ IF initiator[self]
                   THEN /\ msgs' = [msgs EXCEPT ![succ(self)] = @ \union {Id[self]}]
                   ELSE /\ TRUE
                        /\ msgs' = msgs
-            /\ pc' = [pc EXCEPT ![self] = &quot;n1&quot;]
+            /\ pc' = [pc EXCEPT ![self] = "n1"]
             /\ UNCHANGED &lt;&lt; initiator, state &gt;&gt;
 </code></pre>
 <p>Assume we like to test it without looking at the rest of the system, namely,
@@ -382,10 +398,10 @@ that could be passed to the action <code>n0</code>. In this section, we will jus
 TypeOK (see <a href="#generators">Section 5</a> for a more fine-grained control over the
 inputs):</p>
 <pre><code class="language-tla">TypeOK ==
-  /\ pc \in [Node -&gt; {&quot;n0&quot;, &quot;n1&quot;, &quot;n2&quot;, &quot;Done&quot;}]
+  /\ pc \in [Node -&gt; {"n0", "n1", "n2", "Done"}]
   /\ msgs \in [Node -&gt; SUBSET {Id[n] : n \in Node}]
   /\ initiator \in [Node -&gt; BOOLEAN]
-  /\ state \in [Node -&gt; {&quot;cand&quot;, &quot;lost&quot;, &quot;won&quot;}]
+  /\ state \in [Node -&gt; {"cand", "lost", "won"}]
 
 </code></pre>
 <p>Further, we specify what kind of outcome we expect:</p>
@@ -435,7 +451,7 @@ as an action that is an operator over unprimed and primed variable.</li>
 the predicate <code>Assert_n0</code>
 (like an action invariant).</li>
 </ul>
-<h3><a class="header" href="#33-testing-executions" id="33-testing-executions">3.3. Testing executions</a></h3>
+<h3 id="33-testing-executions"><a class="header" href="#33-testing-executions">3.3. Testing executions</a></h3>
 <p>Engineers often like to test a particular set of executions to support their
 intuition, or to communicate an example to their peers. Sometimes, it is useful
 to isolate a set of executions to make continuous integration break, until the
@@ -466,10 +482,10 @@ TestExec_n0_n1 ==
 Assert_noWinner(trace) ==
     LET last == trace[Len(trace)] IN
         \A n \in Node:
-            last.state[n] /= &quot;won&quot;
+            last.state[n] /= "won"
 </code></pre>
 <p>Similar to <code>TestAction_n0</code>, the test <code>TestExec_n0_n1</code> initialized the state
-with the predicate <code>Prepare_n0</code>. In contrast to <code>TestAction_n0</code>, the 
+with the predicate <code>Prepare_n0</code>. In contrast to <code>TestAction_n0</code>, the
 test <code>TestExec_n0_n1</code> does two other steps differently:</p>
 <ol>
 <li>
@@ -487,7 +503,7 @@ general, we could test every single state of the trace.</p>
 </code></pre>
 <p>If the test is violated, a counterexample should be produced in the file
 <code>counterexample_TestExec_n0_n1.tla</code>.</p>
-<h3><a class="header" href="#34-test-executions-with-temporal-properties" id="34-test-executions-with-temporal-properties">3.4. Test executions with temporal properties</a></h3>
+<h3 id="34-test-executions-with-temporal-properties"><a class="header" href="#34-test-executions-with-temporal-properties">3.4. Test executions with temporal properties</a></h3>
 <p><em>We see this feature to have the least priority, as you can do a lot by
 writing trace invariants. Actually, you can check bounded lassos as trace
 invariants. So for bounded model checking, you can always write a trace
@@ -503,7 +519,7 @@ exactly this. Test <code>TestExec_correctness_under_liveness</code>.</p>
 Assert_noWinner(trace) ==
     LET last == trace[Len(trace)] IN
         \A n \in Node:
-            last.state[n] /= &quot;won&quot;
+            last.state[n] /= "won"
 
 \* Execute a sequence of 5 actions, while using temporal properties.
 \*
@@ -517,31 +533,31 @@ Assert_noWinner(trace) ==
 (* with the smallest ID, and all other nodes know that they lost.          *)
 (***************************************************************************)
 Correctness ==
-  \A n \in Node : state[n] = &quot;won&quot; =&gt;
+  \A n \in Node : state[n] = "won" =&gt;
      /\ initiator[n]
      /\ \A m \in Node \ {n} : 
-           /\ state[m] = &quot;lost&quot;
+           /\ state[m] = "lost"
            /\ initiator[m] =&gt; Id[m] &gt; Id[n]
 
-Liveness == (\E n \in Node : state[n] = &quot;cand&quot;) =&gt; &lt;&gt;(\E n \in Node : state[n] = &quot;won&quot;)
+Liveness == (\E n \in Node : state[n] = "cand") =&gt; &lt;&gt;(\E n \in Node : state[n] = "won")
 </code></pre>
 <p>Since <code>Correctness</code> is a state predicate, we wrap it with a temporal operator
 to check it against all states of an execution:</p>
 <pre><code class="language-tla">\* @ensure(GlobalCorrectness)
 \* @testExecution(5)
 </code></pre>
-<h3><a class="header" href="#35-discussion" id="35-discussion">3.5. Discussion</a></h3>
+<h3 id="35-discussion"><a class="header" href="#35-discussion">3.5. Discussion</a></h3>
 <p>As you can see, we clearly decompose a test in three parts:</p>
 <ul>
 <li>Preparing the states (like a small version of <code>Init</code>),</li>
 <li>Executing the action (like a small version of <code>Next</code>),</li>
 <li>Testing the next states against the previous states (like an action invariant).
-Alternatively, you can write an assertion over a trace. </li>
+Alternatively, you can write an assertion over a trace.</li>
 </ul>
 <p>In the rest of this section, we comment on the alternative approaches.</p>
-<h4><a class="header" href="#351-but-i-can-do-all-of-that-in-tla" id="351-but-i-can-do-all-of-that-in-tla">3.5.1. But I can do all of that in TLA+</a></h4>
+<h4 id="351-but-i-can-do-all-of-that-in-tla"><a class="header" href="#351-but-i-can-do-all-of-that-in-tla">3.5.1. But I can do all of that in TLA+</a></h4>
 <p>True. TLA+ is an extremely expressive language.</p>
-<p>Let's go back to the test <code>TestAction_n0</code> that was explained in <a href="#testAction">Section
+<p>Let’s go back to the test <code>TestAction_n0</code> that was explained in <a href="#testAction">Section
 3.2</a>:</p>
 <pre><code class="language-tla">\* Execute the action under test.
 \* Note that we decouple Assert_n0 from TestAction_n0.
@@ -558,7 +574,7 @@ TestAction_n0 ==
 
 </code></pre>
 <p>Can we rewrite this test in pure TLA+? Yes, but it is an error-prone approach.
-Let's do it step-by-step.</p>
+Let’s do it step-by-step.</p>
 <p>First of all, there is no simple way to initialize constants in TLA+, as we did
 with <code>ConstInit</code> (this is an Apalache-specific feature). Of course, one can
 restrict constants with <code>ASSUME(...)</code>.  However, assumptions about constants
@@ -605,7 +621,7 @@ the operator <code>\cdot</code>, which is implemented neither in TLC, nor in Apa
 like <code>MCTestAction_n0.tla</code> and clearly specify <code>TypeOK</code> as the initial
 predicate and the action as the next predicate. But we do not want
 state-of-the-art dictate us our behavior.</p>
-<p>Finally, we have to place the assertion <code>Assert_n0</code>. Let's try it this way:</p>
+<p>Finally, we have to place the assertion <code>Assert_n0</code>. Let’s try it this way:</p>
 <pre><code class="language-tla">TestAction_n0_TLA ==
   ConstInit =&gt;
     TypeOK
@@ -628,7 +644,7 @@ We can use the operator <code>Assert</code> that is supported by TLC:</p>
     (
       /\ \E self \in Node:
          n0(self)
-      /\ Assert(Assert_n0, &quot;assertion violation&quot;)
+      /\ Assert(Assert_n0, "assertion violation")
     )
 </code></pre>
 <p>This time it should conceptually work. Once <code>n0</code> has been executed, TLC could
@@ -641,7 +657,7 @@ Period.</p>
 <p>Phew. It was not easy to write <code>TestAction_n0_TLA</code>. In principle, we could
 fix this pattern and extract the test in a dedicated file <code>MC.tla</code> to run
 it with TLC or Apalache.</p>
-<p>Let's compare it with <code>TestAction_n0</code>. Which one would you choose?</p>
+<p>Let’s compare it with <code>TestAction_n0</code>. Which one would you choose?</p>
 <pre><code class="language-tla">\* Execute the action under test.
 \* Note that we decouple Assert_n0 from TestAction_n0.
 \* The reason is that we always assume that TestAction_n0 always holds,
@@ -672,11 +688,11 @@ Proof System</a>.  From the automation perspective, it would require a
 completely automatic constraint-based solver for TLA+, which we do not have.
 In practice, this would mean either rewriting TLC and Apalache from scratch, or
 hacking them to enforce the right semantics of the above formula.</p>
-<h4><a class="header" href="#352-why-annotations-instead-of-special-operators" id="352-why-annotations-instead-of-special-operators">3.5.2. Why annotations instead of special operators</a></h4>
+<h4 id="352-why-annotations-instead-of-special-operators"><a class="header" href="#352-why-annotations-instead-of-special-operators">3.5.2. Why annotations instead of special operators</a></h4>
 <p>The annotations <code>@require</code> and <code>@ensure</code> are not our invention. You can find
 them in <a href="https://en.wikipedia.org/wiki/Design_by_contract">Design-by-contract</a> languages. In particular, they are used as pre-
 and post-conditions in code verification tools, e.g., <a href="https://www.thestrangeloop.com/2018/contracts-for-getting-more-programs-less-wrong.html">JML</a>, <a href="https://www.microsoft.com/en-us/research/project/dafny-a-language-and-program-verifier-for-functional-correctness/">Dafny</a>, <a href="http://mcmil.net/pubs/SIGCOMM19.pdf">QUIC
-testing</a> with <a href="https://github.com/kenmcmil/ivy">Ivy</a>. </p>
+testing</a> with <a href="https://github.com/kenmcmil/ivy">Ivy</a>.</p>
 <p>You could ask a reasonable question: Why cannot we introduce operators such
 as <code>Require</code> and <code>Ensure</code> instead of writing annotations? For instance,
 we could rewrite <code>TestAction_n0</code> as follows:</p>
@@ -690,7 +706,7 @@ we could rewrite <code>TestAction_n0</code> as follows:</p>
 <p>The above test looks self-contained, no annotations. Moreover, we have probably
 given more power to the users: They could pass expressions to <code>Require</code> and
 <code>Ensure</code>, or they could combine <code>Require</code> and <code>Ensure</code> in other ways and do
-something great... Well, we have actually introduced more problems to the users
+something great… Well, we have actually introduced more problems to the users
 than solutions. Since logical formulas can be composed in a lot of ways, we
 could start writing interesting things:</p>
 <pre><code class="language-tla">Can_I_do_that ==
@@ -706,7 +722,7 @@ But what is written is kind of legal, so it should work, right?</p>
 requirements in logical formulas.</em></p>
 <p>For the moment, we are using Apalache annotations in code comments.  However,
 TLA+ could be extended with ensure/require one day, if they prove to be useful.</p>
-<h2><a class="header" href="#4-using-tests-for-producing-quick-examples" id="4-using-tests-for-producing-quick-examples">4. Using tests for producing quick examples</a></h2>
+<h2 id="4-using-tests-for-producing-quick-examples"><a class="header" href="#4-using-tests-for-producing-quick-examples">4. Using tests for producing quick examples</a></h2>
 <p>It is often nice to see examples of test inputs that pass the
 test. Apalache has all the ingredients to do that that. We should be able
 to run a command like that:</p>
@@ -718,14 +734,14 @@ which is produced when an error is found.</p>
 <p>In a similar way we should be able to produce an example of an execution:</p>
 <pre><code class="language-sh">apalache example ChangRobertsTyped_Test.tla TestExec_n0_n1
 </code></pre>
-<h2><a class="header" href="#5-bounding-the-inputs" id="5-bounding-the-inputs">5. Bounding the inputs</a></h2>
+<h2 id="5-bounding-the-inputs"><a class="header" href="#5-bounding-the-inputs">5. Bounding the inputs</a></h2>
 <p>The following ideas clearly stem from <a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>, e.g., we use
 generators similar to <a href="https://www.scalacheck.org/">Scalacheck</a>. In contrast to property-based testing, we
 want to run the test not only on some random inputs, but to run it exhaustively
 on all inputs within a predefined bounded scope.</p>
 <p><a id="generators"></a></p>
-<h3><a class="header" href="#51-using-apalache-generators" id="51-using-apalache-generators">5.1. Using Apalache generators</a></h3>
-<p>Let's go back to the example in <a href="#testAction">Section 3.2</a>.</p>
+<h3 id="51-using-apalache-generators"><a class="header" href="#51-using-apalache-generators">5.1. Using Apalache generators</a></h3>
+<p>Let’s go back to the example in <a href="#testAction">Section 3.2</a>.</p>
 <p>In <code>TestAction_n0</code> we used <code>TypeOK</code> to describe the states that can be used as
 the input to the test. While this conceptually works, it often happens that
 <code>TypeOK</code> describes a large set of states. Sometimes, this set is even infinite,
@@ -750,7 +766,7 @@ Prepare_n0 ==
 </code></pre>
 <p>In <code>Prepare_n0</code>, we let the solver to produce bounded data structures with
 <code>Gen</code>, by providing bounds on the size of every set, function, sequence, etc.
-Since we don't want to have completely arbitrary values for the data
+Since we don’t want to have completely arbitrary values for the data
 structures, we further restrict them with <code>TypeOK</code>, which we conveniently have
 in the specification.</p>
 <p>The more scoped version of <code>TestAction_n0</code> looks like following:</p>
@@ -765,12 +781,12 @@ TestAction2_n0 ==
         n0(self)
 
 </code></pre>
-<h3><a class="header" href="#52-using-tlc-random" id="52-using-tlc-random">5.2. Using TLC Random</a></h3>
+<h3 id="52-using-tlc-random"><a class="header" href="#52-using-tlc-random">5.2. Using TLC Random</a></h3>
 <p>Leslie Lamport has recently introduced a solution that allows one to run TLC
 in the spirit of <a href="https://en.wikipedia.org/wiki/QuickCheck">Property-based testing</a>. This is done by initializing
 states with the operators that are defined in the module <code>Randomization</code>. For
-details, see Leslie's paper on <a href="http://lamport.azurewebsites.net/tla/inductive-invariant.pdf">Inductive invariants with TLC</a>.</p>
-<h2><a class="header" href="#6-test-options" id="6-test-options">6. Test options</a></h2>
+details, see Leslie’s paper on <a href="http://lamport.azurewebsites.net/tla/inductive-invariant.pdf">Inductive invariants with TLC</a>.</p>
+<h2 id="6-test-options"><a class="header" href="#6-test-options">6. Test options</a></h2>
 <p>To integrate unit tests in the standard TLA+ development cycle, the tools
 should remember how every individual test was run. To avoid additional
 scripting on top of the command-line interface, we can simply pass the tool
@@ -788,27 +804,27 @@ GlobalCorrectness == []Correctness
 \* @require(TypeOK)
 \* @ensure(Assert_noWinner)
 \* @testExecution(5)
-\* @testOption(&quot;tool&quot;, &quot;apalache&quot;)
+\* @testOption("tool", "apalache")
 </code></pre>
 <p>The test options in the above example have the following meaning:</p>
 <ul>
 <li>
-<p>The annotation <code>testOption(&quot;tool&quot;, &quot;apalache&quot;)</code> runs the test only if it is
+<p>The annotation <code>testOption("tool", "apalache")</code> runs the test only if it is
 executed in Apalache. For example, if we run this test in TLC, it should be
 ignored.</p>
 </li>
 <li>
-<p>The annotation <code>testOption(&quot;search.smt.timeout&quot;, 10)</code> sets the tool-specific
+<p>The annotation <code>testOption("search.smt.timeout", 10)</code> sets the tool-specific
 option <code>search.smt.timeout</code> to 10, meaning that the SMT solver should time
 out if it cannot solve a problem in 10 seconds.</p>
 </li>
 <li>
-<p>The annotation <code>testOption(&quot;checker.algo&quot;, &quot;offline&quot;)</code> sets the tool-specific
+<p>The annotation <code>testOption("checker.algo", "offline")</code> sets the tool-specific
 option <code>checker.algo</code> to <code>offline</code>, meaning that the model checker should
 use the offline solver instead of the incremental one.</p>
 </li>
 <li>
-<p>The annotation <code>testOption(&quot;checker.nworkers&quot;, 2)</code> sets the tool-specific
+<p>The annotation <code>testOption("checker.nworkers", 2)</code> sets the tool-specific
 option <code>checker.nworkers</code> to <code>2</code>, meaning that the model checker should
 use two cores.</p>
 </li>
@@ -822,7 +838,7 @@ make sure that updates in a specification do not break the tests.
 This would allow us to integrate TLA+ model checkers in a CI/CD loop,
 e.g., at GitHub.</li>
 </ul>
-<h2><a class="header" href="#7-what-do-you-think" id="7-what-do-you-think">7. What do you think?</a></h2>
+<h2 id="7-what-do-you-think"><a class="header" href="#7-what-do-you-think">7. What do you think?</a></h2>
 <p>Let us know:</p>
 <ul>
 <li>
@@ -840,17 +856,13 @@ e.g., at GitHub.</li>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                        
                             <a rel="prev" href="../adr/005adr-json.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <i class="fa fa-angle-left"></i>
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
-                        
 
-                        
-                            <a rel="next" href="../adr/007adr-restructuring.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="next prefetch" href="../adr/007adr-restructuring.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
-                        
 
                         <div style="clear: both"></div>
                     </nav>
@@ -858,53 +870,44 @@ e.g., at GitHub.</li>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                
                     <a rel="prev" href="../adr/005adr-json.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <i class="fa fa-angle-left"></i>
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
-                
 
-                
-                    <a rel="next" href="../adr/007adr-restructuring.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="next prefetch" href="../adr/007adr-restructuring.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
-                
             </nav>
 
         </div>
 
-        
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
 
-        
 
-        
 
-        
-        <script type="text/javascript">
+        <script>
             window.playground_copyable = true;
         </script>
-        
 
-        
 
-        
-        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
-        
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
-        
-        <script type="text/javascript" src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>
-        
-        <script type="text/javascript" src=".././theme/highlightTla.js"></script>
-        
+        <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>
+        <script src=".././theme/highlightTla.js"></script>
 
-        
 
+
+    </div>
     </body>
 </html>
