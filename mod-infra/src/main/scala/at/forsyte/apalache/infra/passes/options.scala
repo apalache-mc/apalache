@@ -405,9 +405,9 @@ object SMTSolver {
   }
 
   val ofString: String => SMTSolver = {
-    case "z3"     => Z3
-    case "cvc5"   => CVC5
-    case invalid  => throw new IllegalArgumentException(s"Unexpected SMT solver backend $invalid")
+    case "z3"    => Z3
+    case "cvc5"  => CVC5
+    case invalid => throw new IllegalArgumentException(s"Unexpected SMT solver backend $invalid")
   }
 }
 

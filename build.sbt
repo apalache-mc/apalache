@@ -38,6 +38,8 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.cvc5,
     Deps.cvc5LinuxAarch64,
     Deps.cvc5LinuxX86_64,
+    Deps.cvc5MacosAarch64,
+    Deps.cvc5MacosX86_64,
     Deps.z3,
     Deps.shapeless,
     TestDeps.junit,

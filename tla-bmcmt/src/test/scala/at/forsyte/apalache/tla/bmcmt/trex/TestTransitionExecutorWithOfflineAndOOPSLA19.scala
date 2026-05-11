@@ -18,7 +18,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestTransitionExecutorWithOfflineAndOOPSLA19 extends TestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None,
+      .create(None,
           SolverConfig(
               debug = false,
               profile = false,

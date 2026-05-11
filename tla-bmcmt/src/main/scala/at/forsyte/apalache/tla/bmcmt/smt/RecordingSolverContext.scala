@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.infra.passes.options.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
@@ -21,21 +20,6 @@ object RecordingSolverContext {
     context
   }
 
-  /**
-   * A factory method to create a recording context on top of a Z3 solver context. The entries in the parent log are
-   * replayed right after the start.
-   * @param parentLog
-   *   the parent log for the solver
-   * @param config
-   *   solver config
-   * @return
-   *   a recording solver that works on top of Z3
-   */
-  def createZ3(
-      parentLog: Option[SmtLog],
-      config: SolverConfig): RecordingSolverContext = {
-    create(parentLog, config.copy(smtSolver = SMTSolver.Z3))
-  }
 }
 
 /**
