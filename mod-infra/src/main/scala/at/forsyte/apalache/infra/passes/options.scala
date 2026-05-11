@@ -167,6 +167,8 @@ object Config {
    *   the time limit on SMT queries in seconds
    * @param noDeadLocks
    *   do not check for deadlocks
+   * @param smtSolver
+   *   the SMT solver backend to use
    * @param smtEncoding
    *   the SMT encoding to use
    * @param temporalProps
@@ -187,6 +189,7 @@ object Config {
       maxError: Option[Int] = Some(1),
       timeoutSmtSec: Option[Int] = Some(0),
       noDeadlocks: Option[Boolean] = None,
+      smtSolver: Option[SMTSolver] = Some(SMTSolver.Z3),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
@@ -386,6 +389,25 @@ object SMTEncoding {
     case "funArrays"     => FunArrays
     case "oopsla19"      => OOPSLA19
     case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
+  }
+}
+
+/** Defines the SMT solver backends supported */
+sealed abstract class SMTSolver
+
+object SMTSolver {
+  final case object Z3 extends SMTSolver {
+    override def toString: String = "z3"
+  }
+
+  final case object CVC5 extends SMTSolver {
+    override def toString: String = "cvc5"
+  }
+
+  val ofString: String => SMTSolver = {
+    case "z3"     => Z3
+    case "cvc5"   => CVC5
+    case invalid  => throw new IllegalArgumentException(s"Unexpected SMT solver backend $invalid")
   }
 }
 
@@ -685,6 +707,7 @@ object OptionGroup extends LazyLogging {
       maxError: Int,
       timeoutSmtSec: Int,
       noDeadlocks: Boolean,
+      smtSolver: SMTSolver,
       smtEncoding: SMTEncoding,
       tuning: Map[String, String])
       extends OptionGroup
@@ -704,6 +727,7 @@ object OptionGroup extends LazyLogging {
         algo <- checker.algo.toTry("checker.algo")
         discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
         length <- checker.length.toTry("checker.length")
+        smtSolver <- checker.smtSolver.toTry("checker.smtSolver")
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
@@ -716,6 +740,7 @@ object OptionGroup extends LazyLogging {
           timeoutSmtSec = timeoutSmtSec,
           // set to true here, check mergeCheckDeadlockFromTlc below
           noDeadlocks = checker.noDeadlocks.getOrElse(true),
+          smtSolver = smtSolver,
           smtEncoding = smtEncoding,
           tuning = tuning,
       )

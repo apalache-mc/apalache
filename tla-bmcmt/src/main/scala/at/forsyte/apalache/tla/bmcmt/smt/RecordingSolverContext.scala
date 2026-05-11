@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.infra.passes.options.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
@@ -7,6 +8,18 @@ import at.forsyte.apalache.tla.lir.TlaEx
 import com.typesafe.scalalogging.LazyLogging
 
 object RecordingSolverContext {
+
+  /**
+   * A factory method to create a recording context on top of the solver backend configured in [[SolverConfig]].
+   */
+  def create(
+      parentLog: Option[SmtLog],
+      config: SolverConfig): RecordingSolverContext = {
+    val solverImpl = SolverContextFactory.create(config)
+    val context = new RecordingSolverContext(parentLog, config, solverImpl)
+    parentLog.foreach(_.replay(context.solverImpl))
+    context
+  }
 
   /**
    * A factory method to create a recording context on top of a Z3 solver context. The entries in the parent log are
@@ -21,9 +34,7 @@ object RecordingSolverContext {
   def createZ3(
       parentLog: Option[SmtLog],
       config: SolverConfig): RecordingSolverContext = {
-    val context = new RecordingSolverContext(parentLog, config, new Z3SolverContext(config))
-    parentLog.foreach(_.replay(context.solverImpl))
-    context
+    create(parentLog, config.copy(smtSolver = SMTSolver.Z3))
   }
 }
 
