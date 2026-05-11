@@ -522,6 +522,24 @@ Checker has found an error
 EXITCODE: ERROR (12)
 ```
 
+### check Counter.tla with CVC5 and FunArrays reports no error
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --smt-encoding=funArrays --length=0 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
+```
+
+### check Counter.tla with CVC5 and FunArrays finds a counterexample
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --smt-encoding=funArrays --length=10 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker has found|EXITCODE"
+The outcome is: Error
+Checker has found an error
+EXITCODE: ERROR (12)
+```
+
 ### check Counter.tla with CVC5 configured from a file
 
 ```sh
