@@ -79,6 +79,8 @@ class Inliner(
           val newDecl = tracker.trackDecl { _ => theoremDecl.copy(body = newBody)(theoremDecl.typeTag) }(theoremDecl)
           (scope, decls :+ newDecl)
         case assumeDecl: TlaAssumeDecl =>
+          // Add the assumption to the scope, as the user may invoke a named assumption in an operator body.
+          // See https://github.com/apalache-mc/apalache/issues/3326
           val newBody = transform(scope)(assumeDecl.body)
           val newDecl = tracker.trackDecl { _ => assumeDecl.copy(body = newBody)(assumeDecl.typeTag) }(assumeDecl)
           (scope, decls :+ newDecl)
