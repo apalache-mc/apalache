@@ -367,5 +367,55 @@ class TestTlcConfigParserApalache extends AnyFunSuite {
     val config = TlcConfigParserApalache(text)
     assert(config.constAssignments == Map("N" -> ConfigModelValue("M")))
     assert(config.constReplacements == Map("A" -> "B"))
+    assert(config.checkDeadlock.contains(true))
+  }
+
+  test("CHECK_DEADLOCK FALSE is recorded") {
+    val text =
+      """
+        |INIT Init
+        |NEXT Next
+        |CHECK_DEADLOCK FALSE
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
+    assert(config.checkDeadlock.contains(false))
+  }
+
+  test("CHECK_DEADLOCK TRUE is recorded") {
+    val text =
+      """
+        |INIT Init
+        |NEXT Next
+        |CHECK_DEADLOCK TRUE
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(config.behaviorSpec == InitNextSpec("Init", "Next"))
+    assert(config.checkDeadlock.contains(true))
+  }
+
+  test("missing CHECK_DEADLOCK leaves option unset") {
+    val text =
+      """
+        |INIT Init
+        |NEXT Next
+      """.stripMargin
+
+    val config = TlcConfigParserApalache(text)
+    assert(config.checkDeadlock.isEmpty)
+  }
+
+  test("conflicting CHECK_DEADLOCK declarations fail") {
+    val text =
+      """
+        |INIT Init
+        |NEXT Next
+        |CHECK_DEADLOCK TRUE
+        |CHECK_DEADLOCK FALSE
+      """.stripMargin
+
+    assertThrows[TlcConfigParseError](TlcConfigParserApalache(text))
   }
 }
