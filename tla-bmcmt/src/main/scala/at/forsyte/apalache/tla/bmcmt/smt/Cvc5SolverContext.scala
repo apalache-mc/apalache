@@ -40,8 +40,14 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     new mutable.HashMap[Int, ListBuffer[(Term, CellT, Int)]]
   private val inCache: mutable.Map[(Int, Int), (Term, Int)] =
     new mutable.HashMap[(Int, Int), (Term, Int)]
+  private val constantArrayCache: mutable.Map[Sort, (Term, Int)] =
+    new mutable.HashMap[Sort, (Term, Int)]
+  private val cellDefaults: mutable.Map[String, (Term, Int)] =
+    new mutable.HashMap[String, (Term, Int)]
 
   solver.setOption("produce-models", "true")
+  // Required for formulas containing constant arrays, which cvc5 represents as STORE_ALL terms.
+  solver.setOption("arrays-exp", "true")
   config.cvc5Params.foreach { case (k, v) =>
     solver.setOption(k, v.toString)
   }
@@ -68,6 +74,8 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
       cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
       cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
       inCache.filterInPlace((_, value) => value._2 <= level)
+      constantArrayCache.filterInPlace((_, value) => value._2 <= level)
+      cellDefaults.filterInPlace((_, value) => value._2 <= level)
     }
   }
 
@@ -77,6 +85,8 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     cellCache.clear()
     inCache.clear()
     cellSorts.clear()
+    constantArrayCache.clear()
+    cellDefaults.clear()
   }
 
   override def declareCell(cell: ArenaCell): Unit = {
@@ -95,6 +105,24 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     log(s"(declare-const $cellName $cellSort)")
     val const = termManager.mkConst(cellSort, cellName)
     cellCache += (cell.id -> ListBuffer((const, cell.cellType, level)))
+
+    if (cellSort.isArray && !cell.isUnconstrained) {
+      val arrayInitializer =
+        if (cell.cellType.isInstanceOf[InfSetT]) {
+          termManager.mkTerm(Kind.EQUAL, const, getOrMkCellDefaultValue(cellSort, isInfiniteSet = true))
+        } else {
+          constantArrayCache.get(cellSort) match {
+            case Some((emptyArray, _)) =>
+              termManager.mkTerm(Kind.EQUAL, const, emptyArray)
+            case None =>
+              constantArrayCache += (cellSort -> (const, level))
+              termManager.mkTerm(Kind.EQUAL, const, getOrMkCellDefaultValue(cellSort))
+          }
+        }
+      log(s"(assert $arrayInitializer)")
+      solver.assertFormula(arrayInitializer)
+      _metrics = _metrics.addNSmtExprs(1)
+    }
 
     if (cell.id <= 1) {
       val expectedValue =
@@ -214,6 +242,60 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     }
   }
 
+  private def mkSelect(arrayId: Int, elemId: Int): Term = {
+    val array = cellCache(arrayId).head._1
+    val elem = cellCache(elemId).head._1
+
+    termManager.mkTerm(Kind.SELECT, array, elem)
+  }
+
+  private def mkNestedSelect(outerArrayId: Int, innerArrayId: Int, elemId: Int): Term = {
+    val outerArray = cellCache(outerArrayId).head._1
+    val innerSelect = mkSelect(innerArrayId, elemId)
+
+    termManager.mkTerm(Kind.SELECT, outerArray, innerSelect)
+  }
+
+  private def mkStore(arrayId: Int, indexId: Int, elemId: Int = 1): Term = {
+    val (array, arrayT, _) = cellCache(arrayId).head
+    val (index, indexT, _) = cellCache(indexId).head
+    val (elem, elemT, _) = cellCache(elemId).head
+
+    val oldEntry = s"${arrayT.signature}$arrayId[${indexT.signature}$indexId]"
+    val newEntry = s"${elemT.signature}$elemId"
+    log(s";; declare update of $oldEntry to $newEntry")
+
+    val updatedArray = updateArrayConst(arrayId)
+    val store = termManager.mkTerm(Kind.STORE, array, index, elem)
+
+    termManager.mkTerm(Kind.EQUAL, updatedArray, store)
+  }
+
+  private def mkUnchangedArray(arrayId: Int): Term = {
+    if (cellCache(arrayId).size > 1) {
+      val currentArray = cellCache(arrayId).head._1
+      val oldArray = cellCache(arrayId).tail.head._1
+      termManager.mkTerm(Kind.EQUAL, currentArray, oldArray)
+    } else if (cellCache(arrayId).size == 1) {
+      termManager.mkTrue()
+    } else {
+      throw new IllegalStateException(
+          s"SMT $id: Corrupted cellCache, $arrayId key is present, but it does not refer to any array.")
+    }
+  }
+
+  private def updateArrayConst(arrayId: Int): Term = {
+    val (array, arrayT, _) = cellCache(arrayId).head
+    val newSSAIndex = cellCache(arrayId).size
+    val updatedArrayName = array.toString.split("_").head + "_" + newSSAIndex
+    val arraySort = getOrMkCellSort(arrayT)
+    log(s"(declare-const $updatedArrayName $arraySort)")
+    val updatedArray = termManager.mkConst(arraySort, updatedArrayName)
+    cellCache += (arrayId -> cellCache(arrayId).prepend((updatedArray, arrayT, level)))
+    _metrics = _metrics.addNConsts(1)
+    updatedArray
+  }
+
   private def getOrMkCellSort(cellType: CellT): Sort = {
     val sig = "Cell_" + cellType.signature
     cellSorts.get(sig).map(_._1).getOrElse {
@@ -250,6 +332,41 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
       cellSorts += (sig -> (newSort, level))
       newSort
     }
+  }
+
+  private def getOrMkCellDefaultValue(cellSort: Sort, isInfiniteSet: Boolean = false): Term = {
+    val sig = "Cell_" + cellSort
+    cellDefaults.get(sig).map(_._1).getOrElse {
+      val newDefault =
+        if (cellSort.isBoolean) {
+          termManager.mkFalse()
+        } else if (cellSort.isInteger) {
+          termManager.mkInteger("0")
+        } else if (cellSort.isArray && isInfiniteSet) {
+          termManager.mkConstArray(cellSort, termManager.mkTrue())
+        } else if (
+            cellSort.isArray && encoding == SMTEncoding.Arrays && hasValueDefault(cellSort.getArrayElementSort)
+        ) {
+          // In FunArrays, function updates create STORE terms over these defaults. With constant-array defaults,
+          // cvc5 1.3.4 can throw during checkSat with "Array theory solver does not yet support write-chains
+          // connecting two different constant arrays", so FunArrays use a cached fresh array constant instead.
+          termManager.mkConstArray(cellSort, getOrMkCellDefaultValue(cellSort.getArrayElementSort))
+        } else {
+          log(s"(declare-const $sig $cellSort)")
+          termManager.mkConst(cellSort, sig)
+        }
+
+      cellDefaults += (sig -> (newDefault, level))
+      newDefault
+    }
+  }
+
+  private def hasValueDefault(cellSort: Sort): Boolean = {
+    // cvc5 mkConstArray requires the default element to be a value. Booleans, integers, and recursively constant
+    // arrays over value defaults are OK. Uninterpreted cell defaults like Cell_Cell_Si are not values, so we use a
+    // fresh unconstrained array constant instead. The default is still stable because it is cached by sort, but the
+    // encoding is weaker than Z3's fixed-value constant arrays: unstored entries are arbitrary.
+    cellSort.isBoolean || cellSort.isInteger || cellSort.isArray && hasValueDefault(cellSort.getArrayElementSort)
   }
 
   private def mkCellElemSort(cellType: CellT): Sort = {
@@ -349,44 +466,75 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
         val elemId = ArenaCell.idFromName(elemName)
         (getInPred(setId, elemId), 1)
 
-      case OperEx(ApalacheInternalOper.selectInSet, elemNameEx @ NameEx(_), setNameEx @ NameEx(_)) =>
+      case OperEx(ApalacheInternalOper.selectInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
             toExpr(tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx)))
           case SMTEncoding.Arrays =>
-            notImplemented("Array select is not implemented in the cvc5 backend yet.")
+            val setId = ArenaCell.idFromName(setName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkSelect(setId, elemId), 1)
         }
 
-      case OperEx(ApalacheInternalOper.selectInFun, elemNameEx @ NameEx(_), funNameEx @ NameEx(_)) =>
+      case OperEx(ApalacheInternalOper.selectInFun, elemNameEx @ NameEx(elemName), funNameEx @ NameEx(funName)) =>
         encoding match {
           case SMTEncoding.OOPSLA19 =>
             toExpr(tla.in(tla.unchecked(elemNameEx), tla.unchecked(funNameEx)))
           case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
-            notImplemented("Array select is not implemented in the cvc5 backend yet.")
+            val funId = ArenaCell.idFromName(funName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkSelect(funId, elemId), 1)
         }
 
-      case OperEx(ApalacheInternalOper.storeInSet, elemNameEx @ NameEx(_), setNameEx @ NameEx(_)) =>
+      case OperEx(ApalacheInternalOper.selectInSet,
+              OperEx(ApalacheInternalOper.selectInFun, NameEx(elemName), NameEx(funName)), NameEx(setName)) =>
+        encoding match {
+          case SMTEncoding.Arrays =>
+            val set2Id = ArenaCell.idFromName(setName)
+            val set1Id = ArenaCell.idFromName(funName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkNestedSelect(set2Id, set1Id, elemId), 1)
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
+
+      case OperEx(ApalacheInternalOper.storeInSet, elemNameEx @ NameEx(elemName), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
             toExpr(tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx)))
           case SMTEncoding.Arrays =>
-            notImplemented("Array store is not implemented in the cvc5 backend yet.")
+            val setId = ArenaCell.idFromName(setName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkStore(setId, elemId), 1)
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInSet, elemNameEx @ NameEx(_), setNameEx @ NameEx(_)) =>
+      case OperEx(ApalacheInternalOper.storeInSet, NameEx(elemName), NameEx(funName), NameEx(argName)) =>
+        encoding match {
+          case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+            val funId = ArenaCell.idFromName(funName)
+            val argId = ArenaCell.idFromName(argName)
+            val elemId = ArenaCell.idFromName(elemName)
+            (mkStore(funId, argId, elemId), 1)
+          case oddEncodingType =>
+            throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+        }
+
+      case OperEx(ApalacheInternalOper.storeNotInSet, elemNameEx @ NameEx(_), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.OOPSLA19 | SMTEncoding.FunArrays =>
             toExpr(tla.not(tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx))))
           case SMTEncoding.Arrays =>
-            notImplemented("Array store is not implemented in the cvc5 backend yet.")
+            val setId = ArenaCell.idFromName(setName)
+            (mkUnchangedArray(setId), 1)
         }
 
-      case OperEx(ApalacheInternalOper.storeNotInFun, elemNameEx @ NameEx(_), setNameEx @ NameEx(_)) =>
+      case OperEx(ApalacheInternalOper.storeNotInFun, elemNameEx @ NameEx(_), setNameEx @ NameEx(setName)) =>
         encoding match {
           case SMTEncoding.OOPSLA19 =>
             toExpr(tla.not(tla.in(tla.unchecked(elemNameEx), tla.unchecked(setNameEx))))
           case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
-            notImplemented("Array store is not implemented in the cvc5 backend yet.")
+            val setId = ArenaCell.idFromName(setName)
+            (mkUnchangedArray(setId), 1)
         }
 
       case OperEx(TlaSetOper.in, ValEx(TlaInt(_)), NameEx(_)) | OperEx(TlaSetOper.in, ValEx(TlaBool(_)), NameEx(_)) =>
@@ -471,9 +619,6 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     }
   }
 
-  private def notImplemented[A](message: String): A = {
-    throw new UnsupportedOperationException(message)
-  }
 }
 
 object Cvc5SolverContext {
