@@ -13,7 +13,7 @@ object SolverContextFactory {
         new Z3SolverContext(config)
 
       case SMTSolver.CVC5 =>
-        throw new UnsupportedOperationException("The cvc5 solver backend is not implemented yet.")
+        new Cvc5SolverContext(config)
     }
   }
 }
