@@ -248,7 +248,12 @@ jobs:
         run: make docker
       - name: Run integration tests in docker container
         run: |
-          nix develop -c bash -c "source ./test/.envrc && test/mdx-test.py --debug"
+          nix develop -c bash -c '
+            export HOME="$PWD/test/tla"
+            export JVM_ARGS="-Duser.home=/var/apalache"
+            source ./test/.envrc
+            test/mdx-test.py --debug
+          '
         env:
           USE_DOCKER: true
           APALACHE_TAG: latest
