@@ -20,13 +20,18 @@ import at.forsyte.apalache.tla.lir.values._
  *   - `set \in SUBSET TDS` ~> `TRUE`
  *   - `fun \in [TDS1 -> TDS2]` ~> `TRUE`
  *   - `fun \in [Dom -> TDS]` ~> `DOMAIN fun = Dom`
+ *   - `fun \in [Dom -> Nat]` ~> `DOMAIN fun = Dom /\ \A x \in Dom: fun[x] >= 0`
  *   - `tup \in TDS1 \X ... \X TDSn` ~> `TRUE`
  *   - `rec \in [name_1: TDS1, ..., name_n: TDSn]` ~> `TRUE`
  *
  * @author
  *   Thomas Pani
  */
-class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTransformer(tracker) {
+class SetMembershipSimplifier(
+    gen: UniqueNameGenerator,
+    tracker: TransformationTracker,
+    earlyPreKeramelizerMode: Boolean = false)
+    extends AbstractTransformer(tracker) {
   private val boolTag = Typed(BoolT1)
   private val intTag = Typed(IntT1)
   private def trueVal: ValEx = ValEx(TlaBool(true))(boolTag)
@@ -75,6 +80,72 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
     case _ => false
   }
 
+  private def getElemType(e: TlaEx): TlaType1 = {
+    e.typeTag match {
+      case Typed(SetT1(elemType)) => elemType
+      case t                      =>
+        throw new MalformedTlaError(s"Expected a set, found: $t", e)
+    }
+  }
+
+  private def domainEq(fun: TlaEx, domain: TlaEx): TlaEx =
+    OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, fun)(domain.typeTag), domain)(boolTag)
+
+  private def natConstraint(elem: TlaEx): TlaEx =
+    OperEx(TlaArithOper.ge, elem, ValEx(TlaInt(0))(intTag))(boolTag)
+
+  /**
+   * Try to reduce a type-invariant membership to cheaper constraints. This deliberately stays conservative: it only
+   * descends into function codomains when the codomain membership itself can be reduced.
+   */
+  private def simplifyMembership(elem: TlaEx, set: TlaEx): Option[TlaEx] = {
+    set match {
+      // x \in TDS  ~>  TRUE
+      case set if isTypeDefining(set) => Some(trueVal)
+
+      // x \in Nat  ~>  x >= 0
+      case ValEx(TlaNatSet) => Some(natConstraint(elem))
+
+      // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom
+      case OperEx(TlaSetOper.funSet, domain, codomain) if isTypeDefining(codomain) =>
+        Some(domainEq(elem, domain))
+
+      // fun \in [Dom -> Range]  ~>  DOMAIN fun = Dom /\ \A x \in Dom: fun[x] \in Range,
+      // if the range check can itself be reduced by this simplifier.
+      case OperEx(TlaSetOper.funSet, domain, codomain) =>
+        val domElemType = getElemType(domain)
+        val codomainElemType = getElemType(codomain)
+        val domElem = NameEx(gen.newName())(Typed(domElemType))
+        val app = OperEx(TlaFunOper.app, elem, domElem)(Typed(codomainElemType))
+        simplifyMembership(app, codomain).map { rangeConstraint =>
+          OperEx(TlaBoolOper.and, domainEq(elem, domain),
+              OperEx(TlaBoolOper.forall, domElem, domain, rangeConstraint)(boolTag))(boolTag)
+        }
+
+      case _ => None
+    }
+  }
+
+  private def isFunctionSetWithReducibleNonTypeDefRange(set: TlaEx): Boolean = set match {
+    case OperEx(TlaSetOper.funSet, _, codomain) if !isTypeDefining(codomain) =>
+      codomain match {
+        case ValEx(TlaNatSet)                         => true
+        case nested @ OperEx(TlaSetOper.funSet, _, _) => isFunctionSetWithReducibleNonTypeDefRange(nested)
+        case _                                        => false
+      }
+
+    case _ => false
+  }
+
+  private def simplifyBeforeKeramelizer(elem: TlaEx, set: TlaEx): Option[TlaEx] = set match {
+    // Keep the early pass narrow. In particular, do not simplify assignments such as `b' \in BOOLEAN`.
+    case OperEx(TlaSetOper.funSet, _, codomain @ OperEx(TlaSetOper.funSet, _, _))
+        if isFunctionSetWithReducibleNonTypeDefRange(codomain) =>
+      simplifyMembership(elem, set)
+
+    case _ => None
+  }
+
   /**
    * Simplifies expressions commonly found in `TypeOK`, assuming they are well-typed.
    *
@@ -83,25 +154,22 @@ class SetMembershipSimplifier(tracker: TransformationTracker) extends AbstractTr
    */
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
     case ex @ OperEx(TlaSetOper.in, name, set) =>
-      set match {
-        // x \in TDS  ~>  TRUE
-        case set if isTypeDefining(set) => trueVal
-
-        // x \in Nat  ~>  x >= 0
-        case ValEx(TlaNatSet) => OperEx(TlaArithOper.ge, name, ValEx(TlaInt(0))(intTag))(boolTag)
-
-        // fun \in [Dom -> TDS]  ~>  DOMAIN fun = Dom    (fun \in [TDS1 -> TDS2] is handled above)
-        case OperEx(TlaSetOper.funSet, domain, set2) if isTypeDefining(set2) =>
-          OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, name)(domain.typeTag), domain)(boolTag)
-
-        // otherwise, return `ex` unchanged
-        case _ => ex
-      }
+      val simplified =
+        if (earlyPreKeramelizerMode) {
+          simplifyBeforeKeramelizer(name, set)
+        } else {
+          simplifyMembership(name, set)
+        }
+      simplified.getOrElse(ex)
     // return non-set membership expressions unchanged
     case ex => ex
   }
 }
 
 object SetMembershipSimplifier {
-  def apply(tracker: TransformationTracker): SetMembershipSimplifier = new SetMembershipSimplifier(tracker)
+  def apply(gen: UniqueNameGenerator, tracker: TransformationTracker): SetMembershipSimplifier =
+    new SetMembershipSimplifier(gen, tracker)
+
+  def beforeKeramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker): SetMembershipSimplifier =
+    new SetMembershipSimplifier(gen, tracker, earlyPreKeramelizerMode = true)
 }
