@@ -297,7 +297,8 @@ class TestPrinter extends AnyFunSuite {
     assertPrint(tla.tail(s), "Tail(s)")
     assertPrint(tla.len(s), "Len(s)")
     assertPrint(tla.subseq(s, tla.int(1), tla.int(2)), "Sequences!SubSeq(s, 1, 2)")
-    assertPrint(OperEx(TlaSeqOper.subseq, tla.concat(S, T), tla.int(1), tla.len(S)), "Sequences!SubSeq(S ∘ T, 1, Len(S))")
+    assertPrint(OperEx(TlaSeqOper.subseq, tla.concat(S, T), tla.int(1), tla.len(S)),
+        "Sequences!SubSeq(S ∘ T, 1, Len(S))")
   }
 
   test("Test UTF8: TlaSetOper") {
