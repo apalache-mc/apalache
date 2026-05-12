@@ -42,7 +42,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     new mutable.HashMap[(Int, Int), (Term, Int)]
 
   solver.setOption("produce-models", "true")
-  config.cvc5Params.foreach { case (k, v) =>
+  config.solverParams.foreach { case (k, v) =>
     solver.setOption(k, v.toString)
   }
 

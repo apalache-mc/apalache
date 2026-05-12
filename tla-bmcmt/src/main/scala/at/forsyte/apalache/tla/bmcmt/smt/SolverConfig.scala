@@ -19,10 +19,8 @@ import at.forsyte.apalache.infra.passes.options.SMTSolver
  *   The interval in seconds at which to print Z3 statistics.
  * @param smtSolver
  *   The SMT solver backend to be used.
- * @param cvc5Params
- *   The parameters to be passed to cvc5, which must contain proper keys and values.
- * @param z3Params
- *   The parameters to be passed to z3, which must contain proper keys and values.
+ * @param solverParams
+ *   The parameters to be passed to the selected SMT solver, which must contain proper keys and values.
  *
  * @author
  *   Igor Konnov, Rodrigo Otoni
@@ -34,8 +32,7 @@ sealed case class SolverConfig(
     smtEncoding: SMTEncoding,
     z3StatsSec: Int,
     smtSolver: SMTSolver = SMTSolver.Z3,
-    cvc5Params: Map[String, Object] = Map(),
-    z3Params: Map[String, Object] = Map()) {}
+    solverParams: Map[String, Object] = Map()) {}
 
 object SolverConfig {
 
@@ -50,7 +47,6 @@ object SolverConfig {
         smtEncoding = SMTEncoding.OOPSLA19,
         z3StatsSec = 60,
         smtSolver = SMTSolver.Z3,
-        cvc5Params = Map(),
-        z3Params = Map(),
+        solverParams = Map(),
     )
 }

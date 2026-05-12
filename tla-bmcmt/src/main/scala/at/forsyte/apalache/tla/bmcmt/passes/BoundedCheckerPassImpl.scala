@@ -103,16 +103,14 @@ class BoundedCheckerPassImpl @Inject() (
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val smtStatsSec =
       tuning.getOrElse("smt.statsSec", SolverConfig.default.z3StatsSec.toString).toInt
-    // Parse the tuning parameters that are relevant to Z3.
+    // Parse the tuning parameters that are relevant to the selected SMT solver.
     // Currently, `tuning` may contain more configuration options (added by some passes) than we parse in
     // `FineTuningParser`.
-    val z3Parameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith("z3."))) match {
-      case Right(params) => params.map { case (k, v) => (k.substring("z3.".length), v) }
-      case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
-    }
-    val cvc5Parameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith("cvc5."))) match {
-      case Right(params) => params.map { case (k, v) => (k.substring("cvc5.".length), v) }
-      case Left(error)   => throw new PassOptionException(s"Error in tuning parameters: $error")
+    val solverName = options.checker.smtSolver.toString
+    val solverNamespace = s"${solverName}."
+    val solverParameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith(solverNamespace))) match {
+      case Right(params) => params.map { case (k, v) => (k.substring(solverNamespace.length), v) }
+      case Left(error)   => throw new PassOptionException(s"Error in $solverName tuning parameters: $error")
     }
     val solverConfig =
       SolverConfig(
@@ -122,8 +120,7 @@ class BoundedCheckerPassImpl @Inject() (
           smtEncoding,
           smtStatsSec,
           options.checker.smtSolver,
-          cvc5Parameters,
-          z3Parameters,
+          solverParameters,
       )
 
     val result = options.checker.algo match {
