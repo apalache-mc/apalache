@@ -54,6 +54,17 @@ class TestSanyImporter extends SanyImporterTestBase {
     assert("justASimpleTest" == rootName)
   }
 
+  test("blank file") {
+    val tempDir = Files.createTempDirectory("sanyimp").toFile
+    val temp = new File(tempDir, "blank.tla")
+    Files.createFile(temp.toPath)
+
+    val exception = intercept[SanyImporterException] {
+      sanyImporter.loadFromFile(temp)
+    }
+    assert(exception.getMessage == "No root module defined in file")
+  }
+
   test("one variable") {
     val text =
       """---- MODULE onevar ----

@@ -67,6 +67,10 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
    *   the pair (the root module name, a map of modules)
    */
   def loadFromFile(file: File): (String, Map[String, TlaModule]) = {
+    if (Files.size(file.toPath) == 0) {
+      throw new SanyImporterException("No root module defined in file")
+    }
+
     // create a string buffer to write SANY's error messages
     // use.toString() to retrieve the error messages
     val errBuf = new StringWriter()
