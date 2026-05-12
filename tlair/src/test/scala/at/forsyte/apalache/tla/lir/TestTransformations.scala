@@ -13,7 +13,7 @@ import org.scalatest.Outcome
 import java.io.{File, FileOutputStream, PrintStream}
 
 @RunWith(classOf[JUnitRunner])
-class TestTransformations extends AnyFunSuite with TestingPredefs {
+class TestTransformations extends AnyFunSuite {
 
   override protected def withFixture(test: NoArgTest): Outcome = {
     // Tmp file to capture the noisy stdout from these tests
@@ -39,10 +39,14 @@ class TestTransformations extends AnyFunSuite with TestingPredefs {
     )
     val transformation = decorateWithPrime(vars, new IdleTracker())
 
-    val pa1 = n_x -> prime(n_x).untyped()
-    val pa2 = n_y -> n_y
-    val pa3 = prime(n_x).untyped() -> prime(n_x).untyped()
-    val pa4 = and(n_x, n_y, prime(n_a)).untyped() -> and(prime(n_x), n_y, prime(n_a)).untyped()
+    val a = tla.name("a")
+    val x = tla.name("x")
+    val y = tla.name("y")
+
+    val pa1: (TlaEx, TlaEx) = x.untyped() -> prime(x).untyped()
+    val pa2: (TlaEx, TlaEx) = y.untyped() -> y.untyped()
+    val pa3 = prime(x).untyped() -> prime(x).untyped()
+    val pa4 = and(x, y, prime(a)).untyped() -> and(prime(x), y, prime(a)).untyped()
 
     val expected = Seq(
         pa1,
@@ -61,42 +65,55 @@ class TestTransformations extends AnyFunSuite with TestingPredefs {
   test("Test Flatten") {
     val transformation = Flatten(new IdleTracker())
 
-    val pa1 = n_x -> n_x
-    val pa2 = and(n_x, and(n_y, n_z)).untyped() -> and(n_x, n_y, n_z).untyped()
-    val pa3 = or(n_x, or(n_y, n_z)).untyped() -> or(n_x, n_y, n_z).untyped()
-    val pa4 = or(n_x, and(n_y, n_z)).untyped() -> or(n_x, and(n_y, n_z)).untyped()
+    val A = tla.name("A")
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val c = tla.name("c")
+    val d = tla.name("d")
+    val e = tla.name("e")
+    val f = tla.name("f")
+    val g = tla.name("g")
+    val h = NameEx("h")
+    val x = tla.name("x")
+    val y = tla.name("y")
+    val z = tla.name("z")
+
+    val pa1: (TlaEx, TlaEx) = x.untyped() -> x.untyped()
+    val pa2 = and(x, and(y, z)).untyped() -> and(x, y, z).untyped()
+    val pa3 = or(x, or(y, z)).untyped() -> or(x, y, z).untyped()
+    val pa4 = or(x, and(y, z)).untyped() -> or(x, and(y, z)).untyped()
     val pa5 = and(
         and(
             or(
-                or(n_a, n_b),
-                or(n_c, n_d),
+                or(a, b),
+                or(c, d),
             )
         ),
         and(
             or(
-                or(n_e, n_f),
-                or(n_g, NameEx("h")),
+                or(e, f),
+                or(g, h),
             )
         ),
     ).untyped() -> and(
-        or(n_a, n_b, n_c, n_d),
-        or(n_e, n_f, n_g, NameEx("h")),
+        or(a, b, c, d),
+        or(e, f, g, h),
     ).untyped()
-    val pa6 = enumSet(or(n_x, and(n_y, n_z))).untyped() -> enumSet(or(n_x, and(n_y, n_z))).untyped()
+    val pa6 = enumSet(or(x, and(y, z))).untyped() -> enumSet(or(x, and(y, z))).untyped()
     val pa7 = letIn(
-        appOp(n_A),
+        appOp(A),
         declOp("A", int(1)).untypedOperDecl(),
     ).untyped() -> letIn(
-        appOp(n_A),
+        appOp(A),
         declOp("A", int(1)).untypedOperDecl(),
     ).untyped()
 
     val pa8 = letIn(
-        appOp(n_A),
-        declOp("A", or(n_x, or(n_y, n_z))).untypedOperDecl(),
+        appOp(A),
+        declOp("A", or(x, or(y, z))).untypedOperDecl(),
     ).untyped() -> letIn(
-        appOp(n_A),
-        declOp("A", or(n_x, n_y, n_z)).untypedOperDecl(),
+        appOp(A),
+        declOp("A", or(x, y, z)).untypedOperDecl(),
     ).untyped()
 
     val expected = Seq(
