@@ -75,8 +75,8 @@ definition against the free variables of the surrounding environment, rather
 than by using the level directly:
 
 $$
-\operatorname{generalize}(E, t) =
-\forall(\operatorname{fv}(t) \setminus \operatorname{fv}(E)).\ t
+\mathrm{generalize}(E, t) =
+\forall(\mathrm{fv}(t) \setminus \mathrm{fv}(E)).\ t
 $$
 
 The level still matters operationally because it prevents accidental escape of
@@ -139,8 +139,8 @@ structures, unification proceeds recursively.
 The critical invariant is:
 
 $$
-\text{after } \operatorname{unify}(a,b),\quad
-\operatorname{exportType}(a) = \operatorname{exportType}(b)
+\mathrm{after}\ \mathrm{unify}(a,b),\quad
+\mathrm{exportType}(a) = \mathrm{exportType}(b)
 $$
 
 modulo canonical renaming of type variables.
