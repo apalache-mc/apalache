@@ -347,8 +347,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin exists operator application using tuple-bound names") {
-    assert(convert(Q.app("exists", Q.intPairSet, Q.int2ToBool)(
-            QuintBoolT())) == "∃(⟨n, acc⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: TRUE")
+    assert(convert(Q.app("exists", Q.intPairSet, Q.int2ToBool)(QuintBoolT())) == "∃(⟨n, acc⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: TRUE")
   }
 
   test("can convert builtin exists operator when predicate is supplied by name") {
@@ -367,8 +366,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin forall operator application using tuple-bound names") {
-    assert(convert(Q.app("forall", Q.intPairSet, Q.int2ToBool)(
-            QuintBoolT())) == "∀(⟨n, acc⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: TRUE")
+    assert(convert(Q.app("forall", Q.intPairSet, Q.int2ToBool)(QuintBoolT())) == "∀(⟨n, acc⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: TRUE")
   }
 
   test("can convert builtin forall operator when predicate is supplied by name") {
@@ -677,8 +675,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin keys operator") {
-    assert(convert(Q.app("keys", Q.intMap)(
-            QuintSetT(QuintIntT()))) == "DOMAIN Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩})")
+    assert(convert(Q.app("keys", Q.intMap)(QuintSetT(QuintIntT()))) == "DOMAIN Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩})")
   }
 
   test("can convert builtin setToMap operator") {
