@@ -30,6 +30,8 @@ object Dependencies {
     val cvc5LinuxX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("linux-x86_64")
     val cvc5MacosAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("osx-aarch_64")
     val cvc5MacosX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("osx-x86_64")
+    val cvc5WindowsAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("windows-aarch_64")
+    val cvc5WindowsX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("windows-x86_64")
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
