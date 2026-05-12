@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
@@ -10,9 +11,9 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.types.{tlaU => tla}
-import com.typesafe.scalalogging.LazyLogging
 import _root_.io.github.cvc5.{Kind, Result, Solver, Sort, Term, TermManager}
 
+import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -20,8 +21,9 @@ import scala.collection.mutable.ListBuffer
 /**
  * A cvc5-backed implementation of [[SolverContext]].
  */
-class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
+class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   private val id: Long = Cvc5SolverContext.createId()
+  private val logWriters: Iterable[PrintWriter] = initLogs()
 
   private val termManager = new TermManager()
   private val solver = new Solver(termManager)
@@ -30,6 +32,11 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
   private def encoding: SMTEncoding = config.smtEncoding
+  private def smtLogic: String = encoding match {
+    case SMTEncoding.OOPSLA19  => "QF_UFNIA"
+    case SMTEncoding.Arrays    => "QF_AUFNIA"
+    case SMTEncoding.FunArrays => "QF_AUFNIA"
+  }
 
   private var level: Int = 0
   private var maxCellIdPerContext = List(-1)
@@ -41,6 +48,8 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
   private val inCache: mutable.Map[(Int, Int), (Term, Int)] =
     new mutable.HashMap[(Int, Int), (Term, Int)]
 
+  solver.setLogic(smtLogic)
+  log(s"(set-logic $smtLogic)")
   solver.setOption("produce-models", "true")
   config.solverParams.foreach { case (k, v) =>
     solver.setOption(k, v.toString)
@@ -74,6 +83,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
   override def dispose(): Unit = {
     solver.deletePointer()
     termManager.deletePointer()
+    closeLogs()
     cellCache.clear()
     inCache.clear()
     cellSorts.clear()
@@ -159,14 +169,35 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
 
   override def log(message: => String): Unit = {
     if (config.debug) {
-      logger.debug(message)
+      logWriters.foreach(_.println(message))
     }
   }
 
+  private def initLogs(): Iterable[PrintWriter] = {
+    val filePart = s"log$id.smt"
+    val writers =
+      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+
+    if (!config.debug) {
+      writers.foreach { writer =>
+        writer.println("Logging is disabled (Cvc5SolverContext.debug = false). Activate with --debug.")
+        writer.flush()
+      }
+    }
+
+    writers
+  }
+
+  private def flushLogs(): Unit = logWriters.foreach(_.flush())
+
+  private def closeLogs(): Unit = logWriters.foreach(_.close())
+
   override def sat(): Boolean = {
     log("(check-sat)")
+    flushLogs()
     val result = solver.checkSat()
     log(s";; sat = $result")
+    flushLogs()
     resultToBoolean(result).getOrElse {
       val msg = s"SMT $id: cvc5 reports UNKNOWN. Maybe, your specification is outside the supported logic."
       throw new SmtEncodingException(msg, NullEx)
@@ -178,8 +209,13 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
       Some(sat())
     } else {
       solver.setOption("tlimit-per", (timeoutSec * 1000).toString)
+      log(s";; timeout = $timeoutSec")
+      log("(check-sat)")
+      flushLogs()
       val result = solver.checkSat()
       solver.setOption("tlimit-per", "0")
+      log(s";; sat = $result")
+      flushLogs()
       resultToBoolean(result)
     }
   }
