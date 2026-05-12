@@ -29,13 +29,6 @@ class OpApplTranslator(
 
   private case class BTuple(params: List[FormalParamNode], bound: ExprNode) extends BExp
 
-  // we use the following case classes to represent the bound variables without range in many quantified expressions
-  sealed abstract private class UExp
-
-  private case class UVar(param: FormalParamNode) extends UExp
-
-  private case class UTuple(params: List[FormalParamNode]) extends UExp
-
   def translate(node: OpApplNode): TlaEx = {
     if (node.getArgs.length == 0) {
       if (node.getOperator.getKind == ASTConstants.BuiltInKind) {
@@ -284,6 +277,14 @@ class OpApplTranslator(
 
       case ASTConstants.UserDefinedOpKind =>
         translateUserOperator(node)
+
+      case ASTConstants.ThmOrAssumpDefKind =>
+        translateUserOperator(node)
+
+      case _ =>
+        throw new SanyImporterException(
+            s"${oper.getLocation}: Unexpected constant operator: $oper, kind: ${oper.getKind}"
+        )
     }
   }
 

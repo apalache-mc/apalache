@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 
-trait TestSymbStateRewriterApalache extends RewriterBase with TestingPredefs {
+trait TestSymbStateRewriterApalache extends RewriterBase {
   private val parser = DefaultType1Parser
 
   private def pair(i: Int, j: Int): TlaEx = tuple(int(i), int(j)).as(parser("<<Int, Int>>"))

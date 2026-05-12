@@ -20,7 +20,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.17"
+ThisBuild / scalaVersion := "2.13.18"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
@@ -409,7 +409,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:17")
+    from("eclipse-temurin:17-jdk-noble")
 
     workDir(dwd)
 

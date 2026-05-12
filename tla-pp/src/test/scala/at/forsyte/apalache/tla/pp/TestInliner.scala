@@ -266,6 +266,43 @@ class TestInliner extends AnyFunSuite with BeforeAndAfterEach with ScalaCheckPro
     assert(actualBody == ABody)
   }
 
+  test("Named ASSUME is visible when inlining operator bodies") {
+    val assumptionBody =
+      tla.eql(tla.int(1).as(IntT1), tla.int(1).as(IntT1)).as(BoolT1)
+
+    val assumeDecl =
+      TlaAssumeDecl(Some("NamedAssumption"), assumptionBody)(Typed(BoolT1))
+
+    val assumptionType = OperT1(Seq.empty, BoolT1)
+
+    val initBody =
+      tla
+        .and(
+            tla.eql(tla.name("x").as(IntT1), tla.int(0).as(IntT1)).as(BoolT1),
+            tla.appOp(tla.name("NamedAssumption").as(assumptionType)).as(BoolT1),
+        )
+        .as(BoolT1)
+
+    val initDecl =
+      TlaOperDecl("Init", List.empty, initBody)(Typed(OperT1(Seq.empty, BoolT1)))
+
+    val module = mkModule(assumeDecl, initDecl)
+
+    val txModule = inlinerKeepNullary.transformModule(module)
+
+    val actualBody = txModule.declarations(1).asInstanceOf[TlaOperDecl].body
+
+    val expectedBody =
+      tla
+        .and(
+            tla.eql(tla.name("x").as(IntT1), tla.int(0).as(IntT1)).as(BoolT1),
+            assumptionBody,
+        )
+        .as(BoolT1)
+
+    assert(actualBody == expectedBody)
+  }
+
   test("Inlining works correctly on nonbasic arguments:  B == e, A(x) == x, A(B()) ~~> e") {
     val BBody = tla.int(0).as(IntT1)
     val BType = OperT1(Seq.empty, IntT1)
