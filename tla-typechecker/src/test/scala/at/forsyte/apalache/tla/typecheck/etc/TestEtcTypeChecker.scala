@@ -720,6 +720,43 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
     }
   }
 
+  test("record unification joins non-overlapping fields") {
+    val app = mkUniqApp(Seq(parser("(a, a) => a")), mkUniqConst(parser("[x: Int]")),
+        mkUniqConst(parser("[y: Bool]")))
+
+    val computed = checker.compute(new DefaultTypeCheckerListener(), TypeContext.empty, app)
+    assert(computed.contains(parser("[x: Int, y: Bool]")))
+  }
+
+  test("sparse tuple unification rejects indices outside a concrete tuple") {
+    val app = mkUniqApp(Seq(parser("(a, a) => a")), mkUniqConst(parser("<| 3: Int |>")),
+        mkUniqConst(parser("<<Int, Int>>")))
+
+    val computed = checker.compute(new DefaultTypeCheckerListener(), TypeContext.empty, app)
+    assert(computed.isEmpty)
+  }
+
+  test("overload probes do not commit speculative constraints") {
+    val unresolved = mkUniqConst(parser("b"))
+    val inner = mkUniqApp(Seq(parser("a => a"), parser("(Int, Int) => Int")), unresolved)
+    val outer = mkUniqApp(Seq(parser("Int => Int"), parser("Bool => Bool")), inner)
+
+    val computed = checker.compute(new DefaultTypeCheckerListener(), TypeContext.empty, outer)
+    assert(computed.isEmpty)
+  }
+
+  test("let-local resolution does not fail enclosing overloads too early") {
+    val tupleSig = OperT1(Seq(IntT1, IntT1), TupT1(IntT1, IntT1))
+    val seqSig = OperT1(Seq(IntT1, IntT1), SeqT1(IntT1))
+    val ambiguousTuple = mkUniqApp(Seq(tupleSig, seqSig), mkUniqConst(IntT1), mkUniqConst(IntT1))
+    val letArg = mkUniqLet("F", mkUniqAbs(mkUniqConst(BoolT1)), mkUniqConst(BoolT1))
+    val parentSig = OperT1(Seq(TupT1(IntT1, IntT1), BoolT1), BoolT1)
+    val parent = mkUniqApp(Seq(parentSig), ambiguousTuple, letArg)
+
+    val computed = checker.compute(new DefaultTypeCheckerListener(), TypeContext.empty, parent)
+    assert(computed.contains(BoolT1))
+  }
+
   test("CHOOSE") {
     // (((a => Bool) => a) (λ x ∈ Set(Int). x = Int))
     val xRef = mkUniqName("x")

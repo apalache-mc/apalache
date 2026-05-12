@@ -5,6 +5,7 @@ import at.forsyte.apalache.tla.typecheck._
 import at.forsyte.apalache.tla.typecheck.etc.{
   EtcAbs, EtcApp, EtcAppByName, EtcBuilder, EtcConst, EtcExpr, EtcLet, EtcName, EtcRef, EtcTypeDecl, ExactRef,
 }
+import at.forsyte.apalache.tla.types.Substitution
 import at.forsyte.apalache.tla.types.TypeUnifier
 import at.forsyte.apalache.tla.types.TypeVarPool
 
@@ -45,8 +46,6 @@ import scala.collection.mutable
  * @param inferPolytypes
  *   whether LET-polymorphism is allowed to infer polymorphic user definitions
  *
- * @author
- *   Codex + GPT 5.4 Medium
  */
 class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) extends TypeChecker with EtcBuilder {
   import EtcTypeCheckerFast._
@@ -56,7 +55,6 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   private val pendingApps = mutable.ArrayBuffer[PendingApp]()
   private val watchedTypes = mutable.LinkedHashMap[UID, (ExactRef, () => TlaType1)]()
   private val protectedTypes = mutable.HashMap[UID, TlaType1]()
-  private var tempVarNo = -1
 
   /** Type-check the translated ETC expression and report all discovered monotypes to the listener. */
   override def compute(typeListener: TypeCheckerListener, rootCtx: TypeContext, rootEx: EtcExpr): Option[TlaType1] = {
@@ -65,7 +63,6 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     pendingApps.clear()
     watchedTypes.clear()
     protectedTypes.clear()
-    tempVarNo = -1
     try {
       val rootType = infer(initialEnv(rootCtx), level = 0, rootEx, expected = None)
       watchType(rootEx.sourceRef, rootType)
@@ -149,6 +146,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
 
       case letEx @ EtcLet(name, defEx @ EtcAbs(defBody, binders @ _*), scopedEx) =>
         try {
+          val pendingBase = pendingApps.length
           val operScheme = annotationToOperScheme(env, level, name, binders.length)
           val preEnv = env.withBinding(name, operScheme)
           val (extEnv, paramTypes) = translateBinders(preEnv, level + 1, binders.toList)
@@ -185,7 +183,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
               throw new UnwindException
           }
 
-          resolvePendingApps(failOnAmbiguity = true)
+          resolvePendingApps(failOnAmbiguity = true, fromIndex = pendingBase)
           val principalDefType = exportType(defType)
           val generalized = generalizeAgainstEnv(env, defType)
           if (!inferPolytypes && generalized.quantified.nonEmpty) {
@@ -267,7 +265,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       watchType(appEx.sourceRef, resType)
       resType
     } else {
-      val compatible = compatibleOverloads(operTypes, argTypes, resType, level)
+      val compatible = compatibleOverloads(operTypes, argTypes, resType)
       compatible match {
         case Seq(sig) =>
           commitResolvedOverload(sig, argTypes, resType, level, args, operatorNameRef, appEx)
@@ -462,7 +460,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     convert(tt, mutable.HashMap.empty)
   }
 
-  /** Clone an external type into temporary inference variables for local overload probing. */
+  /** Clone an external type into live fresh inference variables for committing overload resolution. */
   private def freshExternalType(tt: TlaType1, level: Int): FType = {
     def convert(tp: TlaType1, cache: mutable.HashMap[Int, TVar]): FType = {
       tp match {
@@ -472,7 +470,7 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         case StrT1      => FStr
         case c: ConstT1 => FConst(c.name)
         case VarT1(no)  =>
-          cache.getOrElseUpdate(no, freshTempVar(level, Some(no)))
+          cache.getOrElseUpdate(no, freshVar(level))
         case SetT1(elem) =>
           FSet(convert(elem, cache))
         case SeqT1(elem) =>
@@ -649,13 +647,6 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     variable
   }
 
-  /** Allocate a fresh temporary variable used for local probes that must not escape directly. */
-  private def freshTempVar(level: Int, canonicalPositiveId: Option[Int]): TVar = {
-    val id = tempVarNo
-    tempVarNo -= 1
-    TVar(id, level, None, canonicalPositiveId)
-  }
-
   /** Follow variable links to the current representative and compress the traversed path. */
   private def prune(tp: FType): FType = {
     tp match {
@@ -672,42 +663,15 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
     }
   }
 
-  /** Capture the mutable variable state so local overload checks can be rolled back cheaply. */
-  private def snapshot(): Map[Int, TVarState] = {
-    globalVars.iterator.map { case (id, tv) => id -> TVarState(tv.link, tv.level, tv.canonicalPositiveId) }.toMap
-  }
-
-  /** Restore a previously captured mutable variable state after a speculative probe. */
-  private def rollback(snapshot: Map[Int, TVarState]): Unit = {
-    globalVars.foreach { case (id, tv) =>
-      snapshot.get(id).foreach { saved =>
-        tv.link = saved.link
-        tv.level = saved.level
-        tv.canonicalPositiveId = saved.canonicalPositiveId
-      }
-    }
-  }
-
   /** Filter overloaded signatures to the candidates that are currently consistent with the live state. */
   private def compatibleOverloads(
       signatures: Seq[TlaType1],
       argTypes: List[FType],
-      resType: FType,
-      level: Int): Seq[TlaType1] = {
+      resType: FType): Seq[TlaType1] = {
+    val applied = exportType(FOper(argTypes, resType))
     signatures.filter { sig =>
-      val checkpoint = snapshot()
-      val localSig = freshExternalType(sig, level)
-      val localApplied = FOper(argTypes.map(cloneType(_, mutable.HashMap.empty, preserveShared = true)),
-          cloneType(resType, mutable.HashMap.empty, preserveShared = true))
-      val ok =
-        try {
-          unify(localSig, localApplied)
-          true
-        } catch {
-          case _: TypeMismatchException => false
-        }
-      rollback(checkpoint)
-      ok
+      val maxVar = (sig.usedNames ++ applied.usedNames).foldLeft(0)(Math.max)
+      new TypeUnifier(new TypeVarPool(maxVar + 1)).unify(Substitution.empty, sig, applied).isDefined
     }
   }
 
@@ -739,13 +703,15 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
   }
 
   /** Revisit all postponed overloaded applications until they stabilize or become errors. */
-  private def resolvePendingApps(failOnAmbiguity: Boolean): Unit = {
+  private def resolvePendingApps(failOnAmbiguity: Boolean, fromIndex: Int = 0): Unit = {
     var progress = true
+    val prefixSize = math.min(fromIndex, pendingApps.length)
     while (progress) {
       progress = false
+      val prefix = pendingApps.take(prefixSize)
       val unresolved = mutable.ArrayBuffer[PendingApp]()
-      pendingApps.foreach { pending =>
-        val compatible = compatibleOverloads(pending.signatures, pending.argTypes, pending.resType, pending.level)
+      pendingApps.drop(prefixSize).foreach { pending =>
+        val compatible = compatibleOverloads(pending.signatures, pending.argTypes, pending.resType)
         compatible match {
           case Seq(sig) =>
             commitResolvedOverload(
@@ -772,11 +738,13 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         }
       }
       pendingApps.clear()
+      pendingApps ++= prefix
       pendingApps ++= unresolved
     }
 
-    if (failOnAmbiguity && pendingApps.nonEmpty) {
-      pendingApps.foreach { pending =>
+    val remaining = pendingApps.drop(prefixSize)
+    if (failOnAmbiguity && remaining.nonEmpty) {
+      remaining.foreach { pending =>
         val evalArgTypes = pending.argTypes.map(exportType)
         val argOrArgs = pluralArgs(pending.argTypes.length)
         val sepSigs = String.join(" or ", pending.signatures.map(_.toString): _*)
@@ -811,23 +779,41 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
         unify(lres, rres)
       case (FTup(lelems), FTup(relems)) if lelems.length == relems.length =>
         lelems.zip(relems).foreach { case (l, r) => unify(l, r) }
-      case (FSparseTup(lfields), FSparseTup(rfields)) =>
+      case (l @ FSparseTup(lfields), r @ FSparseTup(rfields)) =>
         val jointKeys = lfields.keySet ++ rfields.keySet
-        jointKeys.foreach {
-          case key if lfields.contains(key) && rfields.contains(key) => unify(lfields(key), rfields(key))
-          case _                                                     =>
+        val merged = SortedMap(jointKeys.toSeq.map {
+          case key if lfields.contains(key) && rfields.contains(key) =>
+            unify(lfields(key), rfields(key))
+            key -> lfields(key)
+          case key if lfields.contains(key) =>
+            key -> lfields(key)
+          case key =>
+            key -> rfields(key)
+        }: _*)
+        l.fields = merged
+        r.fields = merged
+      case (l @ FSparseTup(lfields), FTup(relems)) =>
+        if (lfields.keySet.exists(i => i < 1 || i > relems.length)) {
+          throw new TypeMismatchException
+        } else {
+          val total = FSparseTup(SortedMap(relems.zipWithIndex.map { case (t, i) => (i + 1) -> t }: _*))
+          unify(l, total)
         }
-      case (l @ FSparseTup(_), FTup(relems)) =>
-        val total = FSparseTup(SortedMap(relems.zipWithIndex.map { case (t, i) => (i + 1) -> t }: _*))
-        unify(l, total)
       case (FTup(_), r @ FSparseTup(_)) =>
         unify(r, left)
-      case (FRec(lfields), FRec(rfields)) =>
+      case (l @ FRec(lfields), r @ FRec(rfields)) =>
         val jointKeys = lfields.keySet ++ rfields.keySet
-        jointKeys.foreach {
-          case key if lfields.contains(key) && rfields.contains(key) => unify(lfields(key), rfields(key))
-          case _                                                     =>
-        }
+        val merged = SortedMap(jointKeys.toSeq.map {
+          case key if lfields.contains(key) && rfields.contains(key) =>
+            unify(lfields(key), rfields(key))
+            key -> lfields(key)
+          case key if lfields.contains(key) =>
+            key -> lfields(key)
+          case key =>
+            key -> rfields(key)
+        }: _*)
+        l.fields = merged
+        r.fields = merged
       case (FRow(lfields, ltail), FRow(rfields, rtail)) =>
         unifyRows(lfields, rfields, ltail, rtail)
       case (FRecRow(lrow), FRecRow(rrow)) =>
@@ -982,8 +968,8 @@ class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) e
       tp: FType,
       cache: mutable.HashMap[Int, TVar],
       preserveShared: Boolean,
-      quantified: Set[Int] = Set.empty,
-      level: Int = 0): FType = {
+      quantified: Set[Int],
+      level: Int): FType = {
     prune(tp) match {
       case v: TVar =>
         if (preserveShared && quantified.isEmpty) {
@@ -1139,10 +1125,10 @@ object EtcTypeCheckerFast {
   private case class FTup(elems: Seq[FType]) extends FType
 
   /** Internal sparse tuple type. */
-  private case class FSparseTup(fields: SortedMap[Int, FType]) extends FType
+  private case class FSparseTup(var fields: SortedMap[Int, FType]) extends FType
 
   /** Internal closed record type. */
-  private case class FRec(fields: SortedMap[String, FType]) extends FType
+  private case class FRec(var fields: SortedMap[String, FType]) extends FType
 
   /** Internal open row fragment. */
   private case class FRow(fields: SortedMap[String, FType], tail: Option[TVar]) extends FType
@@ -1183,9 +1169,6 @@ object EtcTypeCheckerFast {
 
   /** Internal signal for user-facing type-check failures that should stop inference. */
   protected class UnwindException extends RuntimeException
-
-  /** Snapshot of mutable variable state used by overload probing. */
-  private case class TVarState(link: Option[FType], level: Int, canonicalPositiveId: Option[Int])
 
   /** Merge the canonical positive-id provenance of two variable classes. */
   private def mergeCanonicalPositiveIds(left: TVar, right: TVar): Option[Int] = {
