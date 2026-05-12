@@ -297,7 +297,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin idiv operator application") {
-    assert(convert(Q.app("idiv", Q._42, Q._42)(QuintIntT())) == "42 // 42")
+    assert(convert(Q.app("idiv", Q._42, Q._42)(QuintIntT())) == "42 ÷ 42")
   }
 
   test("can convert builtin imod operator application") {
@@ -348,7 +348,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin exists operator application using tuple-bound names") {
     assert(convert(Q.app("exists", Q.intPairSet, Q.int2ToBool)(
-            QuintBoolT())) == "∃(<<n, acc>>) ∈ {<<1, 2>>, <<1, 2>>}: TRUE")
+            QuintBoolT())) == "∃(⟨n, acc⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: TRUE")
   }
 
   test("can convert builtin exists operator when predicate is supplied by name") {
@@ -359,7 +359,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin exists operator when multi-arity predicate is supplied by name") {
     assert(convert(Q.app("exists", Q.intPairSet, Q.namedInt2ToBoolOp)(QuintBoolT()))
       ==
-        "∃(<<__quint_var0, __quint_var1>>) ∈ {<<1, 2>>, <<1, 2>>}: (int2ToBoolOp(__quint_var0, __quint_var1))")
+        "∃(⟨__quint_var0, __quint_var1⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: (int2ToBoolOp(__quint_var0, __quint_var1))")
   }
 
   test("can convert builtin forall operator application") {
@@ -368,7 +368,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin forall operator application using tuple-bound names") {
     assert(convert(Q.app("forall", Q.intPairSet, Q.int2ToBool)(
-            QuintBoolT())) == "∀(<<n, acc>>) ∈ {<<1, 2>>, <<1, 2>>}: TRUE")
+            QuintBoolT())) == "∀(⟨n, acc⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: TRUE")
   }
 
   test("can convert builtin forall operator when predicate is supplied by name") {
@@ -379,7 +379,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin forall operator when multi-arity predicate is supplied by name") {
     assert(convert(Q.app("forall", Q.intPairSet, Q.namedInt2ToBoolOp)(QuintBoolT()))
       ==
-        "∀(<<__quint_var0, __quint_var1>>) ∈ {<<1, 2>>, <<1, 2>>}: (int2ToBoolOp(__quint_var0, __quint_var1))")
+        "∀(⟨__quint_var0, __quint_var1⟩) ∈ {⟨1, 2⟩, ⟨1, 2⟩}: (int2ToBoolOp(__quint_var0, __quint_var1))")
   }
 
   test("converting binary binding operator with missing lambda fails") {
@@ -470,72 +470,72 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin List operator application") {
-    assert(convert(Q.app("List", Q._1, Q._2, Q._3)(QuintSeqT(QuintIntT()))) == "<<1, 2, 3>>")
+    assert(convert(Q.app("List", Q._1, Q._2, Q._3)(QuintSeqT(QuintIntT()))) == "⟨1, 2, 3⟩")
   }
 
   test("can convert builtin List operator application for empty list") {
-    assert(convert(Q.emptyIntList) == "<<>>")
+    assert(convert(Q.emptyIntList) == "⟨⟩")
   }
 
   test("can convert builtin append operator application") {
-    assert(convert(Q.app("append", Q.intList, Q._42)(QuintSeqT(QuintIntT()))) == "Append(<<1, 2, 3>>, 42)")
+    assert(convert(Q.app("append", Q.intList, Q._42)(QuintSeqT(QuintIntT()))) == "Append(⟨1, 2, 3⟩, 42)")
   }
 
   test("can convert builtin concat operator application") {
-    assert(convert(Q.app("concat", Q.intList, Q.intList)(QuintSeqT(QuintIntT()))) == "(<<1, 2, 3>>) ∘ (<<1, 2, 3>>)")
+    assert(convert(Q.app("concat", Q.intList, Q.intList)(QuintSeqT(QuintIntT()))) == "(⟨1, 2, 3⟩) ∘ (⟨1, 2, 3⟩)")
   }
 
   test("can convert builtin head operator application") {
-    assert(convert(Q.app("head", Q.intList)(QuintIntT())) == "Head(<<1, 2, 3>>)")
+    assert(convert(Q.app("head", Q.intList)(QuintIntT())) == "Head(⟨1, 2, 3⟩)")
   }
 
   test("can convert builtin tail operator application") {
-    assert(convert(Q.app("tail", Q.intList)(QuintSeqT(QuintIntT()))) == "Tail(<<1, 2, 3>>)")
+    assert(convert(Q.app("tail", Q.intList)(QuintSeqT(QuintIntT()))) == "Tail(⟨1, 2, 3⟩)")
   }
 
   test("can convert builtin length operator application") {
-    assert(convert(Q.app("length", Q.intList)(QuintIntT())) == "Len(<<1, 2, 3>>)")
+    assert(convert(Q.app("length", Q.intList)(QuintIntT())) == "Len(⟨1, 2, 3⟩)")
   }
 
   test("can convert builtin indices operator application") {
     val expected =
-      "LET __quint_var0 ≜ DOMAIN (<<1, 2, 3>>) IN IF (__quint_var0() = {}) THEN {} ELSE ((__quint_var0() ∪ {0}) ∖ {Len(<<1, 2, 3>>)})"
+      "LET __quint_var0 ≜ DOMAIN (⟨1, 2, 3⟩) IN IF (__quint_var0() = {}) THEN {} ELSE ((__quint_var0() ∪ {0}) ∖ {Len(⟨1, 2, 3⟩)})"
     assert(convert(Q.app("indices", Q.intList)(QuintSetT(QuintIntT()))) == expected)
   }
 
   test("can convert builtin foldl operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0, 0, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA0(acc, n) ≜ n + acc IN __QUINT_LAMBDA0, 0, ⟨1, 2, 3⟩)"
     assert(convert(Q.app("foldl", Q.intList, Q._0, Q.accumulatingOpp)(QuintSeqT(QuintIntT()))) == expected)
   }
 
   test("can convert builtin nth operator application") {
-    assert(convert(Q.app("nth", Q.intList, Q._1)(QuintIntT())) == "(<<1, 2, 3>>)[1 + 1]")
+    assert(convert(Q.app("nth", Q.intList, Q._1)(QuintIntT())) == "(⟨1, 2, 3⟩)[1 + 1]")
   }
 
   test("can convert builtin nth operator application to variable index") {
-    assert(convert(Q.app("nth", Q.intList, Q.name)(QuintIntT())) == "(<<1, 2, 3>>)[n + 1]")
+    assert(convert(Q.app("nth", Q.intList, Q.name)(QuintIntT())) == "(⟨1, 2, 3⟩)[n + 1]")
   }
 
   test("can convert builtin replaceAt operator application") {
     assert(convert(Q.app("replaceAt", Q.intList, Q._1, Q._42)(
-            QuintSeqT(QuintIntT()))) == "[<<1, 2, 3>> EXCEPT ![<<1 + 1>>] = 42]")
+            QuintSeqT(QuintIntT()))) == "[⟨1, 2, 3⟩ EXCEPT ![⟨1 + 1⟩] = 42]")
   }
 
   test("can convert builtin slice operator application") {
     assert(convert(Q.app("slice", Q.intList, Q._0, Q._1)(
-            QuintSeqT(QuintIntT()))) == "Sequences!SubSeq(<<1, 2, 3>>, 0 + 1, 1)")
+            QuintSeqT(QuintIntT()))) == "Sequences!SubSeq(⟨1, 2, 3⟩, 0 + 1, 1)")
   }
 
   test("can convert builtin select operator application") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA2(__quint_var0, __QUINT_LAMBDA1) ≜ IF (LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__QUINT_LAMBDA1)) THEN (Append(__quint_var0, __QUINT_LAMBDA1)) ELSE __quint_var0 IN __QUINT_LAMBDA2, <<>>, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA2(__quint_var0, __QUINT_LAMBDA1) ≜ IF (LET __QUINT_LAMBDA0(n) ≜ n > 0 IN __QUINT_LAMBDA0(__QUINT_LAMBDA1)) THEN (Append(__quint_var0, __QUINT_LAMBDA1)) ELSE __quint_var0 IN __QUINT_LAMBDA2, ⟨⟩, ⟨1, 2, 3⟩)"
     assert(convert(Q.selectGreaterThanZero) == expected)
   }
 
   test("can convert builtin select operator application with named test operator") {
     val expected =
-      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA1(__quint_var0, __QUINT_LAMBDA0) ≜ IF (intToBoolOp(__QUINT_LAMBDA0)) THEN (Append(__quint_var0, __QUINT_LAMBDA0)) ELSE __quint_var0 IN __QUINT_LAMBDA1, <<>>, <<1, 2, 3>>)"
+      "Apalache!ApaFoldSeqLeft(LET __QUINT_LAMBDA1(__quint_var0, __QUINT_LAMBDA0) ≜ IF (intToBoolOp(__QUINT_LAMBDA0)) THEN (Append(__quint_var0, __QUINT_LAMBDA0)) ELSE __quint_var0 IN __QUINT_LAMBDA1, ⟨⟩, ⟨1, 2, 3⟩)"
     assert(convert(Q.selectNamedIntToBoolOp) == expected)
   }
 
@@ -586,7 +586,7 @@ class TestQuintEx extends AnyFunSuite {
   test("can convert builtin with operator application") {
     val typ = QuintRecordT.ofFieldTypes(("s", QuintIntT()), ("t", QuintIntT()))
     val rec = Q.app("Rec", Q.s, Q._1, Q.t, Q._2)(typ)
-    assert(convert(Q.app("with", rec, Q.s, Q._42)(typ)) == """[["s" ↦ 1, "t" ↦ 2] EXCEPT ![<<"s">>] = 42]""")
+    assert(convert(Q.app("with", rec, Q.s, Q._42)(typ)) == """[["s" ↦ 1, "t" ↦ 2] EXCEPT ![⟨"s"⟩] = 42]""")
   }
 
   test("operator def conversion preserves row-typing") {
@@ -611,15 +611,15 @@ class TestQuintEx extends AnyFunSuite {
   /// TUPLES
 
   test("can convert builtin Tup operator application") {
-    assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "<<0, 1>>")
+    assert(convert(Q.app("Tup", Q._0, Q._1)(QuintTupleT.ofTypes(QuintIntT(), QuintIntT()))) == "⟨0, 1⟩")
   }
 
   test("can convert builtin Tup operator application to heterogeneous elements") {
-    assert(convert(Q.app("Tup", Q._0, Q.s)(QuintTupleT.ofTypes(QuintStrT(), QuintStrT()))) == "<<0, \"s\">>")
+    assert(convert(Q.app("Tup", Q._0, Q.s)(QuintTupleT.ofTypes(QuintStrT(), QuintStrT()))) == "⟨0, \"s\"⟩")
   }
 
   test("can convert builtin item operator application") {
-    assert(convert(Q.app("item", Q.intPair, Q._1)(QuintIntT())) == "(<<1, 2>>)[1]")
+    assert(convert(Q.app("item", Q.intPair, Q._1)(QuintIntT())) == "(⟨1, 2⟩)[1]")
   }
 
   test("can convert builtin tuples operator application") {
@@ -653,8 +653,8 @@ class TestQuintEx extends AnyFunSuite {
     )(typ)
     val expected =
       """|CASE (Variants!VariantTag(Variants!Variant("F1", 42)) = "F1") → (LET __QUINT_LAMBDA0(x) ≜ 1 IN __QUINT_LAMBDA0(Variants!VariantGetUnsafe("F1", Variants!Variant("F1", 42))))
-         |☐ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → (LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42))))
-         |☐ OTHER → (LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2({}))""".stripMargin
+         |□ (Variants!VariantTag(Variants!Variant("F1", 42)) = "F2") → (LET __QUINT_LAMBDA1(y) ≜ 2 IN __QUINT_LAMBDA1(Variants!VariantGetUnsafe("F2", Variants!Variant("F1", 42))))
+         |□ OTHER → (LET __QUINT_LAMBDA2(_) ≜ 2 IN __QUINT_LAMBDA2({}))""".stripMargin
         .replace('\n', ' ')
     assert(convert(quintMatch) == expected)
   }
@@ -665,7 +665,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin Map operator") {
     assert(convert(Q.app("Map", Q.intTup1, Q.intTup2)(QuintFunT(QuintIntT(),
-                QuintIntT()))) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+                QuintIntT()))) == "Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩})")
   }
 
   test("can convert builtin Map operator for empty maps") {
@@ -673,17 +673,17 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert builtin get operator") {
-    assert(convert(Q.app("get", Q.intMap, Q._0)(QuintIntT())) == "Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})[0]")
+    assert(convert(Q.app("get", Q.intMap, Q._0)(QuintIntT())) == "Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩})[0]")
   }
 
   test("can convert builtin keys operator") {
     assert(convert(Q.app("keys", Q.intMap)(
-            QuintSetT(QuintIntT()))) == "DOMAIN Apalache!SetAsFun({<<0, 1>>, <<3, 42>>})")
+            QuintSetT(QuintIntT()))) == "DOMAIN Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩})")
   }
 
   test("can convert builtin setToMap operator") {
     assert(convert(Q.app("setToMap", Q.intPairSet)(QuintFunT(QuintIntT(),
-                QuintIntT()))) == "Apalache!SetAsFun({<<1, 2>>, <<1, 2>>})")
+                QuintIntT()))) == "Apalache!SetAsFun({⟨1, 2⟩, ⟨1, 2⟩})")
   }
 
   val intMapT = QuintSetT(QuintFunT(QuintIntT(), QuintIntT()))
@@ -696,7 +696,7 @@ class TestQuintEx extends AnyFunSuite {
     assert(
         convert(Q.app("set", Q.intMap, Q._3, Q._2)(intMapT))
           ==
-            "[Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) EXCEPT ![<<3>>] = 2]"
+            "[Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩}) EXCEPT ![⟨3⟩] = 2]"
     )
   }
 
@@ -706,8 +706,8 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin setBy operator") {
     val expected = """
-        |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
-        |[__quint_var0() EXCEPT ![<<1>>] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
+        |LET __quint_var0 ≜ Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩}) IN
+        |[__quint_var0() EXCEPT ![⟨1⟩] = (LET __QUINT_LAMBDA0(n) ≜ n + 1 IN __QUINT_LAMBDA0(__quint_var0()[1]))]
         """.stripMargin.linesIterator.mkString(" ").trim
     assert(convert(Q.setByExpression) == expected)
   }
@@ -727,7 +727,7 @@ class TestQuintEx extends AnyFunSuite {
 
   test("can convert builtin put operator application") {
     val expected = """
-        |LET __quint_var0 ≜ Apalache!SetAsFun({<<0, 1>>, <<3, 42>>}) IN
+        |LET __quint_var0 ≜ Apalache!SetAsFun({⟨0, 1⟩, ⟨3, 42⟩}) IN
         |LET __quint_var1 ≜ DOMAIN __quint_var0() IN
         |[__quint_var2 ∈ ({3} ∪ __quint_var1()) ↦ IF (__quint_var2 = 3) THEN 42 ELSE __quint_var0()[__quint_var2]]
         """.stripMargin.linesIterator.mkString(" ").trim
@@ -743,7 +743,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert val __label_Foo = ...") {
-    assert(convert(Q.labelledExpr) == "Foo:: n > 0")
+    assert(convert(Q.labelledExpr) == "Foo∷ n > 0")
   }
 
   test("can convert let binding with reference to name in scope") {
@@ -786,11 +786,11 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert always operator") {
-    assert(convert(Q.app("always", Q.tt)(QuintBoolT())) == "☐TRUE")
+    assert(convert(Q.app("always", Q.tt)(QuintBoolT())) == "□TRUE")
   }
 
   test("can convert eventually operator") {
-    assert(convert(Q.app("eventually", Q.tt)(QuintBoolT())) == "♢TRUE")
+    assert(convert(Q.app("eventually", Q.tt)(QuintBoolT())) == "◇TRUE")
   }
 
   test("can convert weakFair operator") {
@@ -802,7 +802,7 @@ class TestQuintEx extends AnyFunSuite {
   }
 
   test("can convert leadsTo operator") {
-    assert(convert(Q.app("leadsTo", Q.tt, Q.tt)(QuintBoolT())) == "TRUE \u21DD TRUE")
+    assert(convert(Q.app("leadsTo", Q.tt, Q.tt)(QuintBoolT())) == "TRUE ↝ TRUE")
   }
 
   test("can convert polymorphic operator applied polymorphically") {
@@ -844,7 +844,7 @@ class TestQuintEx extends AnyFunSuite {
 
     val expr = Q.app("Tup", noneInt, noneBool)(QuintTupleT.ofTypes(optionInt, optionBool))
 
-    assert(convert(expr) == """<<None(), None()>>""")
+    assert(convert(expr) == """⟨None(), None()⟩""")
   }
 
   test("oneOf operator occuring outside of a nondet binding is an error") {
