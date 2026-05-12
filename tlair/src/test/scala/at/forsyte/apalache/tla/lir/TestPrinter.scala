@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.lir
 
 import at.forsyte.apalache.tla.lir.io.UTFPrinter
-import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaFunOper, TlaSeqOper}
+import at.forsyte.apalache.tla.lir.values._
 import at.forsyte.apalache.tla.lir.convenience._
 
 import org.junit.runner.RunWith
@@ -12,6 +13,35 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 @RunWith(classOf[JUnitRunner])
 class TestPrinter extends AnyFunSuite {
   val toUtf = UTFPrinter
+
+  private def assertPrint(ex: TlaEx, expected: String): Unit = {
+    assert(toUtf(ex) == expected)
+  }
+
+  private def assertDeclPrint(decl: TlaDecl, expected: String): Unit = {
+    assert(toUtf(decl) == expected)
+  }
+
+  test("Test UTF8: literals and simple expressions") {
+    assertPrint(NullEx, "<[NULL]>")
+    assertPrint(tla.name("x"), "x")
+    assertPrint(tla.int(42), "42")
+    assertPrint(tla.bigInt(BigInt("9223372036854775808")), "9223372036854775808")
+    assertPrint(tla.decimal(BigDecimal("3.14")), "3.14")
+    assertPrint(tla.str("hello"), "\"hello\"")
+    assertPrint(tla.bool(true), "TRUE")
+    assertPrint(tla.bool(false), "FALSE")
+    assertPrint(tla.booleanSet(), "BOOLEAN")
+    assertPrint(tla.stringSet(), "STRING")
+    assertPrint(tla.intSet(), "Int")
+    assertPrint(tla.natSet(), "Nat")
+    assertPrint(ValEx(TlaRealSet), "Real")
+    assertPrint(ValEx(TlaRealInfinity), "")
+
+    val decl = TlaOperDecl("c", List(), tla.int(1))
+    assertPrint(tla.letIn(tla.appOp(tla.name("c")), decl), "LET c ≜ 1 IN c()")
+    assert(toUtf(tla.plus(tla.name("a"), tla.name("b")), p_rmSpace = true) == "a+b")
+  }
 
   test("Test UTF8: TlaOper") {
     val S = tla.name("S")
@@ -58,6 +88,9 @@ class TestPrinter extends AnyFunSuite {
     assert(chooseEx2 == "CHOOSE x %s S : p".format(toUtf.m_in))
     assert(chooseEx3 == "CHOOSE x : (p %s q)".format(toUtf.m_and))
     assert(chooseEx4 == "CHOOSE x %s (S %s T) : (p %s q)".format(toUtf.m_in, toUtf.m_times, toUtf.m_and))
+
+    assertPrint(tla.label(tla.eql(a, b), "lab"), "lab:: a = b")
+    assertPrint(tla.label(tla.eql(a, b), "lab", "i", "j"), "lab(\"i\", \"j\"):: a = b")
 
   }
 
@@ -141,13 +174,167 @@ class TestPrinter extends AnyFunSuite {
 
   }
 
-  test("Test UTF8: TlaArithOper") {}
+  test("Test UTF8: TlaArithOper") {
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val c = tla.name("c")
+
+    assertPrint(tla.plus(a, b), "a + b")
+    assertPrint(tla.minus(a, b), "a - b")
+    assertPrint(tla.uminus(a), "-a")
+    assertPrint(tla.uminus(tla.plus(a, b)), "-(a + b)")
+    assertPrint(tla.mult(a, b), "a * b")
+    assertPrint(tla.div(a, b), "a // b")
+    assertPrint(tla.mod(a, b), "a % b")
+    assertPrint(tla.rDiv(a, b), "a / b")
+    assertPrint(tla.exp(a, b), "a ^ b")
+    assertPrint(tla.dotdot(a, b), "a .. b")
+    assertPrint(tla.lt(a, b), "a < b")
+    assertPrint(tla.gt(a, b), "a > b")
+    assertPrint(tla.le(a, b), "a ≤ b")
+    assertPrint(tla.ge(a, b), "a ≥ b")
+    assertPrint(tla.plus(tla.mult(a, b), c), "(a * b) + c")
+  }
+
+  test("Test UTF8: TlaActionOper") {
+    val p = tla.name("p")
+    val q = tla.name("q")
+    val x = tla.name("x")
+
+    assertPrint(tla.prime(x), "x'")
+    assertPrint(tla.prime(tla.plus(x, tla.int(1))), "(x + 1)'")
+    assertPrint(tla.stutt(p, x), "[p]_x")
+    assertPrint(tla.nostutt(p, x), "<p>_x")
+    assertPrint(tla.enabled(p), "ENABLED p")
+    assertPrint(tla.enabled(tla.and(p, q)), "ENABLED (p ∧ q)")
+    assertPrint(tla.unchanged(x), "UNCHANGED x")
+    assertPrint(tla.unchangedTup(tla.name("x"), tla.name("y")), "UNCHANGED (<<x, y>>)")
+    assertPrint(tla.comp(p, q), "p ⋅ q")
+    assertPrint(tla.comp(tla.and(p, q), tla.or(p, q)), "(p ∧ q) ⋅ (p ∨ q)")
+  }
+
+  test("Test UTF8: TlaControlOper") {
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val c = tla.name("c")
+    val p = tla.name("p")
+    val q = tla.name("q")
+
+    assertPrint(tla.caseSplit(p, a), "CASE p → a")
+    assertPrint(tla.caseSplit(p, a, q, b), "CASE p → a ☐ q → b")
+    assertPrint(tla.caseOther(c, p, a), "CASE p → a ☐ OTHER → c")
+    assertPrint(tla.caseOther(c, p, a, q, b), "CASE p → a ☐ q → b ☐ OTHER → c")
+    assertPrint(tla.ite(p, a, b), "IF p THEN a ELSE b")
+    assertPrint(tla.ite(tla.and(p, q), tla.plus(a, b), tla.minus(a, b)), "IF (p ∧ q) THEN (a + b) ELSE (a - b)")
+  }
+
+  test("Test UTF8: TlaTempOper") {
+    val p = tla.name("p")
+    val q = tla.name("q")
+    val x = tla.name("x")
+
+    assertPrint(tla.AA(x, p), "[∀]x . p")
+    assertPrint(tla.EE(x, p), "[∃]x . p")
+    assertPrint(tla.box(p), "☐p")
+    assertPrint(tla.box(tla.and(p, q)), "☐(p ∧ q)")
+    assertPrint(tla.diamond(p), "♢p")
+    assertPrint(tla.diamond(tla.or(p, q)), "♢(p ∨ q)")
+    assertPrint(tla.guarantees(p, q), "p ⥅ q")
+    assertPrint(tla.leadsTo(p, q), "p ⇝ q")
+    assertPrint(tla.SF(x, p), "SF_x(p)")
+    assertPrint(tla.WF(x, p), "WF_x(p)")
+  }
+
+  test("Test UTF8: TlaFiniteSetOper") {
+    val S = tla.name("S")
+
+    assertPrint(tla.card(S), "Cardinality(S)")
+    assertPrint(tla.card(tla.enumSet(tla.int(1), tla.int(2))), "Cardinality({1, 2})")
+    assertPrint(tla.isFin(S), "IsFiniteSet(S)")
+    assertPrint(tla.isFin(tla.powSet(S)), "IsFiniteSet(SUBSET S)")
+  }
+
+  test("Test UTF8: TlaFunOper") {
+    val S = tla.name("S")
+    val T = tla.name("T")
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val f = tla.name("f")
+    val i = tla.name("i")
+    val j = tla.name("j")
+    val v = tla.name("v")
+    val x = tla.name("x")
+    val y = tla.name("y")
+
+    assertPrint(tla.appFun(f, i), "f[i]")
+    assertPrint(tla.appFun(tla.appFun(f, i), j), "f[i][j]")
+    assertPrint(tla.dom(f), "DOMAIN f")
+    assertPrint(tla.dom(tla.appFun(f, i)), "DOMAIN f[i]")
+    assertPrint(tla.enumFun(tla.str("foo"), a, tla.str("bar"), b), "[\"foo\" ↦ a, \"bar\" ↦ b]")
+    assertPrint(tla.except(f, i, v), "[f EXCEPT ![i] = v]")
+    assertPrint(tla.except(f, i, v, j, a), "[f EXCEPT ![i] = v, ![j] = a]")
+    assertPrint(tla.funDef(tla.plus(x, y), x, S), "[x ∈ S ↦ x + y]")
+    assertPrint(tla.funDef(tla.plus(x, y), x, S, y, T), "[x ∈ S, y ∈ T ↦ x + y]")
+    assertPrint(tla.tuple(), "<<>>")
+    assertPrint(tla.tuple(a), "<<a>>")
+    assertPrint(tla.tuple(a, b), "<<a, b>>")
+    assertPrint(tla.recFunRef(), "FUN_REC_REF")
+    assertPrint(tla.recFunDef(tla.plus(x, tla.int(1)), x, S), "FUN_REC_CTOR(x + 1, x, S)")
+  }
+
+  test("Test UTF8: TlaSeqOper") {
+    val S = tla.name("S")
+    val T = tla.name("T")
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val s = tla.name("s")
+
+    assertPrint(tla.append(s, a), "Append(s, a)")
+    assertPrint(tla.append(tla.tuple(a), b), "Append(<<a>>, b)")
+    assertPrint(tla.concat(S, T), "S ∘ T")
+    assertPrint(tla.concat(tla.append(S, a), T), "(Append(S, a)) ∘ T")
+    assertPrint(tla.head(s), "Head(s)")
+    assertPrint(tla.tail(s), "Tail(s)")
+    assertPrint(tla.len(s), "Len(s)")
+    assertPrint(tla.subseq(s, tla.int(1), tla.int(2)), "Sequences!SubSeq(s, 1, 2)")
+    assertPrint(OperEx(TlaSeqOper.subseq, tla.concat(S, T), tla.int(1), tla.len(S)), "Sequences!SubSeq(S ∘ T, 1, Len(S))")
+  }
 
   test("Test UTF8: TlaSetOper") {
-    val inEx1: String = toUtf(tla.in(tla.name("a"), tla.name("b")))
-    val inEx2: String = toUtf(tla.and(tla.in(tla.name("a"), tla.name("b")), tla.in(tla.name("c"), tla.name("d"))))
+    val S = tla.name("S")
+    val T = tla.name("T")
+    val a = tla.name("a")
+    val b = tla.name("b")
+    val c = tla.name("c")
+    val d = tla.name("d")
+    val p = tla.name("p")
+    val x = tla.name("x")
+    val y = tla.name("y")
+
+    val inEx1: String = toUtf(tla.in(a, b))
+    val inEx2: String = toUtf(tla.and(tla.in(a, b), tla.in(c, d)))
     assert(inEx1 == "a %s b".format(toUtf.m_in))
     assert(inEx2 == "a %s b %s c %s d".format(toUtf.m_in, toUtf.m_and, toUtf.m_in))
+
+    assertPrint(tla.emptySet(), "{}")
+    assertPrint(tla.enumSet(a, b, c), "{a, b, c}")
+    assertPrint(tla.in(tla.plus(a, b), S), "(a + b) ∈ S")
+    assertPrint(tla.notin(a, S), "a ∉ S")
+    assertPrint(tla.cap(S, T), "S ∩ T")
+    assertPrint(tla.cup(S, T), "S ∪ T")
+    assertPrint(tla.setminus(S, T), "S ∖ T")
+    assertPrint(tla.subseteq(S, T), "S ⊆ T")
+    assertPrint(tla.filter(x, S, p), "{x ∈ S: p}")
+    assertPrint(tla.filter(x, tla.cup(S, T), tla.and(p, tla.in(x, S))), "{x ∈ (S ∪ T): (p ∧ x ∈ S)}")
+    assertPrint(tla.funSet(S, T), "[S → T]")
+    assertPrint(tla.map(tla.plus(x, y), x, S), "{x + y : x ∈ S}")
+    assertPrint(tla.map(tla.plus(x, y), x, S, y, T), "{x + y : x ∈ S, y ∈ T}")
+    assertPrint(tla.powSet(S), "SUBSET S")
+    assertPrint(tla.recSet(tla.str("foo"), S, tla.str("bar"), T), "[\"foo\": S, \"bar\": T]")
+    assertPrint(tla.seqSet(S), "Seq(S)")
+    assertPrint(tla.times(S, T), "S × T")
+    assertPrint(tla.times(S, T, tla.enumSet(a, b)), "S × T × {a, b}")
+    assertPrint(tla.union(S), "UNION S")
   }
 
   test("Test UTF8: TlaAssumeDecl") {
@@ -157,6 +344,21 @@ class TestPrinter extends AnyFunSuite {
 
     val unnamedAssume: String = toUtf(TlaAssumeDecl(None, tla.eql(x, tla.bool(true))))
     assert(unnamedAssume == s"ASSUME x = TRUE")
+  }
+
+  test("Test UTF8: declarations") {
+    assertDeclPrint(TlaConstDecl("C"), "CONSTANT C")
+    assertDeclPrint(TlaVarDecl("x"), "VARIABLE x")
+    assertDeclPrint(TlaOperDecl("A", List(), tla.int(1)), "A ≜ 1")
+    assertDeclPrint(TlaOperDecl("A", List(OperParam("x"), OperParam("y")), tla.plus(tla.name("x"), tla.name("y"))),
+        "A(x, y) ≜ x + y")
+    assertDeclPrint(TlaOperDecl("Apply", List(OperParam("F", 2), OperParam("x", 0)), tla.int(1)),
+        "Apply(F(_, _), x) ≜ 1")
+
+    val err = intercept[RuntimeException] {
+      toUtf(TlaTheoremDecl("Thm", tla.bool(true)))
+    }
+    assert(err.getMessage.contains("Unexpected declaration"))
   }
 
   // regression
@@ -176,5 +378,14 @@ class TestPrinter extends AnyFunSuite {
     val letInEx = tla.letIn(tla.appOp(c), decl)
     val caseEx = tla.caseOther(letInEx, p, a)
     assert(toUtf(caseEx).contains("OTHER → (LET c"))
+  }
+
+  test("Test UTF8: default operator printing") {
+    val x = tla.name("x")
+    val S = tla.name("S")
+
+    assertPrint(OperEx(TlaFunOper.recFunRef), "FUN_REC_REF")
+    assertPrint(OperEx(TlaFunOper.recFunDef, x, x, S), "FUN_REC_CTOR(x, x, S)")
+    assertPrint(OperEx(ApalacheOper.gen, S), "Apalache!Gen(S)")
   }
 }
