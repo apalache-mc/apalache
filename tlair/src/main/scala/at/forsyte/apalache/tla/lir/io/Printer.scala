@@ -292,7 +292,7 @@ object SimplePrinter extends Printer {
       case UTFPrinter.m_box       => "[]"
       case UTFPrinter.m_diamond   => "<>"
       case UTFPrinter.m_rarrow    => "->"
-      case UTFPrinter.m_ring      => "o"
+      case UTFPrinter.m_ring      => "\\o"
       case UTFPrinter.m_guarantee => "-+->"
       case UTFPrinter.m_leadsto   => "~>"
       case UTFPrinter.m_mapto     => "|->"
