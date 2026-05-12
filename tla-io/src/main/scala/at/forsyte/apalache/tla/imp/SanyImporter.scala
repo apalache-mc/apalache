@@ -5,8 +5,9 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.output.WriterOutputStream
-import tla2sany.drivers.SANY
+import tla2sany.drivers.{SANY, SanySettings}
 import tla2sany.modanalyzer.SpecObj
+import tla2sany.output.{LogLevel, SimpleSanyOutput}
 
 import java.io._
 import java.nio.file.Files
@@ -33,11 +34,18 @@ object SANYSyncWrapper {
         .setWriter(errBuf)
         .setCharset(StandardCharsets.UTF_8)
         .get()
-      SANY.frontEndMain(
-          specObj,
-          file.getAbsolutePath,
+      val out = new SimpleSanyOutput(
           new PrintStream(outStream),
+          LogLevel.INFO,
       )
+      SANY
+        .parse(
+            specObj,
+            file.getAbsolutePath,
+            out,
+            SanySettings.defaultSettings(),
+        )
+        .code()
     }
   }
 }
@@ -185,7 +193,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       moduleName <- moduleNameOfSource(source)
       tempFile = new File(dir, moduleName + ".tla")
       // write the contents to a tempFileorary file
-      pw = new PrintWriter(tempFile)
+      pw = new PrintWriter(Files.newBufferedWriter(tempFile.toPath, StandardCharsets.UTF_8))
       _ <- {
         // Stash the try result so we can close the pw before bailing if anything goes wrong
         val result = Try(source.getLines().foreach(pw.println(_)))
@@ -195,14 +203,6 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     } yield (moduleName, tempFile)
 
   private def throwOnError(specObj: SpecObj): Unit = {
-    val initErrors = specObj.getInitErrors
-    if (initErrors.isFailure) {
-      throw new SanyAbortException(initErrors.toString)
-    }
-    val contextErrors = specObj.getGlobalContextErrors
-    if (contextErrors.isFailure) {
-      throw new SanyAbortException(contextErrors.toString)
-    }
     val parseErrors = specObj.getParseErrors
     if (parseErrors.isFailure) {
       throw new SanySyntaxException(parseErrors.toString)
