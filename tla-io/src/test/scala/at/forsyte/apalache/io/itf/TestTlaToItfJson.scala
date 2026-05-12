@@ -59,8 +59,8 @@ class TestTlaToItfJson extends AnyFunSuite {
     val parsed = new ItfJsonToTla(ScalaFromJacksonAdapter).parseTrace(json)
 
     assert(parsed.contains(IndexedSeq(
-            SortedMap("x" -> tla.int(1).build),
-            SortedMap("x" -> tla.int(2).build),
-        )))
+                SortedMap("x" -> tla.int(1).build),
+                SortedMap("x" -> tla.int(2).build),
+            )))
   }
 }
