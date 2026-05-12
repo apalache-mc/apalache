@@ -540,6 +540,23 @@ Checker reports no error up to computation length 0
 EXITCODE: OK
 ```
 
+### check NonLinearArithmetic.tla with default CVC5 logic reports how to enable nonlinear arithmetic
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "error when rewriting to SMT:|EXITCODE" | sed -n '1p;$p' | sed 's/[[:space:]]*$//'
+<unknown>: error when rewriting to SMT: cvc5 is using SMT logic QF_UFLIA, which only permits linear integer arithmetic, but the solver saw a nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA.
+EXITCODE: ERROR (255)
+```
+
+### check NonLinearArithmetic.tla with CVC5 nonlinear arithmetic logic reports no error
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --tuning-options=cvc5.smt.logic=QF_UFNIA --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
+```
+
 ### check factorization find a counterexample (array-encoding)
 
 ```sh

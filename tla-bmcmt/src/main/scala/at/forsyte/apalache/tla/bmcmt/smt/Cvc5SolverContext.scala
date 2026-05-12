@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.types.{tlaU => tla}
-import _root_.io.github.cvc5.{Kind, Result, Solver, Sort, Term, TermManager}
+import _root_.io.github.cvc5.{CVC5ApiException, Kind, Result, Solver, Sort, Term, TermManager}
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
@@ -32,11 +32,16 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   private var _metrics: SolverContextMetrics = SolverContextMetrics.empty
 
   private def encoding: SMTEncoding = config.smtEncoding
-  private def smtLogic: String = encoding match {
-    case SMTEncoding.OOPSLA19  => "QF_UFNIA"
-    case SMTEncoding.Arrays    => "QF_AUFNIA"
-    case SMTEncoding.FunArrays => "QF_AUFNIA"
+  private def defaultSmtLogic: String = encoding match {
+    case SMTEncoding.OOPSLA19  => "QF_UFLIA"
+    case SMTEncoding.Arrays    => "QF_AUFLIA"
+    case SMTEncoding.FunArrays => "QF_UFLIA"
   }
+  private def smtLogic: String =
+    config.solverParams
+      .get("smt.logic")
+      .map(_.toString)
+      .getOrElse(defaultSmtLogic)
 
   private var level: Int = 0
   private var maxCellIdPerContext = List(-1)
@@ -51,7 +56,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   solver.setLogic(smtLogic)
   log(s"(set-logic $smtLogic)")
   solver.setOption("produce-models", "true")
-  config.solverParams.foreach { case (k, v) =>
+  config.solverParams.filterNot(_._1 == "smt.logic").foreach { case (k, v) =>
     solver.setOption(k, v.toString)
   }
 
@@ -195,7 +200,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   override def sat(): Boolean = {
     log("(check-sat)")
     flushLogs()
-    val result = solver.checkSat()
+    val result = checkSat()
     log(s";; sat = $result")
     flushLogs()
     resultToBoolean(result).getOrElse {
@@ -212,7 +217,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
       log(s";; timeout = $timeoutSec")
       log("(check-sat)")
       flushLogs()
-      val result = solver.checkSat()
+      val result = checkSat()
       solver.setOption("tlimit-per", "0")
       log(s";; sat = $result")
       flushLogs()
@@ -233,6 +238,19 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
       Some(false)
     } else {
       None
+    }
+  }
+
+  private def checkSat(): Result = {
+    try {
+      solver.checkSat()
+    } catch {
+      case err: CVC5ApiException
+          if err.getMessage.contains("A non-linear term was asserted to arithmetic in a linear logic") =>
+        val msg =
+          s"cvc5 is using SMT logic $smtLogic, which only permits linear integer arithmetic, but the solver saw a " +
+            "nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA."
+        throw new SmtEncodingException(msg, NullEx)
     }
   }
 
