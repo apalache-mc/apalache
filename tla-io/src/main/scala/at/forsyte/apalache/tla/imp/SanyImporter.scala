@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.output.WriterOutputStream
-import tla2sany.drivers.{SANY, SanySettings}
+import tla2sany.drivers.{FrontEndException, SANY, SanyExitCode, SanySettings}
 import tla2sany.modanalyzer.SpecObj
 import tla2sany.output.{LogLevel, SimpleSanyOutput}
 
@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets
 //
 // All invocation of SANY should go through a synchronized method in this object.
 object SANYSyncWrapper {
-  def loadSpecObject(specObj: SpecObj, file: File, errBuf: Writer): Int = {
+  def loadSpecObject(specObj: SpecObj, file: File, errBuf: Writer): SanyExitCode = {
     this.synchronized {
       val outStream = WriterOutputStream
         .builder()
@@ -38,14 +38,26 @@ object SANYSyncWrapper {
           new PrintStream(outStream),
           LogLevel.INFO,
       )
-      SANY
-        .parse(
-            specObj,
-            file.getAbsolutePath,
-            out,
-            SanySettings.defaultSettings(),
-        )
-        .code()
+      try {
+        SANY
+          .parse(
+              specObj,
+              file.getAbsolutePath,
+              out,
+              SanySettings.defaultSettings(),
+          )
+      } catch {
+        case e: FrontEndException =>
+          val sanyOutput = errBuf.toString
+          val cause = Option(e.getMessage).getOrElse(e.toString)
+          val message =
+            if (sanyOutput.isBlank) {
+              cause
+            } else {
+              s"$cause\n$sanyOutput"
+            }
+          throw new SanyAbortException(message)
+      }
     }
   }
 }
@@ -115,10 +127,10 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
 
     // call SANY
     val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
-    SANYSyncWrapper.loadSpecObject(specObj, file, errBuf)
+    val sanyExitCode = SANYSyncWrapper.loadSpecObject(specObj, file, errBuf)
 
     // abort on errors
-    throwOnError(specObj)
+    throwOnError(specObj, sanyExitCode)
     // do the translation
     val modmap = specObj.getExternalModuleTable.getModuleNodes
       .foldLeft(Map[String, TlaModule]()) { (map, node) =>
@@ -206,7 +218,18 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       }
     } yield (moduleName, tempFile)
 
-  private def throwOnError(specObj: SpecObj): Unit = {
+  private def throwOnError(specObj: SpecObj, sanyExitCode: SanyExitCode): Unit = {
+    if (sanyExitCode != SanyExitCode.OK) {
+      throw new SanyException(
+          "Unknown SANY error (exit code=%s)".format(sanyExitCode)
+      )
+    }
+    // the error level is above zero, so SANY failed for an unknown reason
+    if (specObj.getErrorLevel > 0) {
+      throw new SanyException(
+          "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
+      )
+    }
     val parseErrors = specObj.getParseErrors
     if (parseErrors.isFailure) {
       throw new SanySyntaxException(parseErrors.toString)
@@ -214,12 +237,6 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     val semanticErrors = specObj.getSemanticErrors
     if (semanticErrors.isFailure) {
       throw new SanySemanticException(semanticErrors.toString)
-    }
-    // the error level is above zero, so SANY failed for an unknown reason
-    if (specObj.getErrorLevel > 0) {
-      throw new SanyException(
-          "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
-      )
     }
   }
 }
