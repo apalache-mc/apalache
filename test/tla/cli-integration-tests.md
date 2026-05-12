@@ -1838,12 +1838,28 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
+### check PickPerf succeeds with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### check PickPerf2 succeeds (array-encoding)
 
 A performance test.
 
 ```sh
 $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
+### check PickPerf2 succeeds with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2586,6 +2602,14 @@ $ apalache-mc check --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's
 EXITCODE: OK
 ```
 
+### check MC3_TwoPhaseTyped.tla succeeds with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check OptionTests.tla succeeds
 
 These tests check that the operators defined in `Option.tla` work as expected.
@@ -2710,6 +2734,14 @@ $ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
+### check TestSequences.tla reports no error with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check TestSequencesExt.tla reports no error
 
 ```sh
@@ -2766,6 +2798,14 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check TestSets.tla reports no error with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2907,6 +2947,14 @@ $ apalache-mc check --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check MC_LamportMutexTyped.tla with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check TestVariants.tla
 
 Variant operators work in the model checker.
@@ -2941,6 +2989,14 @@ A regression test for function operations.
 
 ```sh
 $ apalache-mc check --inv=Safety Consensus_epr.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+### check Consensus_epr with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --inv=Safety Consensus_epr.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2991,6 +3047,16 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=5 --inv=NoNegativeBalances MC_ERC20.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
+### check ERC20.tla with CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=5 --inv=NoNegativeBalances MC_ERC20.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
