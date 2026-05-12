@@ -2,11 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
-import at.forsyte.apalache.tla.lir.{BoolT1, TestingPredefs}
+import at.forsyte.apalache.tla.lir.BoolT1
 import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
 
-trait TestPropositionalOracle extends RewriterBase with TestingPredefs {
+trait TestPropositionalOracle extends RewriterBase {
   test("""Propositional Oracle.create""") { rewriterType: SMTEncoding =>
     val rewriter = create(rewriterType)
     val state = new SymbState(tla.bool(true), arena, Binding())

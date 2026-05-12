@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 
-trait TestSymbStateRewriterBool extends RewriterBase with TestingPredefs {
+trait TestSymbStateRewriterBool extends RewriterBase {
   // these are handy variables that will be overwritten by before
   private var x: ArenaCell = new ArenaCell(100000, CellTFrom(IntT1))
   private var y: ArenaCell = new ArenaCell(100001, CellTFrom(IntT1))
