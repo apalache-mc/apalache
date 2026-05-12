@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 
-trait TestSymbStateRewriterControl extends RewriterBase with TestingPredefs {
+trait TestSymbStateRewriterControl extends RewriterBase {
   private val types = Map(
       "b" -> BoolT1,
       "i" -> IntT1,
