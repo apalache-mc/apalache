@@ -36,7 +36,7 @@ class TestPrinter extends AnyFunSuite {
     assertPrint(tla.intSet(), "Int")
     assertPrint(tla.natSet(), "Nat")
     assertPrint(ValEx(TlaRealSet), "Real")
-    assertPrint(ValEx(TlaRealInfinity), "")
+    assertPrint(ValEx(TlaRealInfinity), "Infinity")
 
     val decl = TlaOperDecl("c", List(), tla.int(1))
     assertPrint(tla.letIn(tla.appOp(tla.name("c")), decl), "LET c ≜ 1 IN c()")
@@ -89,8 +89,8 @@ class TestPrinter extends AnyFunSuite {
     assert(chooseEx3 == "CHOOSE x : (p %s q)".format(toUtf.m_and))
     assert(chooseEx4 == "CHOOSE x %s (S %s T) : (p %s q)".format(toUtf.m_in, toUtf.m_times, toUtf.m_and))
 
-    assertPrint(tla.label(tla.eql(a, b), "lab"), "lab:: a = b")
-    assertPrint(tla.label(tla.eql(a, b), "lab", "i", "j"), "lab(\"i\", \"j\"):: a = b")
+    assertPrint(tla.label(tla.eql(a, b), "lab"), "lab∷ a = b")
+    assertPrint(tla.label(tla.eql(a, b), "lab", "i", "j"), "lab(\"i\", \"j\")∷ a = b")
 
   }
 
@@ -184,7 +184,7 @@ class TestPrinter extends AnyFunSuite {
     assertPrint(tla.uminus(a), "-a")
     assertPrint(tla.uminus(tla.plus(a, b)), "-(a + b)")
     assertPrint(tla.mult(a, b), "a * b")
-    assertPrint(tla.div(a, b), "a // b")
+    assertPrint(tla.div(a, b), "a ÷ b")
     assertPrint(tla.mod(a, b), "a % b")
     assertPrint(tla.rDiv(a, b), "a / b")
     assertPrint(tla.exp(a, b), "a ^ b")
@@ -208,7 +208,7 @@ class TestPrinter extends AnyFunSuite {
     assertPrint(tla.enabled(p), "ENABLED p")
     assertPrint(tla.enabled(tla.and(p, q)), "ENABLED (p ∧ q)")
     assertPrint(tla.unchanged(x), "UNCHANGED x")
-    assertPrint(tla.unchangedTup(tla.name("x"), tla.name("y")), "UNCHANGED (<<x, y>>)")
+    assertPrint(tla.unchangedTup(tla.name("x"), tla.name("y")), "UNCHANGED (⟨x, y⟩)")
     assertPrint(tla.comp(p, q), "p ⋅ q")
     assertPrint(tla.comp(tla.and(p, q), tla.or(p, q)), "(p ∧ q) ⋅ (p ∨ q)")
   }
@@ -221,9 +221,9 @@ class TestPrinter extends AnyFunSuite {
     val q = tla.name("q")
 
     assertPrint(tla.caseSplit(p, a), "CASE p → a")
-    assertPrint(tla.caseSplit(p, a, q, b), "CASE p → a ☐ q → b")
-    assertPrint(tla.caseOther(c, p, a), "CASE p → a ☐ OTHER → c")
-    assertPrint(tla.caseOther(c, p, a, q, b), "CASE p → a ☐ q → b ☐ OTHER → c")
+    assertPrint(tla.caseSplit(p, a, q, b), "CASE p → a □ q → b")
+    assertPrint(tla.caseOther(c, p, a), "CASE p → a □ OTHER → c")
+    assertPrint(tla.caseOther(c, p, a, q, b), "CASE p → a □ q → b □ OTHER → c")
     assertPrint(tla.ite(p, a, b), "IF p THEN a ELSE b")
     assertPrint(tla.ite(tla.and(p, q), tla.plus(a, b), tla.minus(a, b)), "IF (p ∧ q) THEN (a + b) ELSE (a - b)")
   }
@@ -235,12 +235,12 @@ class TestPrinter extends AnyFunSuite {
 
     assertPrint(tla.AA(x, p), "[∀]x . p")
     assertPrint(tla.EE(x, p), "[∃]x . p")
-    assertPrint(tla.box(p), "☐p")
-    assertPrint(tla.box(tla.and(p, q)), "☐(p ∧ q)")
-    assertPrint(tla.diamond(p), "♢p")
-    assertPrint(tla.diamond(tla.or(p, q)), "♢(p ∨ q)")
-    assertPrint(tla.guarantees(p, q), "p ⥅ q")
-    assertPrint(tla.leadsTo(p, q), "p ⇝ q")
+    assertPrint(tla.box(p), "□p")
+    assertPrint(tla.box(tla.and(p, q)), "□(p ∧ q)")
+    assertPrint(tla.diamond(p), "◇p")
+    assertPrint(tla.diamond(tla.or(p, q)), "◇(p ∨ q)")
+    assertPrint(tla.guarantees(p, q), "p ⇸ q")
+    assertPrint(tla.leadsTo(p, q), "p ↝ q")
     assertPrint(tla.SF(x, p), "SF_x(p)")
     assertPrint(tla.WF(x, p), "WF_x(p)")
   }
@@ -275,9 +275,9 @@ class TestPrinter extends AnyFunSuite {
     assertPrint(tla.except(f, i, v, j, a), "[f EXCEPT ![i] = v, ![j] = a]")
     assertPrint(tla.funDef(tla.plus(x, y), x, S), "[x ∈ S ↦ x + y]")
     assertPrint(tla.funDef(tla.plus(x, y), x, S, y, T), "[x ∈ S, y ∈ T ↦ x + y]")
-    assertPrint(tla.tuple(), "<<>>")
-    assertPrint(tla.tuple(a), "<<a>>")
-    assertPrint(tla.tuple(a, b), "<<a, b>>")
+    assertPrint(tla.tuple(), "⟨⟩")
+    assertPrint(tla.tuple(a), "⟨a⟩")
+    assertPrint(tla.tuple(a, b), "⟨a, b⟩")
     assertPrint(tla.recFunRef(), "FUN_REC_REF")
     assertPrint(tla.recFunDef(tla.plus(x, tla.int(1)), x, S), "FUN_REC_CTOR(x + 1, x, S)")
   }
@@ -290,7 +290,7 @@ class TestPrinter extends AnyFunSuite {
     val s = tla.name("s")
 
     assertPrint(tla.append(s, a), "Append(s, a)")
-    assertPrint(tla.append(tla.tuple(a), b), "Append(<<a>>, b)")
+    assertPrint(tla.append(tla.tuple(a), b), "Append(⟨a⟩, b)")
     assertPrint(tla.concat(S, T), "S ∘ T")
     assertPrint(tla.concat(tla.append(S, a), T), "(Append(S, a)) ∘ T")
     assertPrint(tla.head(s), "Head(s)")

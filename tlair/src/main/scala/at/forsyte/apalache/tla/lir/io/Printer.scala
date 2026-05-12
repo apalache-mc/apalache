@@ -33,13 +33,15 @@ object UTFPrinter extends Printer {
   val m_forall = "\u2200"
   val m_exists = "\u2203"
   val m_cdot = "\u22C5"
-  val m_box = "\u2610"
-  val m_diamond = "\u2662"
+  val m_box = "\u25A1"
+  val m_diamond = "\u25C7"
   val m_rarrow = "\u2192"
   val m_ring = "\u2218"
-  val m_guarantee = "\u2945"
-  val m_leadsto = "\u21DD"
+  val m_guarantee = "\u21F8"
+  val m_leadsto = "\u219D"
   val m_mapto = "\u21A6"
+  val m_langle = "\u27E8"
+  val m_rangle = "\u27E9"
   val m_cap = "\u2229"
   val m_cup = "\u222A"
   val m_subset = "\u2282"
@@ -49,6 +51,8 @@ object UTFPrinter extends Printer {
   val m_setminus = "\u2216"
   val m_times = "\u00D7"
   val m_defeq = "\u225C"
+  val m_div = "\u00F7"
+  val m_label_as = "\u2237"
 
   def pad(s: String): String = " %s ".format(s)
 
@@ -102,6 +106,7 @@ object UTFPrinter extends Printer {
           case TlaDecimal(d)   => d.toString
           case TlaStr(s)       => "\"" + s + "\""
           case TlaBool(b)      => if (b) "TRUE" else "FALSE"
+          case TlaRealInfinity => "Infinity"
           case s: TlaPredefSet => s.name
           case _               => ""
         }
@@ -132,7 +137,7 @@ object UTFPrinter extends Printer {
           case TlaArithOper.uminus  => mkOpApp("-%s", args: _*)
           case TlaArithOper.minus   => mkOpApp("%s - %s", args: _*)
           case TlaArithOper.mult    => mkOpApp("%s * %s", args: _*)
-          case TlaArithOper.div     => mkOpApp("%s // %s", args: _*)
+          case TlaArithOper.div     => mkOpApp("%%s %s %%s".format(m_div), args: _*)
           case TlaArithOper.mod     => mkOpApp("%s %% %s", args: _*)
           case TlaArithOper.realDiv => mkOpApp("%s / %s", args: _*)
           case TlaArithOper.exp     => mkOpApp("%s ^ %s", args: _*)
@@ -173,7 +178,7 @@ object UTFPrinter extends Printer {
             "[%s EXCEPT %s]".format(apply(args.head), opAppPattern(args.tail, 2, "![%s] = %s", ", "))
           case TlaFunOper.funDef =>
             "[%s %s %s]".format(opAppStrPairs(args.tail, pad(m_in), ", "), m_mapto, apply(args.head))
-          case TlaFunOper.tuple => "<<%s>>".format(str(args))
+          case TlaFunOper.tuple => "%s%s%s".format(m_langle, str(args), m_rangle)
 
           case TlaSeqOper.append => "Append(%s)".format(str(args))
           case TlaSeqOper.concat => mkOpApp("%%s %s %%s".format(m_ring), args: _*)
@@ -204,9 +209,9 @@ object UTFPrinter extends Printer {
             }
             val argsStr = args.tail.tail.map(apply).mkString(", ")
             if (args.lengthCompare(2) > 0) {
-              s"$label($argsStr):: $body"
+              s"$label($argsStr)$m_label_as $body"
             } else {
-              s"$label:: $body"
+              s"$label$m_label_as $body"
             }
 
           case _ =>
@@ -291,6 +296,8 @@ object SimplePrinter extends Printer {
       case UTFPrinter.m_guarantee => "-+->"
       case UTFPrinter.m_leadsto   => "~>"
       case UTFPrinter.m_mapto     => "|->"
+      case UTFPrinter.m_langle    => "<<"
+      case UTFPrinter.m_rangle    => ">>"
       case UTFPrinter.m_cap       => "\\cap"
       case UTFPrinter.m_cup       => "\\cup"
       case UTFPrinter.m_subset    => "\\subset"
@@ -299,6 +306,8 @@ object SimplePrinter extends Printer {
       case UTFPrinter.m_supseteq  => "\\supseteq"
       case UTFPrinter.m_setminus  => "\\"
       case UTFPrinter.m_times     => "x"
+      case UTFPrinter.m_div       => "\\div"
+      case UTFPrinter.m_label_as  => "::"
       case _                      => p_str
     }
   }
