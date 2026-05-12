@@ -13,15 +13,8 @@ GROUP_ID=${GROUP_ID:-1000}
 groupadd --gid "$GROUP_ID" --non-unique apalache
 useradd --create-home --shell /bin/bash --uid "$USER_ID" --non-unique --gid "$GROUP_ID" apalache
 
-# Ensure the apalache user owns their home
+# Ensure the apalache user owns their home.
 chown -R apalache:apalache /home/apalache
-
-# Docker creates bind mounts before the entrypoint runs. Mounting the host's
-# ~/.tlaplus directly under /home/apalache would pre-create the home directory
-# and make useradd --create-home warn, so the wrapper mounts it under /mnt and
-# we link it into the newly-created home here.
-ln -s /mnt/host-tlaplus /home/apalache/.tlaplus
-chown -h apalache:apalache /home/apalache/.tlaplus
 
 echo 'Assuming you bind-mounted your local directory into /var/apalache...'
 cd /var/apalache

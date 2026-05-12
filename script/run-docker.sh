@@ -28,7 +28,6 @@ cmd="docker run \
     -e USER_ID=$(id -u) -e GROUP_ID=$(id -g) \
     --rm \
     -v $(pwd):/var/apalache \
-    -v "$HOME/.tlaplus":/mnt/host-tlaplus \
     ${img} ${*}"
 if [ "${APALACHE_DOCKER_DEBUG:-false}" = "true" ]; then
     >&2 echo "# running command: ${cmd}"
