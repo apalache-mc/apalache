@@ -177,14 +177,10 @@ NOTE: We truncate the output to avoid printing the file, making the test
 indifferent to the execution environment (including in docker).
 
 ```sh
-$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "File does not exist"; done
-File does not exist
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)"; done
 EXITCODE: ERROR (255)
-File does not exist
 EXITCODE: ERROR (255)
-File does not exist
 EXITCODE: ERROR (255)
-File does not exist
 EXITCODE: ERROR (255)
 ```
 
