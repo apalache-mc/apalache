@@ -38,8 +38,8 @@ test-coverage:
 
 # Run the integration tests
 integration: package
-	test/mdx-test.py --debug "$(TEST_FILTER)"
-	test/mdx-test.py --test_file=test/tla/tlc-integration-tests.md --debug "$(TEST_FILTER)"
+	test/mdx-test.py --debug $(if $(TEST_FILTER),"$(TEST_FILTER)")
+	test/mdx-test.py --test_file=test/tla/tlc-integration-tests.md --debug $(if $(TEST_FILTER),"$(TEST_FILTER)")
 
 # Generate fixtures needed to test quint integration
 quint-fixtures: tla-io/src/test/resources/tictactoe.json tla-io/src/test/resources/clockSync3.json test/tla/booleans.qnt.json
