@@ -54,6 +54,17 @@ class TestSanyImporter extends SanyImporterTestBase {
     assert("justASimpleTest" == rootName)
   }
 
+  test("blank file") {
+    val tempDir = Files.createTempDirectory("sanyimp").toFile
+    val temp = new File(tempDir, "blank.tla")
+    Files.createFile(temp.toPath)
+
+    val exception = intercept[SanyImporterException] {
+      sanyImporter.loadFromFile(temp)
+    }
+    assert(exception.getMessage == "No root module defined in file")
+  }
+
   test("one variable") {
     val text =
       """---- MODULE onevar ----
@@ -772,6 +783,70 @@ class TestSanyImporter extends SanyImporterTestBase {
     )
     expectDecl("Boolean", ValEx(TlaBoolSet))
     expectDecl("String", ValEx(TlaStrSet))
+  }
+
+  test("Unicode built-in operators are parsed like their ASCII equivalents") {
+    val asciiText =
+      """---- MODULE asciiBuiltins ----
+        |EXTENDS Naturals, Integers, Sequences
+        |VARIABLES x, y, S, T
+        |Exists == \E z \in S: z \notin T
+        |Forall == \A z \in S: z \in S
+        |NeqAndOrNot == (~(x = y)) \/ ((x /= y) /\ (x \in S))
+        |SubsetCapCupTimes == (S \subseteq T) /\ ((S \cap T) = (S \cup T)) /\ ((S \X T) = {})
+        |ImpliesEquivIff == (x => y) /\ (x \equiv y) /\ (x <=> y)
+        |LeGeDiv == (x \leq y) /\ (x \geq y) /\ (x \div y = 1)
+        |SeqConcat == <<x, y>> \o <<y>>
+        |Temporal == [](x = y) /\ <>(x /= y)
+        |LeadsGuarantees == ((x = y) ~> (x /= y)) /\ ((x = y) -+-> (x /= y))
+        |CaseOther == CASE x = y -> 1 [] OTHER -> 2
+        |Label == lab :: x = y
+        |================================
+        |""".stripMargin
+    val unicodeText =
+      """---- MODULE unicodeBuiltins ----
+        |EXTENDS Naturals, Integers, Sequences
+        |VARIABLES x, y, S, T
+        |Exists == ∃ z ∈ S: z ∉ T
+        |Forall == ∀ z ∈ S: z ∈ S
+        |NeqAndOrNot == (¬(x = y)) ∨ ((x ≠ y) ∧ (x ∈ S))
+        |SubsetCapCupTimes == (S ⊆ T) ∧ ((S ∩ T) = (S ∪ T)) ∧ ((S × T) = {})
+        |ImpliesEquivIff == (x ⇒ y) ∧ (x ≡ y) ∧ (x ⇔ y)
+        |LeGeDiv == (x ≤ y) ∧ (x ≥ y) ∧ (x ÷ y = 1)
+        |SeqConcat == ⟨x, y⟩ ∘ ⟨y⟩
+        |Temporal == □(x = y) ∧ ◇(x ≠ y)
+        |LeadsGuarantees == ((x = y) ↝ (x ≠ y)) ∧ ((x = y) ⇸ (x ≠ y))
+        |CaseOther == CASE x = y → 1 □ OTHER → 2
+        |Label == lab ∷ x = y
+        |================================
+        |""".stripMargin
+
+    def declarationsByName(text: String): Map[String, TlaOperDecl] = {
+      val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString(text))
+      modules(rootName).declarations.collect { case d: TlaOperDecl =>
+        d.name -> d
+      }.toMap
+    }
+
+    val asciiDecls = declarationsByName(asciiText)
+    val unicodeDecls = declarationsByName(unicodeText)
+
+    val names = Seq(
+        "Exists",
+        "Forall",
+        "NeqAndOrNot",
+        "SubsetCapCupTimes",
+        "ImpliesEquivIff",
+        "LeGeDiv",
+        "SeqConcat",
+        "Temporal",
+        "LeadsGuarantees",
+        "CaseOther",
+        "Label",
+    )
+    names.foreach { name =>
+      unicodeDecls(name).body should equal(asciiDecls(name).body)
+    }
   }
 
   test("comprehensions with tuples") {
