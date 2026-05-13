@@ -24,13 +24,21 @@ import at.forsyte.apalache.tla.lir.values._
  *   - `tup \in TDS1 \X ... \X TDSn` ~> `TRUE`
  *   - `rec \in [name_1: TDS1, ..., name_n: TDSn]` ~> `TRUE`
  *
+ * @param gen
+ *   the unique name generator, used for generating bound variable names when simplifying function range constraints
+ * @param tracker
+ *   the transformation tracker, used for tracking transformations and their effects on the TLA+ expressions
+ * @param beforeKeramelizer
+ *   whether to perform only a subset of the simplifications that can be safely performed before applying
+ *   [[Keramelizer]]
+ *
  * @author
  *   Thomas Pani
  */
 class SetMembershipSimplifier(
     gen: UniqueNameGenerator,
     tracker: TransformationTracker,
-    earlyPreKeramelizerMode: Boolean = false)
+    beforeKeramelizer: Boolean = false)
     extends AbstractTransformer(tracker) {
   private val boolTag = Typed(BoolT1)
   private val intTag = Typed(IntT1)
@@ -155,7 +163,7 @@ class SetMembershipSimplifier(
   private def transformMembership: PartialFunction[TlaEx, TlaEx] = {
     case ex @ OperEx(TlaSetOper.in, name, set) =>
       val simplified =
-        if (earlyPreKeramelizerMode) {
+        if (beforeKeramelizer) {
           simplifyBeforeKeramelizer(name, set)
         } else {
           simplifyMembership(name, set)
@@ -171,5 +179,5 @@ object SetMembershipSimplifier {
     new SetMembershipSimplifier(gen, tracker)
 
   def beforeKeramelizer(gen: UniqueNameGenerator, tracker: TransformationTracker): SetMembershipSimplifier =
-    new SetMembershipSimplifier(gen, tracker, earlyPreKeramelizerMode = true)
+    new SetMembershipSimplifier(gen, tracker, beforeKeramelizer = true)
 }
