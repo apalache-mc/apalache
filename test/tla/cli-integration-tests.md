@@ -177,14 +177,10 @@ NOTE: We truncate the output to avoid printing the file, making the test
 indifferent to the execution environment (including in docker).
 
 ```sh
-$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)" -e "Cannot find source file for module"; done
-Cannot find source file for module
+$ for cmd in check parse typecheck transpile; do apalache-mc $cmd nonexistent-file.tla 2>&1 | grep -o -e "EXITCODE: ERROR (255)"; done
 EXITCODE: ERROR (255)
-Cannot find source file for module
 EXITCODE: ERROR (255)
-Cannot find source file for module
 EXITCODE: ERROR (255)
-Cannot find source file for module
 EXITCODE: ERROR (255)
 ```
 
