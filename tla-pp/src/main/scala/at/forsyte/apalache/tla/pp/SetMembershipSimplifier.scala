@@ -6,6 +6,8 @@ import at.forsyte.apalache.tla.lir.transformations.standard.FlatLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.lir.values._
 
+import scala.annotation.tailrec
+
 /**
  * A simplifier that rewrites expressions commonly found in `TypeOK`. Assumes expressions to be well-typed.
  *
@@ -134,24 +136,21 @@ class SetMembershipSimplifier(
     }
   }
 
-  private def isFunctionSetWithReducibleNonTypeDefRange(set: TlaEx): Boolean = set match {
-    case OperEx(TlaSetOper.funSet, _, codomain) if !isTypeDefining(codomain) =>
-      codomain match {
-        case ValEx(TlaNatSet)                         => true
-        case nested @ OperEx(TlaSetOper.funSet, _, _) => isFunctionSetWithReducibleNonTypeDefRange(nested)
-        case _                                        => false
-      }
+  private def simplifyBeforeKeramelizer(elem: TlaEx, set: TlaEx): Option[TlaEx] = {
+    @tailrec
+    def isReducibleNonTypeDefRange(codomain: TlaEx): Boolean = codomain match {
+      case ValEx(TlaNatSet)                             => true
+      case OperEx(TlaSetOper.funSet, _, nestedCodomain) => isReducibleNonTypeDefRange(nestedCodomain)
+      case _                                            => false
+    }
+    set match {
+      // Keep the early pass narrow. In particular, do not simplify assignments such as `b' \in BOOLEAN`.
+      case OperEx(TlaSetOper.funSet, _, OperEx(TlaSetOper.funSet, _, nestedCodomain))
+          if isReducibleNonTypeDefRange(nestedCodomain) =>
+        simplifyMembership(elem, set)
 
-    case _ => false
-  }
-
-  private def simplifyBeforeKeramelizer(elem: TlaEx, set: TlaEx): Option[TlaEx] = set match {
-    // Keep the early pass narrow. In particular, do not simplify assignments such as `b' \in BOOLEAN`.
-    case OperEx(TlaSetOper.funSet, _, codomain @ OperEx(TlaSetOper.funSet, _, nestedCodomain))
-        if isReducibleNonTypeDefRange(nestedCodomain) =>
-      simplifyMembership(elem, set)
-
-    case _ => None
+      case _ => None
+    }
   }
 
   /**
