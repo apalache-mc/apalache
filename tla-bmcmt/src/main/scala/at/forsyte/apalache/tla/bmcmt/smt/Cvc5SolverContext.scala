@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt}
 import at.forsyte.apalache.tla.types.{tlaU => tla}
 import _root_.io.github.cvc5.{CVC5ApiException, Kind, Result, Solver, Sort, Term, TermManager}
+import com.typesafe.scalalogging.LazyLogging
 
 import java.io.PrintWriter
 import java.util.concurrent.atomic.AtomicLong
@@ -20,8 +21,11 @@ import scala.collection.mutable.ListBuffer
 
 /**
  * A cvc5-backed implementation of [[SolverContext]].
+ *
+ * @author
+ *   Thomas Pani
  */
-class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
+class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
   private val id: Long = Cvc5SolverContext.createId()
   private val logWriters: Iterable[PrintWriter] = initLogs()
 
@@ -53,6 +57,8 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   private val inCache: mutable.Map[(Int, Int), (Term, Int)] =
     new mutable.HashMap[(Int, Int), (Term, Int)]
 
+  logger.debug(s"Creating CVC5 solver context ${id}")
+
   solver.setLogic(smtLogic)
   log(s"(set-logic $smtLogic)")
   solver.setOption("seed", config.randomSeed.toString)
@@ -67,7 +73,9 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   override def contextLevel: Int = level
 
   override def push(): Unit = {
-    log("(push)")
+    log("(push) ;; becomes %d".format(level + 1))
+    flushLogs()
+
     solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
@@ -76,12 +84,15 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   override def pop(): Unit = pop(1)
 
   override def pop(n: Int): Unit = {
-    require(n >= 0, s"Expected a non-negative number of contexts to pop, found $n.")
     if (n > 0) {
       log(s"(pop $n)")
+      flushLogs()
+
       solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
+
+      // clean the caches
       cellSorts.filterInPlace((_, value) => value._2 <= level)
       cellCache.foreachEntry((_, valueList) => valueList.filterInPlace(value => value._3 <= level))
       cellCache.filterInPlace((_, valueList) => valueList.nonEmpty)
@@ -90,6 +101,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   }
 
   override def dispose(): Unit = {
+    logger.debug(s"Disposing CVC5 solver context ${id}")
     solver.deletePointer()
     termManager.deletePointer()
     closeLogs()
@@ -102,16 +114,19 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
     smtListener.onIntroCell(cell.id)
 
     if (maxCellIdPerContext.head >= cell.id) {
+      // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
+      // we report it immediately. Otherwise, it is very hard to find the cause.
       val msg = "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
         .format(id, cell.id, maxCellIdPerContext.head)
-      throw new InternalCheckerError(msg, NullEx)
+      flushAndThrow(new InternalCheckerError(msg, NullEx))
     } else {
       maxCellIdPerContext = cell.id +: maxCellIdPerContext.tail
     }
 
+    log(s";; declare cell($cell): ${cell.cellType}")
     val cellSort = getOrMkCellSort(cell.cellType)
+    log(s"(declare-const $cell $cellSort)")
     val cellName = cell.toString
-    log(s"(declare-const $cellName $cellSort)")
     val const = termManager.mkConst(cellSort, cellName)
     cellCache += (cell.id -> ListBuffer((const, cell.cellType, level)))
 
@@ -135,21 +150,42 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
     val elemT = elem.cellType
     val setT = set.cellType
     val name = s"in_${elemT.signature}${elem.id}_${setT.signature}${set.id}"
-    if (!inCache.contains((set.id, elem.id)) && encoding != SMTEncoding.Arrays) {
-      smtListener.onIntroSmtConst(name)
-      log(s"(declare-const $name Bool)")
-      val const = termManager.mkConst(termManager.getBooleanSort, name)
-      inCache += ((set.id, elem.id) -> (const, level))
-      _metrics = _metrics.addNConsts(1)
+    if (!inCache.contains((set.id, elem.id))) {
+      // The concept of an in-relation is not present in the arrays encoding
+      if (encoding == SMTEncoding.OOPSLA19 || encoding == SMTEncoding.FunArrays) {
+        smtListener.onIntroSmtConst(name)
+        log(s";; declare edge predicate $name: Bool")
+        log(s"(declare-const $name Bool)")
+        val const = termManager.mkConst(termManager.getBooleanSort, name)
+        inCache += ((set.id, elem.id) -> (const, level))
+        _metrics = _metrics.addNConsts(1)
+      }
+    }
+  }
+
+  private def getInPred(setId: Int, elemId: Int): Term = {
+    inCache.get((setId, elemId)) match {
+      case Some((const, _)) =>
+        const
+
+      case None =>
+        val setT = cellCache(setId).head._2
+        val elemT = cellCache(elemId).head._2
+        val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
+        flushLogs()
+        throw new IllegalStateException(
+            s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
     }
   }
 
   override def checkConsistency(arena: PureArenaAdapter): Unit = {
     val topId = arena.topCell.id
     if (maxCellIdPerContext.head > topId) {
+      // Checking consistency. When the user accidentally replaces a fresh arena with an older one,
+      // we report it immediately. Otherwise, it is very hard to find the cause.
       val msg = "SMT %d: Declaring cell %d, while cell %d has been already declared. Damaged arena?"
         .format(id, topId, maxCellIdPerContext.head)
-      throw new InternalCheckerError(msg, NullEx)
+      flushAndThrow(new InternalCheckerError(msg, NullEx))
     }
   }
 
@@ -172,7 +208,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
     } else if (value.getSort.hasSymbol && value.getSort.getSymbol.startsWith("Cell_")) {
       tla.name(value.toString, TlaType1.fromTypeTag(ex.typeTag))
     } else {
-      throw new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $value", ex)
+      flushAndThrow(throw new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $value", ex))
     }
   }
 
@@ -204,12 +240,14 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
   override def sat(): Boolean = {
     log("(check-sat)")
     flushLogs()
+
     val result = checkSat()
     log(s";; sat = $result")
     flushLogs()
+
     resultToBoolean(result).getOrElse {
       val msg = s"SMT $id: cvc5 reports UNKNOWN. Maybe, your specification is outside the supported logic."
-      throw new SmtEncodingException(msg, NullEx)
+      flushAndThrow(new SmtEncodingException(msg, NullEx))
     }
   }
 
@@ -218,13 +256,13 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
       Some(sat())
     } else {
       solver.setOption("tlimit-per", (timeoutSec * 1000).toString)
-      log(s";; timeout = $timeoutSec")
+      log(s"(set-option :tlimit-per ${timeoutSec * 1000})")
       log("(check-sat)")
       flushLogs()
       val result = checkSat()
-      solver.setOption("tlimit-per", "0")
       log(s";; sat = $result")
       flushLogs()
+      solver.setOption("tlimit-per", "0")
       resultToBoolean(result)
     }
   }
@@ -255,20 +293,6 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
           s"cvc5 is using SMT logic $smtLogic, which only permits linear integer arithmetic, but the solver saw a " +
             "nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA."
         throw new SmtEncodingException(msg, NullEx)
-    }
-  }
-
-  private def getInPred(setId: Int, elemId: Int): Term = {
-    inCache.get((setId, elemId)) match {
-      case Some((const, _)) =>
-        const
-
-      case None =>
-        val setT = cellCache(setId).head._2
-        val elemT = cellCache(elemId).head._2
-        val name = s"in_${elemT.signature}${elemId}_${setT.signature}$setId"
-        throw new IllegalStateException(
-            s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
     }
   }
 
@@ -354,6 +378,13 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
 
       case arithEx @ OperEx(_: TlaArithOper, _) =>
         toArithExpr(arithEx)
+
+      case OperEx(TlaOper.eq, NameEx(lname), NameEx(rname))
+          if ArenaCell.isValidName(lname) && ArenaCell.isValidName(rname) =>
+        // Fast path for direct arena cell comparison. This avoids descending through NameEx twice
+        val lhs = cellCache(ArenaCell.idFromName(lname)).head._1
+        val rhs = cellCache(ArenaCell.idFromName(rname)).head._1
+        (termManager.mkTerm(Kind.EQUAL, lhs, rhs), 1)
 
       case OperEx(TlaOper.eq, lhs, rhs) =>
         val (le, ln) = toExpr(lhs)
@@ -531,6 +562,19 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
 
   private def notImplemented[A](message: String): A = {
     throw new UnsupportedOperationException(message)
+  }
+
+  /**
+   * Flush the SMT log and throw the provided exception.
+   *
+   * @param e
+   *   an exception to throw
+   * @return
+   *   nothing, as an exception is unconditionally thrown
+   */
+  private def flushAndThrow(e: Exception): Nothing = {
+    flushLogs()
+    throw e
   }
 }
 

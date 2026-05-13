@@ -50,7 +50,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   private def encoding: SMTEncoding = config.smtEncoding
 
   var level: Int = 0
-  var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val simplifier = new ConstSimplifierForSmt()
@@ -267,7 +266,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
-        nBoolConsts += 1
         val const = z3context.mkConst(name, z3context.getBoolSort)
         inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
         _metrics = _metrics.addNConsts(1)
@@ -277,6 +275,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
 
   private def getInPred(setId: Int, elemId: Int): ExprSort = {
     inCache.get((setId, elemId)) match {
+      case Some((const, _)) =>
+        const
+
       case None =>
         val setT = cellCache(setId).head._2
         val elemT = cellCache(elemId).head._2
@@ -284,9 +285,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         flushLogs()
         throw new IllegalStateException(
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
-
-      case Some((const, _)) =>
-        const
     }
   }
 
@@ -501,6 +499,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def push(): Unit = {
     log("(push) ;; becomes %d".format(level + 1))
     flushLogs() // good time to flush
+
     z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
@@ -513,6 +512,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     if (level > 0) {
       log("(pop) ;; becomes %d".format(level - 1))
       flushLogs() // good time to flush
+
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
@@ -531,6 +531,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     if (n > 0) {
       log("(pop %d) ;; becomes %d".format(n, level - n))
       flushLogs() // good time to flush
+
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
@@ -548,9 +549,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def sat(): Boolean = {
     log("(check-sat)")
     flushLogs() // good time to flush
+
     val status = z3solver.check()
     log(s";; sat = ${status.name()}")
     flushLogs() // good time to flush
+
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
       val msg = s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
