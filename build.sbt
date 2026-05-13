@@ -96,6 +96,23 @@ lazy val testSettings = Seq(
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
+ThisBuild / assembly / assemblyMergeStrategy := {
+  // Workaround for conflict with grpc-netty manifest files
+  // See https://github.com/sbt/sbt-assembly/issues/362
+  case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+  // Workaround for conflict between gson and slf4j manifest files:
+  // [error] (assembly) deduplicate: different file contents found in the following:
+  // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
+  // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
+  // See https://stackoverflow.com/a/67937671/1187277
+  case PathList("module-info.class")         => MergeStrategy.discard
+  case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+  // tla2tools 1.8.0 embeds Gson classes. Keep the standalone Gson dependency, which is newer and shared by
+  // other runtime dependencies, instead of failing on duplicate class files during assembly.
+  case PathList("com", "google", "gson", _*) => MergeStrategy.last
+  case x                                     => (ThisBuild / assembly / assemblyMergeStrategy).value(x)
+}
+
 ///////////////////////
 // API Documentation //
 ///////////////////////
@@ -340,19 +357,6 @@ lazy val root = (project in file("."))
             }
             .toVector
         sbtassembly.MappingSet(None, tlaModuleMapping)
-      },
-      assembly / assemblyMergeStrategy := {
-        // Workaround for conflict with grpc-netty manifest files
-        // See https://github.com/sbt/sbt-assembly/issues/362
-        case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
-        // Workaround for conflict between gson and slf4j manifest files:
-        // [error] (assembly) deduplicate: different file contents found in the following:
-        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
-        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
-        // See https://stackoverflow.com/a/67937671/1187277
-        case PathList("module-info.class")         => MergeStrategy.discard
-        case x if x.endsWith("/module-info.class") => MergeStrategy.discard
-        case x                                     => (assembly / assemblyMergeStrategy).value(x)
       },
       // Package the distribution files
       Universal / mappings ++= Seq(

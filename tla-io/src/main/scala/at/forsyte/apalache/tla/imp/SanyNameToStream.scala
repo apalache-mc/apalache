@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
+import util.FilenameToStream.TLAFile
 import util.SimpleFilenameToStream
-
-import java.io.File
 
 /**
  * A decorator of SANY's SimpleFilenameToStream that rewires some names to Apalache names.
@@ -11,7 +10,7 @@ import java.io.File
  *   Igor Konnov, Thomas Pani
  */
 trait SanyNameToStream extends SimpleFilenameToStream {
-  override def resolve(name: String, isModule: Boolean): File = {
+  override def resolve(name: String, isModule: Boolean): TLAFile = {
     val wiredOrOriginalName = StandardLibrary.wiredModules.getOrElse(name, name)
     super.resolve(wiredOrOriginalName, isModule)
   }
