@@ -139,8 +139,8 @@ class SetMembershipSimplifier(
 
   private def simplifyBeforeKeramelizer(elem: TlaEx, set: TlaEx): Option[TlaEx] = set match {
     // Keep the early pass narrow. In particular, do not simplify assignments such as `b' \in BOOLEAN`.
-    case OperEx(TlaSetOper.funSet, _, codomain @ OperEx(TlaSetOper.funSet, _, _))
-        if isFunctionSetWithReducibleNonTypeDefRange(codomain) =>
+    case OperEx(TlaSetOper.funSet, _, codomain @ OperEx(TlaSetOper.funSet, _, nestedCodomain))
+        if isReducibleNonTypeDefRange(nestedCodomain) =>
       simplifyMembership(elem, set)
 
     case _ => None
