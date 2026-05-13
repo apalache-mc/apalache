@@ -723,12 +723,26 @@ object OptionGroup extends LazyLogging {
           Success(n)
         }
 
+      def validateSolverEncoding(solver: SMTSolver, encoding: SMTEncoding): Try[(SMTSolver, SMTEncoding)] =
+        (solver, encoding) match {
+          case (SMTSolver.CVC5, SMTEncoding.OOPSLA19) =>
+            Success((solver, encoding))
+
+          case (SMTSolver.CVC5, unsupported) =>
+            Failure(new PassOptionException(
+                    s"checker.smt-solver=cvc5 currently supports only checker.smt-encoding=oopsla19, but got $unsupported."))
+
+          case _ =>
+            Success((solver, encoding))
+        }
+
       for {
         algo <- checker.algo.toTry("checker.algo")
         discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
         length <- checker.length.toTry("checker.length")
         smtSolver <- checker.smtSolver.toTry("checker.smtSolver")
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
+        validatedSolverEncoding <- validateSolverEncoding(smtSolver, smtEncoding)
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
         timeoutSmtSec <- checker.timeoutSmtSec.toTry("checker.timeoutSmtSec")
@@ -740,8 +754,8 @@ object OptionGroup extends LazyLogging {
           timeoutSmtSec = timeoutSmtSec,
           // set to true here, check mergeCheckDeadlockFromTlc below
           noDeadlocks = checker.noDeadlocks.getOrElse(true),
-          smtSolver = smtSolver,
-          smtEncoding = smtEncoding,
+          smtSolver = validatedSolverEncoding._1,
+          smtEncoding = validatedSolverEncoding._2,
           tuning = tuning,
       )
     }
