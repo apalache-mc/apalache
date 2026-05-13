@@ -500,63 +500,6 @@ Checker reports no error up to computation length 10
 EXITCODE: OK
 ```
 
-### check Counter.tla with CVC5 reports no error
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
-The outcome is: NoError
-Checker reports no error up to computation length 0
-EXITCODE: OK
-```
-
-### check Counter.tla with CVC5 finds a counterexample
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=10 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker has found|EXITCODE"
-The outcome is: Error
-Checker has found an error
-EXITCODE: ERROR (12)
-```
-
-### check Counter.tla with CVC5 configured from a file
-
-```sh
-$ printf "checker={length=0,inv=[Inv],smt-solver=cvc5}" > cvc5-config.cfg
-$ apalache-mc check --config-file=cvc5-config.cfg --run-dir=cvc5-configdump-dir --debug Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
-The outcome is: NoError
-Checker reports no error up to computation length 0
-EXITCODE: OK
-$ grep "smt-solver" cvc5-configdump-dir/application-configs.cfg
-    smt-solver=cvc5
-$ rm -rf cvc5-config.cfg cvc5-configdump-dir
-```
-
-### check Counter.tla with CVC5 configured from the environment
-
-```sh
-$ SMT_SOLVER=cvc5 apalache-mc check --length=0 --inv=Inv Counter.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
-The outcome is: NoError
-Checker reports no error up to computation length 0
-EXITCODE: OK
-```
-
-### check NonLinearArithmetic.tla with default CVC5 logic reports how to enable nonlinear arithmetic
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "error when rewriting to SMT:|EXITCODE" | sed -n '1p;$p' | sed 's/[[:space:]]*$//'
-<unknown>: error when rewriting to SMT: cvc5 is using SMT logic QF_UFLIA, which only permits linear integer arithmetic, but the solver saw a nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA.
-EXITCODE: ERROR (255)
-```
-
-### check NonLinearArithmetic.tla with CVC5 nonlinear arithmetic logic reports no error
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --tuning-options=cvc5.smt.logic=QF_UFNIA --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
-The outcome is: NoError
-Checker reports no error up to computation length 0
-EXITCODE: OK
-```
-
 ### check factorization find a counterexample (array-encoding)
 
 ```sh
@@ -1838,28 +1781,12 @@ $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=
 EXITCODE: OK
 ```
 
-### check PickPerf succeeds with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf.tla | sed 's/I@.*//'
-...
-EXITCODE: OK
-```
-
 ### check PickPerf2 succeeds (array-encoding)
 
 A performance test.
 
 ```sh
 $ apalache-mc check --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
-...
-EXITCODE: OK
-```
-
-### check PickPerf2 succeeds with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --discard-disabled=0 --tuning-options=search.invariant.mode=after PickPerf2.tla | sed 's/I@.*//'
 ...
 EXITCODE: OK
 ```
@@ -1940,6 +1867,25 @@ MCexample5.out
 MCexample.out
 run.txt
 $ rm -rf ./test-out-dir
+```
+
+### check NonLinearArithmetic.tla with default CVC5 logic reports how to enable nonlinear arithmetic
+
+This will run under cvc5 regardless which SMT_SOLVER is set; if both CLI arg and environment variable configure the same parameter, the CLI argument wins.
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "error when rewriting to SMT:|EXITCODE" | sed -n '1p;$p' | sed 's/[[:space:]]*$//'
+<unknown>: error when rewriting to SMT: cvc5 is using SMT logic QF_UFLIA, which only permits linear integer arithmetic, but the solver saw a nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA.
+EXITCODE: ERROR (255)
+```
+
+### check NonLinearArithmetic.tla with CVC5 nonlinear arithmetic logic reports no error
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --tuning-options=cvc5.smt.logic=QF_UFNIA --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
 ```
 
 ## configure the check command
@@ -2602,14 +2548,6 @@ $ apalache-mc check --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's
 EXITCODE: OK
 ```
 
-### check MC3_TwoPhaseTyped.tla succeeds with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --inv=TCConsistent --length=3 MC3_TwoPhaseTyped.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
 ### check OptionTests.tla succeeds
 
 These tests check that the operators defined in `Option.tla` work as expected.
@@ -2734,14 +2672,6 @@ $ apalache-mc check --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.
 EXITCODE: OK
 ```
 
-### check TestSequences.tla reports no error with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=AllTests TestSequences.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
 ### check TestSequencesExt.tla reports no error
 
 ```sh
@@ -2798,14 +2728,6 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
-### check TestSets.tla reports no error with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=AllTests TestSets.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -2947,14 +2869,6 @@ $ apalache-mc check --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
-### check MC_LamportMutexTyped.tla with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=4 MC_LamportMutexTyped.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
 ### check TestVariants.tla
 
 Variant operators work in the model checker.
@@ -2989,14 +2903,6 @@ A regression test for function operations.
 
 ```sh
 $ apalache-mc check --inv=Safety Consensus_epr.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-```
-
-### check Consensus_epr with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --inv=Safety Consensus_epr.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3047,16 +2953,6 @@ EXITCODE: OK
 
 ```sh
 $ apalache-mc check --length=5 --inv=NoNegativeBalances MC_ERC20.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
-EXITCODE: OK
-```
-
-### check ERC20.tla with CVC5
-
-```sh
-$ apalache-mc check --smt-solver=cvc5 --length=5 --inv=NoNegativeBalances MC_ERC20.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
