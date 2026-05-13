@@ -721,16 +721,15 @@ abstract class TestEtcTypeCheckerBase extends AnyFunSuite with EasyMockSugar wit
   }
 
   test("record unification joins non-overlapping fields") {
-    val app = mkUniqApp(Seq(parser("(a, a) => a")), mkUniqConst(parser("[x: Int]")),
-        mkUniqConst(parser("[y: Bool]")))
+    val app = mkUniqApp(Seq(parser("(a, a) => a")), mkUniqConst(parser("[x: Int]")), mkUniqConst(parser("[y: Bool]")))
 
     val computed = checker.compute(new DefaultTypeCheckerListener(), TypeContext.empty, app)
     assert(computed.contains(parser("[x: Int, y: Bool]")))
   }
 
   test("sparse tuple unification rejects indices outside a concrete tuple") {
-    val app = mkUniqApp(Seq(parser("(a, a) => a")), mkUniqConst(parser("<| 3: Int |>")),
-        mkUniqConst(parser("<<Int, Int>>")))
+    val app =
+      mkUniqApp(Seq(parser("(a, a) => a")), mkUniqConst(parser("<| 3: Int |>")), mkUniqConst(parser("<<Int, Int>>")))
 
     val computed = checker.compute(new DefaultTypeCheckerListener(), TypeContext.empty, app)
     assert(computed.isEmpty)

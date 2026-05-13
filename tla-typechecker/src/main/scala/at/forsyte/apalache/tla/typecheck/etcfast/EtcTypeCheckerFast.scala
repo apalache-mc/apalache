@@ -45,7 +45,6 @@ import scala.collection.mutable
  *   the pool used for externally visible fresh type variables
  * @param inferPolytypes
  *   whether LET-polymorphism is allowed to infer polymorphic user definitions
- *
  */
 class EtcTypeCheckerFast(varPool: TypeVarPool, inferPolytypes: Boolean = true) extends TypeChecker with EtcBuilder {
   import EtcTypeCheckerFast._
