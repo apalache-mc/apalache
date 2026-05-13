@@ -1819,11 +1819,10 @@ EXITCODE: OK
 
 While we cannot rely on an actual timeout happening or not, we can make sure that the option is properly parsed. 
 
+Depending on whether the SMT solver times out or not, Apalache will write either `The outcome is: NoError` or `The outcome is: SmtTimeout`, so we filter for only the exit code, which should be OK in either case.
+
 ```sh
-$ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
+$ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | grep 'EXITCODE'
 EXITCODE: OK
 ```
 
@@ -2694,8 +2693,11 @@ EXITCODE: OK
 
 ### check TestBagsExt.tla reports no error
 
+CVC5 1.3.4 rejects the SMT `POW` term generated for this test because its exponent is not constant, even
+with `cvc5.smt.logic=ALL`, so keep this regression fixed to Z3.
+
 ```sh
-$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --smt-solver=z3 --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
