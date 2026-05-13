@@ -503,7 +503,7 @@ EXITCODE: OK
 ### check factorization find a counterexample (array-encoding)
 
 ```sh
-$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -2123,31 +2123,35 @@ application-configs.cfg
 detailed.log
 log0.smt
 run.txt
-$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
-;; fp.spacer.random_seed = 0
-;; nlsat.seed = 0
-;; sat.random_seed = 0
-;; sls.random_seed = 0
-;; smt.random_seed = 0
-;; (params random_seed 0)
-...
 $ rm -rf ./test-out-dir
 ```
 
-#### check SMT seed is picked up
+#### check SMT seed is picked up by Z3
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --smt-solver=z3 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
-$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
-;; fp.spacer.random_seed = 4242
-;; nlsat.seed = 4242
-;; sat.random_seed = 4242
-;; sls.random_seed = 4242
-;; smt.random_seed = 4242
+$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 6 {} \;
+(set-option :fp.spacer.random_seed 4242)
+(set-option :nlsat.seed 4242)
+(set-option :sat.random_seed 4242)
+(set-option :sls.random_seed 4242)
+(set-option :smt.random_seed 4242)
 ;; (params random_seed 4242)
+$ rm -rf ./test-out-dir
+```
+
+#### check SMT seed is picked up by CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
 ...
+EXITCODE: OK
+$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 3 {} \;
+(set-logic QF_UFLIA)
+(set-option :random-seed 4242)
+(set-option :sat-random-seed 4242)
 $ rm -rf ./test-out-dir
 ```
 
@@ -2691,7 +2695,7 @@ EXITCODE: OK
 ### check TestBagsExt.tla reports no error
 
 ```sh
-$ apalache-mc check --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3867,7 +3871,7 @@ $ rm -rf ./test-out-dir
 ### output manager: counterexamples are written to the run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
@@ -3927,7 +3931,7 @@ $ rm -rf ./test-out-dir ./test-run-dir
 ### output manager: counterexamples can be written to specified run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
@@ -4037,7 +4041,7 @@ Then, run a trivial checking command with `--debug` so the derived config will
 be saved into to the `--run-dir`:
 
 ```sh
-$ apalache-mc check --config-file=demo-config.cfg --run-dir=configdump-dir --debug Counter.tla
+$ apalache-mc check --smt-solver=cvc5 --config-file=demo-config.cfg --run-dir=configdump-dir --debug Counter.tla
 ...
 ```
 
@@ -4056,7 +4060,7 @@ checker {
     smt-encoding {
         type=oopsla-19
     }
-    smt-solver=z3
+    smt-solver=cvc5
     timeout-smt-sec=0
     tuning {
         "search.outputTraces"="false"

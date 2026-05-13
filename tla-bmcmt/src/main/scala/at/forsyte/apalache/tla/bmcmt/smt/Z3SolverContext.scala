@@ -44,7 +44,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
-    log(";; %s = %s".format(p, Global.getParameter(p)))
+    log(s"(set-option :$p ${Global.getParameter(p)})")
   }
 
   private def encoding: SMTEncoding = config.smtEncoding
@@ -1090,6 +1090,9 @@ object Z3SolverContext {
 
   /**
    * The names of all parameters that are used to set the random seeds in z3.
+   *
+   * Z3 also exposes `tactic.randomizer.seed` in newer releases, but z3-turnkey is currently older than the Z3 release
+   * that introduced it. Add it here after upgrading the bundled Z3 dependency.
    */
   val RANDOM_SEED_PARAMS: List[String] =
     List(
