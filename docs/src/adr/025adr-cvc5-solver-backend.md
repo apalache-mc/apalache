@@ -114,8 +114,9 @@ the first integration.
 
 The initial implementation should be intentionally conservative:
 
-1. Prioritize the OOPSLA19 encoding, since it is the primary encoding used by Apalache. Arrays and FunArrays should be
-   included in the compatibility work, but they are not the only target.
+1. Target the OOPSLA19 encoding first, since it is the primary encoding used by Apalache. After that path is stable,
+   evaluate the theory support needed by the Arrays and FunArrays encodings separately. They use different SMT array
+   theory features and should not block the first cvc5 backend.
 2. Preserve the current cell/sort naming conventions so that existing logging, recording, and model-decoding assumptions
    remain easy to compare against Z3.
 3. Add a solver choice to configuration separately from `smtEncoding`; those are independent dimensions.
@@ -125,6 +126,13 @@ The initial implementation should be intentionally conservative:
 5. Add differential property-based tests between Z3 and cvc5 at the `SolverContext` level for operations supported by
    both implementations.
 6. Use SMT-LIB dumps as a comparison aid.
+
+The implemented backend uses the official `io.github.cvc5:cvc5:1.3.4` artifacts and explicitly includes the published
+native classifier jars for Linux, macOS, and Windows on `x86_64` and `aarch_64`. CVC5 is selected with
+`--smt-solver=cvc5` or the corresponding checker configuration value. The backend exposes `cvc5.smt.logic` as a
+solver-specific tuning key. We noticed performance degradation if we do not define a logic via `(set-logic ...)`,
+or set it too liberal (e.g., `QF_UFNIA` when `QF_UFLIA` would suffice). Thus, the default cvc5 logic is `QF_UFLIA`
+for OOPSLA19. Specifications that require nonlinear integer arithmetic can use `cvc5.smt.logic=QF_UFNIA`.
 
 ## Consequences
 
@@ -140,9 +148,10 @@ consistency checks, metrics accounting, and solver-selection plumbing. This will
 JavaSMT and KSMT remain viable future options. The native cvc5 backend should give us evidence for whether adopting a
 solver-agnostic formula layer would simplify Apalache or merely move backend-specific behavior into escape hatches.
 
-The implementation will require dependency and CI work. cvc5 ships native code behind the Java API, so CI must verify
-Linux and macOS support explicitly and document any unsupported platform combinations. If official Maven artifacts lag significantly behind a
-new cvc5 release, Apalache should prefer staying on the latest compatible official artifact over depending on stale packaging.
+The implementation requires dependency and CI work. cvc5 ships native code behind the Java API, so CI must verify
+native loading on supported platforms and document any unsupported platform combinations. If official Maven artifacts
+lag significantly behind a new cvc5 release, Apalache should prefer staying on the latest compatible official artifact
+over depending on stale packaging.
 
 ## References
 

@@ -55,6 +55,10 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext {
 
   solver.setLogic(smtLogic)
   log(s"(set-logic $smtLogic)")
+  solver.setOption("seed", config.randomSeed.toString)
+  log(s"(set-option :random-seed ${config.randomSeed})")
+  solver.setOption("sat-random-seed", config.randomSeed.toString)
+  log(s"(set-option :sat-random-seed ${config.randomSeed})")
   solver.setOption("produce-models", "true")
   config.solverParams.filterNot(_._1 == "smt.logic").foreach { case (k, v) =>
     solver.setOption(k, v.toString)
