@@ -1,0 +1,1 @@
+- Allow `ENABLED` expressions in the KerA language predicate, fixing preprocessing failures for invariants such as `ENABLED a'`. (#3275)

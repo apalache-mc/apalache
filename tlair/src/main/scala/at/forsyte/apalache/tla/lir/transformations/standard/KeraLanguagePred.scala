@@ -134,8 +134,8 @@ object KeraLanguagePred {
         ApalacheOper.setAsFun,
         ApalacheOper.guess,
         ApalacheInternalOper.apalacheSeqCapacity,
+        TlaActionOper.enabled,
         // for the future
-        //    TlaActionOper.enabled,
         //    TlaActionOper.unchanged,
         //    TlaTempOper.box,
         //    TlaTempOper.diamond

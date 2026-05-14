@@ -105,6 +105,12 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
     expectOk(pred.isExprOk(and(bool(false), name("b"))))
   }
 
+  test("a KerA enabled expression") {
+    expectOk(pred.isExprOk(enabled(prime(name("a")))))
+    expectOk(pred.isExprOk(enabled(eql(prime(name("a")), bool(true)))))
+    expectOk(pred.isExprOk(enabled(eql(prime(name("a")), not(name("a"))))))
+  }
+
   test("not a KerA logic expression") {
     expectFail(pred.isExprOk(equiv(bool(false), name("b"))))
     expectFail(pred.isExprOk(impl(bool(false), name("b"))))
