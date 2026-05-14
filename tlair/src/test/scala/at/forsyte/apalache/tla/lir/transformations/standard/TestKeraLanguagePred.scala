@@ -108,6 +108,9 @@ class TestKeraLanguagePred extends LanguagePredTestSuite {
   test("a KerA enabled expression") {
     expectOk(pred.isExprOk(enabled(prime(name("a")))))
     expectOk(pred.isExprOk(enabled(eql(prime(name("a")), bool(true)))))
+    expectOk(pred.isExprOk(enabled(eql(prime(name("a")), bool(false)))))
+    expectOk(pred.isExprOk(enabled(or(prime(name("a")), not(prime(name("a")))))))
+    expectOk(pred.isExprOk(enabled(eql(prime(name("a")), name("a")))))
     expectOk(pred.isExprOk(enabled(eql(prime(name("a")), not(name("a"))))))
   }
 
