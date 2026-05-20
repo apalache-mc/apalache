@@ -15,3 +15,42 @@
 
   code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
 })();
+
+(function addApalacheFooter() {
+  let content = document.getElementById("mdbook-content");
+  if (!content || document.getElementById("apalache-site-footer")) {
+    return;
+  }
+
+  if (!document.getElementById("apalache-footer-style")) {
+    let style = document.createElement("style");
+    style.id = "apalache-footer-style";
+    style.textContent = [
+      ".apalache-site-footer {",
+      "  max-width: var(--content-max-width);",
+      "  margin: 30px auto 0;",
+      "  padding: 18px var(--page-padding) 0;",
+      "  border-top: 1px solid var(--table-border-color);",
+      "  color: var(--icons);",
+      "  font-size: 0.85em;",
+      "}",
+      ".apalache-site-footer p {",
+      "  margin: 0 0 8px;",
+      "  line-height: 1.45em;",
+      "}"
+    ].join("\n");
+    document.head.appendChild(style);
+  }
+
+  let footer = document.createElement("footer");
+  footer.id = "apalache-site-footer";
+  footer.className = "apalache-site-footer";
+  footer.setAttribute("role", "contentinfo");
+  footer.innerHTML = [
+    "<p>Copyright &copy; Apalache a Series of LF Projects, LLC</p>",
+    "<p>For web site terms of use, trademark policy and other project policies please see ",
+    "<a href=\"https://lfprojects.org\">lfprojects.org</a>.</p>"
+  ].join("");
+
+  content.appendChild(footer);
+})();

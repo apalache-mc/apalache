@@ -102,14 +102,6 @@ OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 - [Bounded model checking of TLA+ specifications with SMT](https://www.youtube.com/watch?v=Xl1--arESl8)
   TLA+ Community Event 2018 (July 2018).
 
----
-
-Copyright © Apalache a Series of LF Projects, LLC
-
-For web site terms of use, trademark policy and other project policies please
-see [lfprojects.org](https://lfprojects.org).
-
-
 <!-- LINKS -->
 
 [Chat]: https://apalache.discourse.group/
