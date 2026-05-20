@@ -26,9 +26,17 @@
     let style = document.createElement("style");
     style.id = "apalache-footer-style";
     style.textContent = [
+      "#mdbook-content {",
+      "  display: flex;",
+      "  flex-direction: column;",
+      "  box-sizing: border-box;",
+      "  min-height: calc(100vh - var(--menu-bar-height));",
+      "}",
       ".apalache-site-footer {",
       "  max-width: var(--content-max-width);",
-      "  margin: 30px auto 0;",
+      "  width: 100%;",
+      "  box-sizing: border-box;",
+      "  margin: auto auto 0;",
       "  padding: 18px var(--page-padding) 0;",
       "  border-top: 1px solid var(--table-border-color);",
       "  color: var(--icons);",
