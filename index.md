@@ -24,7 +24,7 @@ TLA<sup>+</sup> specifications:
  lengths.
 
  1. Write your own **exploration scripts** over symbolic actions,
- including the feedback from the implementation.
+ including the feedback from the implementation. See [JSON RPC Server][].
 
 To understand, how these three approaches play together, see the
 [[blogpost]][Ben-Or] on Model checking safety of Ben-Or's Byzantine consensus
@@ -126,3 +126,4 @@ OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 [oopsla19]: https://dl.acm.org/doi/10.1145/3360549
 [Solarkraft]: https://github.com/freespek/solarkraft/
 [Atomkraft]: https://github.com/informalsystems/atomkraft
+[JSON RPC Server]: https://github.com/apalache-mc/apalache/tree/main/json-rpc
