@@ -534,7 +534,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
     val predEx = tla.not(tla.in(tla.int(2), tla.name("Q", intSetT)))
     val expandedPowSet = tla.expand(tla.powSet(set))
-    val ex = tla.filter(tla.name("Q", intSetT), expandedPowSet, unchecked(predEx))
+    val ex = tla.filter(tla.name("Q", intSetT), expandedPowSet, predEx)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
