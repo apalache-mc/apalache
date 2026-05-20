@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1}
+import at.forsyte.apalache.tla.types.{tla => typedTla, tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -21,6 +22,10 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def assertBuildEqual(a: BuilderT, b: BuilderT): Unit =
     assert(a.build == b.build)
+
+  protected def boolName(name: String): TBuilderInstruction = typedTla.name(name, BoolT1)
+  protected def intName(name: String): TBuilderInstruction = typedTla.name(name, IntT1)
+  protected def cellEx(cell: ArenaCell): TBuilderInstruction = typedTla.name(cell.toString, cell.cellType.toTlaType1)
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
