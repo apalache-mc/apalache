@@ -5,7 +5,7 @@
 !["Apalache Logo"](./logo-apalache.png "Apalache Logo"){: height="100px"}
 {:refdef}
 
-[Installation][] • [Manual][] • [Releases][] • [Chat][] • [Contribute][]
+[Installation][] • [Manual][] • [Releases][] • [Contribute][]
 {: style="font-size: 1.2em; text-align: center;"}
 
 Contact person: [Igor Konnov][].
@@ -104,7 +104,6 @@ OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 
 <!-- LINKS -->
 
-[Chat]: https://apalache.discourse.group/
 [Contribute]: https://github.com/apalache-mc/apalache/blob/main/CONTRIBUTING.md
 [Features]: ./docs/apalache/features.html
 [Installation]: ./docs/apalache/installation/index.html
