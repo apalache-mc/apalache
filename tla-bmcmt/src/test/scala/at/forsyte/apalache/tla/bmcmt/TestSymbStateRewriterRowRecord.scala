@@ -2,21 +2,20 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSymbStateRewriterRowRecord extends RewriterBase {
   private val parser = DefaultType1Parser
-  private val fieldA = int(22).typed()
-  private val fieldB = bool(false).typed()
-  private val fieldC = str("d").typed()
+  private val fieldA = tla.int(22)
+  private val fieldB = tla.bool(false)
+  private val fieldC = tla.str("d")
 
   test("""[a |-> 22, b |-> FALSE, c |-> "d"]""") { rewriterType: SMTEncoding =>
     val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val record = enumFun(str("a"), fieldA, str("b"), fieldB, str("c"), fieldC).as(recordT)
+    val record = tla.rowRec(None, "a" -> fieldA, "b" -> fieldB, "c" -> fieldC)
 
     val state = new SymbState(record, arena, Binding())
     val rewriter = create(rewriterType)
@@ -31,25 +30,24 @@ trait TestSymbStateRewriterRowRecord extends RewriterBase {
   }
 
   test("""[a |-> 22, b |-> FALSE, c |-> "d"].a""") { rewriterType: SMTEncoding =>
-    val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val record = enumFun(str("a"), fieldA, str("b"), fieldB, str("c"), fieldC).as(recordT)
-    val valueOfA = appFun(record, str("a")).as(IntT1)
+    val record = tla.rowRec(None, "a" -> fieldA, "b" -> fieldB, "c" -> fieldC)
+    val valueOfA = tla.app(record, tla.str("a"))
 
     val state = new SymbState(valueOfA, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
     val cell = nextState.asCell
-    assert(fieldA.typeTag.asTlaType1() == cell.cellType.toTlaType1)
+    assert(typeOf(fieldA.build) == cell.cellType.toTlaType1)
 
-    val eq = eql(cell.toNameEx, int(22)).as(BoolT1)
+    val eq = tla.eql(tla.unchecked(cell.toNameEx), tla.int(22))
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   test("""[[a |-> 22, b |-> FALSE, c |-> "d"] EXCEPT !.a = 10]""") { rewriterType: SMTEncoding =>
     val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val record = enumFun(str("a"), fieldA, str("b"), fieldB, str("c"), fieldC).as(recordT)
-    val newRecord = except(record, tuple(str("a")).as(TupT1(StrT1)), int(10)).as(recordT)
+    val record = tla.rowRec(None, "a" -> fieldA, "b" -> fieldB, "c" -> fieldC)
+    val newRecord = tla.except(record, tla.str("a"), tla.int(10))
 
     val state = new SymbState(newRecord, arena, Binding())
     val rewriter = create(rewriterType)
@@ -58,15 +56,14 @@ trait TestSymbStateRewriterRowRecord extends RewriterBase {
     val cell = nextState.asCell
     assert(recordT == cell.cellType.toTlaType1)
 
-    expectField(rewriter, nextState, cell, "a", int(10).typed())
+    expectField(rewriter, nextState, cell, "a", tla.int(10))
     expectField(rewriter, nextState, cell, "b", fieldB)
     expectField(rewriter, nextState, cell, "c", fieldC)
   }
 
   test("""DOMAIN [a |-> 1, b |-> FALSE, c |-> "d"]""") { rewriterType: SMTEncoding =>
-    val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val record = enumFun(str("a"), fieldA, str("b"), fieldB, str("c"), fieldC).as(recordT)
-    val domain = dom(record).as(SetT1(StrT1))
+    val record = tla.rowRec(None, "a" -> fieldA, "b" -> fieldB, "c" -> fieldC)
+    val domain = tla.dom(record)
 
     val state = new SymbState(domain, arena, Binding())
     val rewriter = create(rewriterType)
@@ -74,19 +71,15 @@ trait TestSymbStateRewriterRowRecord extends RewriterBase {
     assert(solverContext.sat())
     val cell = nextState.asCell
 
-    val eq = eql(cell.toNameEx, enumSet(str("a"), str("b"), str("c")).as(SetT1(StrT1))).as(BoolT1)
+    val eq = tla.eql(tla.unchecked(cell.toNameEx), tla.enumSet(tla.str("a"), tla.str("b"), tla.str("c")))
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
   test("record equality") { rewriterType: SMTEncoding =>
     // order of the fields does not matter
-    val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val a = str("a")
-    val b = str("b")
-    val c = str("c")
-    val record1 = enumFun(a, int(1), b, bool(false), c, str("d")).as(recordT)
-    val record2 = enumFun(c, str("d"), b, bool(false), a, int(1)).as(recordT)
-    val eq = eql(record1, record2).as(BoolT1)
+    val record1 = tla.rowRec(None, "a" -> tla.int(1), "b" -> tla.bool(false), "c" -> tla.str("d"))
+    val record2 = tla.rowRec(None, "c" -> tla.str("d"), "b" -> tla.bool(false), "a" -> tla.int(1))
+    val eq = tla.eql(record1, record2)
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create(rewriterType)
     assertTlaExAndRestore(rewriter, state)
@@ -94,13 +87,9 @@ trait TestSymbStateRewriterRowRecord extends RewriterBase {
 
   test("record inequality") { rewriterType: SMTEncoding =>
     // order of the fields does not matter
-    val recordT = parser("{ a: Int, b: Bool, c: Str }")
-    val a = str("a")
-    val b = str("b")
-    val c = str("c")
-    val record1 = enumFun(a, int(3), b, bool(false), c, str("d")).as(recordT)
-    val record2 = enumFun(c, str("d"), b, bool(false), a, int(1)).as(recordT)
-    val eq = not(eql(record1, record2).as(BoolT1)).as(BoolT1)
+    val record1 = tla.rowRec(None, "a" -> tla.int(3), "b" -> tla.bool(false), "c" -> tla.str("d"))
+    val record2 = tla.rowRec(None, "c" -> tla.str("d"), "b" -> tla.bool(false), "a" -> tla.int(1))
+    val eq = tla.not(tla.eql(record1, record2))
     val state = new SymbState(eq, arena, Binding())
     val rewriter = create(rewriterType)
     assertTlaExAndRestore(rewriter, state)
@@ -121,11 +110,16 @@ trait TestSymbStateRewriterRowRecord extends RewriterBase {
       state: SymbState,
       cell: ArenaCell,
       fieldName: String,
-      expectedEx: TlaEx): Unit = {
+      expectedEx: TBuilderInstruction): Unit = {
     val fieldTypes = getFieldTypes(cell.cellType)
     val index = fieldTypes.keySet.toList.indexOf(fieldName)
     val fieldValue = state.arena.getHas(cell)(index)
-    val eq = tla.eql(fieldValue.toNameEx, expectedEx).as(BoolT1)
+    val eq = tla.eql(tla.unchecked(fieldValue.toNameEx), expectedEx)
     assertTlaExAndRestore(rewriter, state.setRex(eq))
+  }
+
+  private def typeOf(ex: TlaEx): TlaType1 = ex.typeTag match {
+    case Typed(tt: TlaType1) => tt
+    case tag                 => fail("Expected typed expression, found: " + tag)
   }
 }

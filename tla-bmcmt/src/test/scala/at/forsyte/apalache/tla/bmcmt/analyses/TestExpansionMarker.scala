@@ -1,146 +1,120 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, SetT1}
-import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperEx, SetT1, TlaEx, TlaType1, Typed}
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
+  private val intSetT = SetT1(IntT1)
+  private val intFunT = FunT1(IntT1, IntT1)
+
   private var marker = new ExpansionMarker(TrackerWithListeners())
-  val types = Map(
-      "S" -> SetT1(IntT1),
-      "PS" -> SetT1(SetT1(IntT1)),
-      "i" -> IntT1,
-      "b" -> BoolT1,
-      "f" -> FunT1(IntT1, IntT1),
-      "FS" -> SetT1(FunT1(IntT1, IntT1)),
-  )
 
   override def beforeEach(): Unit = {
     marker = new ExpansionMarker(TrackerWithListeners())
   }
 
   test("""not marked: x \in SUBSET S""") {
-    val input =
-      tla
-        .in(tla.name("x") ? "S", tla.powSet(tla.name("S") ? "S") ? "PS")
-        .typed(types, "b")
+    val input = tla.in(tla.name("x", intSetT), tla.powSet(tla.name("S", intSetT)))
     val output = marker.apply(input)
-    assert(output == input)
+    assert(output == input.build)
   }
 
   test("""not marked: x \in [S -> T]""") {
-    val input = tla
-      .in(tla.name("x") ? "f", tla.funSet(tla.name("S") ? "S", tla.name("T") ? "S") ? "FS")
-      .typed(types, "b")
+    val input = tla.in(tla.name("x", intFunT), tla.funSet(tla.name("S", intSetT), tla.name("T", intSetT)))
     val output = marker.apply(input)
-    assert(output == input)
+    assert(output == input.build)
   }
 
   test("""marked: {1} \cup SUBSET S""") {
-    val input = tla
-      .cup(tla.enumSet(tla.int(1)) ? "S", tla.powSet(tla.name("S") ? "S") ? "PS")
-      .typed(types, "S")
+    val input = typedCup(tla.enumSet(tla.int(1)).build, tla.powSet(tla.name("S", intSetT)).build, intSetT)
     val output = marker.apply(input)
-    val expected = {
-      tla
-        .cup(tla.enumSet(tla.int(1)) ? "S", tla.apalacheExpand(tla.powSet(tla.name("S") ? "S") ? "PS") ? "PS")
-        .typed(types, "S")
-    }
+    val expected =
+      typedCup(tla.enumSet(tla.int(1)).build, tla.expand(tla.powSet(tla.name("S", intSetT))).build, intSetT)
 
     assert(expected == output)
   }
 
   // although the optimizing phase should simplify this expression, we like to know what happens, if not
   test("""marked: {} \cup [S -> T]""") {
-    val input = tla
-      .in(tla.name("x") ? "f",
-          tla.cup(tla.emptySet() ? "FS", tla.funSet(tla.name("S") ? "S", tla.name("T") ? "S") ? "FS") ? "FS")
-      .typed(types, "b")
+    val input = tla.in(
+        tla.name("x", intFunT),
+        tla.cup(tla.emptySet(intFunT), tla.funSet(tla.name("S", intSetT), tla.name("T", intSetT))),
+    )
     val output = marker.apply(input)
-    val expected =
-      tla
-        .in(tla.name("x") ? "f",
-            tla.cup(tla.emptySet() ? "FS",
-                tla.apalacheExpand(tla.funSet(tla.name("S") ? "S", tla.name("T") ? "S") ? "FS") ? "FS") ? "FS")
-        .typed(types, "b")
-    assert(expected == output)
+    val expected = tla.in(
+        tla.name("x", intFunT),
+        tla.cup(tla.emptySet(intFunT), tla.expand(tla.funSet(tla.name("S", intSetT), tla.name("T", intSetT)))),
+    )
+    assert(expected.build == output)
   }
 
   test("""marked: \A x \in SUBSET S: P""") {
-    val input = tla
-      .forall(
-          tla.name("x") ? "S",
-          tla.powSet(tla.name("S") ? "S") ? "PS",
-          tla.name("P") ? "b",
-      )
-      .typed(types, "b")
+    val input = tla.forall(
+        tla.name("x", intSetT),
+        tla.powSet(tla.name("S", intSetT)),
+        tla.name("P", BoolT1),
+    )
 
     val output = marker.apply(input)
-    val expected = tla
-      .forall(
-          tla.name("x") ? "S",
-          tla.apalacheExpand(tla.powSet(tla.name("S") ? "S") ? "PS") ? "PS",
-          tla.name("P") ? "b",
-      )
-      .typed(types, "b")
+    val expected = tla.forall(
+        tla.name("x", intSetT),
+        tla.expand(tla.powSet(tla.name("S", intSetT))),
+        tla.name("P", BoolT1),
+    )
 
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   test("""marked: \E x \in SUBSET S: P""") {
-    val input = tla
-      .exists(
-          tla.name("x") ? "S",
-          tla.powSet(tla.name("S") ? "S") ? "PS",
-          tla.name("P") ? "b",
-      )
-      .typed(types, "b")
+    val input = tla.exists(
+        tla.name("x", intSetT),
+        tla.powSet(tla.name("S", intSetT)),
+        tla.name("P", BoolT1),
+    )
 
     val output = marker.apply(input)
-    val expected = tla
-      .exists(
-          tla.name("x") ? "S",
-          tla.apalacheExpand(tla.powSet(tla.name("S") ? "S") ? "PS") ? "PS",
-          tla.name("P") ? "b",
-      )
-      .typed(types, "b")
+    val expected = tla.exists(
+        tla.name("x", intSetT),
+        tla.expand(tla.powSet(tla.name("S", intSetT))),
+        tla.name("P", BoolT1),
+    )
 
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   test("""not marked: Skolem(\E x \in SUBSET S: P)""") {
-    val input =
-      tla
-        .apalacheSkolem(tla.exists(
-            tla.name("x") ? "S",
-            tla.powSet(tla.name("S") ? "S") ? "PS",
-            tla.name("P") ? "b",
-        ) ? "b")
-        .typed(types, "b")
+    val input = tla.skolem(tla.exists(
+        tla.name("x", intSetT),
+        tla.powSet(tla.name("S", intSetT)),
+        tla.name("P", BoolT1),
+    ))
 
     val output = marker.apply(input)
 
-    assert(input == output)
+    assert(input.build == output)
   }
 
   test("""not marked: CHOOSE x \in SUBSET S: P""") {
     val input =
-      tla
-        .choose(
-            tla.name("x") ? "i",
-            tla.powSet(tla.name("S") ? "S") ? "PS",
-            tla.name("P") ? "b",
-        )
-        .typed(types, "i")
+      tla.choose(
+          tla.name("x", intSetT),
+          tla.powSet(tla.name("S", intSetT)),
+          tla.name("P", BoolT1),
+      )
 
     val output = marker.apply(input)
 
-    assert(input == output)
+    assert(input.build == output)
   }
+
+  private def typedCup(left: TlaEx, right: TlaEx, tt: TlaType1): TlaEx =
+    OperEx(TlaSetOper.cup, left, right)(Typed(tt))
 }

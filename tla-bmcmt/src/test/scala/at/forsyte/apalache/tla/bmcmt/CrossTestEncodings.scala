@@ -5,12 +5,11 @@ import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.trex.{IncrementalExecutionContext, TransitionExecutorImpl}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.types.{tlaU => unsafeTla}
 import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
@@ -95,6 +94,38 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   private val boolT = BoolT1
   private val boolSetT = SetT1(BoolT1)
 
+  private object tla {
+    def name(name: String): TlaEx = NameEx(name)(Untyped)
+    def bool(value: Boolean): TlaEx = unsafeTla.bool(value)
+    def str(value: String): TlaEx = unsafeTla.str(value)
+    def booleanSet(): TlaEx = unsafeTla.booleanSet()
+    def enumSet(args: TlaEx*): TlaEx = unsafeTla.enumSet(args: _*)
+    def tuple(args: TlaEx*): TlaEx = unsafeTla.tuple(args: _*)
+    def funDef(result: TlaEx, name: TlaEx, set: TlaEx): TlaEx = unsafeTla.funDef(result, name -> set)
+    def exists(name: TlaEx, set: TlaEx, pred: TlaEx): TlaEx = unsafeTla.exists(name, set, pred)
+    def assign(lhs: TlaEx, rhs: TlaEx): TlaEx = unsafeTla.assign(lhs, rhs)
+    def prime(ex: TlaEx): TlaEx = unsafeTla.prime(ex)
+    def apalacheSkolem(ex: TlaEx): TlaEx = unsafeTla.skolem(ex)
+    def and(args: TlaEx*): TlaEx = unsafeTla.and(args: _*)
+    def eql(lhs: TlaEx, rhs: TlaEx): TlaEx = unsafeTla.eql(lhs, rhs)
+    def not(ex: TlaEx): TlaEx = unsafeTla.not(ex)
+    def declOp(name: String, body: TlaEx): TlaOperDecl =
+      TlaOperDecl(name, Nil, body)(Typed(OperT1(Nil, typeOf(body))))
+  }
+
+  private implicit class TlaExAs(ex: TlaEx) {
+    def as(tt: TlaType1): TlaEx = ex.withTag(Typed(tt))
+  }
+
+  private implicit class TlaDeclAs(decl: TlaOperDecl) {
+    def as(tt: TlaType1): TlaOperDecl = decl.withTag(Typed(tt)).asInstanceOf[TlaOperDecl]
+  }
+
+  private def typeOf(ex: TlaEx): TlaType1 = ex.typeTag match {
+    case Typed(tt: TlaType1) => tt
+    case tag                 => throw new TypingException(s"Expected a typed expression, found $tag", ex.ID)
+  }
+
   private val typeGen = new TlaType1Gen {
     // Override to avoid operators and rows.
     // TODO(#401): Enable rows, variants when supported by the model checker.
@@ -138,7 +169,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * Rewrite elem \in Set ~~> \E elem$selected \in Set: elem' := elem$selected.
    */
   private def rewriteElemInSet(elem: NameEx, set: TlaEx): TlaEx = {
-    val elemT = elem.typeTag.asTlaType1()
+    val elemT = typeOf(elem)
     val selected = tla.name(elem.name + "$selected").as(elemT)
     tla
       .apalacheSkolem(tla.exists(selected, set, tla.assign(tla.prime(elem).as(elemT), selected).as(boolT)).as(boolT))
@@ -327,7 +358,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   private def verify(witness: TlaEx, witnesses: TlaEx): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val witnessType = witness.typeTag.asTlaType1()
+    val witnessType = typeOf(witness)
     val result = NameEx("result")(witness.typeTag)
     val resultDecl = TlaVarDecl(result.name)(witness.typeTag)
     val found = NameEx("found")(Typed(BoolT1))
@@ -471,7 +502,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   @nowarn("cat=deprecation&msg=Stream") // ScalaCheck's Shrink still uses Stream, which is deprecated since Scala 2.13.0
   private def shrinkEx(ex: TlaEx): Stream[TlaEx] = ex match {
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
-      Stream(shrink(args).filterNot(_.isEmpty).map(elems => tla.enumSet(elems: _*).as(ex.typeTag.asTlaType1())): _*)
+      Stream(shrink(args).filterNot(_.isEmpty).map(elems => tla.enumSet(elems: _*).as(typeOf(ex))): _*)
     // TODO: Shrink further operators. For now, the main obstacle to interpreting the bugs uncovered by this class
     // is that the expression generator produces sets of more elements than necessary.
     case _ => Stream.empty

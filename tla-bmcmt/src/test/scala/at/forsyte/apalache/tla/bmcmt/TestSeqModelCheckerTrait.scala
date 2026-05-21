@@ -7,12 +7,14 @@ import at.forsyte.apalache.tla.bmcmt.trex.{
   FilteredTransitionExecutor, IncrementalExecutionContext, TransitionExecutorImpl,
 }
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.scalatest.funsuite.FixtureAnyFunSuite
 import scala.collection.immutable.SortedMap
 
 trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
+  import scala.language.implicitConversions
+
   protected type FixtureParam = SymbStateRewriter
 
   private val types = Map(
@@ -25,6 +27,43 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       "Ob" -> OperT1(Seq(), BoolT1),
   )
   private val intTag: Typed[TlaType1] = Typed(IntT1)
+
+  private case class NameRef(name: String) {
+    def ?(alias: String): TBuilderInstruction = tla.name(name, types(alias))
+  }
+
+  private implicit class BuilderInstructionOps(ex: TBuilderInstruction) {
+    def ?(alias: String): TBuilderInstruction = ex.map(_.withTag(Typed(types(alias))))
+    def typed(types: Map[String, TlaType1], alias: String): TlaEx = ex.map(_.withTag(Typed(types(alias)))).build
+    def typed(tt: TlaType1): TlaEx = ex.map(_.withTag(Typed(tt))).build
+  }
+
+  private implicit def tlaExToBuilderInstruction(ex: TlaEx): TBuilderInstruction = tla.unchecked(ex)
+
+  private def name(name: String): NameRef = NameRef(name)
+  private def int(value: Int): TBuilderInstruction = tla.int(value)
+  private def str(value: String): TBuilderInstruction = tla.str(value)
+  private def prime(ex: TBuilderInstruction): TBuilderInstruction = tla.prime(ex)
+  private def assign(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.assign(lhs, rhs)
+  private def and(args: TBuilderInstruction*): TBuilderInstruction = tla.and(args: _*)
+  private def not(ex: TBuilderInstruction): TBuilderInstruction = tla.not(ex)
+  private def eql(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.eql(lhs, rhs)
+  private def lt(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.lt(lhs, rhs)
+  private def le(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.le(lhs, rhs)
+  private def gt(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.gt(lhs, rhs)
+  private def ge(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.ge(lhs, rhs)
+  private def plus(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.plus(lhs, rhs)
+  private def minus(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.minus(lhs, rhs)
+  private def len(seq: TBuilderInstruction): TBuilderInstruction = tla.len(seq)
+  private def appFun(fun: TBuilderInstruction, arg: TBuilderInstruction): TBuilderInstruction = tla.app(fun, arg)
+  private def tuple(args: TBuilderInstruction*): TBuilderInstruction = tla.tuple(args: _*)
+  private def enumSet(args: TBuilderInstruction*): TBuilderInstruction = tla.enumSet(args: _*)
+  private def exists(
+      name: TBuilderInstruction,
+      set: TBuilderInstruction,
+      pred: TBuilderInstruction): TBuilderInstruction = tla.exists(name, set, pred)
+  private def apalacheSkolem(ex: TBuilderInstruction): TBuilderInstruction = tla.skolem(ex)
+  private def appOp(op: TBuilderInstruction): TBuilderInstruction = tla.appOp(op)
 
   private def mkModuleWithX(): TlaModule = {
     TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
@@ -539,11 +578,8 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // x < 3
     val pred = lt(name("x") ? "i", int(3))
       .typed(types, "b")
-    val letDef = letIn(appOp(name("Foo") ? "Ob") ? "b",
-        declOp("Foo", pred)
-          .typedOperDecl(types, "Ob"))
-    val inv = letDef
-      .typed(types, "b")
+    val letDef = tla.letIn(appOp(name("Foo") ? "Ob") ? "b", tla.decl("Foo", pred))
+    val inv = letDef.typed(types, "b")
     val notInv = not(inv).typed(types, "b")
 
     val checkerInput =
@@ -875,9 +911,9 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
       .typed(types, "b")
   }
 
-  private def mkAssign(varName: String, rhs: BuilderEx, tt: TlaType1): TlaEx = {
-    assign(prime(name(varName) ? "_tt") ? "_tt", rhs)
-      .typed(types + ("_tt" -> tt), "b")
+  private def mkAssign(varName: String, rhs: TBuilderInstruction, tt: TlaType1): TlaEx = {
+    assign(prime(tla.name(varName, tt)), rhs)
+      .typed(BoolT1)
   }
 
   private def mkNotAssign(varName: String, value: Int): TlaEx = {
