@@ -32,13 +32,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     def ?(alias: String): TBuilderInstruction = tla.name(name, types(alias))
   }
 
-  private implicit class BuilderInstructionOps(ex: TBuilderInstruction) {
+  implicit private class BuilderInstructionOps(ex: TBuilderInstruction) {
     def ?(alias: String): TBuilderInstruction = ex.map(_.withTag(Typed(types(alias))))
     def typed(types: Map[String, TlaType1], alias: String): TlaEx = ex.map(_.withTag(Typed(types(alias)))).build
     def typed(tt: TlaType1): TlaEx = ex.map(_.withTag(Typed(tt))).build
   }
 
-  private implicit def tlaExToBuilderInstruction(ex: TlaEx): TBuilderInstruction = tla.unchecked(ex)
+  implicit private def tlaExToBuilderInstruction(ex: TlaEx): TBuilderInstruction = tla.unchecked(ex)
 
   private def name(name: String): NameRef = NameRef(name)
   private def int(value: Int): TBuilderInstruction = tla.int(value)

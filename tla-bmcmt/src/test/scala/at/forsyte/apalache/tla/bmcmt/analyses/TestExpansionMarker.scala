@@ -92,10 +92,10 @@ class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
 
   test("""not marked: Skolem(\E x \in SUBSET S: P)""") {
     val input = tla.skolem(tla.exists(
-        tla.name("x", intSetT),
-        tla.powSet(tla.name("S", intSetT)),
-        tla.name("P", BoolT1),
-    ))
+            tla.name("x", intSetT),
+            tla.powSet(tla.name("S", intSetT)),
+            tla.name("P", BoolT1),
+        ))
 
     val output = marker.apply(input)
 

@@ -113,11 +113,11 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       TlaOperDecl(name, Nil, body)(Typed(OperT1(Nil, typeOf(body))))
   }
 
-  private implicit class TlaExAs(ex: TlaEx) {
+  implicit private class TlaExAs(ex: TlaEx) {
     def as(tt: TlaType1): TlaEx = ex.withTag(Typed(tt))
   }
 
-  private implicit class TlaDeclAs(decl: TlaOperDecl) {
+  implicit private class TlaDeclAs(decl: TlaOperDecl) {
     def as(tt: TlaType1): TlaOperDecl = decl.withTag(Typed(tt)).asInstanceOf[TlaOperDecl]
   }
 

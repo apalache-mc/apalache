@@ -28,7 +28,7 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
       initTrans: List[TlaEx],
       nextTrans: List[TlaEx],
       inv: TlaEx,
-    maxErrors: Int): (
+      maxErrors: Int): (
       CollectCounterexamplesModelCheckerListener,
       SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
     // construct checker input + parameters
