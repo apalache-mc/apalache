@@ -15,11 +15,13 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
   test("filtered check enabled and discard") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
+    val x = intName("x")
+    val y = intName("y")
     // x' <- x /\ y' <- x + y
-    val next1 = tla.and(mkAssign("x", intName("x")), mkAssign("y", tla.plus(intName("x"), intName("y"))))
+    val next1 = tla.and(mkAssign("x", x), mkAssign("y", tla.plus(x, y)))
     val next2 = tla.and(
-        mkAssign("x", intName("y")),
-        mkAssign("y", intName("x")),
+        mkAssign("x", y),
+        mkAssign("y", x),
     ) ///
     // check the transitions
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
@@ -49,8 +51,10 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
   test("filtered mayChangeAssertion") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
     val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
+    val x = intName("x")
+    val y = intName("y")
     // x' <- x /\ y' <- x + y
-    val nextTrans = tla.and(mkAssign("x", intName("x")), mkAssign("y", tla.plus(intName("x"), intName("y"))))
+    val nextTrans = tla.and(mkAssign("x", x), mkAssign("y", tla.plus(x, y)))
     // push Init
     val impl = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     impl.debug = true
@@ -65,10 +69,10 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     // Step 1: Both invariants are excluded by the filter (no word starting in `1->`).
     // inv0 == x >= 3 (unchanged by `Next`)
     // inv1 == y >= x (maybe changed by `Next`)
-    val inv0 = tla.ge(intName("x"), tla.int(3))
+    val inv0 = tla.ge(x, tla.int(3))
     val mayChange0 = trex.mayChangeAssertion(1, StateInvariant, 0, inv0)
     assert(!mayChange0)
-    val inv1 = tla.ge(intName("y"), intName("x"))
+    val inv1 = tla.ge(y, x)
     val mayChange1 = trex.mayChangeAssertion(1, StateInvariant, 1, inv1)
     assert(!mayChange1)
     trex.pickTransition()
@@ -137,8 +141,9 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
   test("filtered regression on #108") { exeCtx: ExecutorContextT =>
     // y' <- 1
     val init = mkAssign("y", 1)
+    val y = intName("y")
     // y' <- y + 1
-    val nextTrans = mkAssign("y", tla.plus(intName("y"), tla.int(1)))
+    val nextTrans = mkAssign("y", tla.plus(y, tla.int(1)))
     // push Init
     val invFilter = "(1->.*|2->.*)"
     val impl = new TransitionExecutorImpl(Set.empty, Set("y"), exeCtx)
