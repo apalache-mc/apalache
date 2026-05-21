@@ -13,57 +13,12 @@ import org.scalatest.funsuite.FixtureAnyFunSuite
 import scala.collection.immutable.SortedMap
 
 trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
-  import scala.language.implicitConversions
-
   protected type FixtureParam = SymbStateRewriter
 
-  private val types = Map(
-      "i" -> IntT1,
-      "I" -> SetT1(IntT1),
-      "b" -> BoolT1,
-      "bb" -> TupT1(BoolT1, BoolT1),
-      "r" -> RecT1(SortedMap("x" -> IntT1)),
-      "s" -> SeqT1(RecT1(SortedMap("x" -> IntT1))),
-      "Ob" -> OperT1(Seq(), BoolT1),
-  )
   private val intTag: Typed[TlaType1] = Typed(IntT1)
-
-  private case class NameRef(name: String) {
-    def ?(alias: String): TBuilderInstruction = tla.name(name, types(alias))
-  }
-
-  implicit private class BuilderInstructionOps(ex: TBuilderInstruction) {
-    def ?(alias: String): TBuilderInstruction = ex.map(_.withTag(Typed(types(alias))))
-    def typed(types: Map[String, TlaType1], alias: String): TlaEx = ex.map(_.withTag(Typed(types(alias)))).build
-    def typed(tt: TlaType1): TlaEx = ex.map(_.withTag(Typed(tt))).build
-  }
-
-  implicit private def tlaExToBuilderInstruction(ex: TlaEx): TBuilderInstruction = tla.unchecked(ex)
-
-  private def name(name: String): NameRef = NameRef(name)
-  private def int(value: Int): TBuilderInstruction = tla.int(value)
-  private def str(value: String): TBuilderInstruction = tla.str(value)
-  private def prime(ex: TBuilderInstruction): TBuilderInstruction = tla.prime(ex)
-  private def assign(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.assign(lhs, rhs)
-  private def and(args: TBuilderInstruction*): TBuilderInstruction = tla.and(args: _*)
-  private def not(ex: TBuilderInstruction): TBuilderInstruction = tla.not(ex)
-  private def eql(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.eql(lhs, rhs)
-  private def lt(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.lt(lhs, rhs)
-  private def le(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.le(lhs, rhs)
-  private def gt(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.gt(lhs, rhs)
-  private def ge(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.ge(lhs, rhs)
-  private def plus(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.plus(lhs, rhs)
-  private def minus(lhs: TBuilderInstruction, rhs: TBuilderInstruction): TBuilderInstruction = tla.minus(lhs, rhs)
-  private def len(seq: TBuilderInstruction): TBuilderInstruction = tla.len(seq)
-  private def appFun(fun: TBuilderInstruction, arg: TBuilderInstruction): TBuilderInstruction = tla.app(fun, arg)
-  private def tuple(args: TBuilderInstruction*): TBuilderInstruction = tla.tuple(args: _*)
-  private def enumSet(args: TBuilderInstruction*): TBuilderInstruction = tla.enumSet(args: _*)
-  private def exists(
-      name: TBuilderInstruction,
-      set: TBuilderInstruction,
-      pred: TBuilderInstruction): TBuilderInstruction = tla.exists(name, set, pred)
-  private def apalacheSkolem(ex: TBuilderInstruction): TBuilderInstruction = tla.skolem(ex)
-  private def appOp(op: TBuilderInstruction): TBuilderInstruction = tla.appOp(op)
+  private val recordT = RecT1(SortedMap("x" -> IntT1))
+  private val historyT = SeqT1(recordT)
+  private val boolOper0T = OperT1(Seq(), BoolT1)
 
   private def mkModuleWithX(): TlaModule = {
     TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
@@ -78,13 +33,16 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     case _                     => false
   })
 
+  private def buildTransitions(transitions: TBuilderInstruction*): List[TlaEx] =
+    transitions.map(_.build).toList
+
   test("Init + Inv => OK") { rewriter: SymbStateRewriter =>
     // x' <- 2
-    val initTrans = List(mkAssign("x", 2))
-    val nextTrans = List(mkAssign("x", 2))
-    val notInv = gt(name("x") ? "i", int(10))
-      .typed(types, "b")
-    val inv = not(notInv).typed(types, "b")
+    val initTrans = buildTransitions(mkAssign("x", 2))
+    val nextTrans = buildTransitions(mkAssign("x", 2))
+    val notInvEx = tla.gt(tla.name("x", IntT1), tla.int(10))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
@@ -97,11 +55,11 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Inv => ERR") { rewriter: SymbStateRewriter =>
     // x' <- 2
-    val initTrans = List(mkAssign("x", 2))
-    val nextTrans = List(mkAssign("x", 2))
-    val notInv = lt(name("x") ? "i", int(10))
-      .typed(types, "b")
-    val inv = not(notInv).typed(types, "b")
+    val initTrans = buildTransitions(mkAssign("x", 2))
+    val nextTrans = buildTransitions(mkAssign("x", 2))
+    val notInvEx = tla.lt(tla.name("x", IntT1), tla.int(10))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
@@ -114,14 +72,14 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("ConstInit + Init => OK") { rewriter: SymbStateRewriter =>
     // N' <- 10
-    val cinit = mkAssign("N", 10)
+    val cinit = mkAssign("N", 10).build
     // x' <- N
-    val initTrans = List(mkAssign("x", name("N") ? "i", IntT1))
-    val nextTrans = List(mkAssign("x", name("N") ? "i", IntT1))
+    val initTrans = buildTransitions(mkAssign("x", tla.name("N", IntT1), IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.name("N", IntT1), IntT1))
     val module = TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
-    val notInv = lt(name("x") ? "i", int(10))
-      .typed(types, "b")
-    val inv = not(notInv).typed(types, "b")
+    val notInvEx = tla.lt(tla.name("x", IntT1), tla.int(10))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
 
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
@@ -134,14 +92,14 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("ConstInit + Init => ERR") { rewriter: SymbStateRewriter =>
     // N' <- 10
-    val cinit = mkAssign("N", 5)
+    val cinit = mkAssign("N", 5).build
     // x' <- N
-    val initTrans = List(mkAssign("x", name("N") ? "i", IntT1))
-    val nextTrans = List(mkAssign("x", name("N") ? "i", IntT1))
+    val initTrans = buildTransitions(mkAssign("x", tla.name("N", IntT1), IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.name("N", IntT1), IntT1))
     val module = new TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
-    val notInv = lt(name("x") ? "i", int(10))
-      .typed(types, "b")
-    val inv = not(notInv).typed(types, "b")
+    val notInvEx = tla.lt(tla.name("x", IntT1), tla.int(10))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
 
     val checkerInput = new CheckerInput(module, initTrans, nextTrans, Some(cinit), CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
@@ -154,8 +112,8 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init, deadlock") { rewriter: SymbStateRewriter =>
     // x' <- 2 /\ x' <- 1
-    val initTrans = List(and(mkAssign("x", 2), mkNotAssign("x", 1)).typed(BoolT1))
-    val nextTrans = List(mkAssign("x", 2))
+    val initTrans = buildTransitions(tla.and(mkAssign("x", 2), mkNotAssign("x", 1)))
+    val nextTrans = buildTransitions(mkAssign("x", 2))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
     // initialize the model checker
@@ -168,8 +126,8 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init, 2 options, OK") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
-    val nextTrans = List(mkAssign("x", 2))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
+    val nextTrans = buildTransitions(mkAssign("x", 2))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
     // initialize the model checker
@@ -182,9 +140,9 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 1 => OK") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map())
     // initialize the model checker
@@ -197,13 +155,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + Inv (before + no-all-enabled) => ERR") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x < 5
-    val inv = lt(name("x") ? "i", int(5))
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(5))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
@@ -219,13 +177,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + Inv (before + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x < 5
-    val inv = lt(name("x") ? "i", int(5))
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(5))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
@@ -241,13 +199,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' < x
-    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -269,13 +227,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (before + all-enabled) => OK") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' > x
-    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.gt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -297,13 +255,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + Inv (after + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x < 5
-    val inv = lt(name("x") ? "i", int(5))
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(5))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
@@ -319,13 +277,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + Inv (after + no-all-enabled) => ERR") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x < 5
-    val inv = lt(name("x") ? "i", int(5))
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(5))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
@@ -341,13 +299,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => ERR") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' < x
-    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -369,13 +327,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (after + all-enabled) => OK") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' > x
-    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.gt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -397,13 +355,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (before) => ERR") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' < x
-    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -425,13 +383,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (before) => OK") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' > x
-    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.gt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -453,13 +411,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (after) => ERR") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' < x
-    val inv = lt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.lt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -481,13 +439,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + ActionInv (after) => OK") { rewriter: SymbStateRewriter =>
     // x' := 2 \/ x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x' > x
-    val inv = gt(prime(name("x") ? "i") ? "i", name("x") ? "i")
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.gt(tla.prime(tla.name("x", IntT1)), tla.name("x", IntT1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -509,17 +467,18 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + TraceInv => OK") { rewriter: SymbStateRewriter =>
     // x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // TraceInv(hist) == hist[Len(hist)].x <= 10 + hist[1].x
-    val hist = name("hist") ? "s"
-    val inv = le(
-        appFun(appFun(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        plus(int(10), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i",
-    ).typed(types, "b")
+    val hist = tla.name("hist", historyT)
+    val invEx = tla.le(
+        tla.app(tla.app(hist, tla.len(hist)), tla.str("x")),
+        tla.plus(tla.int(10), tla.app(tla.app(hist, tla.int(1)), tla.str("x"))),
+    )
+    val inv = invEx.build
     val invDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), inv)(Untyped)
-    val notInv = not(inv).typed(types, "b")
+    val notInv = tla.not(invEx).build
     val notInvDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), notInv)(Untyped)
     val checkerInput =
       new CheckerInput(
@@ -540,17 +499,18 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 + TraceInv => ERR") { rewriter: SymbStateRewriter =>
     // x' := 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' := x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // TraceInv(hist) == hist[Len(hist)].x <= hist[1].x + 9
-    val hist = name("hist") ? "s"
-    val inv = le(
-        appFun(appFun(hist, len(hist) ? "i") ? "r", str("x")) ? "i",
-        plus(int(9), appFun(appFun(hist, int(1)) ? "r", str("x")) ? "i") ? "i",
-    ).typed(types, "b")
+    val hist = tla.name("hist", historyT)
+    val invEx = tla.le(
+        tla.app(tla.app(hist, tla.len(hist)), tla.str("x")),
+        tla.plus(tla.int(9), tla.app(tla.app(hist, tla.int(1)), tla.str("x"))),
+    )
+    val inv = invEx.build
     val invDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), inv)(Untyped)
-    val notInv = not(inv).typed(types, "b")
+    val notInv = tla.not(invEx).build
     val notInvDecl = TlaOperDecl("TraceInv", List(OperParam("hist", 0)), notInv)(Untyped)
     val checkerInput =
       new CheckerInput(
@@ -571,16 +531,15 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 2 (LET-IN) + Inv => ERR") { rewriter: SymbStateRewriter =>
     // x' <- 1
-    val initTrans = List(mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 1))
     // x' <- x + 1
-    val assign = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val nextTrans = List(assign)
+    val assign = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val nextTrans = buildTransitions(assign)
     // x < 3
-    val pred = lt(name("x") ? "i", int(3))
-      .typed(types, "b")
-    val letDef = tla.letIn(appOp(name("Foo") ? "Ob") ? "b", tla.decl("Foo", pred))
-    val inv = letDef.typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val pred = tla.lt(tla.name("x", IntT1), tla.int(3))
+    val letDef = tla.letIn(tla.appOp(tla.name("Foo", boolOper0T)), tla.decl("Foo", pred))
+    val inv = letDef.build
+    val notInv = tla.not(letDef).build
 
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
@@ -595,17 +554,18 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("determinstic Init + 2 steps (regression)") { rewriter: SymbStateRewriter =>
     // y' <- 1 /\ x' <- 1
-    val initTrans = List(and(mkAssign("y", 1), mkAssign("x", 1)).typed(BoolT1))
+    val initTrans = buildTransitions(tla.and(mkAssign("y", 1), mkAssign("x", 1)))
     // y' <- y + 1 /\ x' <- x + 1
-    val nextTrans = List(and(
-            mkAssign("y", plus(name("y") ? "i", int(1)) ? "i", IntT1),
-            mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1),
-        ).typed(BoolT1)) ///
-    val inv = eql(
-        eql(int(3), name("x") ? "i") ? "b",
-        eql(int(3), name("y") ? "i") ? "b",
-    ).typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val nextTrans = buildTransitions(tla.and(
+            mkAssign("y", tla.plus(tla.name("y", IntT1), tla.int(1)), IntT1),
+            mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
+        )) ///
+    val invEx = tla.eql(
+        tla.eql(tla.int(3), tla.name("x", IntT1)),
+        tla.eql(tla.int(3), tla.name("y", IntT1)),
+    )
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
 
     val checkerInput =
       new CheckerInput(
@@ -626,11 +586,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 1 => deadlock") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x > 3 /\ x' <- x + 1
     val nextTrans =
-      List(and(gt(name("x") ? "i", int(3)) ? "b", mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)).typed(
-              types, "b"))
+      buildTransitions(tla.and(
+          tla.gt(tla.name("x", IntT1), tla.int(3)),
+          mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
+      ))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map())
     // initialize the model checker
@@ -643,9 +605,9 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next, 10 steps, OK") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     // initialize the model checker
@@ -658,11 +620,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 10 => deadlock") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x < 10 /\ x' <- x + 1
     val nextTrans =
-      List(and(lt(name("x") ? "i", int(10)) ? "b", mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)).typed(
-              types, "b"))
+      buildTransitions(tla.and(
+          tla.lt(tla.name("x", IntT1), tla.int(10)),
+          mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
+      ))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     // initialize the model checker
@@ -675,14 +639,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next + Inv x 10 => OK") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x < 100
-    val inv = lt(name("x") ? "i", int(100))
-      .typed(types, "b")
-    val notInv = not(inv)
-      .typed(types, "b")
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(100))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
@@ -698,14 +661,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // the invariant is violated in the last state of a bounded execution
 
     // x' <- 0
-    val initTrans = List(mkAssign("x", 0))
+    val initTrans = buildTransitions(mkAssign("x", 0))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x /= 3
-    val notInv = eql(name("x") ? "i", int(3))
-      .typed(types, "b")
-    val inv = not(notInv)
-      .typed(BoolT1)
+    val notInvEx = tla.eql(tla.name("x", IntT1), tla.int(3))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 3, Map())
@@ -720,14 +682,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
   test("Init + Next + Inv x 2 => OK, edge case") { rewriter: SymbStateRewriter =>
     // the invariant is violated in the last state of a bounded execution
     // x' <- 0
-    val initTrans = List(mkAssign("x", 0))
+    val initTrans = buildTransitions(mkAssign("x", 0))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x /= 3
-    val notInv = eql(name("x") ? "i", int(3))
-      .typed(types, "b")
-    val inv = not(notInv)
-      .typed(BoolT1)
+    val notInvEx = tla.eql(tla.name("x", IntT1), tla.int(3))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 2, Map())
@@ -741,14 +702,13 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next + Inv x 10 and invariantFilter => OK") { rewriter: SymbStateRewriter =>
     // x' <- 2 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 2), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 2), mkAssign("x", 1))
     // x' <- x + 1
-    val nextTrans = List(mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1))
+    val nextTrans = buildTransitions(mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1))
     // x < 5
-    val inv = lt(name("x") ? "i", int(5))
-      .typed(types, "b")
-    val notInv = not(inv)
-      .typed(types, "b")
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(5))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     // initialize the model checker
@@ -765,12 +725,14 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 3 + non-determinism => no deadlock") { rewriter: SymbStateRewriter =>
     // x' <- 1
-    val initTrans = List(mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 1))
     // x' <- x + 1 \/ x > 100 /\ x' <- x
-    val trans1 = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val trans2 = and(gt(name("x") ? "i", int(100)) ? "b", mkAssign("x", name("x") ? "i", IntT1))
-      .typed(types, "b")
-    val nextTrans = List(trans1, trans2)
+    val trans1 = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val trans2 = tla.and(
+        tla.gt(tla.name("x", IntT1), tla.int(100)),
+        mkAssign("x", tla.name("x", IntT1), IntT1),
+    )
+    val nextTrans = buildTransitions(trans1, trans2)
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 3, Map())
     // initialize the model checker
@@ -783,17 +745,18 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next, 10 steps, non-determinism in init and next") { rewriter: SymbStateRewriter =>
     // x' <- 0 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 0), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 0), mkAssign("x", 1))
     // x' <- x + 1 \/ x > 10 /\ x' <- x
-    val trans1 = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val trans2 = and(gt(name("x") ? "i", int(10)) ? "b", mkAssign("x", name("x") ? "i", IntT1))
-      .typed(types, "b")
-    val nextTrans = List(trans1, trans2)
+    val trans1 = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val trans2 = tla.and(
+        tla.gt(tla.name("x", IntT1), tla.int(10)),
+        mkAssign("x", tla.name("x", IntT1), IntT1),
+    )
+    val nextTrans = buildTransitions(trans1, trans2)
     // ~(x <= 10)
-    val notInv = gt(name("x") ? "i", int(10))
-      .typed(types, "b")
-    val inv = not(notInv)
-      .typed(types, "b")
+    val notInvEx = tla.gt(tla.name("x", IntT1), tla.int(10))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
@@ -807,26 +770,27 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("cInit + Init + Next, 10 steps") { rewriter: SymbStateRewriter =>
     // x' <- 0 \/ x' <- 1
-    val initTrans = List(mkAssign("x", 0), mkAssign("x", 1))
+    val initTrans = buildTransitions(mkAssign("x", 0), mkAssign("x", 1))
     // x' <- x + 1 \/ x > 10 /\ x' <- x
-    val trans1 = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val trans2 = and(gt(name("x") ? "i", int(10)) ? "b", mkAssign("x", name("x") ? "i", IntT1))
-      .typed(types, "b")
-    val nextTrans = List(trans1, trans2)
+    val trans1 = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val trans2 = tla.and(
+        tla.gt(tla.name("x", IntT1), tla.int(10)),
+        mkAssign("x", tla.name("x", IntT1), IntT1),
+    )
+    val nextTrans = buildTransitions(trans1, trans2)
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
-      apalacheSkolem(exists(
-          name("t") ? "i",
-          enumSet(int(20), int(10)) ? "I",
-          mkAssign("N", name("t") ? "i", IntT1),
-      ) ? "b")
-        .typed(types, "b")
+      tla.skolem(tla.exists(
+          tla.name("t", IntT1),
+          tla.enumSet(tla.int(20), tla.int(10)),
+          mkAssign("N", tla.name("t", IntT1), IntT1),
+      ))
+        .build
 
     // ~(x <= N)
-    val notInv = gt(name("x") ? "i", name("N") ? "i")
-      .typed(types, "b")
-    val inv = not(notInv)
-      .typed(types, "b")
+    val notInvEx = tla.gt(tla.name("x", IntT1), tla.name("N", IntT1))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val dummyModule = TlaModule("root", List(TlaConstDecl("N")(intTag), TlaVarDecl("x")(intTag)))
     val checkerInput =
       new CheckerInput(
@@ -847,16 +811,15 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next, 10 steps and filter") { rewriter: SymbStateRewriter =>
     // x' <- 0
-    val initTrans = List(mkAssign("x", 0))
+    val initTrans = buildTransitions(mkAssign("x", 0))
     // x' <- x + 1 \/ x' <- x + 2
-    val trans1 = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val trans2 = mkAssign("x", plus(name("x") ? "i", int(2)) ? "i", IntT1)
-    val nextTrans = List(trans1, trans2)
+    val trans1 = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val trans2 = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(2)), IntT1)
+    val nextTrans = buildTransitions(trans1, trans2)
     // ~(x <= 11)
-    val notInv = gt(name("x") ? "i", int(11))
-      .typed(types, "b")
-    val inv = not(notInv)
-      .typed(types, "b")
+    val notInvEx = tla.gt(tla.name("x", IntT1), tla.int(11))
+    val notInv = notInvEx.build
+    val inv = tla.not(notInvEx).build
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     // initialize the model checker
@@ -872,19 +835,19 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
 
   test("Init + Next x 2 + Inv + View => ERR x 4") { rewriter: SymbStateRewriter =>
     // x' <- 0
-    val initTrans = List(mkAssign("x", 0))
+    val initTrans = buildTransitions(mkAssign("x", 0))
     // x' := x + 1 \/ x' := x - 1 \/ x' := x
-    val action1 = mkAssign("x", plus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val action2 = mkAssign("x", minus(name("x") ? "i", int(1)) ? "i", IntT1)
-    val action3 = mkAssign("x", name("x") ? "i", IntT1)
-    val nextTrans = List(action1, action2, action3)
+    val action1 = mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val action2 = mkAssign("x", tla.minus(tla.name("x", IntT1), tla.int(1)), IntT1)
+    val action3 = mkAssign("x", tla.name("x", IntT1), IntT1)
+    val nextTrans = buildTransitions(action1, action2, action3)
     // x = 0
-    val inv = eql(name("x") ? "i", int(0))
-      .typed(types, "b")
-    val notInv = not(inv).typed(types, "b")
+    val invEx = tla.eql(tla.name("x", IntT1), tla.int(0))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
     // view: <<x < 0, x > 0>>
-    val view = tuple(le(name("x") ? "i", int(0)) ? "b", ge(name("x") ? "i", int(0)) ? "b")
-      .typed(types, "bb")
+    val view = tla.tuple(tla.le(tla.name("x", IntT1), tla.int(0)), tla.ge(tla.name("x", IntT1), tla.int(0)))
+      .build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
@@ -906,19 +869,16 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     assertResultHasNErrors(4, outcome)
   }
 
-  private def mkAssign(varName: String, value: Int): TlaEx = {
-    assign(prime(name(varName) ? "i") ? "i", int(value))
-      .typed(types, "b")
+  private def mkAssign(varName: String, value: Int): TBuilderInstruction = {
+    tla.assign(tla.prime(tla.name(varName, IntT1)), tla.int(value))
   }
 
-  private def mkAssign(varName: String, rhs: TBuilderInstruction, tt: TlaType1): TlaEx = {
-    assign(prime(tla.name(varName, tt)), rhs)
-      .typed(BoolT1)
+  private def mkAssign(varName: String, rhs: TBuilderInstruction, tt: TlaType1): TBuilderInstruction = {
+    tla.assign(tla.prime(tla.name(varName, tt)), rhs)
   }
 
-  private def mkNotAssign(varName: String, value: Int): TlaEx = {
-    eql(prime(name(varName) ? "i") ? "i", int(value) ? "i")
-      .typed(types, "b")
+  private def mkNotAssign(varName: String, value: Int): TBuilderInstruction = {
+    tla.eql(tla.prime(tla.name(varName, IntT1)), tla.int(value))
   }
 
 }
