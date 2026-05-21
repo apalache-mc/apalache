@@ -590,9 +590,9 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // x > 3 /\ x' <- x + 1
     val nextTrans =
       buildTransitions(tla.and(
-          tla.gt(tla.name("x", IntT1), tla.int(3)),
-          mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
-      ))
+              tla.gt(tla.name("x", IntT1), tla.int(3)),
+              mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
+          ))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map())
     // initialize the model checker
@@ -624,9 +624,9 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     // x < 10 /\ x' <- x + 1
     val nextTrans =
       buildTransitions(tla.and(
-          tla.lt(tla.name("x", IntT1), tla.int(10)),
-          mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
-      ))
+              tla.lt(tla.name("x", IntT1), tla.int(10)),
+              mkAssign("x", tla.plus(tla.name("x", IntT1), tla.int(1)), IntT1),
+          ))
     val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC())
     val params = new ModelCheckerParams(checkerInput, stepsBound = 10, Map())
     // initialize the model checker
@@ -780,11 +780,12 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val nextTrans = buildTransitions(trans1, trans2)
     // a constant initializer: \E t \in { 20, 10 }: N' \in {t}
     val cInit =
-      tla.skolem(tla.exists(
-          tla.name("t", IntT1),
-          tla.enumSet(tla.int(20), tla.int(10)),
-          mkAssign("N", tla.name("t", IntT1), IntT1),
-      ))
+      tla
+        .skolem(tla.exists(
+                tla.name("t", IntT1),
+                tla.enumSet(tla.int(20), tla.int(10)),
+                mkAssign("N", tla.name("t", IntT1), IntT1),
+            ))
         .build
 
     // ~(x <= N)
@@ -846,8 +847,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val inv = invEx.build
     val notInv = tla.not(invEx).build
     // view: <<x < 0, x > 0>>
-    val view = tla.tuple(tla.le(tla.name("x", IntT1), tla.int(0)), tla.ge(tla.name("x", IntT1), tla.int(0)))
-      .build
+    val view = tla.tuple(tla.le(tla.name("x", IntT1), tla.int(0)), tla.ge(tla.name("x", IntT1), tla.int(0))).build
     val checkerInput =
       new CheckerInput(
           mkModuleWithX(),
