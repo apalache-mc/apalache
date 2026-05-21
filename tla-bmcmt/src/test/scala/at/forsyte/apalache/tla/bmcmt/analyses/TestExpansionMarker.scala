@@ -33,38 +33,42 @@ class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""marked: {{1}} \cup SUBSET S""") {
-    val input = tla.cup(tla.enumSet(tla.enumSet(tla.int(1))), tla.powSet(tla.name("S", intSetT)))
+    val S = tla.name("S", intSetT)
+    val input = tla.cup(tla.enumSet(tla.enumSet(tla.int(1))), tla.powSet(S))
     val output = marker.apply(input)
-    val expected = tla.cup(tla.enumSet(tla.enumSet(tla.int(1))), tla.expand(tla.powSet(tla.name("S", intSetT))))
+    val expected = tla.cup(tla.enumSet(tla.enumSet(tla.int(1))), tla.expand(tla.powSet(S)))
 
     assert(expected.build == output)
   }
 
   // although the optimizing phase should simplify this expression, we like to know what happens, if not
   test("""marked: {} \cup [S -> T]""") {
+    val S = tla.name("S", intSetT)
+    val T = tla.name("T", intSetT)
     val input = tla.in(
         tla.name("x", intFunT),
-        tla.cup(tla.emptySet(intFunT), tla.funSet(tla.name("S", intSetT), tla.name("T", intSetT))),
+        tla.cup(tla.emptySet(intFunT), tla.funSet(S, T)),
     )
     val output = marker.apply(input)
     val expected = tla.in(
         tla.name("x", intFunT),
-        tla.cup(tla.emptySet(intFunT), tla.expand(tla.funSet(tla.name("S", intSetT), tla.name("T", intSetT)))),
+        tla.cup(tla.emptySet(intFunT), tla.expand(tla.funSet(S, T))),
     )
     assert(expected.build == output)
   }
 
   test("""marked: \A x \in SUBSET S: P""") {
+    val S = tla.name("S", intSetT)
     val input = tla.forall(
         tla.name("x", intSetT),
-        tla.powSet(tla.name("S", intSetT)),
+        tla.powSet(S),
         tla.name("P", BoolT1),
     )
 
     val output = marker.apply(input)
     val expected = tla.forall(
         tla.name("x", intSetT),
-        tla.expand(tla.powSet(tla.name("S", intSetT))),
+        tla.expand(tla.powSet(S)),
         tla.name("P", BoolT1),
     )
 
@@ -72,16 +76,17 @@ class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""marked: \E x \in SUBSET S: P""") {
+    val S = tla.name("S", intSetT)
     val input = tla.exists(
         tla.name("x", intSetT),
-        tla.powSet(tla.name("S", intSetT)),
+        tla.powSet(S),
         tla.name("P", BoolT1),
     )
 
     val output = marker.apply(input)
     val expected = tla.exists(
         tla.name("x", intSetT),
-        tla.expand(tla.powSet(tla.name("S", intSetT))),
+        tla.expand(tla.powSet(S)),
         tla.name("P", BoolT1),
     )
 
