@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt.{ActionInvariant, StateInvariant}
-import at.forsyte.apalache.tla.lir.{IntT1, TlaEx}
+import at.forsyte.apalache.tla.lir.IntT1
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.tla
 
@@ -14,7 +14,7 @@ import at.forsyte.apalache.tla.types.tla
 trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] {
   test("filtered check enabled and discard") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
-    val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
+    val init = tla.and(mkAssign("y", tla.int(1)), mkAssign("x", tla.int(1)))
     val x = intName("x")
     val y = intName("y")
     // x' <- x /\ y' <- x + y
@@ -50,7 +50,7 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
 
   test("filtered mayChangeAssertion") { exeCtx: ExecutorContextT =>
     // x' <- 1 /\ y' <- 1
-    val init = tla.and(mkAssign("y", 1), mkAssign("x", 1))
+    val init = tla.and(mkAssign("y", tla.int(1)), mkAssign("x", tla.int(1)))
     val x = intName("x")
     val y = intName("y")
     // x' <- x /\ y' <- x + y
@@ -140,7 +140,7 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
 
   test("filtered regression on #108") { exeCtx: ExecutorContextT =>
     // y' <- 1
-    val init = mkAssign("y", 1)
+    val init = mkAssign("y", tla.int(1))
     val y = intName("y")
     // y' <- y + 1
     val nextTrans = mkAssign("y", tla.plus(y, tla.int(1)))
@@ -169,12 +169,9 @@ trait TestFilteredTransitionExecutor[SnapshotT] extends ExecutorBase[SnapshotT] 
     assert(!mayChange3)
   }
 
-  private def mkAssign(name: String, value: Int) =
-    tla.assign(tla.prime(intName(name)), tla.int(value))
+  private def mkAssign(name: String, rhs: TBuilderInstruction): TBuilderInstruction =
+    tla.assign(tla.prime(intName(name)), rhs)
 
-  private def mkAssign(name: String, rhs: TlaEx) =
-    tla.assign(tla.prime(intName(name)), tla.unchecked(rhs))
-
-  private def intName(name: String) =
+  private def intName(name: String): TBuilderInstruction =
     tla.name(name, IntT1)
 }
