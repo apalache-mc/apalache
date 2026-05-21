@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperEx, SetT1, TlaEx, TlaType1, Typed}
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, SetT1}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.tla
@@ -33,13 +32,12 @@ class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
     assert(output == input.build)
   }
 
-  test("""marked: {1} \cup SUBSET S""") {
-    val input = typedCup(tla.enumSet(tla.int(1)).build, tla.powSet(tla.name("S", intSetT)).build, intSetT)
+  test("""marked: {{1}} \cup SUBSET S""") {
+    val input = tla.cup(tla.enumSet(tla.enumSet(tla.int(1))), tla.powSet(tla.name("S", intSetT)))
     val output = marker.apply(input)
-    val expected =
-      typedCup(tla.enumSet(tla.int(1)).build, tla.expand(tla.powSet(tla.name("S", intSetT))).build, intSetT)
+    val expected = tla.cup(tla.enumSet(tla.enumSet(tla.int(1))), tla.expand(tla.powSet(tla.name("S", intSetT))))
 
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   // although the optimizing phase should simplify this expression, we like to know what happens, if not
@@ -114,7 +112,4 @@ class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(input.build == output)
   }
-
-  private def typedCup(left: TlaEx, right: TlaEx, tt: TlaType1): TlaEx =
-    OperEx(TlaSetOper.cup, left, right)(Typed(tt))
 }
