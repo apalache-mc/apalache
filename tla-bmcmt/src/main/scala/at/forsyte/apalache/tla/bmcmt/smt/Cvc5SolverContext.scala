@@ -208,7 +208,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
     } else if (value.getSort.hasSymbol && value.getSort.getSymbol.startsWith("Cell_")) {
       tla.name(value.toString, TlaType1.fromTypeTag(ex.typeTag))
     } else {
-      flushAndThrow(throw new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $value", ex))
+      flushAndThrow(new SmtEncodingException(s"SMT $id: Unexpected term in CVC5 model: $value", ex))
     }
   }
 

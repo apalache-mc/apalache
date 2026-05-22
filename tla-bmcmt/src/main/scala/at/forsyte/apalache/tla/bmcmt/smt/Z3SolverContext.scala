@@ -418,7 +418,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
         tla.name(z3expr.toString, TlaType1.fromTypeTag(ex.typeTag))
       } else {
-        flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
+        flushAndThrow(new SmtEncodingException(s"SMT $id: Unexpected term in Z3 model: $z3expr", ex))
       }
     }
   }
@@ -968,7 +968,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         z3context.mkEq(le, re)
 
       case _ =>
-        flushAndThrow(throw new CheckerException(s"SMT $id: Incomparable expressions", NullEx))
+        flushAndThrow(new CheckerException(s"SMT $id: Incomparable expressions", NullEx))
     }
   }
 
