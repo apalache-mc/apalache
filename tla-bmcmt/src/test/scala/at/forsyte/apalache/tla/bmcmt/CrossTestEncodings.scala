@@ -5,12 +5,12 @@ import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.trex.{IncrementalExecutionContext, TransitionExecutorImpl}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
-import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaOper, TlaSetOper}
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
+import at.forsyte.apalache.tla.types._
 import ch.qos.logback.classic.{Level, Logger}
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
@@ -92,8 +92,10 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   protected var oracleEncoding: SMTEncoding = _
   protected var verifierEncoding: SMTEncoding = _
 
-  private val boolT = BoolT1
-  private val boolSetT = SetT1(BoolT1)
+  private def typeOf(ex: TlaEx): TlaType1 = ex.typeTag match {
+    case Typed(tt: TlaType1) => tt
+    case tag                 => throw new TypingException(s"Expected a typed expression, found $tag", ex.ID)
+  }
 
   private val typeGen = new TlaType1Gen {
     // Override to avoid operators and rows.
@@ -130,19 +132,17 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     override def genPrimitive: Gen[TlaType1] =
       oneOf(const(BoolT1), const(IntT1), const(StrT1) /*, const(RealT1), genConst, genVar*/ )
   }
-  private val irGen = new IrGenerators {}
 
   private val renaming = new IncrementalRenaming(new IdleTracker)
 
   /**
    * Rewrite elem \in Set ~~> \E elem$selected \in Set: elem' := elem$selected.
    */
-  private def rewriteElemInSet(elem: NameEx, set: TlaEx): TlaEx = {
-    val elemT = elem.typeTag.asTlaType1()
-    val selected = tla.name(elem.name + "$selected").as(elemT)
+  private def rewriteElemInSet(elemName: String, elemType: TlaType1, set: TBuilderInstruction): TBuilderInstruction = {
+    val elem = tla.name(elemName, elemType)
+    val selected = tla.name(elemName + "$selected", elemType)
     tla
-      .apalacheSkolem(tla.exists(selected, set, tla.assign(tla.prime(elem).as(elemT), selected).as(boolT)).as(boolT))
-      .as(boolT)
+      .skolem(tla.exists(selected, set, tla.assign(tla.prime(elem), selected)))
   }
 
   /**
@@ -167,19 +167,26 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   private def modelCheckAndGetCex(
       moduleName: String,
       variableDecls: Seq[TlaDecl],
-      initTrans: List[TlaEx],
-      nextTrans: List[TlaEx],
-      invExpr: TlaEx,
+      initTrans: List[TBuilderInstruction],
+      nextTrans: List[TBuilderInstruction],
+      inv: TBuilderInstruction,
       smtEncoding: SMTEncoding): Either[CheckerResult, Map[String, TlaEx]] = {
     // prepare the invariant
-    val invDecl = tla.declOp("Inv", invExpr).as(OperT1(Nil, BoolT1))
+    val invExpr = inv.build
+    val invDecl = TlaOperDecl("Inv", Nil, invExpr)(Typed(OperT1(Nil, BoolT1)))
     val decls = variableDecls :+ invDecl
-    val invariantsAndNegations = List((invExpr, tla.not(invExpr).as(BoolT1)))
+    val invariantsAndNegations = List((invExpr, tla.not(inv).build))
     val verificationConditions = CheckerInputVC(invariantsAndNegations)
 
     val module = TlaModule(moduleName, decls)
 
-    val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, verificationConditions)
+    val checkerInput = new CheckerInput(
+        module,
+        initTrans.map(_.build),
+        nextTrans.map(_.build),
+        None,
+        verificationConditions,
+    )
     val checkerParams = new ModelCheckerParams(checkerInput, 0)
 
     val solverContext =
@@ -277,36 +284,38 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * @param witnesses
    *   TLA+ expression referring to a set of type `SetT1(witnessType)`.
    */
-  private def getWitness(witnessType: TlaType1, witnesses: TlaEx): TlaEx = {
+  private def getWitness(witnessType: TlaType1, witnesses: TBuilderInstruction): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val witness = NameEx("witness")(Typed(witnessType))
-    val witnessDecl = TlaVarDecl(witness.name)(witness.typeTag)
-    val found = NameEx("found")(Typed(BoolT1))
-    val foundDecl = TlaVarDecl(found.name)(found.typeTag)
+    val witnessName = "witness"
+    val foundName = "found"
+    val witnessDecl = TlaVarDecl(witnessName)(Typed(witnessType))
+    val foundDecl = TlaVarDecl(foundName)(Typed(BoolT1))
+    val witnessBuilder = tla.name(witnessName, witnessType)
+    val foundBuilder = tla.name(foundName, BoolT1)
 
     // Construct the `TlaModule`.
     // VARIABLES witness, found
     val variableDecls = List(witnessDecl, foundDecl)
     // Init == witness \in ${witnesses} /\ found \in BOOLEAN
-    val initTrans = List(
-        tla.and(rewriteElemInSet(witness, witnesses), rewriteElemInSet(found, tla.booleanSet().as(boolSetT))).as(boolT))
+    val initTrans = List(tla
+          .and(rewriteElemInSet(witnessName, witnessType, witnesses),
+              rewriteElemInSet(foundName, BoolT1, tla.booleanSet())))
     // Next == UNCHANGED <<witness, found>>
     val nextTrans = List(tla
-          .and(tla.assign(tla.prime(witness).as(witnessType), witness).as(boolT),
-              tla.assign(tla.prime(found).as(boolT), found).as(boolT))
-          .as(boolT))
+          .and(tla.assign(tla.prime(witnessBuilder), witnessBuilder),
+              tla.assign(tla.prime(foundBuilder), foundBuilder)))
     // NotFound == ~found
-    val inv = tla.not(found).as(boolT)
+    val inv = tla.not(foundBuilder)
 
     // Call the model checker.
     modelCheckAndGetCex("Oracle", variableDecls, initTrans, nextTrans, inv, oracleEncoding) match {
       case Left(outcome) =>
-        failNoCex(outcome, oracleEncoding, formatOracleSpec(witnessType, witnesses))
+        failNoCex(outcome, oracleEncoding, formatOracleSpec(witnessType, witnesses.build))
       case Right(binding) =>
         // Extract witness expression from the counterexample.
-        assert(binding.contains(witness.name))
-        val witnessExpr = binding(witness.name)
+        assert(binding.contains(witnessName))
+        val witnessExpr = binding(witnessName)
         witnessExpr
     }
   }
@@ -324,38 +333,38 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * @return
    *   The `result` expression.
    */
-  private def verify(witness: TlaEx, witnesses: TlaEx): TlaEx = {
+  private def verify(witness: TlaEx, witnesses: TBuilderInstruction): TlaEx = {
     // Module-level TLA+ variables.
     // We will force `result` = `witness` in `Init`.
-    val witnessType = witness.typeTag.asTlaType1()
-    val result = NameEx("result")(witness.typeTag)
-    val resultDecl = TlaVarDecl(result.name)(witness.typeTag)
-    val found = NameEx("found")(Typed(BoolT1))
-    val foundDecl = TlaVarDecl(found.name)(found.typeTag)
+    val witnessType = typeOf(witness)
+    val resultName = "result"
+    val foundName = "found"
+    val resultDecl = TlaVarDecl(resultName)(Typed(witnessType))
+    val foundDecl = TlaVarDecl(foundName)(Typed(BoolT1))
+    val resultBuilder = tla.name(resultName, witnessType)
+    val foundBuilder = tla.name(foundName, BoolT1)
+    val witnessBuilder = tla.unchecked(witness)
 
     // Construct the `TlaModule`.
     // VARIABLES witness, found
     val variableDecls: Seq[TlaDecl] = Seq(resultDecl, foundDecl)
     // Init == result \in ${witnesses} /\ result = ${witness} /\ found \in BOOLEAN
     val initTrans = List(tla
-          .and(rewriteElemInSet(result, witnesses), tla.eql(tla.prime(result).as(witnessType), witness).as(boolT),
-              rewriteElemInSet(found, tla.booleanSet().as(SetT1(BoolT1))))
-          .as(boolT))
+          .and(rewriteElemInSet(resultName, witnessType, witnesses), tla.eql(tla.prime(resultBuilder), witnessBuilder),
+              rewriteElemInSet(foundName, BoolT1, tla.booleanSet())))
     // Next == UNCHANGED <<result, found>>
     val nextTrans = List(tla
-          .and(tla.assign(tla.prime(result).as(witnessType), result).as(boolT),
-              tla.assign(tla.prime(found).as(boolT), found).as(boolT))
-          .as(boolT))
+          .and(tla.assign(tla.prime(resultBuilder), resultBuilder), tla.assign(tla.prime(foundBuilder), foundBuilder)))
     // NotFound == ~found
-    val inv = tla.not(found).as(boolT)
+    val inv = tla.not(foundBuilder)
 
     // Call the model checker.
     modelCheckAndGetCex("Verifier", variableDecls, initTrans, nextTrans, inv, verifierEncoding) match {
       case Left(outcome) =>
-        failNoCex(outcome, verifierEncoding, formatVerifierSpec(witnessType, witnesses, witness))
+        failNoCex(outcome, verifierEncoding, formatVerifierSpec(witnessType, witnesses.build, witness))
       case Right(binding) =>
-        assert(binding.contains(result.name))
-        val resultExpr = binding(result.name)
+        assert(binding.contains(resultName))
+        val resultExpr = binding(resultName)
         resultExpr
     }
   }
@@ -368,33 +377,37 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * @return
    *   A [[Gen]] for expressions of type [[witnessType]].
    */
-  private def genWitness(witnessType: TlaType1): Gen[TlaEx] = lzy {
+  private def genWitness(witnessType: TlaType1): Gen[TBuilderInstruction] = lzy {
     witnessType match {
-      case IntT1                => irGen.genInt
-      case BoolT1               => irGen.genBool
-      case StrT1                => irGen.genStr
-      case SetT1(elemType)      => genWitnessSet(elemType)
-      case tp @ SeqT1(elemType) =>
+      case IntT1           => arbitrary[Int].map(i => tla.int(BigInt(i)))
+      case BoolT1          => arbitrary[Boolean].map(tla.bool)
+      case StrT1           => Gen.identifier.map(tla.str)
+      case SetT1(elemType) => genWitnessSet(elemType)
+      case SeqT1(elemType) =>
         for {
           elements <- listOf(genWitness(elemType))
-        } yield tla.tuple(elements: _*).as(tp)
-      case tp @ TupT1(elemTypes @ _*) =>
+        } yield {
+          if (elements.isEmpty) tla.emptySeq(elemType)
+          else tla.seq(elements: _*)
+        }
+      case TupT1(elemTypes @ _*) =>
         for {
-          elements <- Gen.sequence[Seq[TlaEx], TlaEx](elemTypes.map(genWitness(_)))
-        } yield tla.tuple(elements: _*).as(tp)
-      case tp @ RecT1(fieldTypes) =>
+          elements <- Gen.sequence[Seq[TBuilderInstruction], TBuilderInstruction](elemTypes.map(genWitness(_)))
+        } yield tla.tuple(elements: _*)
+      case RecT1(fieldTypes) =>
         for {
-          fieldValues <- Gen.sequence[Seq[TlaEx], TlaEx](fieldTypes.values.map(genWitness(_)))
-          fieldNames = fieldTypes.toSeq.map { case (name, _) => tla.str(name).as(StrT1) }
-          namesAndSets = TlaOper.interleave(fieldNames, fieldValues)
-        } yield OperEx(TlaFunOper.rec, namesAndSets: _*)(Typed(tp))
-      case tp @ FunT1(arg, res) =>
+          fields <- Gen.sequence[Seq[(String, TBuilderInstruction)], (String, TBuilderInstruction)](
+              fieldTypes.toSeq.map { case (name, fieldType) =>
+                genWitness(fieldType).map(name -> _)
+              })
+        } yield tla.rec(fields: _*)
+      case FunT1(arg, res) =>
         for {
           id <- Gen.identifier
-          name = NameEx(id)(Typed(arg))
+          name = tla.name(id, arg)
           set <- genWitnessSet(arg)
           res <- genWitness(res)
-        } yield tla.funDef(res, name, set).as(tp)
+        } yield tla.funDef(res, (name, set))
       // TODO(#401): Enable rows, variants when supported by the model checker.
       case ConstT1(_) | OperT1(_, _) | RealT1 | RecRowT1(_) | RowT1(_, _) | SparseTupT1(_) | VarT1(_) | VariantT1(_) =>
         throw new IllegalArgumentException(
@@ -410,12 +423,12 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
    * @return
    *   A [[Gen]] for expressions of type `Set(witnessType)`.
    */
-  private def genWitnessSet(witnessesType: TlaType1): Gen[TlaEx] = lzy {
+  private def genWitnessSet(witnessesType: TlaType1): Gen[TBuilderInstruction] = lzy {
     witnessesType match {
-      case tp @ BoolT1 =>
+      case BoolT1 =>
         for {
           arg <- arbitrary[Boolean]
-          set <- oneOf(tla.booleanSet().as(SetT1(tp)), tla.enumSet(tla.bool(arg)).as(SetT1(tp)))
+          set <- oneOf(tla.booleanSet(), tla.enumSet(tla.bool(arg)))
         } yield set
       // Temporarily avoid sets of function sets, see https://github.com/apalache-mc/apalache/issues/1759.
       // TODO(#1452): Re-enable when we have better support.
@@ -423,15 +436,15 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
       //  for {
       //    domain <- genWitnessSet(arg)
       //    codomain <- genWitnessSet(res)
-      //  } yield tla.funSet(domain, codomain).as(SetT1(tp))
+      //  } yield tla.funSet(domain, codomain)
       case tp @ FunT1(_, _) =>
         for {
           elements <- nonEmptyListOf(genWitness(tp))
-        } yield tla.enumSet(elements: _*).as(SetT1(tp))
+        } yield tla.enumSet(elements: _*)
       case tp =>
         for {
           elements <- nonEmptyListOf(genWitness(tp))
-        } yield tla.enumSet(elements: _*).as(SetT1(tp))
+        } yield tla.enumSet(elements: _*)
     }
   }
 
@@ -469,9 +482,14 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
   }
 
   @nowarn("cat=deprecation&msg=Stream") // ScalaCheck's Shrink still uses Stream, which is deprecated since Scala 2.13.0
-  private def shrinkEx(ex: TlaEx): Stream[TlaEx] = ex match {
+  private def shrinkBuilder(ex: TBuilderInstruction): Stream[TBuilderInstruction] = shrinkEx(ex.build)
+
+  @nowarn("cat=deprecation&msg=Stream") // ScalaCheck's Shrink still uses Stream, which is deprecated since Scala 2.13.0
+  private def shrinkEx(ex: TlaEx): Stream[TBuilderInstruction] = ex match {
     case OperEx(TlaSetOper.enumSet, args @ _*) =>
-      Stream(shrink(args).filterNot(_.isEmpty).map(elems => tla.enumSet(elems: _*).as(ex.typeTag.asTlaType1())): _*)
+      Stream(shrink(args).filterNot(_.isEmpty).map { elems =>
+        tla.enumSet(elems.map(tla.unchecked): _*)
+      }: _*)
     // TODO: Shrink further operators. For now, the main obstacle to interpreting the bugs uncovered by this class
     // is that the expression generator produces sets of more elements than necessary.
     case _ => Stream.empty
@@ -485,9 +503,9 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
     LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.OFF)
 
     val prop = forAllShrink(typeGen.genType1 :| "witness type", shrinkType) { witnessType =>
-      forAllShrink(genWitnessSet(witnessType) :| "witnesses set", shrinkEx) { witnesses =>
+      forAllShrink(genWitnessSet(witnessType) :| "witnesses set", shrinkBuilder) { witnesses =>
         // Uncomment for debugging:
-        // println(s"Looking for witness of type ${witnessType} in set ${witnesses}")
+        // println(s"Looking for witness of type ${witnessType} in set ${witnesses.build}")
         val witness = getWitness(witnessType, witnesses)
         // println(s"Verifying witness=${witness}")
         val result = verify(witness, witnesses)

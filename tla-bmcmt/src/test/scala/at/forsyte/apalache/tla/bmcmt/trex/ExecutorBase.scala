@@ -3,11 +3,11 @@ package at.forsyte.apalache.tla.bmcmt.trex
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 import java.io.{File, FileOutputStream, PrintStream}
 import org.scalatest.Outcome
@@ -49,7 +49,7 @@ trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
     trex.recover(snapshot)
 
     snapshot = trex.snapshot()
-    trex.assertState(tla.not(assertion))
+    trex.assertState(tla.not(tla.unchecked(assertion)))
     assert(trex.sat(0).contains(false))
     trex.recover(snapshot)
   }

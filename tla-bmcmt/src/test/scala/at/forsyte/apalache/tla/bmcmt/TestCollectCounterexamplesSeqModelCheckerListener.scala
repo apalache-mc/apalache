@@ -7,11 +7,11 @@ import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.bmcmt.trex.{
   IncrementalExecutionContext, IncrementalExecutionContextSnapshot, TransitionExecutorImpl,
 }
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -19,23 +19,29 @@ import org.scalatestplus.junit.JUnitRunner
 @RunWith(classOf[JUnitRunner])
 class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
-  private val types = Map("i" -> IntT1, "b" -> BoolT1)
-
-  private def mkAssign(varName: String, value: Int): TlaEx = {
-    assign(prime(name(varName) ? "i") ? "i", int(value)).typed(types, "b")
+  private def mkAssign(varName: String, value: TBuilderInstruction): TBuilderInstruction = {
+    tla.assign(tla.prime(tla.name(varName, IntT1)), value)
   }
 
   private def getChecker(
       module: TlaModule,
-      initTrans: List[TlaEx],
-      nextTrans: List[TlaEx],
-      inv: TlaEx,
+      initTrans: List[TBuilderInstruction],
+      nextTrans: List[TBuilderInstruction],
+      inv: TBuilderInstruction,
       maxErrors: Int): (
       CollectCounterexamplesModelCheckerListener,
       SeqModelChecker[IncrementalExecutionContextSnapshot]) = {
     // construct checker input + parameters
-    val notInv = not(inv).typed(types, "b")
-    val checkerInput = new CheckerInput(module, initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
+    val invEx = inv.build
+    val notInv = tla.not(inv).build
+    val checkerInput =
+      new CheckerInput(
+          module,
+          initTrans.map(_.build),
+          nextTrans.map(_.build),
+          None,
+          CheckerInputVC(List((invEx, notInv))),
+      )
     val params = new ModelCheckerParams(checkerInput, 1, Map()) { nMaxErrors = maxErrors }
 
     // create utility objects
@@ -57,10 +63,10 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
 
   test("finds cex for invariant violation at initial state") {
     // construct TLA+ module
-    val initTrans = List(mkAssign("x", 2))
-    val nextTrans = List(mkAssign("x", 2))
+    val initTrans = List(mkAssign("x", tla.int(2)))
+    val nextTrans = List(mkAssign("x", tla.int(2)))
     // Inv == x != 2
-    val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
+    val inv = tla.not(tla.eql(tla.name("x", IntT1), tla.int(2)))
     val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
 
     // check the outcome
@@ -76,15 +82,15 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     assert(binding.contains("x"))
     val valOfX = binding("x")
     assert(valOfX.isInstanceOf[ValEx])
-    assert(valOfX.asInstanceOf[ValEx] == int(2).typed(types, "i"))
+    assert(valOfX.asInstanceOf[ValEx] == tla.int(2).build)
   }
 
   test("finds cex for invariant violation after one step") {
     // construct TLA+ module
-    val initTrans = List(mkAssign("x", 10))
-    val nextTrans = List(mkAssign("x", 2))
+    val initTrans = List(mkAssign("x", tla.int(10)))
+    val nextTrans = List(mkAssign("x", tla.int(2)))
     // Inv == x != 2
-    val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
+    val inv = tla.not(tla.eql(tla.name("x", IntT1), tla.int(2)))
     val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
 
     // check the outcome
@@ -100,15 +106,15 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     assert(binding.contains("x"))
     val valOfX = binding("x")
     assert(valOfX.isInstanceOf[ValEx])
-    assert(valOfX.asInstanceOf[ValEx] == int(2).typed(types, "i"))
+    assert(valOfX.asInstanceOf[ValEx] == tla.int(2).build)
   }
 
   test("collects multiple cex") {
     // construct TLA+ module
-    val initTrans = List(mkAssign("x", 10))
-    val nextTrans = List(mkAssign("x", 2))
+    val initTrans = List(mkAssign("x", tla.int(10)))
+    val nextTrans = List(mkAssign("x", tla.int(2)))
     // Inv == x != 2
-    val inv = not(eql(name("x") ? "i", int(2)) ? "b").typed(types, "b")
+    val inv = tla.not(tla.eql(tla.name("x", IntT1), tla.int(2)))
     val module = TlaModule("root", List(TlaVarDecl("x")(Typed(IntT1))))
 
     // check the outcome
