@@ -73,8 +73,7 @@ There is no typo in the CLI arguments above: You pass action invariants the same
 as you pass state invariants. Preprocessing in Apalache is clever enough to figure out,
 what kind of invariant it is dealing with.
 
-<a name="traceInv"></a>
-## Trace invariants
+## <a id="traceInv"></a> Trace invariants
 
 
 Let's have a look at the following two predicates in `Invariants.tla`:

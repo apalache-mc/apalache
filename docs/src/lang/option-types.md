@@ -319,8 +319,7 @@ IN
 
 ----------------------------------------------------------------------------
 
-<a name="OptionFunApp"></a>
-### Apply a function to a partial value
+### <a id="OptionFunApp"></a> Apply a function to a partial value
 
 **Notation:** `OptionFunApp(f, o)`
 
@@ -350,8 +349,7 @@ LET f == [x \in 1..3 |-> x + 1] IN
 
 ----------------------------------------------------------------------------
 
-<a name="OptionPartialFun"></a>
-### Extend a total function into a partial function
+### <a id="OptionPartialFun"></a> Extend a total function into a partial function
 
 **Notation:** `OptionPartialFun(f, undef)`
 
