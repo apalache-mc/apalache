@@ -36,7 +36,7 @@ The most important commands are as follows:
 
 ## 1. Model checker and simulator command-line parameters
 
-### 1.1. Model checker command-line parameters
+### <a id="model-checker-command-line-parameters"></a> 1.1. Model checker command-line parameters
 
 The model checker can be run as follows:
 
@@ -126,7 +126,7 @@ The arguments are as follows:
 
   - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
 
-### 1.3. Supplying JVM arguments
+### <a id="supplying-jvm-arguments"></a> 1.3. Supplying JVM arguments
 
 You can supply JVM argument to be used when running Apalache by setting the
 environment variable `JVM_ARGS`. For example, to change the JVM heap size from
@@ -172,7 +172,7 @@ in this symbolic execution (by querying z3), then it reports a counterexample.
 Otherwise, it reports that no bug was found up to the given length. If a bug
 needs a long execution to get revealed, bounded model checking may miss it!
 
-### 1.5. Checking an inductive invariant
+### <a id="checking-an-inductive-invariant"></a> 1.5. Checking an inductive invariant
 
 To check executions of arbitrary lengths, one usually finds a formula that satisfies the two following properties:
 
