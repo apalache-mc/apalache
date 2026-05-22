@@ -32,7 +32,7 @@ class OptPassImpl @Inject() (
       List(
           ConstSimplifier(tracker),
           ExprOptimizer(gen, tracker),
-          SetMembershipSimplifier(tracker),
+          SetMembershipSimplifier(gen, tracker),
           ConstSimplifier(tracker),
       ) ///
 
