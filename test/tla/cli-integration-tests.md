@@ -1717,6 +1717,26 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check Bug2972 fails clearly for SUBSET Int
+
+Regression test for https://github.com/apalache-mc/apalache/issues/2972.
+`SUBSET Int` is unsupported because Apalache cannot expand a powerset over an
+infinite base set.  The checker used to crash later in `LazyEquality` with
+`Unexpected equality test over types CellTFrom(Set(Int)) and InfSet[CellTFrom(Int)]`.
+It should now reject the unsupported powerset directly with an input error.
+
+```sh
+$ apalache-mc check --init=Init --next=Next Bug2972.tla | sed 's/[IEW]@.*//' | awk '/Input error|EXITCODE/'
+Bug2972.tla:19:28-19:37: Input error (see the manual): SUBSET of an infinite set (InfSet[CellTFrom(Int)]) is not supported. Replace the base set with a finite one, e.g. SUBSET (a..b).
+EXITCODE: ERROR (255)
+```
+
+```sh
+$ apalache-mc check --init=GenInit --next=Next Bug2972.tla | sed 's/[IEW]@.*//' | awk '/Input error|EXITCODE/'
+Bug2972.tla:19:28-19:37: Input error (see the manual): SUBSET of an infinite set (InfSet[CellTFrom(Int)]) is not supported. Replace the base set with a finite one, e.g. SUBSET (a..b).
+EXITCODE: ERROR (255)
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/apalache-mc/apalache/issues/1152

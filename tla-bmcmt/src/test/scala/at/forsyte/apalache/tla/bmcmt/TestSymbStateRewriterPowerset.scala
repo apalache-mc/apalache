@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, NameEx, SetT1, Typed, ValEx}
+import at.forsyte.apalache.tla.pp.TlaInputError
 
 trait TestSymbStateRewriterPowerset extends RewriterBase {
   private val types = Map(
@@ -15,6 +16,14 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       "II" -> SetT1(SetT1(IntT1)),
       "b" -> BoolT1,
   )
+
+  private def assertInfinitePowersetIsUnsupported(rewriterType: SMTEncoding, state: SymbState): Unit = {
+    val rewriter = create(rewriterType)
+    val error = intercept[TlaInputError] {
+      rewriter.rewriteUntilDone(state)
+    }
+    assert(error.getMessage.contains("SUBSET of an infinite set"))
+  }
 
   test("""SUBSET {1, 2, 3}""") { rewriterType: SMTEncoding =>
     val ex = powSet(enumSet(int(1), int(2), int(3)) ? "I")
@@ -86,13 +95,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
 
-    val rewriter = create(rewriterType)
-    try {
-      val _ = rewriter.rewriteUntilDone(state)
-      fail("expected an error message about subseteq over infinite sets being unsupported")
-    } catch {
-      case _: RewriterException => () // OK
-    }
+    assertInfinitePowersetIsUnsupported(rewriterType, state)
   }
 
   test("""SSE-SUBSETEQ: Nat \in SUBSET {1, 2, 3, 4}""") { rewriterType: SMTEncoding =>
@@ -121,13 +124,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
 
-    val rewriter = create(rewriterType)
-    try {
-      val _ = rewriter.rewriteUntilDone(state)
-      fail("expected an error message about subseteq over infinite sets being unsupported")
-    } catch {
-      case _: RewriterException => () // OK
-    }
+    assertInfinitePowersetIsUnsupported(rewriterType, state)
   }
 
   test("""SSE-SUBSETEQ: Nat \in SUBSET Int""") { rewriterType: SMTEncoding =>
@@ -137,13 +134,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
 
-    val rewriter = create(rewriterType)
-    try {
-      val _ = rewriter.rewriteUntilDone(state)
-      fail("expected an error message about subseteq over infinite sets being unsupported")
-    } catch {
-      case _: RewriterException => () // OK
-    }
+    assertInfinitePowersetIsUnsupported(rewriterType, state)
   }
 
   test("""SSE-SUBSETEQ: Int \in SUBSET Nat""") { rewriterType: SMTEncoding =>
@@ -153,13 +144,7 @@ trait TestSymbStateRewriterPowerset extends RewriterBase {
       .typed(types, "b")
     val state = new SymbState(inEx, arena, Binding())
 
-    val rewriter = create(rewriterType)
-    try {
-      val _ = rewriter.rewriteUntilDone(state)
-      fail("expected an error message about subseteq over infinite sets being unsupported")
-    } catch {
-      case _: RewriterException => () // OK
-    }
+    assertInfinitePowersetIsUnsupported(rewriterType, state)
   }
 
   test("""SE-SUBSET: \E X \in SUBSET {1, 2}: TRUE (sat)""") { rewriterType: SMTEncoding =>
