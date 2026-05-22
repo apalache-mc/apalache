@@ -36,8 +36,7 @@ translated as constants in the SMT constraints. This simple trick may bring
 your specification into a much simpler theory. Sometimes, this trick allows z3
 to use parallel algorithms.
 
-<a name="const"></a>
-## Constants
+## <a id="const"></a> Constants
 
 The module `Integers` defines two constant sets (technically, they are
 operators without arguments):
@@ -54,8 +53,7 @@ operators without arguments):
 
 ## Operators
 
-<a name="range"></a>
-### Integer range
+### <a id="range"></a> Integer range
 
 **Notation:** `a..b`
 
@@ -99,8 +97,7 @@ set()
 
 ----------------------------------------------------------------------------
 
-<a name="uminus"></a>
-### Unary integer negation
+### <a id="uminus"></a> Unary integer negation
 
 **Notation:** `-i`
 
@@ -139,8 +136,7 @@ type error, whereas TLC reports a runtime error.
 
 ----------------------------------------------------------------------------
 
-<a name="plus"></a>
-### Integer addition
+### <a id="plus"></a> Integer addition
 
 **Notation:** `a + b`
 
@@ -178,8 +174,7 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 ----------------------------------------------------------------------------
 
-<a name="minus"></a>
-### Integer subtraction
+### <a id="minus"></a> Integer subtraction
 
 **Notation:** `a - b`
 
@@ -220,8 +215,7 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 ----------------------------------------------------------------------------
 
-<a name="mult"></a>
-### Integer multiplication
+### <a id="mult"></a> Integer multiplication
 
 **Notation:** `a * b`
 
@@ -259,8 +253,7 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 ----------------------------------------------------------------------------
 
-<a name="div"></a>
-### Integer division
+### <a id="div"></a> Integer division
 
 **Notation:** `a \div b`
 
@@ -337,8 +330,7 @@ to produce the same results as in TLA+:
 
 ----------------------------------------------------------------------------
 
-<a name="mod"></a>
-### Integer remainder
+### <a id="mod"></a> Integer remainder
 
 **Notation:** `a % b`
 
@@ -390,8 +382,7 @@ to produce the same results as in TLA+:
 
 ----------------------------------------------------------------------------
 
-<a name="pow"></a>
-### Integer exponentiation
+### <a id="pow"></a> Integer exponentiation
 
 **Notation:** `a^b`
 
@@ -457,8 +448,7 @@ statically reports a type error, whereas TLC reports a runtime error.
 
 ----------------------------------------------------------------------------
 
-<a name="lt"></a>
-### Integer less-than
+### <a id="lt"></a> Integer less-than
 
 **Notation:** `a < b`
 
@@ -502,8 +492,7 @@ False
 
 ----------------------------------------------------------------------------
 
-<a name="lte"></a>
-### Integer less-than-or-equal
+### <a id="lte"></a> Integer less-than-or-equal
 
 **Notation:** `a <= b` or `a =< b` or `a \leq b`
 
@@ -547,8 +536,7 @@ False
 
 ----------------------------------------------------------------------------
 
-<a name="gt"></a>
-### Integer greater-than
+### <a id="gt"></a> Integer greater-than
 
 **Notation:** `a > b`
 
@@ -592,8 +580,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="gte"></a>
-### Integer greater-than-or-equal
+### <a id="gte"></a> Integer greater-than-or-equal
 
 **Notation:** `a >= b` or `a \geq b`
 
@@ -637,8 +624,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="eq"></a>
-### Equality and inequality
+### <a id="eq"></a> Equality and inequality
 
 The operators `a = b` and `a /= b` are core operators of TLA+, and thus they are
 not defined in the module `Integers`, see [Logic](./logic.md).

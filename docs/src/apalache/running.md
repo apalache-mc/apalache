@@ -89,7 +89,7 @@ The arguments are as follows:
     - `--out-dir` set location for outputting any generated logs or artifacts,
       *`./_apalache-out` by default*
     - `--write-intermediate` if `true`, then additional output is generated. See
-      [Detailed output](#detailed-output). *`false` by default*
+      [Detailed output](#detailed). *`false` by default*
     - `--run-dir=DIRECTORY` write all outputs directly into the specified
       `DIRECTORY`
     - `--config-file` a file to use for loading configuration parameters. This
@@ -272,9 +272,7 @@ State14 ==
 InvariantViolation == hasLicense /\ year - BIRTH_YEAR < LICENSE_AGE
 ```
 
-<a name="lookup"></a>
-
-## 3. Module lookup
+## <a id="lookup"></a> 3. Module lookup
 
 Apalache uses [the SANY parser](https://lamport.azurewebsites.net/tla/tools.html), which is the standard parser of TLC
 and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in
@@ -289,9 +287,7 @@ __Note:__ To let TLA+ Toolbox and TLC know about the Apalache modules, include
 `$APALACHE_HOME/src/tla` in the lookup directories, as explained by Markus Kuppe for
 the [TLA+ Community Modules](https://github.com/tlaplus/CommunityModules).
 
-<a name="detailed"></a>
-
-## 4. Detailed output
+## <a id="detailed"></a> 4. Detailed output
 
 The location for detailed output is determined by the value of the `out-dir`
 parameter, which specifies the path to a directory into which all Apalache
@@ -340,9 +336,7 @@ intermediate TLA+ files in the run-specific subdirectory:
 - File `out-analysis.tla` is produced as a result of analysis, e.g., marking Skolemizable expressions and expressions to
   be expanded.
 
-<a name="parsing"></a>
-
-## 5. Parsing and pretty-printing
+## <a id="parsing"></a> 5. Parsing and pretty-printing
 
 If you'd like to check that your TLA+ specification is syntactically correct, without running the model checker, you can
 run the following command:
