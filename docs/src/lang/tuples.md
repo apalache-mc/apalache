@@ -77,8 +77,7 @@ immutable dictionary.
 ----------------------------------------------------------------------------
 
 
-<a name="tuple"></a>
-### Tuple/Sequence constructor
+### <a id="tuple"></a> Tuple/Sequence constructor
 
 **Notation:** `<<e_1, ..., e_n>>`
 
@@ -129,8 +128,7 @@ principle "tuples are functions", we have to use a dictionary.
 
 ----------------------------------------------------------------------------
 
-<a name="times"></a>
-### Cartesian product
+### <a id="times"></a> Cartesian product
 
 **Notation:** `S_1 \X ... \X S_n` (or `S_1 \times ... \times S_n`)
 
@@ -180,8 +178,7 @@ is picked with `\E t \in S_1 \X S_2`.
 
 ----------------------------------------------------------------------------
 
-<a name="app"></a>
-### Function application
+### <a id="app"></a> Function application
 
 As tuples are functions, you can access tuple elements by [function
 application](./functions.md#funApp), e.g., `tup[2]`. However, in the case of a

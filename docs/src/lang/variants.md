@@ -172,8 +172,7 @@ an invariant violation and will lead to a spurious counterexample.
 
 ----------------------------------------------------------------------------
 
-<a name="variantCtor"></a>
-### Variant constructor
+### <a id="variantCtor"></a> Variant constructor
 
 **Notation:** `Variant(tagName, associatedValue)`
 
@@ -208,8 +207,7 @@ Beer(malt, strength) == Variant("Beer", [ malt |-> malt, strength |-> strength ]
 
 ----------------------------------------------------------------------------
 
-<a name="variantTag"></a>
-### Variant tag
+### <a id="variantTag"></a> Variant tag
 
 **Notation:** `VariantTag(variant)`
 
@@ -235,8 +233,7 @@ VariantTag(Variant("Water", [ sparkling |-> sparkling ])) = "Water"
 
 ----------------------------------------------------------------------------
 
-<a name="variantFilter"></a>
-### Variant filter
+### <a id="variantFilter"></a> Variant filter
 
 **Notation:** `VariantFilter(tagName, set)`
 
@@ -277,8 +274,7 @@ LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
 
 ----------------------------------------------------------------------------
 
-<a name="variantGetOrElse"></a>
-### Unpacking a variant safely
+### <a id="variantGetOrElse"></a> Unpacking a variant safely
 
 **Notation:** `VariantGetOrElse(tagName, variant, defaultValue)`
 
@@ -320,8 +316,7 @@ VariantGetOrElse("Beer", water,
 
 ----------------------------------------------------------------------------
 
-<a name="variantGetUnsafe"></a>
-### Unpacking a variant unsafely
+### <a id="variantGetUnsafe"></a> Unpacking a variant unsafely
 
 **Notation:** `VariantGetUnsafe(tagName, variant)`
 

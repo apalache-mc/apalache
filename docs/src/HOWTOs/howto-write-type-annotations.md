@@ -79,8 +79,7 @@ Run the type checker again. You should see the following message:
 ...
 ```
 
-<a id="recipe2"></a>
-## Recipe 2: Annotating constants
+## <a id="recipe2"></a> Recipe 2: Annotating constants
 
 Consider the example [Channel.tla][] from [Specifying Systems][]:
 
@@ -207,8 +206,7 @@ This time the type checker can find the types of all expressions:
 ...
 ```
 
-<a id="recipe4"></a>
-## Recipe 4: Using variants in heterogenous sets
+## <a id="recipe4"></a> Recipe 4: Using variants in heterogenous sets
 
 Check the example [TwoPhase.tla][] from the repository of TLA+ examples (you
 will also need [TCommit.tla][], which is imported by TwoPhase.tla). This
@@ -310,8 +308,7 @@ solution. For instance, we could partition `msgs` into three subsets: the
 subset of `Commit` messages, the subset of `Abort` messages, and the subset of
 `Prepared` messages. See the discussion in [Idiom 15][].
 
-<a id="funAsSeq"></a>
-## Recipe 5: functions as sequences
+## <a id="funAsSeq"></a> Recipe 5: functions as sequences
 
 Check the example [Queens.tla][] from the repository of TLA+ examples.  It has
 85 lines of code, so we do not include it here. Similar to the previous
@@ -377,8 +374,7 @@ This time the type checker can find the types of all expressions:
 > All expressions are typed
 ```
 
-<a id="typeAliases"></a>
-## Recipe 6: type aliases
+## <a id="typeAliases"></a> Recipe 6: type aliases
 
 Type aliases can be used to provide a concise label for complex types, or to
 clarify the intended meaning of a simple types in the given context. 
@@ -494,8 +490,7 @@ Attacks(queens,i,j)
 You don't have to do that, but if you feel that types can also help you in documenting
 your specification, you have this option.
 
-<a id="recipe9"></a>
-## Recipe 9: Migrate from Type System 1 to Type System 1.2
+## <a id="recipe9"></a> Recipe 9: Migrate from Type System 1 to Type System 1.2
 
 As explained in [ADR002][], [Type System 1.2][] (TS1.2) differs from [Type
 System 1][] (TS1) as follows:

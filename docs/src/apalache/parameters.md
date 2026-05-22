@@ -27,8 +27,7 @@ Alternatively, you can extend the base module and use overrides:
 {{#include ../../../test/tla/y2k_override.tla::11}}
 ```
 
-<a name="ConstInit"></a>
-## ConstInit predicate
+## <a id="ConstInit"></a> ConstInit predicate
 
 This approach is similar to the ``Init`` operator, but applied to the
 constants. We define a special operator, e.g., called ``ConstInit``. For
