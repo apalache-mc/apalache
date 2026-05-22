@@ -229,8 +229,7 @@ some type <code>a</code>. This is enforced by the type checker.  (Records are an
 to this rule, as some records can be unified to a common type.)</p>
 <hr>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<p><a name="setEnum"></a></p>
-<h3 id="set-constructor-by-enumeration"><a class="header" href="#set-constructor-by-enumeration">Set constructor by enumeration</a></h3>
+<h3 id="set-constructor-by-enumeration"><a class="header" href="#set-constructor-by-enumeration"><a id="setEnum"></a> Set constructor by enumeration</a></h3>
 <p><strong>Notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>LaTeX notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>Arguments:</strong> Any number of arguments, <code>n &gt;= 0</code>.</p>
@@ -261,8 +260,7 @@ If this is not the case, the type checker flags an error.</p>
 
 </code></pre>
 <hr>
-<p><a name="in"></a></p>
-<h3 id="set-membership"><a class="header" href="#set-membership">Set membership</a></h3>
+<h3 id="set-membership"><a class="header" href="#set-membership"><a id="in"></a> Set membership</a></h3>
 <p><strong>Notation:</strong> <code>e \in S</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/in-set.png" alt="in"></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
@@ -299,8 +297,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="notin"></a></p>
-<h3 id="set-non-membership"><a class="header" href="#set-non-membership">Set non-membership</a></h3>
+<h3 id="set-non-membership"><a class="header" href="#set-non-membership"><a id="notin"></a> Set non-membership</a></h3>
 <p><strong>Notation:</strong> <code>e \notin S</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/notin-set.png" alt="notin"></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
@@ -338,13 +335,11 @@ True
 
 </code></pre>
 <hr>
-<p><a name="eq"></a></p>
-<h3 id="equality-and-inequality"><a class="header" href="#equality-and-inequality">Equality and inequality</a></h3>
+<h3 id="equality-and-inequality"><a class="header" href="#equality-and-inequality"><a id="eq"></a> Equality and inequality</a></h3>
 <p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+,
 see <a href="./logic.html">Logic</a>.</p>
 <hr>
-<p><a name="subseteq"></a></p>
-<h3 id="set-inclusion"><a class="header" href="#set-inclusion">Set inclusion</a></h3>
+<h3 id="set-inclusion"><a class="header" href="#set-inclusion"><a id="subseteq"></a> Set inclusion</a></h3>
 <p><strong>Notation:</strong> <code>S \subseteq T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/subseteq.png" alt="subseteq"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -380,8 +375,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="union"></a></p>
-<h3 id="binary-set-union"><a class="header" href="#binary-set-union">Binary set union</a></h3>
+<h3 id="binary-set-union"><a class="header" href="#binary-set-union"><a id="union"></a> Binary set union</a></h3>
 <p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/cup.png" alt="cup"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -414,8 +408,7 @@ that can be written as <code>|</code>:</p>
 
 </code></pre>
 <hr>
-<p><a name="intersect"></a></p>
-<h3 id="set-intersection"><a class="header" href="#set-intersection">Set intersection</a></h3>
+<h3 id="set-intersection"><a class="header" href="#set-intersection"><a id="intersect"></a> Set intersection</a></h3>
 <p><strong>Notation:</strong> <code>S \intersect T</code> or <code>S \cap T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/cap.png" alt="cap"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -448,8 +441,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="setminus"></a></p>
-<h3 id="set-difference"><a class="header" href="#set-difference">Set difference</a></h3>
+<h3 id="set-difference"><a class="header" href="#set-difference"><a id="setminus"></a> Set difference</a></h3>
 <p><strong>Notation:</strong> <code>S \ T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/setminus.png" alt="setminus"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -482,8 +474,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="filter"></a></p>
-<h3 id="set-filter"><a class="header" href="#set-filter">Set filter</a></h3>
+<h3 id="set-filter"><a class="header" href="#set-filter"><a id="filter"></a> Set filter</a></h3>
 <p><strong>Notation:</strong> <code>{ x \in S: P }</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/filter.png" alt="filter"></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
@@ -535,8 +526,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="map"></a></p>
-<h3 id="set-map"><a class="header" href="#set-map">Set map</a></h3>
+<h3 id="set-map"><a class="header" href="#set-map"><a id="map"></a> Set map</a></h3>
 <p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/map.png" alt="map"></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
@@ -593,8 +583,7 @@ syntax:</p>
 
 </code></pre>
 <hr>
-<p><a name="powerset"></a></p>
-<h3 id="powerset"><a class="header" href="#powerset">Powerset</a></h3>
+<h3 id="powerset"><a class="header" href="#powerset"><a id="powerset"></a> Powerset</a></h3>
 <p><strong>Notation:</strong> <code>SUBSET S</code></p>
 <p><strong>LaTeX notation:</strong> <code>SUBSET S</code></p>
 <p><strong>Arguments:</strong> One argument. If it is not a set, the result
@@ -617,8 +606,7 @@ produces a static type error, if the type of <code>S</code> is not a set type.</
 <p><strong>Example in Python:</strong> An implementation of <code>SUBSET S</code> in Python is not trivial.
 To appreciate the power of TLA+, see <a href="./examples/subset.py">subset.py</a>.</p>
 <hr>
-<p><a name="flatten"></a></p>
-<h3 id="set-flattening"><a class="header" href="#set-flattening">Set flattening</a></h3>
+<h3 id="set-flattening"><a class="header" href="#set-flattening"><a id="flatten"></a> Set flattening</a></h3>
 <p><strong>Notation:</strong> <code>UNION S</code></p>
 <p><strong>LaTeX notation:</strong> <code>UNION S</code></p>
 <p><strong>Warning:</strong> Do not confuse <code>UNION S</code> with <code>S \union T</code>. These are two
@@ -653,8 +641,7 @@ in Python is quite simple:</p>
 
 </code></pre>
 <hr>
-<p><a name="card"></a></p>
-<h3 id="set-cardinality"><a class="header" href="#set-cardinality">Set cardinality</a></h3>
+<h3 id="set-cardinality"><a class="header" href="#set-cardinality"><a id="card"></a> Set cardinality</a></h3>
 <p><strong>Notation:</strong> <code>Cardinality(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Cardinality(S)</code></p>
 <p><strong>Warning:</strong> <code>Cardinality(S)</code> is defined in the module <code>FiniteSets</code>.</p>
@@ -681,8 +668,7 @@ different from a finite set.</p>
 
 </code></pre>
 <hr>
-<p><a name="finite"></a></p>
-<h3 id="set-finiteness"><a class="header" href="#set-finiteness">Set finiteness</a></h3>
+<h3 id="set-finiteness"><a class="header" href="#set-finiteness"><a id="finite"></a> Set finiteness</a></h3>
 <p><strong>Notation:</strong> <code>IsFinite(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>IsFinite(S)</code></p>
 <p><strong>Warning:</strong> <code>IsFinite(S)</code> is defined in the module <code>FiniteSets</code>.</p>

@@ -195,8 +195,7 @@ questions:</p>
 <h2 id="1-how-to-write-types-in-tla"><a class="header" href="#1-how-to-write-types-in-tla">1. How to write types in TLA+</a></h2>
 <p>Everybody has a different opinion here. It would be great to use
 the native TLA+ constructs to express types.</p>
-<p><a name="typesAsTypeOk"></a></p>
-<h3 id="11-typeok-syntax"><a class="header" href="#11-typeok-syntax">1.1. TypeOK syntax</a></h3>
+<h3 id="11-typeok-syntax"><a class="header" href="#11-typeok-syntax"><a id="typesAsTypeOk"></a> 1.1. TypeOK syntax</a></h3>
 <p>The only way to write types in the <code>TypeOK</code> style is by set membership.
 For instance:</p>
 <ul>
@@ -224,8 +223,7 @@ where he uses a theorem:</p>
 <pre><code class="language-tla">THEOREM FooType ==
   \A a \in Int: \A b \in STRING: Foo(a, b) \in Int
 </code></pre>
-<p><a name="typesAsTerms"></a></p>
-<h3 id="12-types-as-terms"><a class="header" href="#12-types-as-terms">1.2. Types as terms</a></h3>
+<h3 id="12-types-as-terms"><a class="header" href="#12-types-as-terms"><a id="typesAsTerms"></a> 1.2. Types as terms</a></h3>
 <p>A classical way of writing types is by using logical terms (or algebraic datatypes).
 To this end, we can define a special module <code>Types.tla</code>:</p>
 <pre><code class="language-tla">---- MODULE Types ----
@@ -313,8 +311,7 @@ down a type annotation.</strong></li>
 </ul>
 </li>
 </ul>
-<p><a name="typesAsStrings"></a></p>
-<h3 id="13-types-as-strings"><a class="header" href="#13-types-as-strings">1.3. Types as strings</a></h3>
+<h3 id="13-types-as-strings"><a class="header" href="#13-types-as-strings"><a id="typesAsStrings"></a> 1.3. Types as strings</a></h3>
 <p>Let us introduce the following grammar for types:</p>
 <pre><code>T ::= var | Bool | Int | Str | T -&gt; T | Set(T) | Seq(T) |
       &lt;&lt;T, ..., T&gt;&gt; | [h_1 |-&gt; T, ..., h_k |-&gt; T] | (T, ..., T) =&gt; T
@@ -395,8 +392,7 @@ user writes: <code>x &lt;: BOOLEAN \/ x &lt;: Int</code>?</li>
 a module <code>M</code> and then uses an unnamed instance <code>INSTANCE M</code> in a module <code>M2</code>,
 then <code>M</code> and <code>M2</code> will clash on the operator <code>&lt;:</code>. We should define the operator
 once in a special module <code>Types</code> or <code>Apalache</code>.</p>
-<p><a name="annotationsAsAssumptions"></a></p>
-<h3 id="22-type-annotations-as-assumptions"><a class="header" href="#22-type-annotations-as-assumptions">2.2. Type annotations as assumptions</a></h3>
+<h3 id="22-type-annotations-as-assumptions"><a class="header" href="#22-type-annotations-as-assumptions"><a id="annotationsAsAssumptions"></a> 2.2. Type annotations as assumptions</a></h3>
 <p>One can use TLA+ syntax to write assumptions and assertions about the types.
 We are talking only about type assumptions here.
 The similar approach can be used to write theorems about types.

@@ -200,8 +200,7 @@ For this reason, <code>CASE</code> should only be used when all of its guards ar
 Given all the intricacies of <code>CASE</code>,
 we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
 <hr>
-<p><a name="ite"></a></p>
-<h2 id="deterministic-if-then-else"><a class="header" href="#deterministic-if-then-else">Deterministic IF-THEN-ELSE</a></h2>
+<h2 id="deterministic-if-then-else"><a class="header" href="#deterministic-if-then-else"><a id="ite"></a> Deterministic IF-THEN-ELSE</a></h2>
 <p><em>Use it when choosing between two values, not to structure your code.</em></p>
 <p><strong>Notation:</strong> <code>IF A THEN B ELSE C</code></p>
 <p><strong>LaTeX notation:</strong> the same</p>
@@ -230,8 +229,7 @@ evaluates to <code>TRUE</code>; and it evaluates to <code>0</code>, when <code>x
 <p>Note that we are using the expression syntax for <code>if-else</code> in python.
 This is because we write an expression, not a series of statements that assign
 values to variables!</p>
-<p><a name="case"></a></p>
-<h2 id="deterministic-case"><a class="header" href="#deterministic-case">Deterministic CASE</a></h2>
+<h2 id="deterministic-case"><a class="header" href="#deterministic-case"><a id="case"></a> Deterministic CASE</a></h2>
 <p><em>Read the description and never use this operator</em></p>
 <p><strong>Notation:</strong></p>
 <pre><code class="language-tla">CASE p_1 -&gt; e_1
@@ -312,8 +310,7 @@ give executable semantics for the fixed evaluation order of the predicates.</p>
     elif n &gt; 0:
         return "positive"
 </code></pre>
-<p><a name="caseOther"></a></p>
-<h2 id="deterministic-case-other"><a class="header" href="#deterministic-case-other">Deterministic CASE-OTHER</a></h2>
+<h2 id="deterministic-case-other"><a class="header" href="#deterministic-case-other"><a id="caseOther"></a> Deterministic CASE-OTHER</a></h2>
 <p><em>Better use IF-THEN-ELSE.</em></p>
 <p><strong>Notation:</strong></p>
 <pre><code class="language-tla">CASE p_1 -&gt; e_1

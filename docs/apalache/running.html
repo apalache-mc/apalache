@@ -217,7 +217,7 @@ It terminates successfully if there are no invariant violations.</p>
 </li>
 </ul>
 <h2 id="1-model-checker-and-simulator-command-line-parameters"><a class="header" href="#1-model-checker-and-simulator-command-line-parameters">1. Model checker and simulator command-line parameters</a></h2>
-<h3 id="11-model-checker-command-line-parameters"><a class="header" href="#11-model-checker-command-line-parameters">1.1. Model checker command-line parameters</a></h3>
+<h3 id="11-model-checker-command-line-parameters"><a class="header" href="#11-model-checker-command-line-parameters"><a id="model-checker-command-line-parameters"></a> 1.1. Model checker command-line parameters</a></h3>
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv1,...,Invn] [--length=10] \
@@ -271,7 +271,7 @@ options on the command line</li>
 <li><code>--out-dir</code> set location for outputting any generated logs or artifacts,
 <em><code>./_apalache-out</code> by default</em></li>
 <li><code>--write-intermediate</code> if <code>true</code>, then additional output is generated. See
-<a href="#detailed-output">Detailed output</a>. <em><code>false</code> by default</em></li>
+<a href="#detailed">Detailed output</a>. <em><code>false</code> by default</em></li>
 <li><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
 <code>DIRECTORY</code></li>
 <li><code>--config-file</code> a file to use for loading configuration parameters. This
@@ -307,7 +307,7 @@ the command line, the command line parameters take precedence over those in the 
 </ul>
 </li>
 </ul>
-<h3 id="13-supplying-jvm-arguments"><a class="header" href="#13-supplying-jvm-arguments">1.3. Supplying JVM arguments</a></h3>
+<h3 id="13-supplying-jvm-arguments"><a class="header" href="#13-supplying-jvm-arguments"><a id="supplying-jvm-arguments"></a> 1.3. Supplying JVM arguments</a></h3>
 <p>You can supply JVM argument to be used when running Apalache by setting the
 environment variable <code>JVM_ARGS</code>. For example, to change the JVM heap size from
 the default (<code>4096m</code>) to <code>1G</code> invoke Apalache as follows:</p>
@@ -337,7 +337,7 @@ variables <code>v'</code> are replaced with their copies
 in this symbolic execution (by querying z3), then it reports a counterexample.
 Otherwise, it reports that no bug was found up to the given length. If a bug
 needs a long execution to get revealed, bounded model checking may miss it!</p>
-<h3 id="15-checking-an-inductive-invariant"><a class="header" href="#15-checking-an-inductive-invariant">1.5. Checking an inductive invariant</a></h3>
+<h3 id="15-checking-an-inductive-invariant"><a class="header" href="#15-checking-an-inductive-invariant"><a id="checking-an-inductive-invariant"></a> 1.5. Checking an inductive invariant</a></h3>
 <p>To check executions of arbitrary lengths, one usually finds a formula that satisfies the two following properties:</p>
 <pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
 /\ TypeOK /\ IndInv /\ Next =&gt; TypeOK' /\ IndInv'
@@ -410,8 +410,7 @@ The constants are initialized with the predicate <code>ConstInit</code>, defined
 
 InvariantViolation == hasLicense /\ year - BIRTH_YEAR &lt; LICENSE_AGE
 </code></pre>
-<p><a name="lookup"></a></p>
-<h2 id="3-module-lookup"><a class="header" href="#3-module-lookup">3. Module lookup</a></h2>
+<h2 id="3-module-lookup"><a class="header" href="#3-module-lookup"><a id="lookup"></a> 3. Module lookup</a></h2>
 <p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY parser</a>, which is the standard parser of TLC
 and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in</p>
 <ol>
@@ -424,8 +423,7 @@ classpath).</li>
 <p><strong>Note:</strong> To let TLA+ Toolbox and TLC know about the Apalache modules, include
 <code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus Kuppe for
 the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community Modules</a>.</p>
-<p><a name="detailed"></a></p>
-<h2 id="4-detailed-output"><a class="header" href="#4-detailed-output">4. Detailed output</a></h2>
+<h2 id="4-detailed-output"><a class="header" href="#4-detailed-output"><a id="detailed"></a> 4. Detailed output</a></h2>
 <p>The location for detailed output is determined by the value of the <code>out-dir</code>
 parameter, which specifies the path to a directory into which all Apalache
 runs write their outputs (see <a href="config.html">configuration instructions</a>).</p>
@@ -465,8 +463,7 @@ their primed versions.</li>
 <li>File <code>out-analysis.tla</code> is produced as a result of analysis, e.g., marking Skolemizable expressions and expressions to
 be expanded.</li>
 </ul>
-<p><a name="parsing"></a></p>
-<h2 id="5-parsing-and-pretty-printing"><a class="header" href="#5-parsing-and-pretty-printing">5. Parsing and pretty-printing</a></h2>
+<h2 id="5-parsing-and-pretty-printing"><a class="header" href="#5-parsing-and-pretty-printing"><a id="parsing"></a> 5. Parsing and pretty-printing</a></h2>
 <p>If you’d like to check that your TLA+ specification is syntactically correct, without running the model checker, you can
 run the following command:</p>
 <pre><code class="language-bash">$ apalache-mc parse &lt;myspec&gt;.tla

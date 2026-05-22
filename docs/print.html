@@ -1901,8 +1901,7 @@ prefer a printable version in pdf, check the <a href="https://lamport.azurewebsi
 <p><strong>Difficulty: Red trail – Medium</strong></p>
 <p>This tutorial collects tips and tricks that demonstrate the strong sides of
 Apalache.</p>
-<h2 id="tip-1-use-tla-constructs-instead-of-explicit-iteration"><a class="header" href="#tip-1-use-tla-constructs-instead-of-explicit-iteration">Tip 1: Use TLA+ constructs instead of explicit iteration</a></h2>
-<p><a name="fold-except"></a></p>
+<h2 id="tip-1-use-tla-constructs-instead-of-explicit-iteration"><a class="header" href="#tip-1-use-tla-constructs-instead-of-explicit-iteration"><a id="fold-except"></a> Tip 1: Use TLA+ constructs instead of explicit iteration</a></h2>
 <p>The <a href="#incremental-computation">Apalache
 antipatterns</a> mention that
 one should not use explicit iteration (e.g., <a href="#folding-sets-and-sequences-1"><code>ApaFoldSet</code> and
@@ -3303,8 +3302,7 @@ In this case, you have to write one type annotation per name.</p>
  &gt; All expressions are typed
 ...
 </code></pre>
-<p><a id="recipe2"></a></p>
-<h2 id="recipe-2-annotating-constants"><a class="header" href="#recipe-2-annotating-constants">Recipe 2: Annotating constants</a></h2>
+<h2 id="recipe-2-annotating-constants"><a class="header" href="#recipe-2-annotating-constants"><a id="recipe2"></a> Recipe 2: Annotating constants</a></h2>
 <p>Consider the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla">Channel.tla</a> from <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>:</p>
 <pre><code class="language-tla">
 -------------------------- MODULE Channel -----------------------------
@@ -3418,8 +3416,7 @@ of integers to integers, that is, <code>Int -&gt; Int</code>:</p>
 &gt; All expressions are typed 
 ...
 </code></pre>
-<p><a id="recipe4"></a></p>
-<h2 id="recipe-4-using-variants-in-heterogenous-sets"><a class="header" href="#recipe-4-using-variants-in-heterogenous-sets">Recipe 4: Using variants in heterogenous sets</a></h2>
+<h2 id="recipe-4-using-variants-in-heterogenous-sets"><a class="header" href="#recipe-4-using-variants-in-heterogenous-sets"><a id="recipe4"></a> Recipe 4: Using variants in heterogenous sets</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> from the repository of TLA+ examples (you
 will also need <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TCommit.tla">TCommit.tla</a>, which is imported by TwoPhase.tla). This
 example has 176 lines of code, so we do not inline it here.</p>
@@ -3521,8 +3518,7 @@ introduce a set of records of the same type, this is usually a simpler
 solution. For instance, we could partition <code>msgs</code> into three subsets: the
 subset of <code>Commit</code> messages, the subset of <code>Abort</code> messages, and the subset of
 <code>Prepared</code> messages. See the discussion in <a href="#idiom-15-replace-sets-of-mixed-records-with-disjoint-unions">Idiom 15</a>.</p>
-<p><a id="funAsSeq"></a></p>
-<h2 id="recipe-5-functions-as-sequences"><a class="header" href="#recipe-5-functions-as-sequences">Recipe 5: functions as sequences</a></h2>
+<h2 id="recipe-5-functions-as-sequences"><a class="header" href="#recipe-5-functions-as-sequences"><a id="funAsSeq"></a> Recipe 5: functions as sequences</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/N-Queens/Queens.tla">Queens.tla</a> from the repository of TLA+ examples.  It has
 85 lines of code, so we do not include it here. Similar to the previous
 sections, we annotate constants and variables:</p>
@@ -3577,8 +3573,7 @@ Solutions ==
 &gt; Your types are purrfect!
 &gt; All expressions are typed
 </code></pre>
-<p><a id="typeAliases"></a></p>
-<h2 id="recipe-6-type-aliases"><a class="header" href="#recipe-6-type-aliases">Recipe 6: type aliases</a></h2>
+<h2 id="recipe-6-type-aliases"><a class="header" href="#recipe-6-type-aliases"><a id="typeAliases"></a> Recipe 6: type aliases</a></h2>
 <p>Type aliases can be used to provide a concise label for complex types, or to
 clarify the intended meaning of a simple types in the given context.</p>
 <p>Type aliases are declared with the <code>@typeAlias</code> annotation, as follows:</p>
@@ -3664,8 +3659,7 @@ Attacks(queens,i,j)
 </code></pre>
 <p>You don’t have to do that, but if you feel that types can also help you in documenting
 your specification, you have this option.</p>
-<p><a id="recipe9"></a></p>
-<h2 id="recipe-9-migrate-from-type-system-1-to-type-system-12"><a class="header" href="#recipe-9-migrate-from-type-system-1-to-type-system-12">Recipe 9: Migrate from Type System 1 to Type System 1.2</a></h2>
+<h2 id="recipe-9-migrate-from-type-system-1-to-type-system-12"><a class="header" href="#recipe-9-migrate-from-type-system-1-to-type-system-12"><a id="recipe9"></a> Recipe 9: Migrate from Type System 1 to Type System 1.2</a></h2>
 <p>As explained in <a href="#adr-002-types-and-type-annotations">ADR002</a>, <a href="#ts12">Type System 1.2</a> (TS1.2) differs from <a href="#ts1">Type
 System 1</a> (TS1) as follows:</p>
 <ul>
@@ -4025,7 +4019,7 @@ It terminates successfully if there are no invariant violations.</p>
 </li>
 </ul>
 <h2 id="1-model-checker-and-simulator-command-line-parameters"><a class="header" href="#1-model-checker-and-simulator-command-line-parameters">1. Model checker and simulator command-line parameters</a></h2>
-<h3 id="11-model-checker-command-line-parameters"><a class="header" href="#11-model-checker-command-line-parameters">1.1. Model checker command-line parameters</a></h3>
+<h3 id="11-model-checker-command-line-parameters"><a class="header" href="#11-model-checker-command-line-parameters"><a id="model-checker-command-line-parameters"></a> 1.1. Model checker command-line parameters</a></h3>
 <p>The model checker can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--next=Next] [--inv=Inv1,...,Invn] [--length=10] \
@@ -4079,7 +4073,7 @@ options on the command line</li>
 <li><code>--out-dir</code> set location for outputting any generated logs or artifacts,
 <em><code>./_apalache-out</code> by default</em></li>
 <li><code>--write-intermediate</code> if <code>true</code>, then additional output is generated. See
-<a href="#detailed-output">Detailed output</a>. <em><code>false</code> by default</em></li>
+<a href="#detailed">Detailed output</a>. <em><code>false</code> by default</em></li>
 <li><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
 <code>DIRECTORY</code></li>
 <li><code>--config-file</code> a file to use for loading configuration parameters. This
@@ -4115,7 +4109,7 @@ the command line, the command line parameters take precedence over those in the 
 </ul>
 </li>
 </ul>
-<h3 id="13-supplying-jvm-arguments"><a class="header" href="#13-supplying-jvm-arguments">1.3. Supplying JVM arguments</a></h3>
+<h3 id="13-supplying-jvm-arguments"><a class="header" href="#13-supplying-jvm-arguments"><a id="supplying-jvm-arguments"></a> 1.3. Supplying JVM arguments</a></h3>
 <p>You can supply JVM argument to be used when running Apalache by setting the
 environment variable <code>JVM_ARGS</code>. For example, to change the JVM heap size from
 the default (<code>4096m</code>) to <code>1G</code> invoke Apalache as follows:</p>
@@ -4145,7 +4139,7 @@ variables <code>v'</code> are replaced with their copies
 in this symbolic execution (by querying z3), then it reports a counterexample.
 Otherwise, it reports that no bug was found up to the given length. If a bug
 needs a long execution to get revealed, bounded model checking may miss it!</p>
-<h3 id="15-checking-an-inductive-invariant"><a class="header" href="#15-checking-an-inductive-invariant">1.5. Checking an inductive invariant</a></h3>
+<h3 id="15-checking-an-inductive-invariant"><a class="header" href="#15-checking-an-inductive-invariant"><a id="checking-an-inductive-invariant"></a> 1.5. Checking an inductive invariant</a></h3>
 <p>To check executions of arbitrary lengths, one usually finds a formula that satisfies the two following properties:</p>
 <pre><code class="language-tla">/\ Init =&gt; TypeOK /\ IndInv
 /\ TypeOK /\ IndInv /\ Next =&gt; TypeOK' /\ IndInv'
@@ -4218,8 +4212,7 @@ The constants are initialized with the predicate <code>ConstInit</code>, defined
 
 InvariantViolation == hasLicense /\ year - BIRTH_YEAR &lt; LICENSE_AGE
 </code></pre>
-<p><a name="lookup"></a></p>
-<h2 id="3-module-lookup"><a class="header" href="#3-module-lookup">3. Module lookup</a></h2>
+<h2 id="3-module-lookup"><a class="header" href="#3-module-lookup"><a id="lookup"></a> 3. Module lookup</a></h2>
 <p>Apalache uses <a href="https://lamport.azurewebsites.net/tla/tools.html">the SANY parser</a>, which is the standard parser of TLC
 and the TLA+ Toolbox. By default, SANY is looking for modules (in this order) in</p>
 <ol>
@@ -4232,8 +4225,7 @@ classpath).</li>
 <p><strong>Note:</strong> To let TLA+ Toolbox and TLC know about the Apalache modules, include
 <code>$APALACHE_HOME/src/tla</code> in the lookup directories, as explained by Markus Kuppe for
 the <a href="https://github.com/tlaplus/CommunityModules">TLA+ Community Modules</a>.</p>
-<p><a name="detailed"></a></p>
-<h2 id="4-detailed-output"><a class="header" href="#4-detailed-output">4. Detailed output</a></h2>
+<h2 id="4-detailed-output"><a class="header" href="#4-detailed-output"><a id="detailed"></a> 4. Detailed output</a></h2>
 <p>The location for detailed output is determined by the value of the <code>out-dir</code>
 parameter, which specifies the path to a directory into which all Apalache
 runs write their outputs (see <a href="#apalache-configuration">configuration instructions</a>).</p>
@@ -4273,8 +4265,7 @@ their primed versions.</li>
 <li>File <code>out-analysis.tla</code> is produced as a result of analysis, e.g., marking Skolemizable expressions and expressions to
 be expanded.</li>
 </ul>
-<p><a name="parsing"></a></p>
-<h2 id="5-parsing-and-pretty-printing"><a class="header" href="#5-parsing-and-pretty-printing">5. Parsing and pretty-printing</a></h2>
+<h2 id="5-parsing-and-pretty-printing"><a class="header" href="#5-parsing-and-pretty-printing"><a id="parsing"></a> 5. Parsing and pretty-printing</a></h2>
 <p>If you’d like to check that your TLA+ specification is syntactically correct, without running the model checker, you can
 run the following command:</p>
 <pre><code class="language-bash">$ apalache-mc parse &lt;myspec&gt;.tla
@@ -4404,8 +4395,7 @@ OVERRIDE_LICENSE_AGE == 18
 
 =============================================================================
 </code></pre>
-<p><a name="ConstInit"></a></p>
-<h2 id="constinit-predicate"><a class="header" href="#constinit-predicate">ConstInit predicate</a></h2>
+<h2 id="constinit-predicate"><a class="header" href="#constinit-predicate"><a id="ConstInit"></a> ConstInit predicate</a></h2>
 <p>This approach is similar to the <code>Init</code> operator, but applied to the
 constants. We define a special operator, e.g., called <code>ConstInit</code>. For
 instance, below is the example
@@ -4478,9 +4468,7 @@ and <a href="#how-to-write-type-annotations">HOWTO on annotations</a>.</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="assignments-and-symbolic-transitions-1"><a href="#assignments-and-symbolic-transitions-1" class="header">Assignments and symbolic transitions</a></h1>
-<p><a name="assignments"></a>
-<a name="symbolicTransitions"></a></p>
-<h2 id="assignments-and-symbolic-transitions"><a class="header" href="#assignments-and-symbolic-transitions">Assignments and symbolic transitions</a></h2>
+<h2 id="assignments-and-symbolic-transitions"><a class="header" href="#assignments-and-symbolic-transitions"><a id="assignments"></a> <a id="symbolicTransitions"></a> Assignments and symbolic transitions</a></h2>
 <p>Let us go back to the example
 <a href="https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k.tla"><code>test/tla/y2k.tla</code></a>
 and run <code>apalache-mc</code> against
@@ -4975,8 +4963,7 @@ State 0: action invariant 0 violated. Check the counterexample in: counterexampl
 <p>There is no typo in the CLI arguments above: You pass action invariants the same way
 as you pass state invariants. Preprocessing in Apalache is clever enough to figure out,
 what kind of invariant it is dealing with.</p>
-<p><a name="traceInv"></a></p>
-<h2 id="trace-invariants"><a class="header" href="#trace-invariants">Trace invariants</a></h2>
+<h2 id="trace-invariants"><a class="header" href="#trace-invariants"><a id="traceInv"></a> Trace invariants</a></h2>
 <p>Let’s have a look at the following two predicates in <code>Invariants.tla</code>:</p>
 <pre><code class="language-tla">\* trace invariants that reason about executions
 
@@ -5951,8 +5938,7 @@ may only appear in temporal properties, not in e.g. actions.</p>
 <p>Not supported, not a priority</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="obsolete-recursive-operators-and-functions"><a href="#obsolete-recursive-operators-and-functions" class="header">Obsolete: Recursive operators and functions</a></h1>
-<p><a name="recursion"></a></p>
-<h2 id="recursive-operators-and-functions"><a class="header" href="#recursive-operators-and-functions">Recursive operators and functions</a></h2>
+<h2 id="recursive-operators-and-functions"><a class="header" href="#recursive-operators-and-functions"><a id="recursion"></a> Recursive operators and functions</a></h2>
 <p>While TLA+ allows the use of recursive operators and functions, we have decided to no longer support them in Apalache from version <code>0.23.1</code> onward,
 and suggest the use of fold operators, described in <a href="#folding-sets-and-sequences-1">Folding sets and sequences</a> instead:</p>
 <pre><code class="language-tla">
@@ -6351,7 +6337,7 @@ Below, we discuss such expressions and the decisions that we have made.</p>
 <h1 id="references"><a class="header" href="#references">References</a></h1>
 <ul>
 <li>Leslie Lamport. Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers.
-Addison-Wesley Professional, 2004. <a name="spec2004"></a></li>
+Addison-Wesley Professional, 2004. <a id="spec2004"></a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="assignments-in-apalache"><a class="header" href="#assignments-in-apalache">Assignments in Apalache</a></h1>
@@ -6619,8 +6605,7 @@ E == /\ x' = 2
 <p>Lastly, while <code>E</code> looks almost identical to <code>A</code>, the key difference is that
 expressions under universal quantifiers may not contain assignments. Therefore,
 <code>y' = s</code> is <em>not</em> an assignment to <code>y</code> and thus violates assignment-before-use.</p>
-<p><a name="manual"></a></p>
-<h2 id="manual-assignments"><a class="header" href="#manual-assignments">Manual Assignments</a></h2>
+<h2 id="manual-assignments"><a class="header" href="#manual-assignments"><a id="manual"></a> Manual Assignments</a></h2>
 <p>Users may choose, but aren’t required, to use manual assignments <code>x' := e</code> in
 place of <code>x' = e</code>.  While the use of this operator does not change Apalache’s
 internal search for assignments (in particular, using manual assignment
@@ -6750,7 +6735,7 @@ of TLA</a>.</em></p>
 </ul>
 </li>
 <li>Integer sets: <a href="#range"><code>i..k</code></a>,
-<a href="#const"><code>Int</code></a>, <a href="#const"><code>Nat</code></a></li>
+<a href="#const-1"><code>Int</code></a>, <a href="#const-1"><code>Nat</code></a></li>
 </ul>
 <h3 id="strings-"><a class="header" href="#strings-">Strings 🔡</a></h3>
 <p><em>String constants</em>. You learned it!</p>
@@ -6774,7 +6759,7 @@ of TLA</a>.</em></p>
 <li>Enumeration: <a href="#setEnum"><code>{ e_1, ..., e_n }</code></a></li>
 <li>Filter: <a href="#filter"><code>{ x \in S: p }</code></a></li>
 <li>Map: <a href="#map"><code>{ e: x \in S }</code></a></li>
-<li>Powers: <a href="#powerset"><code>SUBSET S</code></a> and <a href="#flatten"><code>UNION S</code></a></li>
+<li>Powers: <a href="#powerset-1"><code>SUBSET S</code></a> and <a href="#flatten"><code>UNION S</code></a></li>
 </ul>
 </li>
 <li>Set algebra:
@@ -6797,7 +6782,7 @@ of TLA</a>.</em></p>
 <p><em>How logicians write loops</em>. <a href="#logic-1">Learn more…</a></p>
 <ul>
 <li>Equality:
-<a href="#eq"><code>=</code></a> and <a href="#neq"><code>/=</code></a> (also <code>#</code>)</li>
+<a href="#eq-2"><code>=</code></a> and <a href="#neq"><code>/=</code></a> (also <code>#</code>)</li>
 <li>Bounded quantifiers:
 <a href="#forallBounded"><code>\A x \in S: p</code></a> and <a href="#existsBounded"><code>\E x \in S: p</code></a></li>
 <li>Unbounded quantifiers:
@@ -6837,7 +6822,7 @@ of TLA</a>.</em></p>
 <li>Length: <a href="#len"><code>Len(s)</code></a></li>
 <li>Concatenation: <a href="#concat"><code>s \o t</code></a> (also <code>s \circ t</code>)</li>
 <li>Subsequence: <a href="#subseq"><code>SubSeq(s, i, k)</code></a></li>
-<li>Sequence filter: <a href="#filter"><code>SelectSeq(s, Test)</code></a></li>
+<li>Sequence filter: <a href="#filter-1"><code>SelectSeq(s, Test)</code></a></li>
 <li>Set of finite sequences over <code>S</code>: <a href="#seq"><code>Seq(S)</code></a></li>
 <li>Sequences are functions.
 All operators of <a href="#functions-1">functions</a> and <a href="#tuples-1">tuples</a> are supported.</li>
@@ -6889,8 +6874,7 @@ All operators of <a href="#functions-1">functions</a> and <a href="#tuples-1">tu
 <p><a href="#the-standard-operators-of-tla">[Back to all operators]</a></p>
 <p>You find these operators in every programming language and every textbook on
 logic. These operators form <em>propositional logic</em>.</p>
-<p><a name="const"></a></p>
-<h2 id="constants"><a class="header" href="#constants">Constants</a></h2>
+<h2 id="constants"><a class="header" href="#constants"><a id="const"></a> Constants</a></h2>
 <p>TLA+ contains three special constants: <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code>.
 The constant <code>BOOLEAN</code> is defined as the set <code>{FALSE, TRUE}</code>.</p>
 <p>In Apalache, <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code> have the types <code>Bool</code>, <code>Bool</code>,
@@ -6905,8 +6889,7 @@ disjunction operator <code>F \/ G</code> induces a nondeterministic effect when 
 the prime operator  (<code>'</code>), or when they are used inside the initialization predicate <code>Init</code>.
 We discuss this effect <a href="#control-flow-and-non-determinism-in-tla">Control Flow and Non-determinism</a>.</p>
 <hr>
-<p><a name="and"></a></p>
-<h3 id="and-conjunction"><a class="header" href="#and-conjunction">And (conjunction)</a></h3>
+<h3 id="and-conjunction"><a class="header" href="#and-conjunction"><a id="and"></a> And (conjunction)</a></h3>
 <p><strong>Notation:</strong> <code>F /\ G</code> or <code>F \land G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/land.png" alt="land"></p>
 <p><strong>Arguments:</strong> Two or more arbitrary expressions.</p>
@@ -6969,8 +6952,7 @@ is equivalent to:</p>
 <pre><code class="language-tla">  F_1 /\ (G_1 /\ ... /\ G_k) /\ F_2 /\ ... /\ F_n
 </code></pre>
 <hr>
-<p><a name="or"></a></p>
-<h3 id="or-disjunction"><a class="header" href="#or-disjunction">Or (disjunction)</a></h3>
+<h3 id="or-disjunction"><a class="header" href="#or-disjunction"><a id="or"></a> Or (disjunction)</a></h3>
 <p><strong>Notation:</strong> <code>F \/ G</code> or <code>F \lor G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/lor.png" alt="lor"></p>
 <p><strong>Arguments:</strong> Two or more Boolean expressions.</p>
@@ -7039,8 +7021,7 @@ is equivalent to:</p>
 <pre><code class="language-tla">  (F /\ G) \/ (H \/ J)
 </code></pre>
 <hr>
-<p><a name="not"></a></p>
-<h3 id="negation"><a class="header" href="#negation">Negation</a></h3>
+<h3 id="negation"><a class="header" href="#negation"><a id="not"></a> Negation</a></h3>
 <p><strong>Notation:</strong> <code>~F</code> or <code>\neg F</code> or <code>\lnot F</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/lnot.png" alt="lnot"></p>
 <p><strong>Arguments:</strong> One argument that should evaluate to a Boolean value.</p>
@@ -7068,8 +7049,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="implies"></a></p>
-<h3 id="implication"><a class="header" href="#implication">Implication</a></h3>
+<h3 id="implication"><a class="header" href="#implication"><a id="implies"></a> Implication</a></h3>
 <p><strong>Notation:</strong> <code>F =&gt; G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/implies.png" alt="implies"></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
@@ -7113,8 +7093,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="equiv"></a></p>
-<h3 id="equivalence"><a class="header" href="#equivalence">Equivalence</a></h3>
+<h3 id="equivalence"><a class="header" href="#equivalence"><a id="equiv"></a> Equivalence</a></h3>
 <p><strong>Notation:</strong> <code>F &lt;=&gt; G</code> or <code>F \equiv G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/equiv.png" alt="equiv"> or <img src="lang/img/equiv2.png" alt="equiv2"></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
@@ -7411,8 +7390,7 @@ have to backtrack (though that needs fairness of <code>GUESS</code>). In general
 course of action depends on the program analysis that you implement. For
 instance, a random simulator could simply backtrack and randomly choose another
 value.</p>
-<p><a name="nondetExists"></a></p>
-<h3 id="non-determinism-in-e-x-in-s-p"><a class="header" href="#non-determinism-in-e-x-in-s-p">Non-determinism in <code>\E x \in S: P</code></a></h3>
+<h3 id="non-determinism-in-e-x-in-s-p"><a class="header" href="#non-determinism-in-e-x-in-s-p"><a id="nondetExists"></a> Non-determinism in <code>\E x \in S: P</code></a></h3>
 <p>We only have to consider the following case: <code>\E x \in S: P</code> is evaluated against
 a binding <code>s</code>, and there is a primed state variable <code>y'</code> that satisfies two
 conditions:</p>
@@ -7460,8 +7438,7 @@ Simply ask the oracle. Below, we give three examples of how the evaluation works
 2. (GUESS Int) returns 0. (LET i == 0 IN i &gt; x /\ x' = i) is FALSE. Halt.
 3. (GUESS Int) returns -20. (LET i == -20 IN i &gt; x /\ x' = i) is FALSE. Halt.
 </code></pre>
-<p><a name="nondetOr"></a></p>
-<h3 id="non-determinism-in-disjunctions"><a class="header" href="#non-determinism-in-disjunctions">Non-determinism in disjunctions</a></h3>
+<h3 id="non-determinism-in-disjunctions"><a class="header" href="#non-determinism-in-disjunctions"><a id="nondetOr"></a> Non-determinism in disjunctions</a></h3>
 <p>Consider a disjunction that comprises <code>n</code> clauses:</p>
 <pre><code class="language-tla">  \/ P_1
   \/ P_2
@@ -7524,8 +7501,7 @@ be activated when <code>x = 0</code>.</p>
 disjunction</a> in the deterministic case, we have
 non-deterministic choice here. Hence, short-circuiting does not apply to
 non-deterministic disjunctions.</em></p>
-<p><a name="nondetIte"></a></p>
-<h3 id="non-determinism-in-boolean-if-then-else"><a class="header" href="#non-determinism-in-boolean-if-then-else">Non-determinism in Boolean <code>IF-THEN-ELSE</code></a></h3>
+<h3 id="non-determinism-in-boolean-if-then-else"><a class="header" href="#non-determinism-in-boolean-if-then-else"><a id="nondetIte"></a> Non-determinism in Boolean <code>IF-THEN-ELSE</code></a></h3>
 <p>For the deterministic use of <code>IF-THEN-ELSE</code>, see <a href="#deterministic-conditionals">Deterministic
 conditionals</a>.</p>
 <p>Consider an <code>IF-THEN-ELSE</code> expression to be evaluated in a partial state <code>s</code>:</p>
@@ -7549,8 +7525,7 @@ steps: what is the expected result, and what are the possible side effects.</em>
 <p><strong>Warning:</strong> While it is technically possible to write <code>x' = e</code> inside the
 condition, the effect of <code>x' = e</code> is not obvious when <code>x'</code> is not assigned a
 value.</p>
-<p><a name="nondetCase"></a></p>
-<h3 id="non-determinism-in-boolean-case"><a class="header" href="#non-determinism-in-boolean-case">Non-determinism in Boolean <code>CASE</code></a></h3>
+<h3 id="non-determinism-in-boolean-case"><a class="header" href="#non-determinism-in-boolean-case"><a id="nondetCase"></a> Non-determinism in Boolean <code>CASE</code></a></h3>
 <p>For the deterministic use of <code>CASE</code>,
 see <a href="#deterministic-conditionals">Deterministic conditionals</a>.</p>
 <p><strong>CASE without OTHER.</strong>
@@ -7611,8 +7586,7 @@ For this reason, <code>CASE</code> should only be used when all of its guards ar
 Given all the intricacies of <code>CASE</code>,
 we recommend using nested <code>IF-THEN-ELSE</code> instead.</p>
 <hr>
-<p><a name="ite"></a></p>
-<h2 id="deterministic-if-then-else"><a class="header" href="#deterministic-if-then-else">Deterministic IF-THEN-ELSE</a></h2>
+<h2 id="deterministic-if-then-else"><a class="header" href="#deterministic-if-then-else"><a id="ite"></a> Deterministic IF-THEN-ELSE</a></h2>
 <p><em>Use it when choosing between two values, not to structure your code.</em></p>
 <p><strong>Notation:</strong> <code>IF A THEN B ELSE C</code></p>
 <p><strong>LaTeX notation:</strong> the same</p>
@@ -7641,8 +7615,7 @@ evaluates to <code>TRUE</code>; and it evaluates to <code>0</code>, when <code>x
 <p>Note that we are using the expression syntax for <code>if-else</code> in python.
 This is because we write an expression, not a series of statements that assign
 values to variables!</p>
-<p><a name="case"></a></p>
-<h2 id="deterministic-case"><a class="header" href="#deterministic-case">Deterministic CASE</a></h2>
+<h2 id="deterministic-case"><a class="header" href="#deterministic-case"><a id="case"></a> Deterministic CASE</a></h2>
 <p><em>Read the description and never use this operator</em></p>
 <p><strong>Notation:</strong></p>
 <pre><code class="language-tla">CASE p_1 -&gt; e_1
@@ -7723,8 +7696,7 @@ give executable semantics for the fixed evaluation order of the predicates.</p>
     elif n &gt; 0:
         return "positive"
 </code></pre>
-<p><a name="caseOther"></a></p>
-<h2 id="deterministic-case-other"><a class="header" href="#deterministic-case-other">Deterministic CASE-OTHER</a></h2>
+<h2 id="deterministic-case-other"><a class="header" href="#deterministic-case-other"><a id="caseOther"></a> Deterministic CASE-OTHER</a></h2>
 <p><em>Better use IF-THEN-ELSE.</em></p>
 <p><strong>Notation:</strong></p>
 <pre><code class="language-tla">CASE p_1 -&gt; e_1
@@ -7797,8 +7769,7 @@ with string constants, e.g., <code>"1"</code>, <code>"2"</code>, <code>"42"</cod
 translated as constants in the SMT constraints. This simple trick may bring
 your specification into a much simpler theory. Sometimes, this trick allows z3
 to use parallel algorithms.</p>
-<p><a name="const"></a></p>
-<h2 id="constants-1"><a class="header" href="#constants-1">Constants</a></h2>
+<h2 id="constants-1"><a class="header" href="#constants-1"><a id="const-1"></a> Constants</a></h2>
 <p>The module <code>Integers</code> defines two constant sets (technically, they are
 operators without arguments):</p>
 <ul>
@@ -7812,8 +7783,7 @@ In Apalache, the set <code>Nat</code> has the type… <code>Set(Int)</code>.</li
 </ul>
 <hr>
 <h2 id="operators-1"><a class="header" href="#operators-1">Operators</a></h2>
-<p><a name="range"></a></p>
-<h3 id="integer-range"><a class="header" href="#integer-range">Integer range</a></h3>
+<h3 id="integer-range"><a class="header" href="#integer-range"><a id="range"></a> Integer range</a></h3>
 <p><strong>Notation:</strong> <code>a..b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a..b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -7842,8 +7812,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="uminus"></a></p>
-<h3 id="unary-integer-negation"><a class="header" href="#unary-integer-negation">Unary integer negation</a></h3>
+<h3 id="unary-integer-negation"><a class="header" href="#unary-integer-negation"><a id="uminus"></a> Unary integer negation</a></h3>
 <p><strong>Notation:</strong> <code>-i</code></p>
 <p><strong>LaTeX notation:</strong> <code>-i</code></p>
 <p><strong>Arguments:</strong> One argument. The result is only defined when the argument
@@ -7867,8 +7836,7 @@ type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="plus"></a></p>
-<h3 id="integer-addition"><a class="header" href="#integer-addition">Integer addition</a></h3>
+<h3 id="integer-addition"><a class="header" href="#integer-addition"><a id="plus"></a> Integer addition</a></h3>
 <p><strong>Notation:</strong> <code>a + b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a + b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -7891,8 +7859,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="minus"></a></p>
-<h3 id="integer-subtraction"><a class="header" href="#integer-subtraction">Integer subtraction</a></h3>
+<h3 id="integer-subtraction"><a class="header" href="#integer-subtraction"><a id="minus"></a> Integer subtraction</a></h3>
 <p><strong>Notation:</strong> <code>a - b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a - b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -7918,8 +7885,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="mult"></a></p>
-<h3 id="integer-multiplication"><a class="header" href="#integer-multiplication">Integer multiplication</a></h3>
+<h3 id="integer-multiplication"><a class="header" href="#integer-multiplication"><a id="mult"></a> Integer multiplication</a></h3>
 <p><strong>Notation:</strong> <code>a * b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a * b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -7942,8 +7908,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="div"></a></p>
-<h3 id="integer-division"><a class="header" href="#integer-division">Integer division</a></h3>
+<h3 id="integer-division"><a class="header" href="#integer-division"><a id="div"></a> Integer division</a></h3>
 <p><strong>Notation:</strong> <code>a \div b</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/div.png" alt="div"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8008,8 +7973,7 @@ to produce the same results as in TLA+:</p>
 
 </code></pre>
 <hr>
-<p><a name="mod"></a></p>
-<h3 id="integer-remainder"><a class="header" href="#integer-remainder">Integer remainder</a></h3>
+<h3 id="integer-remainder"><a class="header" href="#integer-remainder"><a id="mod"></a> Integer remainder</a></h3>
 <p><strong>Notation:</strong> <code>a % b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a % b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8044,8 +8008,7 @@ to produce the same results as in TLA+:</p>
 
 </code></pre>
 <hr>
-<p><a name="pow"></a></p>
-<h3 id="integer-exponentiation"><a class="header" href="#integer-exponentiation">Integer exponentiation</a></h3>
+<h3 id="integer-exponentiation"><a class="header" href="#integer-exponentiation"><a id="pow"></a> Integer exponentiation</a></h3>
 <p><strong>Notation:</strong> <code>a^b</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/exp.png" alt="exp"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8097,8 +8060,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="lt"></a></p>
-<h3 id="integer-less-than"><a class="header" href="#integer-less-than">Integer less-than</a></h3>
+<h3 id="integer-less-than"><a class="header" href="#integer-less-than"><a id="lt"></a> Integer less-than</a></h3>
 <p><strong>Notation:</strong> <code>a &lt; b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a &lt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8128,8 +8090,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="lte"></a></p>
-<h3 id="integer-less-than-or-equal"><a class="header" href="#integer-less-than-or-equal">Integer less-than-or-equal</a></h3>
+<h3 id="integer-less-than-or-equal"><a class="header" href="#integer-less-than-or-equal"><a id="lte"></a> Integer less-than-or-equal</a></h3>
 <p><strong>Notation:</strong> <code>a &lt;= b</code> or <code>a =&lt; b</code> or <code>a \leq b</code></p>
 <p><strong>LaTeX notation:</strong>  <img src="lang/img/leq.png" alt="leq"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8159,8 +8120,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="gt"></a></p>
-<h3 id="integer-greater-than"><a class="header" href="#integer-greater-than">Integer greater-than</a></h3>
+<h3 id="integer-greater-than"><a class="header" href="#integer-greater-than"><a id="gt"></a> Integer greater-than</a></h3>
 <p><strong>Notation:</strong> <code>a &gt; b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a &gt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8190,8 +8150,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="gte"></a></p>
-<h3 id="integer-greater-than-or-equal"><a class="header" href="#integer-greater-than-or-equal">Integer greater-than-or-equal</a></h3>
+<h3 id="integer-greater-than-or-equal"><a class="header" href="#integer-greater-than-or-equal"><a id="gte"></a> Integer greater-than-or-equal</a></h3>
 <p><strong>Notation:</strong> <code>a &gt;= b</code> or <code>a \geq b</code></p>
 <p><strong>LaTeX notation:</strong>  <img src="lang/img/geq.png" alt="geq"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -8221,8 +8180,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="eq"></a></p>
-<h3 id="equality-and-inequality"><a class="header" href="#equality-and-inequality">Equality and inequality</a></h3>
+<h3 id="equality-and-inequality"><a class="header" href="#equality-and-inequality"><a id="eq"></a> Equality and inequality</a></h3>
 <p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+, and thus they are
 not defined in the module <code>Integers</code>, see <a href="#logic-1">Logic</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -8276,8 +8234,7 @@ some type <code>a</code>. This is enforced by the type checker.  (Records are an
 to this rule, as some records can be unified to a common type.)</p>
 <hr>
 <h2 id="operators-2"><a class="header" href="#operators-2">Operators</a></h2>
-<p><a name="setEnum"></a></p>
-<h3 id="set-constructor-by-enumeration"><a class="header" href="#set-constructor-by-enumeration">Set constructor by enumeration</a></h3>
+<h3 id="set-constructor-by-enumeration"><a class="header" href="#set-constructor-by-enumeration"><a id="setEnum"></a> Set constructor by enumeration</a></h3>
 <p><strong>Notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>LaTeX notation:</strong> <code>{e_1, ..., e_n}</code></p>
 <p><strong>Arguments:</strong> Any number of arguments, <code>n &gt;= 0</code>.</p>
@@ -8308,8 +8265,7 @@ If this is not the case, the type checker flags an error.</p>
 
 </code></pre>
 <hr>
-<p><a name="in"></a></p>
-<h3 id="set-membership"><a class="header" href="#set-membership">Set membership</a></h3>
+<h3 id="set-membership"><a class="header" href="#set-membership"><a id="in"></a> Set membership</a></h3>
 <p><strong>Notation:</strong> <code>e \in S</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/in-set.png" alt="in"></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
@@ -8346,8 +8302,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="notin"></a></p>
-<h3 id="set-non-membership"><a class="header" href="#set-non-membership">Set non-membership</a></h3>
+<h3 id="set-non-membership"><a class="header" href="#set-non-membership"><a id="notin"></a> Set non-membership</a></h3>
 <p><strong>Notation:</strong> <code>e \notin S</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/notin-set.png" alt="notin"></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
@@ -8385,13 +8340,11 @@ True
 
 </code></pre>
 <hr>
-<p><a name="eq"></a></p>
-<h3 id="equality-and-inequality-1"><a class="header" href="#equality-and-inequality-1">Equality and inequality</a></h3>
+<h3 id="equality-and-inequality-1"><a class="header" href="#equality-and-inequality-1"><a id="eq-1"></a> Equality and inequality</a></h3>
 <p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+,
 see <a href="#logic-1">Logic</a>.</p>
 <hr>
-<p><a name="subseteq"></a></p>
-<h3 id="set-inclusion"><a class="header" href="#set-inclusion">Set inclusion</a></h3>
+<h3 id="set-inclusion"><a class="header" href="#set-inclusion"><a id="subseteq"></a> Set inclusion</a></h3>
 <p><strong>Notation:</strong> <code>S \subseteq T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/subseteq.png" alt="subseteq"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -8427,8 +8380,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="union"></a></p>
-<h3 id="binary-set-union"><a class="header" href="#binary-set-union">Binary set union</a></h3>
+<h3 id="binary-set-union"><a class="header" href="#binary-set-union"><a id="union"></a> Binary set union</a></h3>
 <p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/cup.png" alt="cup"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -8461,8 +8413,7 @@ that can be written as <code>|</code>:</p>
 
 </code></pre>
 <hr>
-<p><a name="intersect"></a></p>
-<h3 id="set-intersection"><a class="header" href="#set-intersection">Set intersection</a></h3>
+<h3 id="set-intersection"><a class="header" href="#set-intersection"><a id="intersect"></a> Set intersection</a></h3>
 <p><strong>Notation:</strong> <code>S \intersect T</code> or <code>S \cap T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/cap.png" alt="cap"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -8495,8 +8446,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="setminus"></a></p>
-<h3 id="set-difference"><a class="header" href="#set-difference">Set difference</a></h3>
+<h3 id="set-difference"><a class="header" href="#set-difference"><a id="setminus"></a> Set difference</a></h3>
 <p><strong>Notation:</strong> <code>S \ T</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/setminus.png" alt="setminus"></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
@@ -8529,8 +8479,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="filter"></a></p>
-<h3 id="set-filter"><a class="header" href="#set-filter">Set filter</a></h3>
+<h3 id="set-filter"><a class="header" href="#set-filter"><a id="filter"></a> Set filter</a></h3>
 <p><strong>Notation:</strong> <code>{ x \in S: P }</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/filter.png" alt="filter"></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
@@ -8582,8 +8531,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="map"></a></p>
-<h3 id="set-map"><a class="header" href="#set-map">Set map</a></h3>
+<h3 id="set-map"><a class="header" href="#set-map"><a id="map"></a> Set map</a></h3>
 <p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/map.png" alt="map"></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
@@ -8640,8 +8588,7 @@ syntax:</p>
 
 </code></pre>
 <hr>
-<p><a name="powerset"></a></p>
-<h3 id="powerset"><a class="header" href="#powerset">Powerset</a></h3>
+<h3 id="powerset"><a class="header" href="#powerset-1"><a id="powerset-1"></a> Powerset</a></h3>
 <p><strong>Notation:</strong> <code>SUBSET S</code></p>
 <p><strong>LaTeX notation:</strong> <code>SUBSET S</code></p>
 <p><strong>Arguments:</strong> One argument. If it is not a set, the result
@@ -8664,8 +8611,7 @@ produces a static type error, if the type of <code>S</code> is not a set type.</
 <p><strong>Example in Python:</strong> An implementation of <code>SUBSET S</code> in Python is not trivial.
 To appreciate the power of TLA+, see <a href="lang/examples/subset.py">subset.py</a>.</p>
 <hr>
-<p><a name="flatten"></a></p>
-<h3 id="set-flattening"><a class="header" href="#set-flattening">Set flattening</a></h3>
+<h3 id="set-flattening"><a class="header" href="#set-flattening"><a id="flatten"></a> Set flattening</a></h3>
 <p><strong>Notation:</strong> <code>UNION S</code></p>
 <p><strong>LaTeX notation:</strong> <code>UNION S</code></p>
 <p><strong>Warning:</strong> Do not confuse <code>UNION S</code> with <code>S \union T</code>. These are two
@@ -8700,8 +8646,7 @@ in Python is quite simple:</p>
 
 </code></pre>
 <hr>
-<p><a name="card"></a></p>
-<h3 id="set-cardinality"><a class="header" href="#set-cardinality">Set cardinality</a></h3>
+<h3 id="set-cardinality"><a class="header" href="#set-cardinality"><a id="card"></a> Set cardinality</a></h3>
 <p><strong>Notation:</strong> <code>Cardinality(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Cardinality(S)</code></p>
 <p><strong>Warning:</strong> <code>Cardinality(S)</code> is defined in the module <code>FiniteSets</code>.</p>
@@ -8728,8 +8673,7 @@ different from a finite set.</p>
 
 </code></pre>
 <hr>
-<p><a name="finite"></a></p>
-<h3 id="set-finiteness"><a class="header" href="#set-finiteness">Set finiteness</a></h3>
+<h3 id="set-finiteness"><a class="header" href="#set-finiteness"><a id="finite"></a> Set finiteness</a></h3>
 <p><strong>Notation:</strong> <code>IsFinite(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>IsFinite(S)</code></p>
 <p><strong>Warning:</strong> <code>IsFinite(S)</code> is defined in the module <code>FiniteSets</code>.</p>
@@ -8766,8 +8710,7 @@ logic (see <a href="#booleans">Booleans</a>).</p>
 non-determinism in TLA+. See <a href="#control-flow-and-non-determinism-in-tla">Control Flow and Non-determinism</a>. In this
 section, we only consider the deterministic use of the existential quantifier.</p>
 <hr>
-<p><a name="forallBounded"></a></p>
-<h3 id="bounded-universal-quantifier"><a class="header" href="#bounded-universal-quantifier">Bounded universal quantifier</a></h3>
+<h3 id="bounded-universal-quantifier"><a class="header" href="#bounded-universal-quantifier"><a id="forallBounded"></a> Bounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x \in S: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/forall-bounded.png" alt="forall-bounded"></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
@@ -8831,8 +8774,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="existsBounded"></a></p>
-<h3 id="bounded-existential-quantifier"><a class="header" href="#bounded-existential-quantifier">Bounded existential quantifier</a></h3>
+<h3 id="bounded-existential-quantifier"><a class="header" href="#bounded-existential-quantifier"><a id="existsBounded"></a> Bounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x \in S: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/exists-bounded.png" alt="exists-bounded"></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
@@ -8902,8 +8844,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="eq"></a></p>
-<h3 id="equality"><a class="header" href="#equality">Equality</a></h3>
+<h3 id="equality"><a class="header" href="#equality"><a id="eq-2"></a> Equality</a></h3>
 <p><em>A foundational operator in TLA+</em></p>
 <p><strong>Notation:</strong> <code>e_1 = e_2</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/eq.png" alt="eq"></p>
@@ -9021,16 +8962,14 @@ True
 
 </code></pre>
 <hr>
-<p><a name="neq"></a></p>
-<h3 id="inequality"><a class="header" href="#inequality">Inequality</a></h3>
+<h3 id="inequality"><a class="header" href="#inequality"><a id="neq"></a> Inequality</a></h3>
 <p><strong>Notation:</strong> <code>e_1 /= e_2</code> or <code>e_1 # e_2</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/ne.png" alt="ne"></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator is syntax sugar for <code>~(e_1 = e_2)</code>. Full stop.</p>
 <hr>
-<p><a name="chooseBounded"></a></p>
-<h3 id="bounded-choice"><a class="header" href="#bounded-choice">Bounded Choice</a></h3>
+<h3 id="bounded-choice"><a class="header" href="#bounded-choice"><a id="chooseBounded"></a> Bounded Choice</a></h3>
 <p><em>This operator causes a lot of confusion. Read carefully!</em></p>
 <p><strong>Notation:</strong> <code>CHOOSE x \in S: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/choose-bounded.png" alt="choose-bounded"></p>
@@ -9115,8 +9054,7 @@ if __name__ == "__main__":
     print("CHOOSE {} = {}".format(s2, choose(s2)))
 </code></pre>
 <hr>
-<p><a name="forall"></a></p>
-<h3 id="unbounded-universal-quantifier"><a class="header" href="#unbounded-universal-quantifier">Unbounded universal quantifier</a></h3>
+<h3 id="unbounded-universal-quantifier"><a class="header" href="#unbounded-universal-quantifier"><a id="forall"></a> Unbounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/forall.png" alt="forall"></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
@@ -9130,8 +9068,7 @@ operational semantics for this operator, unless we explicitly introduce the
 universe. It requires a first-order logic solver. This operator may be useful
 when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
 <hr>
-<p><a name="exists"></a></p>
-<h3 id="unbounded-existential-quantifier"><a class="header" href="#unbounded-existential-quantifier">Unbounded existential quantifier</a></h3>
+<h3 id="unbounded-existential-quantifier"><a class="header" href="#unbounded-existential-quantifier"><a id="exists"></a> Unbounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/exists.png" alt="exists"></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
@@ -9145,8 +9082,7 @@ operational semantics for this operator, unless we explicitly introduce the
 universe. It requires a first-order logic solver. This operator may be useful
 when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
 <hr>
-<p><a name="choose"></a></p>
-<h3 id="unbounded-choose"><a class="header" href="#unbounded-choose">Unbounded CHOOSE</a></h3>
+<h3 id="unbounded-choose"><a class="header" href="#unbounded-choose"><a id="choose"></a> Unbounded CHOOSE</a></h3>
 <p><strong>Notation:</strong> <code>CHOOSE x: P</code></p>
 <p><strong>LaTeX notation:</strong> CHOOSE x: P</p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
@@ -9355,8 +9291,7 @@ mutable dictionaries in the Python examples in the rest of this text.</p>
 <hr>
 <h2 id="operators-3"><a class="header" href="#operators-3">Operators</a></h2>
 <hr>
-<p><a name="funCtor"></a></p>
-<h3 id="function-constructor"><a class="header" href="#function-constructor">Function constructor</a></h3>
+<h3 id="function-constructor"><a class="header" href="#function-constructor"><a id="funCtor"></a> Function constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ x \in S |-&gt; e ]</code> or <code>[ x \in S, y \in T |-&gt; e ]</code>, or more
 arguments</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/fun-ctor.png" alt="fun-ctor"></p>
@@ -9439,8 +9374,7 @@ function domain is not known in advance.</p>
 
 </code></pre>
 <hr>
-<p><a name="funSetCtor"></a></p>
-<h3 id="function-set-constructor"><a class="header" href="#function-set-constructor">Function set constructor</a></h3>
+<h3 id="function-set-constructor"><a class="header" href="#function-set-constructor"><a id="funSetCtor"></a> Function set constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ S -&gt; T ]</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/funset.png" alt="funset"></p>
 <p><strong>Arguments:</strong> Two arguments. Both have to be sets. Otherwise, the result is
@@ -9469,8 +9403,7 @@ Apalache flags a static type error.</p>
 functions. It should be similar in spirit to <a href="lang/examples/subset.py">subset.py</a>,
 but it should enumerate strings over the alphabet of <code>0..(Cardinality(T) - 1)</code>
 values, rather than over the alphabet of 2 values.</p>
-<p><a name="funApp"></a></p>
-<h3 id="function-application"><a class="header" href="#function-application">Function application</a></h3>
+<h3 id="function-application"><a class="header" href="#function-application"><a id="funApp"></a> Function application</a></h3>
 <p><strong>Notation:</strong> <code>f[e]</code> or <code>f[e_1, ..., e_n]</code></p>
 <p><strong>LaTeX notation:</strong> <code>f[e]</code> or <code>f[e_1, ..., e_n]</code></p>
 <p><strong>Arguments:</strong> At least two arguments. The first one should be a function,
@@ -9521,8 +9454,7 @@ function domain is not known in advance.</p>
 
 </code></pre>
 <hr>
-<p><a name="except"></a></p>
-<h3 id="function-replacement"><a class="header" href="#function-replacement">Function replacement</a></h3>
+<h3 id="function-replacement"><a class="header" href="#function-replacement"><a id="except"></a> Function replacement</a></h3>
 <p><strong>Notation:</strong> <code>[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]</code></p>
 <p><strong>LaTeX notation:</strong> <code>[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]</code></p>
 <p><strong>Arguments:</strong> At least three arguments. The first one should be a function,
@@ -9625,8 +9557,7 @@ code would be less efficient than the idiomatic Python code.</p>
 
 </code></pre>
 <hr>
-<p><a name="domain"></a></p>
-<h3 id="function-domain"><a class="header" href="#function-domain">Function domain</a></h3>
+<h3 id="function-domain"><a class="header" href="#function-domain"><a id="domain"></a> Function domain</a></h3>
 <p><strong>Notation:</strong> <code>DOMAIN f</code></p>
 <p><strong>LaTeX notation:</strong> <code>DOMAIN f</code></p>
 <p><strong>Arguments:</strong> One argument, which should be a function
@@ -9753,8 +9684,7 @@ supports <a href="#variants">Variants</a>.</p>
 <p>In the Python examples, we are using the package <a href="https://pypi.org/project/frozendict/">frozendict</a>, to produce an
 immutable dictionary.</p>
 <hr>
-<p><a name="recCtor"></a></p>
-<h3 id="record-constructor"><a class="header" href="#record-constructor">Record constructor</a></h3>
+<h3 id="record-constructor"><a class="header" href="#record-constructor"><a id="recCtor"></a> Record constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ field_1 |-&gt; e_1, ..., field_n |-&gt; e_n]</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/rec-ctor.png" alt="rec-ctor"></p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
@@ -9781,8 +9711,7 @@ as follows:</p>
 
 </code></pre>
 <hr>
-<p><a name="recSetCtor"></a></p>
-<h3 id="record-set-constructor"><a class="header" href="#record-set-constructor">Record set constructor</a></h3>
+<h3 id="record-set-constructor"><a class="header" href="#record-set-constructor"><a id="recSetCtor"></a> Record set constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ field_1: S_1, ..., field_n: S_n]</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/recset-ctor.png" alt="recset-ctor"></p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
@@ -9811,8 +9740,7 @@ is picked with <code>\E r \in [ field_1: S_1, ..., field_n: S_n]</code>.</p>
                 for n in { "A", "B", "C" } for p in range(1, 65535 + 1) })
 </code></pre>
 <hr>
-<p><a name="recApp"></a></p>
-<h3 id="access-by-field-name"><a class="header" href="#access-by-field-name">Access by field name</a></h3>
+<h3 id="access-by-field-name"><a class="header" href="#access-by-field-name"><a id="recApp"></a> Access by field name</a></h3>
 <p><strong>Notation:</strong> <code>r.field_i</code></p>
 <p><strong>LaTeX notation:</strong> <code>r.field_i</code></p>
 <p><strong>Arguments:</strong> Two arguments: a record and a field name (as an identifier).</p>
@@ -9895,8 +9823,7 @@ by Apalache than the general functions and sequences!</em></p>
 <p>In the Python examples, we are using the package <a href="https://pypi.org/project/frozendict/">frozendict</a>, to produce an
 immutable dictionary.</p>
 <hr>
-<p><a name="tuple"></a></p>
-<h3 id="tuplesequence-constructor"><a class="header" href="#tuplesequence-constructor">Tuple/Sequence constructor</a></h3>
+<h3 id="tuplesequence-constructor"><a class="header" href="#tuplesequence-constructor"><a id="tuple"></a> Tuple/Sequence constructor</a></h3>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/tuple.png" alt="tuple"></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
@@ -9932,8 +9859,7 @@ principle “tuples are functions”, we have to use a dictionary.</p>
 
 </code></pre>
 <hr>
-<p><a name="times"></a></p>
-<h3 id="cartesian-product"><a class="header" href="#cartesian-product">Cartesian product</a></h3>
+<h3 id="cartesian-product"><a class="header" href="#cartesian-product"><a id="times"></a> Cartesian product</a></h3>
 <p><strong>Notation:</strong> <code>S_1 \X ... \X S_n</code> (or <code>S_1 \times ... \times S_n</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/set-prod.png" alt="set-prod"></p>
 <p><strong>Arguments:</strong> At least two arguments. All of them should be sets.</p>
@@ -9965,8 +9891,7 @@ is picked with <code>\E t \in S_1 \X S_2</code>.</p>
                 for n in { "A", "B", "C" } for p in range(1, 65535 + 1) })
 </code></pre>
 <hr>
-<p><a name="app"></a></p>
-<h3 id="function-application-1"><a class="header" href="#function-application-1">Function application</a></h3>
+<h3 id="function-application-1"><a class="header" href="#function-application-1"><a id="app"></a> Function application</a></h3>
 <p>As tuples are functions, you can access tuple elements by <a href="#funApp">function
 application</a>, e.g., <code>tup[2]</code>. However, in the case of a
 tuple, the type of the function application will be: <code>(&lt;&lt;a_1, ..., a_i, ..., a_n&gt;&gt;, Int) =&gt; a_i</code>, for some types <code>a_1, ..., a_n</code>.</p>
@@ -10038,8 +9963,7 @@ so operations on sequences are often significantly slower than operations
 on sets.</em></p>
 <hr>
 <h2 id="operators-6"><a class="header" href="#operators-6">Operators</a></h2>
-<p><a name="seqCtor"></a></p>
-<h3 id="tuplesequence-constructor-1"><a class="header" href="#tuplesequence-constructor-1">Tuple/Sequence constructor</a></h3>
+<h3 id="tuplesequence-constructor-1"><a class="header" href="#tuplesequence-constructor-1"><a id="seqCtor"></a> Tuple/Sequence constructor</a></h3>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/tuple.png" alt="tuple"></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
@@ -10075,8 +9999,7 @@ principle “sequences are functions”, we have to use a dictionary.</p>
 
 </code></pre>
 <hr>
-<p><a name="append"></a></p>
-<h3 id="sequence-append"><a class="header" href="#sequence-append">Sequence append</a></h3>
+<h3 id="sequence-append"><a class="header" href="#sequence-append"><a id="append"></a> Sequence append</a></h3>
 <p><strong>Notation:</strong> <code>Append(seq, e)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Append(seq, e)</code></p>
 <p><strong>Arguments:</strong> Two arguments. The first argument should be a sequence, the
@@ -10113,15 +10036,13 @@ the type of the sequence elements.</p>
 
 </code></pre>
 <hr>
-<p><a name="app"></a></p>
-<h3 id="function-application-2"><a class="header" href="#function-application-2">Function application</a></h3>
+<h3 id="function-application-2"><a class="header" href="#function-application-2"><a id="app-1"></a> Function application</a></h3>
 <p>As sequences are functions, you can access sequence elements with <a href="#funApp">function
 application</a>, e.g., <code>seq[2]</code>.  However, in the case of a
 sequence, the type of the function application is: <code>(Seq(a), Int) =&gt; a</code>, for
 some type <code>a</code>.</p>
 <hr>
-<p><a name="head"></a></p>
-<h3 id="sequence-head"><a class="header" href="#sequence-head">Sequence head</a></h3>
+<h3 id="sequence-head"><a class="header" href="#sequence-head"><a id="head"></a> Sequence head</a></h3>
 <p><strong>Notation:</strong> <code>Head(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Head(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
@@ -10149,8 +10070,7 @@ error.</p>
 
 </code></pre>
 <hr>
-<p><a name="tail"></a></p>
-<h3 id="sequence-tail"><a class="header" href="#sequence-tail">Sequence tail</a></h3>
+<h3 id="sequence-tail"><a class="header" href="#sequence-tail"><a id="tail"></a> Sequence tail</a></h3>
 <p><strong>Notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
@@ -10186,8 +10106,7 @@ error.</p>
 
 </code></pre>
 <hr>
-<p><a name="len"></a></p>
-<h3 id="sequence-length"><a class="header" href="#sequence-length">Sequence length</a></h3>
+<h3 id="sequence-length"><a class="header" href="#sequence-length"><a id="len"></a> Sequence length</a></h3>
 <p><strong>Notation:</strong> <code>Len(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Len(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
@@ -10218,8 +10137,7 @@ error.</p>
 
 </code></pre>
 <hr>
-<p><a name="concat"></a></p>
-<h3 id="sequence-concatenation"><a class="header" href="#sequence-concatenation">Sequence concatenation</a></h3>
+<h3 id="sequence-concatenation"><a class="header" href="#sequence-concatenation"><a id="concat"></a> Sequence concatenation</a></h3>
 <p><strong>Notation:</strong> <code>s \o t</code> (or <code>s \circ t</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/seq-concat.png" alt="seq-concat"></p>
 <p><strong>Arguments:</strong> Two arguments: both should be sequences (or tuples).</p>
@@ -10257,8 +10175,7 @@ incompatible.</p>
 
 </code></pre>
 <hr>
-<p><a name="subseq"></a></p>
-<h3 id="subsequence"><a class="header" href="#subsequence">Subsequence</a></h3>
+<h3 id="subsequence"><a class="header" href="#subsequence"><a id="subseq"></a> Subsequence</a></h3>
 <p><strong>Notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>Arguments:</strong> Three arguments: a sequence (tuple), and two integers.</p>
@@ -10295,8 +10212,7 @@ error. Apalache flags a static type error.</p>
 
 </code></pre>
 <hr>
-<p><a name="filter"></a></p>
-<h3 id="sequence-filter"><a class="header" href="#sequence-filter">Sequence filter</a></h3>
+<h3 id="sequence-filter"><a class="header" href="#sequence-filter"><a id="filter-1"></a> Sequence filter</a></h3>
 <p><strong>Notation:</strong> <code>SelectSeq(seq, Test)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SelectSeq(seq, Test)</code></p>
 <p><strong>Arguments:</strong> Two arguments: a sequence (a tuple) and a one-argument
@@ -10338,8 +10254,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.</p>
 
 </code></pre>
 <hr>
-<p><a name="seq"></a></p>
-<h3 id="all-sequences"><a class="header" href="#all-sequences">All sequences</a></h3>
+<h3 id="all-sequences"><a class="header" href="#all-sequences"><a id="seq"></a> All sequences</a></h3>
 <p><strong>Notation:</strong> <code>Seq(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Seq(S)</code></p>
 <p><strong>Arguments:</strong> One argument that should be a set.</p>
@@ -10399,8 +10314,7 @@ Apalache defines a number of operators, which do not belong to the core language
 but which Apalache uses to provide clarity, efficiency, or special functionality.
 These operators belong to the module <code>Apalache</code>,
 and can be used in any specification by declaring <code>EXTENDS Apalache</code>.</p>
-<p><a name="Assignment"></a></p>
-<h2 id="assignment"><a class="header" href="#assignment">Assignment</a></h2>
+<h2 id="assignment"><a class="header" href="#assignment"><a id="Assignment"></a> Assignment</a></h2>
 <p><strong>Notation:</strong> <code>v' := e</code></p>
 <p><strong>LaTeX notation:</strong> <img src="lang/img/coloneq.png" alt="coloneq"></p>
 <p><strong>Arguments:</strong> Two arguments. The first is a primed variable name, the second is arbitrary.</p>
@@ -10432,8 +10346,7 @@ True
 &gt;&gt; a = (b == "c") # a' := (b = "c")
 </code></pre>
 <hr>
-<p><a name="Guess"></a></p>
-<h2 id="non-deterministically-guess-a-value"><a class="header" href="#non-deterministically-guess-a-value">Non-deterministically guess a value</a></h2>
+<h2 id="non-deterministically-guess-a-value"><a class="header" href="#non-deterministically-guess-a-value"><a id="Guess"></a> Non-deterministically guess a value</a></h2>
 <p><strong>Notation:</strong> <code>Guess(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Guess(S)</code></p>
 <p><strong>Arguments:</strong> One argument: a finite set <code>S</code>, possibly empty.</p>
@@ -10455,8 +10368,7 @@ If <code>S</code> is not a set, Apalache reports an error.</p>
 /\ Guess({ 1, 2, 3 }) \in Int     \* TRUE
 </code></pre>
 <hr>
-<p><a name="Gen"></a></p>
-<h2 id="value-generators"><a class="header" href="#value-generators">Value generators</a></h2>
+<h2 id="value-generators"><a class="header" href="#value-generators"><a id="Gen"></a> Value generators</a></h2>
 <p><strong>Notation:</strong> <code>Gen(bound)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Gen(bound)</code></p>
 <p><strong>Arguments:</strong> One argument: an integer literal or a constant expression (of
@@ -10491,8 +10403,7 @@ IN
 <h2 id="folding"><a class="header" href="#folding">Folding</a></h2>
 <p>The operators <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code> are explained in more detail in a dedicated section <a href="#folding-sets-and-sequences-1">here</a>.</p>
 <hr>
-<p><a name="Repeat"></a></p>
-<h2 id="operator-iteration"><a class="header" href="#operator-iteration">Operator iteration</a></h2>
+<h2 id="operator-iteration"><a class="header" href="#operator-iteration"><a id="Repeat"></a> Operator iteration</a></h2>
 <p><strong>Notation:</strong> <code>Repeat(Op, N, x)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Repeat(Op, N, x)</code></p>
 <p><strong>Arguments:</strong> Three arguments: An operator <code>Op</code>, an iteration counter <code>N</code> (a nonnegative constant integer expression), and an
@@ -10516,8 +10427,7 @@ Op2(a,i) == a + i
 Repeat(Op2, 0, 5) = 15              \* TRUE
 </code></pre>
 <hr>
-<p><a name="SetAsFun"></a></p>
-<h2 id="convert-a-set-of-pairs-to-a-function"><a class="header" href="#convert-a-set-of-pairs-to-a-function">Convert a set of pairs to a function</a></h2>
+<h2 id="convert-a-set-of-pairs-to-a-function"><a class="header" href="#convert-a-set-of-pairs-to-a-function"><a id="SetAsFun"></a> Convert a set of pairs to a function</a></h2>
 <p><strong>Notation:</strong> <code>SetAsFun(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SetAsFun(S)</code></p>
 <p><strong>Arguments:</strong> One argument: A set of pairs <code>S</code>, which may be empty.</p>
@@ -10545,8 +10455,7 @@ LET F == SetAsFun({ &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;, &lt;&lt;1, 4&gt;
   \/ F = [x \in { 1 } |-&gt; 4]
 </code></pre>
 <hr>
-<p><a name="MkSeq"></a></p>
-<h2 id="construct-a-sequence"><a class="header" href="#construct-a-sequence">Construct a sequence</a></h2>
+<h2 id="construct-a-sequence"><a class="header" href="#construct-a-sequence"><a id="MkSeq"></a> Construct a sequence</a></h2>
 <p><strong>Notation:</strong> <code>MkSeq(n, F)</code></p>
 <p><strong>LaTeX notation:</strong> <code>MkSeq(n, F)</code></p>
 <p><strong>Arguments:</strong> Two arguments: sequence length <code>n</code> (a constant integer
@@ -10561,8 +10470,7 @@ If <code>n</code> is not a constant, or is negative, Apalache reports an error.<
 MkSeq(3, Double) = &lt;&lt;2, 4, 6&gt;&gt;   \* TRUE
 </code></pre>
 <hr>
-<p><a name="Cast"></a></p>
-<h2 id="interpret-a-function-as-a-sequence"><a class="header" href="#interpret-a-function-as-a-sequence">Interpret a function as a sequence</a></h2>
+<h2 id="interpret-a-function-as-a-sequence"><a class="header" href="#interpret-a-function-as-a-sequence"><a id="Cast"></a> Interpret a function as a sequence</a></h2>
 <p><strong>Notation:</strong> <code>FunAsSeq(fn, len, maxLen)</code></p>
 <p><strong>LaTeX notation:</strong> <code>FunAsSeq(fn, len, maxLen)</code></p>
 <p><strong>Arguments:</strong> Three arguments:</p>
@@ -10609,8 +10517,7 @@ g = boundedFn(lambda x: x * x, {0, 42})
 &gt;&gt;&gt; funAsSeq(g, 3, 3)
 [None, None, None]
 </code></pre>
-<p><a name="Skolem"></a></p>
-<h2 id="skolemization-hint"><a class="header" href="#skolemization-hint">Skolemization Hint</a></h2>
+<h2 id="skolemization-hint"><a class="header" href="#skolemization-hint"><a id="Skolem"></a> Skolemization Hint</a></h2>
 <p><strong>Notation:</strong> <code>Skolem(e)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Skolem(e)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be an expression of the form <code>\E x \in S: P</code>.</p>
@@ -10631,8 +10538,7 @@ Manual use of this operator is discouraged and, in many cases, not supported.</p
 Skolem( 1 )                     \* 1 in TLC, type error in Apalache
 Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 </code></pre>
-<p><a name="Expand"></a></p>
-<h2 id="set-expansion"><a class="header" href="#set-expansion">Set expansion</a></h2>
+<h2 id="set-expansion"><a class="header" href="#set-expansion"><a id="Expand"></a> Set expansion</a></h2>
 <p><strong>Notation:</strong> <code>Expand(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Expand(S)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be either <code>SUBSET SS</code> or <code>[T1 -&gt; T2]</code>.</p>
@@ -10654,8 +10560,7 @@ Manual use of this operator is discouraged and, in many cases, not supported.</p
 Expand( {1,2} )        \* {1,2} in TLC, error in Apalache
 Expand( 1 )            \* 1 in TLC, type error in Apalache
 </code></pre>
-<p><a name="ConstCard"></a></p>
-<h2 id="cardinality-hint"><a class="header" href="#cardinality-hint">Cardinality Hint</a></h2>
+<h2 id="cardinality-hint"><a class="header" href="#cardinality-hint"><a id="ConstCard"></a> Cardinality Hint</a></h2>
 <p><strong>Notation:</strong> <code>ConstCardinality(e)</code></p>
 <p><strong>LaTeX notation:</strong> <code>ConstCardinality(e)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be an expression of the form <code>Cardinality(S) &gt;= k</code>.</p>
@@ -10800,8 +10705,7 @@ an invariant violation and will lead to a spurious counterexample.</p>
 <hr>
 <h2 id="operators-7"><a class="header" href="#operators-7">Operators</a></h2>
 <hr>
-<p><a name="variantCtor"></a></p>
-<h3 id="variant-constructor"><a class="header" href="#variant-constructor">Variant constructor</a></h3>
+<h3 id="variant-constructor"><a class="header" href="#variant-constructor"><a id="variantCtor"></a> Variant constructor</a></h3>
 <p><strong>Notation:</strong> <code>Variant(tagName, associatedValue)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Two arguments: the tag name (a string literal) and a value
@@ -10824,8 +10728,7 @@ Water(sparkling) == Variant("Water", [ sparkling |-&gt; sparkling ])
 Beer(malt, strength) == Variant("Beer", [ malt |-&gt; malt, strength |-&gt; strength ])
 </code></pre>
 <hr>
-<p><a name="variantTag"></a></p>
-<h3 id="variant-tag"><a class="header" href="#variant-tag">Variant tag</a></h3>
+<h3 id="variant-tag"><a class="header" href="#variant-tag"><a id="variantTag"></a> Variant tag</a></h3>
 <p><strong>Notation:</strong> <code>VariantTag(variant)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> One argument: a variant constructed via <code>Variant</code>.</p>
@@ -10839,8 +10742,7 @@ variable that captures other options in the variant type.</p>
 <pre><code class="language-tla">VariantTag(Variant("Water", [ sparkling |-&gt; sparkling ])) = "Water"
 </code></pre>
 <hr>
-<p><a name="variantFilter"></a></p>
-<h3 id="variant-filter"><a class="header" href="#variant-filter">Variant filter</a></h3>
+<h3 id="variant-filter"><a class="header" href="#variant-filter"><a id="variantFilter"></a> Variant filter</a></h3>
 <p><strong>Notation:</strong> <code>VariantFilter(tagName, set)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Two arguments: the tag name (a string literal) and a set of
@@ -10869,8 +10771,7 @@ LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
     d.strength &lt; 3
 </code></pre>
 <hr>
-<p><a name="variantGetOrElse"></a></p>
-<h3 id="unpacking-a-variant-safely"><a class="header" href="#unpacking-a-variant-safely">Unpacking a variant safely</a></h3>
+<h3 id="unpacking-a-variant-safely"><a class="header" href="#unpacking-a-variant-safely"><a id="variantGetOrElse"></a> Unpacking a variant safely</a></h3>
 <p><strong>Notation:</strong> <code>VariantGetOrElse(tagName, variant, defaultValue)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Three arguments: the tag name (a string literal), a variant
@@ -10900,8 +10801,7 @@ VariantGetOrElse("Beer", water,
                  [ malt |-&gt; "Non-alcoholic", strength |-&gt; 0])).strength
 </code></pre>
 <hr>
-<p><a name="variantGetUnsafe"></a></p>
-<h3 id="unpacking-a-variant-unsafely"><a class="header" href="#unpacking-a-variant-unsafely">Unpacking a variant unsafely</a></h3>
+<h3 id="unpacking-a-variant-unsafely"><a class="header" href="#unpacking-a-variant-unsafely"><a id="variantGetUnsafe"></a> Unpacking a variant unsafely</a></h3>
 <p><strong>Notation:</strong> <code>VariantGetUnsafe(tagName, variant)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Two arguments: the tag name (a string literal) and a variant
@@ -11145,8 +11045,7 @@ IN
     VariantGetUnsafe("Some", choice) \in choices
 </code></pre>
 <hr>
-<p><a name="OptionFunApp"></a></p>
-<h3 id="apply-a-function-to-a-partial-value"><a class="header" href="#apply-a-function-to-a-partial-value">Apply a function to a partial value</a></h3>
+<h3 id="apply-a-function-to-a-partial-value"><a class="header" href="#apply-a-function-to-a-partial-value"><a id="OptionFunApp"></a> Apply a function to a partial value</a></h3>
 <p><strong>Notation:</strong> <code>OptionFunApp(f, o)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Apalache type:</strong> <code>(a -&gt; b, Some(a) | None(UNIT)) =&gt; Some(b) | None(UNIT)</code></p>
@@ -11165,8 +11064,7 @@ IN
 /\ OptionFunApp(f, None) = None
 </code></pre>
 <hr>
-<p><a name="OptionPartialFun"></a></p>
-<h3 id="extend-a-total-function-into-a-partial-function"><a class="header" href="#extend-a-total-function-into-a-partial-function">Extend a total function into a partial function</a></h3>
+<h3 id="extend-a-total-function-into-a-partial-function"><a class="header" href="#extend-a-total-function-into-a-partial-function"><a id="OptionPartialFun"></a> Extend a total function into a partial function</a></h3>
 <p><strong>Notation:</strong> <code>OptionPartialFun(f, undef)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Apalache type:</strong> <code>(a -&gt; b, Set(a)) =&gt; (a -&gt; Some(b) | None(UNIT))</code></p>
@@ -12303,8 +12201,7 @@ questions:</p>
 <h2 id="1-how-to-write-types-in-tla"><a class="header" href="#1-how-to-write-types-in-tla">1. How to write types in TLA+</a></h2>
 <p>Everybody has a different opinion here. It would be great to use
 the native TLA+ constructs to express types.</p>
-<p><a name="typesAsTypeOk"></a></p>
-<h3 id="11-typeok-syntax"><a class="header" href="#11-typeok-syntax">1.1. TypeOK syntax</a></h3>
+<h3 id="11-typeok-syntax"><a class="header" href="#11-typeok-syntax"><a id="typesAsTypeOk"></a> 1.1. TypeOK syntax</a></h3>
 <p>The only way to write types in the <code>TypeOK</code> style is by set membership.
 For instance:</p>
 <ul>
@@ -12332,8 +12229,7 @@ where he uses a theorem:</p>
 <pre><code class="language-tla">THEOREM FooType ==
   \A a \in Int: \A b \in STRING: Foo(a, b) \in Int
 </code></pre>
-<p><a name="typesAsTerms"></a></p>
-<h3 id="12-types-as-terms"><a class="header" href="#12-types-as-terms">1.2. Types as terms</a></h3>
+<h3 id="12-types-as-terms"><a class="header" href="#12-types-as-terms"><a id="typesAsTerms"></a> 1.2. Types as terms</a></h3>
 <p>A classical way of writing types is by using logical terms (or algebraic datatypes).
 To this end, we can define a special module <code>Types.tla</code>:</p>
 <pre><code class="language-tla">---- MODULE Types ----
@@ -12421,8 +12317,7 @@ down a type annotation.</strong></li>
 </ul>
 </li>
 </ul>
-<p><a name="typesAsStrings"></a></p>
-<h3 id="13-types-as-strings"><a class="header" href="#13-types-as-strings">1.3. Types as strings</a></h3>
+<h3 id="13-types-as-strings"><a class="header" href="#13-types-as-strings"><a id="typesAsStrings"></a> 1.3. Types as strings</a></h3>
 <p>Let us introduce the following grammar for types:</p>
 <pre><code>T ::= var | Bool | Int | Str | T -&gt; T | Set(T) | Seq(T) |
       &lt;&lt;T, ..., T&gt;&gt; | [h_1 |-&gt; T, ..., h_k |-&gt; T] | (T, ..., T) =&gt; T
@@ -12503,8 +12398,7 @@ user writes: <code>x &lt;: BOOLEAN \/ x &lt;: Int</code>?</li>
 a module <code>M</code> and then uses an unnamed instance <code>INSTANCE M</code> in a module <code>M2</code>,
 then <code>M</code> and <code>M2</code> will clash on the operator <code>&lt;:</code>. We should define the operator
 once in a special module <code>Types</code> or <code>Apalache</code>.</p>
-<p><a name="annotationsAsAssumptions"></a></p>
-<h3 id="22-type-annotations-as-assumptions"><a class="header" href="#22-type-annotations-as-assumptions">2.2. Type annotations as assumptions</a></h3>
+<h3 id="22-type-annotations-as-assumptions"><a class="header" href="#22-type-annotations-as-assumptions"><a id="annotationsAsAssumptions"></a> 2.2. Type annotations as assumptions</a></h3>
 <p>One can use TLA+ syntax to write assumptions and assertions about the types.
 We are talking only about type assumptions here.
 The similar approach can be used to write theorems about types.
@@ -12655,8 +12549,7 @@ See the <a href="#the-snowcat-type-checker">manual chapter</a> on Snowcat.</p>
 <p>System engineers often want to write type annotations and quickly check types
 when writing TLA+ specifications. This document is filling this gap.</p>
 <h2 id="1-how-to-write-types-in-tla-1"><a class="header" href="#1-how-to-write-types-in-tla-1">1. How to write types in TLA+</a></h2>
-<p><a id="ts1"></a></p>
-<h3 id="11-type-grammar-type-system-1-or-ts1"><a class="header" href="#11-type-grammar-type-system-1-or-ts1">1.1. Type grammar (Type System 1, or TS1)</a></h3>
+<h3 id="11-type-grammar-type-system-1-or-ts1"><a class="header" href="#11-type-grammar-type-system-1-or-ts1"><a id="ts1"></a> 1.1. Type grammar (Type System 1, or TS1)</a></h3>
 <p><strong>Upgrade warning.</strong> This system is replaced with <a href="#ts12">Type System 1.2</a>.
 In October of 2022, we will stop supporting Type System 1. For the transition
 period, pass <code>--features=no-rows</code> to Apalache, to enable Type System 1.</p>
@@ -12748,8 +12641,7 @@ Its type is <code>(a, a) =&gt; a</code>.</li>
 <li><code>Proc</code> and <code>Faulty</code> are sets of the same type.
 Their type is <code>Set(PID)</code>.</li>
 </ul>
-<p><a id="defTypeAlias"></a></p>
-<h3 id="12-type-aliases"><a class="header" href="#12-type-aliases">1.2. Type aliases</a></h3>
+<h3 id="12-type-aliases"><a class="header" href="#12-type-aliases"><a id="defTypeAlias"></a> 1.2. Type aliases</a></h3>
 <h4 id="new-syntax-for-type-aliases"><a class="header" href="#new-syntax-for-type-aliases">New syntax for type aliases</a></h4>
 <p>We introduce a special syntax for introducing type alises, which is
 defined by the following single-rule grammar:</p>
@@ -12782,9 +12674,7 @@ checker should use the bound type instead of the constant type.</p>
 For instance, when the users forgot to include a type alias, the type alias was
 interpreted as a type constant, and the type checker showed incomprehensible
 error messages.</p>
-<p><a id="rows"></a>
-<a id="ts12"></a></p>
-<h3 id="13-type-system-12-including-precise-records-variants-and-rows"><a class="header" href="#13-type-system-12-including-precise-records-variants-and-rows">1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
+<h3 id="13-type-system-12-including-precise-records-variants-and-rows"><a class="header" href="#13-type-system-12-including-precise-records-variants-and-rows"><a id="rows"></a> <a id="ts12"></a> 1.3. Type System 1.2, including precise records, variants, and rows</a></h3>
 <p>As discussed in <a href="https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/014adr-precise-records.md">ADR014</a>, many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
 capacities: as plain records and as variants. While the technical proposal is
@@ -12850,8 +12740,7 @@ row. For instance, it could be equal to <code>(| A: Int | B: Str |)</code>.</p>
 the syntax for row types for completeness. Most likely, the users will never
 see messages that mention rows explicitly, without referring to records or
 variants.</p>
-<p><a id="comments"></a></p>
-<h3 id="14-comments-inside-types"><a class="header" href="#14-comments-inside-types">1.4. Comments inside types</a></h3>
+<h3 id="14-comments-inside-types"><a class="header" href="#14-comments-inside-types"><a id="comments"></a> 1.4. Comments inside types</a></h3>
 <p>When you introduce records that have dozens of fields, it is useful to explain
 those fields right in the type annotations. For that reason, the type lexer
 supports one-line comments right in the type definitions. The following
@@ -13017,8 +12906,7 @@ auxiliary LET-definition to specify the type of the empty collection:</p>
 </code></pre>
 <p>The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence).</p>
-<p><a id="useTypeAlias"></a></p>
-<h3 id="24-introducing-and-using-type-aliases"><a class="header" href="#24-introducing-and-using-type-aliases">2.4. Introducing and using type aliases</a></h3>
+<h3 id="24-introducing-and-using-type-aliases"><a class="header" href="#24-introducing-and-using-type-aliases"><a id="useTypeAlias"></a> 2.4. Introducing and using type aliases</a></h3>
 <p>A type alias is introduced with the annotation <code>@typeAlias: &lt;ALIAS&gt; = &lt;Type&gt;;</code>.
 Since it is convenient to group type aliases of a module <code>MyModule</code>
 in one place, we usually use the following idiom:</p>
@@ -13784,8 +13672,7 @@ be checked in a stateless context.</p>
 tests by default, if no test name is specified. Also, we have to initialize the
 constants with <code>ConstInit</code>, which we specify with the annotation
 <code>@require(ConstInit)</code>.</p>
-<p><a id="testAction"></a></p>
-<h3 id="32-testing-actions"><a class="header" href="#32-testing-actions">3.2. Testing actions</a></h3>
+<h3 id="32-testing-actions"><a class="header" href="#32-testing-actions"><a id="testAction"></a> 3.2. Testing actions</a></h3>
 <p>Testing stateless operators is nice. However, TLA+ is built around the concept
 of a state machine. Hence, we believe that most of the testing activity will be
 centered around TLA+ actions. For instance, the <a href="https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts">LCR</a> specification has two
@@ -14145,8 +14032,7 @@ which is produced when an error is found.</p>
 generators similar to <a href="https://www.scalacheck.org/">Scalacheck</a>. In contrast to property-based testing, we
 want to run the test not only on some random inputs, but to run it exhaustively
 on all inputs within a predefined bounded scope.</p>
-<p><a id="generators"></a></p>
-<h3 id="51-using-apalache-generators"><a class="header" href="#51-using-apalache-generators">5.1. Using Apalache generators</a></h3>
+<h3 id="51-using-apalache-generators"><a class="header" href="#51-using-apalache-generators"><a id="generators"></a> 5.1. Using Apalache generators</a></h3>
 <p>Let’s go back to the example in <a href="#testAction">Section 3.2</a>.</p>
 <p>In <code>TestAction_n0</code> we used <code>TypeOK</code> to describe the states that can be used as
 the input to the test. While this conceptually works, it often happens that

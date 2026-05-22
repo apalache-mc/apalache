@@ -246,8 +246,7 @@ so operations on sequences are often significantly slower than operations
 on sets.</em></p>
 <hr>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<p><a name="seqCtor"></a></p>
-<h3 id="tuplesequence-constructor"><a class="header" href="#tuplesequence-constructor">Tuple/Sequence constructor</a></h3>
+<h3 id="tuplesequence-constructor"><a class="header" href="#tuplesequence-constructor"><a id="seqCtor"></a> Tuple/Sequence constructor</a></h3>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/tuple.png" alt="tuple"></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
@@ -283,8 +282,7 @@ principle “sequences are functions”, we have to use a dictionary.</p>
 
 </code></pre>
 <hr>
-<p><a name="append"></a></p>
-<h3 id="sequence-append"><a class="header" href="#sequence-append">Sequence append</a></h3>
+<h3 id="sequence-append"><a class="header" href="#sequence-append"><a id="append"></a> Sequence append</a></h3>
 <p><strong>Notation:</strong> <code>Append(seq, e)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Append(seq, e)</code></p>
 <p><strong>Arguments:</strong> Two arguments. The first argument should be a sequence, the
@@ -321,15 +319,13 @@ the type of the sequence elements.</p>
 
 </code></pre>
 <hr>
-<p><a name="app"></a></p>
-<h3 id="function-application"><a class="header" href="#function-application">Function application</a></h3>
+<h3 id="function-application"><a class="header" href="#function-application"><a id="app"></a> Function application</a></h3>
 <p>As sequences are functions, you can access sequence elements with <a href="./functions.html#funApp">function
 application</a>, e.g., <code>seq[2]</code>.  However, in the case of a
 sequence, the type of the function application is: <code>(Seq(a), Int) =&gt; a</code>, for
 some type <code>a</code>.</p>
 <hr>
-<p><a name="head"></a></p>
-<h3 id="sequence-head"><a class="header" href="#sequence-head">Sequence head</a></h3>
+<h3 id="sequence-head"><a class="header" href="#sequence-head"><a id="head"></a> Sequence head</a></h3>
 <p><strong>Notation:</strong> <code>Head(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Head(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
@@ -357,8 +353,7 @@ error.</p>
 
 </code></pre>
 <hr>
-<p><a name="tail"></a></p>
-<h3 id="sequence-tail"><a class="header" href="#sequence-tail">Sequence tail</a></h3>
+<h3 id="sequence-tail"><a class="header" href="#sequence-tail"><a id="tail"></a> Sequence tail</a></h3>
 <p><strong>Notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Tail(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
@@ -394,8 +389,7 @@ error.</p>
 
 </code></pre>
 <hr>
-<p><a name="len"></a></p>
-<h3 id="sequence-length"><a class="header" href="#sequence-length">Sequence length</a></h3>
+<h3 id="sequence-length"><a class="header" href="#sequence-length"><a id="len"></a> Sequence length</a></h3>
 <p><strong>Notation:</strong> <code>Len(seq)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Len(seq)</code></p>
 <p><strong>Arguments:</strong> One argument. The argument should be a sequence (or a tuple).</p>
@@ -426,8 +420,7 @@ error.</p>
 
 </code></pre>
 <hr>
-<p><a name="concat"></a></p>
-<h3 id="sequence-concatenation"><a class="header" href="#sequence-concatenation">Sequence concatenation</a></h3>
+<h3 id="sequence-concatenation"><a class="header" href="#sequence-concatenation"><a id="concat"></a> Sequence concatenation</a></h3>
 <p><strong>Notation:</strong> <code>s \o t</code> (or <code>s \circ t</code>)</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/seq-concat.png" alt="seq-concat"></p>
 <p><strong>Arguments:</strong> Two arguments: both should be sequences (or tuples).</p>
@@ -465,8 +458,7 @@ incompatible.</p>
 
 </code></pre>
 <hr>
-<p><a name="subseq"></a></p>
-<h3 id="subsequence"><a class="header" href="#subsequence">Subsequence</a></h3>
+<h3 id="subsequence"><a class="header" href="#subsequence"><a id="subseq"></a> Subsequence</a></h3>
 <p><strong>Notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SubSeq(seq, m, n)</code></p>
 <p><strong>Arguments:</strong> Three arguments: a sequence (tuple), and two integers.</p>
@@ -503,8 +495,7 @@ error. Apalache flags a static type error.</p>
 
 </code></pre>
 <hr>
-<p><a name="filter"></a></p>
-<h3 id="sequence-filter"><a class="header" href="#sequence-filter">Sequence filter</a></h3>
+<h3 id="sequence-filter"><a class="header" href="#sequence-filter"><a id="filter"></a> Sequence filter</a></h3>
 <p><strong>Notation:</strong> <code>SelectSeq(seq, Test)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SelectSeq(seq, Test)</code></p>
 <p><strong>Arguments:</strong> Two arguments: a sequence (a tuple) and a one-argument
@@ -546,8 +537,7 @@ result is undefined in pure TLA+. TLC raises a model checking error.</p>
 
 </code></pre>
 <hr>
-<p><a name="seq"></a></p>
-<h3 id="all-sequences"><a class="header" href="#all-sequences">All sequences</a></h3>
+<h3 id="all-sequences"><a class="header" href="#all-sequences"><a id="seq"></a> All sequences</a></h3>
 <p><strong>Notation:</strong> <code>Seq(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Seq(S)</code></p>
 <p><strong>Arguments:</strong> One argument that should be a set.</p>

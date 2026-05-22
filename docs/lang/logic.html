@@ -190,8 +190,7 @@ logic (see <a href="./booleans.html">Booleans</a>).</p>
 non-determinism in TLA+. See <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>. In this
 section, we only consider the deterministic use of the existential quantifier.</p>
 <hr>
-<p><a name="forallBounded"></a></p>
-<h3 id="bounded-universal-quantifier"><a class="header" href="#bounded-universal-quantifier">Bounded universal quantifier</a></h3>
+<h3 id="bounded-universal-quantifier"><a class="header" href="#bounded-universal-quantifier"><a id="forallBounded"></a> Bounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x \in S: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/forall-bounded.png" alt="forall-bounded"></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
@@ -255,8 +254,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="existsBounded"></a></p>
-<h3 id="bounded-existential-quantifier"><a class="header" href="#bounded-existential-quantifier">Bounded existential quantifier</a></h3>
+<h3 id="bounded-existential-quantifier"><a class="header" href="#bounded-existential-quantifier"><a id="existsBounded"></a> Bounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x \in S: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/exists-bounded.png" alt="exists-bounded"></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
@@ -326,8 +324,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="eq"></a></p>
-<h3 id="equality"><a class="header" href="#equality">Equality</a></h3>
+<h3 id="equality"><a class="header" href="#equality"><a id="eq"></a> Equality</a></h3>
 <p><em>A foundational operator in TLA+</em></p>
 <p><strong>Notation:</strong> <code>e_1 = e_2</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/eq.png" alt="eq"></p>
@@ -445,16 +442,14 @@ True
 
 </code></pre>
 <hr>
-<p><a name="neq"></a></p>
-<h3 id="inequality"><a class="header" href="#inequality">Inequality</a></h3>
+<h3 id="inequality"><a class="header" href="#inequality"><a id="neq"></a> Inequality</a></h3>
 <p><strong>Notation:</strong> <code>e_1 /= e_2</code> or <code>e_1 # e_2</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/ne.png" alt="ne"></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator is syntax sugar for <code>~(e_1 = e_2)</code>. Full stop.</p>
 <hr>
-<p><a name="chooseBounded"></a></p>
-<h3 id="bounded-choice"><a class="header" href="#bounded-choice">Bounded Choice</a></h3>
+<h3 id="bounded-choice"><a class="header" href="#bounded-choice"><a id="chooseBounded"></a> Bounded Choice</a></h3>
 <p><em>This operator causes a lot of confusion. Read carefully!</em></p>
 <p><strong>Notation:</strong> <code>CHOOSE x \in S: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/choose-bounded.png" alt="choose-bounded"></p>
@@ -539,8 +534,7 @@ if __name__ == "__main__":
     print("CHOOSE {} = {}".format(s2, choose(s2)))
 </code></pre>
 <hr>
-<p><a name="forall"></a></p>
-<h3 id="unbounded-universal-quantifier"><a class="header" href="#unbounded-universal-quantifier">Unbounded universal quantifier</a></h3>
+<h3 id="unbounded-universal-quantifier"><a class="header" href="#unbounded-universal-quantifier"><a id="forall"></a> Unbounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/forall.png" alt="forall"></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
@@ -554,8 +548,7 @@ operational semantics for this operator, unless we explicitly introduce the
 universe. It requires a first-order logic solver. This operator may be useful
 when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
 <hr>
-<p><a name="exists"></a></p>
-<h3 id="unbounded-existential-quantifier"><a class="header" href="#unbounded-existential-quantifier">Unbounded existential quantifier</a></h3>
+<h3 id="unbounded-existential-quantifier"><a class="header" href="#unbounded-existential-quantifier"><a id="exists"></a> Unbounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x: P</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/exists.png" alt="exists"></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
@@ -569,8 +562,7 @@ operational semantics for this operator, unless we explicitly introduce the
 universe. It requires a first-order logic solver. This operator may be useful
 when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/Home.html">TLAPS</a>.</p>
 <hr>
-<p><a name="choose"></a></p>
-<h3 id="unbounded-choose"><a class="header" href="#unbounded-choose">Unbounded CHOOSE</a></h3>
+<h3 id="unbounded-choose"><a class="header" href="#unbounded-choose"><a id="choose"></a> Unbounded CHOOSE</a></h3>
 <p><strong>Notation:</strong> <code>CHOOSE x: P</code></p>
 <p><strong>LaTeX notation:</strong> CHOOSE x: P</p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an

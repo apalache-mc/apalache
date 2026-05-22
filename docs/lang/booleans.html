@@ -183,8 +183,7 @@
 <p><a href="./standard-operators.html">[Back to all operators]</a></p>
 <p>You find these operators in every programming language and every textbook on
 logic. These operators form <em>propositional logic</em>.</p>
-<p><a name="const"></a></p>
-<h2 id="constants"><a class="header" href="#constants">Constants</a></h2>
+<h2 id="constants"><a class="header" href="#constants"><a id="const"></a> Constants</a></h2>
 <p>TLA+ contains three special constants: <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code>.
 The constant <code>BOOLEAN</code> is defined as the set <code>{FALSE, TRUE}</code>.</p>
 <p>In Apalache, <code>TRUE</code>, <code>FALSE</code>, and <code>BOOLEAN</code> have the types <code>Bool</code>, <code>Bool</code>,
@@ -199,8 +198,7 @@ disjunction operator <code>F \/ G</code> induces a nondeterministic effect when 
 the prime operator  (<code>'</code>), or when they are used inside the initialization predicate <code>Init</code>.
 We discuss this effect <a href="./control-and-nondeterminism.html">Control Flow and Non-determinism</a>.</p>
 <hr>
-<p><a name="and"></a></p>
-<h3 id="and-conjunction"><a class="header" href="#and-conjunction">And (conjunction)</a></h3>
+<h3 id="and-conjunction"><a class="header" href="#and-conjunction"><a id="and"></a> And (conjunction)</a></h3>
 <p><strong>Notation:</strong> <code>F /\ G</code> or <code>F \land G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/land.png" alt="land"></p>
 <p><strong>Arguments:</strong> Two or more arbitrary expressions.</p>
@@ -263,8 +261,7 @@ is equivalent to:</p>
 <pre><code class="language-tla">  F_1 /\ (G_1 /\ ... /\ G_k) /\ F_2 /\ ... /\ F_n
 </code></pre>
 <hr>
-<p><a name="or"></a></p>
-<h3 id="or-disjunction"><a class="header" href="#or-disjunction">Or (disjunction)</a></h3>
+<h3 id="or-disjunction"><a class="header" href="#or-disjunction"><a id="or"></a> Or (disjunction)</a></h3>
 <p><strong>Notation:</strong> <code>F \/ G</code> or <code>F \lor G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/lor.png" alt="lor"></p>
 <p><strong>Arguments:</strong> Two or more Boolean expressions.</p>
@@ -333,8 +330,7 @@ is equivalent to:</p>
 <pre><code class="language-tla">  (F /\ G) \/ (H \/ J)
 </code></pre>
 <hr>
-<p><a name="not"></a></p>
-<h3 id="negation"><a class="header" href="#negation">Negation</a></h3>
+<h3 id="negation"><a class="header" href="#negation"><a id="not"></a> Negation</a></h3>
 <p><strong>Notation:</strong> <code>~F</code> or <code>\neg F</code> or <code>\lnot F</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/lnot.png" alt="lnot"></p>
 <p><strong>Arguments:</strong> One argument that should evaluate to a Boolean value.</p>
@@ -362,8 +358,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="implies"></a></p>
-<h3 id="implication"><a class="header" href="#implication">Implication</a></h3>
+<h3 id="implication"><a class="header" href="#implication"><a id="implies"></a> Implication</a></h3>
 <p><strong>Notation:</strong> <code>F =&gt; G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/implies.png" alt="implies"></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
@@ -407,8 +402,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="equiv"></a></p>
-<h3 id="equivalence"><a class="header" href="#equivalence">Equivalence</a></h3>
+<h3 id="equivalence"><a class="header" href="#equivalence"><a id="equiv"></a> Equivalence</a></h3>
 <p><strong>Notation:</strong> <code>F &lt;=&gt; G</code> or <code>F \equiv G</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/equiv.png" alt="equiv"> or <img src="./img/equiv2.png" alt="equiv2"></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the

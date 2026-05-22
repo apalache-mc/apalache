@@ -387,8 +387,7 @@ IN
     VariantGetUnsafe("Some", choice) \in choices
 </code></pre>
 <hr>
-<p><a name="OptionFunApp"></a></p>
-<h3 id="apply-a-function-to-a-partial-value"><a class="header" href="#apply-a-function-to-a-partial-value">Apply a function to a partial value</a></h3>
+<h3 id="apply-a-function-to-a-partial-value"><a class="header" href="#apply-a-function-to-a-partial-value"><a id="OptionFunApp"></a> Apply a function to a partial value</a></h3>
 <p><strong>Notation:</strong> <code>OptionFunApp(f, o)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Apalache type:</strong> <code>(a -&gt; b, Some(a) | None(UNIT)) =&gt; Some(b) | None(UNIT)</code></p>
@@ -407,8 +406,7 @@ IN
 /\ OptionFunApp(f, None) = None
 </code></pre>
 <hr>
-<p><a name="OptionPartialFun"></a></p>
-<h3 id="extend-a-total-function-into-a-partial-function"><a class="header" href="#extend-a-total-function-into-a-partial-function">Extend a total function into a partial function</a></h3>
+<h3 id="extend-a-total-function-into-a-partial-function"><a class="header" href="#extend-a-total-function-into-a-partial-function"><a id="OptionPartialFun"></a> Extend a total function into a partial function</a></h3>
 <p><strong>Notation:</strong> <code>OptionPartialFun(f, undef)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Apalache type:</strong> <code>(a -&gt; b, Set(a)) =&gt; (a -&gt; Some(b) | None(UNIT))</code></p>

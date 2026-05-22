@@ -260,8 +260,7 @@ In this case, you have to write one type annotation per name.</p>
  &gt; All expressions are typed
 ...
 </code></pre>
-<p><a id="recipe2"></a></p>
-<h2 id="recipe-2-annotating-constants"><a class="header" href="#recipe-2-annotating-constants">Recipe 2: Annotating constants</a></h2>
+<h2 id="recipe-2-annotating-constants"><a class="header" href="#recipe-2-annotating-constants"><a id="recipe2"></a> Recipe 2: Annotating constants</a></h2>
 <p>Consider the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/SpecifyingSystems/FIFO/Channel.tla">Channel.tla</a> from <a href="http://lamport.azurewebsites.net/tla/book.html?back-link=learning.html#book">Specifying Systems</a>:</p>
 <pre><code class="language-tla">
 -------------------------- MODULE Channel -----------------------------
@@ -375,8 +374,7 @@ of integers to integers, that is, <code>Int -&gt; Int</code>:</p>
 &gt; All expressions are typed 
 ...
 </code></pre>
-<p><a id="recipe4"></a></p>
-<h2 id="recipe-4-using-variants-in-heterogenous-sets"><a class="header" href="#recipe-4-using-variants-in-heterogenous-sets">Recipe 4: Using variants in heterogenous sets</a></h2>
+<h2 id="recipe-4-using-variants-in-heterogenous-sets"><a class="header" href="#recipe-4-using-variants-in-heterogenous-sets"><a id="recipe4"></a> Recipe 4: Using variants in heterogenous sets</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TwoPhase.tla">TwoPhase.tla</a> from the repository of TLA+ examples (you
 will also need <a href="https://github.com/tlaplus/Examples/blob/master/specifications/transaction_commit/TCommit.tla">TCommit.tla</a>, which is imported by TwoPhase.tla). This
 example has 176 lines of code, so we do not inline it here.</p>
@@ -478,8 +476,7 @@ introduce a set of records of the same type, this is usually a simpler
 solution. For instance, we could partition <code>msgs</code> into three subsets: the
 subset of <code>Commit</code> messages, the subset of <code>Abort</code> messages, and the subset of
 <code>Prepared</code> messages. See the discussion in <a href="../idiomatic/003record-sets.html">Idiom 15</a>.</p>
-<p><a id="funAsSeq"></a></p>
-<h2 id="recipe-5-functions-as-sequences"><a class="header" href="#recipe-5-functions-as-sequences">Recipe 5: functions as sequences</a></h2>
+<h2 id="recipe-5-functions-as-sequences"><a class="header" href="#recipe-5-functions-as-sequences"><a id="funAsSeq"></a> Recipe 5: functions as sequences</a></h2>
 <p>Check the example <a href="https://github.com/tlaplus/Examples/blob/master/specifications/N-Queens/Queens.tla">Queens.tla</a> from the repository of TLA+ examples.  It has
 85 lines of code, so we do not include it here. Similar to the previous
 sections, we annotate constants and variables:</p>
@@ -534,8 +531,7 @@ Solutions ==
 &gt; Your types are purrfect!
 &gt; All expressions are typed
 </code></pre>
-<p><a id="typeAliases"></a></p>
-<h2 id="recipe-6-type-aliases"><a class="header" href="#recipe-6-type-aliases">Recipe 6: type aliases</a></h2>
+<h2 id="recipe-6-type-aliases"><a class="header" href="#recipe-6-type-aliases"><a id="typeAliases"></a> Recipe 6: type aliases</a></h2>
 <p>Type aliases can be used to provide a concise label for complex types, or to
 clarify the intended meaning of a simple types in the given context.</p>
 <p>Type aliases are declared with the <code>@typeAlias</code> annotation, as follows:</p>
@@ -621,8 +617,7 @@ Attacks(queens,i,j)
 </code></pre>
 <p>You don’t have to do that, but if you feel that types can also help you in documenting
 your specification, you have this option.</p>
-<p><a id="recipe9"></a></p>
-<h2 id="recipe-9-migrate-from-type-system-1-to-type-system-12"><a class="header" href="#recipe-9-migrate-from-type-system-1-to-type-system-12">Recipe 9: Migrate from Type System 1 to Type System 1.2</a></h2>
+<h2 id="recipe-9-migrate-from-type-system-1-to-type-system-12"><a class="header" href="#recipe-9-migrate-from-type-system-1-to-type-system-12"><a id="recipe9"></a> Recipe 9: Migrate from Type System 1 to Type System 1.2</a></h2>
 <p>As explained in <a href="../adr/002adr-types.html">ADR002</a>, <a href="../adr/002adr-types.html#ts12">Type System 1.2</a> (TS1.2) differs from <a href="../adr/002adr-types.html#ts1">Type
 System 1</a> (TS1) as follows:</p>
 <ul>

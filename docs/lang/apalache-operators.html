@@ -185,8 +185,7 @@ Apalache defines a number of operators, which do not belong to the core language
 but which Apalache uses to provide clarity, efficiency, or special functionality.
 These operators belong to the module <code>Apalache</code>,
 and can be used in any specification by declaring <code>EXTENDS Apalache</code>.</p>
-<p><a name="Assignment"></a></p>
-<h2 id="assignment"><a class="header" href="#assignment">Assignment</a></h2>
+<h2 id="assignment"><a class="header" href="#assignment"><a id="Assignment"></a> Assignment</a></h2>
 <p><strong>Notation:</strong> <code>v' := e</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/coloneq.png" alt="coloneq"></p>
 <p><strong>Arguments:</strong> Two arguments. The first is a primed variable name, the second is arbitrary.</p>
@@ -218,8 +217,7 @@ True
 &gt;&gt; a = (b == "c") # a' := (b = "c")
 </code></pre>
 <hr>
-<p><a name="Guess"></a></p>
-<h2 id="non-deterministically-guess-a-value"><a class="header" href="#non-deterministically-guess-a-value">Non-deterministically guess a value</a></h2>
+<h2 id="non-deterministically-guess-a-value"><a class="header" href="#non-deterministically-guess-a-value"><a id="Guess"></a> Non-deterministically guess a value</a></h2>
 <p><strong>Notation:</strong> <code>Guess(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Guess(S)</code></p>
 <p><strong>Arguments:</strong> One argument: a finite set <code>S</code>, possibly empty.</p>
@@ -241,8 +239,7 @@ If <code>S</code> is not a set, Apalache reports an error.</p>
 /\ Guess({ 1, 2, 3 }) \in Int     \* TRUE
 </code></pre>
 <hr>
-<p><a name="Gen"></a></p>
-<h2 id="value-generators"><a class="header" href="#value-generators">Value generators</a></h2>
+<h2 id="value-generators"><a class="header" href="#value-generators"><a id="Gen"></a> Value generators</a></h2>
 <p><strong>Notation:</strong> <code>Gen(bound)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Gen(bound)</code></p>
 <p><strong>Arguments:</strong> One argument: an integer literal or a constant expression (of
@@ -277,8 +274,7 @@ IN
 <h2 id="folding"><a class="header" href="#folding">Folding</a></h2>
 <p>The operators <code>ApaFoldSet</code> and <code>ApaFoldSeqLeft</code> are explained in more detail in a dedicated section <a href="../apalache/principles/folds.html">here</a>.</p>
 <hr>
-<p><a name="Repeat"></a></p>
-<h2 id="operator-iteration"><a class="header" href="#operator-iteration">Operator iteration</a></h2>
+<h2 id="operator-iteration"><a class="header" href="#operator-iteration"><a id="Repeat"></a> Operator iteration</a></h2>
 <p><strong>Notation:</strong> <code>Repeat(Op, N, x)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Repeat(Op, N, x)</code></p>
 <p><strong>Arguments:</strong> Three arguments: An operator <code>Op</code>, an iteration counter <code>N</code> (a nonnegative constant integer expression), and an
@@ -302,8 +298,7 @@ Op2(a,i) == a + i
 Repeat(Op2, 0, 5) = 15              \* TRUE
 </code></pre>
 <hr>
-<p><a name="SetAsFun"></a></p>
-<h2 id="convert-a-set-of-pairs-to-a-function"><a class="header" href="#convert-a-set-of-pairs-to-a-function">Convert a set of pairs to a function</a></h2>
+<h2 id="convert-a-set-of-pairs-to-a-function"><a class="header" href="#convert-a-set-of-pairs-to-a-function"><a id="SetAsFun"></a> Convert a set of pairs to a function</a></h2>
 <p><strong>Notation:</strong> <code>SetAsFun(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>SetAsFun(S)</code></p>
 <p><strong>Arguments:</strong> One argument: A set of pairs <code>S</code>, which may be empty.</p>
@@ -331,8 +326,7 @@ LET F == SetAsFun({ &lt;&lt;1, 2&gt;&gt;, &lt;&lt;1, 3&gt;&gt;, &lt;&lt;1, 4&gt;
   \/ F = [x \in { 1 } |-&gt; 4]
 </code></pre>
 <hr>
-<p><a name="MkSeq"></a></p>
-<h2 id="construct-a-sequence"><a class="header" href="#construct-a-sequence">Construct a sequence</a></h2>
+<h2 id="construct-a-sequence"><a class="header" href="#construct-a-sequence"><a id="MkSeq"></a> Construct a sequence</a></h2>
 <p><strong>Notation:</strong> <code>MkSeq(n, F)</code></p>
 <p><strong>LaTeX notation:</strong> <code>MkSeq(n, F)</code></p>
 <p><strong>Arguments:</strong> Two arguments: sequence length <code>n</code> (a constant integer
@@ -347,8 +341,7 @@ If <code>n</code> is not a constant, or is negative, Apalache reports an error.<
 MkSeq(3, Double) = &lt;&lt;2, 4, 6&gt;&gt;   \* TRUE
 </code></pre>
 <hr>
-<p><a name="Cast"></a></p>
-<h2 id="interpret-a-function-as-a-sequence"><a class="header" href="#interpret-a-function-as-a-sequence">Interpret a function as a sequence</a></h2>
+<h2 id="interpret-a-function-as-a-sequence"><a class="header" href="#interpret-a-function-as-a-sequence"><a id="Cast"></a> Interpret a function as a sequence</a></h2>
 <p><strong>Notation:</strong> <code>FunAsSeq(fn, len, maxLen)</code></p>
 <p><strong>LaTeX notation:</strong> <code>FunAsSeq(fn, len, maxLen)</code></p>
 <p><strong>Arguments:</strong> Three arguments:</p>
@@ -395,8 +388,7 @@ g = boundedFn(lambda x: x * x, {0, 42})
 &gt;&gt;&gt; funAsSeq(g, 3, 3)
 [None, None, None]
 </code></pre>
-<p><a name="Skolem"></a></p>
-<h2 id="skolemization-hint"><a class="header" href="#skolemization-hint">Skolemization Hint</a></h2>
+<h2 id="skolemization-hint"><a class="header" href="#skolemization-hint"><a id="Skolem"></a> Skolemization Hint</a></h2>
 <p><strong>Notation:</strong> <code>Skolem(e)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Skolem(e)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be an expression of the form <code>\E x \in S: P</code>.</p>
@@ -417,8 +409,7 @@ Manual use of this operator is discouraged and, in many cases, not supported.</p
 Skolem( 1 )                     \* 1 in TLC, type error in Apalache
 Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 </code></pre>
-<p><a name="Expand"></a></p>
-<h2 id="set-expansion"><a class="header" href="#set-expansion">Set expansion</a></h2>
+<h2 id="set-expansion"><a class="header" href="#set-expansion"><a id="Expand"></a> Set expansion</a></h2>
 <p><strong>Notation:</strong> <code>Expand(S)</code></p>
 <p><strong>LaTeX notation:</strong> <code>Expand(S)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be either <code>SUBSET SS</code> or <code>[T1 -&gt; T2]</code>.</p>
@@ -440,8 +431,7 @@ Manual use of this operator is discouraged and, in many cases, not supported.</p
 Expand( {1,2} )        \* {1,2} in TLC, error in Apalache
 Expand( 1 )            \* 1 in TLC, type error in Apalache
 </code></pre>
-<p><a name="ConstCard"></a></p>
-<h2 id="cardinality-hint"><a class="header" href="#cardinality-hint">Cardinality Hint</a></h2>
+<h2 id="cardinality-hint"><a class="header" href="#cardinality-hint"><a id="ConstCard"></a> Cardinality Hint</a></h2>
 <p><strong>Notation:</strong> <code>ConstCardinality(e)</code></p>
 <p><strong>LaTeX notation:</strong> <code>ConstCardinality(e)</code></p>
 <p><strong>Arguments:</strong> One argument. Must be an expression of the form <code>Cardinality(S) &gt;= k</code>.</p>

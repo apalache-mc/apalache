@@ -378,8 +378,7 @@ be checked in a stateless context.</p>
 tests by default, if no test name is specified. Also, we have to initialize the
 constants with <code>ConstInit</code>, which we specify with the annotation
 <code>@require(ConstInit)</code>.</p>
-<p><a id="testAction"></a></p>
-<h3 id="32-testing-actions"><a class="header" href="#32-testing-actions">3.2. Testing actions</a></h3>
+<h3 id="32-testing-actions"><a class="header" href="#32-testing-actions"><a id="testAction"></a> 3.2. Testing actions</a></h3>
 <p>Testing stateless operators is nice. However, TLA+ is built around the concept
 of a state machine. Hence, we believe that most of the testing activity will be
 centered around TLA+ actions. For instance, the <a href="https://github.com/tlaplus/Examples/tree/master/specifications/chang_roberts">LCR</a> specification has two
@@ -739,8 +738,7 @@ which is produced when an error is found.</p>
 generators similar to <a href="https://www.scalacheck.org/">Scalacheck</a>. In contrast to property-based testing, we
 want to run the test not only on some random inputs, but to run it exhaustively
 on all inputs within a predefined bounded scope.</p>
-<p><a id="generators"></a></p>
-<h3 id="51-using-apalache-generators"><a class="header" href="#51-using-apalache-generators">5.1. Using Apalache generators</a></h3>
+<h3 id="51-using-apalache-generators"><a class="header" href="#51-using-apalache-generators"><a id="generators"></a> 5.1. Using Apalache generators</a></h3>
 <p>Let’s go back to the example in <a href="#testAction">Section 3.2</a>.</p>
 <p>In <code>TestAction_n0</code> we used <code>TypeOK</code> to describe the states that can be used as
 the input to the test. While this conceptually works, it often happens that

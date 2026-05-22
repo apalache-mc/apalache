@@ -208,8 +208,7 @@ with string constants, e.g., <code>"1"</code>, <code>"2"</code>, <code>"42"</cod
 translated as constants in the SMT constraints. This simple trick may bring
 your specification into a much simpler theory. Sometimes, this trick allows z3
 to use parallel algorithms.</p>
-<p><a name="const"></a></p>
-<h2 id="constants"><a class="header" href="#constants">Constants</a></h2>
+<h2 id="constants"><a class="header" href="#constants"><a id="const"></a> Constants</a></h2>
 <p>The module <code>Integers</code> defines two constant sets (technically, they are
 operators without arguments):</p>
 <ul>
@@ -223,8 +222,7 @@ In Apalache, the set <code>Nat</code> has the type… <code>Set(Int)</code>.</li
 </ul>
 <hr>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<p><a name="range"></a></p>
-<h3 id="integer-range"><a class="header" href="#integer-range">Integer range</a></h3>
+<h3 id="integer-range"><a class="header" href="#integer-range"><a id="range"></a> Integer range</a></h3>
 <p><strong>Notation:</strong> <code>a..b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a..b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -253,8 +251,7 @@ set()
 
 </code></pre>
 <hr>
-<p><a name="uminus"></a></p>
-<h3 id="unary-integer-negation"><a class="header" href="#unary-integer-negation">Unary integer negation</a></h3>
+<h3 id="unary-integer-negation"><a class="header" href="#unary-integer-negation"><a id="uminus"></a> Unary integer negation</a></h3>
 <p><strong>Notation:</strong> <code>-i</code></p>
 <p><strong>LaTeX notation:</strong> <code>-i</code></p>
 <p><strong>Arguments:</strong> One argument. The result is only defined when the argument
@@ -278,8 +275,7 @@ type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="plus"></a></p>
-<h3 id="integer-addition"><a class="header" href="#integer-addition">Integer addition</a></h3>
+<h3 id="integer-addition"><a class="header" href="#integer-addition"><a id="plus"></a> Integer addition</a></h3>
 <p><strong>Notation:</strong> <code>a + b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a + b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -302,8 +298,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="minus"></a></p>
-<h3 id="integer-subtraction"><a class="header" href="#integer-subtraction">Integer subtraction</a></h3>
+<h3 id="integer-subtraction"><a class="header" href="#integer-subtraction"><a id="minus"></a> Integer subtraction</a></h3>
 <p><strong>Notation:</strong> <code>a - b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a - b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -329,8 +324,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="mult"></a></p>
-<h3 id="integer-multiplication"><a class="header" href="#integer-multiplication">Integer multiplication</a></h3>
+<h3 id="integer-multiplication"><a class="header" href="#integer-multiplication"><a id="mult"></a> Integer multiplication</a></h3>
 <p><strong>Notation:</strong> <code>a * b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a * b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -353,8 +347,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="div"></a></p>
-<h3 id="integer-division"><a class="header" href="#integer-division">Integer division</a></h3>
+<h3 id="integer-division"><a class="header" href="#integer-division"><a id="div"></a> Integer division</a></h3>
 <p><strong>Notation:</strong> <code>a \div b</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/div.png" alt="div"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -419,8 +412,7 @@ to produce the same results as in TLA+:</p>
 
 </code></pre>
 <hr>
-<p><a name="mod"></a></p>
-<h3 id="integer-remainder"><a class="header" href="#integer-remainder">Integer remainder</a></h3>
+<h3 id="integer-remainder"><a class="header" href="#integer-remainder"><a id="mod"></a> Integer remainder</a></h3>
 <p><strong>Notation:</strong> <code>a % b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a % b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -455,8 +447,7 @@ to produce the same results as in TLA+:</p>
 
 </code></pre>
 <hr>
-<p><a name="pow"></a></p>
-<h3 id="integer-exponentiation"><a class="header" href="#integer-exponentiation">Integer exponentiation</a></h3>
+<h3 id="integer-exponentiation"><a class="header" href="#integer-exponentiation"><a id="pow"></a> Integer exponentiation</a></h3>
 <p><strong>Notation:</strong> <code>a^b</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/exp.png" alt="exp"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -508,8 +499,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 
 </code></pre>
 <hr>
-<p><a name="lt"></a></p>
-<h3 id="integer-less-than"><a class="header" href="#integer-less-than">Integer less-than</a></h3>
+<h3 id="integer-less-than"><a class="header" href="#integer-less-than"><a id="lt"></a> Integer less-than</a></h3>
 <p><strong>Notation:</strong> <code>a &lt; b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a &lt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -539,8 +529,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="lte"></a></p>
-<h3 id="integer-less-than-or-equal"><a class="header" href="#integer-less-than-or-equal">Integer less-than-or-equal</a></h3>
+<h3 id="integer-less-than-or-equal"><a class="header" href="#integer-less-than-or-equal"><a id="lte"></a> Integer less-than-or-equal</a></h3>
 <p><strong>Notation:</strong> <code>a &lt;= b</code> or <code>a =&lt; b</code> or <code>a \leq b</code></p>
 <p><strong>LaTeX notation:</strong>  <img src="./img/leq.png" alt="leq"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -570,8 +559,7 @@ False
 
 </code></pre>
 <hr>
-<p><a name="gt"></a></p>
-<h3 id="integer-greater-than"><a class="header" href="#integer-greater-than">Integer greater-than</a></h3>
+<h3 id="integer-greater-than"><a class="header" href="#integer-greater-than"><a id="gt"></a> Integer greater-than</a></h3>
 <p><strong>Notation:</strong> <code>a &gt; b</code></p>
 <p><strong>LaTeX notation:</strong> <code>a &gt; b</code></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -601,8 +589,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="gte"></a></p>
-<h3 id="integer-greater-than-or-equal"><a class="header" href="#integer-greater-than-or-equal">Integer greater-than-or-equal</a></h3>
+<h3 id="integer-greater-than-or-equal"><a class="header" href="#integer-greater-than-or-equal"><a id="gte"></a> Integer greater-than-or-equal</a></h3>
 <p><strong>Notation:</strong> <code>a &gt;= b</code> or <code>a \geq b</code></p>
 <p><strong>LaTeX notation:</strong>  <img src="./img/geq.png" alt="geq"></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
@@ -632,8 +619,7 @@ True
 
 </code></pre>
 <hr>
-<p><a name="eq"></a></p>
-<h3 id="equality-and-inequality"><a class="header" href="#equality-and-inequality">Equality and inequality</a></h3>
+<h3 id="equality-and-inequality"><a class="header" href="#equality-and-inequality"><a id="eq"></a> Equality and inequality</a></h3>
 <p>The operators <code>a = b</code> and <code>a /= b</code> are core operators of TLA+, and thus they are
 not defined in the module <code>Integers</code>, see <a href="./logic.html">Logic</a>.</p>
 

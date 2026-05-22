@@ -375,8 +375,7 @@ mutable dictionaries in the Python examples in the rest of this text.</p>
 <hr>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
 <hr>
-<p><a name="funCtor"></a></p>
-<h3 id="function-constructor"><a class="header" href="#function-constructor">Function constructor</a></h3>
+<h3 id="function-constructor"><a class="header" href="#function-constructor"><a id="funCtor"></a> Function constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ x \in S |-&gt; e ]</code> or <code>[ x \in S, y \in T |-&gt; e ]</code>, or more
 arguments</p>
 <p><strong>LaTeX notation:</strong> <img src="./img/fun-ctor.png" alt="fun-ctor"></p>
@@ -459,8 +458,7 @@ function domain is not known in advance.</p>
 
 </code></pre>
 <hr>
-<p><a name="funSetCtor"></a></p>
-<h3 id="function-set-constructor"><a class="header" href="#function-set-constructor">Function set constructor</a></h3>
+<h3 id="function-set-constructor"><a class="header" href="#function-set-constructor"><a id="funSetCtor"></a> Function set constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ S -&gt; T ]</code></p>
 <p><strong>LaTeX notation:</strong> <img src="./img/funset.png" alt="funset"></p>
 <p><strong>Arguments:</strong> Two arguments. Both have to be sets. Otherwise, the result is
@@ -489,8 +487,7 @@ Apalache flags a static type error.</p>
 functions. It should be similar in spirit to <a href="./examples/subset.py">subset.py</a>,
 but it should enumerate strings over the alphabet of <code>0..(Cardinality(T) - 1)</code>
 values, rather than over the alphabet of 2 values.</p>
-<p><a name="funApp"></a></p>
-<h3 id="function-application"><a class="header" href="#function-application">Function application</a></h3>
+<h3 id="function-application"><a class="header" href="#function-application"><a id="funApp"></a> Function application</a></h3>
 <p><strong>Notation:</strong> <code>f[e]</code> or <code>f[e_1, ..., e_n]</code></p>
 <p><strong>LaTeX notation:</strong> <code>f[e]</code> or <code>f[e_1, ..., e_n]</code></p>
 <p><strong>Arguments:</strong> At least two arguments. The first one should be a function,
@@ -541,8 +538,7 @@ function domain is not known in advance.</p>
 
 </code></pre>
 <hr>
-<p><a name="except"></a></p>
-<h3 id="function-replacement"><a class="header" href="#function-replacement">Function replacement</a></h3>
+<h3 id="function-replacement"><a class="header" href="#function-replacement"><a id="except"></a> Function replacement</a></h3>
 <p><strong>Notation:</strong> <code>[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]</code></p>
 <p><strong>LaTeX notation:</strong> <code>[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]</code></p>
 <p><strong>Arguments:</strong> At least three arguments. The first one should be a function,
@@ -645,8 +641,7 @@ code would be less efficient than the idiomatic Python code.</p>
 
 </code></pre>
 <hr>
-<p><a name="domain"></a></p>
-<h3 id="function-domain"><a class="header" href="#function-domain">Function domain</a></h3>
+<h3 id="function-domain"><a class="header" href="#function-domain"><a id="domain"></a> Function domain</a></h3>
 <p><strong>Notation:</strong> <code>DOMAIN f</code></p>
 <p><strong>LaTeX notation:</strong> <code>DOMAIN f</code></p>
 <p><strong>Arguments:</strong> One argument, which should be a function
