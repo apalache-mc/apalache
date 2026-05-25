@@ -261,8 +261,7 @@ mutable dictionaries in the Python examples in the rest of this text.
 
 ----------------------------------------------------------------------------
 
-<a name="funCtor"></a>
-### Function constructor
+### <a id="funCtor"></a> Function constructor
 
 **Notation:** `[ x \in S |-> e ]` or `[ x \in S, y \in T |-> e ]`, or more
 arguments
@@ -364,8 +363,7 @@ function domain is not known in advance.
 
 ----------------------------------------------------------------------------
 
-<a name="funSetCtor"></a>
-### Function set constructor
+### <a id="funSetCtor"></a> Function set constructor
 
 **Notation:** `[ S -> T ]`
 
@@ -411,8 +409,7 @@ functions. It should be similar in spirit to [subset.py](./examples/subset.py),
 but it should enumerate strings over the alphabet of `0..(Cardinality(T) - 1)`
 values, rather than over the alphabet of 2 values.
 
-<a name="funApp"></a>
-### Function application
+### <a id="funApp"></a> Function application
 
 **Notation:** `f[e]` or `f[e_1, ..., e_n]`
 
@@ -480,8 +477,7 @@ function domain is not known in advance.
 
 ----------------------------------------------------------------------------
 
-<a name="except"></a>
-### Function replacement
+### <a id="except"></a> Function replacement
 
 **Notation:** `[f EXCEPT ![a_1] = e_1, ..., ![a_n] = e_n]`
 
@@ -615,8 +611,7 @@ code would be less efficient than the idiomatic Python code.
 
 ----------------------------------------------------------------------------
 
-<a name="domain"></a>
-### Function domain
+### <a id="domain"></a> Function domain
 
 **Notation:** `DOMAIN f`
 
