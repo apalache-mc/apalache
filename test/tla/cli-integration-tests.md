@@ -1717,6 +1717,28 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check Bug2107 succeeds (temporal): regression for #2107
+
+Regression test for https://github.com/apalache-mc/apalache/issues/2107.
+
+```sh
+$ apalache-mc check --temporal=P1 Bug2107.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=P2 Bug2107.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=P3 Bug2107.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/apalache-mc/apalache/issues/1152
