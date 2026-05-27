@@ -20,7 +20,7 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.11.0" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.14.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.15.0"
     val commonsIo = "commons-io" % "commons-io" % "2.22.0"
     private lazy val cvc5Version = "1.3.4"
     // The cvc5 POM publishes native jars as classifiers, not transitive dependencies.
