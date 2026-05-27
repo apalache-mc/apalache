@@ -20,8 +20,7 @@ questions:
 Everybody has a different opinion here. It would be great to use
 the native TLA+ constructs to express types.
 
-<a name="typesAsTypeOk"></a>
-### 1.1. TypeOK syntax
+### <a id="typesAsTypeOk"></a> 1.1. TypeOK syntax
 
 The only way to write types in the `TypeOK` style is by set membership.
 For instance:
@@ -56,8 +55,7 @@ THEOREM FooType ==
   \A a \in Int: \A b \in STRING: Foo(a, b) \in Int
 ```
 
-<a name="typesAsTerms"></a>
-### 1.2. Types as terms
+### <a id="typesAsTerms"></a> 1.2. Types as terms
 
 A classical way of writing types is by using logical terms (or algebraic datatypes).
 To this end, we can define a special module `Types.tla`:
@@ -134,8 +132,7 @@ e.g., by writing `x <: T`, we can write the above examples as follows:
   * __Here we have to pull lambda operators, but at least it is possible to write
     down a type annotation.__
 
-<a name="typesAsStrings"></a>
-### 1.3. Types as strings
+### <a id="typesAsStrings"></a> 1.3. Types as strings
 
 Let us introduce the following grammar for types:
 
@@ -219,8 +216,7 @@ a module `M` and then uses an unnamed instance `INSTANCE M` in a module `M2`,
 then `M` and `M2` will clash on the operator `<:`. We should define the operator
 once in a special module `Types` or `Apalache`.
 
-<a name="annotationsAsAssumptions"></a>
-### 2.2. Type annotations as assumptions
+### <a id="annotationsAsAssumptions"></a> 2.2. Type annotations as assumptions
 
 One can use TLA+ syntax to write assumptions and assertions about the types.
 We are talking only about type assumptions here.
