@@ -47,7 +47,8 @@ $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
-    [--smt-encoding=(oopsla19|arrays)] \
+    [--smt-solver=(z3|cvc5)] \
+    [--smt-encoding=(oopsla19|arrays|funArrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
@@ -72,9 +73,12 @@ The arguments are as follows:
     - `--algo` lets you to choose the search algorithm: `incremental` is using the incremental SMT solver, `offline` is
       using the non-incremental
       (offline) SMT solver
-    - `--smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses QF_UFNIA, and
-      `arrays` (experimental) and `funArrays` (experimental) use SMT arrays with extensionality. This parameter can also
-      be set via the `SMT_ENCODING` environment variable. See the [alternative SMT encoding using arrays] for details.
+    - `--smt-solver` lets you choose the SMT solver backend: `z3` (default) or `cvc5` (experimental). This parameter can
+      also be set via the `SMT_SOLVER` environment variable.
+    - `--smt-encoding` lets you choose how the SMT instances are encoded: `oopsla19` (default) uses uninterpreted sorts
+      and integer arithmetic; `arrays` (experimental) and `funArrays` (experimental) use SMT arrays with extensionality.
+      This parameter can also be set via the `SMT_ENCODING` environment variable. See the [alternative SMT encoding
+      using arrays] for details.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.

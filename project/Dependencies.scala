@@ -22,6 +22,16 @@ object Dependencies {
       "commons-beanutils" % "commons-beanutils" % "1.11.0" // Apparently an untracked dependency of commonsConfiguration2
     val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.15.0"
     val commonsIo = "commons-io" % "commons-io" % "2.22.0"
+    private lazy val cvc5Version = "1.3.4"
+    // The cvc5 POM publishes native jars as classifiers, not transitive dependencies.
+    // The base cvc5 jar only has Java classes, so add the native classifier jars explicitly.
+    val cvc5 = "io.github.cvc5" % "cvc5" % cvc5Version
+    val cvc5LinuxAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("linux-aarch_64")
+    val cvc5LinuxX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("linux-x86_64")
+    val cvc5MacosAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("osx-aarch_64")
+    val cvc5MacosX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("osx-x86_64")
+    val cvc5WindowsAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("windows-aarch_64")
+    val cvc5WindowsX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("windows-x86_64")
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion

@@ -33,6 +33,8 @@ object FineTuningParser {
       "rewriter.shortCircuit" -> BoolFieldType(),
       // keeping for backwards compatibility
       "smt.randomSeed" -> UnsignedIntFieldType(),
+      // setting the SMT logic in CVC5
+      "cvc5.smt.logic" -> StringFieldType(),
       // For the parameters starting with "z3.", see:
       // https://microsoft.github.io/z3guide/programming/Parameters/
       // Some of the fine-tuning parameters of Z3 are irrelevant for Apalache.

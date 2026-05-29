@@ -42,7 +42,7 @@ class OfflineExecutionContext(var rewriter: SymbStateRewriter, renaming: Increme
    *   when recovery is impossible
    */
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
-    val solver = RecordingSolverContext.createZ3(Some(snapshot.smtLog), snapshot.solverConfig)
+    val solver = RecordingSolverContext.create(Some(snapshot.smtLog), snapshot.solverConfig)
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
 
     val newRewriter = rewriter match {

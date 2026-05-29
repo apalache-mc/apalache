@@ -12,7 +12,7 @@ alt="Apalache Logo">
 [![build](https://github.com/apalache-mc/apalache/actions/workflows/main.yml/badge.svg)](https://github.com/apalache-mc/apalache/actions/workflows/main.yml)
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
-[Microsoft Z3][]. Apalache can check inductive invariants (for fixed or bounded
+[Microsoft Z3][] and [CVC5][]. Apalache can check inductive invariants (for fixed or bounded
 parameters) and check safety of bounded executions (bounded model checking). To
 see the list of supported TLA+ constructs, check the [supported features][]. In
 general, Apalache runs under the same assumptions as [TLC][]. However, Apalache
@@ -131,6 +131,7 @@ Related reports and publications can be found at the
 
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
+[cvc5]: https://github.com/cvc5/cvc5
 [supported features]: https://apalache-mc.org/docs/apalache/features.html
 [tlc]: http://lamport.azurewebsites.net/tla/tools.html
 [leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html

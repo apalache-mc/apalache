@@ -16,7 +16,7 @@ trait TestRecordingSolverContext extends AnyFunSuite {
   private val int42: BuilderT = tla.int(42)
 
   test("operations proxied") {
-    val solver = RecordingSolverContext.createZ3(None, solverConfig)
+    val solver = RecordingSolverContext.create(None, solverConfig)
     val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toBuilder, int42))
@@ -25,7 +25,7 @@ trait TestRecordingSolverContext extends AnyFunSuite {
   }
 
   test("write and read") {
-    val solver = RecordingSolverContext.createZ3(None, solverConfig)
+    val solver = RecordingSolverContext.create(None, solverConfig)
     val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toBuilder, int42))
@@ -37,14 +37,14 @@ trait TestRecordingSolverContext extends AnyFunSuite {
     solver.assertGroundExpr(tla.gt(x.toBuilder, tla.int(1000)))
     assert(!solver.sat())
     // restore the context
-    val restoredSolver = RecordingSolverContext.createZ3(Some(log), solverConfig)
+    val restoredSolver = RecordingSolverContext.create(Some(log), solverConfig)
     // the restored context should be satisfiable
     assert(restoredSolver.sat())
     assert(restoredSolver.evalGroundExpr(x.toBuilder) == int42.build)
   }
 
   test("pop on empty") {
-    val solver = RecordingSolverContext.createZ3(None, solverConfig)
+    val solver = RecordingSolverContext.create(None, solverConfig)
     assertThrows[IllegalArgumentException](solver.pop(2))
   }
 }

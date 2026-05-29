@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.tla.bmcmt.smt.Z3SolverContext
+import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.UnknownT
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, SetT1}
 import org.scalatest.funsuite.AnyFunSuite
@@ -10,7 +10,7 @@ import org.scalatest.funsuite.AnyFunSuite
  * encodings).
  */
 trait TestArena extends AnyFunSuite {
-  protected var solver: Z3SolverContext = _
+  protected var solver: SolverContext = _
 
   test("create cells") {
     val emptyArena = Arena.create(solver)

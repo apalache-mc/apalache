@@ -9,7 +9,7 @@ checker [TLC][].
 Whereas TLC enumerates the states produced by the behaviors of a TLA+
 specification, Apalache translates the verification problem to a set of logical
 constraints. These constraints are solved by an [SMT solver][SMT], for example,
-by [Microsoft Z3][]. That is, Apalache operates on formulas (i.e.,
+by [Microsoft Z3][] or [CVC5][]. That is, Apalache operates on formulas (i.e.,
 _symbolically_), not by enumerating states one by one (i.e., _state
 enumeration_).
 
@@ -36,6 +36,7 @@ Apalache is working under the following assumptions:
 [TLC]: https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide-tlc&unhideDiv=tlc
 [SMT]: https://en.wikipedia.org/wiki/Satisfiability_modulo_theories
 [Microsoft Z3]: https://github.com/Z3Prover/z3
+[CVC5]: https://github.com/cvc5/cvc5
 [Informal Systems]: https://informal.systems/
 
 ## Conventions

@@ -9,22 +9,17 @@ import com.typesafe.scalalogging.LazyLogging
 object RecordingSolverContext {
 
   /**
-   * A factory method to create a recording context on top of a Z3 solver context. The entries in the parent log are
-   * replayed right after the start.
-   * @param parentLog
-   *   the parent log for the solver
-   * @param config
-   *   solver config
-   * @return
-   *   a recording solver that works on top of Z3
+   * A factory method to create a recording context on top of the solver backend configured in [[SolverConfig]].
    */
-  def createZ3(
+  def create(
       parentLog: Option[SmtLog],
       config: SolverConfig): RecordingSolverContext = {
-    val context = new RecordingSolverContext(parentLog, config, new Z3SolverContext(config))
+    val solverImpl = SolverContextFactory.create(config)
+    val context = new RecordingSolverContext(parentLog, config, solverImpl)
     parentLog.foreach(_.replay(context.solverImpl))
     context
   }
+
 }
 
 /**
