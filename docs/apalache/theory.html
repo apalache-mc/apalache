@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "../searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8bf92157.js"></script>
+        <script src="../toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -191,8 +191,8 @@ allows us to partition the action <code>Next</code> into a disjunction of simple
 </li>
 <li>
 <p>Apalache translates operators <code>Init</code> and <code>A_1, ..., A_n</code> to SMT formulas.
-This allows us to explore bounded executions with an SMT solver (we are using
-<a href="https://github.com/Z3Prover/z3">Microsoft’s Z3</a>). For instance, a sequence of
+This allows us to explore bounded executions with an SMT solver. Z3 is the default
+backend, and CVC5 is also available as an experimental backend. For instance, a sequence of
 <code>k</code> steps <code>s_0, s_1, ..., s_k</code>, all of which execute action <code>A_1</code>, is encoded
 as a formula <code>Run(k)</code> that looks as follows:</p>
 </li>

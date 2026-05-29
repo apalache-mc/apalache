@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8bf92157.js"></script>
+        <script src="toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -3798,7 +3798,7 @@ checker <a href="https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide
 <p>Whereas TLC enumerates the states produced by the behaviors of a TLA+
 specification, Apalache translates the verification problem to a set of logical
 constraints. These constraints are solved by an <a href="https://en.wikipedia.org/wiki/Satisfiability_modulo_theories">SMT solver</a>, for example,
-by <a href="https://github.com/Z3Prover/z3">Microsoft Z3</a>. That is, Apalache operates on formulas (i.e.,
+by <a href="https://github.com/Z3Prover/z3">Microsoft Z3</a> or <a href="https://github.com/cvc5/cvc5">CVC5</a>. That is, Apalache operates on formulas (i.e.,
 <em>symbolically</em>), not by enumerating states one by one (i.e., <em>state
 enumeration</em>).</p>
 <h3 id="shall-i-use-apalache-or-tlc"><a class="header" href="#shall-i-use-apalache-or-tlc">Shall I use Apalache or TLC?</a></h3>
@@ -3832,9 +3832,9 @@ Apalache source code.</li>
 </ol>
 <p>If you just want to try the tool, we recommend using the <a href="#prebuilt-packages">prebuilt package</a>.</p>
 <h2 id="system-requirements"><a class="header" href="#system-requirements">System requirements</a></h2>
-<p><strong>Memory</strong>: Apalache uses Microsoft Z3 as a backend SMT solver, and the required
-memory largely depends on Z3. We recommend to allocate at least 4GB of memory
-for the tool.</p>
+<p><strong>Memory</strong>: Apalache uses a backend SMT solver, Microsoft Z3 by default, and the
+required memory largely depends on the selected solver and specification. We
+recommend to allocate at least 4GB of memory for the tool.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="prebuilt-packages"><a class="header" href="#prebuilt-packages">Prebuilt Packages</a></h1>
 <p>You need to download and install a Java Virtual Machine first.
@@ -4027,7 +4027,8 @@ It terminates successfully if there are no invariant violations.</p>
     [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
-    [--smt-encoding=(oopsla19|arrays)] \
+    [--smt-solver=(z3|cvc5)] \
+    [--smt-encoding=(oopsla19|arrays|funArrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
@@ -4056,9 +4057,12 @@ separated list, <em>optional</em></li>
 <li><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
 using the non-incremental
 (offline) SMT solver</li>
-<li><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
-<code>arrays</code> (experimental) and <code>funArrays</code> (experimental) use SMT arrays with extensionality. This parameter can also
-be set via the <code>SMT_ENCODING</code> environment variable. See the <a href="#adr-011-alternative-smt-encoding-using-arrays">alternative SMT encoding using arrays</a> for details.</li>
+<li><code>--smt-solver</code> lets you choose the SMT solver backend: <code>z3</code> (default) or <code>cvc5</code> (experimental). This parameter can
+also be set via the <code>SMT_SOLVER</code> environment variable.</li>
+<li><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses uninterpreted sorts
+and integer arithmetic; <code>arrays</code> (experimental) and <code>funArrays</code> (experimental) use SMT arrays with extensionality.
+This parameter can also be set via the <code>SMT_ENCODING</code> environment variable. See the <a href="#adr-011-alternative-smt-encoding-using-arrays">alternative SMT encoding
+using arrays</a> for details.</li>
 <li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
 many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
 invariant. Default: true.</li>
@@ -5318,7 +5322,7 @@ Inv ==
     3 \notin S
 =========================================================================
 </code></pre>
-<p>Apalache has its own bottlenecks. As it’s using the SMT solver z3,
+<p>Apalache has its own bottlenecks. As it is using a backend SMT solver,
 we cannot precisely profile your TLA+ specification. However, we can profile
 the number of SMT variables and constraints that Apalache produces for different
 parts of your specification. To activate this profiling mode, use the option
@@ -5379,8 +5383,8 @@ allows us to partition the action <code>Next</code> into a disjunction of simple
 </li>
 <li>
 <p>Apalache translates operators <code>Init</code> and <code>A_1, ..., A_n</code> to SMT formulas.
-This allows us to explore bounded executions with an SMT solver (we are using
-<a href="https://github.com/Z3Prover/z3">Microsoft’s Z3</a>). For instance, a sequence of
+This allows us to explore bounded executions with an SMT solver. Z3 is the default
+backend, and CVC5 is also available as an experimental backend. For instance, a sequence of
 <code>k</code> steps <code>s_0, s_1, ..., s_k</code>, all of which execute action <code>A_1</code>, is encoded
 as a formula <code>Run(k)</code> that looks as follows:</p>
 </li>
@@ -5466,7 +5470,23 @@ after each step, we can do that after the algorithm has made a good number of
 steps.
 You can also use this option to check different parts of an invariant on
 different machines to speed up turnaround time.</p>
-<h2 id="z3-tuning-parameters"><a class="header" href="#z3-tuning-parameters">Z3 Tuning Parameters</a></h2>
+<h2 id="solver-tuning-parameters"><a class="header" href="#solver-tuning-parameters">Solver tuning parameters</a></h2>
+<p>Apalache supports solver-specific tuning under solver namespaces. Z3-specific
+parameters use <code>z3.*</code>. CVC5-specific parameters use <code>cvc5.*</code>.</p>
+<h3 id="cvc5-smt-logic"><a class="header" href="#cvc5-smt-logic">CVC5 SMT logic</a></h3>
+<p><code>cvc5.smt.logic=&lt;logic&gt;</code> sets the SMT logic used by the CVC5 backend.</p>
+<p>By default, Apalache uses linear integer arithmetic logics with CVC5:</p>
+<ul>
+<li><code>QF_UFLIA</code> for the default <code>oopsla19</code> encoding and <code>funArrays</code></li>
+<li><code>QF_AUFLIA</code> for <code>arrays</code></li>
+</ul>
+<p>These defaults improve CVC5 performance on specifications that only need linear
+integer arithmetic. If your specification uses nonlinear integer arithmetic, for
+example multiplication of two symbolic integer values, configure CVC5 with a
+nonlinear logic:</p>
+<pre><code class="language-sh">--tuning-options=cvc5.smt.logic=QF_UFNIA
+</code></pre>
+<h3 id="z3-parameters"><a class="header" href="#z3-parameters">Z3 parameters</a></h3>
 <p>Z3 has a very large number of <a href="https://microsoft.github.io/z3guide/programming/Parameters">Z3 Parameters</a>. If you have a CLI version of Z3
 installed, you can see a complete list of supported parameters by running <code>z3</code>:</p>
 <pre><code class="language-sh">z3 -pd
@@ -5486,9 +5506,10 @@ z3.smt.restart_strategy = 3
 However, some of these parameters fail in the solver, even when they work in the
 command line. Hence, you have to experiment with the choice of parameters.</p>
 <h2 id="randomization"><a class="header" href="#randomization">Randomization</a></h2>
-<p><code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via <code>z3</code>’s parameters
-<code>sat.random_seed</code> and <code>smt.random_seed</code>). Note that this parameter sets the seed
-across the solvers for various logic theories in z3.</p>
+<p><code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to the selected SMT backend. For
+Z3, Apalache maps this to Z3’s <code>sat.random_seed</code> and <code>smt.random_seed</code>
+parameters. For CVC5, Apalache maps this to CVC5’s <code>seed</code> and
+<code>sat-random-seed</code> options.</p>
 <h2 id="translation-to-smt"><a class="header" href="#translation-to-smt">Translation to SMT</a></h2>
 <h3 id="short-circuiting"><a class="header" href="#short-circuiting">Short-circuiting</a></h3>
 <p><code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to
@@ -5820,7 +5841,7 @@ system distinguishes records from general functions.</p>
 <tbody>
 <tr><td><code>"c1...c_n"</code></td><td style="text-align: center">✔</td><td style="text-align: center">-</td><td>A string is always mapped to a unique uninterpreted constant</td></tr>
 <tr><td><code>STRING</code></td><td style="text-align: center">✖</td><td style="text-align: center">-</td><td>It is an infinite set. We cannot handle infinite sets.</td></tr>
-<tr><td><code>d1...d_n</code></td><td style="text-align: center">✔</td><td style="text-align: center">-</td><td>As long as the SMT solver (Z3) accepts that large number</td></tr>
+<tr><td><code>d1...d_n</code></td><td style="text-align: center">✔</td><td style="text-align: center">-</td><td>As long as the selected SMT solver accepts that large number</td></tr>
 <tr><td><code>d1...d_n.d_n+1...d_m</code></td><td style="text-align: center">✖</td><td style="text-align: center">-</td><td>Technical issue. We will implement it upon a user request.</td></tr>
 </tbody>
 </table>
@@ -18310,6 +18331,163 @@ In a nutshell, the problem was that, to retain information from ephemeral expres
 Between the two passes, this data structure needs to be stored either in memory or to a file (and read later).</p>
 <p>Compared to that, the single-traversal approach of the current rewriting rules
 actually has a much better memory footprint, since only the information relevant to the current sub-tree scope needs to be retained.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adr-025-cvc5-solver-backend-integration"><a class="header" href="#adr-025-cvc5-solver-backend-integration">ADR-025: CVC5 solver backend integration</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>authors</th><th style="text-align: right">last revised</th></tr>
+</thead>
+<tbody>
+<tr><td>Thomas Pani</td><td style="text-align: right">2026-05-11</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary-12">Summary (Overview)</a></li>
+<li><a href="#context-11">Context (Problem)</a></li>
+<li><a href="#options-10">Options (Alternatives)</a></li>
+<li><a href="#solution-10">Solution (Decision)</a></li>
+<li><a href="#consequences-11">Consequences (Retrospection)</a></li>
+<li><a href="#references-2">References</a></li>
+</ul>
+<h2 id="summary-12"><a class="header" href="#summary-12">Summary</a></h2>
+<p>We will add CVC5 as a native solver backend by implementing a <code>Cvc5SolverContext</code> behind Apalache’s
+existing <code>SolverContext</code> interface. Z3 remains the default solver while CVC5 is introduced as an opt-in
+backend and validated against the current SMT encodings.</p>
+<p>We will not use <code>tools.aqua:cvc5-turnkey</code>, because it lags current CVC5 releases. We will also not introduce
+JavaSMT or KSMT for the first integration. Those abstractions remain possible future options, but the initial
+CVC5 backend should preserve direct access to CVC5 options, model APIs, statistics, and solver-specific behavior.</p>
+<h2 id="context-11"><a class="header" href="#context-11">Context</a></h2>
+<p>Apalache currently exposes a solver-independent <code>SolverContext</code> interface, but the only production implementation is
+<code>Z3SolverContext</code>. That class has multiple responsibilities. In addition to calling Z3, it contains backend-specific
+code for several parts of the SMT integration, including:</p>
+<ol>
+<li>Translating simplified TLA+ expressions into solver terms.</li>
+<li>Constructing sorts for the OOPSLA19, Arrays, and FunArrays encodings.</li>
+<li>Maintaining solver-term caches across push/pop levels.</li>
+<li>Evaluating ground expressions in a model.</li>
+<li>Handling debug SMT logging, metrics, timeouts, statistics, and solver-specific tuning parameters.</li>
+</ol>
+<p>This means that adding cvc5 is primarily a solver-context implementation problem, not only a dependency problem.
+An integration layer must preserve the existing incremental checking behavior, arena/cell naming conventions, model
+decoding expectations, SMT profiling, and timeout semantics.</p>
+<p>The packaging situation has changed since early cvc5 Java integrations.
+<code>tools.aqua:cvc5-turnkey</code> exists, but it is stale relative to cvc5 releases and
+should not be the dependency that gates Apalache’s cvc5 support. Therefore,
+Apalache should treat the official <code>io.github.cvc5:cvc5</code> artifact as the preferred native dependency
+path.</p>
+<h2 id="options-10"><a class="header" href="#options-10">Options</a></h2>
+<ol>
+<li>
+<p>Implement <code>Cvc5SolverContext</code> directly against the cvc5 Java API.</p>
+<p>This mirrors the existing architecture: keep Apalache’s <code>SolverContext</code> as the internal abstraction and add another
+concrete backend next to <code>Z3SolverContext</code>. The cvc5 Java API exposes a <code>Solver</code> entry point, Java classes for
+<code>Sort</code>, <code>Term</code>, <code>Kind</code>, <code>Result</code>, and related concepts, plus model value and assertion-stack operations that map
+naturally to the current context responsibilities.</p>
+<p>This option keeps access to cvc5-specific options, model APIs, statistics, and future proof or unsat-core features.
+It also lets us reproduce the Z3 context’s cache discipline and logging exactly where Apalache needs it. The cost is
+that term construction, sort construction, timeout handling, and model decoding will be duplicated in another
+backend-specific implementation.</p>
+</li>
+<li>
+<p>Use JavaSMT as the common solver integration layer.</p>
+<p>JavaSMT provides a solver-independent <code>SolverContext</code>, formula managers for arrays, integers, Booleans, UFs, and
+other theories, plus prover environments with assertion stacks. It also has a published cvc5 solver artifact.
+JavaSMT is the more mature solver-abstraction candidate by public project signals: as of 2026-05-11, its GitHub
+mirror has 236 stars, 56 forks, 6,362 commits, 83 open issues, and 28 open pull requests. It also has publications
+from 2016 and 2021, and GitHub lists JavaSMT 6.0.0 as the latest release in 2026.</p>
+<p>This option is attractive if the goal is to make Z3, cvc5, and future solvers share one formula construction layer.
+However, it is a larger architectural migration than adding cvc5. Apalache would have to move the current
+<code>Z3SolverContext</code> expression construction onto JavaSMT’s formula managers or introduce a second internal expression
+representation. We would also depend on JavaSMT’s common-denominator API for solver options, timeout behavior,
+unsupported operations, statistics, model extraction, and exact SMT-LIB serialization. That abstraction may hide
+details that are useful while validating cvc5 against Z3 on Apalache’s encodings.</p>
+</li>
+<li>
+<p>Use KSMT as the common solver integration layer.</p>
+<p>KSMT provides a solver-agnostic expression representation, Java/Kotlin APIs, cvc5 support, native delivery for common
+operating systems, and support for the theories Apalache uses: arrays, uninterpreted functions, and arithmetic. It
+also advertises portfolio solving and running solvers in separate processes, which is relevant for timeout and native
+solver crash isolation. KSMT is less mature by public project signals: as of 2026-05-11, its GitHub repository has 38
+stars, 16 forks, 135 commits, 4 open issues, and 8 open pull requests. GitHub lists <code>0.6.4</code> as the latest release in
+2025.</p>
+<p>This option is worth revisiting if Apalache wants a broader solver abstraction later, especially if solver delivery or
+process isolation becomes more important than direct solver API access. For the first cvc5 backend, it is still a
+larger dependency and architectural shift than needed, and it would require validating all model-decoding and
+incremental-solving semantics used by Apalache.</p>
+</li>
+<li>
+<p>Emit SMT-LIB and invoke a cvc5 process.</p>
+<p>This avoids JNI packaging and Java binding concerns. It could reuse <code>RecordingSolverContext</code>-style SMT-LIB output and
+call an external <code>cvc5</code> binary.</p>
+<p>This is useful as an oracle, debugging mode, or CI comparison target, but it is not a good first production backend
+for Apalache’s current incremental checker. Maintaining interactive push/pop, timeout, model-value queries, and arena
+decoding through a process protocol would add its own adapter complexity while giving up native API type safety.</p>
+</li>
+<li>
+<p>Use <code>tools.aqua:cvc5-turnkey</code>.</p>
+<p>This would resemble the current <code>tools.aqua:z3-turnkey</code> dependency style. It is not acceptable as the main path
+because the published cvc5-turnkey artifact lags current cvc5 releases.</p>
+</li>
+</ol>
+<h2 id="solution-10"><a class="header" href="#solution-10">Solution</a></h2>
+<p>Implement cvc5 support as a native backend. This means adding a <code>Cvc5SolverContext</code> that implements Apalache’s
+existing <code>SolverContext</code> interface, keeping Z3 as the default solver, and exposing cvc5 as an opt-in backend until
+parity and performance are established.</p>
+<p>Use the official cvc5 Java API through <code>io.github.cvc5:cvc5</code> when the artifact is available for Apalache’s supported
+platforms. Do not use <code>tools.aqua:cvc5-turnkey</code> for the production integration. Do not introduce JavaSMT or KSMT in
+the first integration.</p>
+<p>The initial implementation should be intentionally conservative:</p>
+<ol>
+<li>Target the OOPSLA19 encoding first, since it is the primary encoding used by Apalache. After that path is stable,
+evaluate the theory support needed by the Arrays and FunArrays encodings separately. They use different SMT array
+theory features and should not block the first cvc5 backend.</li>
+<li>Preserve the current cell/sort naming conventions so that existing logging, recording, and model-decoding assumptions
+remain easy to compare against Z3.</li>
+<li>Add a solver choice to configuration separately from <code>smtEncoding</code>; those are independent dimensions.</li>
+<li>Keep backend-neutral SMT controls separate from solver-specific options. For example, <code>smt.randomSeed</code>,
+<code>smt.statsSec</code>, and SMT timeouts are concepts Apalache can define once and map to each backend. Low-level solver
+parameters should remain namespaced, for example <code>z3.*</code> and <code>cvc5.*</code>.</li>
+<li>Add differential property-based tests between Z3 and cvc5 at the <code>SolverContext</code> level for operations supported by
+both implementations.</li>
+<li>Use SMT-LIB dumps as a comparison aid.</li>
+</ol>
+<p>The implemented backend uses the official <code>io.github.cvc5:cvc5:1.3.4</code> artifacts and explicitly includes the published
+native classifier jars for Linux, macOS, and Windows on <code>x86_64</code> and <code>aarch_64</code>. CVC5 is selected with
+<code>--smt-solver=cvc5</code> or the corresponding checker configuration value. The backend exposes <code>cvc5.smt.logic</code> as a
+solver-specific tuning key. We noticed performance degradation if we do not define a logic via <code>(set-logic ...)</code>,
+or set it too liberal (e.g., <code>QF_UFNIA</code> when <code>QF_UFLIA</code> would suffice). Thus, the default cvc5 logic is <code>QF_UFLIA</code>
+for OOPSLA19. Specifications that require nonlinear integer arithmetic can use <code>cvc5.smt.logic=QF_UFNIA</code>.</p>
+<h2 id="consequences-11"><a class="header" href="#consequences-11">Consequences</a></h2>
+<p>This decision keeps the first cvc5 integration close to the existing code and reduces the amount of architecture that
+must change before we can compare solver behavior. It also preserves access to cvc5-specific options and model APIs,
+which is important while diagnosing differences from Z3.</p>
+<p>The main downside is duplicated backend code. <code>Cvc5SolverContext</code> will likely share a large shape with
+<code>Z3SolverContext</code>, and some duplication is acceptable during the first integration. After parity is established, we
+should extract only the pieces that are demonstrably solver-independent, for example cell-cache lifetime, arena
+consistency checks, metrics accounting, and solver-selection plumbing. This will likely need a larger refactoring.</p>
+<p>JavaSMT and KSMT remain viable future options. The native cvc5 backend should give us evidence for whether adopting a
+solver-agnostic formula layer would simplify Apalache or merely move backend-specific behavior into escape hatches.</p>
+<p>The implementation requires dependency and CI work. cvc5 ships native code behind the Java API, so CI must verify
+native loading on supported platforms and document any unsupported platform combinations. If official Maven artifacts
+lag significantly behind a new cvc5 release, Apalache should prefer staying on the latest compatible official artifact
+over depending on stale packaging.</p>
+<h2 id="references-2"><a class="header" href="#references-2">References</a></h2>
+<ol>
+<li>cvc5 repository and releases: <a href="https://github.com/cvc5/cvc5">https://github.com/cvc5/cvc5</a></li>
+<li>cvc5 Java API documentation: <a href="https://cvc5.github.io/docs/cvc5-1.2.0/api/java/java.html">https://cvc5.github.io/docs/cvc5-1.2.0/api/java/java.html</a></li>
+<li>cvc5 Java <code>Solver</code> API documentation: <a href="https://cvc5.github.io/docs/cvc5-1.1.0/api/java/io/github/cvc5/Solver.html">https://cvc5.github.io/docs/cvc5-1.1.0/api/java/io/github/cvc5/Solver.html</a></li>
+<li>Official cvc5 Maven artifact index: <a href="https://mvnrepository.com/artifact/io.github.cvc5/cvc5">https://mvnrepository.com/artifact/io.github.cvc5/cvc5</a></li>
+<li>cvc5-turnkey Maven index: <a href="https://repo1.maven.org/maven2/tools/aqua/cvc5-turnkey/">https://repo1.maven.org/maven2/tools/aqua/cvc5-turnkey/</a></li>
+<li>JavaSMT <code>SolverContext</code> API: <a href="https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/SolverContext.html">https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/SolverContext.html</a></li>
+<li>JavaSMT <code>FormulaManager</code> API: <a href="https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/FormulaManager.html">https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/FormulaManager.html</a></li>
+<li>JavaSMT cvc5 solver artifact: <a href="https://central.sonatype.com/artifact/org.sosy-lab/javasmt-solver-cvc5">https://central.sonatype.com/artifact/org.sosy-lab/javasmt-solver-cvc5</a></li>
+<li>JavaSMT GitHub repository and releases: <a href="https://github.com/sosy-lab/java-smt">https://github.com/sosy-lab/java-smt</a></li>
+<li>KSMT overview and solver/theory support: <a href="https://ksmt.io/">https://ksmt.io/</a></li>
+<li>KSMT GitHub repository and releases: <a href="https://github.com/UnitTestBot/ksmt">https://github.com/UnitTestBot/ksmt</a></li>
+</ol>
 
                     </main>
 

@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "../searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8bf92157.js"></script>
+        <script src="../toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -225,7 +225,8 @@ It terminates successfully if there are no invariant violations.</p>
     [--algo=(incremental|offline)] \
     [--discard-disabled] [--no-deadlock] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
-    [--smt-encoding=(oopsla19|arrays)] \
+    [--smt-solver=(z3|cvc5)] \
+    [--smt-encoding=(oopsla19|arrays|funArrays)] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
@@ -254,9 +255,12 @@ separated list, <em>optional</em></li>
 <li><code>--algo</code> lets you to choose the search algorithm: <code>incremental</code> is using the incremental SMT solver, <code>offline</code> is
 using the non-incremental
 (offline) SMT solver</li>
-<li><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses QF_UFNIA, and
-<code>arrays</code> (experimental) and <code>funArrays</code> (experimental) use SMT arrays with extensionality. This parameter can also
-be set via the <code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding using arrays</a> for details.</li>
+<li><code>--smt-solver</code> lets you choose the SMT solver backend: <code>z3</code> (default) or <code>cvc5</code> (experimental). This parameter can
+also be set via the <code>SMT_SOLVER</code> environment variable.</li>
+<li><code>--smt-encoding</code> lets you choose how the SMT instances are encoded: <code>oopsla19</code> (default) uses uninterpreted sorts
+and integer arithmetic; <code>arrays</code> (experimental) and <code>funArrays</code> (experimental) use SMT arrays with extensionality.
+This parameter can also be set via the <code>SMT_ENCODING</code> environment variable. See the <a href="../adr/011adr-smt-arrays.html">alternative SMT encoding
+using arrays</a> for details.</li>
 <li><code>--discard-disabled</code> does a pre-check on transitions and discard the disabled ones at every step. If you know that
 many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
 invariant. Default: true.</li>

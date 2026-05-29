@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "../searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8bf92157.js"></script>
+        <script src="../toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -248,7 +248,23 @@ after each step, we can do that after the algorithm has made a good number of
 steps.
 You can also use this option to check different parts of an invariant on
 different machines to speed up turnaround time.</p>
-<h2 id="z3-tuning-parameters"><a class="header" href="#z3-tuning-parameters">Z3 Tuning Parameters</a></h2>
+<h2 id="solver-tuning-parameters"><a class="header" href="#solver-tuning-parameters">Solver tuning parameters</a></h2>
+<p>Apalache supports solver-specific tuning under solver namespaces. Z3-specific
+parameters use <code>z3.*</code>. CVC5-specific parameters use <code>cvc5.*</code>.</p>
+<h3 id="cvc5-smt-logic"><a class="header" href="#cvc5-smt-logic">CVC5 SMT logic</a></h3>
+<p><code>cvc5.smt.logic=&lt;logic&gt;</code> sets the SMT logic used by the CVC5 backend.</p>
+<p>By default, Apalache uses linear integer arithmetic logics with CVC5:</p>
+<ul>
+<li><code>QF_UFLIA</code> for the default <code>oopsla19</code> encoding and <code>funArrays</code></li>
+<li><code>QF_AUFLIA</code> for <code>arrays</code></li>
+</ul>
+<p>These defaults improve CVC5 performance on specifications that only need linear
+integer arithmetic. If your specification uses nonlinear integer arithmetic, for
+example multiplication of two symbolic integer values, configure CVC5 with a
+nonlinear logic:</p>
+<pre><code class="language-sh">--tuning-options=cvc5.smt.logic=QF_UFNIA
+</code></pre>
+<h3 id="z3-parameters"><a class="header" href="#z3-parameters">Z3 parameters</a></h3>
 <p>Z3 has a very large number of <a href="https://microsoft.github.io/z3guide/programming/Parameters">Z3 Parameters</a>. If you have a CLI version of Z3
 installed, you can see a complete list of supported parameters by running <code>z3</code>:</p>
 <pre><code class="language-sh">z3 -pd
@@ -268,9 +284,10 @@ z3.smt.restart_strategy = 3
 However, some of these parameters fail in the solver, even when they work in the
 command line. Hence, you have to experiment with the choice of parameters.</p>
 <h2 id="randomization"><a class="header" href="#randomization">Randomization</a></h2>
-<p><code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to <code>z3</code> (via <code>z3</code>’s parameters
-<code>sat.random_seed</code> and <code>smt.random_seed</code>). Note that this parameter sets the seed
-across the solvers for various logic theories in z3.</p>
+<p><code>smt.randomSeed=&lt;int&gt;</code> passes the random seed to the selected SMT backend. For
+Z3, Apalache maps this to Z3’s <code>sat.random_seed</code> and <code>smt.random_seed</code>
+parameters. For CVC5, Apalache maps this to CVC5’s <code>seed</code> and
+<code>sat-random-seed</code> options.</p>
 <h2 id="translation-to-smt"><a class="header" href="#translation-to-smt">Translation to SMT</a></h2>
 <h3 id="short-circuiting"><a class="header" href="#short-circuiting">Short-circuiting</a></h3>
 <p><code>rewriter.shortCircuit=(false|true)</code>. When <code>rewriter.shortCircuit=true</code>, <code>A \/ B</code> and <code>A /\ B</code> are translated to SMT as if-then-else expressions, e.g., <code>(ite A true B)</code>. Otherwise, disjunctions and conjunctions are directly translated to

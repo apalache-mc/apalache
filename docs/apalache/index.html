@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "../searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8bf92157.js"></script>
+        <script src="../toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -187,7 +187,7 @@ checker <a href="https://lamport.azurewebsites.net/tla/tools.html?unhideBut=hide
 <p>Whereas TLC enumerates the states produced by the behaviors of a TLA+
 specification, Apalache translates the verification problem to a set of logical
 constraints. These constraints are solved by an <a href="https://en.wikipedia.org/wiki/Satisfiability_modulo_theories">SMT solver</a>, for example,
-by <a href="https://github.com/Z3Prover/z3">Microsoft Z3</a>. That is, Apalache operates on formulas (i.e.,
+by <a href="https://github.com/Z3Prover/z3">Microsoft Z3</a> or <a href="https://github.com/cvc5/cvc5">CVC5</a>. That is, Apalache operates on formulas (i.e.,
 <em>symbolically</em>), not by enumerating states one by one (i.e., <em>state
 enumeration</em>).</p>
 <h3 id="shall-i-use-apalache-or-tlc"><a class="header" href="#shall-i-use-apalache-or-tlc">Shall I use Apalache or TLC?</a></h3>
