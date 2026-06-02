@@ -59,7 +59,7 @@ object Dependencies {
     val scalapbRuntime =
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
     // json-rpc dependencies
-    lazy val jettyVersion = "12.1.9"
+    lazy val jettyVersion = "12.1.10"
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
     val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.2"
