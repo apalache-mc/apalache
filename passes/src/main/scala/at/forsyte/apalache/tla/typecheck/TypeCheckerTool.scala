@@ -6,8 +6,9 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
+import at.forsyte.apalache.tla.typecheck.etcfast.EtcTypeCheckerFast
 import at.forsyte.apalache.tla.typecheck.integration._
-import at.forsyte.apalache.tla.types.TypeVarPool
+import at.forsyte.apalache.tla.types.{TypeCheckerProfiler, TypeVarPool}
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1ParseError}
 import com.typesafe.scalalogging.LazyLogging
 
@@ -53,9 +54,21 @@ class TypeCheckerTool(annotationStore: AnnotationStore, inferPoly: Boolean, useR
     val rootName = "MODULE_%s_%d_APALACHE".format(module.name, System.currentTimeMillis())
     val rootExpr = EtcLet(rootName, EtcAbs(EtcConst(BoolT1)(uniqueRef()))(uniqueRef()), topExpr)(uniqueRef())
 
-    val typeChecker = new EtcTypeChecker(varPool, inferPolytypes = inferPoly)
+    val typeChecker: TypeChecker =
+      sys.props.get("apalache.typechecker.impl").map(_.trim.toLowerCase) match {
+        case Some("etc") => new EtcTypeChecker(varPool, inferPolytypes = inferPoly)
+        case _           => new EtcTypeCheckerFast(varPool, inferPolytypes = inferPoly)
+      }
     // run the type checker
+    if (TypeCheckerProfiler.enabled) TypeCheckerProfiler.reset()
+    val startNs = if (TypeCheckerProfiler.enabled) System.nanoTime() else 0L
     val result = typeChecker.compute(listener, TypeContext.empty, rootExpr)
+    if (TypeCheckerProfiler.enabled) {
+      val elapsedMs = (System.nanoTime() - startNs) / 1e6
+      // Use System.err.println to bypass logback filtering and guarantee visibility
+      System.err.println(f"[TypeCheckerProfiler] Total type-checking time: $elapsedMs%.1f ms")
+      System.err.println(TypeCheckerProfiler.report())
+    }
     result.isDefined
   }
 
