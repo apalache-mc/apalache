@@ -129,6 +129,11 @@ Related reports and publications can be found at the
 
 ---
 
+Copyright © Apalache a Series of LF Projects, LLC
+
+For web site terms of use, trademark policy and other project policies please see [lfprojects.org](https://lfprojects.org).
+
+
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
 [cvc5]: https://github.com/cvc5/cvc5
