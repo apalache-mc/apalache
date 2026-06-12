@@ -40,7 +40,7 @@ object Dependencies {
     val pureConfig = "com.github.pureconfig" %% "pureconfig" % "0.17.9"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
-    val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
+    val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.9"
     val slf4j = "org.slf4j" % "slf4j-api" % "2.0.18"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.8.0").from(
