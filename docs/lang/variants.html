@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-2459343d.css">
-        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/general-0392ca55.css">
+        <link rel="stylesheet" href="../css/chrome-fc474251.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "../searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bcb802fa.js"></script>
+        <script src="../toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -301,8 +301,7 @@ an invariant violation and will lead to a spurious counterexample.</p>
 <hr>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
 <hr>
-<p><a name="variantCtor"></a></p>
-<h3 id="variant-constructor"><a class="header" href="#variant-constructor">Variant constructor</a></h3>
+<h3 id="variant-constructor"><a class="header" href="#variant-constructor"><a id="variantCtor"></a> Variant constructor</a></h3>
 <p><strong>Notation:</strong> <code>Variant(tagName, associatedValue)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Two arguments: the tag name (a string literal) and a value
@@ -325,8 +324,7 @@ Water(sparkling) == Variant("Water", [ sparkling |-&gt; sparkling ])
 Beer(malt, strength) == Variant("Beer", [ malt |-&gt; malt, strength |-&gt; strength ])
 </code></pre>
 <hr>
-<p><a name="variantTag"></a></p>
-<h3 id="variant-tag"><a class="header" href="#variant-tag">Variant tag</a></h3>
+<h3 id="variant-tag"><a class="header" href="#variant-tag"><a id="variantTag"></a> Variant tag</a></h3>
 <p><strong>Notation:</strong> <code>VariantTag(variant)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> One argument: a variant constructed via <code>Variant</code>.</p>
@@ -340,8 +338,7 @@ variable that captures other options in the variant type.</p>
 <pre><code class="language-tla">VariantTag(Variant("Water", [ sparkling |-&gt; sparkling ])) = "Water"
 </code></pre>
 <hr>
-<p><a name="variantFilter"></a></p>
-<h3 id="variant-filter"><a class="header" href="#variant-filter">Variant filter</a></h3>
+<h3 id="variant-filter"><a class="header" href="#variant-filter"><a id="variantFilter"></a> Variant filter</a></h3>
 <p><strong>Notation:</strong> <code>VariantFilter(tagName, set)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Two arguments: the tag name (a string literal) and a set of
@@ -370,8 +367,7 @@ LET Drinks == { Water(TRUE), Water(FALSE), Beer("Radler", 2) } IN
     d.strength &lt; 3
 </code></pre>
 <hr>
-<p><a name="variantGetOrElse"></a></p>
-<h3 id="unpacking-a-variant-safely"><a class="header" href="#unpacking-a-variant-safely">Unpacking a variant safely</a></h3>
+<h3 id="unpacking-a-variant-safely"><a class="header" href="#unpacking-a-variant-safely"><a id="variantGetOrElse"></a> Unpacking a variant safely</a></h3>
 <p><strong>Notation:</strong> <code>VariantGetOrElse(tagName, variant, defaultValue)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Three arguments: the tag name (a string literal), a variant
@@ -401,8 +397,7 @@ VariantGetOrElse("Beer", water,
                  [ malt |-&gt; "Non-alcoholic", strength |-&gt; 0])).strength
 </code></pre>
 <hr>
-<p><a name="variantGetUnsafe"></a></p>
-<h3 id="unpacking-a-variant-unsafely"><a class="header" href="#unpacking-a-variant-unsafely">Unpacking a variant unsafely</a></h3>
+<h3 id="unpacking-a-variant-unsafely"><a class="header" href="#unpacking-a-variant-unsafely"><a id="variantGetUnsafe"></a> Unpacking a variant unsafely</a></h3>
 <p><strong>Notation:</strong> <code>VariantGetUnsafe(tagName, variant)</code></p>
 <p><strong>LaTeX notation:</strong> same</p>
 <p><strong>Arguments:</strong> Two arguments: the tag name (a string literal) and a variant
@@ -482,11 +477,11 @@ IN
 
         <script src="../elasticlunr-ef4e11c1.min.js"></script>
         <script src="../mark-09e88c2c.min.js"></script>
-        <script src="../searcher-c2a407aa.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-a0b12cfe.js"></script>
+        <script src="../book-c22b7243.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

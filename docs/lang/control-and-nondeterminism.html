@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-2459343d.css">
-        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/general-0392ca55.css">
+        <link rel="stylesheet" href="../css/chrome-fc474251.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d28f737f.js";
+            window.path_to_searchindex_js = "../searchindex-867570ca.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bcb802fa.js"></script>
+        <script src="../toc-f88ca4ea.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -427,8 +427,7 @@ have to backtrack (though that needs fairness of <code>GUESS</code>). In general
 course of action depends on the program analysis that you implement. For
 instance, a random simulator could simply backtrack and randomly choose another
 value.</p>
-<p><a name="nondetExists"></a></p>
-<h3 id="non-determinism-in-e-x-in-s-p"><a class="header" href="#non-determinism-in-e-x-in-s-p">Non-determinism in <code>\E x \in S: P</code></a></h3>
+<h3 id="non-determinism-in-e-x-in-s-p"><a class="header" href="#non-determinism-in-e-x-in-s-p"><a id="nondetExists"></a> Non-determinism in <code>\E x \in S: P</code></a></h3>
 <p>We only have to consider the following case: <code>\E x \in S: P</code> is evaluated against
 a binding <code>s</code>, and there is a primed state variable <code>y'</code> that satisfies two
 conditions:</p>
@@ -476,8 +475,7 @@ Simply ask the oracle. Below, we give three examples of how the evaluation works
 2. (GUESS Int) returns 0. (LET i == 0 IN i &gt; x /\ x' = i) is FALSE. Halt.
 3. (GUESS Int) returns -20. (LET i == -20 IN i &gt; x /\ x' = i) is FALSE. Halt.
 </code></pre>
-<p><a name="nondetOr"></a></p>
-<h3 id="non-determinism-in-disjunctions"><a class="header" href="#non-determinism-in-disjunctions">Non-determinism in disjunctions</a></h3>
+<h3 id="non-determinism-in-disjunctions"><a class="header" href="#non-determinism-in-disjunctions"><a id="nondetOr"></a> Non-determinism in disjunctions</a></h3>
 <p>Consider a disjunction that comprises <code>n</code> clauses:</p>
 <pre><code class="language-tla">  \/ P_1
   \/ P_2
@@ -540,8 +538,7 @@ be activated when <code>x = 0</code>.</p>
 disjunction</a> in the deterministic case, we have
 non-deterministic choice here. Hence, short-circuiting does not apply to
 non-deterministic disjunctions.</em></p>
-<p><a name="nondetIte"></a></p>
-<h3 id="non-determinism-in-boolean-if-then-else"><a class="header" href="#non-determinism-in-boolean-if-then-else">Non-determinism in Boolean <code>IF-THEN-ELSE</code></a></h3>
+<h3 id="non-determinism-in-boolean-if-then-else"><a class="header" href="#non-determinism-in-boolean-if-then-else"><a id="nondetIte"></a> Non-determinism in Boolean <code>IF-THEN-ELSE</code></a></h3>
 <p>For the deterministic use of <code>IF-THEN-ELSE</code>, see <a href="./conditionals.html">Deterministic
 conditionals</a>.</p>
 <p>Consider an <code>IF-THEN-ELSE</code> expression to be evaluated in a partial state <code>s</code>:</p>
@@ -565,8 +562,7 @@ steps: what is the expected result, and what are the possible side effects.</em>
 <p><strong>Warning:</strong> While it is technically possible to write <code>x' = e</code> inside the
 condition, the effect of <code>x' = e</code> is not obvious when <code>x'</code> is not assigned a
 value.</p>
-<p><a name="nondetCase"></a></p>
-<h3 id="non-determinism-in-boolean-case"><a class="header" href="#non-determinism-in-boolean-case">Non-determinism in Boolean <code>CASE</code></a></h3>
+<h3 id="non-determinism-in-boolean-case"><a class="header" href="#non-determinism-in-boolean-case"><a id="nondetCase"></a> Non-determinism in Boolean <code>CASE</code></a></h3>
 <p>For the deterministic use of <code>CASE</code>,
 see <a href="./conditionals.html">Deterministic conditionals</a>.</p>
 <p><strong>CASE without OTHER.</strong>
@@ -650,11 +646,11 @@ We recommend you to use the disjunctive form instead.</em></p>
 
         <script src="../elasticlunr-ef4e11c1.min.js"></script>
         <script src="../mark-09e88c2c.min.js"></script>
-        <script src="../searcher-c2a407aa.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-a0b12cfe.js"></script>
+        <script src="../book-c22b7243.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

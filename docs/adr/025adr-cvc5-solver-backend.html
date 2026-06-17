@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Overview - Apalache Documentation</title>
+        <title>ADR-025: CVC5 solver backend integration - Apalache Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -179,22 +179,171 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
+                        <h1 id="adr-025-cvc5-solver-backend-integration"><a class="header" href="#adr-025-cvc5-solver-backend-integration">ADR-025: CVC5 solver backend integration</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>authors</th><th style="text-align: right">last revised</th></tr>
+</thead>
+<tbody>
+<tr><td>Thomas Pani</td><td style="text-align: right">2026-05-11</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary">Summary (Overview)</a></li>
+<li><a href="#context">Context (Problem)</a></li>
+<li><a href="#options">Options (Alternatives)</a></li>
+<li><a href="#solution">Solution (Decision)</a></li>
+<li><a href="#consequences">Consequences (Retrospection)</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>We will add CVC5 as a native solver backend by implementing a <code>Cvc5SolverContext</code> behind Apalache’s
+existing <code>SolverContext</code> interface. Z3 remains the default solver while CVC5 is introduced as an opt-in
+backend and validated against the current SMT encodings.</p>
+<p>We will not use <code>tools.aqua:cvc5-turnkey</code>, because it lags current CVC5 releases. We will also not introduce
+JavaSMT or KSMT for the first integration. Those abstractions remain possible future options, but the initial
+CVC5 backend should preserve direct access to CVC5 options, model APIs, statistics, and solver-specific behavior.</p>
+<h2 id="context"><a class="header" href="#context">Context</a></h2>
+<p>Apalache currently exposes a solver-independent <code>SolverContext</code> interface, but the only production implementation is
+<code>Z3SolverContext</code>. That class has multiple responsibilities. In addition to calling Z3, it contains backend-specific
+code for several parts of the SMT integration, including:</p>
 <ol>
-<li><a href="./howto-write-type-annotations.html">How to write type annotations</a></li>
+<li>Translating simplified TLA+ expressions into solver terms.</li>
+<li>Constructing sorts for the OOPSLA19, Arrays, and FunArrays encodings.</li>
+<li>Maintaining solver-term caches across push/pop levels.</li>
+<li>Evaluating ground expressions in a model.</li>
+<li>Handling debug SMT logging, metrics, timeouts, statistics, and solver-specific tuning parameters.</li>
+</ol>
+<p>This means that adding cvc5 is primarily a solver-context implementation problem, not only a dependency problem.
+An integration layer must preserve the existing incremental checking behavior, arena/cell naming conventions, model
+decoding expectations, SMT profiling, and timeout semantics.</p>
+<p>The packaging situation has changed since early cvc5 Java integrations.
+<code>tools.aqua:cvc5-turnkey</code> exists, but it is stale relative to cvc5 releases and
+should not be the dependency that gates Apalache’s cvc5 support. Therefore,
+Apalache should treat the official <code>io.github.cvc5:cvc5</code> artifact as the preferred native dependency
+path.</p>
+<h2 id="options"><a class="header" href="#options">Options</a></h2>
+<ol>
+<li>
+<p>Implement <code>Cvc5SolverContext</code> directly against the cvc5 Java API.</p>
+<p>This mirrors the existing architecture: keep Apalache’s <code>SolverContext</code> as the internal abstraction and add another
+concrete backend next to <code>Z3SolverContext</code>. The cvc5 Java API exposes a <code>Solver</code> entry point, Java classes for
+<code>Sort</code>, <code>Term</code>, <code>Kind</code>, <code>Result</code>, and related concepts, plus model value and assertion-stack operations that map
+naturally to the current context responsibilities.</p>
+<p>This option keeps access to cvc5-specific options, model APIs, statistics, and future proof or unsat-core features.
+It also lets us reproduce the Z3 context’s cache discipline and logging exactly where Apalache needs it. The cost is
+that term construction, sort construction, timeout handling, and model decoding will be duplicated in another
+backend-specific implementation.</p>
+</li>
+<li>
+<p>Use JavaSMT as the common solver integration layer.</p>
+<p>JavaSMT provides a solver-independent <code>SolverContext</code>, formula managers for arrays, integers, Booleans, UFs, and
+other theories, plus prover environments with assertion stacks. It also has a published cvc5 solver artifact.
+JavaSMT is the more mature solver-abstraction candidate by public project signals: as of 2026-05-11, its GitHub
+mirror has 236 stars, 56 forks, 6,362 commits, 83 open issues, and 28 open pull requests. It also has publications
+from 2016 and 2021, and GitHub lists JavaSMT 6.0.0 as the latest release in 2026.</p>
+<p>This option is attractive if the goal is to make Z3, cvc5, and future solvers share one formula construction layer.
+However, it is a larger architectural migration than adding cvc5. Apalache would have to move the current
+<code>Z3SolverContext</code> expression construction onto JavaSMT’s formula managers or introduce a second internal expression
+representation. We would also depend on JavaSMT’s common-denominator API for solver options, timeout behavior,
+unsupported operations, statistics, model extraction, and exact SMT-LIB serialization. That abstraction may hide
+details that are useful while validating cvc5 against Z3 on Apalache’s encodings.</p>
+</li>
+<li>
+<p>Use KSMT as the common solver integration layer.</p>
+<p>KSMT provides a solver-agnostic expression representation, Java/Kotlin APIs, cvc5 support, native delivery for common
+operating systems, and support for the theories Apalache uses: arrays, uninterpreted functions, and arithmetic. It
+also advertises portfolio solving and running solvers in separate processes, which is relevant for timeout and native
+solver crash isolation. KSMT is less mature by public project signals: as of 2026-05-11, its GitHub repository has 38
+stars, 16 forks, 135 commits, 4 open issues, and 8 open pull requests. GitHub lists <code>0.6.4</code> as the latest release in
+2025.</p>
+<p>This option is worth revisiting if Apalache wants a broader solver abstraction later, especially if solver delivery or
+process isolation becomes more important than direct solver API access. For the first cvc5 backend, it is still a
+larger dependency and architectural shift than needed, and it would require validating all model-decoding and
+incremental-solving semantics used by Apalache.</p>
+</li>
+<li>
+<p>Emit SMT-LIB and invoke a cvc5 process.</p>
+<p>This avoids JNI packaging and Java binding concerns. It could reuse <code>RecordingSolverContext</code>-style SMT-LIB output and
+call an external <code>cvc5</code> binary.</p>
+<p>This is useful as an oracle, debugging mode, or CI comparison target, but it is not a good first production backend
+for Apalache’s current incremental checker. Maintaining interactive push/pop, timeout, model-value queries, and arena
+decoding through a process protocol would add its own adapter complexity while giving up native API type safety.</p>
+</li>
+<li>
+<p>Use <code>tools.aqua:cvc5-turnkey</code>.</p>
+<p>This would resemble the current <code>tools.aqua:z3-turnkey</code> dependency style. It is not acceptable as the main path
+because the published cvc5-turnkey artifact lags current cvc5 releases.</p>
+</li>
+</ol>
+<h2 id="solution"><a class="header" href="#solution">Solution</a></h2>
+<p>Implement cvc5 support as a native backend. This means adding a <code>Cvc5SolverContext</code> that implements Apalache’s
+existing <code>SolverContext</code> interface, keeping Z3 as the default solver, and exposing cvc5 as an opt-in backend until
+parity and performance are established.</p>
+<p>Use the official cvc5 Java API through <code>io.github.cvc5:cvc5</code> when the artifact is available for Apalache’s supported
+platforms. Do not use <code>tools.aqua:cvc5-turnkey</code> for the production integration. Do not introduce JavaSMT or KSMT in
+the first integration.</p>
+<p>The initial implementation should be intentionally conservative:</p>
+<ol>
+<li>Target the OOPSLA19 encoding first, since it is the primary encoding used by Apalache. After that path is stable,
+evaluate the theory support needed by the Arrays and FunArrays encodings separately. They use different SMT array
+theory features and should not block the first cvc5 backend.</li>
+<li>Preserve the current cell/sort naming conventions so that existing logging, recording, and model-decoding assumptions
+remain easy to compare against Z3.</li>
+<li>Add a solver choice to configuration separately from <code>smtEncoding</code>; those are independent dimensions.</li>
+<li>Keep backend-neutral SMT controls separate from solver-specific options. For example, <code>smt.randomSeed</code>,
+<code>smt.statsSec</code>, and SMT timeouts are concepts Apalache can define once and map to each backend. Low-level solver
+parameters should remain namespaced, for example <code>z3.*</code> and <code>cvc5.*</code>.</li>
+<li>Add differential property-based tests between Z3 and cvc5 at the <code>SolverContext</code> level for operations supported by
+both implementations.</li>
+<li>Use SMT-LIB dumps as a comparison aid.</li>
+</ol>
+<p>The implemented backend uses the official <code>io.github.cvc5:cvc5:1.3.4</code> artifacts and explicitly includes the published
+native classifier jars for Linux, macOS, and Windows on <code>x86_64</code> and <code>aarch_64</code>. CVC5 is selected with
+<code>--smt-solver=cvc5</code> or the corresponding checker configuration value. The backend exposes <code>cvc5.smt.logic</code> as a
+solver-specific tuning key. We noticed performance degradation if we do not define a logic via <code>(set-logic ...)</code>,
+or set it too liberal (e.g., <code>QF_UFNIA</code> when <code>QF_UFLIA</code> would suffice). Thus, the default cvc5 logic is <code>QF_UFLIA</code>
+for OOPSLA19. Specifications that require nonlinear integer arithmetic can use <code>cvc5.smt.logic=QF_UFNIA</code>.</p>
+<h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
+<p>This decision keeps the first cvc5 integration close to the existing code and reduces the amount of architecture that
+must change before we can compare solver behavior. It also preserves access to cvc5-specific options and model APIs,
+which is important while diagnosing differences from Z3.</p>
+<p>The main downside is duplicated backend code. <code>Cvc5SolverContext</code> will likely share a large shape with
+<code>Z3SolverContext</code>, and some duplication is acceptable during the first integration. After parity is established, we
+should extract only the pieces that are demonstrably solver-independent, for example cell-cache lifetime, arena
+consistency checks, metrics accounting, and solver-selection plumbing. This will likely need a larger refactoring.</p>
+<p>JavaSMT and KSMT remain viable future options. The native cvc5 backend should give us evidence for whether adopting a
+solver-agnostic formula layer would simplify Apalache or merely move backend-specific behavior into escape hatches.</p>
+<p>The implementation requires dependency and CI work. cvc5 ships native code behind the Java API, so CI must verify
+native loading on supported platforms and document any unsupported platform combinations. If official Maven artifacts
+lag significantly behind a new cvc5 release, Apalache should prefer staying on the latest compatible official artifact
+over depending on stale packaging.</p>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<ol>
+<li>cvc5 repository and releases: <a href="https://github.com/cvc5/cvc5">https://github.com/cvc5/cvc5</a></li>
+<li>cvc5 Java API documentation: <a href="https://cvc5.github.io/docs/cvc5-1.2.0/api/java/java.html">https://cvc5.github.io/docs/cvc5-1.2.0/api/java/java.html</a></li>
+<li>cvc5 Java <code>Solver</code> API documentation: <a href="https://cvc5.github.io/docs/cvc5-1.1.0/api/java/io/github/cvc5/Solver.html">https://cvc5.github.io/docs/cvc5-1.1.0/api/java/io/github/cvc5/Solver.html</a></li>
+<li>Official cvc5 Maven artifact index: <a href="https://mvnrepository.com/artifact/io.github.cvc5/cvc5">https://mvnrepository.com/artifact/io.github.cvc5/cvc5</a></li>
+<li>cvc5-turnkey Maven index: <a href="https://repo1.maven.org/maven2/tools/aqua/cvc5-turnkey/">https://repo1.maven.org/maven2/tools/aqua/cvc5-turnkey/</a></li>
+<li>JavaSMT <code>SolverContext</code> API: <a href="https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/SolverContext.html">https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/SolverContext.html</a></li>
+<li>JavaSMT <code>FormulaManager</code> API: <a href="https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/FormulaManager.html">https://sosy-lab.github.io/java-smt/api/org/sosy_lab/java_smt/api/FormulaManager.html</a></li>
+<li>JavaSMT cvc5 solver artifact: <a href="https://central.sonatype.com/artifact/org.sosy-lab/javasmt-solver-cvc5">https://central.sonatype.com/artifact/org.sosy-lab/javasmt-solver-cvc5</a></li>
+<li>JavaSMT GitHub repository and releases: <a href="https://github.com/sosy-lab/java-smt">https://github.com/sosy-lab/java-smt</a></li>
+<li>KSMT overview and solver/theory support: <a href="https://ksmt.io/">https://ksmt.io/</a></li>
+<li>KSMT GitHub repository and releases: <a href="https://github.com/UnitTestBot/ksmt">https://github.com/UnitTestBot/ksmt</a></li>
 </ol>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../tutorials/temporal-properties.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../adr/024adr-arena-pass.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../HOWTOs/howto-write-type-annotations.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -202,13 +351,10 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../tutorials/temporal-properties.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../adr/024adr-arena-pass.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../HOWTOs/howto-write-type-annotations.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                    </a>
             </nav>
 
         </div>
