@@ -10,8 +10,8 @@ performs the following steps:
  `A_1, ..., A_n`.
 
  2. Apalache translates operators `Init` and `A_1, ..., A_n` to SMT formulas.
- This allows us to explore bounded executions with an SMT solver (we are using
- [Microsoft's Z3](https://github.com/Z3Prover/z3)). For instance, a sequence of
+ This allows us to explore bounded executions with an SMT solver. Z3 is the default
+ backend, and CVC5 is also available as an experimental backend. For instance, a sequence of
  `k` steps `s_0, s_1, ..., s_k`, all of which execute action `A_1`, is encoded
  as a formula `Run(k)` that looks as follows:
 

@@ -1,6 +1,34 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.58.0 - 2026-05-29
+
+### Features
+
+- Added experimental CVC5 support as an SMT solver backend for the OOPSLA19 encoding.
+
+### Bug fixes
+
+- Fixed a `ClassCastException` / `AssertionError` crash during `--temporal` checking when `Next` contains an `IF` or `CASE` whose branches return sets or functions and whose body contains a nested `\/` or `/\` of three or more terms, see #2107.
+
+## 0.58.0 - 2026-05-22
+
+## 0.57.1 - 2026-05-22
+
+### Breaking changes
+
+- Upgrade the TLA+ parser to SANY 1.8.0 and add Unicode support, may change parsing behavior and diagnostics #3341
+- Bump Scala to 2.13.18
+
+### Features
+
+- Extend set simplification rules to handle previously missing cases (#3343)
+
+### Bug fixes
+
+- Fixed a SANY importer crash when a named ASSUME definition is used as an operator, see #3318.
+- Fixed a preprocessing failure when a named ASSUME declaration is referenced from an operator body, see #3326.
+
 ## 0.57.0 - 2026-04-24
 
 ### Features

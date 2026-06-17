@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.infra.passes.options.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
@@ -32,6 +33,10 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   implicit val smtEncodingRead: Read[SMTEncoding] =
     Read.reads[SMTEncoding]("a SMT encoding, either oopsla19 or arrays")(SMTEncoding.ofString)
 
+  // Parses the smtSolver option
+  implicit val smtSolverRead: Read[SMTSolver] =
+    Read.reads[SMTSolver]("an SMT solver backend, either z3 or cvc5")(SMTSolver.ofString)
+
   // Parses the algo option
   implicit val algoRead: Read[Algorithm] =
     Read.reads[Algorithm](
@@ -43,6 +48,9 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
       description =
         s"the SMT encoding: ${SMTEncoding.OOPSLA19}, ${SMTEncoding.Arrays} (experimental), ${SMTEncoding.FunArrays} (experimental), default: ${SMTEncoding.OOPSLA19} (overrides envvar SMT_ENCODING)")
+  var smtSolver: Option[SMTSolver] = opt[Option[SMTSolver]](name = "smt-solver", useEnv = true, default = None,
+      description =
+        s"the SMT solver backend: ${SMTSolver.Z3}, ${SMTSolver.CVC5} (experimental), default: ${SMTSolver.Z3} (overrides envvar SMT_SOLVER)")
   var tuningOptionsFile: Option[String] =
     opt[Option[String]](name = "tuning-options-file", default = None,
         description = "filename of the tuning options, see docs/tuning.md")
@@ -85,6 +93,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       val newCfg = cfg.copy(
           checker = cfg.checker.copy(
               algo = algo,
+              smtSolver = smtSolver,
               smtEncoding = smtEncoding,
               tuning = Some(combinedTuningOptions),
               discardDisabled = discardDisabled,

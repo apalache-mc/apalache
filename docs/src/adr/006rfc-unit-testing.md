@@ -170,8 +170,7 @@ tests by default, if no test name is specified. Also, we have to initialize the
 constants with `ConstInit`, which we specify with the annotation
 `@require(ConstInit)`.
 
-<a id="testAction"></a>
-### 3.2. Testing actions
+### <a id="testAction"></a> 3.2. Testing actions
 
 Testing stateless operators is nice. However, TLA+ is built around the concept
 of a state machine. Hence, we believe that most of the testing activity will be
@@ -542,8 +541,7 @@ generators similar to [Scalacheck]. In contrast to property-based testing, we
 want to run the test not only on some random inputs, but to run it exhaustively
 on all inputs within a predefined bounded scope.
 
-<a id="generators"></a>
-### 5.1. Using Apalache generators
+### <a id="generators"></a> 5.1. Using Apalache generators
 
 Let's go back to the example in [Section 3.2](#testAction).
 

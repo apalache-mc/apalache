@@ -29,7 +29,7 @@ Inv ==
 =========================================================================
 ```
 
-Apalache has its own bottlenecks. As it's using the SMT solver z3,
+Apalache has its own bottlenecks. As it is using a backend SMT solver,
 we cannot precisely profile your TLA+ specification. However, we can profile
 the number of SMT variables and constraints that Apalache produces for different
 parts of your specification. To activate this profiling mode, use the option

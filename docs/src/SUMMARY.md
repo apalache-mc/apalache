@@ -114,3 +114,4 @@
 - [ADR-022: Unify Configuration Management and "Pass Options"](./adr/022adr-unification-of-configs-and-options.md)
 - [ADR-023: Trace evaluation](./adr/023adr-trace-evaluation.md)
 - [ADR-024: Arena computation isolation](./adr/024adr-arena-pass.md)
+- [ADR-025: CVC5 solver backend integration](./adr/025adr-cvc5-solver-backend.md)

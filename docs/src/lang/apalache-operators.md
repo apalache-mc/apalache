@@ -6,8 +6,7 @@ but which Apalache uses to provide clarity, efficiency, or special functionality
 These operators belong to the module `Apalache`,
 and can be used in any specification by declaring `EXTENDS Apalache`.
 
-<a name="Assignment"></a>
-## Assignment
+## <a id="Assignment"></a> Assignment
 
 **Notation:** `v' := e`
 
@@ -54,9 +53,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="Guess"></a>
-
-## Non-deterministically guess a value
+## <a id="Guess"></a> Non-deterministically guess a value
 
 **Notation:** `Guess(S)`
 
@@ -92,8 +89,7 @@ If `S` is not a set, Apalache reports an error.
 
 ----------------------------------------------------------------------------
 
-<a name="Gen"></a>
-## Value generators
+## <a id="Gen"></a> Value generators
 
 **Notation:** `Gen(bound)`
 
@@ -142,8 +138,7 @@ IN
 The operators `ApaFoldSet` and `ApaFoldSeqLeft` are explained in more detail in a dedicated section [here](../apalache/principles/folds.md).
 
 ----------------------------------------------------------------------------
-<a name="Repeat"></a>
-## Operator iteration
+## <a id="Repeat"></a> Operator iteration
 
 **Notation:** `Repeat(Op, N, x)`
 
@@ -180,9 +175,7 @@ Op2(a,i) == a + i
 Repeat(Op2, 0, 5) = 15              \* TRUE
 ```
 ----------------------------------------------------------------------------
-<a name="SetAsFun"></a>
-
-## Convert a set of pairs to a function
+## <a id="SetAsFun"></a> Convert a set of pairs to a function
 
 **Notation:** `SetAsFun(S)`
 
@@ -225,9 +218,7 @@ LET F == SetAsFun({ <<1, 2>>, <<1, 3>>, <<1, 4>> }) IN
 
 ----------------------------------------------------------------------------
 
-<a name="MkSeq"></a>
-
-## Construct a sequence
+## <a id="MkSeq"></a> Construct a sequence
 
 **Notation:** `MkSeq(n, F)`
 
@@ -255,9 +246,7 @@ MkSeq(3, Double) = <<2, 4, 6>>   \* TRUE
 
 ----------------------------------------------------------------------------
 
-<a name="Cast"></a>
-
-## Interpret a function as a sequence
+## <a id="Cast"></a> Interpret a function as a sequence
 
 **Notation:** `FunAsSeq(fn, len, maxLen)`
 
@@ -317,8 +306,7 @@ g = boundedFn(lambda x: x * x, {0, 42})
 [None, None, None]
 ```
 
-<a name="Skolem"></a>
-## Skolemization Hint
+## <a id="Skolem"></a> Skolemization Hint
 
 **Notation:** `Skolem(e)`
 
@@ -351,8 +339,7 @@ Skolem( 1 )                     \* 1 in TLC, type error in Apalache
 Skolem( TRUE )                  \* TRUE in TLC, error in Apalache
 ```
 
-<a name="Expand"></a>
-## Set expansion
+## <a id="Expand"></a> Set expansion
 
 **Notation:** `Expand(S)`
 
@@ -386,8 +373,7 @@ Expand( {1,2} )        \* {1,2} in TLC, error in Apalache
 Expand( 1 )            \* 1 in TLC, type error in Apalache
 ```
 
-<a name="ConstCard"></a>
-## Cardinality Hint
+## <a id="ConstCard"></a> Cardinality Hint
 
 **Notation:** `ConstCardinality(e)`
 

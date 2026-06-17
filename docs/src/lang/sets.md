@@ -70,8 +70,7 @@ to this rule, as some records can be unified to a common type.)
 
 ## Operators
 
-<a name="setEnum"></a>
-### Set constructor by enumeration
+### <a id="setEnum"></a> Set constructor by enumeration
 
 **Notation:** `{e_1, ..., e_n}`
 
@@ -120,8 +119,7 @@ If this is not the case, the type checker flags an error.
 
 ----------------------------------------------------------------------------
 
-<a name="in"></a>
-### Set membership
+### <a id="in"></a> Set membership
 
 **Notation:** `e \in S`
 
@@ -174,8 +172,7 @@ False
 
 ----------------------------------------------------------------------------
 
-<a name="notin"></a>
-### Set non-membership
+### <a id="notin"></a> Set non-membership
 
 **Notation:** `e \notin S`
 
@@ -228,16 +225,14 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="eq"></a>
-### Equality and inequality
+### <a id="eq"></a> Equality and inequality
 
 The operators `a = b` and `a /= b` are core operators of TLA+,
 see [Logic](./logic.md).
 
 ----------------------------------------------------------------------------
 
-<a name="subseteq"></a>
-### Set inclusion
+### <a id="subseteq"></a> Set inclusion
 
 **Notation:** `S \subseteq T`
 
@@ -287,8 +282,7 @@ False
 
 ----------------------------------------------------------------------------
 
-<a name="union"></a>
-### Binary set union
+### <a id="union"></a> Binary set union
 
 **Notation:** `S \union T` or `S \cup T`
 
@@ -336,8 +330,7 @@ are either not sets, or sets of incompatible types.
 
 ----------------------------------------------------------------------------
 
-<a name="intersect"></a>
-### Set intersection
+### <a id="intersect"></a> Set intersection
 
 **Notation:** `S \intersect T` or `S \cap T`
 
@@ -385,8 +378,7 @@ set()
 
 ----------------------------------------------------------------------------
 
-<a name="setminus"></a>
-### Set difference
+### <a id="setminus"></a> Set difference
 
 **Notation:** `S \ T`
 
@@ -434,8 +426,7 @@ set()
 
 ----------------------------------------------------------------------------
 
-<a name="filter"></a>
-### Set filter
+### <a id="filter"></a> Set filter
 
 **Notation:** `{ x \in S: P }`
 
@@ -500,8 +491,7 @@ set()
 
 ----------------------------------------------------------------------------
 
-<a name="map"></a>
-### Set map
+### <a id="map"></a> Set map
 
 **Notation:** `{ e: x \in S }` or `{ e: x \in S, y \in T }`, or more arguments
 
@@ -572,8 +562,7 @@ syntax:
 
 ----------------------------------------------------------------------------
 
-<a name="powerset"></a>
-### Powerset
+### <a id="powerset"></a> Powerset
 
 **Notation:** `SUBSET S`
 
@@ -609,8 +598,7 @@ To appreciate the power of TLA+, see [subset.py](./examples/subset.py).
 
 ----------------------------------------------------------------------------
 
-<a name="flatten"></a>
-### Set flattening
+### <a id="flatten"></a> Set flattening
 
 **Notation:** `UNION S`
 
@@ -662,8 +650,7 @@ in Python is quite simple:
 
 ----------------------------------------------------------------------------
 
-<a name="card"></a>
-### Set cardinality
+### <a id="card"></a> Set cardinality
 
 **Notation:** `Cardinality(S)`
 
@@ -706,8 +693,7 @@ different from a finite set.
 
 ----------------------------------------------------------------------------
 
-<a name="finite"></a>
-### Set finiteness
+### <a id="finite"></a> Set finiteness
 
 **Notation:** `IsFinite(S)`
 

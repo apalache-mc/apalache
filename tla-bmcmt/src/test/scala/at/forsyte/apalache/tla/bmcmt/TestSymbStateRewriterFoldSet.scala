@@ -2,10 +2,9 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rules.FoldSetRule
-import at.forsyte.apalache.tla.lir.TypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSymbStateRewriterFoldSet extends RewriterBase {
   test("""FoldSet( LAMBDA x,y: C, v, S ) = C""") { rewriterType: SMTEncoding =>
@@ -13,27 +12,17 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     // A(p,q) == 0
     val a = IntT1
     val b = IntT1
-    val opT = OperT1(Seq(a, b), a)
+    val nonemptySet = tla.enumSet(tla.int(2), tla.int(3))
 
-    val nonemptySet = enumSet(int(2), int(3)).typed(SetT1(b))
+    def constVal = tla.int(0)
 
-    def constVal = int(0)
-
-    val nullOperDecl = declOp("A", constVal, OperParam("p"), OperParam("q")).as(opT)
-    val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
-
-    val foldEx = OperEx(
-        ApalacheOper.foldSet,
-        letEx,
-        int(1).typed(IntT1),
-        nonemptySet,
-    )(Typed(a))
-
-    val eqn = eql(foldEx, constVal).typed(BoolT1)
+    val letEx = tla.lambda("A", constVal, tla.param("p", a), tla.param("q", b))
+    val foldEx = tla.foldSet(letEx, tla.int(1), nonemptySet)
+    val eqn = tla.eql(foldEx, constVal)
 
     val state = new SymbState(eqn, arena, Binding())
 
-    assert(new FoldSetRule(this.create(rewriterType), renaming).isApplicable(state.setRex(foldEx)))
+    assert(new FoldSetRule(this.create(rewriterType), renaming).isApplicable(state.setRex(foldEx.build)))
 
     assertTlaExAndRestore(create(rewriterType), state)
   }
@@ -43,22 +32,13 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     // A(p,q) == 0
     val a = IntT1
     val b = IntT1
-    val opT = OperT1(Seq(a, b), a)
+    val emptySet = tla.emptySet(b)
+    val letEx = tla.lambda("A", tla.int(0), tla.param("p", a), tla.param("q", b))
 
-    val emptySet = enumSet().typed(SetT1(b))
+    def v = tla.int(1)
+    val foldEx = tla.foldSet(letEx, v, emptySet)
 
-    val nullOperDecl = declOp("A", int(0), OperParam("p"), OperParam("q")).as(opT)
-    val letEx = LetInEx(name(nullOperDecl.name).typed(opT), nullOperDecl)(Typed(opT))
-
-    def v = int(1).typed(IntT1)
-    val foldEx = OperEx(
-        ApalacheOper.foldSet,
-        letEx,
-        v,
-        emptySet,
-    )(Typed(a))
-
-    val eqn = eql(foldEx, v).typed(BoolT1)
+    val eqn = tla.eql(foldEx, v)
 
     val state = new SymbState(eqn, arena, Binding())
 
@@ -70,26 +50,12 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     // A(p,q) == p + 1
     val a = IntT1
     val b = StrT1
-    val opT = OperT1(Seq(a, b), a)
-
     // insert duplicate x
-    val nonemptySet = enumSet(str("x"), str("x"), str("y")).typed(SetT1(b))
-    val plusOneOper = TlaOperDecl(
-        "A",
-        List(OperParam("p"), OperParam("q")),
-        plus(name("p").typed(a), int(1)).typed(IntT1),
-    )(Typed(opT))
-
-    val letEx = LetInEx(name(plusOneOper.name).typed(opT), plusOneOper)(Typed(opT))
-
-    val foldEx = OperEx(
-        ApalacheOper.foldSet,
-        letEx,
-        int(0).typed(IntT1),
-        nonemptySet,
-    )(Typed(a))
-
-    val eqn = eql(foldEx, card(nonemptySet).typed(IntT1)).typed(BoolT1)
+    val nonemptySet = tla.enumSet(tla.str("x"), tla.str("x"), tla.str("y"))
+    val plusOneBody = tla.plus(tla.name("p", a), tla.int(1))
+    val letEx = tla.lambda("A", plusOneBody, tla.param("p", a), tla.param("q", b))
+    val foldEx = tla.foldSet(letEx, tla.int(0), nonemptySet)
+    val eqn = tla.eql(foldEx, tla.cardinality(nonemptySet))
 
     val state = new SymbState(eqn, arena, Binding())
 
@@ -101,27 +67,12 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
     // A(p,q) == p + q
     val a = IntT1
     val b = IntT1
-    val opT = OperT1(Seq(a, b), a)
-
     val ints = Seq(2, 93, 4)
-    val nonemptySet = enumSet(ints.map(int): _*).typed(SetT1(b))
-
-    val plusOneOper = TlaOperDecl(
-        "A",
-        List(OperParam("p"), OperParam("q")),
-        plus(name("p").typed(a), name("q").typed(b)).typed(IntT1),
-    )(Typed(opT))
-
-    val letEx = LetInEx(name(plusOneOper.name).typed(opT), plusOneOper)(Typed(opT))
-
-    val foldEx = OperEx(
-        ApalacheOper.foldSet,
-        letEx,
-        int(0).typed(IntT1),
-        nonemptySet,
-    )(Typed(a))
-
-    val eqn = eql(foldEx, int(ints.sum)).typed(BoolT1)
+    val nonemptySet = tla.enumSet(ints.map(i => tla.int(i)): _*)
+    val plusBody = tla.plus(tla.name("p", a), tla.name("q", b))
+    val letEx = tla.lambda("A", plusBody, tla.param("p", a), tla.param("q", b))
+    val foldEx = tla.foldSet(letEx, tla.int(0), nonemptySet)
+    val eqn = tla.eql(foldEx, tla.int(ints.sum))
 
     val state = new SymbState(eqn, arena, Binding())
 
