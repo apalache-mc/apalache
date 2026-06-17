@@ -4,3 +4,19 @@
 @import "{{ site.theme }}";
 
 // Custom styles go here
+
+.site-footer {
+  position: static;
+  bottom: auto;
+  left: auto;
+  width: auto;
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e5e5;
+  color: #727272;
+  font-size: 12px;
+
+  p {
+    margin: 0 0 8px;
+  }
+}
