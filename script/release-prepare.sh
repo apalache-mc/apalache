@@ -51,7 +51,7 @@ sbt changelingReleaseNotes
 commit_msg="[release] ${RELEASE_VERSION}"
 git add --update
 git add "$RELEASE_NOTES"
-git commit -m "$commit_msg"
+git commit --signoff -m "$commit_msg"
 
 if [[ "$POST_BODY" == true ]]
 then
@@ -66,7 +66,7 @@ fi
 # Commit the updated version and changelog
 DEV_VERSION=$("$DIR"/get-version.sh)
 git add --update
-git commit -m "Bump version to ${DEV_VERSION}"
+git commit --signoff -m "Bump version to ${DEV_VERSION}"
 
 instructions="
 # Reviewer instructions
