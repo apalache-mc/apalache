@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
+import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, RewriterKnownLimitationError, SymbState}
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.types.tla
@@ -20,5 +20,14 @@ trait TestDefaultValueFactory extends RewriterBase {
     val eq = tla.eql(expected, tla.unchecked(value.toNameEx))
     val state = new SymbState(eq, newArena, Binding())
     assertTlaExAndRestore(rewriter, state)
+  }
+
+  test("""reject a polymorphic type with a clear error (#3116)""") { rewriterType: SMTEncoding =>
+    // A polymorphic (uninstantiated) type must not produce a confusing internal error.
+    val rewriter = create(rewriterType)
+    val factory = new DefaultValueFactory(rewriter)
+    assertThrows[RewriterKnownLimitationError] {
+      factory.makeUpValue(arena, parser("a"))
+    }
   }
 }

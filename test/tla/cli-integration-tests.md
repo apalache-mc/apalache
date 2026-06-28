@@ -465,6 +465,17 @@ EXITCODE: OK
 $ rm output.json
 ```
 
+### check Github3116.tla with un-annotated OptionCase succeeds
+
+Regression test for #3116: `OptionCase` with an un-annotated `caseNone` (returning
+`None`) used to crash the model checker with a confusing "Unexpected type" error.
+
+```sh
+$ apalache-mc check --length=1 Github3116.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### parse FormulaRefs fails
 
 ```sh

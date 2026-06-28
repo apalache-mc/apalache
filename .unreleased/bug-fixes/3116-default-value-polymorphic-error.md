@@ -1,0 +1,1 @@
+Generating a default value for a polymorphic (uninstantiated) type now raises a clear "known limitation" error advising to add a type annotation, instead of a confusing internal `Unexpected type ... when generating a default value` error that asked the user to report a bug (e.g. with an un-annotated `caseNone` of `OptionCase`), see #3116.

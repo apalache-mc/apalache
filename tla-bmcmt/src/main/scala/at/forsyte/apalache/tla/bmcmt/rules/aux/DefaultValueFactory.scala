@@ -1,7 +1,9 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
-import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, RewriterException, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{
+  ArenaCell, FixedElemPtr, RewriterException, RewriterKnownLimitationError, SymbStateRewriter,
+}
 import at.forsyte.apalache.tla.lir._
 
 import scala.collection.immutable.SortedSet
@@ -108,6 +110,13 @@ class DefaultValueFactory(rewriter: SymbStateRewriter) {
         }
 
         (nextArena, variantCell)
+
+      case tp @ VarT1(_) =>
+        // A polymorphic (uninstantiated) type reached default-value generation. This is not an internal bug, but a
+        // sign that the spec is not fully monomorphic, usually because a type annotation is missing. See #3116.
+        throw new RewriterKnownLimitationError(
+            s"Cannot generate a default value for the polymorphic type $tp. This usually means a type annotation is missing, e.g., on a `None`/`caseNone` branch of a variant. Please add an explicit type annotation.",
+            NullEx)
 
       case tp @ _ =>
         throw new RewriterException(s"Unexpected type $tp when generating a default value", NullEx)
