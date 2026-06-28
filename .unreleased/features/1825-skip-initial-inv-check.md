@@ -1,0 +1,1 @@
+`check` now skips the (redundant) invariant check in the initial state when every `--inv` operator is the same as the `--init` operator (e.g. `--init=IndInv --inv=IndInv`, as used for inductive-invariant checking). The invariant is guaranteed to hold in the initial states by construction, so this avoids a redundant and often slow SMT query, see #1825.

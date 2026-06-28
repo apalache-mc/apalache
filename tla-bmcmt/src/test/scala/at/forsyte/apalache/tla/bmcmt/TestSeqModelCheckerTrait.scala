@@ -70,6 +70,43 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     assertResultHasNErrors(1, outcome)
   }
 
+  test("skipInitialStateInvariant skips a state-0 violation (#1825)") { rewriter: SymbStateRewriter =>
+    // x' <- 2, with an invariant x > 10 that is violated in the initial state.
+    val initTrans = buildTransitions(mkAssign("x", 2))
+    val nextTrans = buildTransitions(mkAssign("x", 2))
+    val invEx = tla.gt(tla.name("x", IntT1), tla.int(10))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
+    val checkerInput =
+      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
+    // skipping the state-0 invariant check hides the (otherwise reported) initial violation
+    params.skipInitialStateInvariant = true
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(ModelCheckerContext(params, checkerInput, trex))
+    val outcome = checker.run()
+    assert(NoError() == outcome)
+  }
+
+  test("skipInitialStateInvariant still finds a violation after Next (#1825)") { rewriter: SymbStateRewriter =>
+    // x' <- 0 in Init, x' <- 1 in Next; invariant x < 1 holds in state 0 but is violated in state 1.
+    val initTrans = buildTransitions(mkAssign("x", 0))
+    val nextTrans = buildTransitions(mkAssign("x", 1))
+    val invEx = tla.lt(tla.name("x", IntT1), tla.int(1))
+    val inv = invEx.build
+    val notInv = tla.not(invEx).build
+    val checkerInput =
+      new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map())
+    params.skipInitialStateInvariant = true
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(ModelCheckerContext(params, checkerInput, trex))
+    val outcome = checker.run()
+    assertResultHasNErrors(1, outcome)
+  }
+
   test("ConstInit + Init => OK") { rewriter: SymbStateRewriter =>
     // N' <- 10
     val cinit = mkAssign("N", 10).build

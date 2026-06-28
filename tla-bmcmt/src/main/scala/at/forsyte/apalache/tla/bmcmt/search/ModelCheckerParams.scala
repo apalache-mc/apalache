@@ -64,6 +64,13 @@ class ModelCheckerParams(
     tuningOptions.getOrElse("search.invariantFilter", "")
 
   /**
+   * If set, the state invariants are not checked in the initial state (step 0). This is sound when every checked
+   * invariant coincides with the Init predicate (e.g., `--init=IndInv --inv=IndInv`), since the initial states satisfy
+   * the invariant by construction. It avoids a redundant and often expensive SMT query. See #1825.
+   */
+  var skipInitialStateInvariant: Boolean = false
+
+  /**
    * The number of counterexamples to produce. The default value is 1.
    */
   var nMaxErrors: Int = 1
