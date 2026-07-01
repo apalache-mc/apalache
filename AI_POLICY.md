@@ -13,7 +13,7 @@ aid of AI tools, do not contribute to this project.
   In particular, if you are new to Scala, you must be able to explain all
   programming constructs in your contribution. AI tools are great helpers for
   learning. Use them to understand your code. The project maintainers do not have
-  to remember all of the Scala by heart. Hence, we tend to use the common
+  to remember all of Scala by heart. Hence, we tend to use the common
   subset of the language and idioms that are understood by humans.
 
 - **Issues and discussions must be written by humans.** AI tools are good at
@@ -84,8 +84,8 @@ understand that many external contributors are trying to help the project. We
 also know that it is tempting to shoot an AI tool at a problem and see it
 "solved". Unfortunately, the AI tools do not have understanding of the impact of
 their code. We often see the code that may even solve the issue, but it is not
-properly integrated into the system, nor it is properly tested.  As a result,
-the maintainers have to spend hours of their time on fixing the code that was
+properly integrated into the system, nor is it properly tested.  As a result,
+the maintainers have to spend hours of their time on fixing code that was
 generated in 10 minutes.
 
 ## References
