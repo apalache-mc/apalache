@@ -68,18 +68,22 @@ JavaTime ==
     123
 
 \* Apalache does not support this operator, but the type checker does.
+\* The register key may be an integer (numbered register) or a string (named
+\* register), so its type is left polymorphic, see #3274.
 \*
-\* @type: Int => a;
+\* @type: b => a;
 TLCGet(__i) ==
     LET \* @type: () => Set(a);
         __Empty == {}
     IN
     CHOOSE __x \in __Empty: TRUE
-    
+
 
 \* Apalache does not support this operator, but the type checker does.
+\* The register key may be an integer (numbered register) or a string (named
+\* register), so its type is left polymorphic, see #3274.
 \*
-\* @type: (Int, a) => Bool;
+\* @type: (b, a) => Bool;
 TLCSet(__i, __v) ==
     TRUE
 

@@ -465,6 +465,17 @@ EXITCODE: OK
 $ rm output.json
 ```
 
+### typecheck accepts string and integer TLC registers
+
+Regression test for #3274: `TLCGet`/`TLCSet` must accept both string (named) and
+integer (numbered) registers in the same operator.
+
+```sh
+$ apalache-mc typecheck Bug3274.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### parse FormulaRefs fails
 
 ```sh
