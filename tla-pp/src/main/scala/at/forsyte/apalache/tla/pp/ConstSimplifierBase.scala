@@ -70,9 +70,11 @@ abstract class ConstSimplifierBase {
     // Replace \notin with \in
     // x \notin y = !(x \in y)
     case OperEx(TlaSetOper.notin, lhs, rhs) =>
-      OperEx(TlaBoolOper.not, OperEx(TlaSetOper.in, lhs, rhs)(boolTag))(boolTag)
+      val member = simplifyShallow(OperEx(TlaSetOper.in, lhs, rhs)(boolTag))
+      simplifyShallow(OperEx(TlaBoolOper.not, member)(boolTag))
     // !(x \notin y) = x \in y
-    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) => OperEx(TlaSetOper.in, lhs, rhs)(boolTag)
+    case OperEx(TlaBoolOper.not, OperEx(TlaSetOper.notin, lhs, rhs)) =>
+      simplifyShallow(OperEx(TlaSetOper.in, lhs, rhs)(boolTag))
 
     // integer operations
     // Evaluate constant addition
@@ -261,6 +263,38 @@ abstract class ConstSimplifierBase {
     // if A /= {}, then [ A -> {} ] <=> {}
     case funSet @ OperEx(TlaSetOper.funSet, _, OperEx(TlaSetOper.enumSet)) =>
       emptySet(funSet.typeTag)
+
+    // Set simplifications that hold for an arbitrary set S, not only for set enumerations.
+    // These complement the literal-only rules below.
+
+    // x \in {} = FALSE
+    case OperEx(TlaSetOper.in, _, OperEx(TlaSetOper.enumSet)) => falseEx
+
+    // {} \subseteq S = TRUE
+    case OperEx(TlaSetOper.subseteq, OperEx(TlaSetOper.enumSet), _) => trueEx
+    // S \subseteq S = TRUE
+    case OperEx(TlaSetOper.subseteq, lhs, rhs) if lhs == rhs => trueEx
+
+    // {} \cup S = S
+    case OperEx(TlaSetOper.cup, OperEx(TlaSetOper.enumSet), set) => set
+    // S \cup {} = S
+    case OperEx(TlaSetOper.cup, set, OperEx(TlaSetOper.enumSet)) => set
+    // S \cup S = S
+    case OperEx(TlaSetOper.cup, lhs, rhs) if lhs == rhs => lhs
+
+    // {} \cap S = {}
+    case OperEx(TlaSetOper.cap, emptyEx @ OperEx(TlaSetOper.enumSet), _) => emptyEx
+    // S \cap {} = {}
+    case OperEx(TlaSetOper.cap, _, emptyEx @ OperEx(TlaSetOper.enumSet)) => emptyEx
+    // S \cap S = S
+    case OperEx(TlaSetOper.cap, lhs, rhs) if lhs == rhs => lhs
+
+    // {} \ S = {}
+    case OperEx(TlaSetOper.setminus, emptyEx @ OperEx(TlaSetOper.enumSet), _) => emptyEx
+    // S \ {} = S
+    case OperEx(TlaSetOper.setminus, set, OperEx(TlaSetOper.enumSet)) => set
+    // S \ S = {}
+    case ex @ OperEx(TlaSetOper.setminus, lhs, rhs) if lhs == rhs => emptySet(ex.typeTag)
 
     // S \cup T when both S and T contain only literals
     case originalExpr @ OperEx(TlaSetOper.cup, OperEx(TlaSetOper.enumSet, args1 @ _*),

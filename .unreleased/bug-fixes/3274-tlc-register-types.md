@@ -1,0 +1,1 @@
+Fixed type checking of `TLCGet`/`TLCSet`: the register key may be a string (named register, e.g. `TLCGet("level")`) or an integer (numbered register, e.g. `TLCGet(2)`). The key argument is now polymorphic, so an operator mixing both forms type-checks, see #3274.

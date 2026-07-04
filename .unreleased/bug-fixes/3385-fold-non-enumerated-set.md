@@ -1,0 +1,1 @@
+Fixed `FoldSet` silently returning the base value when folding over a non-enumerated set such as `SUBSET S` or `[S -> T]`. The set is now marked for expansion, so folds over powersets produce the correct result, and folds over sets whose expansion is unsupported fail loudly instead of returning a wrong answer, see #3385.
