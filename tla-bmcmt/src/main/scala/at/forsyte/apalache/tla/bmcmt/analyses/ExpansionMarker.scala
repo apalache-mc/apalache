@@ -88,6 +88,13 @@ class ExpansionMarker @Inject() (tracker: TransformationTracker) extends TlaExTr
       val tag = ex.typeTag
       OperEx(op, args.map(transform(true)): _*)(tag)
 
+    case ex @ OperEx(op @ ApalacheOper.foldSet, operEx, baseEx, setEx) =>
+      // FoldSet folds over the concrete elements of the set, so the set must be expanded.
+      // Otherwise a lazily-represented set (e.g. SUBSET S or [S -> T]) contributes no elements
+      // and the fold silently returns the base value. See #3385.
+      val tag = ex.typeTag
+      OperEx(op, transform(shallExpand)(operEx), transform(shallExpand)(baseEx), transform(true)(setEx))(tag)
+
     case ex @ OperEx(op @ TlaSetOper.filter, name, set, pred) =>
       // For the moment, we require the set to be expanded. However, we could think of collecting constraints on the way.
       val tag = ex.typeTag
