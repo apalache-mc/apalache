@@ -25,4 +25,4 @@ preprocessing steps:
 # References
 
  * Leslie Lamport. Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers.
-Addison-Wesley Professional, 2004. <a name="spec2004"></a>
+Addison-Wesley Professional, 2004. <a id="spec2004"></a>

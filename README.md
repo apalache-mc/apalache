@@ -12,7 +12,7 @@ alt="Apalache Logo">
 [![build](https://github.com/apalache-mc/apalache/actions/workflows/main.yml/badge.svg)](https://github.com/apalache-mc/apalache/actions/workflows/main.yml)
 
 Apalache translates [TLA+][] into the logic supported by SMT solvers such as
-[Microsoft Z3][]. Apalache can check inductive invariants (for fixed or bounded
+[Microsoft Z3][] and [CVC5][]. Apalache can check inductive invariants (for fixed or bounded
 parameters) and check safety of bounded executions (bounded model checking). To
 see the list of supported TLA+ constructs, check the [supported features][]. In
 general, Apalache runs under the same assumptions as [TLC][]. However, Apalache
@@ -57,10 +57,8 @@ Also, check the [standard repository of TLA+ examples][].
 
 ## Funding and Sponsorship
 
-Currently, Apalache is not funded by any organization. As a result,
-it is de-facto funded by its current maintainers and contributors,
-including [Igor Konnov][], [Jure Kukovec][], and [Thomas Pani][].
-If you would like to sponsor the project, please contact us.
+Apalache has moved to [TLA<sup>+</sup> Foundation][tlaplus-foundation], under
+the [Linux Foundation][linuxfoundation].
 
 We are grateful for the past financial support in the form of grants or
 employment from the following organizations:
@@ -85,52 +83,20 @@ branch for more information.
 The user documentation is automatically deployed to the website branch as per
 the [CI configuration](./.github/workflows/deploy.yml).
 
-<!-- TODO:this section should go to the website
+## Technical Charter
 
-## Talks
-
-- [Informal Systems Tutorial: TLA+ Basics](https://www.youtube.com/watch?v=peKYddIvCIs)
-
-- [Extended version of the Apalache tutorial](https://www.youtube.com/watch?v=Ml7d_3vlH88).
-  TLA+ tutorial at DISC 2021 (October 2021).
-
-- [How TLA+ and Apalache Helped Us to Design the Tendermint Light Client](https://www.crowdcast.io/e/interchain-conversations-II/38).
-  Interchain Conversations 2020 (December 2020).
-
-- [Model-based testing with TLA+ and Apalache](https://youtu.be/aveoIMphzW8).
-  TLA+ Community Event 2020 (October 2020).
-
-- [Type inference for TLA+ in Apalache](https://youtu.be/hnp25hmCMN8).
-  TLA+ Community Event 2020 (October 2020).
-
-- [Formal Spec and Model Checking of the Tendermint Blockchain Synchronization Protocol](https://youtu.be/h2Ovc1KWlXM)
-  2nd Workshop on Formal Methods for Blockchains (July 2020).
-
-- [Showing safety of Tendermint Consensus with TLA+ and Apalache](https://www.youtube.com/watch?v=aF20-28sMII).
-  Dev session at Informal Systems (May 2020).
-
-- [TLA+ model checking made symbolic](https://www.youtube.com/watch?v=e66FGgRzaqw)
-  OOPSLA 2019 (October 2019).
-
-- [Bounded model checking of TLA+ specifications with SMT](https://www.youtube.com/watch?v=Xl1--arESl8)
-  TLA+ Community Event 2018 (July 2018).
--->
-
-<!-- TODO: This section should also go to the website
-## Academic papers
-
-To read an academic paper about the theory behind Apalache,
-check our [paper at OOPSLA19](https://dl.acm.org/doi/10.1145/3360549).
-For the details of our novel encoding using SMT arrays, check our
-[paper at TACAS23](https://link.springer.com/chapter/10.1007/978-3-031-30823-9_7).
-Related reports and publications can be found at the
-[Apalache page at TU Wien](http://forsyte.at/research/apalache/).
--->
+This project is governed according to the [Technical Charter][].
 
 ---
 
+Copyright © Apalache a Series of LF Projects, LLC
+
+For web site terms of use, trademark policy and other project policies please see [lfprojects.org](https://lfprojects.org).
+
+
 [tla+]: http://lamport.azurewebsites.net/tla/tla.html
 [microsoft z3]: https://github.com/Z3Prover/z3
+[cvc5]: https://github.com/cvc5/cvc5
 [supported features]: https://apalache-mc.org/docs/apalache/features.html
 [tlc]: http://lamport.azurewebsites.net/tla/tools.html
 [leslie lamport's page on tla+]: http://lamport.azurewebsites.net/tla/tla.html
@@ -166,3 +132,6 @@ Related reports and publications can be found at the
 [Igor Konnov]: https://github.com/konnov
 [Jure Kukovec]: https://github.com/kukovec
 [Thomas Pani]: https://github.com/thpani
+[Technical Charter]: https://raw.githubusercontent.com/apalache-mc/.github/main/profile/docs/Apalache-Technical-Charter-Final-6-5-2026-1.pdf
+[tlaplus-foundation]: https://foundation.tlapl.us/
+[linuxfoundation]: https://linuxfoundation.org

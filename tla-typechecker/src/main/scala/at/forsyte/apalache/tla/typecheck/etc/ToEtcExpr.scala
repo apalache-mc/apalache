@@ -337,6 +337,22 @@ class ToEtcExpr(
         // the resulting expression is (principal lambda)
         mkApp(ref, Seq(principal), lambda)
 
+      case OperEx(op, bindingNameEx @ NameEx(_), pred)
+          if op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded =>
+        // \E x: P, \A x: P
+        // the principal type of unbounded \E and \A is (a => Bool) => Bool
+        val a = varPool.fresh
+        val quantType = OperT1(Seq(OperT1(Seq(a), BoolT1)), BoolT1)
+        // unbounded \E and \A implicitly introduce a lambda abstraction: λ x ∈ Set(b). P
+        val b = varPool.fresh
+        val lambda = mkAbs(
+            BlameRef(ex.ID),
+            this(pred),
+            (mkName(bindingNameEx), mkConst(BlameRef(ex.ID), SetT1(b))),
+        )
+        // the resulting expression is (((a => Bool) => Bool) (λ x ∈ Set(b). P))
+        mkApp(ref, Seq(quantType), lambda)
+
       // ******************************************** SETS **************************************************
       case OperEx(TlaSetOper.enumSet) =>
         // empty set {} is not an operator but a constant

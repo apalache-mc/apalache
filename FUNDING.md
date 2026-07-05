@@ -1,10 +1,7 @@
 ## Apalache Funding
 
-Currently, Apalache is not funded by any organization. As a result,
-it is de-facto funded by its current maintainers and contributors,
-including [Igor Konnov][], [Jure Kukovec][], and [Thomas Pani][].
-If you would like to sponsor the project, please contact us, or
-simply sponsor us on GitHub by clicking the "Sponsor" button!
+Apalache has moved to [TLA<sup>+</sup> Foundation][tlaplus-foundation], under
+the [Linux Foundation][linuxfoundation].
 
 We are grateful to the following organizations for financially supporting
 the Apalache project (in the form of grants or employment) for a significant
@@ -24,3 +21,5 @@ duration of time in the past:
 [Interchain Foundation]: https://interchain.io/
 [Informal Systems]: https://informal.systems/
 [Vienna Business Agency]: https://viennabusinessagency.at/
+[tlaplus-foundation]: https://foundation.tlapl.us/
+[linuxfoundation]: https://linuxfoundation.org

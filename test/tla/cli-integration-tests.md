@@ -465,6 +465,17 @@ EXITCODE: OK
 $ rm output.json
 ```
 
+### typecheck accepts string and integer TLC registers
+
+Regression test for #3274: `TLCGet`/`TLCSet` must accept both string (named) and
+integer (numbered) registers in the same operator.
+
+```sh
+$ apalache-mc typecheck Bug3274.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### parse FormulaRefs fails
 
 ```sh
@@ -503,7 +514,7 @@ EXITCODE: OK
 ### check factorization find a counterexample (array-encoding)
 
 ```sh
-$ apalache-mc check --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --length=2 --inv=Inv factorization.tla | sed 's/I@.*//'
 ...
 The outcome is: Error
 Checker has found an error
@@ -1717,6 +1728,28 @@ EXITCODE: ERROR (12)
 [12]
 ```
 
+### check Bug2107 succeeds (temporal): regression for #2107
+
+Regression test for https://github.com/apalache-mc/apalache/issues/2107.
+
+```sh
+$ apalache-mc check --temporal=P1 Bug2107.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=P2 Bug2107.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
+```sh
+$ apalache-mc check --temporal=P3 Bug2107.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check SetSndRcv succeeds (array-encoding)
 
 Regression test for https://github.com/apalache-mc/apalache/issues/1152
@@ -1819,11 +1852,10 @@ EXITCODE: OK
 
 While we cannot rely on an actual timeout happening or not, we can make sure that the option is properly parsed. 
 
+Depending on whether the SMT solver times out or not, Apalache will write either `The outcome is: NoError` or `The outcome is: SmtTimeout`, so we filter for only the exit code, which should be OK in either case.
+
 ```sh
-$ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | sed 's/I@.*//'
-...
-The outcome is: NoError
-...
+$ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | grep 'EXITCODE'
 EXITCODE: OK
 ```
 
@@ -1867,6 +1899,25 @@ MCexample5.out
 MCexample.out
 run.txt
 $ rm -rf ./test-out-dir
+```
+
+### check NonLinearArithmetic.tla with default CVC5 logic reports how to enable nonlinear arithmetic
+
+This will run under cvc5 regardless which SMT_SOLVER is set; if both CLI arg and environment variable configure the same parameter, the CLI argument wins.
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "error when rewriting to SMT:|EXITCODE" | sed -n '1p;$p' | sed 's/[[:space:]]*$//'
+<unknown>: error when rewriting to SMT: cvc5 is using SMT logic QF_UFLIA, which only permits linear integer arithmetic, but the solver saw a nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA.
+EXITCODE: ERROR (255)
+```
+
+### check NonLinearArithmetic.tla with CVC5 nonlinear arithmetic logic reports no error
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --tuning-options=cvc5.smt.logic=QF_UFNIA --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla | sed 's/[IEW]@.*//' | grep -E "The outcome is:|Checker reports|EXITCODE"
+The outcome is: NoError
+Checker reports no error up to computation length 0
+EXITCODE: OK
 ```
 
 ## configure the check command
@@ -2104,31 +2155,35 @@ application-configs.cfg
 detailed.log
 log0.smt
 run.txt
-$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
-;; fp.spacer.random_seed = 0
-;; nlsat.seed = 0
-;; sat.random_seed = 0
-;; sls.random_seed = 0
-;; smt.random_seed = 0
-;; (params random_seed 0)
-...
 $ rm -rf ./test-out-dir
 ```
 
-#### check SMT seed is picked up
+#### check SMT seed is picked up by Z3
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --smt-solver=z3 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
-$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec cat {} \;
-;; fp.spacer.random_seed = 4242
-;; nlsat.seed = 4242
-;; sat.random_seed = 4242
-;; sls.random_seed = 4242
-;; smt.random_seed = 4242
+$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 6 {} \;
+(set-option :fp.spacer.random_seed 4242)
+(set-option :nlsat.seed 4242)
+(set-option :sat.random_seed 4242)
+(set-option :sls.random_seed 4242)
+(set-option :smt.random_seed 4242)
 ;; (params random_seed 4242)
+$ rm -rf ./test-out-dir
+```
+
+#### check SMT seed is picked up by CVC5
+
+```sh
+$ apalache-mc check --smt-solver=cvc5 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
 ...
+EXITCODE: OK
+$ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 3 {} \;
+(set-logic QF_UFLIA)
+(set-option :random-seed 4242)
+(set-option :sat-random-seed 4242)
 $ rm -rf ./test-out-dir
 ```
 
@@ -2671,8 +2726,11 @@ EXITCODE: OK
 
 ### check TestBagsExt.tla reports no error
 
+CVC5 1.3.4 rejects the SMT `POW` term generated for this test because its exponent is not constant, even
+with `cvc5.smt.logic=ALL`, so keep this regression fixed to Z3.
+
 ```sh
-$ apalache-mc check --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --smt-solver=z3 --length=0 --inv=AllTests TestBagsExt.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 ```
@@ -3848,7 +3906,7 @@ $ rm -rf ./test-out-dir
 ### output manager: counterexamples are written to the run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-out-dir/factorization.tla/* | ./sort.sh
@@ -3908,7 +3966,7 @@ $ rm -rf ./test-out-dir ./test-run-dir
 ### output manager: counterexamples can be written to specified run directory
 
 ```sh
-$ apalache-mc check --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
+$ apalache-mc check --tuning-options=cvc5.smt.logic=QF_UFNIA --out-dir=./test-out-dir --write-intermediate=0 --length=2 --inv=Inv --run-dir=./test-run-dir factorization.tla | sed -e 's/[IEW]@.*//'
 ...
 EXITCODE: ERROR (12)
 $ ls ./test-run-dir | ./sort.sh
@@ -4018,7 +4076,7 @@ Then, run a trivial checking command with `--debug` so the derived config will
 be saved into to the `--run-dir`:
 
 ```sh
-$ apalache-mc check --config-file=demo-config.cfg --run-dir=configdump-dir --debug Counter.tla
+$ apalache-mc check --smt-solver=cvc5 --config-file=demo-config.cfg --run-dir=configdump-dir --debug Counter.tla
 ...
 ```
 
@@ -4037,6 +4095,7 @@ checker {
     smt-encoding {
         type=oopsla-19
     }
+    smt-solver=cvc5
     timeout-smt-sec=0
     tuning {
         "search.outputTraces"="false"

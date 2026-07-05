@@ -25,8 +25,7 @@ we recommend using nested `IF-THEN-ELSE` instead.
 
 ----------------------------------------------------------------------------
 
-<a name="ite"></a>
-## Deterministic IF-THEN-ELSE
+## <a id="ite"></a> Deterministic IF-THEN-ELSE
 
 _Use it when choosing between two values, not to structure your code._
 
@@ -72,8 +71,7 @@ Note that we are using the expression syntax for `if-else` in python.
 This is because we write an expression, not a series of statements that assign
 values to variables!
 
-<a name="case"></a>
-## Deterministic CASE
+## <a id="case"></a> Deterministic CASE
 
 _Read the description and never use this operator_
 
@@ -183,8 +181,7 @@ def case_example(n):
         return "positive"
 ```
 
-<a name="caseOther"></a>
-## Deterministic CASE-OTHER
+## <a id="caseOther"></a> Deterministic CASE-OTHER
 
 _Better use IF-THEN-ELSE._
 

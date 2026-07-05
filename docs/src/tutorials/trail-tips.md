@@ -5,9 +5,7 @@
 This tutorial collects tips and tricks that demonstrate the strong sides of
 Apalache.
 
-## Tip 1: Use TLA+ constructs instead of explicit iteration
-
-<a name="fold-except"></a>
+## <a id="fold-except"></a> Tip 1: Use TLA+ constructs instead of explicit iteration
 
 The [Apalache
 antipatterns](../apalache/antipatterns.md#incremental-computation) mention that

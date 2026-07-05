@@ -44,13 +44,12 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
     Global.setParameter(p, config.randomSeed.toString)
-    log(";; %s = %s".format(p, Global.getParameter(p)))
+    log(s"(set-option :$p ${Global.getParameter(p)})")
   }
 
   private def encoding: SMTEncoding = config.smtEncoding
 
   var level: Int = 0
-  var nBoolConsts: Int = 0 // the solver introduces Boolean constants internally
   private val z3context: Context = new Context()
   private val z3solver = z3context.mkSolver()
   private val simplifier = new ConstSimplifierForSmt()
@@ -64,7 +63,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   // Note: when the user sets z3.smt.logic = QF_LIA, z3 complains about random_seed.
   // https://github.com/apalache-mc/apalache/issues/2989
   params.add("random_seed", config.randomSeed)
-  config.z3Params.foreach { case (k, v) =>
+  config.solverParams.foreach { case (k, v) =>
     if (v.isInstanceOf[Int]) {
       params.add(k, v.asInstanceOf[Int])
     } else if (v.isInstanceOf[Boolean]) {
@@ -267,7 +266,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         smtListener.onIntroSmtConst(name)
         log(s";; declare edge predicate $name: Bool")
         log(s"(declare-const $name Bool)")
-        nBoolConsts += 1
         val const = z3context.mkConst(name, z3context.getBoolSort)
         inCache += ((set.id, elem.id) -> ((const.asInstanceOf[ExprSort], level)))
         _metrics = _metrics.addNConsts(1)
@@ -277,6 +275,9 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
 
   private def getInPred(setId: Int, elemId: Int): ExprSort = {
     inCache.get((setId, elemId)) match {
+      case Some((const, _)) =>
+        const
+
       case None =>
         val setT = cellCache(setId).head._2
         val elemT = cellCache(elemId).head._2
@@ -284,9 +285,6 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         flushLogs()
         throw new IllegalStateException(
             s"SMT $id: The Boolean constant $name (set membership) is missing from the SMT context")
-
-      case Some((const, _)) =>
-        const
     }
   }
 
@@ -420,7 +418,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
       if (z3expr.isConst && z3expr.getSort.getName.toString.startsWith("Cell_")) {
         tla.name(z3expr.toString, TlaType1.fromTypeTag(ex.typeTag))
       } else {
-        flushAndThrow(new SmtEncodingException(s"SMT $id: Expected an integer or Boolean, found: $z3expr", ex))
+        flushAndThrow(new SmtEncodingException(s"SMT $id: Unexpected term in Z3 model: $z3expr", ex))
       }
     }
   }
@@ -501,6 +499,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def push(): Unit = {
     log("(push) ;; becomes %d".format(level + 1))
     flushLogs() // good time to flush
+
     z3solver.push()
     maxCellIdPerContext = maxCellIdPerContext.head +: maxCellIdPerContext
     level += 1
@@ -513,6 +512,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     if (level > 0) {
       log("(pop) ;; becomes %d".format(level - 1))
       flushLogs() // good time to flush
+
       z3solver.pop()
       maxCellIdPerContext = maxCellIdPerContext.tail
       level -= 1
@@ -531,6 +531,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
     if (n > 0) {
       log("(pop %d) ;; becomes %d".format(n, level - n))
       flushLogs() // good time to flush
+
       z3solver.pop(n)
       maxCellIdPerContext = maxCellIdPerContext.drop(n)
       level -= n
@@ -548,9 +549,11 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   override def sat(): Boolean = {
     log("(check-sat)")
     flushLogs() // good time to flush
+
     val status = z3solver.check()
     log(s";; sat = ${status.name()}")
     flushLogs() // good time to flush
+
     if (status == Status.UNKNOWN) {
       // that seems to be the only reasonable behavior
       val msg = s"SMT $id: z3 reports UNKNOWN. Maybe, your specification is outside the supported logic."
@@ -965,7 +968,7 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
         z3context.mkEq(le, re)
 
       case _ =>
-        flushAndThrow(throw new CheckerException(s"SMT $id: Incomparable expressions", NullEx))
+        flushAndThrow(new CheckerException(s"SMT $id: Incomparable expressions", NullEx))
     }
   }
 
@@ -1090,6 +1093,9 @@ object Z3SolverContext {
 
   /**
    * The names of all parameters that are used to set the random seeds in z3.
+   *
+   * Z3 also exposes `tactic.randomizer.seed` in newer releases, but z3-turnkey is currently older than the Z3 release
+   * that introduced it. Add it here after upgrading the bundled Z3 dependency.
    */
   val RANDOM_SEED_PARAMS: List[String] =
     List(

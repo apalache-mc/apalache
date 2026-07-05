@@ -127,13 +127,25 @@ jobs:
       # Allows other OS tests to proceed even if one fails
       fail-fast: false
       matrix:
-        operating-system: [ubuntu-latest, macos-latest]
-        smt-encoding: [oopsla19, arrays]
-        exclude:
-          # We don't need an additional run of the arrays encoding just for macos
-          # since no OS-specific differences seem likely.
+        include:
+          - operating-system: ubuntu-latest
+            smt-encoding: oopsla19
+            smt-solver: z3
+            test-filter: ""
           - operating-system: macos-latest
+            smt-encoding: oopsla19
+            smt-solver: z3
+            test-filter: ""
+          # Arrays and cvc5 have no expected OS-specific behavior in these
+          # tests, so run them once on Ubuntu instead of repeating them on macOS.
+          - operating-system: ubuntu-latest
             smt-encoding: arrays
+            smt-solver: z3
+            test-filter: array-encoding
+          - operating-system: ubuntu-latest
+            smt-encoding: oopsla19
+            smt-solver: cvc5
+            test-filter: ""
     steps:
       - uses: actions/checkout@v4
       - name: Cache local m2 repository
@@ -172,8 +184,9 @@ jobs:
         if: runner.os == 'Linux'
         run: nix develop -c make integration
         env:
+          SMT_SOLVER: ${{ matrix.smt-solver }}
           SMT_ENCODING: ${{ matrix.smt-encoding }}
-          TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
+          TEST_FILTER: ${{ matrix.test-filter }}
 
       # ── Direct path (macOS only, no Nix) ─────────────────────────────────────
       - name: Set up JDK 17
@@ -216,8 +229,9 @@ jobs:
           source .envrc
           make integration
         env:
+          SMT_SOLVER: ${{ matrix.smt-solver }}
           SMT_ENCODING: ${{ matrix.smt-encoding }}
-          TEST_FILTER: ${{ matrix.smt-encoding == 'arrays' && 'array-encoding' || '' }}
+          TEST_FILTER: ${{ matrix.test-filter }}
 
   docker-tests:
     runs-on: ubuntu-latest

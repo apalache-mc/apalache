@@ -308,8 +308,7 @@ course of action depends on the program analysis that you implement. For
 instance, a random simulator could simply backtrack and randomly choose another
 value.
 
-<a name="nondetExists"></a>
-### Non-determinism in `\E x \in S: P`
+### <a id="nondetExists"></a> Non-determinism in `\E x \in S: P`
 
 We only have to consider the following case: `\E x \in S: P` is evaluated against
 a binding `s`, and there is a primed state variable `y'` that satisfies two
@@ -370,8 +369,7 @@ Simply ask the oracle. Below, we give three examples of how the evaluation works
 3. (GUESS Int) returns -20. (LET i == -20 IN i > x /\ x' = i) is FALSE. Halt.
 ```
 
-<a name="nondetOr"></a>
-### Non-determinism in disjunctions
+### <a id="nondetOr"></a> Non-determinism in disjunctions
 
 Consider a disjunction that comprises `n` clauses:
 
@@ -456,8 +454,7 @@ disjunction](./booleans.md) in the deterministic case, we have
 non-deterministic choice here. Hence, short-circuiting does not apply to
 non-deterministic disjunctions.*
 
-<a name="nondetIte"></a>
-### Non-determinism in Boolean `IF-THEN-ELSE`
+### <a id="nondetIte"></a> Non-determinism in Boolean `IF-THEN-ELSE`
 
 For the deterministic use of `IF-THEN-ELSE`, see [Deterministic
 conditionals](./conditionals.md).
@@ -493,8 +490,7 @@ _We do not recommend you to use IF-THEN-ELSE with non-determinism. The structure
 condition, the effect of `x' = e` is not obvious when `x'` is not assigned a
 value.
 
-<a name="nondetCase"></a>
-### Non-determinism in Boolean `CASE`
+### <a id="nondetCase"></a> Non-determinism in Boolean `CASE`
 
 For the deterministic use of `CASE`,
     see [Deterministic conditionals](./conditionals.md).
