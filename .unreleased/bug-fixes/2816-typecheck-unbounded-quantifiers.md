@@ -1,0 +1,1 @@
+Fixed a crash (`IllegalArgumentException: Unsupported expression`) in the type checker on unbounded quantifiers `\A x: P` and `\E x: P`. These expressions are now type-checked like their bounded counterparts, and are reported with a proper, source-located error only if they reach the model checker, see #2816.
