@@ -84,7 +84,7 @@ understand that many external contributors are trying to help the project. We
 also know that it is tempting to shoot an AI tool at a problem and see it
 "solved". Unfortunately, the AI tools do not have understanding of the impact of
 their code. We often see the code that may even solve the issue, but it is not
-properly integrated into the system, nor is it properly tested.  As a result,
+properly integrated into the system, nor is it properly tested. As a result,
 the maintainers have to spend hours of their time on fixing code that was
 generated in 10 minutes.
 
