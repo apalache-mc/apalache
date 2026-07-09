@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-867570ca.js";
+            window.path_to_searchindex_js = "../searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f88ca4ea.js"></script>
@@ -262,7 +262,7 @@ If this is not the case, the type checker flags an error.</p>
 <hr>
 <h3 id="set-membership"><a class="header" href="#set-membership"><a id="in"></a> Set membership</a></h3>
 <p><strong>Notation:</strong> <code>e \in S</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/in-set.png" alt="in"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/in-set.png" alt="in"><span class="img-wrapper"><img src="./img/in-set.png" alt="in"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
@@ -299,7 +299,7 @@ False
 <hr>
 <h3 id="set-non-membership"><a class="header" href="#set-non-membership"><a id="notin"></a> Set non-membership</a></h3>
 <p><strong>Notation:</strong> <code>e \notin S</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/notin-set.png" alt="notin"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/notin-set.png" alt="notin"><span class="img-wrapper"><img src="./img/notin-set.png" alt="notin"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
@@ -341,7 +341,7 @@ see <a href="./logic.html">Logic</a>.</p>
 <hr>
 <h3 id="set-inclusion"><a class="header" href="#set-inclusion"><a id="subseteq"></a> Set inclusion</a></h3>
 <p><strong>Notation:</strong> <code>S \subseteq T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/subseteq.png" alt="subseteq"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/subseteq.png" alt="subseteq"><span class="img-wrapper"><img src="./img/subseteq.png" alt="subseteq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
@@ -377,7 +377,7 @@ False
 <hr>
 <h3 id="binary-set-union"><a class="header" href="#binary-set-union"><a id="union"></a> Binary set union</a></h3>
 <p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/cup.png" alt="cup"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/cup.png" alt="cup"><span class="img-wrapper"><img src="./img/cup.png" alt="cup"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
@@ -410,7 +410,7 @@ that can be written as <code>|</code>:</p>
 <hr>
 <h3 id="set-intersection"><a class="header" href="#set-intersection"><a id="intersect"></a> Set intersection</a></h3>
 <p><strong>Notation:</strong> <code>S \intersect T</code> or <code>S \cap T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/cap.png" alt="cap"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/cap.png" alt="cap"><span class="img-wrapper"><img src="./img/cap.png" alt="cap"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
@@ -443,7 +443,7 @@ set()
 <hr>
 <h3 id="set-difference"><a class="header" href="#set-difference"><a id="setminus"></a> Set difference</a></h3>
 <p><strong>Notation:</strong> <code>S \ T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/setminus.png" alt="setminus"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/setminus.png" alt="setminus"><span class="img-wrapper"><img src="./img/setminus.png" alt="setminus"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
@@ -476,7 +476,7 @@ set()
 <hr>
 <h3 id="set-filter"><a class="header" href="#set-filter"><a id="filter"></a> Set filter</a></h3>
 <p><strong>Notation:</strong> <code>{ x \in S: P }</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/filter.png" alt="filter"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/filter.png" alt="filter"><span class="img-wrapper"><img src="./img/filter.png" alt="filter"></span></label></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
 <strong>Advanced syntax</strong>), a set, and an expression.</p>
 <p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
@@ -528,7 +528,7 @@ set()
 <hr>
 <h3 id="set-map"><a class="header" href="#set-map"><a id="map"></a> Set map</a></h3>
 <p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments</p>
-<p><strong>LaTeX notation:</strong> <img src="./img/map.png" alt="map"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/map.png" alt="map"><span class="img-wrapper"><img src="./img/map.png" alt="map"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
 a set. Additional arguments are variables’ names and sets, interleaved.</p>
@@ -742,7 +742,7 @@ produces a static type error, if the type of <code>S</code> is different from a 
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

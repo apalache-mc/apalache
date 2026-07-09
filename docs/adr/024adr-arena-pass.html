@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-867570ca.js";
+            window.path_to_searchindex_js = "../searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f88ca4ea.js"></script>
@@ -238,11 +238,11 @@ As a result, arenas are incredibly fragile, as it becomes easy to inadvertently 
 <h2 id="illustration"><a class="header" href="#illustration">Illustration</a></h2>
 <p>Let us use an example rewriting rule, and visualize the difference between the approaches. Take, for instance <code>SetCupRule</code>, the rule used in translating the union of two sets.
 Currently, the sequence diagram for this rule looks like this (with the OOPSLA19 encoding):
-<img src="seqDiaBefore.png" alt=""></p>
+<label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="seqDiaBefore.png" alt=""><span class="img-wrapper"><img src="seqDiaBefore.png" alt=""></span></label></p>
 <p>Of note are the multiple calls needed to mutate and read from <code>SymbState</code>, as well as the <code>PureArenaAdapter</code> wrapper, which connects arena generation to SMT solving.
 Observe also, that calls to <code>Z3SolverContext</code> happen at multiple points, in between other code (in part due to <code>PureArenaAdapter</code>).</p>
 <p>Under (3), the same rule would look more like this:
-<img src="seqDiaAfter.png" alt=""></p>
+<label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="seqDiaAfter.png" alt=""><span class="img-wrapper"><img src="seqDiaAfter.png" alt=""></span></label></p>
 <p>Specifically, we would no longer need <code>PureArenaAdapters</code>, and we could drop the parts of <code>SymbState</code>, which are treated as mutable (the <code>TlaEx</code> value). In the above, <code>RewriterScope</code> is what remains of <code>SymbState</code>, when we remove the <code>TlaEx</code> value.</p>
 <p>A prototype implementation can be found in <a href="https://github.com/apalache-mc/apalache/pull/2554">this PR</a>.</p>
 <h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
@@ -308,7 +308,7 @@ actually has a much better memory footprint, since only the information relevant
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-867570ca.js";
+            window.path_to_searchindex_js = "../searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f88ca4ea.js"></script>
@@ -395,7 +395,7 @@ It describes a possible infinite execution: first it goes through the prefix, an
 <p>For example, what is a trace that is a counterexample to the property <code>♢isGreen</code>?
 It’s an execution that loops without ever finding a state that satisfies <code>isGreen</code>.
 For example, a counterexample trace might visually look like this:</p>
-<p><img src="img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen"><span class="img-wrapper"><img src="img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen"></span></label></p>
 <p>In contrast, as long as the model checking engine has not found a lasso, there may still exist some future state satisfying <code>isGreen</code>.</p>
 <h2 id="utilizing-auxiliary-variables-to-find-lassos"><a class="header" href="#utilizing-auxiliary-variables-to-find-lassos">Utilizing auxiliary variables to find lassos</a></h2>
 <p>The encoding for temporal properties involves lots of auxiliary variables.
@@ -458,7 +458,7 @@ However, since state 3 is the last state, this means simply that the trace loops
 Since the loop starts, the copies of the system variables are also set to the values of the variables in state 2,
 so <code> __loop_isGreen = FALSE</code> and <code>__loop_requestedGreen = TRUE</code>.</p>
 <p>The lasso in this case can be visualized like this:</p>
-<p><img src="img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)"><span class="img-wrapper"><img src="img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)"></span></label></p>
 <p>It is also clear why this trace violates the property:
 <code>requestedGreen</code> holds in state 1, but <code>isGreen</code> never holds,
 so in state 1 the property <code>requestedGreen =&gt; &lt;&gt;isGreen</code> is violated.</p>
@@ -499,7 +499,7 @@ us that along the execution, <code>isGreen</code> will never be true.</p>
 <p>You might already have noticed the pattern of which formulas appear as variables.
 Take our property <code>[](requestedGreen =&gt; &lt;&gt;isGreen)</code>.
 The syntax tree of this formula looks like this:</p>
-<p><img src="img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)"><span class="img-wrapper"><img src="img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)"></span></label></p>
 <p>For each node of the syntax tree where the formula contains a temporal operator,
 there is an auxiliary variable.
 For example, there would be auxiliary variables for the formulas <code>[]isGreen</code>
@@ -638,7 +638,7 @@ There, take a look at <code>0X_OutTemporalPass.tla</code>.</p>
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

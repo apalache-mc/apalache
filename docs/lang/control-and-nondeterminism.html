@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-867570ca.js";
+            window.path_to_searchindex_js = "../searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f88ca4ea.js"></script>
@@ -241,7 +241,7 @@ sequence of states that are connected via <code>Init</code> and <code>Next</code
 without stopping at any index <code>k</code>.</p>
 <p>Below we plot the values of <code>x</code> and <code>y</code> in the first 16 states with red dots.
 Not surprisingly, we just get a line.</p>
-<p><img src="./img/diagonal.png" alt="diagonal"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/diagonal.png" alt="diagonal"><span class="img-wrapper"><img src="./img/diagonal.png" alt="diagonal"></span></label></p>
 <p><strong>Note:</strong> In the above examples, we only showed transitions that could be
 produced by computations, which (by our definition) originate from the initial
 states. These transitions contain <em>reachable</em> states. In principle, <code>Next</code> may
@@ -268,7 +268,7 @@ Next == x' = x + 1 /\ y' = y + 1
 <p>Now our plot has a bit more variation. It presents three computations
 that are starting in three different initial states: <code>[x |-&gt; 0, y |-&gt; 0]</code>,
 <code>[x |-&gt; 0, y |-&gt; 1]</code>, and <code>[x |-&gt; 0, y |-&gt; 2]</code>.</p>
-<p><img src="./img/diagonal3.png" alt="diagonal3"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/diagonal3.png" alt="diagonal3"><span class="img-wrapper"><img src="./img/diagonal3.png" alt="diagonal3"></span></label></p>
 <p>However, there is still not much variation in <code>Next</code>. For every state <code>s</code>,
 we can precisely say which state follows <code>s</code> according to <code>Next</code>. We can
 define <code>Next</code> as follows (note that <code>Init</code> is defined as in <code>coord</code>):</p>
@@ -280,7 +280,7 @@ Next == x' = x + 1 /\ (y' = x \/ y' = x + 1)
 </code></pre>
 <p>The following plot shows the states that are visited by the computations
 of the specification <code>coord3</code>:</p>
-<p><img src="./img/diag2.png" alt="diag2"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/diag2.png" alt="diag2"><span class="img-wrapper"><img src="./img/diag2.png" alt="diag2"></span></label></p>
 <p>Notice that specification <code>coord</code> describes one infinite computation (and
 infinitely many finite computations that are prefixes of the infinite
 computation).  Specification <code>coord2</code> describes three infinite computations.
@@ -650,7 +650,7 @@ We recommend you to use the disjunctive form instead.</em></p>
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

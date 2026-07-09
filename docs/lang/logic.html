@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-867570ca.js";
+            window.path_to_searchindex_js = "../searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f88ca4ea.js"></script>
@@ -192,7 +192,7 @@ section, we only consider the deterministic use of the existential quantifier.</
 <hr>
 <h3 id="bounded-universal-quantifier"><a class="header" href="#bounded-universal-quantifier"><a id="forallBounded"></a> Bounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x \in S: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/forall-bounded.png" alt="forall-bounded"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/forall-bounded.png" alt="forall-bounded"><span class="img-wrapper"><img src="./img/forall-bounded.png" alt="forall-bounded"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
@@ -256,7 +256,7 @@ True
 <hr>
 <h3 id="bounded-existential-quantifier"><a class="header" href="#bounded-existential-quantifier"><a id="existsBounded"></a> Bounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x \in S: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/exists-bounded.png" alt="exists-bounded"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/exists-bounded.png" alt="exists-bounded"><span class="img-wrapper"><img src="./img/exists-bounded.png" alt="exists-bounded"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
@@ -327,7 +327,7 @@ True
 <h3 id="equality"><a class="header" href="#equality"><a id="eq"></a> Equality</a></h3>
 <p><em>A foundational operator in TLA+</em></p>
 <p><strong>Notation:</strong> <code>e_1 = e_2</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/eq.png" alt="eq"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/eq.png" alt="eq"><span class="img-wrapper"><img src="./img/eq.png" alt="eq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It tests the values
@@ -444,7 +444,7 @@ True
 <hr>
 <h3 id="inequality"><a class="header" href="#inequality"><a id="neq"></a> Inequality</a></h3>
 <p><strong>Notation:</strong> <code>e_1 /= e_2</code> or <code>e_1 # e_2</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/ne.png" alt="ne"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/ne.png" alt="ne"><span class="img-wrapper"><img src="./img/ne.png" alt="ne"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator is syntax sugar for <code>~(e_1 = e_2)</code>. Full stop.</p>
@@ -452,7 +452,7 @@ True
 <h3 id="bounded-choice"><a class="header" href="#bounded-choice"><a id="chooseBounded"></a> Bounded Choice</a></h3>
 <p><em>This operator causes a lot of confusion. Read carefully!</em></p>
 <p><strong>Notation:</strong> <code>CHOOSE x \in S: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/choose-bounded.png" alt="choose-bounded"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/choose-bounded.png" alt="choose-bounded"><span class="img-wrapper"><img src="./img/choose-bounded.png" alt="choose-bounded"></span></label></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name, a set, and an
 expression.</p>
 <p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
@@ -536,7 +536,7 @@ if __name__ == "__main__":
 <hr>
 <h3 id="unbounded-universal-quantifier"><a class="header" href="#unbounded-universal-quantifier"><a id="forall"></a> Unbounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/forall.png" alt="forall"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/forall.png" alt="forall"><span class="img-wrapper"><img src="./img/forall.png" alt="forall"></span></label></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
 expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
@@ -550,7 +550,7 @@ when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/H
 <hr>
 <h3 id="unbounded-existential-quantifier"><a class="header" href="#unbounded-existential-quantifier"><a id="exists"></a> Unbounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="./img/exists.png" alt="exists"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./img/exists.png" alt="exists"><span class="img-wrapper"><img src="./img/exists.png" alt="exists"></span></label></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
 expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
@@ -623,7 +623,7 @@ more about unbounded <code>CHOOSE</code>, read Section 16.1.2 of <a href="http:/
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

@@ -15,8 +15,8 @@
         <link rel="icon" href="../favicon-de23e50b.svg">
         <link rel="shortcut icon" href="../favicon-8114d1fc.png">
         <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-0392ca55.css">
-        <link rel="stylesheet" href="../css/chrome-fc474251.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
         <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-867570ca.js";
+            window.path_to_searchindex_js = "../searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f88ca4ea.js"></script>
@@ -245,7 +245,7 @@ contexts are not multithreaded).</p>
 <code>RecordingZ3SolverContext</code>. A snapshot produces an hierarchical log of calls to
 SMT that can be replayed in another <code>OfflineExecutionContext</code>, even on another
 machine.</p>
-<p><img src="./trex-arch.png" alt="TRex architecture"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./trex-arch.png" alt="TRex architecture"><span class="img-wrapper"><img src="./trex-arch.png" alt="TRex architecture"></span></label></p>
 <h2 id="interaction-with-transitionexecutor"><a class="header" href="#interaction-with-transitionexecutor">Interaction with TransitionExecutor</a></h2>
 <p>We demonstrate a typical interaction with <code>TransitionExecutor</code> for the
 following TLA+ specification, which has been preprocessed by the passes
@@ -274,15 +274,15 @@ Inv ==
 </code></pre>
 <p>The sequence diagram below shows how the sequential model checker translates
 <code>ConstInit</code> to SMT and then translates <code>Init$0</code>.</p>
-<p><img src="./trex-initialization.png" alt="Initialization"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./trex-initialization.png" alt="Initialization"><span class="img-wrapper"><img src="./trex-initialization.png" alt="Initialization"></span></label></p>
 <p>The sequence diagram below shows how the sequential model checker translates
 <code>Next$0</code> and <code>Next$1</code> to SMT. It first finds that <code>Next$0</code> is disabled and
 then it finds that <code>Next$1</code> is enabled. The enabled transition is picked.</p>
-<p><img src="./trex-step.png" alt="Step"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./trex-step.png" alt="Step"><span class="img-wrapper"><img src="./trex-step.png" alt="Step"></span></label></p>
 <p>The sequence diagram below shows how the sequential model checker translates
 <code>~Inv</code> to SMT and checks, whether there is a concrete state that witnesses
 the negation of the invariant.</p>
-<p><img src="./trex-inv.png" alt="Invariant"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="./trex-inv.png" alt="Invariant"><span class="img-wrapper"><img src="./trex-inv.png" alt="Invariant"></span></label></p>
 <p>As you can see, <code>TransitionExecutor</code> is still offering a lot flexibility to the
 model checker layer, while it is completely hiding the lower layer.  We do not
 explain how the parallel checker is working. This is a subject to another ADR.</p>
@@ -337,7 +337,7 @@ model checking strategies.</p>
 
         <script src="../clipboard-1626706a.min.js"></script>
         <script src="../highlight-abc7f01d.js"></script>
-        <script src="../book-c22b7243.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src=".././highlightjs-tlaplus/dist/tlaplus.min.js"></script>

@@ -16,8 +16,8 @@
         <link rel="icon" href="favicon-de23e50b.svg">
         <link rel="shortcut icon" href="favicon-8114d1fc.png">
         <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-0392ca55.css">
-        <link rel="stylesheet" href="css/chrome-fc474251.css">
+        <link rel="stylesheet" href="css/general-e96d0476.css">
+        <link rel="stylesheet" href="css/chrome-d279d366.css">
         <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-867570ca.js";
+            window.path_to_searchindex_js = "searchindex-b5572066.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f88ca4ea.js"></script>
@@ -310,7 +310,7 @@ predicate over pairs of states <code>(current, successor)</code> in TLA+. This p
 is usually called <code>Next</code>.</p>
 <p>We start with the simplest possible specification of a single-state machine.
 If we visualize it as a state diagram, it looks like follows:</p>
-<p><img src="tutorials/img/single.drawio.svg" alt="Tux, the Linux mascot"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="tutorials/img/single.drawio.svg" alt="Tux, the Linux mascot"><span class="img-wrapper"><img src="tutorials/img/single.drawio.svg" alt="Tux, the Linux mascot"></span></label></p>
 <p>Let’s open a new file called <code>BinSearch0.tla</code> and type a very minimal module
 definition:</p>
 <pre><code class="language-tla">--------------------------- MODULE BinSearch0 ---------------------------------
@@ -2029,7 +2029,7 @@ apalache-mc check --next=NextFast --inv=DriftInv MC_FoldExcept${N}.tla
 </code></pre>
 <p>The plot below shows the running times for the versions <code>NextSlow</code> and
 <code>NextFast</code>:</p>
-<p><img src="tutorials/img/times.png" alt="Running times"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="tutorials/img/times.png" alt="Running times"><span class="img-wrapper"><img src="tutorials/img/times.png" alt="Running times"></span></label></p>
 <p>The plot speaks for itself. The version <code>NextFast</code> is dramatically faster than
 <code>NextSlow</code> for an increasing number of processes. Interestingly, <code>NextFast</code> is
 also more concise. In principle, both <code>NextFast</code> and <code>NextSlow</code> describe the
@@ -3021,7 +3021,7 @@ It describes a possible infinite execution: first it goes through the prefix, an
 <p>For example, what is a trace that is a counterexample to the property <code>♢isGreen</code>?
 It’s an execution that loops without ever finding a state that satisfies <code>isGreen</code>.
 For example, a counterexample trace might visually look like this:</p>
-<p><img src="tutorials/img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="tutorials/img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen"><span class="img-wrapper"><img src="tutorials/img/looping_trace.png" alt="A counterexample trace for the property &lt;&gt;isGreen"></span></label></p>
 <p>In contrast, as long as the model checking engine has not found a lasso, there may still exist some future state satisfying <code>isGreen</code>.</p>
 <h2 id="utilizing-auxiliary-variables-to-find-lassos"><a class="header" href="#utilizing-auxiliary-variables-to-find-lassos">Utilizing auxiliary variables to find lassos</a></h2>
 <p>The encoding for temporal properties involves lots of auxiliary variables.
@@ -3084,7 +3084,7 @@ However, since state 3 is the last state, this means simply that the trace loops
 Since the loop starts, the copies of the system variables are also set to the values of the variables in state 2,
 so <code> __loop_isGreen = FALSE</code> and <code>__loop_requestedGreen = TRUE</code>.</p>
 <p>The lasso in this case can be visualized like this:</p>
-<p><img src="tutorials/img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="tutorials/img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)"><span class="img-wrapper"><img src="tutorials/img/counterexample.png" alt="A counterexample trace for the property [](requestedGreen =&gt; &lt;&gt;isGreen)"></span></label></p>
 <p>It is also clear why this trace violates the property:
 <code>requestedGreen</code> holds in state 1, but <code>isGreen</code> never holds,
 so in state 1 the property <code>requestedGreen =&gt; &lt;&gt;isGreen</code> is violated.</p>
@@ -3125,7 +3125,7 @@ us that along the execution, <code>isGreen</code> will never be true.</p>
 <p>You might already have noticed the pattern of which formulas appear as variables.
 Take our property <code>[](requestedGreen =&gt; &lt;&gt;isGreen)</code>.
 The syntax tree of this formula looks like this:</p>
-<p><img src="tutorials/img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="tutorials/img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)"><span class="img-wrapper"><img src="tutorials/img/syntaxtree.png" alt="The syntax tree for the formula [](requestedGreen =&gt; &lt;&gt;isGreen)"></span></label></p>
 <p>For each node of the syntax tree where the formula contains a temporal operator,
 there is an auxiliary variable.
 For example, there would be auxiliary variables for the formulas <code>[]isGreen</code>
@@ -5365,11 +5365,11 @@ was found, indicated by the file name correlated with a range of <code>line:colu
 <pre><code class="language-sh">$APALACHE_HOME/script/heatmap.py profile.csv heatmap.html
 </code></pre>
 <p>The produced file <code>heatmap.html</code> looks as follows:</p>
-<p><img src="apalache/img/profiler2.png" title="A heatmap" alt="Here you should see a heatmap"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="apalache/img/profiler2.png" title="A heatmap" alt="Here you should see a heatmap"><span class="img-wrapper"><img src="apalache/img/profiler2.png" title="A heatmap" alt="Here you should see a heatmap"></span></label></p>
 <p>The heatmap may give you an idea about the expression that are hard for Apalache.
 The following picture highlights one part of the Raft specification that produces
 a lot of constraints:</p>
-<p><img src="apalache/img/profiler.png" title="A heatmap of Raft" alt="Here you should see a heatmap"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="apalache/img/profiler.png" title="A heatmap of Raft" alt="Here you should see a heatmap"><span class="img-wrapper"><img src="apalache/img/profiler.png" title="A heatmap of Raft" alt="Here you should see a heatmap"></span></label></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="five-minutes-of-theory"><a class="header" href="#five-minutes-of-theory">Five minutes of theory</a></h1>
 <p><strong>You can safely skip this section</strong></p>
@@ -6912,7 +6912,7 @@ We discuss this effect <a href="#control-flow-and-non-determinism-in-tla">Contro
 <hr>
 <h3 id="and-conjunction"><a class="header" href="#and-conjunction"><a id="and"></a> And (conjunction)</a></h3>
 <p><strong>Notation:</strong> <code>F /\ G</code> or <code>F \land G</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/land.png" alt="land"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/land.png" alt="land"><span class="img-wrapper"><img src="lang/img/land.png" alt="land"></span></label></p>
 <p><strong>Arguments:</strong> Two or more arbitrary expressions.</p>
 <p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong> The binary case <code>F /\ G</code> evaluates to:</p>
@@ -6975,7 +6975,7 @@ is equivalent to:</p>
 <hr>
 <h3 id="or-disjunction"><a class="header" href="#or-disjunction"><a id="or"></a> Or (disjunction)</a></h3>
 <p><strong>Notation:</strong> <code>F \/ G</code> or <code>F \lor G</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/lor.png" alt="lor"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/lor.png" alt="lor"><span class="img-wrapper"><img src="lang/img/lor.png" alt="lor"></span></label></p>
 <p><strong>Arguments:</strong> Two or more Boolean expressions.</p>
 <p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
 <p><strong>Effect:</strong></p>
@@ -7044,7 +7044,7 @@ is equivalent to:</p>
 <hr>
 <h3 id="negation"><a class="header" href="#negation"><a id="not"></a> Negation</a></h3>
 <p><strong>Notation:</strong> <code>~F</code> or <code>\neg F</code> or <code>\lnot F</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/lnot.png" alt="lnot"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/lnot.png" alt="lnot"><span class="img-wrapper"><img src="lang/img/lnot.png" alt="lnot"></span></label></p>
 <p><strong>Arguments:</strong> One argument that should evaluate to a Boolean value.</p>
 <p><strong>Apalache type:</strong> <code>Bool =&gt; Bool</code></p>
 <p><strong>Effect:</strong></p>
@@ -7072,7 +7072,7 @@ True
 <hr>
 <h3 id="implication"><a class="header" href="#implication"><a id="implies"></a> Implication</a></h3>
 <p><strong>Notation:</strong> <code>F =&gt; G</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/implies.png" alt="implies"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/implies.png" alt="implies"><span class="img-wrapper"><img src="lang/img/implies.png" alt="implies"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.</p>
 <p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code>.
@@ -7116,7 +7116,7 @@ False
 <hr>
 <h3 id="equivalence"><a class="header" href="#equivalence"><a id="equiv"></a> Equivalence</a></h3>
 <p><strong>Notation:</strong> <code>F &lt;=&gt; G</code> or <code>F \equiv G</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/equiv.png" alt="equiv"> or <img src="lang/img/equiv2.png" alt="equiv2"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/equiv.png" alt="equiv"><span class="img-wrapper"><img src="lang/img/equiv.png" alt="equiv"></span></label> or <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/equiv2.png" alt="equiv2"><span class="img-wrapper"><img src="lang/img/equiv2.png" alt="equiv2"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. Although they can be arbitrary expressions, the
 result is only defined when both arguments are evaluated to Boolean values.</p>
 <p><strong>Apalache type:</strong> <code>(Bool, Bool) =&gt; Bool</code></p>
@@ -7225,7 +7225,7 @@ sequence of states that are connected via <code>Init</code> and <code>Next</code
 without stopping at any index <code>k</code>.</p>
 <p>Below we plot the values of <code>x</code> and <code>y</code> in the first 16 states with red dots.
 Not surprisingly, we just get a line.</p>
-<p><img src="lang/img/diagonal.png" alt="diagonal"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/diagonal.png" alt="diagonal"><span class="img-wrapper"><img src="lang/img/diagonal.png" alt="diagonal"></span></label></p>
 <p><strong>Note:</strong> In the above examples, we only showed transitions that could be
 produced by computations, which (by our definition) originate from the initial
 states. These transitions contain <em>reachable</em> states. In principle, <code>Next</code> may
@@ -7252,7 +7252,7 @@ Next == x' = x + 1 /\ y' = y + 1
 <p>Now our plot has a bit more variation. It presents three computations
 that are starting in three different initial states: <code>[x |-&gt; 0, y |-&gt; 0]</code>,
 <code>[x |-&gt; 0, y |-&gt; 1]</code>, and <code>[x |-&gt; 0, y |-&gt; 2]</code>.</p>
-<p><img src="lang/img/diagonal3.png" alt="diagonal3"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/diagonal3.png" alt="diagonal3"><span class="img-wrapper"><img src="lang/img/diagonal3.png" alt="diagonal3"></span></label></p>
 <p>However, there is still not much variation in <code>Next</code>. For every state <code>s</code>,
 we can precisely say which state follows <code>s</code> according to <code>Next</code>. We can
 define <code>Next</code> as follows (note that <code>Init</code> is defined as in <code>coord</code>):</p>
@@ -7264,7 +7264,7 @@ Next == x' = x + 1 /\ (y' = x \/ y' = x + 1)
 </code></pre>
 <p>The following plot shows the states that are visited by the computations
 of the specification <code>coord3</code>:</p>
-<p><img src="lang/img/diag2.png" alt="diag2"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/diag2.png" alt="diag2"><span class="img-wrapper"><img src="lang/img/diag2.png" alt="diag2"></span></label></p>
 <p>Notice that specification <code>coord</code> describes one infinite computation (and
 infinitely many finite computations that are prefixes of the infinite
 computation).  Specification <code>coord2</code> describes three infinite computations.
@@ -7644,7 +7644,7 @@ values to variables!</p>
   ...
   [] p_n -&gt; e_n
 </code></pre>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/case.png" alt="case"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/case.png" alt="case"><span class="img-wrapper"><img src="lang/img/case.png" alt="case"></span></label></p>
 <p><strong>Arguments:</strong> Boolean expressions <code>p_1, ..., p_n</code> and expressions <code>e_1, ..., e_n</code>.</p>
 <p><strong>Apalache type:</strong> <code>(Bool, a, Bool, a, ..., Bool, a) =&gt; a</code>, for some type <code>a</code>.
 If <code>a</code> is <code>Bool</code>, then the case operator can be a part of a Boolean formula.</p>
@@ -7726,7 +7726,7 @@ give executable semantics for the fixed evaluation order of the predicates.</p>
   [] p_n -&gt; e_n
   [] OTHER -&gt; e_0
 </code></pre>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/case-other.png" alt="case-other"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/case-other.png" alt="case-other"><span class="img-wrapper"><img src="lang/img/case-other.png" alt="case-other"></span></label></p>
 <p><strong>Arguments:</strong> Boolean expressions <code>p_1, ..., p_n</code> and expressions <code>e_0, e_1, ..., e_n</code>.</p>
 <p><strong>Apalache type:</strong> <code>(Bool, a, Bool, a, ..., Bool, a, a) =&gt; a</code>, for some type <code>a</code>.
 If <code>a</code> is <code>Bool</code>, then the case operator can be a part of a Boolean formula.</p>
@@ -7931,7 +7931,7 @@ statically reports a type error, whereas TLC reports a runtime error.</p>
 <hr>
 <h3 id="integer-division"><a class="header" href="#integer-division"><a id="div"></a> Integer division</a></h3>
 <p><strong>Notation:</strong> <code>a \div b</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/div.png" alt="div"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/div.png" alt="div"><span class="img-wrapper"><img src="lang/img/div.png" alt="div"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and the second argument is different from 0.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Int</code>.</p>
@@ -8031,7 +8031,7 @@ to produce the same results as in TLA+:</p>
 <hr>
 <h3 id="integer-exponentiation"><a class="header" href="#integer-exponentiation"><a id="pow"></a> Integer exponentiation</a></h3>
 <p><strong>Notation:</strong> <code>a^b</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/exp.png" alt="exp"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/exp.png" alt="exp"><span class="img-wrapper"><img src="lang/img/exp.png" alt="exp"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values, and these values fall into one of the several
 cases:</p>
@@ -8113,7 +8113,7 @@ False
 <hr>
 <h3 id="integer-less-than-or-equal"><a class="header" href="#integer-less-than-or-equal"><a id="lte"></a> Integer less-than-or-equal</a></h3>
 <p><strong>Notation:</strong> <code>a &lt;= b</code> or <code>a =&lt; b</code> or <code>a \leq b</code></p>
-<p><strong>LaTeX notation:</strong>  <img src="lang/img/leq.png" alt="leq"></p>
+<p><strong>LaTeX notation:</strong>  <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/leq.png" alt="leq"><span class="img-wrapper"><img src="lang/img/leq.png" alt="leq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
@@ -8173,7 +8173,7 @@ True
 <hr>
 <h3 id="integer-greater-than-or-equal"><a class="header" href="#integer-greater-than-or-equal"><a id="gte"></a> Integer greater-than-or-equal</a></h3>
 <p><strong>Notation:</strong> <code>a &gt;= b</code> or <code>a \geq b</code></p>
-<p><strong>LaTeX notation:</strong>  <img src="lang/img/geq.png" alt="geq"></p>
+<p><strong>LaTeX notation:</strong>  <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/geq.png" alt="geq"><span class="img-wrapper"><img src="lang/img/geq.png" alt="geq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. The result is only defined when both arguments
 are evaluated to integer values.</p>
 <p><strong>Apalache type:</strong> <code>(Int, Int) =&gt; Bool</code>.</p>
@@ -8288,7 +8288,7 @@ If this is not the case, the type checker flags an error.</p>
 <hr>
 <h3 id="set-membership"><a class="header" href="#set-membership"><a id="in"></a> Set membership</a></h3>
 <p><strong>Notation:</strong> <code>e \in S</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/in-set.png" alt="in"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/in-set.png" alt="in"><span class="img-wrapper"><img src="lang/img/in-set.png" alt="in"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
@@ -8325,7 +8325,7 @@ False
 <hr>
 <h3 id="set-non-membership"><a class="header" href="#set-non-membership"><a id="notin"></a> Set non-membership</a></h3>
 <p><strong>Notation:</strong> <code>e \notin S</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/notin-set.png" alt="notin"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/notin-set.png" alt="notin"><span class="img-wrapper"><img src="lang/img/notin-set.png" alt="notin"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If the second argument is not a set, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(a, Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
@@ -8367,7 +8367,7 @@ see <a href="#logic-1">Logic</a>.</p>
 <hr>
 <h3 id="set-inclusion"><a class="header" href="#set-inclusion"><a id="subseteq"></a> Set inclusion</a></h3>
 <p><strong>Notation:</strong> <code>S \subseteq T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/subseteq.png" alt="subseteq"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/subseteq.png" alt="subseteq"><span class="img-wrapper"><img src="lang/img/subseteq.png" alt="subseteq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Bool</code>, for some type <code>a</code>.</p>
@@ -8403,7 +8403,7 @@ False
 <hr>
 <h3 id="binary-set-union"><a class="header" href="#binary-set-union"><a id="union"></a> Binary set union</a></h3>
 <p><strong>Notation:</strong> <code>S \union T</code> or <code>S \cup T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/cup.png" alt="cup"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/cup.png" alt="cup"><span class="img-wrapper"><img src="lang/img/cup.png" alt="cup"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
@@ -8436,7 +8436,7 @@ that can be written as <code>|</code>:</p>
 <hr>
 <h3 id="set-intersection"><a class="header" href="#set-intersection"><a id="intersect"></a> Set intersection</a></h3>
 <p><strong>Notation:</strong> <code>S \intersect T</code> or <code>S \cap T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/cap.png" alt="cap"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/cap.png" alt="cap"><span class="img-wrapper"><img src="lang/img/cap.png" alt="cap"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
@@ -8469,7 +8469,7 @@ set()
 <hr>
 <h3 id="set-difference"><a class="header" href="#set-difference"><a id="setminus"></a> Set difference</a></h3>
 <p><strong>Notation:</strong> <code>S \ T</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/setminus.png" alt="setminus"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/setminus.png" alt="setminus"><span class="img-wrapper"><img src="lang/img/setminus.png" alt="setminus"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.  If both arguments are not sets, the result
 is undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(a)) =&gt; Set(a)</code>, for some type <code>a</code>.</p>
@@ -8502,7 +8502,7 @@ set()
 <hr>
 <h3 id="set-filter"><a class="header" href="#set-filter"><a id="filter"></a> Set filter</a></h3>
 <p><strong>Notation:</strong> <code>{ x \in S: P }</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/filter.png" alt="filter"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/filter.png" alt="filter"><span class="img-wrapper"><img src="lang/img/filter.png" alt="filter"></span></label></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name (or a tuple of names, see
 <strong>Advanced syntax</strong>), a set, and an expression.</p>
 <p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
@@ -8554,7 +8554,7 @@ set()
 <hr>
 <h3 id="set-map"><a class="header" href="#set-map"><a id="map"></a> Set map</a></h3>
 <p><strong>Notation:</strong> <code>{ e: x \in S }</code> or <code>{ e: x \in S, y \in T }</code>, or more arguments</p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/map.png" alt="map"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/map.png" alt="map"><span class="img-wrapper"><img src="lang/img/map.png" alt="map"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a mapping expression,
 a variable name (or a tuple of names, see <strong>Advanced syntax</strong>),
 a set. Additional arguments are variables’ names and sets, interleaved.</p>
@@ -8733,7 +8733,7 @@ section, we only consider the deterministic use of the existential quantifier.</
 <hr>
 <h3 id="bounded-universal-quantifier"><a class="header" href="#bounded-universal-quantifier"><a id="forallBounded"></a> Bounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x \in S: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/forall-bounded.png" alt="forall-bounded"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/forall-bounded.png" alt="forall-bounded"><span class="img-wrapper"><img src="lang/img/forall-bounded.png" alt="forall-bounded"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
@@ -8797,7 +8797,7 @@ True
 <hr>
 <h3 id="bounded-existential-quantifier"><a class="header" href="#bounded-existential-quantifier"><a id="existsBounded"></a> Bounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x \in S: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/exists-bounded.png" alt="exists-bounded"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/exists-bounded.png" alt="exists-bounded"><span class="img-wrapper"><img src="lang/img/exists-bounded.png" alt="exists-bounded"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name, a set, and an
 expression. As usual in TLA+, if the second argument is not a set, the result is
 undefined. You can also use multiple variables and tuples, see <strong>Advanced
@@ -8868,7 +8868,7 @@ True
 <h3 id="equality"><a class="header" href="#equality"><a id="eq-2"></a> Equality</a></h3>
 <p><em>A foundational operator in TLA+</em></p>
 <p><strong>Notation:</strong> <code>e_1 = e_2</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/eq.png" alt="eq"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/eq.png" alt="eq"><span class="img-wrapper"><img src="lang/img/eq.png" alt="eq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It tests the values
@@ -8985,7 +8985,7 @@ True
 <hr>
 <h3 id="inequality"><a class="header" href="#inequality"><a id="neq"></a> Inequality</a></h3>
 <p><strong>Notation:</strong> <code>e_1 /= e_2</code> or <code>e_1 # e_2</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/ne.png" alt="ne"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/ne.png" alt="ne"><span class="img-wrapper"><img src="lang/img/ne.png" alt="ne"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> This operator is syntax sugar for <code>~(e_1 = e_2)</code>. Full stop.</p>
@@ -8993,7 +8993,7 @@ True
 <h3 id="bounded-choice"><a class="header" href="#bounded-choice"><a id="chooseBounded"></a> Bounded Choice</a></h3>
 <p><em>This operator causes a lot of confusion. Read carefully!</em></p>
 <p><strong>Notation:</strong> <code>CHOOSE x \in S: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/choose-bounded.png" alt="choose-bounded"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/choose-bounded.png" alt="choose-bounded"><span class="img-wrapper"><img src="lang/img/choose-bounded.png" alt="choose-bounded"></span></label></p>
 <p><strong>Arguments:</strong> Three arguments: a variable name, a set, and an
 expression.</p>
 <p><strong>Apalache type:</strong> The formal type of this operator is a bit complex.
@@ -9077,7 +9077,7 @@ if __name__ == "__main__":
 <hr>
 <h3 id="unbounded-universal-quantifier"><a class="header" href="#unbounded-universal-quantifier"><a id="forall"></a> Unbounded universal quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\A x: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/forall.png" alt="forall"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/forall.png" alt="forall"><span class="img-wrapper"><img src="lang/img/forall.png" alt="forall"></span></label></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
 expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
@@ -9091,7 +9091,7 @@ when writing proofs with <a href="https://tla.msr-inria.inria.fr/tlaps/content/H
 <hr>
 <h3 id="unbounded-existential-quantifier"><a class="header" href="#unbounded-existential-quantifier"><a id="exists"></a> Unbounded existential quantifier</a></h3>
 <p><strong>Notation:</strong> <code>\E x: P</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/exists.png" alt="exists"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/exists.png" alt="exists"><span class="img-wrapper"><img src="lang/img/exists.png" alt="exists"></span></label></p>
 <p><strong>Arguments:</strong> At least two arguments: a variable name and an
 expression.</p>
 <p><strong>Effect:</strong> This operator evaluates to a Boolean value. It evaluates to <code>TRUE</code>,
@@ -9315,7 +9315,7 @@ mutable dictionaries in the Python examples in the rest of this text.</p>
 <h3 id="function-constructor"><a class="header" href="#function-constructor"><a id="funCtor"></a> Function constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ x \in S |-&gt; e ]</code> or <code>[ x \in S, y \in T |-&gt; e ]</code>, or more
 arguments</p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/fun-ctor.png" alt="fun-ctor"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/fun-ctor.png" alt="fun-ctor"><span class="img-wrapper"><img src="lang/img/fun-ctor.png" alt="fun-ctor"></span></label></p>
 <p><strong>Arguments:</strong> At least three arguments: a variable name (or a tuple of names,
 see <strong>Advanced syntax</strong>), a set, and a mapping expression. Instead of one
 variable and one set, you can use multiple variables and multiple sets.</p>
@@ -9397,7 +9397,7 @@ function domain is not known in advance.</p>
 <hr>
 <h3 id="function-set-constructor"><a class="header" href="#function-set-constructor"><a id="funSetCtor"></a> Function set constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ S -&gt; T ]</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/funset.png" alt="funset"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/funset.png" alt="funset"><span class="img-wrapper"><img src="lang/img/funset.png" alt="funset"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. Both have to be sets. Otherwise, the result is
 undefined.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a), Set(b)) =&gt; Set(a -&gt; b)</code>, for some types <code>a</code> and <code>b</code>.</p>
@@ -9707,7 +9707,7 @@ immutable dictionary.</p>
 <hr>
 <h3 id="record-constructor"><a class="header" href="#record-constructor"><a id="recCtor"></a> Record constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ field_1 |-&gt; e_1, ..., field_n |-&gt; e_n]</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/rec-ctor.png" alt="rec-ctor"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/rec-ctor.png" alt="rec-ctor"><span class="img-wrapper"><img src="lang/img/rec-ctor.png" alt="rec-ctor"></span></label></p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
@@ -9734,7 +9734,7 @@ as follows:</p>
 <hr>
 <h3 id="record-set-constructor"><a class="header" href="#record-set-constructor"><a id="recSetCtor"></a> Record set constructor</a></h3>
 <p><strong>Notation:</strong> <code>[ field_1: S_1, ..., field_n: S_n]</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/recset-ctor.png" alt="recset-ctor"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/recset-ctor.png" alt="recset-ctor"><span class="img-wrapper"><img src="lang/img/recset-ctor.png" alt="recset-ctor"></span></label></p>
 <p><strong>Arguments:</strong> An even number of arguments: field names and field values,
 interleaved. At least one field is expected. Note that field names are TLA+
 identifiers, not strings.</p>
@@ -9846,7 +9846,7 @@ immutable dictionary.</p>
 <hr>
 <h3 id="tuplesequence-constructor"><a class="header" href="#tuplesequence-constructor"><a id="tuple"></a> Tuple/Sequence constructor</a></h3>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/tuple.png" alt="tuple"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/tuple.png" alt="tuple"><span class="img-wrapper"><img src="lang/img/tuple.png" alt="tuple"></span></label></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
 <p><strong>Apalache type:</strong> This operator is overloaded. There are two potential types:</p>
 <ol>
@@ -9882,7 +9882,7 @@ principle “tuples are functions”, we have to use a dictionary.</p>
 <hr>
 <h3 id="cartesian-product"><a class="header" href="#cartesian-product"><a id="times"></a> Cartesian product</a></h3>
 <p><strong>Notation:</strong> <code>S_1 \X ... \X S_n</code> (or <code>S_1 \times ... \times S_n</code>)</p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/set-prod.png" alt="set-prod"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/set-prod.png" alt="set-prod"><span class="img-wrapper"><img src="lang/img/set-prod.png" alt="set-prod"></span></label></p>
 <p><strong>Arguments:</strong> At least two arguments. All of them should be sets.</p>
 <p><strong>Apalache type:</strong> <code>(Set(a_1), ..., Set(a_n)) =&gt; Set(&lt;&lt;a_1, ..., a_n&gt;&gt;)</code>,
 for some types <code>a_1, ..., a_n</code>.</p>
@@ -9986,7 +9986,7 @@ on sets.</em></p>
 <h2 id="operators-6"><a class="header" href="#operators-6">Operators</a></h2>
 <h3 id="tuplesequence-constructor-1"><a class="header" href="#tuplesequence-constructor-1"><a id="seqCtor"></a> Tuple/Sequence constructor</a></h3>
 <p><strong>Notation:</strong> <code>&lt;&lt;e_1, ..., e_n&gt;&gt;</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/tuple.png" alt="tuple"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/tuple.png" alt="tuple"><span class="img-wrapper"><img src="lang/img/tuple.png" alt="tuple"></span></label></p>
 <p><strong>Arguments:</strong> An arbitrary number of arguments.</p>
 <p><strong>Apalache type:</strong> This operator is overloaded. There are two potential types:</p>
 <ol>
@@ -10160,7 +10160,7 @@ error.</p>
 <hr>
 <h3 id="sequence-concatenation"><a class="header" href="#sequence-concatenation"><a id="concat"></a> Sequence concatenation</a></h3>
 <p><strong>Notation:</strong> <code>s \o t</code> (or <code>s \circ t</code>)</p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/seq-concat.png" alt="seq-concat"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/seq-concat.png" alt="seq-concat"><span class="img-wrapper"><img src="lang/img/seq-concat.png" alt="seq-concat"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments: both should be sequences (or tuples).</p>
 <p><strong>Apalache type:</strong> <code>(Seq(a), Seq(a)) =&gt; Seq(a)</code>, for some type <code>a</code>.</p>
 <p><strong>Effect:</strong> The operator <code>s \o t</code>
@@ -10337,7 +10337,7 @@ These operators belong to the module <code>Apalache</code>,
 and can be used in any specification by declaring <code>EXTENDS Apalache</code>.</p>
 <h2 id="assignment"><a class="header" href="#assignment"><a id="Assignment"></a> Assignment</a></h2>
 <p><strong>Notation:</strong> <code>v' := e</code></p>
-<p><strong>LaTeX notation:</strong> <img src="lang/img/coloneq.png" alt="coloneq"></p>
+<p><strong>LaTeX notation:</strong> <label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="lang/img/coloneq.png" alt="coloneq"><span class="img-wrapper"><img src="lang/img/coloneq.png" alt="coloneq"></span></label></p>
 <p><strong>Arguments:</strong> Two arguments. The first is a primed variable name, the second is arbitrary.</p>
 <p><strong>Apalache type:</strong> <code>(a, a) =&gt; Bool</code>, for some type <code>a</code></p>
 <p><strong>Effect:</strong> The expression <code>v' := e</code> evaluates to <code>v' = e</code>.
@@ -13114,7 +13114,7 @@ contexts are not multithreaded).</p>
 <code>RecordingZ3SolverContext</code>. A snapshot produces an hierarchical log of calls to
 SMT that can be replayed in another <code>OfflineExecutionContext</code>, even on another
 machine.</p>
-<p><img src="adr/trex-arch.png" alt="TRex architecture"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/trex-arch.png" alt="TRex architecture"><span class="img-wrapper"><img src="adr/trex-arch.png" alt="TRex architecture"></span></label></p>
 <h2 id="interaction-with-transitionexecutor"><a class="header" href="#interaction-with-transitionexecutor">Interaction with TransitionExecutor</a></h2>
 <p>We demonstrate a typical interaction with <code>TransitionExecutor</code> for the
 following TLA+ specification, which has been preprocessed by the passes
@@ -13143,15 +13143,15 @@ Inv ==
 </code></pre>
 <p>The sequence diagram below shows how the sequential model checker translates
 <code>ConstInit</code> to SMT and then translates <code>Init$0</code>.</p>
-<p><img src="adr/trex-initialization.png" alt="Initialization"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/trex-initialization.png" alt="Initialization"><span class="img-wrapper"><img src="adr/trex-initialization.png" alt="Initialization"></span></label></p>
 <p>The sequence diagram below shows how the sequential model checker translates
 <code>Next$0</code> and <code>Next$1</code> to SMT. It first finds that <code>Next$0</code> is disabled and
 then it finds that <code>Next$1</code> is enabled. The enabled transition is picked.</p>
-<p><img src="adr/trex-step.png" alt="Step"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/trex-step.png" alt="Step"><span class="img-wrapper"><img src="adr/trex-step.png" alt="Step"></span></label></p>
 <p>The sequence diagram below shows how the sequential model checker translates
 <code>~Inv</code> to SMT and checks, whether there is a concrete state that witnesses
 the negation of the invariant.</p>
-<p><img src="adr/trex-inv.png" alt="Invariant"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/trex-inv.png" alt="Invariant"><span class="img-wrapper"><img src="adr/trex-inv.png" alt="Invariant"></span></label></p>
 <p>As you can see, <code>TransitionExecutor</code> is still offering a lot flexibility to the
 model checker layer, while it is completely hiding the lower layer.  We do not
 explain how the parallel checker is working. This is a subject to another ADR.</p>
@@ -14334,7 +14334,7 @@ special care should be made during PR review to ascertain type-correctness. When
 <h2 id="5-visualization"><a class="header" href="#5-visualization">5. Visualization</a></h2>
 <p>A visualization of the architecture and the dependencies can be found below. Black arrows denote dependencies between components within a package, while red arrows denote dependencies on packages. Dotted arrows denote conditional dependencies, subject to the concrete implementation of components that have not yet been implemented (marked TBD).
 Classes within the level boxes are examples, but are not exhaustive.</p>
-<p><img src="adr/ApaPkg.png" alt="Architecture"></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/ApaPkg.png" alt="Architecture"><span class="img-wrapper"><img src="adr/ApaPkg.png" alt="Architecture"></span></label></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-008-apalache-exceptions"><a class="header" href="#adr-008-apalache-exceptions">ADR-008: Apalache Exceptions</a></h1>
 <div class="table-wrapper">
@@ -17852,7 +17852,7 @@ logic of a process, we’ll have a static guarantee that all needed configurable
 values are available.</p>
 <p>The following diagram represents the data flow dependencies of the proposed
 configuration system:</p>
-<p><img src="adr/022adr-apalache-configuration.drawio.svg" alt=""></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/022adr-apalache-configuration.drawio.svg" alt=""><span class="img-wrapper"><img src="adr/022adr-apalache-configuration.drawio.svg" alt=""></span></label></p>
 <h2 id="consequences-8"><a class="header" href="#consequences-8">Consequences</a></h2>
 <!-- Records the results of the decision over the long term.
      Did it work, not work, was changed, upgraded, etc.
@@ -18310,11 +18310,11 @@ As a result, arenas are incredibly fragile, as it becomes easy to inadvertently 
 <h2 id="illustration"><a class="header" href="#illustration">Illustration</a></h2>
 <p>Let us use an example rewriting rule, and visualize the difference between the approaches. Take, for instance <code>SetCupRule</code>, the rule used in translating the union of two sets.
 Currently, the sequence diagram for this rule looks like this (with the OOPSLA19 encoding):
-<img src="adr/seqDiaBefore.png" alt=""></p>
+<label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/seqDiaBefore.png" alt=""><span class="img-wrapper"><img src="adr/seqDiaBefore.png" alt=""></span></label></p>
 <p>Of note are the multiple calls needed to mutate and read from <code>SymbState</code>, as well as the <code>PureArenaAdapter</code> wrapper, which connects arena generation to SMT solving.
 Observe also, that calls to <code>Z3SolverContext</code> happen at multiple points, in between other code (in part due to <code>PureArenaAdapter</code>).</p>
 <p>Under (3), the same rule would look more like this:
-<img src="adr/seqDiaAfter.png" alt=""></p>
+<label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="adr/seqDiaAfter.png" alt=""><span class="img-wrapper"><img src="adr/seqDiaAfter.png" alt=""></span></label></p>
 <p>Specifically, we would no longer need <code>PureArenaAdapters</code>, and we could drop the parts of <code>SymbState</code>, which are treated as mutable (the <code>TlaEx</code> value). In the above, <code>RewriterScope</code> is what remains of <code>SymbState</code>, when we remove the <code>TlaEx</code> value.</p>
 <p>A prototype implementation can be found in <a href="https://github.com/apalache-mc/apalache/pull/2554">this PR</a>.</p>
 <h2 id="consequences-10"><a class="header" href="#consequences-10">Consequences</a></h2>
@@ -18525,7 +18525,7 @@ over depending on stale packaging.</p>
 
         <script src="clipboard-1626706a.min.js"></script>
         <script src="highlight-abc7f01d.js"></script>
-        <script src="book-c22b7243.js"></script>
+        <script src="book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
         <script src="./highlightjs-tlaplus/dist/tlaplus.min.js"></script>
