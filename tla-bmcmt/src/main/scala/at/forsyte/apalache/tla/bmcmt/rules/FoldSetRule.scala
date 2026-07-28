@@ -1,7 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt.rules.aux.SetOps
-import at.forsyte.apalache.tla.bmcmt.{RewriterException, RewritingRule, SymbState, SymbStateRewriter}
+import at.forsyte.apalache.tla.bmcmt.{
+  RewriterException, RewriterKnownLimitationError, RewritingRule, SymbState, SymbStateRewriter,
+}
+import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -37,6 +40,17 @@ class FoldSetRule(rewriter: SymbStateRewriter, renaming: IncrementalRenaming) ex
       // rewrite setEx to its final cell form
       val setState = rewriter.rewriteUntilDone(baseState.setRex(setEx))
       val setCell = setState.asCell
+
+      // Folding over an infinite set (such as Nat or Int) is unsound: an infinite set has no
+      // concrete members in the arena, so the fold would silently return the base value instead
+      // of failing. Reject it explicitly. See https://github.com/apalache-mc/apalache/issues/1691.
+      setCell.cellType match {
+        case InfSetT(_) =>
+          throw new RewriterKnownLimitationError(
+              s"FoldSet is not supported over an infinite set such as Nat or Int, found: $setEx. Fold over a finite set instead.",
+              setEx)
+        case _ => ()
+      }
 
       // Assume that setCell is in fact a Set-type cell
       // getHas returns a sequence of cells the set cell points to
