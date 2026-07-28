@@ -1,0 +1,1 @@
+Fixed an unsoundness where folding over an infinite set such as `Nat` or `Int` (e.g. `ApaFoldSet(Op, v, Nat)`) silently treated the set as empty and returned the base value. Apalache now reports a clear "known limitation" error instead, see #1691.

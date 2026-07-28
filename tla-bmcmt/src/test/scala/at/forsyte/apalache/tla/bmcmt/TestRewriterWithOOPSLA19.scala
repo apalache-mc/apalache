@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
+import at.forsyte.apalache.tla.bmcmt.caches.TestDefaultValueCache
 import at.forsyte.apalache.tla.bmcmt.rules.aux._
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
@@ -19,7 +20,7 @@ class TestRewriterWithOOPSLA19
     with TestSymbStateRewriterVariant with TestSymbStateRewriterSequence with TestSymbStateRewriterSet
     with TestSymbStateRewriterStr with TestSymbStateRewriterTuple with TestPropositionalOracle with TestSparseOracle
     with TestUninterpretedConstOracle with TestSymbStateRewriterApalache with TestSymbStateRewriterMkSeq
-    with TestDefaultValueFactory with TestSymbStateRewriterRepeat {
+    with TestDefaultValueFactory with TestDefaultValueCache with TestSymbStateRewriterRepeat {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
                 smtEncoding = SMTEncoding.OOPSLA19)))
