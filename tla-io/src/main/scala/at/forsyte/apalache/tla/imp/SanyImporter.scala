@@ -8,6 +8,7 @@ import org.apache.commons.io.output.WriterOutputStream
 import tla2sany.drivers.{FrontEndException, SANY, SanyExitCode, SanySettings}
 import tla2sany.modanalyzer.SpecObj
 import tla2sany.output.{LogLevel, SimpleSanyOutput}
+import tla2sany.semantic.Errors
 
 import java.io._
 import java.nio.file.Files
@@ -219,6 +220,14 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
     } yield (moduleName, tempFile)
 
   private def throwOnError(specObj: SpecObj, sanyExitCode: SanyExitCode): Unit = {
+    val parseErrors = specObj.getParseErrors
+    if (parseErrors.isFailure) {
+      throw new SanySyntaxException(formatSanyErrors("Syntax errors", parseErrors))
+    }
+    val semanticErrors = specObj.getSemanticErrors
+    if (semanticErrors.isFailure) {
+      throw new SanySemanticException(formatSanyErrors("Semantic errors", semanticErrors))
+    }
     if (sanyExitCode != SanyExitCode.OK) {
       throw new SanyException(
           "Unknown SANY error (exit code=%s)".format(sanyExitCode)
@@ -230,13 +239,13 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
           "Unknown SANY error (error level=%d)".format(specObj.getErrorLevel)
       )
     }
-    val parseErrors = specObj.getParseErrors
-    if (parseErrors.isFailure) {
-      throw new SanySyntaxException(parseErrors.toString)
+  }
+
+  private def formatSanyErrors(header: String, errors: Errors): String = {
+    val details = errors.toString.trim match {
+      case "" => errors.getErrors.mkString("\n\n")
+      case s  => s
     }
-    val semanticErrors = specObj.getSemanticErrors
-    if (semanticErrors.isFailure) {
-      throw new SanySemanticException(semanticErrors.toString)
-    }
+    s"$header:\n\n$details"
   }
 }

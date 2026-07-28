@@ -1,1 +1,0 @@
-`ConstSimplifier` now simplifies more set expressions: membership in the empty set (`x \in {}` becomes `FALSE`), trivial subset checks (`{} \subseteq S` and `S \subseteq S` become `TRUE`), empty-set identities for an arbitrary set (`{} \cup S`, `S \cup {}`, `{} \cap S`, `S \cap {}`, `{} \ S`, `S \ {}`), and self-operations (`S \cup S`, `S \cap S`, `S \ S`), see #1238.
