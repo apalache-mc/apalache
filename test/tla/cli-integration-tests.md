@@ -1873,6 +1873,79 @@ $ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | grep 'E
 EXITCODE: OK
 ```
 
+### simulate --seed reproduces transition choices and seeds Z3
+
+Two `--seed` invocations produce the same transition choices. `--seed` also
+takes priority over the equivalent tuning option, and passing the same seed
+directly through the tuning interface produces the same choices.
+
+```sh
+$ apalache-mc simulate --seed=4242 --tuning-options=search.simulation.seed=1 --smt-solver=z3 --run-dir=./seed-run-cli-1 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-1.txt
+$ apalache-mc simulate --seed=4242 --smt-solver=z3 --run-dir=./seed-run-cli-2 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-2.txt
+$ apalache-mc simulate --tuning-options=search.simulation.seed=4242 --smt-solver=z3 --run-dir=./seed-run-tuning --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-tuning.txt
+$ test -s seed-cli-1.txt && cmp -s seed-cli-1.txt seed-cli-2.txt && cmp -s seed-cli-1.txt seed-tuning.txt; echo $?
+0
+$ grep '"search.simulation.seed"="4242"' ./seed-run-cli-1/application-configs.cfg
+        "search.simulation.seed"="4242"
+$ head -n 6 ./seed-run-cli-1/log0.smt
+(set-option :fp.spacer.random_seed 4242)
+(set-option :nlsat.seed 4242)
+(set-option :sat.random_seed 4242)
+(set-option :sls.random_seed 4242)
+(set-option :smt.random_seed 4242)
+;; (params random_seed 4242)
+$ rm -rf ./seed-run-cli-1 ./seed-run-cli-2 ./seed-run-tuning seed-cli-1.txt seed-cli-2.txt seed-tuning.txt
+```
+
+### simulate seed seeds CVC5
+
+```sh
+$ apalache-mc simulate --seed=4242 --smt-solver=cvc5 --run-dir=./seed-run-cvc5 --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ head -n 3 ./seed-run-cvc5/log0.smt
+(set-logic QF_UFLIA)
+(set-option :random-seed 4242)
+(set-option :sat-random-seed 4242)
+$ rm -rf ./seed-run-cvc5
+```
+
+### explicit SMT seeds override simulation seed derivation
+
+The backend-neutral SMT seed wins over the simulation seed.
+
+```sh
+$ apalache-mc simulate --seed=111 --tuning-options=smt.randomSeed=4242 --smt-solver=z3 --run-dir=./seed-run-smt --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ head -n 6 ./seed-run-smt/log0.smt
+(set-option :fp.spacer.random_seed 4242)
+(set-option :nlsat.seed 4242)
+(set-option :sat.random_seed 4242)
+(set-option :sls.random_seed 4242)
+(set-option :smt.random_seed 4242)
+;; (params random_seed 4242)
+$ rm -rf ./seed-run-smt
+```
+
+An explicit backend-specific seed disables derivation. Unspecified seed knobs
+retain the common default, while the named backend seed keeps its explicit
+value.
+
+```sh
+$ apalache-mc simulate --seed=111 --tuning-options=z3.smt.random_seed=4242 --smt-solver=z3 --run-dir=./seed-run-z3 --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ head -n 6 ./seed-run-z3/log0.smt
+(set-option :fp.spacer.random_seed 0)
+(set-option :nlsat.seed 0)
+(set-option :sat.random_seed 0)
+(set-option :sls.random_seed 0)
+(set-option :smt.random_seed 0)
+;; (params random_seed 0 smt.random_seed 4242)
+$ rm -rf ./seed-run-z3
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh

@@ -102,13 +102,13 @@ class BoundedCheckerPassImpl @Inject() (
     params.smtEncoding = smtEncoding
 
     val smtProfile = commonOptions.smtprof
-    val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
+    val solverName = checkerOptions.smtSolver.toString
+    val smtRandomSeed = computeSmtRandomSeed(tuning, solverName, params)
     val smtStatsSec =
       tuning.getOrElse("smt.statsSec", SolverConfig.default.z3StatsSec.toString).toInt
     // Parse the tuning parameters that are relevant to the selected SMT solver.
     // Currently, `tuning` may contain more configuration options (added by some passes) than we parse in
     // `FineTuningParser`.
-    val solverName = checkerOptions.smtSolver.toString
     val solverNamespace = s"${solverName}."
     val solverParameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith(solverNamespace))) match {
       case Right(params) => params.map { case (k, v) => (k.substring(solverNamespace.length), v) }
@@ -242,6 +242,22 @@ class BoundedCheckerPassImpl @Inject() (
     this.modelCheckerContext = Some(ModelCheckerContext(params, input, trex, Seq(DumpFilesModelCheckerListener)))
     logger.info(s"The outcome is: prepared for remote symbolic execution")
     NoError()
+  }
+
+  private def computeSmtRandomSeed(
+      tuning: Map[String, String],
+      solverName: String,
+      params: ModelCheckerParams): Int = {
+    val hasExplicitSmtSeed =
+      tuning.keys.exists(key => key == "smt.randomSeed" || (key.startsWith(s"$solverName.") && key.endsWith("seed")))
+
+    if (hasExplicitSmtSeed) {
+      tuning.getOrElse("smt.randomSeed", SolverConfig.default.randomSeed.toString).toInt
+    } else if (params.isRandomSimulation) {
+      params.simulationSeed.getOrElse(SolverConfig.default.randomSeed)
+    } else {
+      SolverConfig.default.randomSeed
+    }
   }
 
   override def dependencies = Set(ModuleProperty.Analyzed)

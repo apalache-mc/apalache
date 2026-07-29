@@ -125,7 +125,7 @@ The simulator can be run as follows:
 
 ```bash
 $ apalache-mc simulate
-    [all-checker-options] [--max-run=NUM] <myspec>.tla
+    [all-checker-options] [--max-run=NUM] [--seed=NUM] <myspec>.tla
 ```
 
 The arguments are as follows:
@@ -133,6 +133,9 @@ The arguments are as follows:
 * Special parameters:
 
   - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
+  - `--seed=NUM`: use a nonnegative random seed for reproducible transition selection. This is equivalent to
+    `--tuning-options=search.simulation.seed=NUM`, except that `--seed` takes priority when both are supplied. When no
+    simulation seed is set, the random number generator uses its default initialization.
 
 ### <a id="supplying-jvm-arguments"></a> 1.3. Supplying JVM arguments
 

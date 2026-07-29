@@ -44,6 +44,9 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
   private val searchState: SearchState = new SearchState(ctx.params)
   // cache for labels that are used in the current run
   private val labelsCache = new LabelsCache()
+  // a checker-local source of randomness, optionally initialized with the user-provided simulation seed
+  private val random: Random =
+    ctx.params.simulationSeed.map(seed => new Random(seed)).getOrElse(new Random())
 
   override def run(): CheckerResult = {
     // initialize CONSTANTS
@@ -205,7 +208,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
 
     // in case we do random simulation, shuffle the indices and stop at the first enabled transition
     val transitionIndices =
-      if (ctx.params.isRandomSimulation) Random.shuffle(transitions.indices.toList) else transitions.indices
+      if (ctx.params.isRandomSimulation) random.shuffle(transitions.indices.toList) else transitions.indices
 
     // keep track of SMT timeouts
     var nTimeouts = 0

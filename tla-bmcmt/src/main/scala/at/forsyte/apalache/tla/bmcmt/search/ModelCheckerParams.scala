@@ -119,6 +119,13 @@ class ModelCheckerParams(
     tuningOptions.getOrElse("search.simulation", "false").toBoolean
 
   /**
+   * The random seed used to choose transitions during simulation. When absent, the random number generator uses its
+   * default initialization.
+   */
+  val simulationSeed: Option[Int] =
+    tuningOptions.get("search.simulation.seed").map(_.toInt)
+
+  /**
    * The number of random simulation runs to try.
    */
   val nSimulationRuns: Int =

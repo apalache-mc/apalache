@@ -50,6 +50,20 @@ class TestFineTuningParser extends AnyFunSuite {
     assert(config.isLeft)
   }
 
+  test("parses search.simulation.seed") {
+    Seq(0, 4242, Int.MaxValue).foreach { seed =>
+      val config = FineTuningParser.fromStrings(Map("search.simulation.seed" -> seed.toString))
+      assert(config.isRight && config.exists(_.get("search.simulation.seed").contains(seed)))
+    }
+  }
+
+  test("fails on invalid search.simulation.seed") {
+    Seq("-1", "not-a-number", "2147483648").foreach { seed =>
+      val config = FineTuningParser.fromStrings(Map("search.simulation.seed" -> seed))
+      assert(config.isLeft)
+    }
+  }
+
   test("parses z3.memory_high_watermark_mb") {
     val config = FineTuningParser.fromStrings(Map("z3.memory_high_watermark_mb" -> "123"))
     assert(config.isRight && config.exists(_.get("z3.memory_high_watermark_mb").contains(123)))
