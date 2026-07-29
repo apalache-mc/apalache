@@ -207,6 +207,13 @@ To check an inductive invariant ``IndInv`` in Apalache, you run two commands tha
     $ apalache-mc check --init=IndInv --inv=IndInv --length=1 <myspec>.tla
     ```
 
+    In this query, Apalache does not check `IndInv` in state 0, as the initial
+    states satisfy the init predicate by construction. The same happens when the
+    invariant is a conjunct of the init predicate, e.g., when you write
+    `IndInit == TypeOK /\ IndInv` and run `--init=IndInit --inv=IndInv`. The
+    conjuncts of `IndInv` that do not occur in the init predicate are still
+    checked in state 0.
+
 Usually, you look for an inductive invariant to check a safety predicate. For
 example, if you have found an inductive invariant `IndInv` and want to check a
 safety predicate `Safety`, you have to run Apalache once again:
