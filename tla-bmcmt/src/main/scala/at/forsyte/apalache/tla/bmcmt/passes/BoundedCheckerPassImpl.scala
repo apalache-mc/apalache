@@ -253,10 +253,8 @@ class BoundedCheckerPassImpl @Inject() (
 
     if (hasExplicitSmtSeed) {
       tuning.getOrElse("smt.randomSeed", SolverConfig.default.randomSeed.toString).toInt
-    } else if (params.isRandomSimulation) {
-      params.simulationSeed.getOrElse(SolverConfig.default.randomSeed)
     } else {
-      SolverConfig.default.randomSeed
+      params.searchSeed.getOrElse(SolverConfig.default.randomSeed)
     }
   }
 

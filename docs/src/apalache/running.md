@@ -49,6 +49,7 @@ $ apalache-mc check [--config=filename] [--init=Init] [--cinit=ConstInit] \
     [--tuning-options-file=filename] [--tuning-options=key1=val1:...:keyn=valn] \
     [--smt-solver=(z3|cvc5)] \
     [--smt-encoding=(oopsla19|arrays|funArrays)] \
+    [--seed=NUM] \
     [--out-dir=./path/to/dir] \
     [--write-intermediate=(true|false)] \
     [--config-file=./path/to/file] \
@@ -79,6 +80,9 @@ The arguments are as follows:
       and integer arithmetic; `arrays` (experimental) and `funArrays` (experimental) use SMT arrays with extensionality.
       This parameter can also be set via the `SMT_ENCODING` environment variable. See the [alternative SMT encoding
       using arrays] for details.
+    - `--seed=NUM` sets a nonnegative search seed. It initializes SMT solving unless an SMT seed is configured
+      explicitly. With `simulate`, the same seed is also used for transition selection. It takes priority over
+      `search.seed` in the tuning options.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
@@ -133,9 +137,10 @@ The arguments are as follows:
 * Special parameters:
 
   - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
-  - `--seed=NUM`: use a nonnegative random seed for reproducible transition selection. This is equivalent to
-    `--tuning-options=search.simulation.seed=NUM`, except that `--seed` takes priority when both are supplied. When no
-    simulation seed is set, the random number generator uses its default initialization.
+  - `--seed=NUM`: in addition to initializing the SMT backend as described above, use the same seed for reproducible
+    transition selection. This is equivalent to setting `search.seed=NUM`; when no SMT seed is configured explicitly,
+    the SMT seed is derived from it. When no search seed is set, the random number generator uses its default
+    initialization.
 
 ### <a id="supplying-jvm-arguments"></a> 1.3. Supplying JVM arguments
 

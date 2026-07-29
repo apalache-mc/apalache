@@ -5,6 +5,7 @@ object Constants {
   // Commands and top-level sections. Some names intentionally serve both roles.
   val CHECK = "check"
   val CONFIG = "config"
+  val SEED = "seed"
   val PARSE = "parse"
   val SERVER = "server"
   val SIMULATE = "simulate"

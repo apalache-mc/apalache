@@ -1880,13 +1880,13 @@ takes priority over the equivalent tuning option, and passing the same seed
 directly through the tuning interface produces the same choices.
 
 ```sh
-$ apalache-mc simulate --seed=4242 --tuning-options=search.simulation.seed=1 --smt-solver=z3 --run-dir=./seed-run-cli-1 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-1.txt
+$ apalache-mc simulate --seed=4242 --tuning-options=search.seed=1 --smt-solver=z3 --run-dir=./seed-run-cli-1 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-1.txt
 $ apalache-mc simulate --seed=4242 --smt-solver=z3 --run-dir=./seed-run-cli-2 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-2.txt
-$ apalache-mc simulate --tuning-options=search.simulation.seed=4242 --smt-solver=z3 --run-dir=./seed-run-tuning --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-tuning.txt
+$ apalache-mc simulate --tuning-options=search.seed=4242 --smt-solver=z3 --run-dir=./seed-run-tuning --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-tuning.txt
 $ test -s seed-cli-1.txt && cmp -s seed-cli-1.txt seed-cli-2.txt && cmp -s seed-cli-1.txt seed-tuning.txt; echo $?
 0
-$ grep '"search.simulation.seed"="4242"' ./seed-run-cli-1/application-configs.cfg
-        "search.simulation.seed"="4242"
+$ grep '"search.seed"="4242"' ./seed-run-cli-1/application-configs.cfg
+        "search.seed"="4242"
 $ head -n 6 ./seed-run-cli-1/log0.smt
 (set-option :fp.spacer.random_seed 4242)
 (set-option :nlsat.seed 4242)
@@ -1910,9 +1910,10 @@ $ head -n 3 ./seed-run-cvc5/log0.smt
 $ rm -rf ./seed-run-cvc5
 ```
 
-### explicit SMT seeds override simulation seed derivation
+### explicit SMT seeds override search seed derivation
 
-The backend-neutral SMT seed wins over the simulation seed.
+The shared CLI seed initializes search randomization. An explicit generic SMT
+seed takes priority over deriving the SMT seed from the search seed.
 
 ```sh
 $ apalache-mc simulate --seed=111 --tuning-options=smt.randomSeed=4242 --smt-solver=z3 --run-dir=./seed-run-smt --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
@@ -1933,7 +1934,7 @@ retain the common default, while the named backend seed keeps its explicit
 value.
 
 ```sh
-$ apalache-mc simulate --seed=111 --tuning-options=z3.smt.random_seed=4242 --smt-solver=z3 --run-dir=./seed-run-z3 --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
+$ apalache-mc simulate --tuning-options=search.seed=111:z3.smt.random_seed=4242 --smt-solver=z3 --run-dir=./seed-run-z3 --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ head -n 6 ./seed-run-z3/log0.smt
@@ -2245,10 +2246,10 @@ run.txt
 $ rm -rf ./test-out-dir
 ```
 
-#### check SMT seed is picked up by Z3
+#### check --seed is picked up by Z3
 
 ```sh
-$ apalache-mc check --smt-solver=z3 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --seed=4242 --smt-solver=z3 --out-dir=./test-out-dir --length=0 --debug Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 6 {} \;

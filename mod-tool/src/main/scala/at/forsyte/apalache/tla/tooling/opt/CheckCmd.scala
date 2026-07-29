@@ -71,6 +71,12 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
           s"the SMT solver backend: $smtSolverDescriptions",
           configDefaults.checker.smtSolver,
       ) + " (overrides envvar SMT_SOLVER)")
+  var seed: Option[Int] =
+    opt[Option[Int]](name = SEED,
+        description = descriptionWithDefault(
+          "set a nonnegative random seed for reproducible SMT solving and, with simulate, transition selection",
+          configDefaults.checker.tuning.flatMap(_.get("search.seed")),
+        ), default = None)
   var tuningOptionsFile: Option[String] =
     opt[Option[String]](name = TUNING_OPTIONS_FILE, default = None,
         description = descriptionWithDefault(
@@ -129,11 +135,17 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
     val combinedTuningOptions =
       try {
         val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
+        val seedTuningOptions = seed.map(value => "search.seed" -> value.toString).toMap
         val outputTraceOptions = saveRuns match {
           case Some(value) => Map("search.outputTraces" -> value.toString)
           case None        => Map.empty
         }
-        overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ outputTraceOptions
+        val combined =
+          overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ outputTraceOptions ++ seedTuningOptions
+        FineTuningParser.fromStrings(seedTuningOptions) match {
+          case Left(error) => throw new PassOptionException(s"Invalid --$SEED: $error")
+          case Right(_)    => combined
+        }
       } catch {
         case e: PassOptionException => return ConfigParseResult.failure(e.getMessage)
       }

@@ -44,9 +44,9 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
   private val searchState: SearchState = new SearchState(ctx.params)
   // cache for labels that are used in the current run
   private val labelsCache = new LabelsCache()
-  // a checker-local source of randomness, optionally initialized with the user-provided simulation seed
+  // a checker-local source of randomness, optionally initialized with the user-provided search seed
   private val random: Random =
-    ctx.params.simulationSeed.map(seed => new Random(seed)).getOrElse(new Random())
+    ctx.params.searchSeed.map(seed => new Random(seed)).getOrElse(new Random())
 
   override def run(): CheckerResult = {
     // initialize CONSTANTS

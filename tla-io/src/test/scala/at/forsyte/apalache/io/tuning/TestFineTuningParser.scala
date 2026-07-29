@@ -50,16 +50,16 @@ class TestFineTuningParser extends AnyFunSuite {
     assert(config.isLeft)
   }
 
-  test("parses search.simulation.seed") {
+  test("parses search.seed") {
     Seq(0, 4242, Int.MaxValue).foreach { seed =>
-      val config = FineTuningParser.fromStrings(Map("search.simulation.seed" -> seed.toString))
-      assert(config.isRight && config.exists(_.get("search.simulation.seed").contains(seed)))
+      val config = FineTuningParser.fromStrings(Map("search.seed" -> seed.toString))
+      assert(config.isRight && config.exists(_.get("search.seed").contains(seed)))
     }
   }
 
-  test("fails on invalid search.simulation.seed") {
+  test("fails on invalid search.seed") {
     Seq("-1", "not-a-number", "2147483648").foreach { seed =>
-      val config = FineTuningParser.fromStrings(Map("search.simulation.seed" -> seed))
+      val config = FineTuningParser.fromStrings(Map("search.seed" -> seed))
       assert(config.isLeft)
     }
   }

@@ -29,7 +29,7 @@ object FineTuningParser {
       "search.invariant.mode" -> EnumFieldType("before", "after"),
       "search.transitionFilter" -> RegexFieldType(),
       "search.invariantFilter" -> RegexFieldType(),
-      "search.simulation.seed" -> UnsignedIntFieldType(),
+      "search.seed" -> UnsignedIntFieldType(),
       "rewriter.shortCircuit" -> BoolFieldType(),
       // keeping for backwards compatibility
       "smt.randomSeed" -> UnsignedIntFieldType(),
