@@ -98,10 +98,8 @@ class BoundedCheckerPassImpl @Inject() (
     params.nMaxErrors = options.checker.maxError
     params.timeoutSmtSec = options.checker.timeoutSmtSec
     params.smtEncoding = smtEncoding
-    // #1825: when every checked invariant is exactly the --init predicate, the invariant is guaranteed to hold in the
-    // initial states, so the (redundant and often slow) state-invariant check in state 0 can be skipped soundly.
-    params.skipInitialStateInvariant = derivedPreds.invariants.nonEmpty && derivedPreds.invariants.forall(
-        _ == derivedPreds.init)
+    // the state invariants that VCGen found to follow from the init predicate, see #1825
+    params.invariantsImpliedByInit = derivedPreds.invariantsImpliedByInit.toSet
 
     val smtProfile = options.common.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt

@@ -56,8 +56,9 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
     }
     val constSnapshot = trex.snapshot()
 
-    if (ctx.params.skipInitialStateInvariant) {
-      logger.info("Skipping the invariant check in state 0, as the invariant coincides with Init (see #1825)")
+    val nImpliedByInit = ctx.params.invariantsImpliedByInit.size
+    if (nImpliedByInit > 0) {
+      logger.info(s"State 0: skipping $nImpliedByInit state invariant(s) that follow from Init")
     }
 
     // Repeat the search: 1 time in the `check` mode, and `params.nSimulationRuns` times in the `simulation` mode.
@@ -190,18 +191,16 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
     var maybeActionInvariantNos: Set[Int] = Set()
 
     def addMaybeInvariants(trNo: Int): Set[Int] = {
-      // #1825: skip the state-invariant check in the initial state (Init step), when the invariant coincides with the
-      // Init predicate. The initial states satisfy the invariant by construction, so the check is redundant.
-      if (!isNext && ctx.params.skipInitialStateInvariant) {
-        Set.empty
-      } else {
-        val indices = notInvariants.zipWithIndex
-          .filter(p => trex.mayChangeAssertion(trNo, StateInvariant, p._2, p._1))
-          .map(_._2)
-        val newIndices = indices.toSet
-        maybeInvariantNos ++= newIndices
-        newIndices
-      }
+      // In the initial states, leave out the invariants that hold there by construction, see #1825
+      val skipped = if (isNext) Set.empty[Int] else ctx.params.invariantsImpliedByInit
+      val indices = notInvariants.zipWithIndex
+        .filter { case (notInv, invNo) =>
+          !skipped.contains(invNo) && trex.mayChangeAssertion(trNo, StateInvariant, invNo, notInv)
+        }
+        .map(_._2)
+      val newIndices = indices.toSet
+      maybeInvariantNos ++= newIndices
+      newIndices
     }
 
     def addMaybeActionInvariants(trNo: Int): Set[Int] = {

@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.SanyImporter
+import at.forsyte.apalache.tla.imp.{findBodyOf, SanyImporter}
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
 import at.forsyte.apalache.tla.types.tla._
 import org.junit.runner.RunWith
@@ -131,6 +132,101 @@ class TestVCGenerator extends AnyFunSuite {
     assertDecl(newMod, "VCInv$1", """∀z ∈ S: (∀y ∈ S: (y < 10))""")
     assertDecl(newMod, "VCNotInv$0", """¬(∀z ∈ S: (∀y ∈ S: (y > 0)))""")
     assertDecl(newMod, "VCNotInv$1", """¬(∀z ∈ S: (∀y ∈ S: (y < 10)))""")
+  }
+
+  test("invariant that is a conjunct of init") {
+    // the way one checks an inductive invariant: --init=IndInit --inv=IndInv
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |IndInv == x > 0 /\ x < 10
+        |IndInit == x \in Int /\ (x > 0 /\ x < 10)
+        |====================
+      """.stripMargin
+
+    assert(Seq(0, 1) == findImpliedByInit(text, "IndInit", "IndInv"))
+  }
+
+  test("invariant that is only partially a conjunct of init") {
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |IndInv == x > 0 /\ x < 10
+        |IndInit == x \in Int /\ x < 10
+        |====================
+      """.stripMargin
+
+    assert(Seq(1) == findImpliedByInit(text, "IndInit", "IndInv"))
+  }
+
+  test("invariant that is unrelated to init") {
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |Inv == x > 0
+        |Init == x = 3
+        |====================
+      """.stripMargin
+
+    assert(findImpliedByInit(text, "Init", "Inv").isEmpty)
+  }
+
+  test("invariant under a disjunction in init") {
+    // Init does not decompose into conjuncts, so nothing follows from it syntactically
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |Inv == x > 0
+        |Init == x > 0 \/ x < 0
+        |====================
+      """.stripMargin
+
+    assert(findImpliedByInit(text, "Init", "Inv").isEmpty)
+  }
+
+  test("invariant that is a conjunct of init, up to the renaming of bound variables") {
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |IndInv == \A i \in 1..3: x > 0
+        |IndInit == x \in Int /\ (\A i \in 1..3: x > 0)
+        |====================
+      """.stripMargin
+
+    val renamed = new IncrementalRenaming(new IdleTracker).renameInModule(loadFromText("inv", text))
+    // make sure that unique renaming has given the bound variables of the two copies different names
+    val invBody = findBodyOf("IndInv", renamed.declarations: _*)
+    val initConjuncts = findBodyOf("IndInit", renamed.declarations: _*).asInstanceOf[OperEx].args
+    assert(initConjuncts.forall(_ != invBody))
+
+    assert(Seq(0) == findImpliedByInit(renamed, "IndInit", "IndInv"))
+  }
+
+  test("action invariant that is a conjunct of init") {
+    // an action invariant is never checked in the initial states
+    val text =
+      """---- MODULE inv ----
+        |EXTENDS Integers
+        |VARIABLE x
+        |Inv == x' > 0
+        |Init == x \in Int /\ x' > 0
+        |====================
+      """.stripMargin
+
+    assert(findImpliedByInit(text, "Init", "Inv").isEmpty)
+  }
+
+  private def findImpliedByInit(moduleText: String, initName: String, invName: String): Seq[Int] =
+    findImpliedByInit(loadFromText("inv", moduleText), initName, invName)
+
+  private def findImpliedByInit(mod: TlaModule, initName: String, invName: String): Seq[Int] = {
+    val vcgen = mkVCGen()
+    vcgen.findInvariantsImpliedByInit(vcgen.genInv(mod, invName), initName)
   }
 
   private def assertDecl(mod: TlaModule, name: String, expectedBodyText: String): Unit = {

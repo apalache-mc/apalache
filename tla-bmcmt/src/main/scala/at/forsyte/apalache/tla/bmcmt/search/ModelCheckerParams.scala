@@ -64,11 +64,11 @@ class ModelCheckerParams(
     tuningOptions.getOrElse("search.invariantFilter", "")
 
   /**
-   * If set, the state invariants are not checked in the initial state (step 0). This is sound when every checked
-   * invariant coincides with the Init predicate (e.g., `--init=IndInv --inv=IndInv`), since the initial states satisfy
-   * the invariant by construction. It avoids a redundant and often expensive SMT query. See #1825.
+   * The numbers of the state invariants that hold in the initial states by construction, as they are conjuncts of the
+   * init predicate. The model checker does not check them in state 0, which saves a redundant and often expensive SMT
+   * query, e.g., when checking an inductive invariant with `--init=IndInit --inv=IndInv`. See #1825.
    */
-  var skipInitialStateInvariant: Boolean = false
+  var invariantsImpliedByInit: Set[Int] = Set.empty
 
   /**
    * The number of counterexamples to produce. The default value is 1.

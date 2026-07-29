@@ -70,7 +70,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     assertResultHasNErrors(1, outcome)
   }
 
-  test("skipInitialStateInvariant skips a state-0 violation (#1825)") { rewriter: SymbStateRewriter =>
+  test("invariantsImpliedByInit skips a state-0 violation (#1825)") { rewriter: SymbStateRewriter =>
     // x' <- 2, with an invariant x > 10 that is violated in the initial state.
     val initTrans = buildTransitions(mkAssign("x", 2))
     val nextTrans = buildTransitions(mkAssign("x", 2))
@@ -80,8 +80,8 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
-    // skipping the state-0 invariant check hides the (otherwise reported) initial violation
-    params.skipInitialStateInvariant = true
+    // when the invariant is assumed to hold in the initial states, the initial violation goes unreported
+    params.invariantsImpliedByInit = Set(0)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(ModelCheckerContext(params, checkerInput, trex))
@@ -89,7 +89,7 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     assert(NoError() == outcome)
   }
 
-  test("skipInitialStateInvariant still finds a violation after Next (#1825)") { rewriter: SymbStateRewriter =>
+  test("invariantsImpliedByInit still finds a violation after Next (#1825)") { rewriter: SymbStateRewriter =>
     // x' <- 0 in Init, x' <- 1 in Next; invariant x < 1 holds in state 0 but is violated in state 1.
     val initTrans = buildTransitions(mkAssign("x", 0))
     val nextTrans = buildTransitions(mkAssign("x", 1))
@@ -99,7 +99,25 @@ trait TestSeqModelCheckerTrait extends FixtureAnyFunSuite {
     val checkerInput =
       new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, CheckerInputVC(List((inv, notInv))))
     val params = new ModelCheckerParams(checkerInput, stepsBound = 1, Map())
-    params.skipInitialStateInvariant = true
+    params.invariantsImpliedByInit = Set(0)
+    val ctx = new IncrementalExecutionContext(rewriter)
+    val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
+    val checker = new SeqModelChecker(ModelCheckerContext(params, checkerInput, trex))
+    val outcome = checker.run()
+    assertResultHasNErrors(1, outcome)
+  }
+
+  test("invariantsImpliedByInit only skips the listed invariants (#1825)") { rewriter: SymbStateRewriter =>
+    // x' <- 2, with two invariants that are both violated in the initial state
+    val initTrans = buildTransitions(mkAssign("x", 2))
+    val nextTrans = buildTransitions(mkAssign("x", 2))
+    val inv0Ex = tla.gt(tla.name("x", IntT1), tla.int(10))
+    val inv1Ex = tla.gt(tla.name("x", IntT1), tla.int(20))
+    val vc = CheckerInputVC(List((inv0Ex.build, tla.not(inv0Ex).build), (inv1Ex.build, tla.not(inv1Ex).build)))
+    val checkerInput = new CheckerInput(mkModuleWithX(), initTrans, nextTrans, None, vc)
+    val params = new ModelCheckerParams(checkerInput, stepsBound = 0, Map())
+    // invariant 1 is still checked in state 0, so its violation is reported
+    params.invariantsImpliedByInit = Set(0)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
     val checker = new SeqModelChecker(ModelCheckerContext(params, checkerInput, trex))

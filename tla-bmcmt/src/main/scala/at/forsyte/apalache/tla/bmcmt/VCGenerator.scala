@@ -1,10 +1,12 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaBoolOper, TlaOper}
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
+import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, IncrementalRenaming, ReplaceFixed}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
 import com.typesafe.scalalogging.LazyLogging
@@ -119,6 +121,50 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     }
   }
 
+  /**
+   * Find the state invariants that hold in the initial states by construction, namely, those that also appear as
+   * conjuncts of the init predicate. This is what happens when one checks an inductive invariant with `IndInit ==
+   * TypeOK /\ IndInv` and:
+   *
+   * {{{
+   * $ apalache-mc check --init=IndInit --inv=IndInv --length=1 Spec.tla
+   * }}}
+   *
+   * Since the init predicate implies each of its conjuncts, the model checker may leave these invariants out in state
+   * 0, see #1825. The comparison belongs here, as [[genInv]] is the place where an invariant such as
+   * `IndInv == A /\ B /\ C` is decomposed into the smaller invariants `A`, `B`, and `C`.
+   *
+   * We only compare syntax, so this method may find fewer invariants than one would expect, but never more.
+   *
+   * @param module
+   *   a module that has been processed by [[genInv]]
+   * @param initName
+   *   name of the init predicate
+   * @return
+   *   the numbers of these invariants, as the model checker numbers them
+   */
+  def findInvariantsImpliedByInit(module: TlaModule, initName: String): Seq[Int] = {
+    module.declarations.find(_.name == initName) match {
+      case Some(init: TlaOperDecl) if init.formalParams.isEmpty =>
+        val initConjuncts = splitInv(Seq(), init.body).map(canonical).toSet
+        // Only state invariants are checked in the initial states. Action and trace invariants carry another prefix,
+        // so they never show up here.
+        ModuleAdapter
+          .getDeclsFromSpec(module, NormalizedNames.VC_INV_PREFIX)
+          .zipWithIndex
+          .collect { case (vc, invNo) if initConjuncts.contains(canonical(vc.body)) => invNo }
+
+      case _ => Seq.empty
+    }
+  }
+
+  /**
+   * Rename the bound variables of an expression from scratch. Unique renaming has given the bound variables in two
+   * copies of one and the same expression different counters, e.g., `\A i$1 \in S: p` and `\A i$2 \in S: p`. Renaming
+   * both from scratch makes the copies syntactically equal.
+   */
+  private def canonical(ex: TlaEx): TlaEx = new IncrementalRenaming(new IdleTracker)(removeAssignments(ex))
+
   private def assertTraceInvType(module: TlaModule, traceInv: TlaOperDecl): Unit = {
     val varTypes = SortedMap(module.varDeclarations.map(d => d.name -> d.typeTag.asTlaType1()): _*)
     // the history variable is a sequence of records over variable names
@@ -130,13 +176,16 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
     }
   }
 
+  /**
+   * In rare cases, an invariant may contain assignments, e.g., when one uses `--inv=Next`. Replace them with equality.
+   */
+  private def removeAssignments: TlaExTransformation = ReplaceFixed(tracker).withFun {
+    case ex @ OperEx(ApalacheOper.assign, lhs, rhs) =>
+      OperEx(TlaOper.eq, lhs, rhs)(ex.typeTag)
+  }
+
   private def introConditions(level: TlaLevel, inputInv: TlaEx): Seq[TlaOperDecl] = {
     def mapToDecls(invPiece: TlaEx, index: Int): Seq[TlaOperDecl] = {
-      // In rare cases, invPiece may contain assignments, e.g., when one uses --inv=Next.
-      // Replace assignments with equality.
-      val removeAssignments = ReplaceFixed(tracker).withFun { case ex @ OperEx(ApalacheOper.assign, lhs, rhs) =>
-        OperEx(TlaOper.eq, lhs, rhs)(ex.typeTag)
-      }
       val invPieceNorm = removeAssignments(invPiece)
       val invPieceCopy = DeepCopy(tracker).deepCopyEx(invPieceNorm)
       val tag = inputInv.typeTag

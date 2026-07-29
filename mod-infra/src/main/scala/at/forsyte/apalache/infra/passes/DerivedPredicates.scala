@@ -83,6 +83,12 @@ trait DerivedPredicates {
   /** A list of names of predicates that specify invariants  (may be empty) */
   def invariants: List[String]
 
+  /**
+   * The numbers of the state invariants that hold in the initial states by construction, because they are conjuncts of
+   * the init predicate. These are the numbers that the model checker gives to the invariants (may be empty)
+   */
+  def invariantsImpliedByInit: List[Int]
+
   /** The name of the predicate used to compute state transitions */
   def next: String
 
@@ -140,6 +146,9 @@ object DerivedPredicates {
     /** The invariant predicates are extended in subsequent passes */
     def addInvariants(invs: List[String]): Unit
 
+    /** The invariants that follow from the init predicate are only known once the verification conditions are built */
+    def setInvariantsImpliedByInit(invs: List[Int]): Unit
+
     /** The persistent operators are extended in subsequent passes */
     def addPersistent(names: String*): Unit
   }
@@ -151,6 +160,7 @@ object DerivedPredicates {
    */
   class Impl @Inject() extends DerivedPredicates.Configurable {
     var invariants: List[String] = List.empty
+    var invariantsImpliedByInit: List[Int] = List.empty
     var temporalProps: List[String] = List.empty
     var next: String = ""
     var init: String = ""
@@ -178,6 +188,8 @@ object DerivedPredicates {
     def setCinit(cinit: String): Unit = this.cinit = Some(cinit)
 
     def addInvariants(invs: List[String]): Unit = this.invariants = this.invariants ++ invs
+
+    def setInvariantsImpliedByInit(invs: List[Int]): Unit = this.invariantsImpliedByInit = invs
 
     def addPersistent(names: String*): Unit = this.persistent ++= names
   }

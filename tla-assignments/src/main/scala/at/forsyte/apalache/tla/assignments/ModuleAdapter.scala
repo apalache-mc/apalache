@@ -45,14 +45,20 @@ object ModuleAdapter {
    * `SymbolicTransitionInserter.suffix` string, that distinguishes them from normal operators.
    */
   def getTransitionsFromSpec(module: TlaModule, prefix: String): Seq[TlaEx] =
+    getDeclsFromSpec(module, prefix).map {
+      _.body
+    }
+
+  /**
+   * The same as [[getTransitionsFromSpec]], but keeping the declarations instead of their bodies. Use this when you
+   * need the names too, e.g., to figure out the number that the model checker gives to an invariant.
+   */
+  def getDeclsFromSpec(module: TlaModule, prefix: String): Seq[TlaOperDecl] =
     module.operDeclarations
       .filter {
         _.name.startsWith(prefix) // transitions end in 0,1,...
       }
       .sortBy(_.name)
-      .map {
-        _.body
-      }
 
   def getOperatorOption(module: TlaModule, name: String): Option[TlaEx] =
     module.operDeclarations

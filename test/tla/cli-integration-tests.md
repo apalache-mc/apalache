@@ -1002,6 +1002,38 @@ Checker has found an error
 EXITCODE: ERROR (12)
 ```
 
+### IndInv1825.tla
+
+#### check IndInv1825 does not check an invariant that follows from init: regression for issue 1825
+
+`IndInv` is a conjunct of `IndInit`, so it holds in state 0 by construction. The
+violation that `Next` introduces is still reported.
+
+```sh
+$ apalache-mc check --init=IndInit --inv=IndInv --length=1 IndInv1825.tla | sed 's/I@.*//'
+...
+State 0: skipping 2 state invariant(s) that follow from Init
+...
+State 1: state invariant 1 violated.
+...
+EXITCODE: ERROR (12)
+```
+
+#### check IndInv1825 still checks the other invariants in state 0: regression for issue 1825
+
+`PartialInit` omits `LemmaB`, so `LemmaB` is checked in state 0, where it is violated.
+
+```sh
+$ apalache-mc check --init=PartialInit --inv=IndInv --length=0 IndInv1825.tla | sed 's/I@.*//'
+...
+State 0: skipping 1 state invariant(s) that follow from Init
+State 0: Checking 1 state invariants
+...
+State 0: state invariant 1 violated.
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Counter.tla errors (array-encoding)
 
 ```sh

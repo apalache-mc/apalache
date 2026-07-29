@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -18,7 +19,7 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class VCGenPassImpl @Inject() (
     options: OptionGroup.HasChecker,
-    derivedPredicates: DerivedPredicates,
+    derivedPredicates: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {
@@ -38,6 +39,17 @@ class VCGenPassImpl @Inject() (
             new VCGenerator(tracker).genInv(mod, invName)
           }
       }
+
+    // The invariants that are conjuncts of the init predicate hold in the initial states by construction. We pass them
+    // on to the model checker, which then does not check them in state 0, see #1825. The expressions that we build on
+    // the way are only used for comparison, hence the idle tracker.
+    val impliedByInit =
+      new VCGenerator(new IdleTracker).findInvariantsImpliedByInit(moduleWithInvariants, derivedPredicates.init)
+    if (impliedByInit.nonEmpty) {
+      val nConditions = impliedByInit.length
+      logger.info(s"  > $nConditions verification condition(s) follow from ${derivedPredicates.init}")
+    }
+    derivedPredicates.setInvariantsImpliedByInit(impliedByInit.toList)
 
     val moduleWithInvariantsAndView =
       derivedPredicates.view
