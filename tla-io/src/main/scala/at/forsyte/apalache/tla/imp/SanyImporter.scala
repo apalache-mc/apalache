@@ -109,7 +109,7 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       // Construct library lookup path:
       //   1. Include the file's parent directory
       val parentDirPath = file.getAbsoluteFile().getParent() match {
-        case null => Nil
+        case null                  => Nil
         case parentDirPath: String => Seq(parentDirPath)
       }
       //   2. Patch in Apalache standard library.

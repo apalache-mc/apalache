@@ -69,8 +69,8 @@ class TestSanyImporter extends SanyImporterTestBase {
     val hostDirectory = Files.createTempDirectory("sany-host-modules")
     val hostModule = hostDirectory.resolve("HostOnly.tla")
     Files.writeString(
-      hostModule,
-      """---- MODULE HostOnly ----
+        hostModule,
+        """---- MODULE HostOnly ----
         |HostValue == TRUE
         |=========================
         |""".stripMargin,
@@ -107,8 +107,8 @@ class TestSanyImporter extends SanyImporterTestBase {
         |""".stripMargin
 
     val (rootName, modules) = sanyImporter.loadFromSource(
-      Source.fromString(root),
-      Seq(Source.fromString(supplied)),
+        Source.fromString(root),
+        Seq(Source.fromString(supplied)),
     )
 
     assert(rootName == "Root")

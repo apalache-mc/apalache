@@ -12,6 +12,11 @@ import com.github.apalachemc.apalache.jsonrpc.JsonRpcServerApp
 
 class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode") with LazyLogging {
 
+  private val serverTypeDescriptions = List(
+      s"'${ServerType.Checker.name}' (shai-grpc)",
+      s"'${ServerType.Explorer.name}' (json-rpc)",
+  ).mkString(", ")
+
   implicit val serverTypeRead: Read[ServerType] =
     Read.reads[ServerType](s"a server type: ${ServerType.values.mkString(", ")}")(ServerType.fromString)
 
@@ -21,7 +26,7 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
       ) + " (overrides envvar PORT)", useEnv = true)
 
   var serverType: Option[ServerType] = opt[Option[ServerType]](description = descriptionWithDefault(
-          s"the type of server to run: ${ServerType.values.map(_.displayName).mkString(", ")}",
+          s"the type of server to run: $serverTypeDescriptions",
           configDefaults.server.serverType,
       ), default = None)
 

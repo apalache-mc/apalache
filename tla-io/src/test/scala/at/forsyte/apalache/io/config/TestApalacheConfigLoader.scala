@@ -13,8 +13,8 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       writeGlobal(home, "not json")
       val explicit = work.resolve("selected.json")
       write(
-        explicit,
-        """{"out-dir":"selected","checker":{"length":2,"tuning":{"selected":"1","shared":"selected"}}}""",
+          explicit,
+          """{"out-dir":"selected","checker":{"length":2,"tuning":{"selected":"1","shared":"selected"}}}""",
       )
       val primary = ApalacheConfigJsonParser
         .parse("""{"checker":{"length":3,"tuning":{"primary":"1","shared":"primary"}}}""")
@@ -108,14 +108,14 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       val missing = work.resolve("missing.json")
       val primary = ApalacheConfig(context = RunContextPatch(
           command = Some("check"),
-        configFile = Some(missing),
+          configFile = Some(missing),
       ))
 
       val result = new ApalacheConfigLoader(work, home).load(primary)
 
       assert(!result.isSuccess)
       assert(result.errors.exists(error =>
-        error.contains("Configuration file not found") && error.contains("missing.json")))
+            error.contains("Configuration file not found") && error.contains("missing.json")))
     }
   }
 
@@ -164,8 +164,8 @@ class TestApalacheConfigLoader extends AnyFunSuite {
   test("config-file inside the selected file does not trigger recursive loading") {
     withTempDirectories { (work, home) =>
       write(
-        work.resolve(".apalache.json"),
-        """{"config-file":"missing.json","run-dir":"local-run"}""",
+          work.resolve(".apalache.json"),
+          """{"config-file":"missing.json","run-dir":"local-run"}""",
       )
 
       val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))

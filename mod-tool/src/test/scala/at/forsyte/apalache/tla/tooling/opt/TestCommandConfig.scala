@@ -42,6 +42,14 @@ class TestCommandConfig extends AnyFunSuite {
     assertOptionLists(new ServerCmd(), "server-type", ServerType.values.map(_.name))
   }
 
+  test("CLI commands own user-facing enum descriptions") {
+    val checker = new CheckCmd()
+    assertOptionLists(checker, "algo", List("remote (used by explorer)"))
+    assertOptionLists(checker, "smt-encoding", List("arrays (experimental)", "funArrays (experimental)"))
+    assertOptionLists(checker, "smt-solver", List("cvc5 (experimental)"))
+    assertOptionLists(new ServerCmd(), "server-type", List("'checker' (shai-grpc)", "'explorer' (json-rpc)"))
+  }
+
   test("specialized command patches merge over inherited command fields") {
     val command = new CheckCmd()
     command.read(List("CommandConfig.tla"))

@@ -1,19 +1,14 @@
 package at.forsyte.apalache.io.config
 
 /** SMT encodings accepted by configuration inputs. */
-sealed abstract class SMTEncoding(val name: String, val experimental: Boolean) {
-
-  /** Canonical name with its support status for user-facing descriptions. */
-  final def displayName: String =
-    if (experimental) s"$name (experimental)" else name
-
+sealed abstract class SMTEncoding(val name: String) {
   final override def toString: String = name
 }
 
 object SMTEncoding {
-  case object OOPSLA19 extends SMTEncoding("oopsla19", experimental = false)
-  case object Arrays extends SMTEncoding("arrays", experimental = true)
-  case object FunArrays extends SMTEncoding("funArrays", experimental = true)
+  case object OOPSLA19 extends SMTEncoding("oopsla19")
+  case object Arrays extends SMTEncoding("arrays")
+  case object FunArrays extends SMTEncoding("funArrays")
 
   /** Canonical values in user-facing order. */
   val values: List[SMTEncoding] = List(OOPSLA19, Arrays, FunArrays)
@@ -28,18 +23,13 @@ object SMTEncoding {
 }
 
 /** Supported SMT solver backends. */
-sealed abstract class SMTSolver(val name: String, val experimental: Boolean) {
-
-  /** Canonical name with its support status for user-facing descriptions. */
-  final def displayName: String =
-    if (experimental) s"$name (experimental)" else name
-
+sealed abstract class SMTSolver(val name: String) {
   final override def toString: String = name
 }
 
 object SMTSolver {
-  case object Z3 extends SMTSolver("z3", experimental = false)
-  case object CVC5 extends SMTSolver("cvc5", experimental = true)
+  case object Z3 extends SMTSolver("z3")
+  case object CVC5 extends SMTSolver("cvc5")
 
   /** Canonical values in user-facing order. */
   val values: List[SMTSolver] = List(Z3, CVC5)
@@ -53,19 +43,14 @@ object SMTSolver {
 }
 
 /** Supported model-checking algorithms. */
-sealed abstract class Algorithm(val name: String, val details: String) {
-
-  /** Canonical name with optional context for user-facing descriptions. */
-  final def displayName: String =
-    if (details.isEmpty) name else s"$name ($details)"
-
+sealed abstract class Algorithm(val name: String) {
   final override def toString: String = name
 }
 
 object Algorithm {
-  case object Incremental extends Algorithm("incremental", "")
-  case object Offline extends Algorithm("offline", "")
-  case object Remote extends Algorithm("remote", "used by explorer")
+  case object Incremental extends Algorithm("incremental")
+  case object Offline extends Algorithm("offline")
+  case object Remote extends Algorithm("remote")
 
   /** Canonical values in user-facing order. */
   val values: List[Algorithm] = List(Incremental, Offline, Remote)
@@ -80,17 +65,13 @@ object Algorithm {
 }
 
 /** Supported server implementations. */
-sealed abstract class ServerType(val name: String, val implementation: String) {
-
-  /** Canonical name with its implementation for user-facing descriptions. */
-  final def displayName: String = s"'$name' ($implementation)"
-
+sealed abstract class ServerType(val name: String) {
   final override def toString: String = name
 }
 
 object ServerType {
-  case object Checker extends ServerType("checker", "shai-grpc")
-  case object Explorer extends ServerType("explorer", "json-rpc")
+  case object Checker extends ServerType("checker")
+  case object Explorer extends ServerType("explorer")
 
   /** Canonical values in user-facing order. */
   val values: List[ServerType] = List(Checker, Explorer)

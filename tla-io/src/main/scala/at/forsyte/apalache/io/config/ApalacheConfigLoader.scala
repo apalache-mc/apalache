@@ -11,9 +11,9 @@ import java.nio.file.{Files, Path, Paths}
  * searched. Defaults are applied later by [[ApalacheConfigResolver]].
  *
  * @param workingDirectory
- * Directory in which to look for `.apalache.json`.
+ *   Directory in which to look for `.apalache.json`.
  * @param homeDirectory
- * JVM user home containing the user-wide configuration.
+ *   JVM user home containing the user-wide configuration.
  */
 final class ApalacheConfigLoader(
     workingDirectory: Path = Paths.get("").toAbsolutePath.normalize(),
@@ -34,8 +34,8 @@ final class ApalacheConfigLoader(
         val decoded = decodeFile(selected.path, selected.label)
         if (decoded.isSuccess) {
           ConfigParseResult.success(
-            primary.mergeWithLower(decoded.requireValue()),
-            decoded.warnings,
+              primary.mergeWithLower(decoded.requireValue()),
+              decoded.warnings,
           )
         } else {
           ConfigParseResult.failureFrom(decoded)
@@ -82,10 +82,10 @@ final class ApalacheConfigLoader(
       decoded
     } else {
       ConfigParseResult.failure(
-        decoded.errors.map { error =>
-          if (error.startsWith(label)) error else s"$label: $error"
-        },
-        decoded.warnings,
+          decoded.errors.map { error =>
+            if (error.startsWith(label)) error else s"$label: $error"
+          },
+          decoded.warnings,
       )
     }
   }

@@ -29,6 +29,23 @@ import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 class CheckCmd(name: String = "check", description: String = "Check a TLA+ specification")
     extends AbstractCheckerCmd(name, description) {
 
+  private val algorithmDescriptions = List(
+      Algorithm.Incremental.name,
+      Algorithm.Offline.name,
+      s"${Algorithm.Remote.name} (used by explorer)",
+  ).mkString(", ")
+
+  private val smtEncodingDescriptions = List(
+      SMTEncoding.OOPSLA19.name,
+      s"${SMTEncoding.Arrays.name} (experimental)",
+      s"${SMTEncoding.FunArrays.name} (experimental)",
+  ).mkString(", ")
+
+  private val smtSolverDescriptions = List(
+      SMTSolver.Z3.name,
+      s"${SMTSolver.CVC5.name} (experimental)",
+  ).mkString(", ")
+
   // Parses the smtEncoding option
   implicit val smtEncodingRead: Read[SMTEncoding] =
     Read.reads[SMTEncoding](s"an SMT encoding: ${SMTEncoding.values.mkString(", ")}")(SMTEncoding.fromString)
@@ -43,17 +60,17 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
       description = descriptionWithDefault(
-          s"the search algorithm: ${Algorithm.values.map(_.displayName).mkString(", ")}",
+          s"the search algorithm: $algorithmDescriptions",
           configDefaults.checker.algorithm,
       ))
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
       description = descriptionWithDefault(
-          s"the SMT encoding: ${SMTEncoding.values.map(_.displayName).mkString(", ")}",
+          s"the SMT encoding: $smtEncodingDescriptions",
           configDefaults.checker.smtEncoding,
       ) + " (overrides envvar SMT_ENCODING)")
   var smtSolver: Option[SMTSolver] = opt[Option[SMTSolver]](name = "smt-solver", useEnv = true, default = None,
       description = descriptionWithDefault(
-          s"the SMT solver backend: ${SMTSolver.values.map(_.displayName).mkString(", ")}",
+          s"the SMT solver backend: $smtSolverDescriptions",
           configDefaults.checker.smtSolver,
       ) + " (overrides envvar SMT_SOLVER)")
   var tuningOptionsFile: Option[String] =
