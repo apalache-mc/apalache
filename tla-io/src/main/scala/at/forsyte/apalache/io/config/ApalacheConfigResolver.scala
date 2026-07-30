@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-
 import scala.collection.mutable.ListBuffer
 
 /** Applies defaults, loads TLC configuration, validates a mode, and constructs its final options. */
@@ -41,7 +40,7 @@ object ApalacheConfigResolver {
   }
 
   /** Resolve parsing options, requiring an input source and applying common defaults. */
-  def resolveParse(config: ApalacheConfig): ConfigParseResult[ResolvedParseOptions] = {
+  def resolveParse(config: ApalacheConfig): ConfigParseResult[ValidatedParseOptions] = {
     val commandResult = requireCommand(config)
     if (!commandResult.isSuccess) {
       ConfigParseResult.failureFrom(commandResult)
@@ -54,7 +53,7 @@ object ApalacheConfigResolver {
           )
         case Some(source) =>
           ConfigParseResult.success(
-              ResolvedParseOptions(
+            ValidatedParseOptions(
                   resolveCommon(config),
                   source,
                   config.output,
@@ -66,7 +65,7 @@ object ApalacheConfigResolver {
   }
 
   /** Resolve typechecking options on top of the parsing options. */
-  def resolveTypecheck(config: ApalacheConfig): ConfigParseResult[ResolvedTypecheckOptions] = {
+  def resolveTypecheck(config: ApalacheConfig): ConfigParseResult[ValidatedTypecheckOptions] = {
     val parseResult = resolveParse(config)
     if (!parseResult.isSuccess) {
       ConfigParseResult.failureFrom(parseResult)
@@ -74,7 +73,7 @@ object ApalacheConfigResolver {
       val parse = parseResult.requireValue()
       val typechecker = config.mergeWithDefaults.typechecker
       ConfigParseResult.success(
-          ResolvedTypecheckOptions(
+        ValidatedTypecheckOptions(
               parse.common,
               parse.source,
               parse.output,
@@ -86,7 +85,7 @@ object ApalacheConfigResolver {
   }
 
   /** Resolve checker options, including TLC configuration and cross-field validation. */
-  def resolveCheck(config: ApalacheConfig): ConfigParseResult[ResolvedCheckOptions] = {
+  def resolveCheck(config: ApalacheConfig): ConfigParseResult[ValidatedCheckOptions] = {
     val typecheckResult = resolveTypecheck(config)
     if (!typecheckResult.isSuccess) {
       return ConfigParseResult.failureFrom(typecheckResult)
@@ -132,7 +131,7 @@ object ApalacheConfigResolver {
     )
     val typecheck = typecheckResult.requireValue()
     ConfigParseResult.success(
-        ResolvedCheckOptions(
+      ValidatedCheckOptions(
             typecheck.common,
             typecheck.source,
             typecheck.output,
@@ -145,7 +144,7 @@ object ApalacheConfigResolver {
   }
 
   /** Resolve trace-evaluation options and validate the trace source and expressions. */
-  def resolveTrace(config: ApalacheConfig): ConfigParseResult[ResolvedTraceOptions] = {
+  def resolveTrace(config: ApalacheConfig): ConfigParseResult[ValidatedTraceOptions] = {
     val checkResult = resolveCheck(config)
     if (!checkResult.isSuccess) {
       return ConfigParseResult.failureFrom(checkResult)
@@ -170,7 +169,7 @@ object ApalacheConfigResolver {
     } else {
       val check = checkResult.requireValue()
       ConfigParseResult.success(
-          ResolvedTraceOptions(
+        ValidatedTraceOptions(
               check.common,
               check.source,
               check.output,
@@ -188,14 +187,14 @@ object ApalacheConfigResolver {
   }
 
   /** Resolve server options and apply the server defaults. */
-  def resolveServer(config: ApalacheConfig): ConfigParseResult[ResolvedServerOptions] = {
+  def resolveServer(config: ApalacheConfig): ConfigParseResult[ValidatedServerOptions] = {
     val commandResult = requireCommand(config)
     if (!commandResult.isSuccess) {
       ConfigParseResult.failureFrom(commandResult)
     } else {
       val server = config.mergeWithDefaults.server
       ConfigParseResult.success(
-          ResolvedServerOptions(
+        ValidatedServerOptions(
               resolveCommon(config),
               ServerOptions(
                   port = requireDefault(server.port, "server.port"),
@@ -214,7 +213,7 @@ object ApalacheConfigResolver {
       init: String,
       next: String,
       invariants: List[String],
-      persistent: List[String]): ConfigParseResult[ResolvedCheckOptions] = {
+      persistent: List[String]): ConfigParseResult[ValidatedCheckOptions] = {
 
     val requestConfig = ApalacheConfig(
         context = RunContextPatch(command = Some("server")),

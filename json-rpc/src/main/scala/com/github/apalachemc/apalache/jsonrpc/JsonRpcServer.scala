@@ -699,7 +699,7 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
    * @return
    *   the configuration for spawning a CheckerModule
    */
-  private def createConfigFromParams(params: LoadSpecParams): ConfigParseResult[ResolvedCheckOptions] = {
+  private def createConfigFromParams(params: LoadSpecParams): ConfigParseResult[ValidatedCheckOptions] = {
     if (!config.isSuccess) {
       ConfigParseResult.failureFrom(config)
     } else if (params.sources.isEmpty) {

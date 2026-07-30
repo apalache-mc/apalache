@@ -7,12 +7,12 @@ import at.forsyte.apalache.tla.lir.Feature
 import java.nio.file.Path
 
 /**
- * Configuration options that have passed validation.
- * Implementations of `ResolvedOptions` are consumed by Apalache passes.
+ * Configuration options that have passed validation. Implementations of `ValidatedOptions` are consumed by Apalache
+ * passes.
  */
-sealed trait ResolvedOptions
+sealed trait ValidatedOptions
 
-/** Resolved settings shared by every execution mode. */
+/** Validated settings shared by every execution mode. */
 final case class CommonOptions(
     debug: Boolean,
     features: List[Feature],
@@ -20,23 +20,26 @@ final case class CommonOptions(
     profiling: Boolean,
     runDir: Option[Path],
     smtprof: Boolean,
-    writeIntermediate: Boolean) extends ResolvedOptions
+    writeIntermediate: Boolean)
+    extends ValidatedOptions
 
 /** Values needed to initialize output and logging for a command. */
 final case class CommandInitializationOptions(
     command: String,
     common: CommonOptions,
-    source: Option[InputSource]) extends ResolvedOptions
+    source: Option[InputSource])
+    extends ValidatedOptions
 
 /** Input and output values injected into the frontend passes. */
 final case class ModuleIoOptions(
     source: InputSource,
-    output: Option[Path]) extends ResolvedOptions
+    output: Option[Path])
+    extends ValidatedOptions
 
-/** Resolved type-inference settings. */
-final case class TypecheckerOptions(inferPoly: Boolean) extends ResolvedOptions
+/** Validated type-inference settings. */
+final case class TypecheckerOptions(inferPoly: Boolean) extends ValidatedOptions
 
-/** Resolved model-checker engine settings independent of the specification. */
+/** Validated model-checker engine settings independent of the specification. */
 final case class CheckerOptions(
     algorithm: Algorithm,
     discardDisabled: Boolean,
@@ -46,14 +49,16 @@ final case class CheckerOptions(
     checkDeadlocks: Boolean,
     smtSolver: SMTSolver,
     smtEncoding: SMTEncoding,
-    tuning: Map[String, String]) extends ResolvedOptions
+    tuning: Map[String, String])
+    extends ValidatedOptions
 
 /** A parsed TLC configuration together with its source path. */
 final case class TlcConfigInput(
     config: TlcConfig,
-    path: Path) extends ResolvedOptions
+    path: Path)
+    extends ValidatedOptions
 
-/** Resolved behavior, properties, and TLC-derived specification settings. */
+/** Validated behavior, properties, and TLC-derived specification settings. */
 final case class SpecificationOptions(
     behaviorSpec: BehaviorSpec,
     constantInitializer: Option[String],
@@ -61,55 +66,63 @@ final case class SpecificationOptions(
     temporalProperties: List[String],
     tlcConfig: Option[TlcConfigInput],
     view: Option[String],
-    persistent: List[String]) extends ResolvedOptions
+    persistent: List[String])
+    extends ValidatedOptions
 
 /** A trace source and the expressions evaluated in each state. */
 final case class TraceEvaluationOptions(
     trace: InputSource,
-    expressions: List[String]) extends ResolvedOptions
+    expressions: List[String])
+    extends ValidatedOptions
 
-/** Resolved server port and implementation. */
+/** Validated server port and implementation. */
 final case class ServerOptions(
     port: Int,
-    serverType: ServerType) extends ResolvedOptions
+    serverType: ServerType)
+    extends ValidatedOptions
 
 /** Complete validated options for parsing a specification. */
-final case class ResolvedParseOptions(
+final case class ValidatedParseOptions(
     common: CommonOptions,
     source: InputSource,
-    output: Option[Path]) extends ResolvedOptions
+    output: Option[Path])
+    extends ValidatedOptions
 
 /** Complete validated options for parsing and typechecking a specification. */
-final case class ResolvedTypecheckOptions(
+final case class ValidatedTypecheckOptions(
     common: CommonOptions,
     source: InputSource,
     output: Option[Path],
-    typechecker: TypecheckerOptions) extends ResolvedOptions
+    typechecker: TypecheckerOptions)
+    extends ValidatedOptions
 
 /** Complete validated options for model checking a specification. */
-final case class ResolvedCheckOptions(
+final case class ValidatedCheckOptions(
     common: CommonOptions,
     source: InputSource,
     output: Option[Path],
     typechecker: TypecheckerOptions,
     checker: CheckerOptions,
-    specification: SpecificationOptions) extends ResolvedOptions
+    specification: SpecificationOptions)
+    extends ValidatedOptions
 
 /** Complete validated options for evaluating expressions over a trace. */
-final case class ResolvedTraceOptions(
+final case class ValidatedTraceOptions(
     common: CommonOptions,
     source: InputSource,
     output: Option[Path],
     typechecker: TypecheckerOptions,
     checker: CheckerOptions,
     specification: SpecificationOptions,
-    traceEvaluation: TraceEvaluationOptions) extends ResolvedOptions {
+    traceEvaluation: TraceEvaluationOptions)
+    extends ValidatedOptions {
 
-  def withLength(length: Int): ResolvedTraceOptions =
+  def withLength(length: Int): ValidatedTraceOptions =
     copy(checker = checker.copy(length = length))
 }
 
 /** Complete validated options for starting a server. */
-final case class ResolvedServerOptions(
+final case class ValidatedServerOptions(
     common: CommonOptions,
-    server: ServerOptions) extends ResolvedOptions
+    server: ServerOptions)
+    extends ValidatedOptions

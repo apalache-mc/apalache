@@ -17,7 +17,7 @@ ApalacheConfigJsonParser + mergeWithLower --> merged ApalacheConfig
 ApalacheConfigResolver.resolve*
         |
         v
-mode-specific Resolved*Options
+mode-specific Validated*Options
         |
         v
 passes and services
@@ -37,7 +37,7 @@ For CLI execution, [Tool.scala] calls `toConfig`, selects at most one configurat
 `ApalacheConfig` to the command. Commands must not cache or reload configuration. Untrusted service JSON is parsed and
 checked by `RemoteConfigValidator` without invoking `ApalacheConfigLoader`.
 
-Resolved command types also expose `source` and `output` directly.
+Validated command types also expose `source` and `output` directly.
 `ModuleIoOptions` is only the two-field adapter used by Guice when constructing frontend passes.
 
 ## Files
@@ -50,7 +50,7 @@ Resolved command types also expose `source` and `output` directly.
 | [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                                                      |
 | [RemoteConfigValidator.scala]    | Filesystem-free validation for untrusted service request configuration.                               |
 | [ConfigPatch.scala]              | Shared patch marker and sparse section patch types.                                                   |
-| [ResolvedOptions.scala]          | Immutable, validated values consumed during execution.                                                |
+| [ValidatedOptions.scala]         | Immutable, validated values consumed during execution.                                                |
 | [ConfigParseResult.scala]        | Expected configuration errors and warnings as values.                                                 |
 | [ConfigEnums.scala]              | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
 
@@ -86,6 +86,6 @@ Resolved command types also expose `source` and `output` directly.
 [ConfigEnums.scala]: ConfigEnums.scala
 [ConfigParseResult.scala]: ConfigParseResult.scala
 [ConfigPatch.scala]: ConfigPatch.scala
-[ResolvedOptions.scala]: ResolvedOptions.scala
+[ValidatedOptions.scala]: ValidatedOptions.scala
 [RemoteConfigValidator.scala]: RemoteConfigValidator.scala
 [Tool.scala]: ../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala

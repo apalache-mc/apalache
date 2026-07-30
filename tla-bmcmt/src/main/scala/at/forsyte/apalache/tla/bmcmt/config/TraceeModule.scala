@@ -2,21 +2,18 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.io.config.{
-  CheckerOptions, CommonOptions, ModuleIoOptions, ResolvedTraceOptions, SpecificationOptions, TraceEvaluationOptions,
-  TypecheckerOptions,
-}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
+import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import at.forsyte.apalache.tla.passes.pp._
-import at.forsyte.apalache.tla.tracee.pass.{TraceeBridgingPass, TraceeBridgingPassImpl, TraceePass, TraceePassImpl}
 import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
+import at.forsyte.apalache.tla.tracee.pass.{TraceeBridgingPass, TraceeBridgingPassImpl, TraceePass, TraceePassImpl}
 import com.google.inject.TypeLiteral
 
 /**
@@ -25,7 +22,7 @@ import com.google.inject.TypeLiteral
  * @author
  *   Jure Kukovec
  */
-class TraceeModule(options: ResolvedTraceOptions) extends ToolModule {
+class TraceeModule(options: ValidatedTraceOptions) extends ToolModule {
 
   override def configure(): Unit = {
     bind(classOf[CommonOptions]).toInstance(options.common)

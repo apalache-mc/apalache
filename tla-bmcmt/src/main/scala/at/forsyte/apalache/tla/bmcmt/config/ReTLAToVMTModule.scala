@@ -4,22 +4,17 @@ import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{LanguagePred, TransformationListener, TransformationTracker}
-import com.google.inject.TypeLiteral
-import at.forsyte.apalache.io.config.{
-  CheckerOptions, CommonOptions, ModuleIoOptions, ResolvedCheckOptions, SpecificationOptions, TypecheckerOptions,
-}
 import at.forsyte.apalache.tla.passes.assignments.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
 import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.tla.passes.pp.{
-  ConfigurationPass, ConfigurationPassImpl, InlinePass, InlinePassImpl, OptPass, OptPassImpl, PreproPass,
-  ReTLAPreproPassImpl, WatchdogPassImpl,
-}
+import at.forsyte.apalache.tla.passes.pp._
 import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
+import com.google.inject.TypeLiteral
 
 /**
  * Transpiels reTLA inputs to VMT
@@ -27,7 +22,7 @@ import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
  * @author
  *   Jure Kukovec
  */
-class ReTLAToVMTModule(options: ResolvedCheckOptions) extends ToolModule {
+class ReTLAToVMTModule(options: ValidatedCheckOptions) extends ToolModule {
   override def configure(): Unit = {
     bind(classOf[CommonOptions]).toInstance(options.common)
     bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
