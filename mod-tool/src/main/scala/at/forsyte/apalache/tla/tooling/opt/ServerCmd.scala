@@ -20,13 +20,13 @@ class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in ser
     Read.reads[ServerType](s"a server type: ${ServerType.values.mkString(", ")}")(ServerType.fromString)
 
   var port: Option[Int] = opt[Option[Int]](name = PORT,
-    description = descriptionWithDefault(
+      description = descriptionWithDefault(
           "the port served by the RPC server",
           configDefaults.server.port,
       ) + " (overrides envvar PORT)", useEnv = true)
 
   var serverType: Option[ServerType] = opt[Option[ServerType]](name = SERVER_TYPE,
-    description = descriptionWithDefault(
+      description = descriptionWithDefault(
           s"the type of server to run: $serverTypeDescriptions",
           configDefaults.server.serverType,
       ), default = None)

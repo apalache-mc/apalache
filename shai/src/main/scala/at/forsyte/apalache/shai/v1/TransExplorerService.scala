@@ -163,7 +163,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
       try {
         // TODO: replace hard-coded options with options derived from CLI params
         val config = ApalacheConfig(
-          context = RunContextPatch(command = Some(SERVER)),
+            context = RunContextPatch(command = Some(SERVER)),
             common = CommonPatch(
                 outDir = Some(Path.of(".")),
                 debug = Some(true),

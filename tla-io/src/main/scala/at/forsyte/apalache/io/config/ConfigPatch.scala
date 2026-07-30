@@ -6,9 +6,8 @@ import at.forsyte.apalache.tla.lir.Feature
 import java.nio.file.Path
 
 /**
- * A section of [[ApalacheConfig]] that can be merged into a configuration file.
- * Patches are introduced as logical configuration pieces that are required
- * by Apalache commands.
+ * A section of [[ApalacheConfig]] that can be merged into a configuration file. Patches are introduced as logical
+ * configuration pieces that are required by Apalache commands.
  */
 sealed trait ConfigPatch
 

@@ -15,6 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
 import java.io.File
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.io.config.SpecificationOptions
+import at.forsyte.apalache.io.config.Constants.CINIT
 import at.forsyte.apalache.infra.tlc.config.TlcConfig
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.infra.tlc.config.TemporalSpec
@@ -88,7 +89,8 @@ class ConfigurationPassImpl @Inject() (
       if (overrideTag != constDeclTag) {
         throw new TypingInputException(
             s"Constant ${decl.name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)} declared in the specification has the type tag $constDeclTag, while the value defined in the .cfg file has the type tag $overrideTag.\n" +
-              s"Please make sure the values in the .cfg file have types matching those in the specification, or use --cinit instead.",
+              s"Please make sure the values in the .cfg file have types matching those in the specification, " +
+              s"or use --$CINIT instead.",
             decl.ID,
         )
       }

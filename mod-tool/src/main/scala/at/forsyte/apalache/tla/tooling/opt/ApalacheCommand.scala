@@ -40,38 +40,38 @@ abstract class ApalacheCommand(name: String, description: String)
   private val displayedDefaultOutDir = s"./${configDefaults.common.outDir.get.getFileName}"
 
   var configFile: Option[File] = opt[Option[File]](name = CONFIG_FILE,
-    description = descriptionWithDefault(
+      description = descriptionWithDefault(
           "strict JSON configuration to read. Overrides local .apalache.json files",
           configDefaults.context.configFile,
       ) + " (overrides envvar CONFIG_FILE)", useEnv = true)
   var debug: Option[Boolean] = opt[Option[Boolean]](name = DEBUG,
-    description = descriptionWithDefault(
-      "extensive logging in detailed.log and log.smt",
-      configDefaults.common.debug,
-    ))
+      description = descriptionWithDefault(
+          "extensive logging in detailed.log and log.smt",
+          configDefaults.common.debug,
+      ))
   var smtprof: Option[Boolean] = opt[Option[Boolean]](name = SMTPROF,
-    description = descriptionWithDefault(
-      "profile SMT constraints in profile.csv",
-      configDefaults.common.smtprof,
-    ))
+      description = descriptionWithDefault(
+          "profile SMT constraints in profile.csv",
+          configDefaults.common.smtprof,
+      ))
   var profiling: Option[Boolean] = opt[Option[Boolean]](name = PROFILING,
-    description = descriptionWithDefault(
+      description = descriptionWithDefault(
           "write general profiling data to profile-rules.txt in the run directory",
           configDefaults.common.profiling,
       ) + " (overrides envvar PROFILING)", useEnv = true)
   var outDir: Option[File] = opt[Option[File]](name = OUT_DIR,
-    description = descriptionWithDefault(
+      description = descriptionWithDefault(
           "where all output files will be written",
           displayedDefaultOutDir,
       ) + " (overrides envvar OUT_DIR)", useEnv = true)
   var runDir: Option[File] = opt[Option[File]](name = RUN_DIR,
-    description = descriptionWithDefault(
+      description = descriptionWithDefault(
           "additional directory wherein output files for this run will be written directly",
           configDefaults.common.runDir,
       ) + " (overrides envvar RUN_DIR)", useEnv = true)
   var writeIntermediate: Option[Boolean] = opt[Option[Boolean]](name = WRITE_INTERMEDIATE,
-    description = descriptionWithDefault(
-          "write intermediate output files to `out-dir`",
+      description = descriptionWithDefault(
+          s"write intermediate output files to `$OUT_DIR`",
           configDefaults.common.writeIntermediate,
       ) + " (overrides envvar WRITE_INTERMEDIATE)", useEnv = true)
   var features: Option[Seq[Feature]] = opt[Option[Seq[Feature]]](name = FEATURES, default = None,

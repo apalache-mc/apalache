@@ -80,7 +80,8 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
   var tuningOptions: Option[String] =
     opt[Option[String]](name = TUNING_OPTIONS, default = None,
         description = descriptionWithDefault(
-            "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning-options-file)",
+            s"tuning options as arguments in the format key1=val1:key2=val2:key3=val3 " +
+              s"(priority over --$TUNING_OPTIONS_FILE)",
             configDefaults.checker.tuning,
         ))
   var discardDisabled: Option[Boolean] = opt[Option[Boolean]](name = DISCARD_DISABLED, default = None,
@@ -98,14 +99,15 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
   var maxError: Option[Int] =
     opt[Option[Int]](name = MAX_ERROR,
         description = descriptionWithDefault(
-            "do not stop on first error, but produce at most the given number of errors (requires --view when greater than 1)",
+            s"do not stop on first error, but produce at most the given number of errors " +
+              s"(requires --$VIEW when greater than 1)",
             configDefaults.checker.maxError,
         ), default = None)
 
   var view: Option[String] =
     opt[Option[String]](name = VIEW,
         description = descriptionWithDefault(
-            "the state view to use with --max-error=n",
+            s"the state view to use with --$MAX_ERROR=n",
             configDefaults.checker.view,
         ), default = None)
 
@@ -176,7 +178,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
           val defaultConfig = new File(stem + ".cfg")
           if (defaultConfig.exists()) {
             val msg =
-              s"  > TLC config file found in specification directory. To enable it, pass --config=$defaultConfig."
+              s"  > TLC config file found in specification directory. To enable it, pass --$CONFIG=$defaultConfig."
             logger.info(msg)
           }
         }
@@ -224,7 +226,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
     def parseKeyValue(text: String): (String, String) = {
       val parts = text.split('=')
       if (parts.length != 2 || parts.head.trim == "" || parts(1) == "") {
-        throw new PassOptionException(s"Expected key=value in --tuning-options=$propsAsString")
+        throw new PassOptionException(s"Expected key=value in --$TUNING_OPTIONS=$propsAsString")
       } else {
         // trim to remove surrounding whitespace from the key, but allow the value to have white spaces
         (parts.head.trim, parts(1))

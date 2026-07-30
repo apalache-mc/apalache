@@ -17,9 +17,9 @@ object SMTEncoding {
 
   def fromString(value: String): SMTEncoding =
     value match {
-      case Constants.ARRAYS => Arrays
+      case Constants.ARRAYS                                  => Arrays
       case Constants.FUN_ARRAYS | Constants.FUN_ARRAYS_ALIAS => FunArrays
-      case Constants.OOPSLA19 | Constants.OOPSLA19_ALIAS => OOPSLA19
+      case Constants.OOPSLA19 | Constants.OOPSLA19_ALIAS     => OOPSLA19
       case other => throw new IllegalArgumentException(s"Unexpected SMT encoding: $other")
     }
 }
@@ -39,9 +39,9 @@ object SMTSolver {
 
   def fromString(value: String): SMTSolver =
     value.toLowerCase match {
-      case Constants.Z3 => Z3
+      case Constants.Z3   => Z3
       case Constants.CVC5 => CVC5
-      case other => throw new IllegalArgumentException(s"Unexpected SMT solver backend: $other")
+      case other          => throw new IllegalArgumentException(s"Unexpected SMT solver backend: $other")
     }
 }
 
@@ -63,9 +63,9 @@ object Algorithm {
   def fromString(value: String): Algorithm =
     value.toLowerCase match {
       case Constants.INCREMENTAL => Incremental
-      case Constants.OFFLINE => Offline
-      case Constants.REMOTE => Remote
-      case other => throw new IllegalArgumentException(s"Unexpected checker algorithm: $other")
+      case Constants.OFFLINE     => Offline
+      case Constants.REMOTE      => Remote
+      case other                 => throw new IllegalArgumentException(s"Unexpected checker algorithm: $other")
     }
 }
 
@@ -84,8 +84,8 @@ object ServerType {
 
   def fromString(value: String): ServerType =
     value.toLowerCase match {
-      case Constants.CHECKER => Checker
+      case Constants.CHECKER  => Checker
       case Constants.EXPLORER => Explorer
-      case other => throw new IllegalArgumentException(s"Unexpected server type: $other")
+      case other              => throw new IllegalArgumentException(s"Unexpected server type: $other")
     }
 }

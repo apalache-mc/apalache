@@ -51,12 +51,12 @@ object ApalacheConfigResolver {
       config.source match {
         case None =>
           ConfigParseResult.failure(
-            List(s"Missing value for required option $SOURCE"),
+              List(s"Missing value for required option $SOURCE"),
               commandResult.warnings,
           )
         case Some(source) =>
           ConfigParseResult.success(
-            ValidatedParseOptions(
+              ValidatedParseOptions(
                   resolveCommon(config),
                   source,
                   config.output,
@@ -76,11 +76,11 @@ object ApalacheConfigResolver {
       val parse = parseResult.requireValue()
       val typechecker = config.mergeWithDefaults.typechecker
       ConfigParseResult.success(
-        ValidatedTypecheckOptions(
+          ValidatedTypecheckOptions(
               parse.common,
               parse.source,
               parse.output,
-          TypecheckerOptions(requireDefault(typechecker.inferPoly, s"$TYPECHECKER.$INFER_POLY")),
+              TypecheckerOptions(requireDefault(typechecker.inferPoly, s"$TYPECHECKER.$INFER_POLY")),
           ),
           parseResult.warnings,
       )
@@ -123,19 +123,19 @@ object ApalacheConfigResolver {
 
     val specification = specificationResult.requireValue()
     val checker = CheckerOptions(
-      algorithm = requireDefault(checkerWithDefaults.algorithm, s"$CHECKER.$ALGO"),
-      discardDisabled = requireDefault(checkerWithDefaults.discardDisabled, s"$CHECKER.$DISCARD_DISABLED"),
-      length = requireDefault(checkerWithDefaults.length, s"$CHECKER.$LENGTH"),
+        algorithm = requireDefault(checkerWithDefaults.algorithm, s"$CHECKER.$ALGO"),
+        discardDisabled = requireDefault(checkerWithDefaults.discardDisabled, s"$CHECKER.$DISCARD_DISABLED"),
+        length = requireDefault(checkerWithDefaults.length, s"$CHECKER.$LENGTH"),
         maxError = maxError,
-      timeoutSmtSeconds = requireDefault(checkerWithDefaults.timeoutSmtSeconds, s"$CHECKER.$TIMEOUT_SMT"),
+        timeoutSmtSeconds = requireDefault(checkerWithDefaults.timeoutSmtSeconds, s"$CHECKER.$TIMEOUT_SMT"),
         checkDeadlocks = resolveDeadlockSetting(configuredChecker, specification, warnings),
         smtSolver = solver,
         smtEncoding = encoding,
-      tuning = requireDefault(checkerWithDefaults.tuning, s"$CHECKER.$TUNING"),
+        tuning = requireDefault(checkerWithDefaults.tuning, s"$CHECKER.$TUNING"),
     )
     val typecheck = typecheckResult.requireValue()
     ConfigParseResult.success(
-      ValidatedCheckOptions(
+        ValidatedCheckOptions(
             typecheck.common,
             typecheck.source,
             typecheck.output,
@@ -173,7 +173,7 @@ object ApalacheConfigResolver {
     } else {
       val check = checkResult.requireValue()
       ConfigParseResult.success(
-        ValidatedTraceOptions(
+          ValidatedTraceOptions(
               check.common,
               check.source,
               check.output,
@@ -198,11 +198,11 @@ object ApalacheConfigResolver {
     } else {
       val server = config.mergeWithDefaults.server
       ConfigParseResult.success(
-        ValidatedServerOptions(
+          ValidatedServerOptions(
               resolveCommon(config),
               ServerOptions(
-                port = requireDefault(server.port, s"$SERVER.$PORT"),
-                serverType = requireDefault(server.serverType, s"$SERVER.$SERVER_TYPE"),
+                  port = requireDefault(server.port, s"$SERVER.$PORT"),
+                  serverType = requireDefault(server.serverType, s"$SERVER.$SERVER_TYPE"),
               ),
           ),
           commandResult.warnings,
@@ -220,7 +220,7 @@ object ApalacheConfigResolver {
       persistent: List[String]): ConfigParseResult[ValidatedCheckOptions] = {
 
     val requestConfig = ApalacheConfig(
-      context = RunContextPatch(command = Some(SERVER)),
+        context = RunContextPatch(command = Some(SERVER)),
         source = Some(source),
         checker = CheckerPatch(
             algorithm = Some(Algorithm.Remote),
@@ -253,19 +253,19 @@ object ApalacheConfigResolver {
   private def requireCommand(config: ApalacheConfig): ConfigParseResult[String] =
     config.context.command match {
       case Some(command) => ConfigParseResult.success(command)
-      case None => ConfigParseResult.failure(s"Missing value for required option $COMMAND")
+      case None          => ConfigParseResult.failure(s"Missing value for required option $COMMAND")
     }
 
   private def resolveCommon(config: ApalacheConfig): CommonOptions = {
     val common = config.mergeWithDefaults.common
     CommonOptions(
-      debug = requireDefault(common.debug, DEBUG),
-      features = requireDefault(common.features, FEATURES),
-      outDir = requireDefault(common.outDir, OUT_DIR),
-      profiling = requireDefault(common.profiling, PROFILING),
+        debug = requireDefault(common.debug, DEBUG),
+        features = requireDefault(common.features, FEATURES),
+        outDir = requireDefault(common.outDir, OUT_DIR),
+        profiling = requireDefault(common.profiling, PROFILING),
         runDir = common.runDir,
-      smtprof = requireDefault(common.smtprof, SMTPROF),
-      writeIntermediate = requireDefault(common.writeIntermediate, WRITE_INTERMEDIATE),
+        smtprof = requireDefault(common.smtprof, SMTPROF),
+        writeIntermediate = requireDefault(common.writeIntermediate, WRITE_INTERMEDIATE),
     )
   }
 

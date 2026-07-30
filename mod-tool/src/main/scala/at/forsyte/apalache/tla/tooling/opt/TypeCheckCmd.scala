@@ -18,7 +18,7 @@ import java.io.File
  *   Igor Konnov
  */
 class TypeCheckCmd
-  extends ApalacheCommand(name = TYPECHECK, description = "Check types in a TLA+ specification") with LazyLogging {
+    extends ApalacheCommand(name = TYPECHECK, description = "Check types in a TLA+ specification") with LazyLogging {
 
   var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
   var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = INFER_POLY, default = None,

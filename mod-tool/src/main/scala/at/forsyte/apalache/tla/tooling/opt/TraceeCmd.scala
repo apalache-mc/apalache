@@ -25,11 +25,11 @@ class TraceeCmd(name: String = TRACEE, description: String = "Evaluate expressio
     extends CheckCmd(name, description) {
 
   var trace: File =
-    arg[File](name = TRACE, description = "a file containing an ITF trace. Must also define --expressions.")
+    arg[File](name = TRACE, description = s"a file containing an ITF trace. Must also define --$EXPRESSIONS.")
 
   var expressions: List[String] =
     arg[List[String]](name = EXPRESSIONS,
-        description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
+        description = s"TLA+ expressions to be evaluated over a given trace. Must also define --$TRACE.")
 
   private val traceReader = new UJsonTraceReader(None, DefaultTagJsonReader)
 

@@ -5,6 +5,7 @@ import apalache.BuildInfo
 import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.io.config._
+import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
 import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
@@ -197,12 +198,12 @@ object Tool extends LazyLogging {
     if (new ExecutionStatisticsCollector().isEnabled) {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
-      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
+      Console.println(s"# If you have changed your mind, disable the statistics with $CONFIG --$ENABLE_STATS=false.")
     } else {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
       Console.println(
-          "# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
+          s"# If you want to help our project, consider enabling statistics with $CONFIG --$ENABLE_STATS=true.")
     }
     Console.println("")
   }

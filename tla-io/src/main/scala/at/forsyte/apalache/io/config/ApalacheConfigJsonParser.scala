@@ -95,50 +95,50 @@ object ApalacheConfigJsonParser {
           root,
           "$",
           Set(
-            COMMAND,
-            CONFIG_FILE,
-            OUT_DIR,
-            RUN_DIR,
-            DEBUG,
-            SMTPROF,
-            WRITE_INTERMEDIATE,
-            PROFILING,
-            FEATURES,
-            SOURCE,
-            OUTPUT,
-            CHECKER,
-            TYPECHECKER,
-            TRACEE,
-            SERVER,
+              COMMAND,
+              CONFIG_FILE,
+              OUT_DIR,
+              RUN_DIR,
+              DEBUG,
+              SMTPROF,
+              WRITE_INTERMEDIATE,
+              PROFILING,
+              FEATURES,
+              SOURCE,
+              OUTPUT,
+              CHECKER,
+              TYPECHECKER,
+              TRACEE,
+              SERVER,
           ),
       )
       val (context, common) = decodeTopLevelOptions(root)
       ApalacheConfig(
           context = context,
           common = common,
-        source = source(root, SOURCE, "$"),
-        output = pathValue(root, OUTPUT, "$"),
-        checker = decodeChecker(objectField(root, CHECKER, "$")),
-        typechecker = decodeTypechecker(objectField(root, TYPECHECKER, "$")),
-        traceEvaluation = decodeTrace(objectField(root, TRACEE, "$")),
-        server = decodeServer(objectField(root, SERVER, "$")),
+          source = source(root, SOURCE, "$"),
+          output = pathValue(root, OUTPUT, "$"),
+          checker = decodeChecker(objectField(root, CHECKER, "$")),
+          typechecker = decodeTypechecker(objectField(root, TYPECHECKER, "$")),
+          traceEvaluation = decodeTrace(objectField(root, TRACEE, "$")),
+          server = decodeServer(objectField(root, SERVER, "$")),
       )
     }
 
     private def decodeTopLevelOptions(root: ObjectNode): (RunContextPatch, CommonPatch) =
       (
           RunContextPatch(
-            command = text(root, COMMAND, "$"),
-            configFile = pathValue(root, CONFIG_FILE, "$"),
+              command = text(root, COMMAND, "$"),
+              configFile = pathValue(root, CONFIG_FILE, "$"),
           ),
           CommonPatch(
-            outDir = pathValue(root, OUT_DIR, "$"),
-            runDir = pathValue(root, RUN_DIR, "$"),
-            debug = boolean(root, DEBUG, "$"),
-            smtprof = boolean(root, SMTPROF, "$"),
-            writeIntermediate = boolean(root, WRITE_INTERMEDIATE, "$"),
-            profiling = boolean(root, PROFILING, "$"),
-            features = featureList(root, FEATURES, "$"),
+              outDir = pathValue(root, OUT_DIR, "$"),
+              runDir = pathValue(root, RUN_DIR, "$"),
+              debug = boolean(root, DEBUG, "$"),
+              smtprof = boolean(root, SMTPROF, "$"),
+              writeIntermediate = boolean(root, WRITE_INTERMEDIATE, "$"),
+              profiling = boolean(root, PROFILING, "$"),
+              features = featureList(root, FEATURES, "$"),
           ),
       )
 
@@ -154,22 +154,22 @@ object ApalacheConfigJsonParser {
               obj,
               path,
               Set(
-                TUNING,
-                ALGO,
-                CONFIG,
-                DISCARD_DISABLED,
-                CINIT,
-                INIT,
-                INV,
-                NEXT,
-                LENGTH,
-                MAX_ERROR,
-                TIMEOUT_SMT,
-                NO_DEADLOCK,
-                SMT_SOLVER,
-                SMT_ENCODING,
-                TEMPORAL,
-                VIEW,
+                  TUNING,
+                  ALGO,
+                  CONFIG,
+                  DISCARD_DISABLED,
+                  CINIT,
+                  INIT,
+                  INV,
+                  NEXT,
+                  LENGTH,
+                  MAX_ERROR,
+                  TIMEOUT_SMT,
+                  NO_DEADLOCK,
+                  SMT_SOLVER,
+                  SMT_ENCODING,
+                  TEMPORAL,
+                  VIEW,
               ) ++ aliases,
           )
 
@@ -178,22 +178,22 @@ object ApalacheConfigJsonParser {
           val temporalNode = aliased(obj, TEMPORAL, Seq(TEMPORAL_PROPS), path)
 
           CheckerPatch(
-            tuning = stringMap(obj, TUNING, path),
-            algorithm = enumValue(obj, ALGO, path, Algorithm.fromString),
-            tlcConfig = pathValue(obj, CONFIG, path),
-            discardDisabled = boolean(obj, DISCARD_DISABLED, path),
-            constantInitializer = text(obj, CINIT, path),
-            init = text(obj, INIT, path),
-            invariants = stringList(obj, INV, path),
-            next = text(obj, NEXT, path),
-            length = integer(obj, LENGTH, path),
-            maxError = integer(obj, MAX_ERROR, path),
-            timeoutSmtSeconds = integerNode(timeoutNode, s"$path.$TIMEOUT_SMT"),
-            checkDeadlocks = negate(booleanNode(deadlockNode, s"$path.$NO_DEADLOCK")),
-            smtSolver = enumValue(obj, SMT_SOLVER, path, SMTSolver.fromString),
-            smtEncoding = enumValue(obj, SMT_ENCODING, path, SMTEncoding.fromString),
-            temporalProperties = stringListNode(temporalNode, s"$path.$TEMPORAL"),
-            view = text(obj, VIEW, path),
+              tuning = stringMap(obj, TUNING, path),
+              algorithm = enumValue(obj, ALGO, path, Algorithm.fromString),
+              tlcConfig = pathValue(obj, CONFIG, path),
+              discardDisabled = boolean(obj, DISCARD_DISABLED, path),
+              constantInitializer = text(obj, CINIT, path),
+              init = text(obj, INIT, path),
+              invariants = stringList(obj, INV, path),
+              next = text(obj, NEXT, path),
+              length = integer(obj, LENGTH, path),
+              maxError = integer(obj, MAX_ERROR, path),
+              timeoutSmtSeconds = integerNode(timeoutNode, s"$path.$TIMEOUT_SMT"),
+              checkDeadlocks = negate(booleanNode(deadlockNode, s"$path.$NO_DEADLOCK")),
+              smtSolver = enumValue(obj, SMT_SOLVER, path, SMTSolver.fromString),
+              smtEncoding = enumValue(obj, SMT_ENCODING, path, SMTEncoding.fromString),
+              temporalProperties = stringListNode(temporalNode, s"$path.$TEMPORAL"),
+              view = text(obj, VIEW, path),
           )
       }
 
@@ -215,8 +215,8 @@ object ApalacheConfigJsonParser {
           val path = s"$$.$TRACEE"
           rejectUnknown(obj, path, Set(TRACE, EXPRESSIONS))
           TraceEvaluationPatch(
-            trace = source(obj, TRACE, path),
-            expressions = stringList(obj, EXPRESSIONS, path),
+              trace = source(obj, TRACE, path),
+              expressions = stringList(obj, EXPRESSIONS, path),
           )
       }
 
@@ -228,10 +228,10 @@ object ApalacheConfigJsonParser {
           val path = s"$$.$SERVER"
           rejectUnknown(obj, path, Set(PORT, SERVER_TYPE))
           ServerPatch(
-            port = integer(obj, PORT, path),
+              port = integer(obj, PORT, path),
               serverType = enumValue(
                   obj,
-                SERVER_TYPE,
+                  SERVER_TYPE,
                   path,
                   value => {
                     val normalized = value.stripSuffix(SERVER_SUFFIX)
@@ -298,7 +298,7 @@ object ApalacheConfigJsonParser {
             val aux = stringList(sourceObj, AUX, path)
             val format = formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")
             if (
-              content.nonEmpty && (!sourceObj.has(AUX) || aux.nonEmpty) &&
+                content.nonEmpty && (!sourceObj.has(AUX) || aux.nonEmpty) &&
                 (!sourceObj.has(FORMAT) || format.nonEmpty)
             ) {
               Some(InputSource.StringSource(

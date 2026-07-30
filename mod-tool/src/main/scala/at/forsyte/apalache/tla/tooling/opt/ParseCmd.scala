@@ -18,7 +18,7 @@ import java.io.File
  *   Igor Konnov
  */
 class ParseCmd
-  extends ApalacheCommand(name = PARSE, description = "Parse a TLA+ specification and quit") with LazyLogging {
+    extends ApalacheCommand(name = PARSE, description = "Parse a TLA+ specification and quit") with LazyLogging {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var output: Option[File] = opt[Option[File]](name = OUTPUT,

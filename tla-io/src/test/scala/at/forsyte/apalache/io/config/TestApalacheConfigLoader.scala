@@ -108,7 +108,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       writeGlobal(home, """{"run-dir":"global-run"}""")
       val missing = work.resolve("missing.json")
       val primary = ApalacheConfig(context = RunContextPatch(
-        command = Some(CHECK),
+          command = Some(CHECK),
           configFile = Some(missing),
       ))
 
@@ -151,7 +151,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       val explicit = work.resolve("selected.cfg")
       write(explicit, """{"run-dir":"legacy-run"}""")
       val primary = ApalacheConfig(context = RunContextPatch(
-        command = Some(CHECK),
+          command = Some(CHECK),
           configFile = Some(explicit),
       ))
 

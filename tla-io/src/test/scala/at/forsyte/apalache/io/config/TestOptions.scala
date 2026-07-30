@@ -21,7 +21,7 @@ class TestOptions extends AnyFunSuite {
   test("command initialization exposes command, common options, and source directly") {
     val source = InputSource.StringSource("---- MODULE M ----\n====")
     val result = ApalacheConfigResolver.resolveCommandInitialization(ApalacheConfig(
-      context = RunContextPatch(command = Some(CHECK)),
+            context = RunContextPatch(command = Some(CHECK)),
             source = Some(source),
         ))
 
@@ -48,7 +48,7 @@ class TestOptions extends AnyFunSuite {
     val defaults = ApalacheConfig.defaults
     assert(ApalacheConfig.empty.mergeWithDefaults == defaults)
     val config = ApalacheConfig(
-      context = RunContextPatch(command = Some(CHECK)),
+        context = RunContextPatch(command = Some(CHECK)),
         source = Some(InputSource.StringSource("---- MODULE M ----\n====")),
     )
 
@@ -144,7 +144,7 @@ class TestOptions extends AnyFunSuite {
 
   private def checkConfig(solver: SMTSolver, encoding: SMTEncoding): ApalacheConfig =
     ApalacheConfig(
-      context = RunContextPatch(command = Some(CHECK)),
+        context = RunContextPatch(command = Some(CHECK)),
         source = Some(InputSource.StringSource("---- MODULE M ----\n====")),
         checker = CheckerPatch(
             smtSolver = Some(solver),
