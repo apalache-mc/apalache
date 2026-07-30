@@ -10,14 +10,14 @@ import java.nio.file.{Files, Path}
  * `.apalache.json` in the working directory, and the user-wide `.tlaplus/apalache.json`. Parent directories are not
  * searched. Defaults are applied later by [[ApalacheConfigResolver]].
  *
- * @param workingDirectory
+ * @param currentWorkingDirectory
  *   Directory in which to look for `.apalache.json`.
- * @param homeDirectory
+ * @param userHomeDirectory
  *   JVM user home containing the user-wide configuration.
  */
 final class ApalacheConfigLoader(
-    workingDirectory: Path = Path.of("").toAbsolutePath.normalize(),
-    homeDirectory: Path = Path.of(System.getProperty("user.home"))) {
+    currentWorkingDirectory: Path = Path.of("").toAbsolutePath.normalize(),
+    userHomeDirectory: Path = Path.of(System.getProperty("user.home")).toAbsolutePath.normalize()) {
 
   import ApalacheConfigLoader._
 
@@ -53,11 +53,11 @@ final class ApalacheConfigLoader(
         Right(Some(SelectedFile(path, path.toString)))
 
       case None =>
-        val local = workingDirectory.resolve(LocalJson)
+        val local = currentWorkingDirectory.resolve(LocalJson)
         if (Files.exists(local)) {
           Right(Some(SelectedFile(local, local.toString)))
         } else {
-          val global = homeDirectory.resolve(TlaPlusDirectory).resolve(GlobalJson)
+          val global = userHomeDirectory.resolve(TlaPlusDirectory).resolve(GlobalJson)
           if (Files.exists(global)) Right(Some(SelectedFile(global, global.toString)))
           else Right(None)
         }
