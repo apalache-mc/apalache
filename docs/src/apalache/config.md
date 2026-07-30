@@ -106,9 +106,9 @@ In the table below, a default of "none" means that the value is optional.
 | `server`      | `port`               | Set the listening port.                                      | integer                      | `8822`                                      |
 |               | `server-type`        | Select the server implementation.                            | string                       | `checker`; also `explorer`                  |
 
-Top-level `command` and `config-file` can appear in trusted JSON and diagnostic snapshots. Normal configuration files
-should not set them; the selected command and `--config-file` provide those values. Remote RPC configuration rejects
-`config-file`.
+Top-level `command` and `config-file` can appear in trusted JSON and configuration dumps when in debug mode.
+Normal configuration files should not set them; the selected command and `--config-file` provide those values.
+Remote RPC configuration rejects `config-file`.
 
 A file source is normally just a path string. RPC callers must provide an in-memory source:
 

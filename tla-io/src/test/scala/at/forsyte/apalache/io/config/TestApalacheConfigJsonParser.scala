@@ -25,6 +25,23 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     assert(formatResult.errors.contains("$.source.format: Unsupported source format: unknown"))
   }
 
+  test("reports all independent decoding errors") {
+    val result = ApalacheConfigJsonParser.parse(
+        """{"run-dir":1,"debug":"yes","checker":{"length":"ten","inv":[1,true],"smt-solver":"unknown"},"server":{"port":"8822"}}""")
+    val expected = Set(
+        "$.run-dir: Expected a JSON string.",
+        "$.debug: Expected a JSON boolean.",
+        "$.checker.inv[0]: Expected a JSON string.",
+        "$.checker.inv[1]: Expected a JSON string.",
+        "$.checker.length: Expected a 32-bit JSON integer.",
+        "$.checker.smt-solver: Unexpected SMT solver backend: unknown",
+        "$.server.port: Expected a 32-bit JSON integer.",
+    )
+
+    assert(!result.isSuccess)
+    assert(result.errors.toSet == expected)
+  }
+
   test("serializes cvc5 as a scalar value") {
     val config = ApalacheConfig(checker = CheckerPatch(smtSolver = Some(SMTSolver.CVC5)))
 
@@ -86,10 +103,10 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("rejects deprecated option names") {
     Seq(
-      "$.checker.timeout-smt-sec" -> """{"checker":{"timeout-smt-sec":12}}""",
-      "$.checker.no-deadlocks" -> """{"checker":{"no-deadlocks":true}}""",
-      "$.checker.temporal-props" -> """{"checker":{"temporal-props":["P"]}}""",
-      "$.typechecker.inferpoly" -> """{"typechecker":{"inferpoly":true}}""",
+        "$.checker.timeout-smt-sec" -> """{"checker":{"timeout-smt-sec":12}}""",
+        "$.checker.no-deadlocks" -> """{"checker":{"no-deadlocks":true}}""",
+        "$.checker.temporal-props" -> """{"checker":{"temporal-props":["P"]}}""",
+        "$.typechecker.inferpoly" -> """{"typechecker":{"inferpoly":true}}""",
     ).foreach { case (path, json) =>
       val result = ApalacheConfigJsonParser.parse(json)
       assert(!result.isSuccess)
@@ -99,24 +116,24 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("rejects deprecated source and enum representations") {
     Seq(
-      "$.source.type: Unknown configuration key." ->
-        """{"source":{"type":"string","content":"x"}}""",
-      "$.source.file: Unknown configuration key." ->
-        """{"source":{"kind":"file","file":"Spec.tla"}}""",
-      "Expected \"file\" or \"string\", but got \"filesource\"" ->
-        """{"source":{"kind":"filesource","path":"Spec.tla"}}""",
-      "Expected \"file\" or \"string\", but got \"stringsource\"" ->
-        """{"source":{"kind":"stringsource","content":"x"}}""",
-      "$.checker.smt-solver: Expected a JSON string." ->
-        """{"checker":{"smt-solver":{"type":"z3"}}}""",
-      "Unexpected SMT encoding: fun-arrays" ->
-        """{"checker":{"smt-encoding":"fun-arrays"}}""",
-      "Unexpected SMT encoding: oopsla-19" ->
-        """{"checker":{"smt-encoding":"oopsla-19"}}""",
-      "Unexpected server type: checker-server" ->
-        """{"server":{"server-type":"checker-server"}}""",
-      "Unexpected server type: explorer-server" ->
-        """{"server":{"server-type":"explorer-server"}}""",
+        "$.source.type: Unknown configuration key." ->
+          """{"source":{"type":"string","content":"x"}}""",
+        "$.source.file: Unknown configuration key." ->
+          """{"source":{"kind":"file","file":"Spec.tla"}}""",
+        "Expected \"file\" or \"string\", but got \"filesource\"" ->
+          """{"source":{"kind":"filesource","path":"Spec.tla"}}""",
+        "Expected \"file\" or \"string\", but got \"stringsource\"" ->
+          """{"source":{"kind":"stringsource","content":"x"}}""",
+        "$.checker.smt-solver: Expected a JSON string." ->
+          """{"checker":{"smt-solver":{"type":"z3"}}}""",
+        "Unexpected SMT encoding: fun-arrays" ->
+          """{"checker":{"smt-encoding":"fun-arrays"}}""",
+        "Unexpected SMT encoding: oopsla-19" ->
+          """{"checker":{"smt-encoding":"oopsla-19"}}""",
+        "Unexpected server type: checker-server" ->
+          """{"server":{"server-type":"checker-server"}}""",
+        "Unexpected server type: explorer-server" ->
+          """{"server":{"server-type":"explorer-server"}}""",
     ).foreach { case (expected, json) =>
       val result = ApalacheConfigJsonParser.parse(json)
       assert(!result.isSuccess)

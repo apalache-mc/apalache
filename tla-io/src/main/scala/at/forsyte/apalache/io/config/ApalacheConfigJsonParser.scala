@@ -7,16 +7,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 
 import java.nio.file.{InvalidPathException, Path}
-import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
 /**
  * Strict JSON parser and writer for sparse `ApalacheConfig` values.
  *
  * [[parse]] parses and checks one JSON document; [[write]] emits canonical JSON without applying source precedence,
- * runtime defaults, or mode-specific validation. A request-local `JsonDecoder` maps JSON fields and sections to patch
- * classes while accumulating all actionable errors. The `decode*` and `write*` methods handle top-level structures; the
- * remaining helpers handle leaf values.
+ * runtime defaults, or mode-specific validation. `JsonDecoder` maps JSON fields and sections to patch classes with
+ * `Either`, accumulating independent diagnostics without mutable decoder state. The `decode*` and `write*` methods
+ * handle top-level structures; the remaining helpers handle leaf values.
  *
  * The package model and maintenance rules are documented in the
  * [[https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/config/README.md package README]].
@@ -25,6 +24,9 @@ object ApalacheConfigJsonParser {
 
   import Constants._
 
+  // either a list of errors, or a result
+  private type DecodeResult[A] = Either[List[String], A]
+
   private val factory = new JsonFactory()
   factory.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
   private val mapper = new ObjectMapper(factory)
@@ -32,41 +34,55 @@ object ApalacheConfigJsonParser {
   /** Parse one strict JSON document into a sparse configuration, using `sourceName` to identify diagnostics. */
   def parse(
       sourceText: String,
-      sourceName: String = "<configuration>"): ConfigParseResult[ApalacheConfig] = {
-    val errors = ListBuffer.empty[String]
-    val root =
+      sourceName: String = "<configuration>"): ConfigParseResult[ApalacheConfig] =
+    decodeRoot(sourceText, sourceName).flatMap(JsonDecoder.config) match {
+      case Right(config)     => ConfigParseResult.success(config)
+      case Left(diagnostics) => ConfigParseResult.failure(diagnostics)
+    }
+
+  /** Parse and validate the root JSON node before decoding configuration fields. */
+  private def decodeRoot(sourceText: String, sourceName: String): DecodeResult[ObjectNode] =
+    try {
+      val parser = mapper.createParser(sourceText)
       try {
-        val parser = mapper.createParser(sourceText)
-        try {
-          val value = mapper.readTree[JsonNode](parser)
-          if (value == null) {
-            errors += s"$sourceName: Expected a JSON object, but the document is empty."
-          }
-          if (parser.nextToken() != null) {
-            errors += s"$sourceName: Trailing content after the JSON document is not allowed."
-          }
-          value
-        } finally {
-          parser.close()
+        val root: DecodeResult[JsonNode] = Option(mapper.readTree[JsonNode](parser)) match {
+          case Some(value) => Right(value)
+          case None        => decodeFailure(s"$sourceName: Expected a JSON object, but the document is empty.")
         }
-      } catch {
-        case e: Exception =>
-          errors += s"$sourceName: Invalid strict JSON: ${e.getMessage}"
-          null
+        val endOfDocument: DecodeResult[Unit] =
+          if (parser.nextToken() == null) Right(())
+          else decodeFailure(s"$sourceName: Trailing content after the JSON document is not allowed.")
+
+        combine(root, endOfDocument)((value, _) => value).flatMap { value =>
+          if (value.isObject) Right(value.asInstanceOf[ObjectNode])
+          else decodeFailure(s"$sourceName: Expected the configuration root to be a JSON object.")
+        }
+      } finally {
+        parser.close()
       }
-
-    if (root == null || errors.nonEmpty) {
-      return ConfigParseResult.failure(errors.toList)
-    }
-    if (!root.isObject) {
-      return ConfigParseResult.failure(List(s"$sourceName: Expected the configuration root to be a JSON object."))
+    } catch {
+      case e: Exception => decodeFailure(s"$sourceName: Invalid strict JSON: ${e.getMessage}")
     }
 
-    val decoder = new JsonDecoder(errors)
-    val config = decoder.config(root.asInstanceOf[ObjectNode])
-    if (errors.isEmpty) ConfigParseResult.success(config)
-    else ConfigParseResult.failure(errors.toList)
-  }
+  private def decodeFailure[A](diagnostic: String): DecodeResult[A] = Left(List(diagnostic))
+
+  /** Combine independent decode results and retain diagnostics from both sides. */
+  private def combine[A, B, C](
+      first: DecodeResult[A],
+      second: DecodeResult[B],
+    )(f: (A, B) => C): DecodeResult[C] =
+    (first, second) match {
+      case (Right(a), Right(b))   => Right(f(a, b))
+      case (Left(a), Left(b))     => Left(a ++ b)
+      case (Left(diagnostics), _) => Left(diagnostics)
+      case (_, Left(diagnostics)) => Left(diagnostics)
+    }
+
+  /** Sequence homogeneous decode results while retaining every independent diagnostic. */
+  private def collect[A](results: Iterable[DecodeResult[A]]): DecodeResult[List[A]] =
+    results.toList.foldRight[DecodeResult[List[A]]](Right(Nil)) { (result, collected) =>
+      combine(result, collected)(_ :: _)
+    }
 
   /** Serialize the fields present in `config`, optionally with pretty-printing. */
   def write(config: ApalacheConfig, usePrettyPrinter: Boolean = false): String = {
@@ -80,417 +96,404 @@ object ApalacheConfigJsonParser {
     else mapper.writeValueAsString(root)
   }
 
-  /** Per-decode state that translates JSON nodes while collecting errors. */
-  final private class JsonDecoder(errors: ListBuffer[String]) {
+  /** Stateless translation from JSON nodes to sparse configuration patches. */
+  private object JsonDecoder {
 
-    /** Decode all recognized top-level keys and sections; malformed values contribute errors to this decoder. */
-    def config(root: ObjectNode): ApalacheConfig = {
-      rejectUnknown(
-          root,
-          "$",
-          Set(
-              COMMAND,
-              CONFIG_FILE,
-              OUT_DIR,
-              RUN_DIR,
-              DEBUG,
-              SMTPROF,
-              WRITE_INTERMEDIATE,
-              PROFILING,
-              FEATURES,
-              SOURCE,
-              OUTPUT,
-              CHECKER,
-              TYPECHECKER,
-              TRACEE,
-              SERVER,
-          ),
-      )
-      val (context, common) = decodeTopLevelOptions(root)
-      ApalacheConfig(
-          context = context,
-          common = common,
-          source = source(root, SOURCE, "$"),
-          output = pathValue(root, OUTPUT, "$"),
-          checker = decodeChecker(objectField(root, CHECKER, "$")),
-          typechecker = decodeTypechecker(objectField(root, TYPECHECKER, "$")),
-          traceEvaluation = decodeTrace(objectField(root, TRACEE, "$")),
-          server = decodeServer(objectField(root, SERVER, "$")),
-      )
-    }
-
-    private def decodeTopLevelOptions(root: ObjectNode): (RunContextPatch, CommonPatch) =
-      (
-          RunContextPatch(
-              command = text(root, COMMAND, "$"),
-              configFile = pathValue(root, CONFIG_FILE, "$"),
-          ),
-          CommonPatch(
-              outDir = pathValue(root, OUT_DIR, "$"),
-              runDir = pathValue(root, RUN_DIR, "$"),
-              debug = boolean(root, DEBUG, "$"),
-              smtprof = boolean(root, SMTPROF, "$"),
-              writeIntermediate = boolean(root, WRITE_INTERMEDIATE, "$"),
-              profiling = boolean(root, PROFILING, "$"),
-              features = featureList(root, FEATURES, "$"),
-          ),
+    /** Decode all recognized top-level keys and sections. */
+    def config(root: ObjectNode): DecodeResult[ApalacheConfig] =
+      build(
+          ApalacheConfig(),
+          validation(rejectUnknown(
+                  root,
+                  "$",
+                  Set(
+                      COMMAND,
+                      CONFIG_FILE,
+                      OUT_DIR,
+                      RUN_DIR,
+                      DEBUG,
+                      SMTPROF,
+                      WRITE_INTERMEDIATE,
+                      PROFILING,
+                      FEATURES,
+                      SOURCE,
+                      OUTPUT,
+                      CHECKER,
+                      TYPECHECKER,
+                      TRACEE,
+                      SERVER,
+                  ),
+              )),
+          update(decodeContext(root))((config, context) => config.copy(context = context)),
+          update(decodeCommon(root))((config, common) => config.copy(common = common)),
+          update(source(root, SOURCE, "$"))((config, value) => config.copy(source = value)),
+          update(pathValue(root, OUTPUT, "$"))((config, value) => config.copy(output = value)),
+          update(decodeChecker(root))((config, checker) => config.copy(checker = checker)),
+          update(decodeTypechecker(root))((config, typechecker) => config.copy(typechecker = typechecker)),
+          update(decodeTrace(root))((config, trace) => config.copy(traceEvaluation = trace)),
+          update(decodeServer(root))((config, server) => config.copy(server = server)),
       )
 
-    private def decodeChecker(node: Option[ObjectNode]): CheckerPatch =
-      node match {
+    private def decodeContext(root: ObjectNode): DecodeResult[RunContextPatch] =
+      build(
+          RunContextPatch(),
+          update(text(root, COMMAND, "$"))((context, value) => context.copy(command = value)),
+          update(pathValue(root, CONFIG_FILE, "$"))((context, value) => context.copy(configFile = value)),
+      )
+
+    private def decodeCommon(root: ObjectNode): DecodeResult[CommonPatch] =
+      build(
+          CommonPatch(),
+          update(pathValue(root, OUT_DIR, "$"))((common, value) => common.copy(outDir = value)),
+          update(pathValue(root, RUN_DIR, "$"))((common, value) => common.copy(runDir = value)),
+          update(boolean(root, DEBUG, "$"))((common, value) => common.copy(debug = value)),
+          update(boolean(root, SMTPROF, "$"))((common, value) => common.copy(smtprof = value)),
+          update(boolean(root, WRITE_INTERMEDIATE, "$"))((common, value) => common.copy(writeIntermediate = value)),
+          update(boolean(root, PROFILING, "$"))((common, value) => common.copy(profiling = value)),
+          update(featureList(root, FEATURES, "$"))((common, value) => common.copy(features = value)),
+      )
+
+    private def decodeChecker(root: ObjectNode): DecodeResult[CheckerPatch] =
+      objectField(root, CHECKER, "$").flatMap {
         case None =>
-          CheckerPatch()
+          Right(CheckerPatch())
 
         case Some(obj) =>
           val path = s"$$.$CHECKER"
-          rejectUnknown(
-              obj,
-              path,
-              Set(
-                  TUNING,
-                  ALGO,
-                  CONFIG,
-                  DISCARD_DISABLED,
-                  CINIT,
-                  INIT,
-                  INV,
-                  NEXT,
-                  LENGTH,
-                  MAX_ERROR,
-                  TIMEOUT_SMT,
-                  NO_DEADLOCK,
-                  SMT_SOLVER,
-                  SMT_ENCODING,
-                  TEMPORAL,
-                  VIEW,
-              ),
-          )
-
-          CheckerPatch(
-              tuning = stringMap(obj, TUNING, path),
-              algorithm = enumValue(obj, ALGO, path, Algorithm.fromString),
-              tlcConfig = pathValue(obj, CONFIG, path),
-              discardDisabled = boolean(obj, DISCARD_DISABLED, path),
-              constantInitializer = text(obj, CINIT, path),
-              init = text(obj, INIT, path),
-              invariants = stringList(obj, INV, path),
-              next = text(obj, NEXT, path),
-              length = integer(obj, LENGTH, path),
-              maxError = integer(obj, MAX_ERROR, path),
-            timeoutSmtSeconds = integer(obj, TIMEOUT_SMT, path),
-            checkDeadlocks = negate(boolean(obj, NO_DEADLOCK, path)),
-              smtSolver = enumValue(obj, SMT_SOLVER, path, SMTSolver.fromString),
-              smtEncoding = enumValue(obj, SMT_ENCODING, path, SMTEncoding.fromString),
-            temporalProperties = stringList(obj, TEMPORAL, path),
-              view = text(obj, VIEW, path),
+          build(
+              CheckerPatch(),
+              validation(rejectUnknown(
+                      obj,
+                      path,
+                      Set(
+                          TUNING,
+                          ALGO,
+                          CONFIG,
+                          DISCARD_DISABLED,
+                          CINIT,
+                          INIT,
+                          INV,
+                          NEXT,
+                          LENGTH,
+                          MAX_ERROR,
+                          TIMEOUT_SMT,
+                          NO_DEADLOCK,
+                          SMT_SOLVER,
+                          SMT_ENCODING,
+                          TEMPORAL,
+                          VIEW,
+                      ),
+                  )),
+              update(stringMap(obj, TUNING, path))((checker: CheckerPatch, value) => checker.copy(tuning = value)),
+              update(enumValue(obj, ALGO, path, Algorithm.fromString))((checker: CheckerPatch, value) =>
+                checker.copy(algorithm = value)),
+              update(pathValue(obj, CONFIG, path))((checker: CheckerPatch, value) => checker.copy(tlcConfig = value)),
+              update(boolean(obj, DISCARD_DISABLED, path))((checker: CheckerPatch, value) =>
+                checker.copy(discardDisabled = value)),
+              update(text(obj, CINIT, path))((checker: CheckerPatch, value) =>
+                checker.copy(constantInitializer = value)),
+              update(text(obj, INIT, path))((checker: CheckerPatch, value) => checker.copy(init = value)),
+              update(stringList(obj, INV, path))((checker: CheckerPatch, value) => checker.copy(invariants = value)),
+              update(text(obj, NEXT, path))((checker: CheckerPatch, value) => checker.copy(next = value)),
+              update(integer(obj, LENGTH, path))((checker: CheckerPatch, value) => checker.copy(length = value)),
+              update(integer(obj, MAX_ERROR, path))((checker: CheckerPatch, value) => checker.copy(maxError = value)),
+              update(integer(obj, TIMEOUT_SMT, path))((checker: CheckerPatch, value) =>
+                checker.copy(timeoutSmtSeconds = value)),
+              update(negate(boolean(obj, NO_DEADLOCK, path)))((checker: CheckerPatch, value) =>
+                checker.copy(checkDeadlocks = value)),
+              update(enumValue(obj, SMT_SOLVER, path, SMTSolver.fromString))((checker: CheckerPatch, value) =>
+                checker.copy(smtSolver = value)),
+              update(enumValue(obj, SMT_ENCODING, path, SMTEncoding.fromString))((checker: CheckerPatch, value) =>
+                checker.copy(smtEncoding = value)),
+              update(stringList(obj, TEMPORAL, path))((checker: CheckerPatch, value) =>
+                checker.copy(temporalProperties = value)),
+              update(text(obj, VIEW, path))((checker: CheckerPatch, value) => checker.copy(view = value)),
           )
       }
 
-    private def decodeTypechecker(node: Option[ObjectNode]): TypecheckerPatch =
-      node match {
+    private def decodeTypechecker(root: ObjectNode): DecodeResult[TypecheckerPatch] =
+      objectField(root, TYPECHECKER, "$").flatMap {
         case None =>
-          TypecheckerPatch()
+          Right(TypecheckerPatch())
         case Some(obj) =>
           val path = s"$$.$TYPECHECKER"
-          rejectUnknown(obj, path, Set(INFER_POLY))
-          TypecheckerPatch(boolean(obj, INFER_POLY, path))
+          build(
+              TypecheckerPatch(),
+              validation(rejectUnknown(obj, path, Set(INFER_POLY))),
+              update(boolean(obj, INFER_POLY, path))((typechecker: TypecheckerPatch, value) =>
+                typechecker.copy(inferPoly = value)),
+          )
       }
 
-    private def decodeTrace(node: Option[ObjectNode]): TraceEvaluationPatch =
-      node match {
+    private def decodeTrace(root: ObjectNode): DecodeResult[TraceEvaluationPatch] =
+      objectField(root, TRACEE, "$").flatMap {
         case None =>
-          TraceEvaluationPatch()
+          Right(TraceEvaluationPatch())
         case Some(obj) =>
           val path = s"$$.$TRACEE"
-          rejectUnknown(obj, path, Set(TRACE, EXPRESSIONS))
-          TraceEvaluationPatch(
-              trace = source(obj, TRACE, path),
-              expressions = stringList(obj, EXPRESSIONS, path),
+          build(
+              TraceEvaluationPatch(),
+              validation(rejectUnknown(obj, path, Set(TRACE, EXPRESSIONS))),
+              update(source(obj, TRACE, path))((trace: TraceEvaluationPatch, value) => trace.copy(trace = value)),
+              update(stringList(obj, EXPRESSIONS, path))((trace: TraceEvaluationPatch, value) =>
+                trace.copy(expressions = value)),
           )
       }
 
-    private def decodeServer(node: Option[ObjectNode]): ServerPatch =
-      node match {
+    private def decodeServer(root: ObjectNode): DecodeResult[ServerPatch] =
+      objectField(root, SERVER, "$").flatMap {
         case None =>
-          ServerPatch()
+          Right(ServerPatch())
         case Some(obj) =>
           val path = s"$$.$SERVER"
-          rejectUnknown(obj, path, Set(PORT, SERVER_TYPE))
-          ServerPatch(
-              port = integer(obj, PORT, path),
-              serverType = enumValue(
-                  obj,
-                  SERVER_TYPE,
-                  path,
-                ServerType.fromString,
-              ),
+          build(
+              ServerPatch(),
+              validation(rejectUnknown(obj, path, Set(PORT, SERVER_TYPE))),
+              update(integer(obj, PORT, path))((server: ServerPatch, value) => server.copy(port = value)),
+              update(enumValue(obj, SERVER_TYPE, path, ServerType.fromString))((server: ServerPatch, value) =>
+                server.copy(serverType = value)),
           )
       }
 
-    // Leaf decoders return None for an absent or invalid value; invalid values also append a diagnostic.
-    private def source(obj: ObjectNode, field: String, parent: String): Option[InputSource] = {
-      val node = obj.get(field)
-      if (node == null) {
-        return None
-      }
-
-      val path = s"$parent.$field"
-      if (node.isTextual) {
-        expandedPath(node.textValue(), path) match {
-          case Some(sourcePath) => recordSource(InputSource.FileSource(sourcePath), path)
-          case None             => None
-        }
-      } else if (node.isObject) {
-        val sourceObj = node.asInstanceOf[ObjectNode]
-        rejectUnknown(sourceObj, path, Set(KIND, PATH, CONTENT, AUX, FORMAT))
-        val kind =
-          if (sourceObj.has(KIND)) {
-            text(sourceObj, KIND, path).map(_.toLowerCase).getOrElse("")
-          } else if (sourceObj.has(CONTENT)) {
-            STRING
-          } else if (sourceObj.has(PATH)) {
-            FILE
-          } else {
-            errors += s"$path: Source object requires kind, path, or content."
-            ""
-          }
-
-        kind match {
-          case FILE =>
-            val sourcePath = text(sourceObj, PATH, path) match {
-              case Some(value) => expandedPath(value, s"$path.$PATH")
-              case None        => None
-            }
-            sourcePath match {
-              case None =>
-                None
-              case Some(value) =>
-                val format = formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")
-                format match {
-                  case Some(sourceFormat) =>
-                    Some(InputSource.FileSource(value, sourceFormat))
-                  case None if sourceObj.has(FORMAT) =>
-                    None
-                  case None =>
-                    recordSource(InputSource.FileSource(value), path)
-                }
-            }
-
-          case STRING =>
-            val content = text(sourceObj, CONTENT, path)
-            val aux = stringList(sourceObj, AUX, path)
-            val format = formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")
-            if (
-                content.nonEmpty && (!sourceObj.has(AUX) || aux.nonEmpty) &&
-                (!sourceObj.has(FORMAT) || format.nonEmpty)
-            ) {
-              Some(InputSource.StringSource(
-                      content.get,
-                      aux.getOrElse(Nil),
-                      format.getOrElse(InputSource.Format.Tla),
-                  ))
-            } else {
-              None
-            }
-
-          case other if other.nonEmpty =>
-            errors += s"$path.$KIND: Expected \"$FILE\" or \"$STRING\", but got \"$other\"."
-            None
-
-          case _ =>
-            None
-        }
-      } else {
-        errors += s"$path: Expected a path string or source object."
-        None
-      }
-    }
-
-    private def formatValue(node: JsonNode, path: String): Option[InputSource.Format] = {
-      if (node == null) {
-        return None
-      }
-      scalarEnumText(node, path) match {
-        case Some(value) => convertValue(value, path, InputSource.Format.fromString)
-        case None        => None
-      }
-    }
-
-    private def featureList(obj: ObjectNode, field: String, parent: String): Option[List[Feature]] =
-      stringList(obj, field, parent) match {
+    // Optional fields are represented inside Right; malformed fields are represented by Left.
+    private def source(obj: ObjectNode, field: String, parent: String): DecodeResult[Option[InputSource]] =
+      Option(obj.get(field)) match {
         case None =>
-          None
-        case Some(strings) =>
-          val features = ListBuffer.empty[Feature]
-          strings.foreach { value =>
-            Feature.fromString(value) match {
-              case Some(feature) => features += feature
-              case None          => errors += s"$parent.$field: Unexpected feature: $value"
+          Right(None)
+
+        case Some(node) =>
+          val path = s"$parent.$field"
+          if (node.isTextual) {
+            expandedPath(node.textValue(), path)
+              .flatMap(value => recordSource(InputSource.FileSource(value), path))
+              .map(value => Some(value))
+          } else if (node.isObject) {
+            val sourceObj = node.asInstanceOf[ObjectNode]
+            val decoded = sourceKind(sourceObj, path).flatMap {
+              case FILE                    => decodeFileSource(sourceObj, path)
+              case STRING                  => decodeStringSource(sourceObj, path)
+              case other if other.nonEmpty =>
+                decodeFailure(s"$path.$KIND: Expected \"$FILE\" or \"$STRING\", but got \"$other\".")
+              case _ =>
+                Right(None)
+            }
+            combine(
+                rejectUnknown(sourceObj, path, Set(KIND, PATH, CONTENT, AUX, FORMAT)),
+                decoded,
+            )((_, value) => value)
+          } else {
+            decodeFailure(s"$path: Expected a path string or source object.")
+          }
+      }
+
+    private def sourceKind(sourceObj: ObjectNode, path: String): DecodeResult[String] =
+      if (sourceObj.has(KIND)) {
+        text(sourceObj, KIND, path).map(_.map(_.toLowerCase).getOrElse(""))
+      } else if (sourceObj.has(CONTENT)) {
+        Right(STRING)
+      } else if (sourceObj.has(PATH)) {
+        Right(FILE)
+      } else {
+        decodeFailure(s"$path: Source object requires kind, path, or content.")
+      }
+
+    private def decodeFileSource(sourceObj: ObjectNode, path: String): DecodeResult[Option[InputSource]] =
+      text(sourceObj, PATH, path).flatMap {
+        case None =>
+          Right(None)
+        case Some(value) =>
+          expandedPath(value, s"$path.$PATH").flatMap { sourcePath =>
+            formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT").flatMap {
+              case Some(format) => Right(Some(InputSource.FileSource(sourcePath, format): InputSource))
+              case None         =>
+                recordSource(InputSource.FileSource(sourcePath), path).map(value => Some(value))
             }
           }
-          if (features.size == strings.size) Some(features.toList) else None
+      }
+
+    private def decodeStringSource(sourceObj: ObjectNode, path: String): DecodeResult[Option[InputSource]] = {
+      val contentAndAux = combine(
+          text(sourceObj, CONTENT, path),
+          stringList(sourceObj, AUX, path),
+      )((_, _))
+      combine(contentAndAux, formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")) {
+        case ((Some(content), aux), format) =>
+          Some(InputSource.StringSource(
+                  content,
+                  aux.getOrElse(Nil),
+                  format.getOrElse(InputSource.Format.Tla),
+              ): InputSource)
+        case _ =>
+          None
+      }
+    }
+
+    private def formatValue(node: JsonNode, path: String): DecodeResult[Option[InputSource.Format]] =
+      Option(node) match {
+        case None        => Right(None)
+        case Some(value) =>
+          scalarEnumText(value, path)
+            .flatMap(convertValue(_, path, InputSource.Format.fromString))
+            .map(value => Some(value))
+      }
+
+    private def featureList(
+        obj: ObjectNode,
+        field: String,
+        parent: String): DecodeResult[Option[List[Feature]]] =
+      stringList(obj, field, parent).flatMap {
+        case None =>
+          Right(None)
+        case Some(strings) =>
+          collect(strings.map { value =>
+            Feature.fromString(value) match {
+              case Some(feature) => Right(feature)
+              case None          => decodeFailure(s"$parent.$field: Unexpected feature: $value")
+            }
+          }).map(values => Some(values))
       }
 
     private def enumValue[A](
         obj: ObjectNode,
         field: String,
         parent: String,
-        fromString: String => A): Option[A] = {
-      val node = obj.get(field)
-      if (node == null) {
-        return None
+        fromString: String => A): DecodeResult[Option[A]] =
+      Option(obj.get(field)) match {
+        case None =>
+          Right(None)
+        case Some(node) =>
+          val path = s"$parent.$field"
+          scalarEnumText(node, path).flatMap(convertValue(_, path, fromString)).map(value => Some(value))
       }
-      val path = s"$parent.$field"
-      scalarEnumText(node, path) match {
-        case Some(value) => convertValue(value, path, fromString)
-        case None        => None
-      }
-    }
 
-    /** Converts an enum-like value and records a path-qualified conversion error. */
-    private def convertValue[A](value: String, path: String, fromString: String => A): Option[A] =
+    /** Convert an enum-like value into a path-qualified decode result. */
+    private def convertValue[A](value: String, path: String, fromString: String => A): DecodeResult[A] =
       try {
-        Some(fromString(value))
+        Right(fromString(value))
       } catch {
-        case e: IllegalArgumentException =>
-          errors += s"$path: ${e.getMessage}"
-          None
+        case e: IllegalArgumentException => decodeFailure(s"$path: ${e.getMessage}")
       }
 
-    private def scalarEnumText(node: JsonNode, path: String): Option[String] = {
-      if (node.isTextual) {
-        Some(node.textValue())
-      } else {
-        errors += s"$path: Expected a JSON string."
-        None
-      }
-    }
+    private def scalarEnumText(node: JsonNode, path: String): DecodeResult[String] =
+      if (node.isTextual) Right(node.textValue())
+      else decodeFailure(s"$path: Expected a JSON string.")
 
-    private def stringMap(obj: ObjectNode, field: String, parent: String): Option[Map[String, String]] = {
-      val node = obj.get(field)
-      if (node == null) {
-        return None
-      }
-      val path = s"$parent.$field"
-      if (!node.isObject) {
-        errors += s"$path: Expected a JSON object with string values."
-        return None
+    private def stringMap(
+        obj: ObjectNode,
+        field: String,
+        parent: String): DecodeResult[Option[Map[String, String]]] =
+      Option(obj.get(field)) match {
+        case None =>
+          Right(None)
+        case Some(node) =>
+          val path = s"$parent.$field"
+          if (!node.isObject) {
+            decodeFailure(s"$path: Expected a JSON object with string values.")
+          } else {
+            collect(node.properties().asScala.map { entry =>
+              if (entry.getValue.isTextual) {
+                Right(entry.getKey -> entry.getValue.textValue())
+              } else {
+                decodeFailure(s"$path.${entry.getKey}: Expected a JSON string.")
+              }
+            }).map(values => Some(values.toMap))
+          }
       }
 
-      val values = Map.newBuilder[String, String]
-      node.properties().asScala.foreach { entry =>
-        if (entry.getValue.isTextual) {
-          values += entry.getKey -> entry.getValue.textValue()
-        } else {
-          errors += s"$path.${entry.getKey}: Expected a JSON string."
-        }
-      }
-      Some(values.result())
-    }
-
-    private def stringList(obj: ObjectNode, field: String, parent: String): Option[List[String]] =
+    private def stringList(
+        obj: ObjectNode,
+        field: String,
+        parent: String): DecodeResult[Option[List[String]]] =
       stringListNode(Option(obj.get(field)), s"$parent.$field")
 
-    private def stringListNode(node: Option[JsonNode], path: String): Option[List[String]] =
+    private def stringListNode(node: Option[JsonNode], path: String): DecodeResult[Option[List[String]]] =
       node match {
         case None =>
-          None
+          Right(None)
         case Some(value) if !value.isArray =>
-          errors += s"$path: Expected an array of strings."
-          None
+          decodeFailure(s"$path: Expected an array of strings.")
         case Some(value) =>
-          val values = ListBuffer.empty[String]
-          value.elements().asScala.zipWithIndex.foreach { case (item, index) =>
-            if (item.isTextual) {
-              values += item.textValue()
-            } else {
-              errors += s"$path[$index]: Expected a JSON string."
-            }
-          }
-          Some(values.toList)
+          collect(value
+                .elements()
+                .asScala
+                .zipWithIndex
+                .map { case (item, index) =>
+                  if (item.isTextual) Right(item.textValue())
+                  else decodeFailure(s"$path[$index]: Expected a JSON string.")
+                }
+                .toList).map(values => Some(values))
       }
 
-    private def text(obj: ObjectNode, field: String, parent: String): Option[String] =
+    private def text(obj: ObjectNode, field: String, parent: String): DecodeResult[Option[String]] =
       textNode(Option(obj.get(field)), s"$parent.$field")
 
-    private def textNode(node: Option[JsonNode], path: String): Option[String] =
+    private def textNode(node: Option[JsonNode], path: String): DecodeResult[Option[String]] =
       node match {
-        case None =>
-          None
-        case Some(value) if value.isTextual =>
-          Some(value.textValue())
-        case Some(_) =>
-          errors += s"$path: Expected a JSON string."
-          None
+        case None                           => Right(None)
+        case Some(value) if value.isTextual => Right(Some(value.textValue()))
+        case Some(_)                        => decodeFailure(s"$path: Expected a JSON string.")
       }
 
-    private def pathValue(obj: ObjectNode, field: String, parent: String): Option[Path] =
-      text(obj, field, parent) match {
-        case Some(value) => expandedPath(value, s"$parent.$field")
-        case None        => None
+    private def pathValue(obj: ObjectNode, field: String, parent: String): DecodeResult[Option[Path]] =
+      text(obj, field, parent).flatMap {
+        case Some(value) => expandedPath(value, s"$parent.$field").map(path => Some(path))
+        case None        => Right(None)
       }
 
-    private def boolean(obj: ObjectNode, field: String, parent: String): Option[Boolean] =
+    private def boolean(obj: ObjectNode, field: String, parent: String): DecodeResult[Option[Boolean]] =
       booleanNode(Option(obj.get(field)), s"$parent.$field")
 
-    private def booleanNode(node: Option[JsonNode], path: String): Option[Boolean] =
+    private def booleanNode(node: Option[JsonNode], path: String): DecodeResult[Option[Boolean]] =
       node match {
-        case None =>
-          None
-        case Some(value) if value.isBoolean =>
-          Some(value.booleanValue())
-        case Some(_) =>
-          errors += s"$path: Expected a JSON boolean."
-          None
+        case None                           => Right(None)
+        case Some(value) if value.isBoolean => Right(Some(value.booleanValue()))
+        case Some(_)                        => decodeFailure(s"$path: Expected a JSON boolean.")
       }
 
-    private def integer(obj: ObjectNode, field: String, parent: String): Option[Int] =
+    private def integer(obj: ObjectNode, field: String, parent: String): DecodeResult[Option[Int]] =
       integerNode(Option(obj.get(field)), s"$parent.$field")
 
-    private def integerNode(node: Option[JsonNode], path: String): Option[Int] =
+    private def integerNode(node: Option[JsonNode], path: String): DecodeResult[Option[Int]] =
       node match {
         case None =>
-          None
+          Right(None)
         case Some(value) if value.isIntegralNumber && value.canConvertToInt =>
-          Some(value.intValue())
+          Right(Some(value.intValue()))
         case Some(_) =>
-          errors += s"$path: Expected a 32-bit JSON integer."
-          None
+          decodeFailure(s"$path: Expected a 32-bit JSON integer.")
       }
 
-    private def negate(value: Option[Boolean]): Option[Boolean] =
-      value match {
-        case Some(boolean) => Some(!boolean)
-        case None          => None
+    private def negate(value: DecodeResult[Option[Boolean]]): DecodeResult[Option[Boolean]] =
+      value.map(_.map(boolean => !boolean))
+
+    private def objectField(
+        obj: ObjectNode,
+        field: String,
+        parent: String): DecodeResult[Option[ObjectNode]] =
+      Option(obj.get(field)) match {
+        case None                        => Right(None)
+        case Some(node) if node.isObject => Right(Some(node.asInstanceOf[ObjectNode]))
+        case Some(_)                     => decodeFailure(s"$parent.$field: Expected a JSON object.")
       }
 
-    private def objectField(obj: ObjectNode, field: String, parent: String): Option[ObjectNode] = {
-      val node = obj.get(field)
-      if (node == null) {
-        None
-      } else if (node.isObject) {
-        Some(node.asInstanceOf[ObjectNode])
-      } else {
-        errors += s"$parent.$field: Expected a JSON object."
-        None
-      }
+    private def rejectUnknown(obj: ObjectNode, path: String, allowed: Set[String]): DecodeResult[Unit] = {
+      val diagnostics = obj
+        .fieldNames()
+        .asScala
+        .filterNot(allowed)
+        .map(field => s"$path.$field: Unknown configuration key.")
+        .toList
+      if (diagnostics.isEmpty) Right(()) else Left(diagnostics)
     }
-
-    private def rejectUnknown(obj: ObjectNode, path: String, allowed: Set[String]): Unit =
-      obj.fieldNames().asScala.filterNot(allowed).foreach { field =>
-        errors += s"$path.$field: Unknown configuration key."
-      }
 
     private def recordSource(
         result: ConfigParseResult[InputSource.FileSource],
-        path: String): Option[InputSource] = {
+        path: String): DecodeResult[InputSource] =
       if (result.isSuccess) {
-        Some(result.requireValue(): InputSource)
+        Right(result.requireValue(): InputSource)
       } else {
-        result.errors.foreach(error => errors += s"$path: $error")
-        None
+        Left(result.errors.map(error => s"$path: $error"))
       }
-    }
 
     private def expandPath(value: String): Path = {
       if (value == "~") {
@@ -502,14 +505,24 @@ object ApalacheConfigJsonParser {
       }
     }
 
-    private def expandedPath(value: String, path: String): Option[Path] =
+    private def expandedPath(value: String, path: String): DecodeResult[Path] =
       try {
-        Some(expandPath(value))
+        Right(expandPath(value))
       } catch {
-        case e: InvalidPathException =>
-          errors += s"$path: Invalid path: ${e.getReason}"
-          None
+        case e: InvalidPathException => decodeFailure(s"$path: Invalid path: ${e.getReason}")
       }
+
+    /** Apply independently decoded updates while retaining diagnostics from every update. */
+    private def build[A](initial: A, updates: DecodeResult[A => A]*): DecodeResult[A] =
+      updates.foldLeft[DecodeResult[A]](Right(initial)) { (current, decodedUpdate) =>
+        combine(current, decodedUpdate)((value, applyUpdate) => applyUpdate(value))
+      }
+
+    private def update[A, B](decoded: DecodeResult[B])(f: (A, B) => A): DecodeResult[A => A] =
+      decoded.map(value => current => f(current, value))
+
+    private def validation[A](decoded: DecodeResult[Unit]): DecodeResult[A => A] =
+      decoded.map(_ => identity[A])
   }
 
   private def writeTopLevelOptions(root: ObjectNode, config: ApalacheConfig): Unit = {

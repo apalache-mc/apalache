@@ -43,18 +43,18 @@ Validated command types also expose `source` and `output` directly.
 
 ## Files
 
-| File                             | Responsibility                                                                                        |
-|----------------------------------|-------------------------------------------------------------------------------------------------------|
-| [ApalacheConfig.scala]           | Top-level configuration data model, explicit merge rules, and defaults used for diagnostic snapshots. |
-| [ApalacheConfigLoader.scala]     | Single-file selection, loading, and precedence merging.                                               |
-| [ApalacheConfigResolver.scala]   | Defaults, TLC integration, validation, and construction of run options.                               |
-| [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                                                      |
-| [RemoteConfigValidator.scala]    | Filesystem-free validation for untrusted service request configuration.                               |
-| [ConfigPatch.scala]              | Shared patch marker and sparse section patch types.                                                   |
-| [Constants.scala]                | Shared configuration keys, command names, and canonical literal values.                               |
-| [ValidatedOptions.scala]         | Immutable, validated values consumed during execution.                                                |
-| [ConfigParseResult.scala]        | Expected configuration errors and warnings as values.                                                 |
-| [ConfigEnums.scala]              | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
+| File                             | Responsibility                                                             |
+|----------------------------------|----------------------------------------------------------------------------|
+| [ApalacheConfig.scala]           | Top-level configuration data model, explicit merge rules, and defaults.    |
+| [ApalacheConfigLoader.scala]     | Single-file selection, loading, and precedence merging.                    |
+| [ApalacheConfigResolver.scala]   | Defaults, TLC integration, validation, and construction of run options.    |
+| [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                           |
+| [RemoteConfigValidator.scala]    | Filesystem-free validation for untrusted service request configuration.    |
+| [ConfigPatch.scala]              | Shared patch marker and sparse section patch types.                        |
+| [Constants.scala]                | Shared configuration keys, command names, and canonical literal values.    |
+| [ValidatedOptions.scala]         | Immutable, validated values consumed during execution.                     |
+| [ConfigParseResult.scala]        | Expected configuration errors and warnings as values.                      |
+| [ConfigEnums.scala]              | Closed sets of supported algorithms, solvers, encodings, and server types. |
 
 ## Maintenance rules
 

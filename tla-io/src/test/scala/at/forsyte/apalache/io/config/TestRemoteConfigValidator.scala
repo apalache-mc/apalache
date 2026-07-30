@@ -75,7 +75,7 @@ class TestRemoteConfigValidator extends AnyFunSuite {
 
   test("parse rejects Quint's legacy request shape") {
     val result = RemoteConfigValidator.parse(
-      """{"input":{"source":{"type":"string","content":"module M {}","format":"qnt"}},"checker":{"temporal-props":["q::temporalProps"]}}""")
+        """{"input":{"source":{"type":"string","content":"module M {}","format":"qnt"}},"checker":{"temporal-props":["q::temporalProps"]}}""")
 
     assert(!result.isSuccess)
     assert(result.errors.contains("$.input: Unknown configuration key."))
