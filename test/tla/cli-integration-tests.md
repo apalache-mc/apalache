@@ -1910,41 +1910,23 @@ $ head -n 3 ./seed-run-cvc5/log0.smt
 $ rm -rf ./seed-run-cvc5
 ```
 
-### explicit SMT seeds override search seed derivation
+### search.seed seeds SMT solving
 
-The shared CLI seed initializes search randomization. An explicit generic SMT
-seed takes priority over deriving the SMT seed from the search seed.
+The search seed supplied through the tuning interface is also passed to the SMT
+backend.
 
 ```sh
-$ apalache-mc simulate --seed=111 --tuning-options=smt.randomSeed=4242 --smt-solver=z3 --run-dir=./seed-run-smt --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
+$ apalache-mc simulate --tuning-options=search.seed=4242 --smt-solver=z3 --run-dir=./seed-run-search --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
-$ head -n 6 ./seed-run-smt/log0.smt
+$ head -n 6 ./seed-run-search/log0.smt
 (set-option :fp.spacer.random_seed 4242)
 (set-option :nlsat.seed 4242)
 (set-option :sat.random_seed 4242)
 (set-option :sls.random_seed 4242)
 (set-option :smt.random_seed 4242)
 ;; (params random_seed 4242)
-$ rm -rf ./seed-run-smt
-```
-
-An explicit backend-specific seed disables derivation. Unspecified seed knobs
-retain the common default, while the named backend seed keeps its explicit
-value.
-
-```sh
-$ apalache-mc simulate --tuning-options=search.seed=111:z3.smt.random_seed=4242 --smt-solver=z3 --run-dir=./seed-run-z3 --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
-...
-EXITCODE: OK
-$ head -n 6 ./seed-run-z3/log0.smt
-(set-option :fp.spacer.random_seed 0)
-(set-option :nlsat.seed 0)
-(set-option :sat.random_seed 0)
-(set-option :sls.random_seed 0)
-(set-option :smt.random_seed 0)
-;; (params random_seed 0 smt.random_seed 4242)
-$ rm -rf ./seed-run-z3
+$ rm -rf ./seed-run-search
 ```
 
 ### simulate y2k with --output-traces succeeds
@@ -2262,10 +2244,10 @@ $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 6 {} \;
 $ rm -rf ./test-out-dir
 ```
 
-#### check SMT seed is picked up by CVC5
+#### check --seed is picked up by CVC5
 
 ```sh
-$ apalache-mc check --smt-solver=cvc5 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --seed=4242 --smt-solver=cvc5 --out-dir=./test-out-dir --length=0 --debug Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 3 {} \;

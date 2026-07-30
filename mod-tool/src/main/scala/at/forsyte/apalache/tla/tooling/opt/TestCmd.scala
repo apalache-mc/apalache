@@ -47,7 +47,7 @@ class TestCmd extends ApalacheCommand(name = TEST, description = "Quickly test a
         ApalacheConfig(
             source = Some(source.requireValue()),
             checker = CheckerPatch(
-                tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
+                tuning = Some(Map("search.invariantFilter" -> "1->.*", "search.seed" -> seed.toString)),
                 init = Some(before),
                 next = Some(action),
                 invariants = Some(List(assertion)),

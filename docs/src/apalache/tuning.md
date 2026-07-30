@@ -145,21 +145,16 @@ command line. Hence, you have to experiment with the choice of parameters.
 
 ## Randomization
 
-`smt.randomSeed=<int>` passes the random seed to the selected SMT backend. For
-Z3, Apalache maps this to its supported random-seed parameters. For CVC5,
-Apalache maps this to CVC5's `seed` and `sat-random-seed` options.
-
 `search.seed=<int>` sets the search seed. It is used by `simulate` to choose
 transitions. The `check --seed=<int>` option, inherited by `simulate`, sets this
 tuning parameter and takes priority over the same tuning parameter. When
 `search.seed` is absent, the simulator's random number generator uses its
 default initialization.
 
-The search seed is also used as the backend-neutral SMT seed when neither
-`smt.randomSeed` nor a seed option for the selected backend is explicitly set.
-An explicit backend-specific seed, such as `z3.smt.random_seed`, disables this
-fallback: unspecified SMT seed parameters retain their default value, while the
-explicit parameter is applied normally.
+The search seed is also passed to the selected SMT backend. For Z3, Apalache
+maps it to its supported random-seed parameters. For CVC5, Apalache maps it to
+CVC5's `seed` and `sat-random-seed` options. When `search.seed` is absent, the
+SMT backend uses its default seed.
 
 ## Translation to SMT
 
