@@ -2,6 +2,7 @@ package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
 import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter, ScalaToJacksonAdapter}
@@ -901,7 +902,7 @@ object JsonRpcServerApp {
 
   def main(args: Array[String]): Unit = {
     val port = if (args.nonEmpty) args(0).toInt else 8822
-    val cfg = ApalacheConfigLoader.load(ApalacheConfig.empty.withCommand("server"))
+    val cfg = ApalacheConfigLoader.load(ApalacheConfig.empty.withCommand(SERVER))
     run(cfg, port)
   }
 }

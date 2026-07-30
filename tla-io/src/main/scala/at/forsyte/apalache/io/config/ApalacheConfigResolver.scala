@@ -11,6 +11,9 @@ import scala.collection.mutable.ListBuffer
 
 /** Applies defaults, loads TLC configuration, validates a mode, and constructs its final options. */
 object ApalacheConfigResolver {
+
+  import Constants._
+
   private val logger = LoggerFactory.getLogger(getClass)
 
   /** Behavior operator used when neither application nor TLC configuration supplies one. */
@@ -48,7 +51,7 @@ object ApalacheConfigResolver {
       config.source match {
         case None =>
           ConfigParseResult.failure(
-              List("Missing value for required option source"),
+            List(s"Missing value for required option $SOURCE"),
               commandResult.warnings,
           )
         case Some(source) =>
@@ -77,7 +80,7 @@ object ApalacheConfigResolver {
               parse.common,
               parse.source,
               parse.output,
-              TypecheckerOptions(requireDefault(typechecker.inferPoly, "typechecker.infer-poly")),
+          TypecheckerOptions(requireDefault(typechecker.inferPoly, s"$TYPECHECKER.$INFER_POLY")),
           ),
           parseResult.warnings,
       )
@@ -95,16 +98,17 @@ object ApalacheConfigResolver {
     val warnings = ListBuffer.from(typecheckResult.warnings)
     val configuredChecker = config.checker
     val checkerWithDefaults = config.mergeWithDefaults.checker
-    val solver = requireDefault(checkerWithDefaults.smtSolver, "checker.smt-solver")
-    val encoding = requireDefault(checkerWithDefaults.smtEncoding, "checker.smt-encoding")
-    val maxError = requireDefault(checkerWithDefaults.maxError, "checker.max-error")
+    val solver = requireDefault(checkerWithDefaults.smtSolver, s"$CHECKER.$SMT_SOLVER")
+    val encoding = requireDefault(checkerWithDefaults.smtEncoding, s"$CHECKER.$SMT_ENCODING")
+    val maxError = requireDefault(checkerWithDefaults.maxError, s"$CHECKER.$MAX_ERROR")
 
     if (solver == SMTSolver.CVC5 && encoding != SMTEncoding.OOPSLA19) {
       errors +=
-        s"checker.smt-solver=cvc5 currently supports only checker.smt-encoding=oopsla19, but got $encoding."
+        s"$CHECKER.$SMT_SOLVER=${SMTSolver.CVC5.name} currently supports only " +
+          s"$CHECKER.$SMT_ENCODING=${SMTEncoding.OOPSLA19.name}, but got $encoding."
     }
     if (maxError > 1 && configuredChecker.view.isEmpty) {
-      errors += s"Option checker.max-error=$maxError requires checker.view."
+      errors += s"Option $CHECKER.$MAX_ERROR=$maxError requires $CHECKER.$VIEW."
     }
 
     val specificationResult = resolveSpecification(configuredChecker)
@@ -119,15 +123,15 @@ object ApalacheConfigResolver {
 
     val specification = specificationResult.requireValue()
     val checker = CheckerOptions(
-        algorithm = requireDefault(checkerWithDefaults.algorithm, "checker.algo"),
-        discardDisabled = requireDefault(checkerWithDefaults.discardDisabled, "checker.discard-disabled"),
-        length = requireDefault(checkerWithDefaults.length, "checker.length"),
+      algorithm = requireDefault(checkerWithDefaults.algorithm, s"$CHECKER.$ALGO"),
+      discardDisabled = requireDefault(checkerWithDefaults.discardDisabled, s"$CHECKER.$DISCARD_DISABLED"),
+      length = requireDefault(checkerWithDefaults.length, s"$CHECKER.$LENGTH"),
         maxError = maxError,
-        timeoutSmtSeconds = requireDefault(checkerWithDefaults.timeoutSmtSeconds, "checker.timeout-smt"),
+      timeoutSmtSeconds = requireDefault(checkerWithDefaults.timeoutSmtSeconds, s"$CHECKER.$TIMEOUT_SMT"),
         checkDeadlocks = resolveDeadlockSetting(configuredChecker, specification, warnings),
         smtSolver = solver,
         smtEncoding = encoding,
-        tuning = requireDefault(checkerWithDefaults.tuning, "checker.tuning"),
+      tuning = requireDefault(checkerWithDefaults.tuning, s"$CHECKER.$TUNING"),
     )
     val typecheck = typecheckResult.requireValue()
     ConfigParseResult.success(
@@ -153,7 +157,7 @@ object ApalacheConfigResolver {
     val errors = ListBuffer.empty[String]
     config.traceEvaluation.trace match {
       case None =>
-        errors += "Missing value for required option tracee.trace"
+        errors += s"Missing value for required option $TRACEE.$TRACE"
       case Some(trace) =>
         trace.format match {
           case InputSource.Format.Itf | InputSource.Format.Json => ()
@@ -161,7 +165,7 @@ object ApalacheConfigResolver {
         }
     }
     if (config.traceEvaluation.expressions.forall(_.isEmpty)) {
-      errors += "Trace evaluation requires a nonempty list of expressions."
+      errors += s"Trace evaluation requires a nonempty list of $EXPRESSIONS."
     }
 
     if (errors.nonEmpty) {
@@ -197,8 +201,8 @@ object ApalacheConfigResolver {
         ValidatedServerOptions(
               resolveCommon(config),
               ServerOptions(
-                  port = requireDefault(server.port, "server.port"),
-                  serverType = requireDefault(server.serverType, "server.server-type"),
+                port = requireDefault(server.port, s"$SERVER.$PORT"),
+                serverType = requireDefault(server.serverType, s"$SERVER.$SERVER_TYPE"),
               ),
           ),
           commandResult.warnings,
@@ -216,7 +220,7 @@ object ApalacheConfigResolver {
       persistent: List[String]): ConfigParseResult[ValidatedCheckOptions] = {
 
     val requestConfig = ApalacheConfig(
-        context = RunContextPatch(command = Some("server")),
+      context = RunContextPatch(command = Some(SERVER)),
         source = Some(source),
         checker = CheckerPatch(
             algorithm = Some(Algorithm.Remote),
@@ -249,19 +253,19 @@ object ApalacheConfigResolver {
   private def requireCommand(config: ApalacheConfig): ConfigParseResult[String] =
     config.context.command match {
       case Some(command) => ConfigParseResult.success(command)
-      case None          => ConfigParseResult.failure("Missing value for required option command")
+      case None => ConfigParseResult.failure(s"Missing value for required option $COMMAND")
     }
 
   private def resolveCommon(config: ApalacheConfig): CommonOptions = {
     val common = config.mergeWithDefaults.common
     CommonOptions(
-        debug = requireDefault(common.debug, "debug"),
-        features = requireDefault(common.features, "features"),
-        outDir = requireDefault(common.outDir, "out-dir"),
-        profiling = requireDefault(common.profiling, "profiling"),
+      debug = requireDefault(common.debug, DEBUG),
+      features = requireDefault(common.features, FEATURES),
+      outDir = requireDefault(common.outDir, OUT_DIR),
+      profiling = requireDefault(common.profiling, PROFILING),
         runDir = common.runDir,
-        smtprof = requireDefault(common.smtprof, "smtprof"),
-        writeIntermediate = requireDefault(common.writeIntermediate, "write-intermediate"),
+      smtprof = requireDefault(common.smtprof, SMTPROF),
+      writeIntermediate = requireDefault(common.writeIntermediate, WRITE_INTERMEDIATE),
     )
   }
 
@@ -292,14 +296,14 @@ object ApalacheConfigResolver {
     val warnings = ListBuffer.empty[String]
     val behavior: BehaviorSpec = tlc.behaviorSpec match {
       case InitNextSpec(tlcInit, tlcNext) =>
-        val init = overrideString(checker.init, tlcInit, "checker.init", warnings)
-        val next = overrideString(checker.next, tlcNext, "checker.next", warnings)
+        val init = overrideString(checker.init, tlcInit, s"$CHECKER.$INIT", warnings)
+        val next = overrideString(checker.next, tlcNext, s"$CHECKER.$NEXT", warnings)
         InitNextSpec(init, next)
       case other => other
     }
-    val invariants = overrideList(checker.invariants, tlc.invariants, "checker.inv", warnings)
+    val invariants = overrideList(checker.invariants, tlc.invariants, s"$CHECKER.$INV", warnings)
     val temporal =
-      overrideList(checker.temporalProperties, tlc.temporalProps, "checker.temporal", warnings)
+      overrideList(checker.temporalProperties, tlc.temporalProps, s"$CHECKER.$TEMPORAL", warnings)
 
     ConfigParseResult.success(
         SpecificationOptions(
@@ -353,7 +357,7 @@ object ApalacheConfigResolver {
         val configured = checker.checkDeadlocks.get
         if (configured != value) {
           warnings +=
-            s"TLC CHECK_DEADLOCK=$value is overridden by checker.no-deadlock=${!configured}."
+            s"TLC CHECK_DEADLOCK=$value is overridden by $CHECKER.$NO_DEADLOCK=${!configured}."
         }
         configured
       case Some(value) =>
@@ -397,5 +401,5 @@ object ApalacheConfigResolver {
     }
 
   private def displayName(field: String): String =
-    field.stripPrefix("checker.")
+    field.stripPrefix(s"$CHECKER.")
 }

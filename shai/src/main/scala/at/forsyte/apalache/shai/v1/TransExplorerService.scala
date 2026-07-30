@@ -12,23 +12,21 @@ package at.forsyte.apalache.shai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.shai.v1.transExplorer.{
-  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, TransExplorerError,
-  TransExplorerErrorType, ZioTransExplorer,
-}
-import at.forsyte.apalache.io.InputSource
-import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CommonPatch, RunContextPatch}
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
-import at.forsyte.apalache.tla.lir.TlaModule
-import io.grpc.Status
-
-import java.util.UUID
-import zio.{Ref, ZEnv, ZIO}
-import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.SERVER
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CommonPatch, RunContextPatch}
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.shai.v1.transExplorer._
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.passes.imp.ParserModule
+import com.typesafe.scalalogging.Logger
+import io.grpc.Status
+import zio.{Ref, ZEnv, ZIO}
+
 import java.nio.file.Path
+import java.util.UUID
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -165,7 +163,7 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
       try {
         // TODO: replace hard-coded options with options derived from CLI params
         val config = ApalacheConfig(
-            context = RunContextPatch(command = Some("server")),
+          context = RunContextPatch(command = Some(SERVER)),
             common = CommonPatch(
                 outDir = Some(Path.of(".")),
                 debug = Some(true),

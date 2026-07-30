@@ -50,6 +50,7 @@ Validated command types also expose `source` and `output` directly.
 | [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                                                      |
 | [RemoteConfigValidator.scala]    | Filesystem-free validation for untrusted service request configuration.                               |
 | [ConfigPatch.scala]              | Shared patch marker and sparse section patch types.                                                   |
+| [Constants.scala]                | Shared configuration keys, command names, aliases, and canonical literal values.                      |
 | [ValidatedOptions.scala]         | Immutable, validated values consumed during execution.                                                |
 | [ConfigParseResult.scala]        | Expected configuration errors and warnings as values.                                                 |
 | [ConfigEnums.scala]              | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
@@ -65,7 +66,8 @@ Validated command types also expose `source` and `output` directly.
 - Keep merge code explicit. Avoid reflection and generic derivation so adding a field produces compiler-visible work and
   exceptional rules remain obvious.
 - Report invalid user configuration through `ConfigParseResult`, not exceptions.
-- Keep external names and compatibility aliases in the JSON/CLI boundary; internal fields use descriptive Scala names.
+- Define external names and compatibility aliases once in `Constants`; JSON, CLI, and service boundaries must reuse
+  them. Internal fields use descriptive Scala names.
 - Boundary code may retain an `ApalacheConfig` while awaiting request-specific values, but passes should receive
   resolved run options.
 
@@ -73,7 +75,8 @@ Validated command types also expose `source` and `output` directly.
 
 1. Add the sparse field to `ApalacheConfig` or the appropriate `*Patch`.
 2. Add its explicit merge rule.
-3. Decode and encode it in `ApalacheConfigJsonParser`. Then, update the CLI or RPC producer if applicable.
+3. Add its external name to `Constants`, then decode and encode it in `ApalacheConfigJsonParser`. Update the CLI or RPC
+   producer if applicable.
 4. Add the runtime field, default, and validation in `ApalacheConfigResolver`.
 5. Update consumers and tests for decoding, precedence, validation, and the relevant command.
 6. Document the JSON key in `docs/src/apalache/config.md`.
@@ -86,6 +89,7 @@ Validated command types also expose `source` and `output` directly.
 [ConfigEnums.scala]: ConfigEnums.scala
 [ConfigParseResult.scala]: ConfigParseResult.scala
 [ConfigPatch.scala]: ConfigPatch.scala
+[Constants.scala]: Constants.scala
 [ValidatedOptions.scala]: ValidatedOptions.scala
 [RemoteConfigValidator.scala]: RemoteConfigValidator.scala
 [Tool.scala]: ../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala

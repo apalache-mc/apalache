@@ -1,14 +1,15 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
+import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.{INFER_POLY, OUTPUT, TYPECHECK}
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, TypecheckerPatch}
+import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
+import com.typesafe.scalalogging.LazyLogging
+import org.backuity.clist._
 
 import java.io.File
-import org.backuity.clist._
-import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.io.InputSource
-import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, TypecheckerPatch}
-import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
 
 /**
  * This command initiates the 'typecheck' command line.
@@ -17,15 +18,15 @@ import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
  *   Igor Konnov
  */
 class TypeCheckCmd
-    extends ApalacheCommand(name = "typecheck", description = "Check types in a TLA+ specification") with LazyLogging {
+  extends ApalacheCommand(name = TYPECHECK, description = "Check types in a TLA+ specification") with LazyLogging {
 
   var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
-  var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = "infer-poly", default = None,
+  var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = INFER_POLY, default = None,
       description = descriptionWithDefault(
           "allow the type checker to infer polymorphic types",
           configDefaults.typechecker.inferPoly,
       ))
-  var output: Option[File] = opt[Option[File]](name = "output",
+  var output: Option[File] = opt[Option[File]](name = OUTPUT,
       description = descriptionWithDefault(
           "file to which the typechecked source is written (.tla or .json)",
           configDefaults.output,

@@ -1,13 +1,13 @@
 package at.forsyte.apalache.io.config
 
 import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.{CHECK, SERVER}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
-import java.nio.file.Path
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
+import java.nio.file.{Files, Path}
 
 @RunWith(classOf[JUnitRunner])
 class TestOptions extends AnyFunSuite {
@@ -21,13 +21,13 @@ class TestOptions extends AnyFunSuite {
   test("command initialization exposes command, common options, and source directly") {
     val source = InputSource.StringSource("---- MODULE M ----\n====")
     val result = ApalacheConfigResolver.resolveCommandInitialization(ApalacheConfig(
-            context = RunContextPatch(command = Some("check")),
+      context = RunContextPatch(command = Some(CHECK)),
             source = Some(source),
         ))
 
     assert(result.isSuccess)
     val initialization = result.requireValue()
-    assert(initialization.command == "check")
+    assert(initialization.command == CHECK)
     assert(initialization.source.contains(source))
     assert(!initialization.common.debug)
   }
@@ -48,7 +48,7 @@ class TestOptions extends AnyFunSuite {
     val defaults = ApalacheConfig.defaults
     assert(ApalacheConfig.empty.mergeWithDefaults == defaults)
     val config = ApalacheConfig(
-        context = RunContextPatch(command = Some("check")),
+      context = RunContextPatch(command = Some(CHECK)),
         source = Some(InputSource.StringSource("---- MODULE M ----\n====")),
     )
 
@@ -73,7 +73,7 @@ class TestOptions extends AnyFunSuite {
     assert(options.checker.smtEncoding == defaults.checker.smtEncoding.get)
     assert(options.checker.tuning == defaults.checker.tuning.get)
 
-    val serverResult = ApalacheConfigResolver.resolveServer(config.withCommand("server"))
+    val serverResult = ApalacheConfigResolver.resolveServer(config.withCommand(SERVER))
     assert(serverResult.isSuccess)
     val server = serverResult.requireValue().server
     assert(server.port == defaults.server.port.get)
@@ -144,7 +144,7 @@ class TestOptions extends AnyFunSuite {
 
   private def checkConfig(solver: SMTSolver, encoding: SMTEncoding): ApalacheConfig =
     ApalacheConfig(
-        context = RunContextPatch(command = Some("check")),
+      context = RunContextPatch(command = Some(CHECK)),
         source = Some(InputSource.StringSource("---- MODULE M ----\n====")),
         checker = CheckerPatch(
             smtSolver = Some(solver),

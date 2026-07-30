@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants._
+import at.forsyte.apalache.io.config._
+import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist._
 
 import java.io.File
-import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.io.InputSource
-import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.config.Algorithm
-import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CheckerPatch, ConfigParseResult}
 
 /**
  * This command initiates the 'test' command line.
@@ -16,18 +16,17 @@ import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, Ch
  * @author
  *   Igor Konnov
  */
-class TestCmd
-    extends ApalacheCommand(name = "test", description = "Quickly test a TLA+ specification") with LazyLogging {
+class TestCmd extends ApalacheCommand(name = TEST, description = "Quickly test a TLA+ specification") with LazyLogging {
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var before: String =
-    arg[String](name = "before", description = "the name of an operator to prepare the test, similar to Init")
+    arg[String](name = BEFORE, description = "the name of an operator to prepare the test, similar to Init")
   var action: String =
-    arg[String](name = "action", description = "the name of an action to execute, similar to Next")
+    arg[String](name = ACTION, description = "the name of an action to execute, similar to Next")
   var assertion: String =
-    arg[String](name = "assertion",
+    arg[String](name = ASSERTION,
         description = "the name of an operator that should evaluate to true after executing `action`")
-  var cinit: Option[String] = opt[Option[String]](name = "cinit", default = None,
+  var cinit: Option[String] = opt[Option[String]](name = CINIT, default = None,
       description = descriptionWithDefault(
           "the name of an operator that initializes CONSTANTS",
           configDefaults.checker.constantInitializer,

@@ -1,14 +1,14 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.io.config.Constants._
+import at.forsyte.apalache.io.config.{ApalacheConfig, CommonPatch, ConfigParseResult, RunContextPatch}
 import at.forsyte.apalache.tla.lir.Feature
-
-import java.io.File
+import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist._
 import org.backuity.clist.util.Read
-import at.forsyte.apalache.io.config.{ApalacheConfig, CommonPatch, ConfigParseResult, RunContextPatch}
-import com.typesafe.scalalogging.LazyLogging
 
+import java.io.File
 import scala.annotation.tailrec
 
 /**
@@ -39,35 +39,42 @@ abstract class ApalacheCommand(name: String, description: String)
 
   private val displayedDefaultOutDir = s"./${configDefaults.common.outDir.get.getFileName}"
 
-  var configFile: Option[File] = opt[Option[File]](description = descriptionWithDefault(
+  var configFile: Option[File] = opt[Option[File]](name = CONFIG_FILE,
+    description = descriptionWithDefault(
           "strict JSON configuration to read. Overrides local .apalache.json files",
           configDefaults.context.configFile,
       ) + " (overrides envvar CONFIG_FILE)", useEnv = true)
-  var debug: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
+  var debug: Option[Boolean] = opt[Option[Boolean]](name = DEBUG,
+    description = descriptionWithDefault(
       "extensive logging in detailed.log and log.smt",
       configDefaults.common.debug,
-  ))
-  var smtprof: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
+    ))
+  var smtprof: Option[Boolean] = opt[Option[Boolean]](name = SMTPROF,
+    description = descriptionWithDefault(
       "profile SMT constraints in profile.csv",
       configDefaults.common.smtprof,
-  ))
-  var profiling: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
+    ))
+  var profiling: Option[Boolean] = opt[Option[Boolean]](name = PROFILING,
+    description = descriptionWithDefault(
           "write general profiling data to profile-rules.txt in the run directory",
           configDefaults.common.profiling,
       ) + " (overrides envvar PROFILING)", useEnv = true)
-  var outDir: Option[File] = opt[Option[File]](description = descriptionWithDefault(
+  var outDir: Option[File] = opt[Option[File]](name = OUT_DIR,
+    description = descriptionWithDefault(
           "where all output files will be written",
           displayedDefaultOutDir,
       ) + " (overrides envvar OUT_DIR)", useEnv = true)
-  var runDir: Option[File] = opt[Option[File]](description = descriptionWithDefault(
+  var runDir: Option[File] = opt[Option[File]](name = RUN_DIR,
+    description = descriptionWithDefault(
           "additional directory wherein output files for this run will be written directly",
           configDefaults.common.runDir,
       ) + " (overrides envvar RUN_DIR)", useEnv = true)
-  var writeIntermediate: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
+  var writeIntermediate: Option[Boolean] = opt[Option[Boolean]](name = WRITE_INTERMEDIATE,
+    description = descriptionWithDefault(
           "write intermediate output files to `out-dir`",
           configDefaults.common.writeIntermediate,
       ) + " (overrides envvar WRITE_INTERMEDIATE)", useEnv = true)
-  var features: Option[Seq[Feature]] = opt[Option[Seq[Feature]]](default = None,
+  var features: Option[Seq[Feature]] = opt[Option[Seq[Feature]]](name = FEATURES, default = None,
       description = {
         val featureDescriptions: Seq[String] = Feature.all.map(f => s"  * ${f.name}: ${f.description}")
         val header = descriptionWithDefault(

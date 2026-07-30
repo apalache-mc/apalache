@@ -1,5 +1,7 @@
 package at.forsyte.apalache.io.config
 
+import at.forsyte.apalache.io.config.Constants._
+
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 
@@ -17,7 +19,7 @@ import java.nio.file.{Files, Path}
  */
 final class ApalacheConfigLoader(
     currentWorkingDirectory: Path = Path.of("").toAbsolutePath.normalize(),
-    userHomeDirectory: Path = Path.of(System.getProperty("user.home")).toAbsolutePath.normalize()) {
+    userHomeDirectory: Path = Path.of(System.getProperty(USER_HOME_PROPERTY)).toAbsolutePath.normalize()) {
 
   import ApalacheConfigLoader._
 
@@ -53,11 +55,11 @@ final class ApalacheConfigLoader(
         Right(Some(SelectedFile(path, path.toString)))
 
       case None =>
-        val local = currentWorkingDirectory.resolve(LocalJson)
+        val local = currentWorkingDirectory.resolve(LOCAL_CONFIG_FILENAME)
         if (Files.exists(local)) {
           Right(Some(SelectedFile(local, local.toString)))
         } else {
-          val global = userHomeDirectory.resolve(TlaPlusDirectory).resolve(GlobalJson)
+          val global = userHomeDirectory.resolve(TLA_PLUS_DIRECTORY).resolve(GLOBAL_CONFIG_FILENAME)
           if (Files.exists(global)) Right(Some(SelectedFile(global, global.toString)))
           else Right(None)
         }
@@ -93,10 +95,6 @@ final class ApalacheConfigLoader(
 
 /** Convenience entry point using the process working and JVM user-home directories. */
 object ApalacheConfigLoader {
-  private val TlaPlusDirectory = ".tlaplus"
-  private val LocalJson = ".apalache.json"
-  private val GlobalJson = "apalache.json"
-
   final private case class SelectedFile(path: Path, label: String)
 
   /** Select and load at most one file below `primary`. */
@@ -105,12 +103,12 @@ object ApalacheConfigLoader {
 
   /** Return whether an explicitly selected path uses the unsupported `.cfg` suffix. */
   private def isLegacyFilename(path: Path): Boolean =
-    path.getFileName.toString.endsWith(".cfg")
+    path.getFileName.toString.endsWith(LEGACY_CONFIG_EXTENSION)
 
   /** Explain how to replace a legacy application-configuration filename. */
   private def legacyFilenameError(path: Path): String = {
     val filename = path.getFileName.toString
-    val replacement = path.resolveSibling(filename.dropRight(".cfg".length) + ".json")
+    val replacement = path.resolveSibling(filename.dropRight(LEGACY_CONFIG_EXTENSION.length) + JSON_EXTENSION)
     if (Files.exists(replacement)) {
       s"Legacy Apalache configuration file $path is not supported. Remove it; use $replacement."
     } else {

@@ -2,23 +2,21 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.PassOptionException
-import at.forsyte.apalache.io.config.SMTEncoding
-import at.forsyte.apalache.io.config.SMTSolver
+import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants._
+import at.forsyte.apalache.io.config._
+import at.forsyte.apalache.io.tuning.FineTuningParser
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
+import org.apache.commons.io.FilenameUtils
 import org.backuity.clist._
 import org.backuity.clist.util.Read
 
 import java.io.{File, FileNotFoundException}
 import scala.jdk.CollectionConverters._
-import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CheckerPatch, ConfigParseResult}
-import at.forsyte.apalache.io.tuning.FineTuningParser
-import org.apache.commons.io.FilenameUtils
-import at.forsyte.apalache.io.InputSource
-import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.config.Algorithm
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 
 /**
  * This command initiates the 'check' command line.
@@ -26,7 +24,7 @@ import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
  * @author
  *   Igor Konnov
  */
-class CheckCmd(name: String = "check", description: String = "Check a TLA+ specification")
+class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specification")
     extends AbstractCheckerCmd(name, description) {
 
   private val algorithmDescriptions = List(
@@ -58,68 +56,68 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
   implicit val algoRead: Read[Algorithm] =
     Read.reads[Algorithm](s"a checking algorithm: ${Algorithm.values.mkString(", ")}")(Algorithm.fromString)
 
-  var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
+  var algo: Option[Algorithm] = opt[Option[Algorithm]](name = ALGO, default = None,
       description = descriptionWithDefault(
           s"the search algorithm: $algorithmDescriptions",
           configDefaults.checker.algorithm,
       ))
-  var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
+  var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = SMT_ENCODING, useEnv = true, default = None,
       description = descriptionWithDefault(
           s"the SMT encoding: $smtEncodingDescriptions",
           configDefaults.checker.smtEncoding,
       ) + " (overrides envvar SMT_ENCODING)")
-  var smtSolver: Option[SMTSolver] = opt[Option[SMTSolver]](name = "smt-solver", useEnv = true, default = None,
+  var smtSolver: Option[SMTSolver] = opt[Option[SMTSolver]](name = SMT_SOLVER, useEnv = true, default = None,
       description = descriptionWithDefault(
           s"the SMT solver backend: $smtSolverDescriptions",
           configDefaults.checker.smtSolver,
       ) + " (overrides envvar SMT_SOLVER)")
   var tuningOptionsFile: Option[String] =
-    opt[Option[String]](name = "tuning-options-file", default = None,
+    opt[Option[String]](name = TUNING_OPTIONS_FILE, default = None,
         description = descriptionWithDefault(
             "filename of the tuning options, see docs/tuning.md",
             configDefaults.checker.tuning,
         ))
   var tuningOptions: Option[String] =
-    opt[Option[String]](name = "tuning-options", default = None,
+    opt[Option[String]](name = TUNING_OPTIONS, default = None,
         description = descriptionWithDefault(
             "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning-options-file)",
             configDefaults.checker.tuning,
         ))
-  var discardDisabled: Option[Boolean] = opt[Option[Boolean]](name = "discard-disabled", default = None,
+  var discardDisabled: Option[Boolean] = opt[Option[Boolean]](name = DISCARD_DISABLED, default = None,
       description = descriptionWithDefault(
           "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller",
           configDefaults.checker.discardDisabled,
       ))
   var noDeadlocks: Option[Boolean] =
-    opt[Option[Boolean]](name = "no-deadlock", default = None,
+    opt[Option[Boolean]](name = NO_DEADLOCK, default = None,
         description = descriptionWithDefault(
             "do not check for deadlocks",
             !ApalacheConfigResolver.defaultCheckDeadlocks,
         ))
 
   var maxError: Option[Int] =
-    opt[Option[Int]](name = "max-error",
+    opt[Option[Int]](name = MAX_ERROR,
         description = descriptionWithDefault(
             "do not stop on first error, but produce at most the given number of errors (requires --view when greater than 1)",
             configDefaults.checker.maxError,
         ), default = None)
 
   var view: Option[String] =
-    opt[Option[String]](name = "view",
+    opt[Option[String]](name = VIEW,
         description = descriptionWithDefault(
             "the state view to use with --max-error=n",
             configDefaults.checker.view,
         ), default = None)
 
   var saveRuns: Option[Boolean] =
-    opt[Option[Boolean]](name = "output-traces",
+    opt[Option[Boolean]](name = OUTPUT_TRACES,
         description = descriptionWithDefault(
             "save an example trace for each symbolic run",
             ModelCheckerParams.defaultOutputTraces,
         ), default = None)
 
   var timeoutSmtSec: Option[Int] =
-    opt[Option[Int]](name = "timeout-smt",
+    opt[Option[Int]](name = TIMEOUT_SMT,
         description = descriptionWithDefault(
             "limit the duration of a single SMT check query with `n` seconds",
             configDefaults.checker.timeoutSmtSeconds,

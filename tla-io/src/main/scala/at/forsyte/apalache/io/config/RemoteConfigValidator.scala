@@ -7,6 +7,8 @@ import scala.collection.mutable.ListBuffer
 /** Validates untrusted service configuration without consulting the filesystem. */
 object RemoteConfigValidator {
 
+  import Constants._
+
   /** Tuning keys that can cause Z3 to create caller-selected or implicit files. */
   val FileWritingTuningKeys: Set[String] = Set(
       "z3.dot_proof_file",
@@ -39,18 +41,18 @@ object RemoteConfigValidator {
   def validate(config: ApalacheConfig): ConfigParseResult[ApalacheConfig] = {
     val errors = ListBuffer.empty[String]
 
-    rejectPath(config.context.configFile.nonEmpty, "$.config-file", errors)
-    rejectPath(config.common.outDir.nonEmpty, "$.out-dir", errors)
-    rejectPath(config.common.runDir.nonEmpty, "$.run-dir", errors)
-    rejectPath(config.output.nonEmpty, "$.output", errors)
-    rejectPath(config.checker.tlcConfig.nonEmpty, "$.checker.config", errors)
+    rejectPath(config.context.configFile.nonEmpty, s"$$.$CONFIG_FILE", errors)
+    rejectPath(config.common.outDir.nonEmpty, s"$$.$OUT_DIR", errors)
+    rejectPath(config.common.runDir.nonEmpty, s"$$.$RUN_DIR", errors)
+    rejectPath(config.output.nonEmpty, s"$$.$OUTPUT", errors)
+    rejectPath(config.checker.tlcConfig.nonEmpty, s"$$.$CHECKER.$CONFIG", errors)
 
     config.source match {
-      case Some(_: InputSource.FileSource) => rejectFileSource("$.source", errors)
+      case Some(_: InputSource.FileSource) => rejectFileSource(s"$$.$SOURCE", errors)
       case _                               => ()
     }
     config.traceEvaluation.trace match {
-      case Some(_: InputSource.FileSource) => rejectFileSource("$.tracee.trace", errors)
+      case Some(_: InputSource.FileSource) => rejectFileSource(s"$$.$TRACEE.$TRACE", errors)
       case _                               => ()
     }
 
@@ -61,7 +63,7 @@ object RemoteConfigValidator {
       .toSeq
       .sorted
       .foreach { key =>
-        errors += s"$$.checker.tuning.$key: This tuning option can write files and is not allowed in remote configuration."
+        errors += s"$$.$CHECKER.$TUNING.$key: This tuning option can write files and is not allowed in remote configuration."
       }
 
     if (errors.isEmpty) ConfigParseResult.success(config)

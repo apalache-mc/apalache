@@ -3,6 +3,7 @@ package at.forsyte.apalache.shai.v1
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, RemoteConfigValidator}
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.shai.v1.cmdExecutor._
@@ -156,7 +157,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   private def validateConfig(config: String): Result[ApalacheConfig] = {
     val parsed = RemoteConfigValidator.parse(config)
     if (parsed.isSuccess) {
-      ZIO.succeed(parsed.requireValue().withCommand("server"))
+      ZIO.succeed(parsed.requireValue().withCommand(SERVER))
     } else {
       ZIO.fail(Status.INVALID_ARGUMENT.withDescription(parsed.errors.mkString("; ")))
     }

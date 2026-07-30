@@ -1,16 +1,17 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
+import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.opt
 
 import java.io.File
-import com.typesafe.scalalogging.LazyLogging
 
 // imports from Sany utils
-import util.ExecutionStatisticsCollector
-import util.ExecutionStatisticsCollector.Selection
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.io.config.ApalacheConfig
+import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS, TLA_PLUS_DIRECTORY, USER_HOME_PROPERTY}
+import util.ExecutionStatisticsCollector
+import util.ExecutionStatisticsCollector.Selection
 
 /**
  * This command initiates the 'config' command line.
@@ -18,9 +19,9 @@ import at.forsyte.apalache.io.config.ApalacheConfig
  * @author
  *   Igor Konnov
  */
-class ConfigCmd extends ApalacheCommand(name = "config", description = "Configure Apalache options") with LazyLogging {
+class ConfigCmd extends ApalacheCommand(name = CONFIG, description = "Configure Apalache options") with LazyLogging {
 
-  var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
+  var submitStats: Option[Boolean] = opt[Option[Boolean]](name = ENABLE_STATS,
       description = descriptionWithDefault(
           "Let Apalache submit usage statistics to tlapl.us\n(shared with TLC and TLA+ Toolbox)",
           "unchanged",
@@ -53,7 +54,7 @@ class ConfigCmd extends ApalacheCommand(name = "config", description = "Configur
 
   private def configDirExistsOrCreated(): Boolean = {
     // A temporary fix for the issue #762: create ~/.tlaplus if it does not exist
-    val configDir = new File(System.getProperty("user.home", ""), ".tlaplus")
+    val configDir = new File(System.getProperty(USER_HOME_PROPERTY, ""), TLA_PLUS_DIRECTORY)
     if (configDir.exists()) {
       true
     } else {

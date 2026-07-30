@@ -1,5 +1,6 @@
 package at.forsyte.apalache.io.config
 
+import at.forsyte.apalache.io.config.Constants.CHECK
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.charset.StandardCharsets
@@ -19,7 +20,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       val primary = ApalacheConfigJsonParser
         .parse("""{"checker":{"length":3,"tuning":{"primary":"1","shared":"primary"}}}""")
         .requireValue()
-        .copy(context = RunContextPatch(command = Some("check"), configFile = Some(explicit)))
+        .copy(context = RunContextPatch(command = Some(CHECK), configFile = Some(explicit)))
 
       val result = new ApalacheConfigLoader(work, home).load(primary)
 
@@ -36,7 +37,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       write(work.resolve(".apalache.json"), """{"run-dir":"local-run"}""")
       writeGlobal(home, "not json")
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(result.isSuccess)
       assert(result.requireValue().common.runDir.get.toString == "local-run")
@@ -49,7 +50,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       write(work.resolve(".apalache.json"), """{"run-dir":"parent-run"}""")
       writeGlobal(home, """{"run-dir":"global-run"}""")
 
-      val result = new ApalacheConfigLoader(child, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(child, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(result.isSuccess)
       assert(result.requireValue().common.runDir.get.toString == "global-run")
@@ -60,7 +61,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
     withTempDirectories { (work, home) =>
       writeGlobal(home, """{"run-dir":"global-run"}""")
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(result.isSuccess)
       assert(result.requireValue().common.runDir.get.toString == "global-run")
@@ -71,7 +72,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
     withTempDirectories { (work, home) =>
       writeGlobal(home, "not json")
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(!result.isSuccess)
       assert(result.errors.exists(_.contains(".tlaplus")))
@@ -80,7 +81,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
 
   test("returns the primary configuration when no file is selected") {
     withTempDirectories { (work, home) =>
-      val primary = ApalacheConfig.empty.withCommand("check")
+      val primary = ApalacheConfig.empty.withCommand(CHECK)
 
       val result = new ApalacheConfigLoader(work, home).load(primary)
 
@@ -94,7 +95,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       write(work.resolve(".apalache.json"), "not json")
       writeGlobal(home, """{"run-dir":"global-run"}""")
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(!result.isSuccess)
       assert(result.errors.exists(_.contains(".apalache.json")))
@@ -107,7 +108,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       writeGlobal(home, """{"run-dir":"global-run"}""")
       val missing = work.resolve("missing.json")
       val primary = ApalacheConfig(context = RunContextPatch(
-          command = Some("check"),
+        command = Some(CHECK),
           configFile = Some(missing),
       ))
 
@@ -126,7 +127,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       write(globalDirectory.resolve("apalache.cfg"), "not json")
       write(globalDirectory.resolve("apalache.json"), """{"run-dir":"global-run"}""")
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(result.isSuccess)
       assert(result.requireValue().common.runDir.get.toString == "global-run")
@@ -138,7 +139,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       write(work.resolve(".apalache.cfg"), "not json")
       write(work.resolve(".apalache.json"), """{"run-dir":"local-run"}""")
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(result.isSuccess)
       assert(result.requireValue().common.runDir.get.toString == "local-run")
@@ -150,7 +151,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
       val explicit = work.resolve("selected.cfg")
       write(explicit, """{"run-dir":"legacy-run"}""")
       val primary = ApalacheConfig(context = RunContextPatch(
-          command = Some("check"),
+        command = Some(CHECK),
           configFile = Some(explicit),
       ))
 
@@ -168,7 +169,7 @@ class TestApalacheConfigLoader extends AnyFunSuite {
           """{"config-file":"missing.json","run-dir":"local-run"}""",
       )
 
-      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand("check"))
+      val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(result.isSuccess)
       assert(result.requireValue().common.runDir.get.toString == "local-run")

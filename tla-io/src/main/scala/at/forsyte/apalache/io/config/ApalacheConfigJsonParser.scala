@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 
 import java.nio.file.{InvalidPathException, Path}
-
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
 
@@ -23,6 +22,9 @@ import scala.jdk.CollectionConverters._
  * [[https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/config/README.md package README]].
  */
 object ApalacheConfigJsonParser {
+
+  import Constants._
+
   private val factory = new JsonFactory()
   factory.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
   private val mapper = new ObjectMapper(factory)
@@ -93,50 +95,50 @@ object ApalacheConfigJsonParser {
           root,
           "$",
           Set(
-              "command",
-              "config-file",
-              "out-dir",
-              "run-dir",
-              "debug",
-              "smtprof",
-              "write-intermediate",
-              "profiling",
-              "features",
-              "source",
-              "output",
-              "checker",
-              "typechecker",
-              "tracee",
-              "server",
+            COMMAND,
+            CONFIG_FILE,
+            OUT_DIR,
+            RUN_DIR,
+            DEBUG,
+            SMTPROF,
+            WRITE_INTERMEDIATE,
+            PROFILING,
+            FEATURES,
+            SOURCE,
+            OUTPUT,
+            CHECKER,
+            TYPECHECKER,
+            TRACEE,
+            SERVER,
           ),
       )
       val (context, common) = decodeTopLevelOptions(root)
       ApalacheConfig(
           context = context,
           common = common,
-          source = source(root, "source", "$"),
-          output = pathValue(root, "output", "$"),
-          checker = decodeChecker(objectField(root, "checker", "$")),
-          typechecker = decodeTypechecker(objectField(root, "typechecker", "$")),
-          traceEvaluation = decodeTrace(objectField(root, "tracee", "$")),
-          server = decodeServer(objectField(root, "server", "$")),
+        source = source(root, SOURCE, "$"),
+        output = pathValue(root, OUTPUT, "$"),
+        checker = decodeChecker(objectField(root, CHECKER, "$")),
+        typechecker = decodeTypechecker(objectField(root, TYPECHECKER, "$")),
+        traceEvaluation = decodeTrace(objectField(root, TRACEE, "$")),
+        server = decodeServer(objectField(root, SERVER, "$")),
       )
     }
 
     private def decodeTopLevelOptions(root: ObjectNode): (RunContextPatch, CommonPatch) =
       (
           RunContextPatch(
-              command = text(root, "command", "$"),
-              configFile = pathValue(root, "config-file", "$"),
+            command = text(root, COMMAND, "$"),
+            configFile = pathValue(root, CONFIG_FILE, "$"),
           ),
           CommonPatch(
-              outDir = pathValue(root, "out-dir", "$"),
-              runDir = pathValue(root, "run-dir", "$"),
-              debug = boolean(root, "debug", "$"),
-              smtprof = boolean(root, "smtprof", "$"),
-              writeIntermediate = boolean(root, "write-intermediate", "$"),
-              profiling = boolean(root, "profiling", "$"),
-              features = featureList(root, "features", "$"),
+            outDir = pathValue(root, OUT_DIR, "$"),
+            runDir = pathValue(root, RUN_DIR, "$"),
+            debug = boolean(root, DEBUG, "$"),
+            smtprof = boolean(root, SMTPROF, "$"),
+            writeIntermediate = boolean(root, WRITE_INTERMEDIATE, "$"),
+            profiling = boolean(root, PROFILING, "$"),
+            features = featureList(root, FEATURES, "$"),
           ),
       )
 
@@ -146,52 +148,52 @@ object ApalacheConfigJsonParser {
           CheckerPatch()
 
         case Some(obj) =>
-          val path = "$.checker"
-          val aliases = Set("timeout-smt-sec", "no-deadlocks", "temporal-props")
+          val path = s"$$.$CHECKER"
+          val aliases = Set(TIMEOUT_SMT_SEC, NO_DEADLOCKS, TEMPORAL_PROPS)
           rejectUnknown(
               obj,
               path,
               Set(
-                  "tuning",
-                  "algo",
-                  "config",
-                  "discard-disabled",
-                  "cinit",
-                  "init",
-                  "inv",
-                  "next",
-                  "length",
-                  "max-error",
-                  "timeout-smt",
-                  "no-deadlock",
-                  "smt-solver",
-                  "smt-encoding",
-                  "temporal",
-                  "view",
+                TUNING,
+                ALGO,
+                CONFIG,
+                DISCARD_DISABLED,
+                CINIT,
+                INIT,
+                INV,
+                NEXT,
+                LENGTH,
+                MAX_ERROR,
+                TIMEOUT_SMT,
+                NO_DEADLOCK,
+                SMT_SOLVER,
+                SMT_ENCODING,
+                TEMPORAL,
+                VIEW,
               ) ++ aliases,
           )
 
-          val timeoutNode = aliased(obj, "timeout-smt", Seq("timeout-smt-sec"), path)
-          val deadlockNode = aliased(obj, "no-deadlock", Seq("no-deadlocks"), path)
-          val temporalNode = aliased(obj, "temporal", Seq("temporal-props"), path)
+          val timeoutNode = aliased(obj, TIMEOUT_SMT, Seq(TIMEOUT_SMT_SEC), path)
+          val deadlockNode = aliased(obj, NO_DEADLOCK, Seq(NO_DEADLOCKS), path)
+          val temporalNode = aliased(obj, TEMPORAL, Seq(TEMPORAL_PROPS), path)
 
           CheckerPatch(
-              tuning = stringMap(obj, "tuning", path),
-              algorithm = enumValue(obj, "algo", path, Algorithm.fromString),
-              tlcConfig = pathValue(obj, "config", path),
-              discardDisabled = boolean(obj, "discard-disabled", path),
-              constantInitializer = text(obj, "cinit", path),
-              init = text(obj, "init", path),
-              invariants = stringList(obj, "inv", path),
-              next = text(obj, "next", path),
-              length = integer(obj, "length", path),
-              maxError = integer(obj, "max-error", path),
-              timeoutSmtSeconds = integerNode(timeoutNode, s"$path.timeout-smt"),
-              checkDeadlocks = negate(booleanNode(deadlockNode, s"$path.no-deadlock")),
-              smtSolver = enumValue(obj, "smt-solver", path, SMTSolver.fromString),
-              smtEncoding = enumValue(obj, "smt-encoding", path, SMTEncoding.fromString),
-              temporalProperties = stringListNode(temporalNode, s"$path.temporal"),
-              view = text(obj, "view", path),
+            tuning = stringMap(obj, TUNING, path),
+            algorithm = enumValue(obj, ALGO, path, Algorithm.fromString),
+            tlcConfig = pathValue(obj, CONFIG, path),
+            discardDisabled = boolean(obj, DISCARD_DISABLED, path),
+            constantInitializer = text(obj, CINIT, path),
+            init = text(obj, INIT, path),
+            invariants = stringList(obj, INV, path),
+            next = text(obj, NEXT, path),
+            length = integer(obj, LENGTH, path),
+            maxError = integer(obj, MAX_ERROR, path),
+            timeoutSmtSeconds = integerNode(timeoutNode, s"$path.$TIMEOUT_SMT"),
+            checkDeadlocks = negate(booleanNode(deadlockNode, s"$path.$NO_DEADLOCK")),
+            smtSolver = enumValue(obj, SMT_SOLVER, path, SMTSolver.fromString),
+            smtEncoding = enumValue(obj, SMT_ENCODING, path, SMTEncoding.fromString),
+            temporalProperties = stringListNode(temporalNode, s"$path.$TEMPORAL"),
+            view = text(obj, VIEW, path),
           )
       }
 
@@ -200,9 +202,9 @@ object ApalacheConfigJsonParser {
         case None =>
           TypecheckerPatch()
         case Some(obj) =>
-          val path = "$.typechecker"
-          rejectUnknown(obj, path, Set("infer-poly", "inferpoly"))
-          TypecheckerPatch(booleanNode(aliased(obj, "infer-poly", Seq("inferpoly"), path), s"$path.infer-poly"))
+          val path = s"$$.$TYPECHECKER"
+          rejectUnknown(obj, path, Set(INFER_POLY, INFERPOLY))
+          TypecheckerPatch(booleanNode(aliased(obj, INFER_POLY, Seq(INFERPOLY), path), s"$path.$INFER_POLY"))
       }
 
     private def decodeTrace(node: Option[ObjectNode]): TraceEvaluationPatch =
@@ -210,11 +212,11 @@ object ApalacheConfigJsonParser {
         case None =>
           TraceEvaluationPatch()
         case Some(obj) =>
-          val path = "$.tracee"
-          rejectUnknown(obj, path, Set("trace", "expressions"))
+          val path = s"$$.$TRACEE"
+          rejectUnknown(obj, path, Set(TRACE, EXPRESSIONS))
           TraceEvaluationPatch(
-              trace = source(obj, "trace", path),
-              expressions = stringList(obj, "expressions", path),
+            trace = source(obj, TRACE, path),
+            expressions = stringList(obj, EXPRESSIONS, path),
           )
       }
 
@@ -223,16 +225,16 @@ object ApalacheConfigJsonParser {
         case None =>
           ServerPatch()
         case Some(obj) =>
-          val path = "$.server"
-          rejectUnknown(obj, path, Set("port", "server-type"))
+          val path = s"$$.$SERVER"
+          rejectUnknown(obj, path, Set(PORT, SERVER_TYPE))
           ServerPatch(
-              port = integer(obj, "port", path),
+            port = integer(obj, PORT, path),
               serverType = enumValue(
                   obj,
-                  "server-type",
+                SERVER_TYPE,
                   path,
                   value => {
-                    val normalized = value.stripSuffix("-server")
+                    val normalized = value.stripSuffix(SERVER_SUFFIX)
                     ServerType.fromString(normalized)
                   },
               ),
@@ -254,50 +256,50 @@ object ApalacheConfigJsonParser {
         }
       } else if (node.isObject) {
         val sourceObj = node.asInstanceOf[ObjectNode]
-        rejectUnknown(sourceObj, path, Set("kind", "type", "path", "file", "content", "aux", "format"))
-        val kindNode = aliased(sourceObj, "kind", Seq("type"), path)
+        rejectUnknown(sourceObj, path, Set(KIND, TYPE, PATH, FILE, CONTENT, AUX, FORMAT))
+        val kindNode = aliased(sourceObj, KIND, Seq(TYPE), path)
         val kind =
           kindNode match {
             case Some(value) if value.isTextual =>
               value.textValue().toLowerCase
-            case _ if sourceObj.has("content") =>
-              "string"
-            case _ if sourceObj.has("path") || sourceObj.has("file") =>
-              "file"
+            case _ if sourceObj.has(CONTENT) =>
+              STRING
+            case _ if sourceObj.has(PATH) || sourceObj.has(FILE) =>
+              FILE
             case _ =>
               errors += s"$path: Source object requires kind, path, or content."
               ""
           }
 
         kind match {
-          case "file" | "filesource" =>
-            val pathNode = aliased(sourceObj, "path", Seq("file"), path)
-            val sourcePath = textNode(pathNode, s"$path.path") match {
-              case Some(value) => expandedPath(value, s"$path.path")
+          case FILE | FILE_SOURCE =>
+            val pathNode = aliased(sourceObj, PATH, Seq(FILE), path)
+            val sourcePath = textNode(pathNode, s"$path.$PATH") match {
+              case Some(value) => expandedPath(value, s"$path.$PATH")
               case None        => None
             }
             sourcePath match {
               case None =>
                 None
               case Some(value) =>
-                val format = formatValue(sourceObj.get("format"), s"$path.format")
+                val format = formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")
                 format match {
                   case Some(sourceFormat) =>
                     Some(InputSource.FileSource(value, sourceFormat))
-                  case None if sourceObj.has("format") =>
+                  case None if sourceObj.has(FORMAT) =>
                     None
                   case None =>
                     recordSource(InputSource.FileSource(value), path)
                 }
             }
 
-          case "string" | "stringsource" =>
-            val content = text(sourceObj, "content", path)
-            val aux = stringList(sourceObj, "aux", path)
-            val format = formatValue(sourceObj.get("format"), s"$path.format")
+          case STRING | STRING_SOURCE =>
+            val content = text(sourceObj, CONTENT, path)
+            val aux = stringList(sourceObj, AUX, path)
+            val format = formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")
             if (
-                content.nonEmpty && (!sourceObj.has("aux") || aux.nonEmpty) &&
-                (!sourceObj.has("format") || format.nonEmpty)
+              content.nonEmpty && (!sourceObj.has(AUX) || aux.nonEmpty) &&
+                (!sourceObj.has(FORMAT) || format.nonEmpty)
             ) {
               Some(InputSource.StringSource(
                       content.get,
@@ -309,7 +311,7 @@ object ApalacheConfigJsonParser {
             }
 
           case other if other.nonEmpty =>
-            errors += s"$path.kind: Expected \"file\" or \"string\", but got \"$other\"."
+            errors += s"$path.$KIND: Expected \"$FILE\" or \"$STRING\", but got \"$other\"."
             None
 
           case _ =>
@@ -375,9 +377,9 @@ object ApalacheConfigJsonParser {
     private def scalarEnumText(node: JsonNode, path: String): Option[String] = {
       if (node.isTextual) {
         Some(node.textValue())
-      } else if (node.isObject && node.size() == 1 && node.has("type") && node.get("type").isTextual) {
+      } else if (node.isObject && node.size() == 1 && node.has(TYPE) && node.get(TYPE).isTextual) {
         warnings += s"$path: Object-form enum values are deprecated; use a JSON string."
-        Some(node.get("type").textValue())
+        Some(node.get(TYPE).textValue())
       } else {
         errors += s"$path: Expected a JSON string."
         None
@@ -536,9 +538,9 @@ object ApalacheConfigJsonParser {
 
     private def expandPath(value: String): Path = {
       if (value == "~") {
-        Path.of(System.getProperty("user.home"))
+        Path.of(System.getProperty(USER_HOME_PROPERTY))
       } else if (value.startsWith("~/") || value.startsWith("~\\")) {
-        Path.of(System.getProperty("user.home")).resolve(value.substring(2))
+        Path.of(System.getProperty(USER_HOME_PROPERTY)).resolve(value.substring(2))
       } else {
         Path.of(value)
       }
@@ -555,65 +557,65 @@ object ApalacheConfigJsonParser {
   }
 
   private def writeTopLevelOptions(root: ObjectNode, config: ApalacheConfig): Unit = {
-    put(root, "command", config.context.command)
-    putPath(root, "config-file", config.context.configFile)
-    putPath(root, "out-dir", config.common.outDir)
-    putPath(root, "run-dir", config.common.runDir)
-    putBoolean(root, "debug", config.common.debug)
-    putBoolean(root, "smtprof", config.common.smtprof)
-    putBoolean(root, "write-intermediate", config.common.writeIntermediate)
-    putBoolean(root, "profiling", config.common.profiling)
+    put(root, COMMAND, config.context.command)
+    putPath(root, CONFIG_FILE, config.context.configFile)
+    putPath(root, OUT_DIR, config.common.outDir)
+    putPath(root, RUN_DIR, config.common.runDir)
+    putBoolean(root, DEBUG, config.common.debug)
+    putBoolean(root, SMTPROF, config.common.smtprof)
+    putBoolean(root, WRITE_INTERMEDIATE, config.common.writeIntermediate)
+    putBoolean(root, PROFILING, config.common.profiling)
     config.common.features.foreach { features =>
-      val values = root.putArray("features")
+      val values = root.putArray(FEATURES)
       features.foreach(feature => values.add(feature.toString))
     }
-    config.source.foreach(source => root.set[JsonNode]("source", sourceNode(source)))
-    putPath(root, "output", config.output)
+    config.source.foreach(source => root.set[JsonNode](SOURCE, sourceNode(source)))
+    putPath(root, OUTPUT, config.output)
   }
 
   // Section writers omit absent fields and leave empty sections out of the document.
   private def writeChecker(root: ObjectNode, checker: CheckerPatch): Unit = {
     val obj = mapper.createObjectNode()
     checker.tuning.foreach { values =>
-      val tuning = obj.putObject("tuning")
+      val tuning = obj.putObject(TUNING)
       values.foreach { case (key, value) => tuning.put(key, value) }
     }
-    putNamed(obj, "algo", checker.algorithm, (value: Algorithm) => value.name)
-    putPath(obj, "config", checker.tlcConfig)
-    putBoolean(obj, "discard-disabled", checker.discardDisabled)
-    put(obj, "cinit", checker.constantInitializer)
-    put(obj, "init", checker.init)
-    putList(obj, "inv", checker.invariants)
-    put(obj, "next", checker.next)
-    putInt(obj, "length", checker.length)
-    putInt(obj, "max-error", checker.maxError)
-    putInt(obj, "timeout-smt", checker.timeoutSmtSeconds)
-    checker.checkDeadlocks.foreach(value => obj.put("no-deadlock", !value))
-    putNamed(obj, "smt-solver", checker.smtSolver, (value: SMTSolver) => value.name)
-    putNamed(obj, "smt-encoding", checker.smtEncoding, (value: SMTEncoding) => value.name)
-    putList(obj, "temporal", checker.temporalProperties)
-    put(obj, "view", checker.view)
-    setIfNonEmpty(root, "checker", obj)
+    putNamed(obj, ALGO, checker.algorithm, (value: Algorithm) => value.name)
+    putPath(obj, CONFIG, checker.tlcConfig)
+    putBoolean(obj, DISCARD_DISABLED, checker.discardDisabled)
+    put(obj, CINIT, checker.constantInitializer)
+    put(obj, INIT, checker.init)
+    putList(obj, INV, checker.invariants)
+    put(obj, NEXT, checker.next)
+    putInt(obj, LENGTH, checker.length)
+    putInt(obj, MAX_ERROR, checker.maxError)
+    putInt(obj, TIMEOUT_SMT, checker.timeoutSmtSeconds)
+    checker.checkDeadlocks.foreach(value => obj.put(NO_DEADLOCK, !value))
+    putNamed(obj, SMT_SOLVER, checker.smtSolver, (value: SMTSolver) => value.name)
+    putNamed(obj, SMT_ENCODING, checker.smtEncoding, (value: SMTEncoding) => value.name)
+    putList(obj, TEMPORAL, checker.temporalProperties)
+    put(obj, VIEW, checker.view)
+    setIfNonEmpty(root, CHECKER, obj)
   }
 
   private def writeTypechecker(root: ObjectNode, typechecker: TypecheckerPatch): Unit = {
     val obj = mapper.createObjectNode()
-    putBoolean(obj, "infer-poly", typechecker.inferPoly)
-    setIfNonEmpty(root, "typechecker", obj)
+    putBoolean(obj, INFER_POLY, typechecker.inferPoly)
+    setIfNonEmpty(root, TYPECHECKER, obj)
   }
 
   private def writeTrace(root: ObjectNode, trace: TraceEvaluationPatch): Unit = {
     val obj = mapper.createObjectNode()
-    trace.trace.foreach(source => obj.set[JsonNode]("trace", sourceNode(source)))
-    putList(obj, "expressions", trace.expressions)
-    setIfNonEmpty(root, "tracee", obj)
+    trace.trace.foreach(source => obj.set[JsonNode](TRACE, sourceNode(source)))
+    putList(obj, EXPRESSIONS, trace.expressions)
+    setIfNonEmpty(root, TRACEE, obj)
   }
 
   private def writeServer(root: ObjectNode, server: ServerPatch): Unit = {
     val obj = mapper.createObjectNode()
-    putInt(obj, "port", server.port)
-    putNamed(obj, "server-type", server.serverType, (value: ServerType) => value.name)
-    setIfNonEmpty(root, "server", obj)
+    putInt(obj, PORT, server.port)
+    putNamed(obj, SERVER_TYPE, server.serverType, (value: ServerType) => value.name)
+    setIfNonEmpty(root, SERVER, obj)
   }
 
   // Leaf writers preserve the sparse-configuration contract by emitting only present values.
@@ -625,19 +627,19 @@ object ApalacheConfigJsonParser {
           mapper.getNodeFactory.textNode(path.toString)
         } else {
           val obj = mapper.createObjectNode()
-          obj.put("kind", "file")
-          obj.put("path", path.toString)
-          obj.put("format", format.name)
+          obj.put(KIND, FILE)
+          obj.put(PATH, path.toString)
+          obj.put(FORMAT, format.name)
           obj
         }
 
       case value: InputSource.StringSource =>
         val obj = mapper.createObjectNode()
-        obj.put("kind", "string")
-        obj.put("content", value.content)
-        val aux = obj.putArray("aux")
+        obj.put(KIND, STRING)
+        obj.put(CONTENT, value.content)
+        val aux = obj.putArray(AUX)
         value.aux.foreach(aux.add)
-        obj.put("format", value.format.name)
+        obj.put(FORMAT, value.format.name)
         obj
     }
 

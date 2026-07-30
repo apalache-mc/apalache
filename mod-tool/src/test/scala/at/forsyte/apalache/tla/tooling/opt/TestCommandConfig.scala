@@ -1,8 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import at.forsyte.apalache.io.config.{
-  Algorithm, ApalacheConfig, CheckerPatch, CommonPatch, SMTEncoding, SMTSolver, ServerPatch, ServerType,
-}
+import at.forsyte.apalache.io.config.Constants._
+import at.forsyte.apalache.io.config._
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestCommandConfig extends AnyFunSuite {
@@ -36,18 +35,18 @@ class TestCommandConfig extends AnyFunSuite {
 
   test("enum options document every canonical value") {
     val checker = new CheckCmd()
-    assertOptionLists(checker, "algo", Algorithm.values.map(_.name))
-    assertOptionLists(checker, "smt-encoding", SMTEncoding.values.map(_.name))
-    assertOptionLists(checker, "smt-solver", SMTSolver.values.map(_.name))
-    assertOptionLists(new ServerCmd(), "server-type", ServerType.values.map(_.name))
+    assertOptionLists(checker, ALGO, Algorithm.values.map(_.name))
+    assertOptionLists(checker, SMT_ENCODING, SMTEncoding.values.map(_.name))
+    assertOptionLists(checker, SMT_SOLVER, SMTSolver.values.map(_.name))
+    assertOptionLists(new ServerCmd(), SERVER_TYPE, ServerType.values.map(_.name))
   }
 
   test("CLI commands own user-facing enum descriptions") {
     val checker = new CheckCmd()
-    assertOptionLists(checker, "algo", List("remote (used by explorer)"))
-    assertOptionLists(checker, "smt-encoding", List("arrays (experimental)", "funArrays (experimental)"))
-    assertOptionLists(checker, "smt-solver", List("cvc5 (experimental)"))
-    assertOptionLists(new ServerCmd(), "server-type", List("'checker' (shai-grpc)", "'explorer' (json-rpc)"))
+    assertOptionLists(checker, ALGO, List("remote (used by explorer)"))
+    assertOptionLists(checker, SMT_ENCODING, List("arrays (experimental)", "funArrays (experimental)"))
+    assertOptionLists(checker, SMT_SOLVER, List("cvc5 (experimental)"))
+    assertOptionLists(new ServerCmd(), SERVER_TYPE, List("'checker' (shai-grpc)", "'explorer' (json-rpc)"))
   }
 
   test("specialized command patches merge over inherited command fields") {
@@ -60,7 +59,7 @@ class TestCommandConfig extends AnyFunSuite {
     val result = command.toConfig
     assert(result.isSuccess)
     val config = result.requireValue()
-    assert(config.context.command.contains("check"))
+    assert(config.context.command.contains(CHECK))
     assert(config.common.debug.contains(true))
     assert(config.source.exists(_.toString == "CommandConfig.tla"))
     assert(config.checker.length.contains(4))

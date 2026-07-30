@@ -1,16 +1,15 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
-import com.typesafe.scalalogging.LazyLogging
+import at.forsyte.apalache.io.config.Constants.{PORT, SERVER, SERVER_TYPE}
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.shai
+import com.github.apalachemc.apalache.jsonrpc.JsonRpcServerApp
+import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist._
 import org.backuity.clist.util.Read
-import at.forsyte.apalache.io.config.{
-  ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, ServerPatch, ServerType,
-}
-import com.github.apalachemc.apalache.jsonrpc.JsonRpcServerApp
 
-class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode") with LazyLogging {
+class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in server mode") with LazyLogging {
 
   private val serverTypeDescriptions = List(
       s"'${ServerType.Checker.name}' (shai-grpc)",
@@ -20,12 +19,14 @@ class ServerCmd extends ApalacheCommand(name = "server", description = "Run in s
   implicit val serverTypeRead: Read[ServerType] =
     Read.reads[ServerType](s"a server type: ${ServerType.values.mkString(", ")}")(ServerType.fromString)
 
-  var port: Option[Int] = opt[Option[Int]](description = descriptionWithDefault(
+  var port: Option[Int] = opt[Option[Int]](name = PORT,
+    description = descriptionWithDefault(
           "the port served by the RPC server",
           configDefaults.server.port,
       ) + " (overrides envvar PORT)", useEnv = true)
 
-  var serverType: Option[ServerType] = opt[Option[ServerType]](description = descriptionWithDefault(
+  var serverType: Option[ServerType] = opt[Option[ServerType]](name = SERVER_TYPE,
+    description = descriptionWithDefault(
           s"the type of server to run: $serverTypeDescriptions",
           configDefaults.server.serverType,
       ), default = None)

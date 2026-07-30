@@ -4,6 +4,7 @@ import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.InputSource.FileSource
+import at.forsyte.apalache.io.config.Constants.{EXPRESSIONS, TRACE, TRACEE}
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
@@ -20,13 +21,14 @@ import java.io.File
  * @author
  *   Jure Kukovec
  */
-class TraceeCmd(name: String = "tracee", description: String = "Evaluate expressions over a trace.")
+class TraceeCmd(name: String = TRACEE, description: String = "Evaluate expressions over a trace.")
     extends CheckCmd(name, description) {
 
-  var trace: File = arg[File](description = "a file containing an ITF trace. Must also define --expressions.")
+  var trace: File =
+    arg[File](name = TRACE, description = "a file containing an ITF trace. Must also define --expressions.")
 
   var expressions: List[String] =
-    arg[List[String]](name = "expressions",
+    arg[List[String]](name = EXPRESSIONS,
         description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
 
   private val traceReader = new UJsonTraceReader(None, DefaultTagJsonReader)
