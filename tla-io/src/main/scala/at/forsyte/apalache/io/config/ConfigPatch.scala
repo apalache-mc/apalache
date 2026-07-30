@@ -5,7 +5,11 @@ import at.forsyte.apalache.tla.lir.Feature
 
 import java.nio.file.Path
 
-/** A sparse patch to one section of [[ApalacheConfig]]. */
+/**
+ * A section of [[ApalacheConfig]] that can be merged into a configuration file.
+ * Patches are introduced as logical configuration pieces that are required
+ * by Apalache commands.
+ */
 sealed trait ConfigPatch
 
 /** Patches the top-level `command` and `config-file` execution metadata. */

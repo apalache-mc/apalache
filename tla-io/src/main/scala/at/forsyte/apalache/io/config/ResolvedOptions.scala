@@ -6,6 +6,12 @@ import at.forsyte.apalache.tla.lir.Feature
 
 import java.nio.file.Path
 
+/**
+ * Configuration options that have passed validation.
+ * Implementations of `ResolvedOptions` are consumed by Apalache passes.
+ */
+sealed trait ResolvedOptions
+
 /** Resolved settings shared by every execution mode. */
 final case class CommonOptions(
     debug: Boolean,
@@ -14,21 +20,21 @@ final case class CommonOptions(
     profiling: Boolean,
     runDir: Option[Path],
     smtprof: Boolean,
-    writeIntermediate: Boolean)
+    writeIntermediate: Boolean) extends ResolvedOptions
 
 /** Values needed to initialize output and logging for a command. */
 final case class CommandInitializationOptions(
     command: String,
     common: CommonOptions,
-    source: Option[InputSource])
+    source: Option[InputSource]) extends ResolvedOptions
 
 /** Input and output values injected into the frontend passes. */
 final case class ModuleIoOptions(
     source: InputSource,
-    output: Option[Path])
+    output: Option[Path]) extends ResolvedOptions
 
 /** Resolved type-inference settings. */
-final case class TypecheckerOptions(inferPoly: Boolean)
+final case class TypecheckerOptions(inferPoly: Boolean) extends ResolvedOptions
 
 /** Resolved model-checker engine settings independent of the specification. */
 final case class CheckerOptions(
@@ -40,12 +46,12 @@ final case class CheckerOptions(
     checkDeadlocks: Boolean,
     smtSolver: SMTSolver,
     smtEncoding: SMTEncoding,
-    tuning: Map[String, String])
+    tuning: Map[String, String]) extends ResolvedOptions
 
 /** A parsed TLC configuration together with its source path. */
 final case class TlcConfigInput(
     config: TlcConfig,
-    path: Path)
+    path: Path) extends ResolvedOptions
 
 /** Resolved behavior, properties, and TLC-derived specification settings. */
 final case class SpecificationOptions(
@@ -55,30 +61,30 @@ final case class SpecificationOptions(
     temporalProperties: List[String],
     tlcConfig: Option[TlcConfigInput],
     view: Option[String],
-    persistent: List[String])
+    persistent: List[String]) extends ResolvedOptions
 
 /** A trace source and the expressions evaluated in each state. */
 final case class TraceEvaluationOptions(
     trace: InputSource,
-    expressions: List[String])
+    expressions: List[String]) extends ResolvedOptions
 
 /** Resolved server port and implementation. */
 final case class ServerOptions(
     port: Int,
-    serverType: ServerType)
+    serverType: ServerType) extends ResolvedOptions
 
 /** Complete validated options for parsing a specification. */
 final case class ResolvedParseOptions(
     common: CommonOptions,
     source: InputSource,
-    output: Option[Path])
+    output: Option[Path]) extends ResolvedOptions
 
 /** Complete validated options for parsing and typechecking a specification. */
 final case class ResolvedTypecheckOptions(
     common: CommonOptions,
     source: InputSource,
     output: Option[Path],
-    typechecker: TypecheckerOptions)
+    typechecker: TypecheckerOptions) extends ResolvedOptions
 
 /** Complete validated options for model checking a specification. */
 final case class ResolvedCheckOptions(
@@ -87,7 +93,7 @@ final case class ResolvedCheckOptions(
     output: Option[Path],
     typechecker: TypecheckerOptions,
     checker: CheckerOptions,
-    specification: SpecificationOptions)
+    specification: SpecificationOptions) extends ResolvedOptions
 
 /** Complete validated options for evaluating expressions over a trace. */
 final case class ResolvedTraceOptions(
@@ -97,7 +103,7 @@ final case class ResolvedTraceOptions(
     typechecker: TypecheckerOptions,
     checker: CheckerOptions,
     specification: SpecificationOptions,
-    traceEvaluation: TraceEvaluationOptions) {
+    traceEvaluation: TraceEvaluationOptions) extends ResolvedOptions {
 
   def withLength(length: Int): ResolvedTraceOptions =
     copy(checker = checker.copy(length = length))
@@ -106,4 +112,4 @@ final case class ResolvedTraceOptions(
 /** Complete validated options for starting a server. */
 final case class ResolvedServerOptions(
     common: CommonOptions,
-    server: ServerOptions)
+    server: ServerOptions) extends ResolvedOptions
