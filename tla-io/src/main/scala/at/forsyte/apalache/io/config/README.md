@@ -2,9 +2,8 @@
 
 This package owns Apalache's configuration model, merge semantics, validation, and mode-specific runtime options. JSON
 parsing lives here, in
-[ApalacheConfigJsonParser.scala](ApalacheConfigJsonParser.scala). Configuration-file discovery and precedence loading
-live in
-[ApalacheConfigLoader.scala](ApalacheConfigLoader.scala).
+[ApalacheConfigJsonParser.scala]. Configuration-file discovery and precedence loading live in
+[ApalacheConfigLoader.scala].
 
 ## Data flow
 
@@ -34,8 +33,7 @@ value; `checker.tuning` is merged by key.
 loads TLC configuration where required, checks cross-field constraints, and returns the smallest option type needed by
 the selected mode. Execution passes should consume these resolved types rather than interpret patches themselves.
 
-For CLI execution, [Tool.scala](../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala)
-calls `toConfig`, loads file-based fallbacks once, and passes the merged
+For CLI execution, [Tool.scala] calls `toConfig`, loads file-based fallbacks once, and passes the merged
 `ApalacheConfig` to the command. Commands must not cache or reload configuration.
 
 Resolved command types also expose `source` and `output` directly.
@@ -43,16 +41,16 @@ Resolved command types also expose `source` and `output` directly.
 
 ## Files
 
-| File                                                             | Responsibility                                                                                        |
-|------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| [ApalacheConfig.scala](ApalacheConfig.scala)                     | Top-level configuration data model, explicit merge rules, and defaults used for diagnostic snapshots. |
-| [ApalacheConfigLoader.scala](ApalacheConfigLoader.scala)         | Configuration-file discovery, loading, and precedence merging.                                        |
-| [ApalacheConfigResolver.scala](ApalacheConfigResolver.scala)     | Defaults, TLC integration, validation, and construction of run options.                               |
-| [ApalacheConfigJsonParser.scala](ApalacheConfigJsonParser.scala) | Strict JSON decoding and canonical JSON writing.                                                      |
-| [ConfigPatch.scala](ConfigPatch.scala)                           | Shared patch marker and sparse section patch types.                                                   |
-| [ResolvedOptions.scala](ResolvedOptions.scala)                   | Immutable, validated values consumed during execution.                                                |
-| [ConfigParseResult.scala](ConfigParseResult.scala)               | Expected configuration errors and warnings as values.                                                 |
-| [ConfigEnums.scala](ConfigEnums.scala)                           | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
+| File                            | Responsibility                                                                                        |
+|---------------------------------|-------------------------------------------------------------------------------------------------------|
+| [ApalacheConfig.scala]          | Top-level configuration data model, explicit merge rules, and defaults used for diagnostic snapshots. |
+| [ApalacheConfigLoader.scala]    | Configuration-file discovery, loading, and precedence merging.                                        |
+| [ApalacheConfigResolver.scala]  | Defaults, TLC integration, validation, and construction of run options.                               |
+| [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                                                      |
+| [ConfigPatch.scala]             | Shared patch marker and sparse section patch types.                                                   |
+| [ResolvedOptions.scala]         | Immutable, validated values consumed during execution.                                                |
+| [ConfigParseResult.scala]       | Expected configuration errors and warnings as values.                                                 |
+| [ConfigEnums.scala]             | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
 
 ## Maintenance rules
 
@@ -61,7 +59,7 @@ Resolved command types also expose `source` and `output` directly.
   Context-dependent defaults, such as values loaded from a TLC configuration, remain in the resolver.
 - CLI commands must leave omitted options absent. Each subclass builds a sparse
   `ApalacheConfig` and merges it over its superclass configuration through
-  [ApalacheCommand.scala](../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/tooling/opt/ApalacheCommand.scala).
+  [ApalacheCommand.scala].
 - Keep merge code explicit. Avoid reflection and generic derivation so adding a field produces compiler-visible work and
   exceptional rules remain obvious.
 - Report invalid user configuration through `ConfigParseResult`, not exceptions.
@@ -77,3 +75,14 @@ Resolved command types also expose `source` and `output` directly.
 4. Add the runtime field, default, and validation in `ApalacheConfigResolver`.
 5. Update consumers and tests for decoding, precedence, validation, and the relevant command.
 6. Document the JSON key in `docs/src/apalache/config.md`.
+
+[ApalacheConfig.scala]: ApalacheConfig.scala
+[ApalacheConfigJsonParser.scala]: ApalacheConfigJsonParser.scala
+[ApalacheConfigLoader.scala]: ApalacheConfigLoader.scala
+[ApalacheConfigResolver.scala]: ApalacheConfigResolver.scala
+[ApalacheCommand.scala]: ../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/tooling/opt/ApalacheCommand.scala
+[ConfigEnums.scala]: ConfigEnums.scala
+[ConfigParseResult.scala]: ConfigParseResult.scala
+[ConfigPatch.scala]: ConfigPatch.scala
+[ResolvedOptions.scala]: ResolvedOptions.scala
+[Tool.scala]: ../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala
