@@ -1,7 +1,8 @@
 # Apalache configuration
 
 Apalache configuration files use **strict JSON**. The supported filenames are
-`.apalache.json` for a project file and `$HOME/.tlaplus/apalache.json` for a user-wide file.
+`.apalache.json` for a project file and `${user.home}/.tlaplus/apalache.json` for a user-wide file, where `user.home`
+is the JVM user-home system property.
 
 ## Loading and precedence
 
@@ -9,31 +10,28 @@ The following sources are considered, in decreasing order of precedence:
 
 1. command-line arguments;
 2. environment variables used by command-line options;
-3. the file passed with `--config-file`, or the nearest `.apalache.json` found by searching the current directory and
-   its parents;
-4. `$HOME/.tlaplus/apalache.json`;
-5. built-in defaults.
+3. at most one selected configuration file;
+4. built-in defaults.
 
-An explicit `--config-file` disables the search for a local file, but not the global fallback. Lists and ordinary values
-replace lower-precedence values.
-`checker.tuning` objects are merged by key.
+The configuration file is selected by taking the first applicable choice:
 
-The old `.apalache.cfg` and `$HOME/.tlaplus/apalache.cfg` application configuration filenames are rejected, even when
-they contain valid JSON or a
-`.json` file exists beside them. Rename them to `.apalache.json` and
-`$HOME/.tlaplus/apalache.json`, respectively. Explicit `--config-file` paths ending in `.cfg` are rejected as well.
-HOCON syntax is no longer supported.
+1. the file passed with `--config-file`, or a path supplied through its `CONFIG_FILE` environment variable;
+2. `.apalache.json` in the current working directory;
+3. `${user.home}/.tlaplus/apalache.json`;
+4. no configuration file.
 
-This does not affect TLC configuration files passed with `--config`, that conventionally use the `.cfg` extension.
+Apalache previously supported `.cfg` configuration files in HOCON syntax, as well as recursive merging of configuration
+files. These are no longer supported.
+
+The above rules to do not apply to the TLC configuration files passed with `--config`.
 
 ## JSON rules
 
 Configuration must be one JSON object. Keys and strings require double quotes. The following constructs are
 **rejected**: Comments, substitutions such as `${PWD}`, unquoted keys, `=`, trailing commas, duplicate keys, and
 trailing documents. **Unknown keys are rejected** in every group; for example, `checker.discardDisabled`
-is an error.
-
-`source` and `output` are top-level values. The former `input` object and object-valued `output` section are rejected.
+is an error. Moreover, `source` and `output` are top-level values. The former `input` object and object-valued `output`
+section are rejected.
 
 A leading `~` or `~/` in a path expands to the user's home directory. Other environment-variable expansion is not
 performed.
@@ -108,10 +106,11 @@ In the table below, a default of "none" means that the value is optional.
 | `server`      | `port`               | Set the listening port.                                      | integer                      | `8822`                                      |
 |               | `server-type`        | Select the server implementation.                            | string                       | `checker`; also `explorer`                  |
 
-Top-level `command` and `config-file` can appear in JSON exchanged with the RPC API and in diagnostic snapshots. Normal
-configuration files should not set them; the selected command and `--config-file` provide those values.
+Top-level `command` and `config-file` can appear in trusted JSON and diagnostic snapshots. Normal configuration files
+should not set them; the selected command and `--config-file` provide those values. Remote RPC configuration rejects
+`config-file`.
 
-A file source is normally just a path string. RPC callers may provide an in-memory source:
+A file source is normally just a path string. RPC callers must provide an in-memory source:
 
 ```json
 {
@@ -127,6 +126,30 @@ A file source is normally just a path string. RPC callers may provide an in-memo
 The source formats are `tla`, `json`, `itf`, and `qnt`. A file with a nonstandard or ambiguous extension can use a
 source object with
 `"kind": "file"`, `"path": "..."`, and an explicit `"format"`.
+
+### Remote RPC configuration
+
+Remote request JSON is parsed without configuration-file discovery. The fields `config-file`, `out-dir`, `run-dir`,
+`output`, and `checker.config` are rejected, as are file-backed `source` and `tracee.trace` values. In-memory source
+content and auxiliary modules remain supported. In-memory TLA+ modules can import only supplied auxiliary modules and
+trusted standard modules, not modules from the server's working directory.
+
+The following Z3 tuning keys are also rejected for remote requests, as they can create files:
+
+- `z3.dot_proof_file`,
+- `z3.trace`,
+- `z3.trace_file_name`,
+- `z3.sat.drat.file`,
+- `z3.sat.inprocess.out`,
+- `z3.solver.axioms2files`,
+- `z3.solver.cancel_backup_file`,
+- `z3.solver.proof.log`,
+- `z3.solver.smtlib2_log`,
+- `z3.opt.dump_benchmarks`,
+- `z3.opt.solution_prefix`,
+- `z3.smt.arith.dump_lemmas`.
+
+Default output files are still produced by the services.
 
 ## TLC configuration precedence
 
@@ -144,9 +167,6 @@ The following old spellings remain accepted with warnings:
 | `checker.no-deadlocks`    | `checker.no-deadlock`    |
 | `checker.temporal-props`  | `checker.temporal`       |
 | `typechecker.inferpoly`   | `typechecker.infer-poly` |
-
-Old object-shaped enum and source values using a `type` field are also read with a warning. Setting a canonical key and
-its alias together is an error.
 
 ## Migrating from HOCON
 
@@ -166,6 +186,6 @@ to JSON:
 }
 ```
 
-Then rename `.apalache.cfg` to `.apalache.json` before running Apalache; legacy application configuration filenames are
-errors. With `--debug`, the merged canonical JSON configuration is written to `application-config.json` in the run
-directory.
+Then rename `.apalache.cfg` to `.apalache.json` before running Apalache. Automatically discovered legacy filenames are
+ignored, while an explicit `--config-file` ending in `.cfg` is an error. With `--debug`, the merged canonical JSON
+configuration is written to `application-config.json` in the run directory.
