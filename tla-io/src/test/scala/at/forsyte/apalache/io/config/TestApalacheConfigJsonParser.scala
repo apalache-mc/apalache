@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.InputSource
 import org.scalatest.funsuite.AnyFunSuite
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path}
 
 class TestApalacheConfigJsonParser extends AnyFunSuite {
   test("loads cvc5 as an SMT solver backend") {
@@ -32,7 +32,7 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
   }
 
   test("preserves an explicit source format when a filename cannot express it") {
-    val source = InputSource.FileSource(Paths.get("trace.json"), InputSource.Format.Itf)
+    val source = InputSource.FileSource(Path.of("trace.json"), InputSource.Format.Itf)
     val config = ApalacheConfig(source = Some(source))
 
     val decoded = ApalacheConfigJsonParser.parse(ApalacheConfigJsonParser.write(config))
@@ -42,8 +42,8 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("writes source and output at the top level and rejects the old singleton sections") {
     val config = ApalacheConfig(
-        source = Some(InputSource.FileSource(Paths.get("Spec.tla"), InputSource.Format.Tla)),
-        output = Some(Paths.get("output.tla")),
+        source = Some(InputSource.FileSource(Path.of("Spec.tla"), InputSource.Format.Tla)),
+        output = Some(Path.of("output.tla")),
     )
     val serialized = ApalacheConfigJsonParser.write(config)
     val oldInput = ApalacheConfigJsonParser.parse("""{"input":{"source":"Spec.tla"}}""")
@@ -126,8 +126,8 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("all JSON examples in the configuration manual are valid configurations") {
     val candidates = Seq(
-        Paths.get("docs/src/apalache/config.md"),
-        Paths.get("../docs/src/apalache/config.md"),
+        Path.of("docs/src/apalache/config.md"),
+        Path.of("../docs/src/apalache/config.md"),
     )
     val manual = candidates.find(Files.exists(_)).getOrElse(fail("Could not locate configuration manual"))
     val text = Files.readString(manual, StandardCharsets.UTF_8)

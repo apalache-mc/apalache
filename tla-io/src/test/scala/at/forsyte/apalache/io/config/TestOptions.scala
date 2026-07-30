@@ -5,7 +5,7 @@ import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 
-import java.nio.file.Paths
+import java.nio.file.Path
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 
@@ -33,13 +33,13 @@ class TestOptions extends AnyFunSuite {
   }
 
   test("FileSource recognizes ITF files") {
-    val result = InputSource.FileSource(Paths.get("foo.itf.json"))
+    val result = InputSource.FileSource(Path.of("foo.itf.json"))
     assert(result.isSuccess)
     assert(result.requireValue().format == InputSource.Format.Itf)
   }
 
   test("ordinary JSON files are not recognized as ITF") {
-    val result = InputSource.FileSource(Paths.get("foo.json"))
+    val result = InputSource.FileSource(Path.of("foo.json"))
     assert(result.isSuccess)
     assert(result.requireValue().format == InputSource.Format.Json)
   }

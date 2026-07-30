@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.config
 
 import at.forsyte.apalache.io.InputSource
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 
 /**
  * Top-level sparse configuration assembled from scalar values and section patches. This configuration is used as the
@@ -47,7 +47,7 @@ object ApalacheConfig {
   /** Static built-in values shared by resolution, diagnostics, and user-facing descriptions. */
   val defaults: ApalacheConfig = ApalacheConfig(
       common = CommonPatch(
-          outDir = Some(Paths.get(System.getProperty("user.dir"), "_apalache-out")),
+          outDir = Some(Path.of(System.getProperty("user.dir"), "_apalache-out")),
           debug = Some(false),
           smtprof = Some(false),
           writeIntermediate = Some(false),

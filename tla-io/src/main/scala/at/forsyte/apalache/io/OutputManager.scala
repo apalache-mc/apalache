@@ -8,7 +8,6 @@ import java.io.FileWriter
 import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -170,7 +169,7 @@ object OutputManager extends LazyLogging {
    * val w = printWriter("foo", "bar", "baz.json")
    */
   def printWriter(base: String, fileParts: String*): PrintWriter = {
-    printWriter(Paths.get(base), fileParts: _*)
+    printWriter(Path.of(base), fileParts: _*)
   }
 
   /** Apply f to the writer w, being sure to close w */

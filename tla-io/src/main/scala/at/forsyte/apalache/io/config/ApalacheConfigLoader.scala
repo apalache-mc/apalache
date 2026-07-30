@@ -1,7 +1,7 @@
 package at.forsyte.apalache.io.config
 
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 
 /**
  * Selects at most one JSON configuration file and merges it below a primary configuration.
@@ -16,8 +16,8 @@ import java.nio.file.{Files, Path, Paths}
  *   JVM user home containing the user-wide configuration.
  */
 final class ApalacheConfigLoader(
-    workingDirectory: Path = Paths.get("").toAbsolutePath.normalize(),
-    homeDirectory: Path = Paths.get(System.getProperty("user.home"))) {
+    workingDirectory: Path = Path.of("").toAbsolutePath.normalize(),
+    homeDirectory: Path = Path.of(System.getProperty("user.home"))) {
 
   import ApalacheConfigLoader._
 

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.{JsonFactory, JsonParser}
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 
-import java.nio.file.{InvalidPathException, Path, Paths}
+import java.nio.file.{InvalidPathException, Path}
 
 import scala.collection.mutable.ListBuffer
 import scala.jdk.CollectionConverters._
@@ -536,11 +536,11 @@ object ApalacheConfigJsonParser {
 
     private def expandPath(value: String): Path = {
       if (value == "~") {
-        Paths.get(System.getProperty("user.home"))
+        Path.of(System.getProperty("user.home"))
       } else if (value.startsWith("~/") || value.startsWith("~\\")) {
-        Paths.get(System.getProperty("user.home")).resolve(value.substring(2))
+        Path.of(System.getProperty("user.home")).resolve(value.substring(2))
       } else {
-        Paths.get(value)
+        Path.of(value)
       }
     }
 

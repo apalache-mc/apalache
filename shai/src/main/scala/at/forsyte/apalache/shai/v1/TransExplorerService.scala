@@ -28,7 +28,7 @@ import com.typesafe.scalalogging.Logger
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.passes.imp.ParserModule
-import java.nio.file.Paths
+import java.nio.file.Path
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -167,11 +167,11 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
         val config = ApalacheConfig(
             context = RunContextPatch(command = Some("server")),
             common = CommonPatch(
-                outDir = Some(Paths.get(".")),
+                outDir = Some(Path.of(".")),
                 debug = Some(true),
             ),
             source = Some(InputSource.StringSource(spec, aux.toList)),
-            output = Some(Paths.get(".")),
+            output = Some(Path.of(".")),
         )
         val resolved = ApalacheConfigResolver.resolveParse(config)
         if (!resolved.isSuccess) {
