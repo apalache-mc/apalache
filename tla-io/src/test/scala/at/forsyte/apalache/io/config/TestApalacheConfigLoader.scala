@@ -92,13 +92,13 @@ class TestApalacheConfigLoader extends AnyFunSuite {
 
   test("an invalid cwd-local file fails instead of falling back to the user-wide file") {
     withTempDirectories { (work, home) =>
-      write(work.resolve(".apalache.json"), "not json")
+      write(work.resolve(".apalache.json"), """{"features":["invalid-feature"]}""")
       writeGlobal(home, """{"run-dir":"global-run"}""")
 
       val result = new ApalacheConfigLoader(work, home).load(ApalacheConfig.empty.withCommand(CHECK))
 
       assert(!result.isSuccess)
-      assert(result.errors.exists(_.contains(".apalache.json")))
+      assert(result.errors == List(".apalache.json: $.features: Unexpected feature: invalid-feature"))
     }
   }
 

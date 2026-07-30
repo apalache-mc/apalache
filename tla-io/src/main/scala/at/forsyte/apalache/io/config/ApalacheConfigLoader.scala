@@ -57,7 +57,7 @@ final class ApalacheConfigLoader(
       case None =>
         val local = currentWorkingDirectory.resolve(LOCAL_CONFIG_FILENAME)
         if (Files.exists(local)) {
-          Right(Some(SelectedFile(local, local.toString)))
+          Right(Some(SelectedFile(local, LOCAL_CONFIG_FILENAME)))
         } else {
           val global = userHomeDirectory.resolve(TLA_PLUS_DIRECTORY).resolve(GLOBAL_CONFIG_FILENAME)
           if (Files.exists(global)) Right(Some(SelectedFile(global, global.toString)))

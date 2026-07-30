@@ -4018,7 +4018,7 @@ $ rm -rf ./configured-run-dir ./.apalache.json
 
 ```sh
 $ printf '%s\n' '{"run-dir":"./configured-run-dir"}' > .apalache.cfg
-$ apalache-mc check --length=0 Counter.tla 2>&1 | grep -o -e "Legacy Apalache configuration file" -e "EXITCODE:.*"
+$ apalache-mc check --config-file=.apalache.cfg --length=0 Counter.tla 2>&1 | grep -o -e "Legacy Apalache configuration file" -e "EXITCODE:.*"
 Legacy Apalache configuration file
 EXITCODE: ERROR (255)
 $ rm -f ./.apalache.cfg
