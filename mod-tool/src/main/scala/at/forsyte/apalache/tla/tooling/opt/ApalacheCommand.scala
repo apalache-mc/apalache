@@ -21,66 +21,58 @@ import scala.annotation.tailrec
  */
 abstract class ApalacheCommand(name: String, description: String)
     extends Command(name: String, description: String) with LazyLogging {
-  protected final val configDefaults: ApalacheConfig = ApalacheConfig.defaults
+  final protected val configDefaults: ApalacheConfig = ApalacheConfig.defaults
 
   /** Append a consistently formatted default obtained from its authoritative source. */
-  protected final def descriptionWithDefault(description: String, default: Any): String =
+  final protected def descriptionWithDefault(description: String, default: Any): String =
     s"$description, default: ${renderDefault(default)}"
 
   @tailrec
   private def renderDefault(default: Any): String =
     default match {
-      case None => "none"
-      case Some(value) => renderDefault(value)
+      case None                                  => "none"
+      case Some(value)                           => renderDefault(value)
       case values: Iterable[_] if values.isEmpty => "none"
-      case values: Iterable[_] => values.mkString(",")
-      case value => value.toString
+      case values: Iterable[_]                   => values.mkString(",")
+      case value                                 => value.toString
     }
 
   private val displayedDefaultOutDir = s"./${configDefaults.common.outDir.get.getFileName}"
 
   var configFile: Option[File] = opt[Option[File]](description = descriptionWithDefault(
-    "strict JSON configuration to read. Overrides local .apalache.json files",
-    configDefaults.context.configFile,
-  ) + " (overrides envvar CONFIG_FILE)",
-      useEnv = true)
-  var debug: Option[Boolean] = opt[Option[Boolean]](
-    description = descriptionWithDefault(
+          "strict JSON configuration to read. Overrides local .apalache.json files",
+          configDefaults.context.configFile,
+      ) + " (overrides envvar CONFIG_FILE)", useEnv = true)
+  var debug: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
       "extensive logging in detailed.log and log.smt",
       configDefaults.common.debug,
-    ))
-  var smtprof: Option[Boolean] = opt[Option[Boolean]](
-    description = descriptionWithDefault(
+  ))
+  var smtprof: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
       "profile SMT constraints in profile.csv",
       configDefaults.common.smtprof,
-    ))
+  ))
   var profiling: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
-    "write general profiling data to profile-rules.txt in the run directory",
-    configDefaults.common.profiling,
-  ) + " (overrides envvar PROFILING)",
-      useEnv = true)
-  var outDir: Option[File] = opt[Option[File]](
-    description = descriptionWithDefault(
-      "where all output files will be written",
-      displayedDefaultOutDir,
-    ) + " (overrides envvar OUT_DIR)",
-      useEnv = true)
+          "write general profiling data to profile-rules.txt in the run directory",
+          configDefaults.common.profiling,
+      ) + " (overrides envvar PROFILING)", useEnv = true)
+  var outDir: Option[File] = opt[Option[File]](description = descriptionWithDefault(
+          "where all output files will be written",
+          displayedDefaultOutDir,
+      ) + " (overrides envvar OUT_DIR)", useEnv = true)
   var runDir: Option[File] = opt[Option[File]](description = descriptionWithDefault(
-    "additional directory wherein output files for this run will be written directly",
-    configDefaults.common.runDir,
-  ) + " (overrides envvar RUN_DIR)",
-      useEnv = true)
+          "additional directory wherein output files for this run will be written directly",
+          configDefaults.common.runDir,
+      ) + " (overrides envvar RUN_DIR)", useEnv = true)
   var writeIntermediate: Option[Boolean] = opt[Option[Boolean]](description = descriptionWithDefault(
-    "write intermediate output files to `out-dir`",
-    configDefaults.common.writeIntermediate,
-  ) + " (overrides envvar WRITE_INTERMEDIATE)",
-      useEnv = true)
+          "write intermediate output files to `out-dir`",
+          configDefaults.common.writeIntermediate,
+      ) + " (overrides envvar WRITE_INTERMEDIATE)", useEnv = true)
   var features: Option[Seq[Feature]] = opt[Option[Seq[Feature]]](default = None,
       description = {
         val featureDescriptions: Seq[String] = Feature.all.map(f => s"  * ${f.name}: ${f.description}")
         val header = descriptionWithDefault(
-          "a comma-separated list of experimental features",
-          configDefaults.common.features,
+            "a comma-separated list of experimental features",
+            configDefaults.common.features,
         ) + ":"
         (header +: featureDescriptions).mkString("\n")
       })
@@ -90,20 +82,20 @@ abstract class ApalacheCommand(name: String, description: String)
     logger.info("Loading configuration")
 
     ConfigParseResult.success(ApalacheConfig(
-      context = RunContextPatch(
-        command = Some(name),
-        configFile = configFile.map(_.toPath),
-      ),
-      common = CommonPatch(
-        outDir = outDir.map(_.toPath),
-        runDir = runDir.map(_.toPath),
-        debug = debug,
-        smtprof = smtprof,
-        profiling = profiling,
-        writeIntermediate = writeIntermediate,
-        features = features.map(_.toList),
-      ),
-    ))
+            context = RunContextPatch(
+                command = Some(name),
+                configFile = configFile.map(_.toPath),
+            ),
+            common = CommonPatch(
+                outDir = outDir.map(_.toPath),
+                runDir = runDir.map(_.toPath),
+                debug = debug,
+                smtprof = smtprof,
+                profiling = profiling,
+                writeIntermediate = writeIntermediate,
+                features = features.map(_.toList),
+            ),
+        ))
   }
 
   /**
@@ -115,7 +107,7 @@ abstract class ApalacheCommand(name: String, description: String)
    * providing a `ToolModule`. E.g.,
    *
    * @param config
-   * The merged configuration produced after parsing the command line.
+   *   The merged configuration produced after parsing the command line.
    * @return
    *   `Right(msg)` on a successful execution or `Left((errCode, msg))` if the process fails, where `errCode` is the
    *   return code with the which the program will be terminated. In either case `msg` is the final message reported to
@@ -175,8 +167,8 @@ abstract class ApalacheCommand(name: String, description: String)
 
   /** Merge a higher-precedence command patch into a successfully constructed base configuration. */
   final protected def mergeConfig(
-                                   base: ConfigParseResult[ApalacheConfig],
-                                   higher: ApalacheConfig): ConfigParseResult[ApalacheConfig] = {
+      base: ConfigParseResult[ApalacheConfig],
+      higher: ApalacheConfig): ConfigParseResult[ApalacheConfig] = {
     if (base.isSuccess) {
       ConfigParseResult.success(higher.mergeWithLower(base.requireValue()), base.warnings)
     } else {
@@ -185,8 +177,8 @@ abstract class ApalacheCommand(name: String, description: String)
   }
 
   final protected def runWithOptions[A](
-                                         result: ConfigParseResult[A]
-                                       )(body: A => Either[(ExitCodes.TExitCode, String), String]): Either[(ExitCodes.TExitCode, String), String] = {
+      result: ConfigParseResult[A]
+    )(body: A => Either[(ExitCodes.TExitCode, String), String]): Either[(ExitCodes.TExitCode, String), String] = {
     result.warnings.foreach(warning => logger.warn(warning))
     if (result.isSuccess) body(result.requireValue())
     else Left(ExitCodes.ERROR -> result.errors.mkString("Configuration error: ", "; ", ""))

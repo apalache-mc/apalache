@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.io.config.CommonOptions
 
 abstract class PreproPassPartial(
-                                  val commonOptions: CommonOptions,
+    val commonOptions: CommonOptions,
     derivedPreds: DerivedPredicates,
     renaming: IncrementalRenaming,
     tracker: TransformationTracker,

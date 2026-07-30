@@ -126,8 +126,8 @@ object OutputManager extends LazyLogging {
 
     val fileName = initialization.source match {
       case Some(InputSource.FileSource(path, _)) => path.getFileName.toString
-      case Some(_: InputSource.StringSource) => initialization.command
-      case None => initialization.command
+      case Some(_: InputSource.StringSource)     => initialization.command
+      case None                                  => initialization.command
     }
 
     setOutDir(initialization.common.outDir, fileName)

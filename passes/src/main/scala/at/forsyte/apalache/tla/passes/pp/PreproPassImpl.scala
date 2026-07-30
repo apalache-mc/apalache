@@ -25,7 +25,7 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  *   next pass to call
  */
 class PreproPassImpl @Inject() (
-                                 commonOptions: CommonOptions,
+    commonOptions: CommonOptions,
     derivedPreds: DerivedPredicates,
     gen: UniqueNameGenerator,
     renaming: IncrementalRenaming,
@@ -34,7 +34,7 @@ class PreproPassImpl @Inject() (
     changeListener: ChangeListener,
     writerFactory: TlaWriterFactory)
     extends PreproPassPartial(
-      commonOptions,
+        commonOptions,
         derivedPreds,
         renaming,
         tracker,

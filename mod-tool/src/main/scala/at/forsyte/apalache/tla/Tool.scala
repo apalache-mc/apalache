@@ -86,8 +86,8 @@ object Tool extends LazyLogging {
     val primary = cmd.toConfig
     if (primary.isSuccess) {
       ConfigParseResult.withWarnings(
-        ApalacheConfigLoader.loadWithFallbacks(primary.requireValue()),
-        primary.warnings,
+          ApalacheConfigLoader.loadWithFallbacks(primary.requireValue()),
+          primary.warnings,
       )
     } else {
       ConfigParseResult.failureFrom(primary)

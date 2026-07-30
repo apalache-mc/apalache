@@ -35,7 +35,7 @@ import at.forsyte.apalache.tla.typecheck.TypingInputException
  *   a writer factory
  */
 class ConfigurationPassImpl @Inject() (
-                                        val specification: SpecificationOptions,
+    val specification: SpecificationOptions,
     val derivedPreds: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
@@ -161,11 +161,11 @@ class ConfigurationPassImpl @Inject() (
     derivedPreds.configure(
         init = init,
         next = next,
-      temporalProps = temporalProperties,
-      invariants = invariants,
-      cinit = cinit,
-      view = view,
-      persistent = persistent,
+        temporalProps = temporalProperties,
+        invariants = invariants,
+        cinit = cinit,
+        view = view,
+        persistent = persistent,
     )
   }
 
@@ -198,10 +198,10 @@ class ConfigurationPassImpl @Inject() (
     derivedPreds.configure(
         init = init,
         next = next,
-      invariants = invariants,
-      temporalProps = temporalProperties,
-      view = view,
-      cinit = cinit,
+        invariants = invariants,
+        temporalProps = temporalProperties,
+        view = view,
+        cinit = cinit,
         persistent = List.empty,
     )
 

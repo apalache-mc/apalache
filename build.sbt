@@ -148,7 +148,7 @@ lazy val tlair = (project in file("tlair"))
       libraryDependencies ++= Seq(
           Deps.ujson,
           Deps.kiama,
-        Deps.shapeless % Test,
+          Deps.shapeless % Test,
       ),
   )
 

@@ -21,11 +21,11 @@ import at.forsyte.apalache.io.config.ApalacheConfig
 class ConfigCmd extends ApalacheCommand(name = "config", description = "Configure Apalache options") with LazyLogging {
 
   var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
-    description = descriptionWithDefault(
-      "Let Apalache submit usage statistics to tlapl.us\n(shared with TLC and TLA+ Toolbox)",
-      "unchanged",
-    )
-      + "\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
+      description = descriptionWithDefault(
+          "Let Apalache submit usage statistics to tlapl.us\n(shared with TLC and TLA+ Toolbox)",
+          "unchanged",
+      )
+        + "\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
 
   override def run(_config: ApalacheConfig): Either[(TExitCode, String), String] = {
     logger.info("Configuring Apalache")

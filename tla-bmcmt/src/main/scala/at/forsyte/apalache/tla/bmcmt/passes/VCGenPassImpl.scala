@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   Igor Konnov
  */
 class VCGenPassImpl @Inject() (
-                                checkerOptions: CheckerOptions,
+    checkerOptions: CheckerOptions,
     derivedPredicates: DerivedPredicates,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)

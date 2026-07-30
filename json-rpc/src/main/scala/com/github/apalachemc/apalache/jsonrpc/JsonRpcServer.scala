@@ -48,7 +48,7 @@ case class ServiceError(code: Int, message: String)
  * A transition exploration service.
  *
  * @param config
- * the service configuration, typically constructed with [[at.forsyte.apalache.io.config.ApalacheConfigLoader]].
+ *   the service configuration, typically constructed with [[at.forsyte.apalache.io.config.ApalacheConfigLoader]].
  * @author
  *   Igor Konnov, 2025
  */
@@ -87,9 +87,9 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
     val optionsResult = createConfigFromParams(params)
     if (!optionsResult.isSuccess) {
       return Left(ServiceError(
-        JsonRpcCodes.INVALID_PARAMS,
-        optionsResult.errors.mkString("Invalid configuration: ", "; ", ""),
-      ))
+              JsonRpcCodes.INVALID_PARAMS,
+              optionsResult.errors.mkString("Invalid configuration: ", "; ", ""),
+          ))
     }
     val options = optionsResult.requireValue()
     // call the parser
@@ -709,12 +709,12 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
     } else {
       val source = InputSource.StringSource(params.sources.head, params.sources.tail.toList)
       ApalacheConfigResolver.resolveRemote(
-        base = config.requireValue(),
-        source = source,
-        init = params.init,
-        next = params.next,
-        invariants = params.invariants,
-        persistent = params.exports,
+          base = config.requireValue(),
+          source = source,
+          init = params.init,
+          next = params.next,
+          invariants = params.invariants,
+          persistent = params.exports,
       )
     }
   }

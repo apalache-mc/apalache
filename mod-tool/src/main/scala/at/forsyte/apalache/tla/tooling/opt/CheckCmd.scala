@@ -39,79 +39,74 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
 
   // Parses the algo option
   implicit val algoRead: Read[Algorithm] =
-    Read.reads[Algorithm](s"a checking algorithm: ${Algorithm.values.mkString(", ")}")(
-      Algorithm.fromString)
+    Read.reads[Algorithm](s"a checking algorithm: ${Algorithm.values.mkString(", ")}")(Algorithm.fromString)
 
   var algo: Option[Algorithm] = opt[Option[Algorithm]](name = "algo", default = None,
-    description = descriptionWithDefault(
-      s"the search algorithm: ${Algorithm.values.map(_.displayName).mkString(", ")}",
-      configDefaults.checker.algorithm,
-    ))
+      description = descriptionWithDefault(
+          s"the search algorithm: ${Algorithm.values.map(_.displayName).mkString(", ")}",
+          configDefaults.checker.algorithm,
+      ))
   var smtEncoding: Option[SMTEncoding] = opt[Option[SMTEncoding]](name = "smt-encoding", useEnv = true, default = None,
-    description = descriptionWithDefault(
-      s"the SMT encoding: ${SMTEncoding.values.map(_.displayName).mkString(", ")}",
-      configDefaults.checker.smtEncoding,
-    ) + " (overrides envvar SMT_ENCODING)")
+      description = descriptionWithDefault(
+          s"the SMT encoding: ${SMTEncoding.values.map(_.displayName).mkString(", ")}",
+          configDefaults.checker.smtEncoding,
+      ) + " (overrides envvar SMT_ENCODING)")
   var smtSolver: Option[SMTSolver] = opt[Option[SMTSolver]](name = "smt-solver", useEnv = true, default = None,
-    description = descriptionWithDefault(
-      s"the SMT solver backend: ${SMTSolver.values.map(_.displayName).mkString(", ")}",
-      configDefaults.checker.smtSolver,
-    ) + " (overrides envvar SMT_SOLVER)")
+      description = descriptionWithDefault(
+          s"the SMT solver backend: ${SMTSolver.values.map(_.displayName).mkString(", ")}",
+          configDefaults.checker.smtSolver,
+      ) + " (overrides envvar SMT_SOLVER)")
   var tuningOptionsFile: Option[String] =
     opt[Option[String]](name = "tuning-options-file", default = None,
-      description = descriptionWithDefault(
-        "filename of the tuning options, see docs/tuning.md",
-        configDefaults.checker.tuning,
-      ))
+        description = descriptionWithDefault(
+            "filename of the tuning options, see docs/tuning.md",
+            configDefaults.checker.tuning,
+        ))
   var tuningOptions: Option[String] =
     opt[Option[String]](name = "tuning-options", default = None,
-      description = descriptionWithDefault(
-        "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning-options-file)",
-        configDefaults.checker.tuning,
-      ))
+        description = descriptionWithDefault(
+            "tuning options as arguments in the format key1=val1:key2=val2:key3=val3 (priority over --tuning-options-file)",
+            configDefaults.checker.tuning,
+        ))
   var discardDisabled: Option[Boolean] = opt[Option[Boolean]](name = "discard-disabled", default = None,
-    description = descriptionWithDefault(
-      "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller",
-      configDefaults.checker.discardDisabled,
-    ))
+      description = descriptionWithDefault(
+          "pre-check, whether a transition is disabled, and discard it, to make SMT queries smaller",
+          configDefaults.checker.discardDisabled,
+      ))
   var noDeadlocks: Option[Boolean] =
     opt[Option[Boolean]](name = "no-deadlock", default = None,
-      description = descriptionWithDefault(
-        "do not check for deadlocks",
-        !ApalacheConfigResolver.defaultCheckDeadlocks,
-      ))
+        description = descriptionWithDefault(
+            "do not check for deadlocks",
+            !ApalacheConfigResolver.defaultCheckDeadlocks,
+        ))
 
   var maxError: Option[Int] =
     opt[Option[Int]](name = "max-error",
-      description = descriptionWithDefault(
-        "do not stop on first error, but produce at most the given number of errors (requires --view when greater than 1)",
-        configDefaults.checker.maxError,
-      ),
-        default = None)
+        description = descriptionWithDefault(
+            "do not stop on first error, but produce at most the given number of errors (requires --view when greater than 1)",
+            configDefaults.checker.maxError,
+        ), default = None)
 
   var view: Option[String] =
     opt[Option[String]](name = "view",
-      description = descriptionWithDefault(
-        "the state view to use with --max-error=n",
-        configDefaults.checker.view,
-      ),
-        default = None)
+        description = descriptionWithDefault(
+            "the state view to use with --max-error=n",
+            configDefaults.checker.view,
+        ), default = None)
 
   var saveRuns: Option[Boolean] =
     opt[Option[Boolean]](name = "output-traces",
-      description = descriptionWithDefault(
-        "save an example trace for each symbolic run",
-        ModelCheckerParams.defaultOutputTraces,
-      ),
-      default = None)
+        description = descriptionWithDefault(
+            "save an example trace for each symbolic run",
+            ModelCheckerParams.defaultOutputTraces,
+        ), default = None)
 
   var timeoutSmtSec: Option[Int] =
     opt[Option[Int]](name = "timeout-smt",
-      description = descriptionWithDefault(
-        "limit the duration of a single SMT check query with `n` seconds",
-        configDefaults.checker.timeoutSmtSeconds,
-      ) + " (unlimited)",
-        default = None)
+        description = descriptionWithDefault(
+            "limit the duration of a single SMT check query with `n` seconds",
+            configDefaults.checker.timeoutSmtSeconds,
+        ) + " (unlimited)", default = None)
 
   override def toConfig: ConfigParseResult[ApalacheConfig] = {
     val combinedTuningOptions =
@@ -119,7 +114,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
         val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
         val outputTraceOptions = saveRuns match {
           case Some(value) => Map("search.outputTraces" -> value.toString)
-          case None => Map.empty
+          case None        => Map.empty
         }
         overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ outputTraceOptions
       } catch {
@@ -133,20 +128,20 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       if (combinedTuningOptions.nonEmpty) Some(combinedTuningOptions)
       else None
     val merged = mergeConfig(
-      base,
-      ApalacheConfig(
-        checker = CheckerPatch(
-          algorithm = algo,
-          smtSolver = smtSolver,
-          smtEncoding = smtEncoding,
-          tuning = tuning,
-          discardDisabled = discardDisabled,
-          checkDeadlocks = noDeadlocks.map(value => !value),
-          maxError = maxError,
-          timeoutSmtSeconds = timeoutSmtSec,
-          view = view,
-        )
-      ),
+        base,
+        ApalacheConfig(
+            checker = CheckerPatch(
+                algorithm = algo,
+                smtSolver = smtSolver,
+                smtEncoding = smtEncoding,
+                tuning = tuning,
+                discardDisabled = discardDisabled,
+                checkDeadlocks = noDeadlocks.map(value => !value),
+                maxError = maxError,
+                timeoutSmtSeconds = timeoutSmtSec,
+                view = view,
+            )
+        ),
     )
 
     warnIfTLCConfigIsPresent(merged.requireValue())
@@ -181,7 +176,7 @@ class CheckCmd(name: String = "check", description: String = "Check a TLA+ speci
       logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
       PassChainExecutor(new CheckerModule(options)).run() match {
-        case Right(_) => Right(s"Checker reports no error up to computation length ${options.checker.length}")
+        case Right(_)      => Right(s"Checker reports no error up to computation length ${options.checker.length}")
         case Left(failure) => Left(failure.exitCode, "Checker has found an error")
       }
     }

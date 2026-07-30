@@ -34,8 +34,8 @@ import at.forsyte.apalache.tla.bmcmt.Checker.NoError
  */
 @Singleton()
 class BoundedCheckerPassImpl @Inject() (
-                                         commonOptions: CommonOptions,
-                                         checkerOptions: CheckerOptions,
+    commonOptions: CommonOptions,
+    checkerOptions: CheckerOptions,
     derivedPreds: DerivedPredicates,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
@@ -121,7 +121,7 @@ class BoundedCheckerPassImpl @Inject() (
           smtRandomSeed,
           smtEncoding,
           smtStatsSec,
-        checkerOptions.smtSolver,
+          checkerOptions.smtSolver,
           solverParameters,
       )
 

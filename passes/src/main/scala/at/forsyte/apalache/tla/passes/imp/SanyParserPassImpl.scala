@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.imp.{SanyImporter, SanyImporterException, utils}
+import at.forsyte.apalache.tla.imp.{utils, SanyImporter, SanyImporterException}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
@@ -32,8 +32,8 @@ import at.forsyte.apalache.io.quint.{Quint, QuintOutput}
  *   Igor Konnov
  */
 class SanyParserPassImpl @Inject() (
-                                     val commonOptions: CommonOptions,
-                                     val moduleIoOptions: ModuleIoOptions,
+    val commonOptions: CommonOptions,
+    val moduleIoOptions: ModuleIoOptions,
     val sourceStore: SourceStore,
     val annotationStore: AnnotationStore,
     val writerFactory: TlaWriterFactory)

@@ -16,7 +16,7 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  * A preprocessing pass that simplifies TLA+ expressions by running multiple transformations.
  */
 class ReTLAPreproPassImpl @Inject() (
-                                      commonOptions: CommonOptions,
+    commonOptions: CommonOptions,
     derivedPreds: DerivedPredicates,
     renaming: IncrementalRenaming,
     tracker: TransformationTracker,
@@ -24,7 +24,7 @@ class ReTLAPreproPassImpl @Inject() (
     changeListener: ChangeListener,
     writerFactory: TlaWriterFactory)
     extends PreproPassPartial(
-      commonOptions,
+        commonOptions,
         derivedPreds,
         renaming,
         tracker,

@@ -16,9 +16,9 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 class EtcTypeCheckerPassImpl @Inject() (
-                                         val commonOptions: CommonOptions,
-                                         val moduleIoOptions: ModuleIoOptions,
-                                         val typecheckerOptions: TypecheckerOptions,
+    val commonOptions: CommonOptions,
+    val moduleIoOptions: ModuleIoOptions,
+    val typecheckerOptions: TypecheckerOptions,
     val sourceStore: SourceStore,
     changeListener: ChangeListener,
     tracker: TransformationTracker,
@@ -70,12 +70,12 @@ class EtcTypeCheckerPassImpl @Inject() (
       logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
       writeOut(writerFactory, newModule)
       utils.writeToOutput(
-        newModule,
-        commonOptions,
-        moduleIoOptions.output,
-        writerFactory,
-        logger,
-        sourceStore,
+          newModule,
+          commonOptions,
+          moduleIoOptions.output,
+          writerFactory,
+          logger,
+          sourceStore,
       )
       Right(newModule)
     }

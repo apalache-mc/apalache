@@ -165,13 +165,13 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
       try {
         // TODO: replace hard-coded options with options derived from CLI params
         val config = ApalacheConfig(
-          context = RunContextPatch(command = Some("server")),
-          common = CommonPatch(
-            outDir = Some(Paths.get(".")),
-            debug = Some(true),
-          ),
-          source = Some(InputSource.StringSource(spec, aux.toList)),
-          output = Some(Paths.get(".")),
+            context = RunContextPatch(command = Some("server")),
+            common = CommonPatch(
+                outDir = Some(Paths.get(".")),
+                debug = Some(true),
+            ),
+            source = Some(InputSource.StringSource(spec, aux.toList)),
+            output = Some(Paths.get(".")),
         )
         val resolved = ApalacheConfigResolver.resolveParse(config)
         if (!resolved.isSuccess) {

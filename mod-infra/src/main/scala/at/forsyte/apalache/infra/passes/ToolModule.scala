@@ -5,8 +5,8 @@ import com.google.inject.AbstractModule
 /**
  * An extension of Google Guice AbstractModule used to configure a pass sequence.
  *
- * Concrete modules accept validated, mode-specific options and bind only the option components consumed by
- * their passes.
+ * Concrete modules accept validated, mode-specific options and bind only the option components consumed by their
+ * passes.
  *
  * @author
  *   Gabriela Moreira

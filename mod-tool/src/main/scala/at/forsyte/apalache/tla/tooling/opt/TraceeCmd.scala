@@ -52,7 +52,7 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
       val executionLength = getLenFromFile(options.source) - 1
       val lenAdjustedOptions = options.withLength(executionLength)
       PassChainExecutor(new TraceeModule(lenAdjustedOptions)).run() match {
-        case Right(_) => Right("Trace successfully generated.")
+        case Right(_)      => Right("Trace successfully generated.")
         case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
       }
     }
@@ -66,18 +66,18 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
 
     val src = source.requireValue()
     val tuning = Map(
-      "search.outputTraces" -> "true",
-      "search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)),
+        "search.outputTraces" -> "true",
+        "search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)),
     )
     mergeConfig(
-      base,
-      ApalacheConfig(
-        checker = CheckerPatch(tuning = Some(tuning)),
-        traceEvaluation = TraceEvaluationPatch(
-          trace = Some(src),
-          expressions = Some(expressions),
+        base,
+        ApalacheConfig(
+            checker = CheckerPatch(tuning = Some(tuning)),
+            traceEvaluation = TraceEvaluationPatch(
+                trace = Some(src),
+                expressions = Some(expressions),
+            ),
         ),
-      ),
     )
   }
 

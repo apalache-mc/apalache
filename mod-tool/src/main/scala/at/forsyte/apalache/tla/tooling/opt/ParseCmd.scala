@@ -21,10 +21,10 @@ class ParseCmd
 
   var file: File = arg[File](description = "a file containing a TLA+ specification (.tla or .json)")
   var output: Option[File] = opt[Option[File]](name = "output",
-    description = descriptionWithDefault(
-      "file to which the parsed source is written (.tla or .json)",
-      configDefaults.output,
-    ))
+      description = descriptionWithDefault(
+          "file to which the parsed source is written (.tla or .json)",
+          configDefaults.output,
+      ))
 
   override def toConfig: ConfigParseResult[ApalacheConfig] = {
     val base = super.toConfig
@@ -36,11 +36,11 @@ class ParseCmd
         ConfigParseResult.failureFrom(source)
       } else {
         mergeConfig(
-          base,
-          ApalacheConfig(
-            source = Some(source.requireValue()),
-            output = output.map(_.toPath),
-          ),
+            base,
+            ApalacheConfig(
+                source = Some(source.requireValue()),
+                output = output.map(_.toPath),
+            ),
         )
       }
     }

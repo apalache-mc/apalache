@@ -28,10 +28,10 @@ class TestCmd
     arg[String](name = "assertion",
         description = "the name of an operator that should evaluate to true after executing `action`")
   var cinit: Option[String] = opt[Option[String]](name = "cinit", default = None,
-    description = descriptionWithDefault(
-      "the name of an operator that initializes CONSTANTS",
-      configDefaults.checker.constantInitializer,
-    ))
+      description = descriptionWithDefault(
+          "the name of an operator that initializes CONSTANTS",
+          configDefaults.checker.constantInitializer,
+      ))
 
   override def toConfig: ConfigParseResult[ApalacheConfig] = {
     val base = super.toConfig
@@ -44,21 +44,21 @@ class TestCmd
     //   2. Randomize
     val seed = Math.abs(System.currentTimeMillis().toInt)
     mergeConfig(
-      base,
-      ApalacheConfig(
-        source = Some(source.requireValue()),
-        checker = CheckerPatch(
-          tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
-          init = Some(before),
-          next = Some(action),
-          invariants = Some(List(assertion)),
-          constantInitializer = cinit,
-          length = Some(1),
-          discardDisabled = Some(false),
-          checkDeadlocks = Some(true),
-          algorithm = Some(Algorithm.Offline),
+        base,
+        ApalacheConfig(
+            source = Some(source.requireValue()),
+            checker = CheckerPatch(
+                tuning = Some(Map("search.invariantFilter" -> "1->.*", "smt.randomSeed" -> seed.toString)),
+                init = Some(before),
+                next = Some(action),
+                invariants = Some(List(assertion)),
+                constantInitializer = cinit,
+                length = Some(1),
+                discardDisabled = Some(false),
+                checkDeadlocks = Some(true),
+                algorithm = Some(Algorithm.Offline),
+            ),
         ),
-      ),
     )
   }
 
@@ -66,13 +66,13 @@ class TestCmd
     runWithOptions(ApalacheConfigResolver.resolveCheck(config)) { options =>
       // This is a special version of the `check` command that is tuned towards testing scenarios
       logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
-        .format(file, before, action, assertion))
+            .format(file, before, action, assertion))
 
       val tuning = options.checker.tuning
       logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
       PassChainExecutor(new CheckerModule(options)).run() match {
-        case Right(_) => Right("No example found")
+        case Right(_)      => Right("No example found")
         case Left(failure) =>
           Left(failure.exitCode, "Found a violation of the postcondition. Check violation.tla.")
       }

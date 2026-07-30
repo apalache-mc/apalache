@@ -71,10 +71,11 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     /**
      * Adapts configuration loading and resolution results to the command executor's `Either` pipeline.
      *
-     * Successful results expose their value. Failed results combine their diagnostics into an `IllegalArgumentException`,
-     * which [[throwableErr]] reports as an `UNEXPECTED` command error.
+     * Successful results expose their value. Failed results combine their diagnostics into an
+     * `IllegalArgumentException`, which [[throwableErr]] reports as an `UNEXPECTED` command error.
      */
     implicit class ConfigParseResultCmdErr[O](result: ConfigParseResult[O]) {
+
       /** Return the configured value or its errors encoded as a command error. */
       def toCmdResult: Either[CmdError, O] =
         if (result.isSuccess) Right(result.requireValue())
