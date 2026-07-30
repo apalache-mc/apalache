@@ -17,9 +17,9 @@ object SMTEncoding {
 
   def fromString(value: String): SMTEncoding =
     value match {
-      case Constants.ARRAYS                                  => Arrays
-      case Constants.FUN_ARRAYS | Constants.FUN_ARRAYS_ALIAS => FunArrays
-      case Constants.OOPSLA19 | Constants.OOPSLA19_ALIAS     => OOPSLA19
+      case Constants.ARRAYS => Arrays
+      case Constants.FUN_ARRAYS => FunArrays
+      case Constants.OOPSLA19 => OOPSLA19
       case other => throw new IllegalArgumentException(s"Unexpected SMT encoding: $other")
     }
 }

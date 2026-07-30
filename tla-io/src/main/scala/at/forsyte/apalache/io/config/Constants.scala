@@ -28,7 +28,7 @@ object Constants {
   val TYPECHECKER = "typechecker"
   val WRITE_INTERMEDIATE = "write-intermediate"
 
-  // Checker fields and accepted aliases.
+  // Checker fields.
   val ALGO = "algo"
   val CINIT = "cinit"
   val DISCARD_DISABLED = "discard-disabled"
@@ -38,13 +38,10 @@ object Constants {
   val MAX_ERROR = "max-error"
   val NEXT = "next"
   val NO_DEADLOCK = "no-deadlock"
-  val NO_DEADLOCKS = "no-deadlocks"
   val SMT_ENCODING = "smt-encoding"
   val SMT_SOLVER = "smt-solver"
   val TEMPORAL = "temporal"
-  val TEMPORAL_PROPS = "temporal-props"
   val TIMEOUT_SMT = "timeout-smt"
-  val TIMEOUT_SMT_SEC = "timeout-smt-sec"
   val TUNING = "tuning"
   val VIEW = "view"
 
@@ -55,31 +52,24 @@ object Constants {
   val FILE = "file"
   val FORMAT = "format"
   val INFER_POLY = "infer-poly"
-  val INFERPOLY = "inferpoly"
   val KIND = "kind"
   val PATH = "path"
   val PORT = "port"
   val SERVER_TYPE = "server-type"
   val TRACE = "trace"
-  val TYPE = "type"
 
-  // Source-object discriminators and accepted legacy spellings.
-  val FILE_SOURCE = "filesource"
+  // Source-object discriminators.
   val STRING = "string"
-  val STRING_SOURCE = "stringsource"
 
-  // Enum values and accepted aliases.
+  // Enum values.
   val ARRAYS = "arrays"
   val CVC5 = "cvc5"
   val EXPLORER = "explorer"
   val FUN_ARRAYS = "funArrays"
-  val FUN_ARRAYS_ALIAS = "fun-arrays"
   val INCREMENTAL = "incremental"
   val OFFLINE = "offline"
   val OOPSLA19 = "oopsla19"
-  val OOPSLA19_ALIAS = "oopsla-19"
   val REMOTE = "remote"
-  val SERVER_SUFFIX = "-server"
   val Z3 = "z3"
 
   // CLI-only option and argument names.

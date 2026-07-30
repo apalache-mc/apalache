@@ -15,8 +15,8 @@ import scala.jdk.CollectionConverters._
  *
  * [[parse]] parses and checks one JSON document; [[write]] emits canonical JSON without applying source precedence,
  * runtime defaults, or mode-specific validation. A request-local `JsonDecoder` maps JSON fields and sections to patch
- * classes while accumulating all actionable errors and migration warnings. The `decode*` and `write*` methods handle
- * top-level structures; the remaining helpers handle leaf values.
+ * classes while accumulating all actionable errors. The `decode*` and `write*` methods handle top-level structures; the
+ * remaining helpers handle leaf values.
  *
  * The package model and maintenance rules are documented in the
  * [[https://github.com/apalache-mc/apalache/blob/main/tla-io/src/main/scala/at/forsyte/apalache/io/config/README.md package README]].
@@ -34,7 +34,6 @@ object ApalacheConfigJsonParser {
       sourceText: String,
       sourceName: String = "<configuration>"): ConfigParseResult[ApalacheConfig] = {
     val errors = ListBuffer.empty[String]
-    val warnings = ListBuffer.empty[String]
     val root =
       try {
         val parser = mapper.createParser(sourceText)
@@ -57,19 +56,16 @@ object ApalacheConfigJsonParser {
       }
 
     if (root == null || errors.nonEmpty) {
-      return ConfigParseResult.failure(errors.toList, warnings.toList)
+      return ConfigParseResult.failure(errors.toList)
     }
     if (!root.isObject) {
-      return ConfigParseResult.failure(
-          List(s"$sourceName: Expected the configuration root to be a JSON object."),
-          warnings.toList,
-      )
+      return ConfigParseResult.failure(List(s"$sourceName: Expected the configuration root to be a JSON object."))
     }
 
-    val decoder = new JsonDecoder(errors, warnings)
+    val decoder = new JsonDecoder(errors)
     val config = decoder.config(root.asInstanceOf[ObjectNode])
-    if (errors.isEmpty) ConfigParseResult.success(config, warnings.toList)
-    else ConfigParseResult.failure(errors.toList, warnings.toList)
+    if (errors.isEmpty) ConfigParseResult.success(config)
+    else ConfigParseResult.failure(errors.toList)
   }
 
   /** Serialize the fields present in `config`, optionally with pretty-printing. */
@@ -84,10 +80,8 @@ object ApalacheConfigJsonParser {
     else mapper.writeValueAsString(root)
   }
 
-  /** Per-decode state that translates JSON nodes while collecting errors and warnings. */
-  final private class JsonDecoder(
-      errors: ListBuffer[String],
-      warnings: ListBuffer[String]) {
+  /** Per-decode state that translates JSON nodes while collecting errors. */
+  final private class JsonDecoder(errors: ListBuffer[String]) {
 
     /** Decode all recognized top-level keys and sections; malformed values contribute errors to this decoder. */
     def config(root: ObjectNode): ApalacheConfig = {
@@ -149,7 +143,6 @@ object ApalacheConfigJsonParser {
 
         case Some(obj) =>
           val path = s"$$.$CHECKER"
-          val aliases = Set(TIMEOUT_SMT_SEC, NO_DEADLOCKS, TEMPORAL_PROPS)
           rejectUnknown(
               obj,
               path,
@@ -170,12 +163,8 @@ object ApalacheConfigJsonParser {
                   SMT_ENCODING,
                   TEMPORAL,
                   VIEW,
-              ) ++ aliases,
+              ),
           )
-
-          val timeoutNode = aliased(obj, TIMEOUT_SMT, Seq(TIMEOUT_SMT_SEC), path)
-          val deadlockNode = aliased(obj, NO_DEADLOCK, Seq(NO_DEADLOCKS), path)
-          val temporalNode = aliased(obj, TEMPORAL, Seq(TEMPORAL_PROPS), path)
 
           CheckerPatch(
               tuning = stringMap(obj, TUNING, path),
@@ -188,11 +177,11 @@ object ApalacheConfigJsonParser {
               next = text(obj, NEXT, path),
               length = integer(obj, LENGTH, path),
               maxError = integer(obj, MAX_ERROR, path),
-              timeoutSmtSeconds = integerNode(timeoutNode, s"$path.$TIMEOUT_SMT"),
-              checkDeadlocks = negate(booleanNode(deadlockNode, s"$path.$NO_DEADLOCK")),
+            timeoutSmtSeconds = integer(obj, TIMEOUT_SMT, path),
+            checkDeadlocks = negate(boolean(obj, NO_DEADLOCK, path)),
               smtSolver = enumValue(obj, SMT_SOLVER, path, SMTSolver.fromString),
               smtEncoding = enumValue(obj, SMT_ENCODING, path, SMTEncoding.fromString),
-              temporalProperties = stringListNode(temporalNode, s"$path.$TEMPORAL"),
+            temporalProperties = stringList(obj, TEMPORAL, path),
               view = text(obj, VIEW, path),
           )
       }
@@ -203,8 +192,8 @@ object ApalacheConfigJsonParser {
           TypecheckerPatch()
         case Some(obj) =>
           val path = s"$$.$TYPECHECKER"
-          rejectUnknown(obj, path, Set(INFER_POLY, INFERPOLY))
-          TypecheckerPatch(booleanNode(aliased(obj, INFER_POLY, Seq(INFERPOLY), path), s"$path.$INFER_POLY"))
+          rejectUnknown(obj, path, Set(INFER_POLY))
+          TypecheckerPatch(boolean(obj, INFER_POLY, path))
       }
 
     private def decodeTrace(node: Option[ObjectNode]): TraceEvaluationPatch =
@@ -233,10 +222,7 @@ object ApalacheConfigJsonParser {
                   obj,
                   SERVER_TYPE,
                   path,
-                  value => {
-                    val normalized = value.stripSuffix(SERVER_SUFFIX)
-                    ServerType.fromString(normalized)
-                  },
+                ServerType.fromString,
               ),
           )
       }
@@ -256,25 +242,22 @@ object ApalacheConfigJsonParser {
         }
       } else if (node.isObject) {
         val sourceObj = node.asInstanceOf[ObjectNode]
-        rejectUnknown(sourceObj, path, Set(KIND, TYPE, PATH, FILE, CONTENT, AUX, FORMAT))
-        val kindNode = aliased(sourceObj, KIND, Seq(TYPE), path)
+        rejectUnknown(sourceObj, path, Set(KIND, PATH, CONTENT, AUX, FORMAT))
         val kind =
-          kindNode match {
-            case Some(value) if value.isTextual =>
-              value.textValue().toLowerCase
-            case _ if sourceObj.has(CONTENT) =>
-              STRING
-            case _ if sourceObj.has(PATH) || sourceObj.has(FILE) =>
-              FILE
-            case _ =>
-              errors += s"$path: Source object requires kind, path, or content."
-              ""
+          if (sourceObj.has(KIND)) {
+            text(sourceObj, KIND, path).map(_.toLowerCase).getOrElse("")
+          } else if (sourceObj.has(CONTENT)) {
+            STRING
+          } else if (sourceObj.has(PATH)) {
+            FILE
+          } else {
+            errors += s"$path: Source object requires kind, path, or content."
+            ""
           }
 
         kind match {
-          case FILE | FILE_SOURCE =>
-            val pathNode = aliased(sourceObj, PATH, Seq(FILE), path)
-            val sourcePath = textNode(pathNode, s"$path.$PATH") match {
+          case FILE =>
+            val sourcePath = text(sourceObj, PATH, path) match {
               case Some(value) => expandedPath(value, s"$path.$PATH")
               case None        => None
             }
@@ -293,7 +276,7 @@ object ApalacheConfigJsonParser {
                 }
             }
 
-          case STRING | STRING_SOURCE =>
+          case STRING =>
             val content = text(sourceObj, CONTENT, path)
             val aux = stringList(sourceObj, AUX, path)
             val format = formatValue(sourceObj.get(FORMAT), s"$path.$FORMAT")
@@ -377,9 +360,6 @@ object ApalacheConfigJsonParser {
     private def scalarEnumText(node: JsonNode, path: String): Option[String] = {
       if (node.isTextual) {
         Some(node.textValue())
-      } else if (node.isObject && node.size() == 1 && node.has(TYPE) && node.get(TYPE).isTextual) {
-        warnings += s"$path: Object-form enum values are deprecated; use a JSON string."
-        Some(node.get(TYPE).textValue())
       } else {
         errors += s"$path: Expected a JSON string."
         None
@@ -492,30 +472,6 @@ object ApalacheConfigJsonParser {
         Some(node.asInstanceOf[ObjectNode])
       } else {
         errors += s"$parent.$field: Expected a JSON object."
-        None
-      }
-    }
-
-    /**
-     * Parse the canonical and aliased names. Issue a deprecation warning on alias. This is required for
-     * backward-compatibility with Quint.
-     */
-    private def aliased(
-        obj: ObjectNode,
-        canonical: String,
-        aliases: Seq[String],
-        parent: String): Option[JsonNode] = {
-      val presentAliases = aliases.filter(obj.has)
-      if (obj.has(canonical) && presentAliases.nonEmpty) {
-        errors += s"$parent: Do not set both \"$canonical\" and its deprecated alias \"${presentAliases.head}\"."
-        None
-      } else if (obj.has(canonical)) {
-        Some(obj.get(canonical))
-      } else if (presentAliases.nonEmpty) {
-        val alias = presentAliases.head
-        warnings += s"$parent.$alias is deprecated; use $parent.$canonical."
-        Some(obj.get(alias))
-      } else {
         None
       }
     }

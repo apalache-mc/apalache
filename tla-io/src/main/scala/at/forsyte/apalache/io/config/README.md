@@ -35,7 +35,8 @@ the selected mode. Execution passes should consume these resolved types rather t
 
 For CLI execution, [Tool.scala] calls `toConfig`, selects at most one configuration file, and passes the merged
 `ApalacheConfig` to the command. Commands must not cache or reload configuration. Untrusted service JSON is parsed and
-checked by `RemoteConfigValidator` without invoking `ApalacheConfigLoader`.
+checked by `RemoteConfigValidator` without invoking `ApalacheConfigLoader`. Both the JSON reader and writer use only
+canonical names and representations.
 
 Validated command types also expose `source` and `output` directly.
 `ModuleIoOptions` is only the two-field adapter used by Guice when constructing frontend passes.
@@ -50,7 +51,7 @@ Validated command types also expose `source` and `output` directly.
 | [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                                                      |
 | [RemoteConfigValidator.scala]    | Filesystem-free validation for untrusted service request configuration.                               |
 | [ConfigPatch.scala]              | Shared patch marker and sparse section patch types.                                                   |
-| [Constants.scala]                | Shared configuration keys, command names, aliases, and canonical literal values.                      |
+| [Constants.scala]                | Shared configuration keys, command names, and canonical literal values.                               |
 | [ValidatedOptions.scala]         | Immutable, validated values consumed during execution.                                                |
 | [ConfigParseResult.scala]        | Expected configuration errors and warnings as values.                                                 |
 | [ConfigEnums.scala]              | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
@@ -66,8 +67,8 @@ Validated command types also expose `source` and `output` directly.
 - Keep merge code explicit. Avoid reflection and generic derivation so adding a field produces compiler-visible work and
   exceptional rules remain obvious.
 - Report invalid user configuration through `ConfigParseResult`, not exceptions.
-- Define external names and compatibility aliases once in `Constants`; JSON, CLI, and service boundaries must reuse
-  them. Internal fields use descriptive Scala names.
+- Define external names once in `Constants`; JSON, CLI, and service boundaries must reuse them. Internal fields use
+  descriptive Scala names.
 - Boundary code may retain an `ApalacheConfig` while awaiting request-specific values, but passes should receive
   resolved run options.
 

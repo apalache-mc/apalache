@@ -18,6 +18,12 @@ class TestOptions extends AnyFunSuite {
     ServerType.values.foreach(value => assert(ServerType.fromString(value.name) == value))
   }
 
+  test("configuration enums reject deprecated aliases") {
+    Seq("fun-arrays", "oopsla-19").foreach { alias =>
+      intercept[IllegalArgumentException](SMTEncoding.fromString(alias))
+    }
+  }
+
   test("command initialization exposes command, common options, and source directly") {
     val source = InputSource.StringSource("---- MODULE M ----\n====")
     val result = ApalacheConfigResolver.resolveCommandInitialization(ApalacheConfig(

@@ -84,20 +84,44 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     assert(result.errors.exists(_.contains("$.checker.discardDisabled: Unknown configuration key")))
   }
 
-  test("accepts legacy aliases with a warning") {
-    val result = ApalacheConfigJsonParser.parse("""{"checker":{"timeout-smt-sec":12}}""")
-
-    assert(result.isSuccess)
-    assert(result.requireValue().checker.timeoutSmtSeconds.get == 12)
-    assert(result.warnings.exists(_.contains("deprecated")))
+  test("rejects deprecated option names") {
+    Seq(
+      "$.checker.timeout-smt-sec" -> """{"checker":{"timeout-smt-sec":12}}""",
+      "$.checker.no-deadlocks" -> """{"checker":{"no-deadlocks":true}}""",
+      "$.checker.temporal-props" -> """{"checker":{"temporal-props":["P"]}}""",
+      "$.typechecker.inferpoly" -> """{"typechecker":{"inferpoly":true}}""",
+    ).foreach { case (path, json) =>
+      val result = ApalacheConfigJsonParser.parse(json)
+      assert(!result.isSuccess)
+      assert(result.errors.contains(s"$path: Unknown configuration key."))
+    }
   }
 
-  test("rejects a canonical key together with its alias") {
-    val result =
-      ApalacheConfigJsonParser.parse("""{"checker":{"timeout-smt":12,"timeout-smt-sec":13}}""")
-
-    assert(!result.isSuccess)
-    assert(result.errors.exists(_.contains("Do not set both")))
+  test("rejects deprecated source and enum representations") {
+    Seq(
+      "$.source.type: Unknown configuration key." ->
+        """{"source":{"type":"string","content":"x"}}""",
+      "$.source.file: Unknown configuration key." ->
+        """{"source":{"kind":"file","file":"Spec.tla"}}""",
+      "Expected \"file\" or \"string\", but got \"filesource\"" ->
+        """{"source":{"kind":"filesource","path":"Spec.tla"}}""",
+      "Expected \"file\" or \"string\", but got \"stringsource\"" ->
+        """{"source":{"kind":"stringsource","content":"x"}}""",
+      "$.checker.smt-solver: Expected a JSON string." ->
+        """{"checker":{"smt-solver":{"type":"z3"}}}""",
+      "Unexpected SMT encoding: fun-arrays" ->
+        """{"checker":{"smt-encoding":"fun-arrays"}}""",
+      "Unexpected SMT encoding: oopsla-19" ->
+        """{"checker":{"smt-encoding":"oopsla-19"}}""",
+      "Unexpected server type: checker-server" ->
+        """{"server":{"server-type":"checker-server"}}""",
+      "Unexpected server type: explorer-server" ->
+        """{"server":{"server-type":"explorer-server"}}""",
+    ).foreach { case (expected, json) =>
+      val result = ApalacheConfigJsonParser.parse(json)
+      assert(!result.isSuccess)
+      assert(result.errors.exists(_.contains(expected)), result.errors.mkString("; "))
+    }
   }
 
   test("rejects HOCON, duplicate keys, and trailing documents") {

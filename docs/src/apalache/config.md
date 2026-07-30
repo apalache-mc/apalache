@@ -31,7 +31,7 @@ Configuration must be one JSON object. Keys and strings require double quotes. T
 **rejected**: Comments, substitutions such as `${PWD}`, unquoted keys, `=`, trailing commas, duplicate keys, and
 trailing documents. **Unknown keys are rejected** in every group; for example, `checker.discardDisabled`
 is an error. Moreover, `source` and `output` are top-level values. The former `input` object and object-valued `output`
-section are rejected.
+section are rejected. Deprecated aliases and object-form enum values are not accepted.
 
 A leading `~` or `~/` in a path expands to the user's home directory. Other environment-variable expansion is not
 performed.
@@ -157,17 +157,6 @@ For `init`, `next`, `inv`, `temporal`, and deadlock checking, an application con
 Otherwise the TLC value is used, then the application default. `CHECK_DEADLOCK FALSE` is equivalent to
 `"no-deadlock": true`.
 
-## Deprecated JSON aliases
-
-The following old spellings remain accepted with warnings:
-
-| Deprecated                | Canonical                |
-|---------------------------|--------------------------|
-| `checker.timeout-smt-sec` | `checker.timeout-smt`    |
-| `checker.no-deadlocks`    | `checker.no-deadlock`    |
-| `checker.temporal-props`  | `checker.temporal`       |
-| `typechecker.inferpoly`   | `typechecker.infer-poly` |
-
 ## Migrating from HOCON
 
 Change HOCON such as:
@@ -189,3 +178,21 @@ to JSON:
 Then rename `.apalache.cfg` to `.apalache.json` before running Apalache. Automatically discovered legacy filenames are
 ignored, while an explicit `--config-file` ending in `.cfg` is an error. With `--debug`, the merged canonical JSON
 configuration is written to `application-config.json` in the run directory.
+
+The strict JSON parser accepts only canonical names and values. In particular, apply these changes to older
+configurations:
+
+| Former representation              | Canonical JSON           |
+|------------------------------------|--------------------------|
+| `input.source`                     | top-level `source`       |
+| `checker.timeout-smt-sec`          | `checker.timeout-smt`    |
+| `checker.no-deadlocks`             | `checker.no-deadlock`    |
+| `checker.temporal-props`           | `checker.temporal`       |
+| `typechecker.inferpoly`            | `typechecker.infer-poly` |
+| source field `type`                | source field `kind`      |
+| source field `file`                | source field `path`      |
+| `filesource`/`stringsource`        | `file`/`string`          |
+| `fun-arrays`/`oopsla-19`           | `funArrays`/`oopsla19`   |
+| `checker-server`/`explorer-server` | `checker`/`explorer`     |
+
+Enum values are JSON strings, not objects containing a `type` field.
