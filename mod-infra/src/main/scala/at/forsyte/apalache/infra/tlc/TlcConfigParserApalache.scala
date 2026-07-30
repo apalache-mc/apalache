@@ -112,11 +112,12 @@ object TlcConfigParserApalache extends Parsers with TlcConfigParser with LazyLog
     }
   }
 
-  // CHECK_DEADLOCK definition. Ignore.
+  // CHECK_DEADLOCK <BOOLEAN>: record the requested deadlock-checking behavior so the
+  // checker pass can act on it (CHECK_DEADLOCK FALSE behaves like --no-deadlock,
+  // CHECK_DEADLOCK TRUE preserves the default of checking for deadlocks).
   private def checkDeadlock: Parser[TlcConfig] = {
-    CHECK_DEADLOCK() ~ boolean ^^ { case _ ~ flag =>
-      logger.warn("TLC config option CHECK_DEADLOCK %b will be ignored".format(flag))
-      TlcConfig.empty
+    CHECK_DEADLOCK() ~ boolean ^^ { case _ ~ BOOLEAN(flag) =>
+      TlcConfig.empty.copy(checkDeadlock = Some(flag.toBoolean))
     }
   }
 

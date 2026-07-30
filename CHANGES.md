@@ -1,6 +1,66 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.58.3 - 2026-07-09
+
+### Features
+
+- `ConstSimplifier` now simplifies more set expressions: membership in the empty set (`x \in {}` becomes `FALSE`), trivial subset checks (`{} \subseteq S` and `S \subseteq S` become `TRUE`), empty-set identities for an arbitrary set (`{} \cup S`, `S \cup {}`, `{} \cap S`, `S \cap {}`, `{} \ S`, `S \ {}`), and self-operations (`S \cup S`, `S \cap S`, `S \ S`), see #1238.
+
+### Bug fixes
+
+- Fixed type checking of `TLCGet`/`TLCSet`: the register key may be a string (named register, e.g. `TLCGet("level")`) or an integer (numbered register, e.g. `TLCGet(2)`). The key argument is now polymorphic, so an operator mixing both forms type-checks, see #3274.
+- Fixed `FoldSet` silently returning the base value when folding over a non-enumerated set such as `SUBSET S` or `[S -> T]`. The set is now marked for expansion, so folds over powersets produce the correct result, and folds over sets whose expansion is unsupported fail loudly instead of returning a wrong answer, see #3385.
+- Fix the SANY parsing errors (#3401)
+- Fixed a crash (`IllegalArgumentException: Unsupported expression`) in the type checker on unbounded quantifiers `\A x: P` and `\E x: P`. These expressions are now type-checked like their bounded counterparts, and are reported with a proper, source-located error only if they reach the model checker, see #2816.
+
+## 0.58.2 - 2026-06-22
+
+## 0.58.0 - 2026-05-29
+
+### Features
+
+- Added experimental CVC5 support as an SMT solver backend for the OOPSLA19 encoding.
+
+### Bug fixes
+
+- Fixed a `ClassCastException` / `AssertionError` crash during `--temporal` checking when `Next` contains an `IF` or `CASE` whose branches return sets or functions and whose body contains a nested `\/` or `/\` of three or more terms, see #2107.
+
+## 0.58.0 - 2026-05-22
+
+## 0.57.1 - 2026-05-22
+
+### Breaking changes
+
+- Upgrade the TLA+ parser to SANY 1.8.0 and add Unicode support, may change parsing behavior and diagnostics #3341
+- Bump Scala to 2.13.18
+
+### Features
+
+- Extend set simplification rules to handle previously missing cases (#3343)
+
+### Bug fixes
+
+- Fixed a SANY importer crash when a named ASSUME definition is used as an operator, see #3318.
+- Fixed a preprocessing failure when a named ASSUME declaration is referenced from an operator body, see #3326.
+
+## 0.57.0 - 2026-04-24
+
+### Features
+
+- Honor TLC's `CHECK_DEADLOCK` config keyword: `CHECK_DEADLOCK FALSE` now behaves like `--no-deadlock` and `CHECK_DEADLOCK TRUE` preserves the default deadlock-checking behavior. The CLI flag `--no-deadlock` (and `apalache.cfg`) still takes precedence over the value from the TLC config file (#3311).
+
+## 0.56.1 - 2026-03-26
+
+### Features
+
+- Add support for the `leadsTo` operator when translating Quint to TLA+
+
+### Bug fixes
+
+- Fix TLA+ printers to wrap LET-IN expressions in parentheses when nested inside another expression, preventing unintended scope extension through `/\` conjuncts
+- Fix "used before it is assigned" error when using grouped-variable UNCHANGED with nested operator references (e.g., `vars == <<myList1, myList2>>` where `myList1 == <<myVar1, myVar2>>`), see #3143
+
 ## 0.56.0 - 2026-03-20
 
 ### Features

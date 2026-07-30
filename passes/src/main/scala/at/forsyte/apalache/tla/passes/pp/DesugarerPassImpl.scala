@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -31,7 +31,13 @@ class DesugarerPassImpl @Inject() (
     val varNames = input.varDeclarations.map {
       _.name
     }.toSet
-    val output = ModuleByExTransformer(Desugarer(gen, varNames, tracker))(input)
+    // Collect nullary operator definitions so the Desugarer can expand operator
+    // references inside UNCHANGED (e.g., UNCHANGED vars where vars == <<myList1, myList2>>).
+    // See: https://github.com/apalache-mc/apalache/issues/3143
+    val operDefs = input.operDeclarations.collect {
+      case TlaOperDecl(name, params, body) if params.isEmpty => name -> body
+    }.toMap
+    val output = ModuleByExTransformer(Desugarer(gen, varNames, tracker, operDefs))(input)
 
     // dump the result of preprocessing
     writeOut(writerFactory, output)

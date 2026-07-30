@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, UniqueNameGenerator}
+import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, SetMembershipSimplifier, UniqueNameGenerator}
 import com.google.inject.Inject
 import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.DerivedPredicates
@@ -53,6 +53,7 @@ class PreproPassImpl @Inject() (
           ("Desugarer", ModuleByExTransformer(Desugarer(gen, varSet, tracker))),
           ("UniqueRenamer", renaming.renameInModule),
           ("Normalizer", ModuleByExTransformer(Normalizer(tracker))),
+          ("SetMembershipSimplifier", ModuleByExTransformer(SetMembershipSimplifier.beforeKeramelizer(gen, tracker))),
           ("Keramelizer", ModuleByExTransformer(Keramelizer(gen, tracker))),
       )
 

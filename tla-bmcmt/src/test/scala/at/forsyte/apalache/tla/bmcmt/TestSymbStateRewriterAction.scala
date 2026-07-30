@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.Continue
 import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSymbStateRewriterAction extends RewriterBase {
   test("""x' is rewritten to the binding of x'""") { rewriterType: SMTEncoding =>

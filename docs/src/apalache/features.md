@@ -98,7 +98,7 @@ system distinguishes records from general functions.
 |------------------------|:----------:|:---------:|--------------------------------------------------------------|
 | `"c1...c_n"`           |     ✔      |     -     | A string is always mapped to a unique uninterpreted constant |
 | `STRING`               |     ✖      |     -     | It is an infinite set. We cannot handle infinite sets.       |
-| `d1...d_n`             |     ✔      |     -     | As long as the SMT solver (Z3) accepts that large number     |
+| `d1...d_n`             |     ✔      |     -     | As long as the selected SMT solver accepts that large number |
 | `d1...d_n.d_n+1...d_m` |     ✖      |     -     | Technical issue. We will implement it upon a user request.   |
 
 #### Miscellaneous Constructs

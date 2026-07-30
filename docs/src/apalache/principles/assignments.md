@@ -1,6 +1,4 @@
-<a name="assignments"></a>
-<a name="symbolicTransitions"></a>
-## Assignments and symbolic transitions
+## <a id="assignments"></a> <a id="symbolicTransitions"></a> Assignments and symbolic transitions
 
 Let us go back to the example
 [`test/tla/y2k.tla`](https://github.com/apalache-mc/apalache/blob/main/test/tla/y2k.tla)

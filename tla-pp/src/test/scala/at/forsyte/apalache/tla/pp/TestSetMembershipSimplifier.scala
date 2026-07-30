@@ -3,7 +3,9 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
+import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
+import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -40,6 +42,8 @@ class TestSetMembershipSimplifier
   private val strName = tla.name("s").as(StrT1)
   private val intName = tla.name("i").as(IntT1)
   private val funName = tla.name("fun").as(FunT1(IntT1, BoolT1))
+  private val intFunName = tla.name("intFun").as(FunT1(IntT1, IntT1))
+  private val nestedIntFunName = tla.name("nestedIntFun").as(FunT1(IntT1, FunT1(IntT1, IntT1)))
 
   private val boolSet = tla.booleanSet().as(boolSetT)
   private val strSet = tla.stringSet().as(strSetT)
@@ -83,7 +87,7 @@ class TestSetMembershipSimplifier
     tla.recSet(tla.str("a").as(StrT1), intSet, tla.str("b").as(StrT1), boolSet).as(SetT1(recType))
 
   override def beforeEach(): Unit = {
-    simplifier = SetMembershipSimplifier(new IdleTracker)
+    simplifier = SetMembershipSimplifier(new UniqueNameGenerator, new IdleTracker)
   }
 
   /* *** tests for all supported types of type-defining sets *** */
@@ -186,6 +190,72 @@ class TestSetMembershipSimplifier
     val funSetType = SetT1(FunT1(BoolT1, IntT1))
     val funConstToBoolean = tla.in(funName, tla.funSet(domain, boolSet).as(funSetType)).as(BoolT1)
     simplifier(funConstToBoolean) shouldBe tla.eql(tla.dom(funName).as(intSetT), domain).as(BoolT1)
+  }
+
+  test("rewrites function into Nat to domain and range constraints") {
+    // f \in [RM -> Nat]  ~>  DOMAIN f = RM /\ \A x \in RM: f[x] >= 0
+    val domain = tla.name("RM").as(intSetT)
+    val funSetType = SetT1(FunT1(IntT1, IntT1))
+    val funToNat = tla.in(intFunName, tla.funSet(domain, tla.natSet()).as(funSetType)).as(BoolT1)
+
+    simplifier(funToNat) match {
+      case OperEx(TlaBoolOper.and, OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, NameEx("intFun")), NameEx("RM")),
+              OperEx(TlaBoolOper.forall, NameEx(arg), NameEx("RM"),
+                  OperEx(TlaArithOper.ge, OperEx(TlaFunOper.app, NameEx("intFun"), NameEx(appArg)),
+                      ValEx(TlaInt(zero))))) =>
+        arg shouldBe appArg
+        zero shouldBe BigInt(0)
+
+      case other => fail(s"Unexpected simplified expression: $other")
+    }
+  }
+
+  test("rewrites nested function into Nat to nested domain and range constraints") {
+    // f \in [RM -> [RM -> Nat]]
+    // ~> DOMAIN f = RM /\ \A x \in RM: DOMAIN f[x] = RM /\ \A y \in RM: f[x][y] >= 0
+    val domain = tla.name("RM").as(intSetT)
+    val innerFunSetType = SetT1(FunT1(IntT1, IntT1))
+    val outerFunSetType = SetT1(FunT1(IntT1, FunT1(IntT1, IntT1)))
+    val innerFunSet = tla.funSet(domain, tla.natSet()).as(innerFunSetType)
+    val nestedFunToNat = tla.in(nestedIntFunName, tla.funSet(domain, innerFunSet).as(outerFunSetType)).as(BoolT1)
+
+    simplifier(nestedFunToNat) match {
+      case OperEx(TlaBoolOper.and, OperEx(TlaOper.eq, OperEx(TlaFunOper.domain, NameEx("nestedIntFun")), NameEx("RM")),
+              OperEx(TlaBoolOper.forall, NameEx(outerArg), NameEx("RM"),
+                  OperEx(TlaBoolOper.and,
+                      OperEx(TlaOper.eq,
+                          OperEx(TlaFunOper.domain, OperEx(TlaFunOper.app, NameEx("nestedIntFun"), NameEx(domainArg))),
+                          NameEx("RM")),
+                      OperEx(TlaBoolOper.forall, NameEx(innerArg), NameEx("RM"),
+                          OperEx(TlaArithOper.ge,
+                              OperEx(TlaFunOper.app,
+                                  OperEx(TlaFunOper.app, NameEx("nestedIntFun"), NameEx(appOuterArg)),
+                                  NameEx(appInnerArg)), ValEx(TlaInt(zero))))))) =>
+        outerArg shouldBe domainArg
+        outerArg shouldBe appOuterArg
+        innerArg shouldBe appInnerArg
+        zero shouldBe BigInt(0)
+
+      case other => fail(s"Unexpected simplified expression: $other")
+    }
+  }
+
+  test("pre-keramelizer mode rewrites only nested function ranges") {
+    val preKeramelizerSimplifier = SetMembershipSimplifier.beforeKeramelizer(new UniqueNameGenerator, new IdleTracker)
+    val domain = tla.name("RM").as(intSetT)
+
+    val intNameInNat = tla.in(intName, tla.natSet()).as(BoolT1)
+    preKeramelizerSimplifier(intNameInNat) shouldBe intNameInNat
+
+    val funSetType = SetT1(FunT1(IntT1, IntT1))
+    val funToNat = tla.in(intFunName, tla.funSet(domain, tla.natSet()).as(funSetType)).as(BoolT1)
+    preKeramelizerSimplifier(funToNat) shouldBe funToNat
+
+    val innerFunSetType = SetT1(FunT1(IntT1, IntT1))
+    val outerFunSetType = SetT1(FunT1(IntT1, FunT1(IntT1, IntT1)))
+    val innerFunSet = tla.funSet(domain, tla.natSet()).as(innerFunSetType)
+    val nestedFunToNat = tla.in(nestedIntFunName, tla.funSet(domain, innerFunSet).as(outerFunSetType)).as(BoolT1)
+    preKeramelizerSimplifier(nestedFunToNat) should not be nestedFunToNat
   }
 
   /* *** rewriting of `Nat` *** */

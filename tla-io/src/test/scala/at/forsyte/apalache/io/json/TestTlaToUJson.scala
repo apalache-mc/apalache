@@ -1,7 +1,7 @@
 package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
-import at.forsyte.apalache.tla.lir.{TestingPredefs, TlaAssumeDecl, TlaConstDecl, TlaDecl, TlaEx, TlaVarDecl, TypeTag}
+import at.forsyte.apalache.tla.lir.{OperParam, TlaAssumeDecl, TlaConstDecl, TlaDecl, TlaEx, TlaVarDecl, TypeTag}
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.oper.{TlaFunOper, TlaSetOper}
 import org.junit.runner.RunWith
@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.io.lir.TypeTagPrinter
 
 @RunWith(classOf[JUnitRunner])
-class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPredefs {
+class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach {
 
   implicit val ttp: TypeTagPrinter = new TypeTagPrinter {
     override def apply(tag: TypeTag): String = ""
@@ -62,12 +62,13 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
   }
 
   test("Let-In") {
+    val p = tla.name("p")
     // A(p) == p + 1
     val decl = tla
       .declOp(
           "A",
-          tla.plus(n_p, tla.int(1)),
-          "p",
+          tla.plus(p, tla.int(1)),
+          OperParam("p"),
       )
       .untypedOperDecl()
     // LET A(p) == p + 1
@@ -87,10 +88,11 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
   }
 
   test("Non-operator declarations") {
+    val x = tla.name("x")
     val constDecl = TlaConstDecl("C")
     val varDecl = TlaVarDecl("x")
-    val namedAssumeDecl = TlaAssumeDecl(Some("myAssume"), tla.eql(tla.name("x"), tla.bool(true)))
-    val unnamedAssumeDecl = TlaAssumeDecl(None, tla.eql(tla.name("x"), tla.bool(true)))
+    val namedAssumeDecl = TlaAssumeDecl(Some("myAssume"), tla.eql(x, tla.bool(true)))
+    val unnamedAssumeDecl = TlaAssumeDecl(None, tla.eql(x, tla.bool(true)))
 
     val constJson = getEncVal(constDecl)
     val varJson = getEncVal(varDecl)
@@ -111,15 +113,19 @@ class TestTlaToUJson extends AnyFunSuite with BeforeAndAfterEach with TestingPre
   }
 
   test("Operator declarations") {
+    val A = tla.name("A")
+    val b = tla.name("b")
+    val p = tla.name("p")
+    val T = tla.name("T")
     // T == 1
     val nullary = tla.declOp("T", tla.int(1)).untypedOperDecl()
     // T(p) == p
-    val unary = tla.declOp("T", n_p, "p").untypedOperDecl()
+    val unary = tla.declOp("T", p, OperParam("p")).untypedOperDecl()
     // T(A(_),b) == A(b)
-    val higherOrder = tla.declOp("T", tla.appOp(n_A, n_b), ("A", 1), "b").untypedOperDecl()
+    val higherOrder = tla.declOp("T", tla.appOp(A, b), OperParam("A", 1), OperParam("b")).untypedOperDecl()
     // RECURSIVE T(_)
     // T(p) == X(p)
-    val recursive = tla.declOp("T", tla.appOp(n_T, n_p), "p").untypedOperDecl()
+    val recursive = tla.declOp("T", tla.appOp(T, p), OperParam("p")).untypedOperDecl()
     recursive.isRecursive = true
 
     val jsons @ Seq(jsonNullary, jsonUnary, jsonHO, jsonRec) =

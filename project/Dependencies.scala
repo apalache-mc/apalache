@@ -20,8 +20,18 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.11.0" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.13.0"
-    val commonsIo = "commons-io" % "commons-io" % "2.21.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.15.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.22.0"
+    private lazy val cvc5Version = "1.3.4"
+    // The cvc5 POM publishes native jars as classifiers, not transitive dependencies.
+    // The base cvc5 jar only has Java classes, so add the native classifier jars explicitly.
+    val cvc5 = "io.github.cvc5" % "cvc5" % cvc5Version
+    val cvc5LinuxAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("linux-aarch_64")
+    val cvc5LinuxX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("linux-x86_64")
+    val cvc5MacosAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("osx-aarch_64")
+    val cvc5MacosX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("osx-x86_64")
+    val cvc5WindowsAarch64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("windows-aarch_64")
+    val cvc5WindowsX86_64 = ("io.github.cvc5" % "cvc5" % cvc5Version).classifier("windows-x86_64")
     val guice = "com.google.inject" % "guice" % "7.0.0"
     val kiama = "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.5.1"
     val logbackClassic = "ch.qos.logback" % "logback-classic" % logbackVersion
@@ -31,10 +41,10 @@ object Dependencies {
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
     val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
-    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.17"
+    val slf4j = "org.slf4j" % "slf4j-api" % "2.0.18"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
-    val tla2tools = ("org.lamport" % "tla2tools" % "1.7.4").from(
-        "https://github.com/tlaplus/tlaplus/releases/download/v1.7.4/tla2tools.jar")
+    val tla2tools = ("org.lamport" % "tla2tools" % "1.8.0").from(
+        "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar")
     val ujson = "com.lihaoyi" %% "ujson" % "4.3.2"
     val upickle = "com.lihaoyi" %% "upickle" % "4.3.2"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
@@ -49,10 +59,10 @@ object Dependencies {
     val scalapbRuntime =
       "com.thesamet.scalapb" %% "scalapb-runtime" % scalapb.compiler.Version.scalapbVersion % "protobuf"
     // json-rpc dependencies
-    lazy val jettyVersion = "12.1.7"
+    lazy val jettyVersion = "12.1.10"
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
     val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
-    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.20.2"
+    val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.22.0"
     val jettyServer = "org.eclipse.jetty" % "jetty-server" % jettyVersion
     val jettyServlet = "org.eclipse.jetty.ee10" % "jetty-ee10-servlet" % jettyVersion
     val jettyCompressionServer = "org.eclipse.jetty.compression" % "jetty-compression-server" % jettyVersion

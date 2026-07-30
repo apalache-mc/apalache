@@ -20,7 +20,7 @@ ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
 ThisBuild / organization := "at.forsyte"
-ThisBuild / scalaVersion := "2.13.17"
+ThisBuild / scalaVersion := "2.13.18"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
@@ -35,6 +35,13 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.scalaz,
     Deps.slf4j,
     Deps.tla2tools,
+    Deps.cvc5,
+    Deps.cvc5LinuxAarch64,
+    Deps.cvc5LinuxX86_64,
+    Deps.cvc5MacosAarch64,
+    Deps.cvc5MacosX86_64,
+    Deps.cvc5WindowsAarch64,
+    Deps.cvc5WindowsX86_64,
     Deps.z3,
     Deps.shapeless,
     TestDeps.junit,
@@ -95,6 +102,23 @@ lazy val testSettings = Seq(
     // for the meaning of the flags.
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
+
+ThisBuild / assembly / assemblyMergeStrategy := {
+  // Workaround for conflict with grpc-netty manifest files
+  // See https://github.com/sbt/sbt-assembly/issues/362
+  case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+  // Workaround for conflict between gson and slf4j manifest files:
+  // [error] (assembly) deduplicate: different file contents found in the following:
+  // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
+  // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
+  // See https://stackoverflow.com/a/67937671/1187277
+  case PathList("module-info.class")         => MergeStrategy.discard
+  case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+  // tla2tools 1.8.0 embeds Gson classes. Keep the standalone Gson dependency, which is newer and shared by
+  // other runtime dependencies, instead of failing on duplicate class files during assembly.
+  case PathList("com", "google", "gson", _*) => MergeStrategy.last
+  case x                                     => (ThisBuild / assembly / assemblyMergeStrategy).value(x)
+}
 
 ///////////////////////
 // API Documentation //
@@ -341,19 +365,6 @@ lazy val root = (project in file("."))
             .toVector
         sbtassembly.MappingSet(None, tlaModuleMapping)
       },
-      assembly / assemblyMergeStrategy := {
-        // Workaround for conflict with grpc-netty manifest files
-        // See https://github.com/sbt/sbt-assembly/issues/362
-        case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
-        // Workaround for conflict between gson and slf4j manifest files:
-        // [error] (assembly) deduplicate: different file contents found in the following:
-        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/com/google/code/gson/gson/2.9.0/gson-2.9.0.jar:META-INF/versions/9/module-info.class
-        // [error] .../.cache/coursier/v1/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.0/slf4j-api-2.0.0.jar:META-INF/versions/9/module-info.class
-        // See https://stackoverflow.com/a/67937671/1187277
-        case PathList("module-info.class")         => MergeStrategy.discard
-        case x if x.endsWith("/module-info.class") => MergeStrategy.discard
-        case x                                     => (assembly / assemblyMergeStrategy).value(x)
-      },
       // Package the distribution files
       Universal / mappings ++= Seq(
           // The fat jar
@@ -409,7 +420,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:17")
+    from("eclipse-temurin:17-jdk-noble")
 
     workDir(dwd)
 

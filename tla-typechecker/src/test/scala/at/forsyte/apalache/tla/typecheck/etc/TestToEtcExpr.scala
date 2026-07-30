@@ -151,6 +151,17 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     assert(chooseExpected == mkToEtcExpr()(tla.choose(tla.name("x"), tla.name("P"))))
   }
 
+  test("unbounded quantifiers: \\E x: P and \\A x: P") {
+    // The unbounded forms \E x: P and \A x: P. Similar to unbounded CHOOSE, they implicitly
+    // introduce a lambda abstraction over a fresh set: λ x ∈ Set(b). P
+    val quantLambda = mkUniqAbs(mkUniqName("P"), (mkUniqName("x"), mkUniqConst(SetT1(VarT1("b")))))
+    // the principal type of unbounded \E and \A is (a => Bool) => Bool
+    val expected = mkUniqApp(Seq(parser("(a => Bool) => Bool")), quantLambda)
+    // use a fresh generator per call so the fresh-variable counter starts from `a`
+    assert(expected == mkToEtcExpr()(tla.exists(tla.name("x"), tla.name("P"))))
+    assert(expected == mkToEtcExpr()(tla.forall(tla.name("x"), tla.name("P"))))
+  }
+
   test("binary Boolean connectives") {
     val bool2ToBool = parser("(Bool, Bool) => Bool")
     val expected = mkConstAppByType(bool2ToBool, parser("Bool"), parser("Bool"))

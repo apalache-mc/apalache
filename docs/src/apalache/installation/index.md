@@ -10,6 +10,6 @@ If you just want to try the tool, we recommend using the [prebuilt package](./jv
 
 ## System requirements
 
-**Memory**: Apalache uses Microsoft Z3 as a backend SMT solver, and the required
-memory largely depends on Z3. We recommend to allocate at least 4GB of memory
-for the tool.
+**Memory**: Apalache uses a backend SMT solver, Microsoft Z3 by default, and the
+required memory largely depends on the selected solver and specification. We
+recommend to allocate at least 4GB of memory for the tool.

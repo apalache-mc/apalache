@@ -1,19 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, SetT1}
-import at.forsyte.apalache.tla.lir.TypedPredefs.{BuilderExAsTyped, BuilderOperDeclAsTyped}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
-import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class TestSkolemizationMarker extends AnyFunSuite with BeforeAndAfterEach {
-
-  import at.forsyte.apalache.tla.lir.convenience.tla._
-
   private val Int = IntT1
   private val Bool = BoolT1
   private val BoolOper0 = OperT1(Seq(), BoolT1)
@@ -26,27 +23,32 @@ class TestSkolemizationMarker extends AnyFunSuite with BeforeAndAfterEach {
   }
 
   test("""mark: \E y \in S: P""") {
-    val input = exists(name("y"), name("S"), name("P")).untyped()
-    val expected = apalacheSkolem(input).untyped()
+    val input = tla.exists(tla.name("y", Int), tla.name("S", IntSet), tla.name("P", Bool)).build
+    val expected = tla.skolem(tla.unchecked(input))
 
     val output = marker(input)
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   test("""mark: \E y \in S: P /\ \E z \in S: Q""") {
-    val left = exists(name("y"), name("S"), name("P"))
-    val right = exists(name("z"), name("S"), name("Q"))
-    val input = and(left, right).untyped()
-    val expected = and(apalacheSkolem(left), apalacheSkolem(right)).untyped()
+    val S = tla.name("S", IntSet)
+    val left = tla.exists(tla.name("y", Int), S, tla.name("P", Bool)).build
+    val right = tla.exists(tla.name("z", Int), S, tla.name("Q", Bool)).build
+    val input = tla.and(tla.unchecked(left), tla.unchecked(right)).build
+    val expected = tla.and(tla.skolem(tla.unchecked(left)), tla.skolem(tla.unchecked(right)))
 
     val output = marker(input)
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   // see the issue #148
   test("""no mark: x' <- \E y \in S: P""") {
-    val input =
-      assignPrime(name("x"), exists(name("y"), name("S"), name("P"))).untyped()
+    val input = tla
+      .assign(
+          tla.prime(tla.name("x", Bool)),
+          tla.exists(tla.name("y", Int), tla.name("S", IntSet), tla.name("P", Bool)),
+      )
+      .build
 
     val output = marker(input)
     assert(input == output)
@@ -54,60 +56,61 @@ class TestSkolemizationMarker extends AnyFunSuite with BeforeAndAfterEach {
 
   // skolemize let-definitions, if they are used positively as part of a formula, see the issue #985
   test("""mark: LET A == \E y \in S: P IN A \/ TRUE""") {
-    val bodyOfA = exists(name("y").as(Int), name("S").as(IntSet), name("P").as(Bool)).as(Bool)
-    val declOfA = declOp("A", bodyOfA).as(BoolOper0)
-    val A = name("A").as(BoolOper0)
-    val B = bool(true).typed()
-    val input = letIn(or(appOp(A).as(Bool), B).as(Bool), declOfA).as(Bool)
+    val bodyOfA = tla.exists(tla.name("y", Int), tla.name("S", IntSet), tla.name("P", Bool))
+    val declOfA = tla.decl("A", bodyOfA)
+    val A = tla.name("A", BoolOper0)
+    val B = tla.bool(true)
+    val input = tla.letIn(tla.or(tla.appOp(A), B), declOfA)
 
     // the body of A is skolemized
-    val bodyOfAskolem = apalacheSkolem(bodyOfA).as(Bool)
+    val bodyOfAskolem = tla.skolem(bodyOfA)
     // the skolemized copy of A is used
-    val declOfAskolem = declOp("A$_skolem", bodyOfAskolem).as(BoolOper0)
+    val declOfAskolem = tla.decl("A$_skolem", bodyOfAskolem)
     // note that we have two let-in definitions now: one that is skolemized and one that is not skolemized
-    val skolemA = name("A$_skolem").as(BoolOper0)
-    val expected = letIn(or(appOp(skolemA).as(Bool), B).as(Bool), declOfA, declOfAskolem).as(Bool)
+    val skolemA = tla.name("A$_skolem", BoolOper0)
+    val expected =
+      LetInEx(tla.or(tla.appOp(skolemA), B).build, declOfA.build, declOfAskolem.build)(Typed(BoolT1))
 
     val output = marker(input)
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   // do not skolemize let-definitions, if they are used as a value, see the issue #985
   test("""mark: LET A == \E y \in S: P IN A = FALSE""") {
-    val bodyOfA = exists(name("y").as(Int), name("S").as(IntSet), name("P").as(Bool)).as(Bool)
-    val declOfA = declOp("A", bodyOfA).as(BoolOper0)
-    val A = name("A").as(BoolOper0)
-    val B = bool(false).typed()
-    val input = letIn(eql(appOp(A).as(Bool), B).as(Bool), declOfA).as(Bool)
+    val bodyOfA = tla.exists(tla.name("y", Int), tla.name("S", IntSet), tla.name("P", Bool))
+    val declOfA = tla.decl("A", bodyOfA)
+    val A = tla.name("A", BoolOper0)
+    val B = tla.bool(false)
+    val input = tla.letIn(tla.eql(tla.appOp(A), B), declOfA)
 
     // the body of A is skolemized
-    val bodyOfAskolem = apalacheSkolem(bodyOfA).as(Bool)
+    val bodyOfAskolem = tla.skolem(bodyOfA)
     // the skolemized copy of A is used
-    val declOfAskolem = declOp("A$_skolem", bodyOfAskolem).as(BoolOper0)
+    val declOfAskolem = tla.decl("A$_skolem", bodyOfAskolem)
     // note that we have two let-in definitions now: one that is skolemized and one that is not skolemized
-    val expected = letIn(eql(appOp(A).as(Bool), B).as(Bool), declOfA, declOfAskolem).as(Bool)
+    val expected =
+      LetInEx(tla.eql(tla.appOp(A), B).build, declOfA.build, declOfAskolem.build)(Typed(BoolT1))
 
     val output = marker(input)
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   test("""mark: Cardinality(S) >= 3""") {
-    val input = ge(card(name("S")), int(3)).untyped()
-    val expected = apalacheConstCard(input).untyped()
+    val input = tla.ge(tla.cardinality(tla.name("S", IntSet)), tla.int(3)).build
+    val expected = tla.constCard(tla.unchecked(input))
     val output = marker(input)
-    assert(expected == output)
+    assert(expected.build == output)
   }
 
   test("""no mark: ~(Cardinality(S) >= 3)""") {
-    val input = not(ge(card(name("S")), int(3))).untyped()
+    val input = tla.not(tla.ge(tla.cardinality(tla.name("S", IntSet)), tla.int(3))).build
     val output = marker(input)
     assert(input == output)
   }
 
   test("""no mark: Cardinality(S) < 3""") {
-    val input = lt(card(name("S")), int(3)).untyped()
+    val input = tla.lt(tla.cardinality(tla.name("S", IntSet)), tla.int(3)).build
     val output = marker(input)
     assert(input == output)
   }
-
 }

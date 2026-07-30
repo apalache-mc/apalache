@@ -146,6 +146,12 @@ contributors and maintainers to make sure:
 - Maintainers have the necessary context in order to support and review
   contributions.
 
+> [!IMPORTANT]
+> Apalache has [DCO2][] enabled, as required by the Linux
+> Foundation.  Hence, you have to add `-s` to your commits such as `git commit
+> -s -m 'Commit message'`. This does not require any
+> cryptography knowledge/setup.
+
 ## Dependencies
 
 For setting up the local build, see the [instructions on building from
@@ -535,3 +541,4 @@ When the PR is merged into `main`:
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
 [adr]: https://en.wikipedia.org/wiki/Architectural_decision
 [draft pull request]: https://github.blog/2019-02-14-introducing-draft-pull-requests/
+[DCO2]: https://github.com/cncf/dco2

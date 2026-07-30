@@ -8,9 +8,9 @@ import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
 import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
 import at.forsyte.apalache.infra.tlc.config.InitNextSpec
 import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.io.itf.ItfJsonToTla
-import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter}
-import at.forsyte.apalache.io.lir.{ItfCounterexampleWriter, Trace}
+import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
+import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter, ScalaToJacksonAdapter}
+import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.bmcmt.ModelCheckerContext
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
 import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
@@ -32,7 +32,6 @@ import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.gzip.GzipCompression
 import org.eclipse.jetty.compression.zstandard.ZstandardCompression
 
-import java.io.StringReader
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.{Lock, ReentrantLock}
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
@@ -71,6 +70,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   private val snapshots: CheckerSnapshotsPerSession = new CheckerSnapshotsPerSession()
   // Shared Jackson mapper for JSON serialization/deserialization.
   private val mapper: ObjectMapper = new ObjectMapper().registerModule(DefaultScalaModule)
+  private val itfJson = new TlaToItfJson[JacksonRepresentation](ScalaToJacksonAdapter)
 
   /**
    * A trivial health check.
@@ -519,7 +519,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                 .getOrElse(NextModelStatus.UNKNOWN)
 
               // Serialize the old operator value to JSON
-              val oldValueInJson = ujsonToJackson(ItfCounterexampleWriter.exprToJson(oldTlaExpr))
+              val oldValueInJson = itfJson.exprToJson(oldTlaExpr).value
               NextModelResult(params.sessionId, oldValue = oldValueInJson, hasOld = NextModelStatus.TRUE,
                   hasNext = hasNext)
           }
@@ -612,9 +612,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
             path.map(_ => SortedSet[String]()).toIndexedSeq, ())
         // Serialize the counterexample to JSON
-        val ujsonTrace =
-          ItfCounterexampleWriter.mkJson(checkerContext.checkerInput.rootModule, counterexample.states)
-        ujsonToJackson(ujsonTrace)
+        itfJson.mkJson(checkerContext.checkerInput.rootModule, counterexample.states).value
 
       case _ =>
         // no trace or unknown
@@ -652,11 +650,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
                 (path.last.assignments, path.length - 2)
             }
 
-          // Serialize the single state in the same format as ItfCounterexampleWriter.stateToJson
-          val meta = ujson.Obj(at.forsyte.apalache.io.itf.INDEX_FIELD -> ujson.Num(lastIndex))
-          val fields = lastState.toList.sortBy(_._1).map(p => (p._1, ItfCounterexampleWriter.exprToJson(p._2)))
-          val ujsonState = ujson.Obj(at.forsyte.apalache.io.itf.META_FIELD -> meta, fields: _*)
-          ujsonToJackson(ujsonState)
+          itfJson.stateToJson(lastState, lastIndex).value
         }
 
       case _ =>
@@ -676,7 +670,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           Left(msg)
 
         case Some(tlaExpr) =>
-          Right(ujsonToJackson(ItfCounterexampleWriter.exprToJson(tlaExpr)))
+          Right(itfJson.exprToJson(tlaExpr).value)
       }
     }
 
@@ -736,10 +730,6 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         )
       }
   }
-
-  /** Convert a UJSON value to Jackson's JsonNode. */
-  private def ujsonToJackson(ujsonValue: ujson.Value): JsonNode =
-    mapper.readTree(new StringReader(ujsonValue.render()))
 
   /** Look up the session's checker context, or return a ServiceError. */
   private def getCheckerContext(

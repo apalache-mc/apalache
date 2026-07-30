@@ -25,8 +25,7 @@ when writing TLA+ specifications. This document is filling this gap.
 
 ## 1. How to write types in TLA+
 
-<a id="ts1"></a>
-### 1.1. Type grammar (Type System 1, or TS1)
+### <a id="ts1"></a> 1.1. Type grammar (Type System 1, or TS1)
 
 **Upgrade warning.** This system is replaced with [Type System 1.2](#ts12).
 In October of 2022, we will stop supporting Type System 1. For the transition
@@ -128,8 +127,7 @@ type aliases: tools should always exchange data with types in the alias-free for
 * `Proc` and `Faulty` are sets of the same type.
    Their type is `Set(PID)`.
 
-<a id="defTypeAlias"></a>
-### 1.2. Type aliases
+### <a id="defTypeAlias"></a> 1.2. Type aliases
 
 #### New syntax for type aliases
 
@@ -181,9 +179,7 @@ For instance, when the users forgot to include a type alias, the type alias was
 interpreted as a type constant, and the type checker showed incomprehensible
 error messages.
 
-<a id="rows"></a>
-<a id="ts12"></a>
-### 1.3. Type System 1.2, including precise records, variants, and rows
+### <a id="rows"></a> <a id="ts12"></a> 1.3. Type System 1.2, including precise records, variants, and rows
 
 As discussed in [ADR014][], many users expressed the need for precise type
 checking for records in Snowcat. Records in untyped TLA+ are used in two
@@ -249,8 +245,7 @@ the syntax for row types for completeness. Most likely, the users will never
 see messages that mention rows explicitly, without referring to records or
 variants. 
 
-<a id="comments"></a>
-### 1.4. Comments inside types
+### <a id="comments"></a> 1.4. Comments inside types
 
 When you introduce records that have dozens of fields, it is useful to explain
 those fields right in the type annotations. For that reason, the type lexer
@@ -472,8 +467,7 @@ auxiliary LET-definition to specify the type of the empty collection:
 The type checker uses the type annotation to refine the type of an empty set
 (or, of an empty sequence).
 
-<a id="useTypeAlias"></a>
-### 2.4. Introducing and using type aliases
+### <a id="useTypeAlias"></a> 2.4. Introducing and using type aliases
 
 A type alias is introduced with the annotation `@typeAlias: <ALIAS> = <Type>;`.
 Since it is convenient to group type aliases of a module `MyModule`

@@ -3,17 +3,16 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
 
 trait TestSymbStateRewriter extends RewriterBase {
   test("SE-SUBST1: x[cell/x] ~~> cell") { rewriterType: SMTEncoding =>
     arena = arena.appendCellOld(UnknownT())
     val cell = arena.topCell
     val binding = Binding("x" -> cell)
-    val state = new SymbState(NameEx("x"), arena, binding)
+    val state = new SymbState(NameEx("x")(Untyped), arena, binding)
     create(rewriterType).rewriteOnce(state) match {
       case SymbStateRewriter.Done(nextState) =>
-        val expected = NameEx("$C$%d".format(cell.id))
+        val expected = NameEx("$C$%d".format(cell.id))(Untyped)
         assert(expected == nextState.ex)
         assert(state.arena == nextState.arena)
 

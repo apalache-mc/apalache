@@ -167,6 +167,8 @@ object Config {
    *   the time limit on SMT queries in seconds
    * @param noDeadLocks
    *   do not check for deadlocks
+   * @param smtSolver
+   *   the SMT solver backend to use
    * @param smtEncoding
    *   the SMT encoding to use
    * @param temporalProps
@@ -186,7 +188,8 @@ object Config {
       length: Option[Int] = Some(10),
       maxError: Option[Int] = Some(1),
       timeoutSmtSec: Option[Int] = Some(0),
-      noDeadlocks: Option[Boolean] = Some(false),
+      noDeadlocks: Option[Boolean] = None,
+      smtSolver: Option[SMTSolver] = Some(SMTSolver.Z3),
       smtEncoding: Option[SMTEncoding] = Some(SMTEncoding.OOPSLA19),
       temporalProps: Option[List[String]] = None,
       view: Option[String] = None)
@@ -386,6 +389,25 @@ object SMTEncoding {
     case "funArrays"     => FunArrays
     case "oopsla19"      => OOPSLA19
     case oddEncodingType => throw new IllegalArgumentException(s"Unexpected SMT encoding type $oddEncodingType")
+  }
+}
+
+/** Defines the SMT solver backends supported */
+sealed abstract class SMTSolver
+
+object SMTSolver {
+  final case object Z3 extends SMTSolver {
+    override def toString: String = "z3"
+  }
+
+  final case object CVC5 extends SMTSolver {
+    override def toString: String = "cvc5"
+  }
+
+  val ofString: String => SMTSolver = {
+    case "z3"    => Z3
+    case "cvc5"  => CVC5
+    case invalid => throw new IllegalArgumentException(s"Unexpected SMT solver backend $invalid")
   }
 }
 
@@ -685,6 +707,7 @@ object OptionGroup extends LazyLogging {
       maxError: Int,
       timeoutSmtSec: Int,
       noDeadlocks: Boolean,
+      smtSolver: SMTSolver,
       smtEncoding: SMTEncoding,
       tuning: Map[String, String])
       extends OptionGroup
@@ -700,12 +723,26 @@ object OptionGroup extends LazyLogging {
           Success(n)
         }
 
+      def validateSolverEncoding(solver: SMTSolver, encoding: SMTEncoding): Try[(SMTSolver, SMTEncoding)] =
+        (solver, encoding) match {
+          case (SMTSolver.CVC5, SMTEncoding.OOPSLA19) =>
+            Success((solver, encoding))
+
+          case (SMTSolver.CVC5, unsupported) =>
+            Failure(new PassOptionException(
+                    s"checker.smt-solver=cvc5 currently supports only checker.smt-encoding=oopsla19, but got $unsupported."))
+
+          case _ =>
+            Success((solver, encoding))
+        }
+
       for {
         algo <- checker.algo.toTry("checker.algo")
         discardDisabled <- checker.discardDisabled.toTry("checker.discardDisabled")
         length <- checker.length.toTry("checker.length")
-        noDeadlocks <- checker.noDeadlocks.toTry("checker.noDeadlocks")
+        smtSolver <- checker.smtSolver.toTry("checker.smtSolver")
         smtEncoding <- checker.smtEncoding.toTry("checker.smtEncoding")
+        validatedSolverEncoding <- validateSolverEncoding(smtSolver, smtEncoding)
         tuning <- checker.tuning.toTry("checker.tuning")
         maxError <- checker.maxError.toTry("checker.maxError").flatMap(validateMaxError)
         timeoutSmtSec <- checker.timeoutSmtSec.toTry("checker.timeoutSmtSec")
@@ -715,8 +752,10 @@ object OptionGroup extends LazyLogging {
           length = length,
           maxError = maxError,
           timeoutSmtSec = timeoutSmtSec,
-          noDeadlocks = noDeadlocks,
-          smtEncoding = smtEncoding,
+          // set to true here, check mergeCheckDeadlockFromTlc below
+          noDeadlocks = checker.noDeadlocks.getOrElse(true),
+          smtSolver = validatedSolverEncoding._1,
+          smtEncoding = validatedSolverEncoding._2,
           tuning = tuning,
       )
     }
@@ -918,10 +957,15 @@ object OptionGroup extends LazyLogging {
       predicates: Predicates)
       extends HasCheckerPreds
 
-  object WithCheckerPreds extends Configurable[Config.ApalacheConfig, WithCheckerPreds] {
+  object WithCheckerPreds extends Configurable[Config.ApalacheConfig, WithCheckerPreds] with LazyLogging {
     def apply(cfg: Config.ApalacheConfig): Try[WithCheckerPreds] = for {
-      opts <- WithChecker(cfg)
       predicates <- Predicates(cfg.checker)
+      // If the TLC config file declared CHECK_DEADLOCK and the user did not set
+      // --no-deadlock on the CLI / in apalache.cfg, propagate the TLC value into
+      // the checker options. CLI/apalache.cfg always wins, mirroring how other
+      // TLC config options (INIT, NEXT, INVARIANT, ...) are merged above.
+      effectiveCheckerCfg = mergeCheckDeadlockFromTlc(cfg.checker, predicates.tlcConfig)
+      opts <- WithChecker(cfg.copy(checker = effectiveCheckerCfg))
     } yield WithCheckerPreds(
         opts.common,
         opts.input,
@@ -930,5 +974,38 @@ object OptionGroup extends LazyLogging {
         opts.checker,
         predicates,
     )
+
+    private def mergeCheckDeadlockFromTlc(
+        checkerCfg: Config.Checker,
+        tlcConfig: Option[(TlcConfig, File)]): Config.Checker = {
+      tlcConfig.flatMap(_._1.checkDeadlock) match {
+        case None => {
+          checkerCfg.noDeadlocks match {
+            case None =>
+              // Neither the CLI/apalache.cfg nor the TLC config specified a value for deadlock checking, set to false
+              checkerCfg.copy(noDeadlocks = Some(false))
+            case Some(_) =>
+              checkerCfg
+          }
+        }
+        case Some(checkDeadlock) =>
+          // `checkDeadlock` mirrors TLC's CHECK_DEADLOCK keyword: TRUE means the
+          // checker should look for deadlocks (the default), FALSE behaves like
+          // --no-deadlock. We translate it into the negated `noDeadlocks` option.
+          val tlcNoDeadlocks = !checkDeadlock
+          checkerCfg.noDeadlocks match {
+            case None =>
+              logger.info(
+                  s"  > Using CHECK_DEADLOCK $checkDeadlock from the TLC config (sets --no-deadlock=$tlcNoDeadlocks)")
+              checkerCfg.copy(noDeadlocks = Some(tlcNoDeadlocks))
+            case Some(cliNoDeadlocks) =>
+              if (cliNoDeadlocks != tlcNoDeadlocks) {
+                logger.warn(
+                    s"  > CHECK_DEADLOCK is set in the TLC config but overridden via the `--no-deadlock` cli option or apalache.cfg; using --no-deadlock=$cliNoDeadlocks")
+              }
+              checkerCfg
+          }
+      }
+    }
   }
 }

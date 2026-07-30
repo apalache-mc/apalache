@@ -1,0 +1,17 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/java
+{
+	"name": "Apalache",
+	"image": "mcr.microsoft.com/devcontainers/java:1-17-bookworm",
+
+	"features": {
+		"ghcr.io/ebaskoro/devcontainer-features/scala:1": {
+			"installSbt": true
+		},
+		"ghcr.io/devcontainers/features/rust:1": {
+			"profile": "minimal"
+		}
+	},
+
+	"postCreateCommand": "cargo install mdbook --version 0.4.5"
+}

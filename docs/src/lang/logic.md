@@ -14,8 +14,7 @@ section, we only consider the deterministic use of the existential quantifier.
 
 ----------------------------------------------------------------------------
 
-<a name="forallBounded"></a>
-### Bounded universal quantifier
+### <a id="forallBounded"></a> Bounded universal quantifier
 
 **Notation:** `\A x \in S: P`
 
@@ -96,8 +95,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="existsBounded"></a>
-### Bounded existential quantifier
+### <a id="existsBounded"></a> Bounded existential quantifier
 
 **Notation:** `\E x \in S: P`
 
@@ -187,8 +185,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="eq"></a>
-### Equality
+### <a id="eq"></a> Equality
 
 _A foundational operator in TLA+_
 
@@ -317,8 +314,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="neq"></a>
-### Inequality
+### <a id="neq"></a> Inequality
 
 **Notation:** `e_1 /= e_2` or `e_1 # e_2`
 
@@ -332,8 +328,7 @@ True
 
 ----------------------------------------------------------------------------
 
-<a name="chooseBounded"></a>
-### Bounded Choice
+### <a id="chooseBounded"></a> Bounded Choice
 
 _This operator causes a lot of confusion. Read carefully!_
 
@@ -437,8 +432,7 @@ if __name__ == "__main__":
 
 ----------------------------------------------------------------------------
 
-<a name="forall"></a>
-### Unbounded universal quantifier
+### <a id="forall"></a> Unbounded universal quantifier
 
 **Notation:** `\A x: P`
 
@@ -459,8 +453,7 @@ when writing proofs with [TLAPS].
 
 ----------------------------------------------------------------------------
 
-<a name="exists"></a>
-### Unbounded existential quantifier
+### <a id="exists"></a> Unbounded existential quantifier
 
 **Notation:** `\E x: P`
 
@@ -481,8 +474,7 @@ when writing proofs with [TLAPS].
 
 ----------------------------------------------------------------------------
 
-<a name="choose"></a>
-### Unbounded CHOOSE
+### <a id="choose"></a> Unbounded CHOOSE
 
 **Notation:** `CHOOSE x: P`
 

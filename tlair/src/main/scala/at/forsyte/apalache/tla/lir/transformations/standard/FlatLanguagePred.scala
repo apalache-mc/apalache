@@ -30,9 +30,9 @@ class FlatLanguagePred extends ContextualLanguagePred {
       case e @ OperEx(TlaOper.apply, NameEx(opName), args @ _*) =>
         // the only allowed case is calling a nullary operator that was declared with let-in
         if (!letDefs.contains(opName)) {
-          PredResultFail(List((e.ID, s"undeclared operator $opName")))
+          PredResultFail(List((e.ID, s"undeclared operator $opName [FlatLanguagePred]")))
         } else if (args.nonEmpty) {
-          PredResultFail(List((e.ID, s"non-nullary operator $opName")))
+          PredResultFail(List((e.ID, s"non-nullary operator $opName [FlatLanguagePred]")))
         } else {
           PredResultOk()
         }

@@ -638,6 +638,7 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
         case "eventually" => unaryApp(opName, tla.diamond)
         case "weakFair"   => binaryApp(opName, (action, vars) => tla.WF(vars, action))
         case "strongFair" => binaryApp(opName, (action, vars) => tla.SF(vars, action))
+        case "leadsTo"    => binaryApp(opName, tla.leadsTo)
 
         case "ite" => ternaryApp(opName, tla.ite)
 

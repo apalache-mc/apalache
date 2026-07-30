@@ -12,7 +12,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestTransitionExecutorWithOfflineAndArrays extends TestTransitionExecutorImpl[OfflineExecutionContextSnapshot] {
   override protected def withFixture(test: OneArgTest): Outcome = {
     val solver = RecordingSolverContext
-      .createZ3(None,
+      .create(None,
           SolverConfig(
               debug = false,
               profile = false,

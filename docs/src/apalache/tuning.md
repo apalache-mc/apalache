@@ -86,7 +86,30 @@ steps.
 You can also use this option to check different parts of an invariant on
 different machines to speed up turnaround time.
 
-## Z3 Tuning Parameters
+## Solver tuning parameters
+
+Apalache supports solver-specific tuning under solver namespaces. Z3-specific
+parameters use `z3.*`. CVC5-specific parameters use `cvc5.*`.
+
+### CVC5 SMT logic
+
+`cvc5.smt.logic=<logic>` sets the SMT logic used by the CVC5 backend.
+
+By default, Apalache uses linear integer arithmetic logics with CVC5:
+
+* `QF_UFLIA` for the default `oopsla19` encoding and `funArrays`
+* `QF_AUFLIA` for `arrays`
+
+These defaults improve CVC5 performance on specifications that only need linear
+integer arithmetic. If your specification uses nonlinear integer arithmetic, for
+example multiplication of two symbolic integer values, configure CVC5 with a
+nonlinear logic:
+
+```sh
+--tuning-options=cvc5.smt.logic=QF_UFNIA
+```
+
+### Z3 parameters
 
 Z3 has a very large number of [Z3 Parameters][]. If you have a CLI version of Z3
 installed, you can see a complete list of supported parameters by running `z3`:
@@ -122,9 +145,10 @@ command line. Hence, you have to experiment with the choice of parameters.
 
 ## Randomization
 
-`smt.randomSeed=<int>` passes the random seed to `z3` (via `z3`'s parameters
-`sat.random_seed` and `smt.random_seed`). Note that this parameter sets the seed
-across the solvers for various logic theories in z3.
+`smt.randomSeed=<int>` passes the random seed to the selected SMT backend. For
+Z3, Apalache maps this to Z3's `sat.random_seed` and `smt.random_seed`
+parameters. For CVC5, Apalache maps this to CVC5's `seed` and
+`sat-random-seed` options.
 
 ## Translation to SMT
 
