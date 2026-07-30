@@ -9,12 +9,13 @@ import tla2sany.drivers.{FrontEndException, SANY, SanyExitCode, SanySettings}
 import tla2sany.modanalyzer.SpecObj
 import tla2sany.output.{LogLevel, SimpleSanyOutput}
 import tla2sany.semantic.Errors
+import util.ToolIO
 
 import java.io._
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
-import java.nio.charset.StandardCharsets
 
 // The SANY parser is not thread safe. This singleton object is used to create a
 // mutex around its execution.
@@ -28,8 +29,22 @@ import java.nio.charset.StandardCharsets
 //
 // All invocation of SANY should go through a synchronized method in this object.
 object SANYSyncWrapper {
+
+  /** Serialize setup and execution that touches SANY's process-global state. */
+  def withLock[A](body: => A): A = this.synchronized(body)
+
+  /**
+   * Run SANY setup and parsing with a restricted user directory, restoring the process-global setting afterwards.
+   */
+  def withUserDir[A](directory: String)(body: => A): A = this.synchronized {
+    val previous = ToolIO.getUserDir
+    ToolIO.setUserDir(directory)
+    try body
+    finally ToolIO.setUserDir(previous)
+  }
+
   def loadSpecObject(specObj: SpecObj, file: File, errBuf: Writer): SanyExitCode = {
-    this.synchronized {
+    withLock {
       val outStream = WriterOutputStream
         .builder()
         .setWriter(errBuf)
@@ -84,64 +99,68 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       throw new SanyImporterException("No root module defined in file")
     }
 
-    // create a string buffer to write SANY's error messages
-    // use.toString() to retrieve the error messages
-    val errBuf = new StringWriter()
+    // Resolver construction reads ToolIO.userDir. Keep it under the same lock as SANY parsing so an in-memory parse
+    // can temporarily restrict that process-global value without racing a file-based parse.
+    SANYSyncWrapper.withLock {
+      // create a string buffer to write SANY's error messages
+      // use.toString() to retrieve the error messages
+      val errBuf = new StringWriter()
 
-    // Construct library lookup path:
-    //   1. Include the file's parent directory
-    val parentDirPath = file.getAbsoluteFile().getParent() match {
-      case null                  => Nil
-      case parentDirPath: String => Seq(parentDirPath)
-    }
-    //   2. Patch in Apalache standard library.
-    //      When running Apalache from the fat JAR, these TLA+ modules are baked into the JAR.
-    //      Otherwise (e.g., running from `sbt`, an IDE, for unit tests), we include the standard library path for
-    //      lookup from the filesystem.
-    val standardLibraryPath = {
-      // Test if running from fat JAR; see also `build.sbt` and [[StandardLibrary.wiredModules]]
-      if (this.getClass().getClassLoader().getResource("tla2sany/StandardModules/Apalache.tla") != null) {
-        // Running from fat JAR with standard library baked in (in `build.sbt`).
-        // SANY looks up modules from the JAR as part of its base path, no need to adjust the lookup paths.
-        Nil
-      } else {
-        // Running from outside the fat JAR, we don't have a standard library bundled.
-        // Add $APALACHE_HOME/src/tla/ to lookup paths.
-        System.getenv("APALACHE_HOME") match {
-          // Warn if environment variable APALACHE_HOME is not set
-          case null =>
-            logger.warn("Not running from fat JAR and APALACHE_HOME is not set;")
-            logger.warn("will not be able to find the Apalache standard library.")
-            Nil
-          case apalacheHome: String => Seq(s"${apalacheHome}/src/tla")
+      // Construct library lookup path:
+      //   1. Include the file's parent directory
+      val parentDirPath = file.getAbsoluteFile().getParent() match {
+        case null => Nil
+        case parentDirPath: String => Seq(parentDirPath)
+      }
+      //   2. Patch in Apalache standard library.
+      //      When running Apalache from the fat JAR, these TLA+ modules are baked into the JAR.
+      //      Otherwise (e.g., running from `sbt`, an IDE, for unit tests), we include the standard library path for
+      //      lookup from the filesystem.
+      val standardLibraryPath = {
+        // Test if running from fat JAR; see also `build.sbt` and [[StandardLibrary.wiredModules]]
+        if (this.getClass().getClassLoader().getResource("tla2sany/StandardModules/Apalache.tla") != null) {
+          // Running from fat JAR with standard library baked in (in `build.sbt`).
+          // SANY looks up modules from the JAR as part of its base path, no need to adjust the lookup paths.
+          Nil
+        } else {
+          // Running from outside the fat JAR, we don't have a standard library bundled.
+          // Add $APALACHE_HOME/src/tla/ to lookup paths.
+          System.getenv("APALACHE_HOME") match {
+            // Warn if environment variable APALACHE_HOME is not set
+            case null =>
+              logger.warn("Not running from fat JAR and APALACHE_HOME is not set;")
+              logger.warn("will not be able to find the Apalache standard library.")
+              Nil
+            case apalacheHome: String => Seq(s"${apalacheHome}/src/tla")
+          }
         }
       }
-    }
-    val libraryPaths = parentDirPath ++ standardLibraryPath
+      val libraryPaths = parentDirPath ++ standardLibraryPath
 
-    // Resolver for filenames, patched for wired modules.
-    val filenameResolver = SanyNameToStream(libraryPaths)
+      // Resolver for filenames, patched for wired modules.
+      val filenameResolver = SanyNameToStream(libraryPaths)
 
-    // Set a unique tmpdir to avoid race-condition in SANY
-    // TODO: RM once https://github.com/tlaplus/tlaplus/issues/688 is fixed
-    System.setProperty("java.io.tmpdir", sanyTempDir().toString())
+      // Set a unique tmpdir to avoid race-condition in SANY
+      // TODO: RM once https://github.com/tlaplus/tlaplus/issues/688 is fixed
+      System.setProperty("java.io.tmpdir", sanyTempDir().toString())
 
-    // call SANY
-    val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
-    val sanyExitCode = SANYSyncWrapper.loadSpecObject(specObj, file, errBuf)
+      // call SANY
+      val specObj = new SpecObj(file.getAbsolutePath, filenameResolver)
+      val sanyExitCode = SANYSyncWrapper.loadSpecObject(specObj, file, errBuf)
 
-    // abort on errors
-    throwOnError(specObj, sanyExitCode)
-    // do the translation
-    val modmap = specObj.getExternalModuleTable.getModuleNodes
-      .foldLeft(Map[String, TlaModule]()) { (map, node) =>
-        map + (node.getName.toString ->
-          ModuleTranslator(sourceStore, annotationStore).translate(node))
+      // abort on errors
+      throwOnError(specObj, sanyExitCode)
+      // do the translation
+      val modmap = specObj.getExternalModuleTable.getModuleNodes
+        .foldLeft(Map[String, TlaModule]()) { (map, node) =>
+          map + (node.getName.toString ->
+            ModuleTranslator(sourceStore, annotationStore).translate(node))
+        }
+
+      specObj.getName match {
+        case null => throw new SanyImporterException("No root module defined in file")
+        case name => (name, modmap)
       }
-
-    specObj.getName match {
-      case null => throw new SanyImporterException("No root module defined in file")
-      case name => (name, modmap)
     }
   }
 
@@ -163,7 +182,11 @@ class SanyImporter(sourceStore: SourceStore, annotationStore: AnnotationStore) e
       // Save the aux modules to files, and get just the module names, if errors are hit, the first one will turn into a `Try`
       savedModuleNames <- Try(aux.map(saveTlaFile(tempDir, _).map(_._1).get))
       _ <- ensureModuleNamesAreUnique(rootName +: savedModuleNames)
-      result <- Try(loadFromFile(rootFile))
+      // SimpleFilenameToStream searches ToolIO.userDir before the supplied library paths. Point it at the directory
+      // containing only the request's root and auxiliary modules so in-memory input cannot import from the process cwd.
+      result <- Try(SANYSyncWrapper.withUserDir(tempDir.getAbsolutePath) {
+        loadFromFile(rootFile)
+      })
     } yield result
     tempDir.delete()
     // Raise any errors previously captures in the `Try`

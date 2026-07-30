@@ -1,13 +1,12 @@
 package at.forsyte.apalache.shai.v1
 
-import zio._
-import zio.test._
-import zio.test.Assertion._
-
-import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, PingRequest, PongResponse}
 import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigJsonParser, CheckerPatch}
-import at.forsyte.apalache.shai.v1.cmdExecutor.CmdErrorType
+import at.forsyte.apalache.shai.v1.cmdExecutor._
+import io.grpc.Status
+import zio._
+import zio.test.Assertion._
+import zio.test._
 
 // Defines the test cases used to test the CmdExecutor service
 object TestCmdExecutorService extends DefaultRunnableSpec {
@@ -71,6 +70,18 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
           msg = resp.result.failure.get.data
         } yield assert(msg)(containsString("Missing value for required option source"))
       },
+    testM("rpc rejects file-backed input as an invalid argument") {
+      for {
+        s <- ZIO.service[CmdExecutorService]
+        result <- s.run(CmdRequest(cmd = Cmd.PARSE, config = """{"source":"does-not-exist.tla"}""")).either
+      } yield result match {
+        case Left(status) =>
+          assert(status.getCode)(equalTo(Status.Code.INVALID_ARGUMENT)) &&
+            assert(status.getDescription)(containsString("$.source"))
+        case Right(_) =>
+          assert(false)(isTrue)
+      }
+    },
       testM("running check an invalid spec returns an error") {
         for {
           s <- ZIO.service[CmdExecutorService]

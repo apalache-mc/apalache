@@ -4,6 +4,7 @@ package at.forsyte.apalache.tla
 import apalache.BuildInfo
 import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
@@ -13,13 +14,7 @@ import util.ExecutionStatisticsCollector
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters._
-import scala.util.Random
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import at.forsyte.apalache.io.config.{
-  ApalacheConfig, ApalacheConfigJsonParser, ApalacheConfigLoader, ApalacheConfigResolver, ConfigParseResult,
-}
+import scala.util.{Failure, Random, Success, Try}
 
 /**
  * Command line access to the APALACHE tools.
@@ -81,12 +76,12 @@ object Tool extends LazyLogging {
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
   }
 
-  /** Build the CLI configuration, then load and merge its file-based fallbacks. */
+  /** Build the CLI configuration, then select and merge at most one file-based configuration. */
   private def loadConfig(cmd: ApalacheCommand): ConfigParseResult[ApalacheConfig] = {
     val primary = cmd.toConfig
     if (primary.isSuccess) {
       ConfigParseResult.withWarnings(
-          ApalacheConfigLoader.loadWithFallbacks(primary.requireValue()),
+        ApalacheConfigLoader.load(primary.requireValue()),
           primary.warnings,
       )
     } else {

@@ -3,18 +3,17 @@ package at.forsyte.apalache.io.config
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
 
-import scala.collection.mutable.ListBuffer
-
 /**
- * Discovers local and user-wide JSON configuration files and merges them below a primary configuration.
+ * Selects at most one JSON configuration file and merges it below a primary configuration.
  *
- * Precedence, from highest to lowest, is primary/CLI, local, global. Defaults are applied later by
- * `ApalacheConfigResolver`.
+ * File selection, from highest to lowest precedence, is an explicit file from the primary configuration, a
+ * `.apalache.json` in the working directory, and the user-wide `.tlaplus/apalache.json`. Parent directories are not
+ * searched. Defaults are applied later by [[ApalacheConfigResolver]].
  *
  * @param workingDirectory
- *   Starting directory for local configuration discovery.
+ * Directory in which to look for `.apalache.json`.
  * @param homeDirectory
- *   Home directory containing the user-wide configuration.
+ * JVM user home containing the user-wide configuration.
  */
 final class ApalacheConfigLoader(
     workingDirectory: Path = Paths.get("").toAbsolutePath.normalize(),
@@ -22,185 +21,89 @@ final class ApalacheConfigLoader(
 
   import ApalacheConfigLoader._
 
-  /**
-   * Discover, decode, and merge configuration files below the primary configuration.
-   *
-   * @param primary
-   *   Highest-precedence configuration, normally produced by the CLI or RPC boundary.
-   * @return
-   *   The merged sparse configuration and warnings, or all loading and decoding errors found.
-   */
-  def loadWithFallbacks(primary: ApalacheConfig): ConfigParseResult[ApalacheConfig] = {
-    val errors = ListBuffer.empty[String]
-    val warnings = ListBuffer.empty[String]
-    val configurations = ListBuffer.empty[ApalacheConfig]
+  /** Select, decode, and merge at most one file below `primary`. */
+  def load(primary: ApalacheConfig): ConfigParseResult[ApalacheConfig] = {
+    selectedFile(primary) match {
+      case Left(error) =>
+        ConfigParseResult.failure(error)
 
-    discoverGlobal().foreach { discovered =>
-      errors ++= discovered.errors
-      discovered.path.foreach { path =>
-        addDecodedFile(path, discovered.label, errors, warnings, configurations)
-      }
-    }
+      case Right(None) =>
+        ConfigParseResult.success(primary)
 
-    primary.context.configFile match {
-      case Some(path) =>
-        if (isLegacyFilename(path)) {
-          errors += legacyFilenameError(path)
+      case Right(Some(selected)) =>
+        val decoded = decodeFile(selected.path, selected.label)
+        if (decoded.isSuccess) {
+          ConfigParseResult.success(
+            primary.mergeWithLower(decoded.requireValue()),
+            decoded.warnings,
+          )
         } else {
-          addDecodedFile(path, path.toString, errors, warnings, configurations)
+          ConfigParseResult.failureFrom(decoded)
         }
-
-      case None =>
-        val discovered = discoverLocal(workingDirectory)
-        errors ++= discovered.errors
-        discovered.path.foreach { path =>
-          addDecodedFile(path, discovered.label, errors, warnings, configurations)
-        }
-    }
-
-    if (errors.nonEmpty) {
-      ConfigParseResult.failure(errors.toList, warnings.toList)
-    } else {
-      var merged = ApalacheConfig.empty
-      configurations.foreach { config =>
-        merged = config.mergeWithLower(merged)
-      }
-      merged = primary.mergeWithLower(merged)
-      ConfigParseResult.success(merged, warnings.toList)
     }
   }
 
-  /** Read and decode one file, appending either its configuration or its diagnostics to the supplied accumulators. */
-  private def addDecodedFile(
-      path: Path,
-      label: String,
-      errors: ListBuffer[String],
-      warnings: ListBuffer[String],
-      configurations: ListBuffer[ApalacheConfig]): Unit = {
+  /** Choose one file without inspecting any lower-precedence candidate after a match. */
+  private def selectedFile(primary: ApalacheConfig): Either[String, Option[SelectedFile]] = {
+    primary.context.configFile match {
+      case Some(path) if isLegacyFilename(path) =>
+        Left(legacyFilenameError(path))
 
+      case Some(path) =>
+        Right(Some(SelectedFile(path, path.toString)))
+
+      case None =>
+        val local = workingDirectory.resolve(LocalJson)
+        if (Files.exists(local)) {
+          Right(Some(SelectedFile(local, local.toString)))
+        } else {
+          val global = homeDirectory.resolve(TlaPlusDirectory).resolve(GlobalJson)
+          if (Files.exists(global)) Right(Some(SelectedFile(global, global.toString)))
+          else Right(None)
+        }
+    }
+  }
+
+  /** Read and decode one selected file. */
+  private def decodeFile(path: Path, label: String): ConfigParseResult[ApalacheConfig] = {
     if (!Files.exists(path)) {
-      errors += s"Configuration file not found: ${path.toAbsolutePath}"
-      return
+      return ConfigParseResult.failure(s"Configuration file not found: ${path.toAbsolutePath}")
     }
 
     val text =
       try Files.readString(path, StandardCharsets.UTF_8)
       catch {
         case e: java.io.IOException =>
-          errors += s"$label: Could not read configuration: ${e.getMessage}"
-          return
+          return ConfigParseResult.failure(s"$label: Could not read configuration: ${e.getMessage}")
       }
 
     val decoded = ApalacheConfigJsonParser.parse(text, label)
-    warnings ++= decoded.warnings
     if (decoded.isSuccess) {
-      configurations += decoded.requireValue()
+      decoded
     } else {
-      decoded.errors.foreach { error =>
-        if (error.startsWith(label)) errors += error
-        else errors += s"$label: $error"
-      }
-    }
-  }
-
-  /** Search the starting directory and its parents, reporting any legacy application config as an error. */
-  private def discoverLocal(start: Path): Discovered = {
-    var current: Path = start
-    while (current != null) {
-      val json = current.resolve(LocalJson)
-      val legacy = current.resolve(LocalLegacy)
-      if (Files.exists(json)) {
-        val errors =
-          if (Files.exists(legacy)) {
-            List(legacyFilenameError(legacy))
-          } else {
-            Nil
-          }
-        return Discovered(Some(json), start.relativize(json).toString, errors)
-      }
-      if (Files.exists(legacy)) {
-        return Discovered(
-            None,
-            "",
-            List(legacyFilenameError(legacy)),
-        )
-      }
-      current = current.getParent
-    }
-    Discovered.none
-  }
-
-  /** Discover the user-wide configuration, reporting a legacy application config as an error. */
-  private def discoverGlobal(): Option[Discovered] = {
-    val directory = homeDirectory.resolve(TlaPlusDirectory)
-    val json = directory.resolve(GlobalJson)
-    val legacy = directory.resolve(GlobalLegacy)
-    if (Files.exists(json)) {
-      val errors =
-        if (Files.exists(legacy)) {
-          List(legacyFilenameError(legacy))
-        } else {
-          Nil
-        }
-      Some(Discovered(Some(json), json.toString, errors))
-    } else if (Files.exists(legacy)) {
-      Some(Discovered(
-              None,
-              "",
-              List(legacyFilenameError(legacy)),
-          ))
-    } else {
-      None
+      ConfigParseResult.failure(
+        decoded.errors.map { error =>
+          if (error.startsWith(label)) error else s"$label: $error"
+        },
+        decoded.warnings,
+      )
     }
   }
 }
 
-/** Convenience entry points using the process working and home directories. */
+/** Convenience entry point using the process working and JVM user-home directories. */
 object ApalacheConfigLoader {
   private val TlaPlusDirectory = ".tlaplus"
   private val LocalJson = ".apalache.json"
-  private val LocalLegacy = ".apalache.cfg"
   private val GlobalJson = "apalache.json"
-  private val GlobalLegacy = "apalache.cfg"
 
-  /** A discovered configuration path together with its diagnostic label and discovery errors. */
-  final private case class Discovered(path: Option[Path], label: String, errors: List[String])
-  private object Discovered {
-    val none: Discovered = Discovered(None, "", Nil)
-  }
+  final private case class SelectedFile(path: Path, label: String)
 
-  /**
-   * Load file-based fallbacks and merge them below a primary configuration.
-   *
-   * @param primary
-   *   Highest-precedence configuration, normally produced by the CLI.
-   * @return
-   *   The merged sparse configuration, or loading and decoding errors.
-   */
-  def loadWithFallbacks(primary: ApalacheConfig): ConfigParseResult[ApalacheConfig] =
-    new ApalacheConfigLoader().loadWithFallbacks(primary)
+  /** Select and load at most one file below `primary`. */
+  def load(primary: ApalacheConfig): ConfigParseResult[ApalacheConfig] =
+    new ApalacheConfigLoader().load(primary)
 
-  /**
-   * Decode primary JSON and merge local and user-wide fallbacks below it.
-   *
-   * @param json
-   *   Strict JSON containing the highest-precedence configuration.
-   * @return
-   *   The merged sparse configuration, or decoding and loading errors.
-   */
-  def loadJsonWithFallbacks(json: String): ConfigParseResult[ApalacheConfig] = {
-    val decoded = ApalacheConfigJsonParser.parse(json, "<configuration>")
-    if (!decoded.isSuccess) {
-      ConfigParseResult.failureFrom(decoded)
-    } else {
-      ConfigParseResult.withWarnings(
-          new ApalacheConfigLoader().loadWithFallbacks(decoded.requireValue()),
-          decoded.warnings,
-      )
-    }
-  }
-
-  /** Return whether a path uses the unsupported `.cfg` suffix. */
+  /** Return whether an explicitly selected path uses the unsupported `.cfg` suffix. */
   private def isLegacyFilename(path: Path): Boolean =
     path.getFileName.toString.endsWith(".cfg")
 

@@ -96,9 +96,9 @@ The arguments are as follows:
       [Detailed output](#detailed). *`false` by default*
     - `--run-dir=DIRECTORY` write all outputs directly into the specified
       `DIRECTORY`
-    - `--config-file` a file to use for loading configuration parameters. This will prevent Apalache from looking for
-      any local `.apalache.json` file. The file must contain [strict JSON](config.md); legacy `.cfg` filenames are
-      rejected.
+  - `--config-file` selects the only file used for loading configuration parameters. This prevents Apalache from
+    considering both `.apalache.json` in the current working directory and the user-wide configuration. The file must
+    contain [strict JSON](config.md); legacy `.cfg` filenames are rejected.
     - `--profiling` (Bool): This flag governs the creation of `profile-rules.txt`
       used in [profiling](profiling.md). The file is only created if `profiling`
       is set to `True`.  Setting `profiling` to `False` is incompatible with the
@@ -114,7 +114,10 @@ In case conflicting arguments are passed for the same parameter, the following p
 
 1. Command-line value
 2. Environment variable value
-3. Configuration file value
+3. Value from the single selected configuration file
+
+Without `--config-file` (or its `CONFIG_FILE` environment variable), Apalache selects `.apalache.json` in the current
+working directory, then `${user.home}/.tlaplus/apalache.json`. It does not search parent directories.
 
 ### 1.2. Simulator command-line parameters
 

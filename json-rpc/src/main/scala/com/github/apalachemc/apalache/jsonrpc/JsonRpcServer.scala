@@ -2,9 +2,7 @@ package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
 import at.forsyte.apalache.io.InputSource
-import at.forsyte.apalache.io.config.{
-  ApalacheConfig, ApalacheConfigLoader, ApalacheConfigResolver, ConfigParseResult, ResolvedCheckOptions,
-}
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
 import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter, ScalaToJacksonAdapter}
 import at.forsyte.apalache.io.lir.Trace
@@ -14,8 +12,8 @@ import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -23,11 +21,11 @@ import com.google.inject.Injector
 import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
-import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.gzip.GzipCompression
+import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.zstandard.ZstandardCompression
+import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
+import org.eclipse.jetty.server.Server
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.{Lock, ReentrantLock}
@@ -903,7 +901,7 @@ object JsonRpcServerApp {
 
   def main(args: Array[String]): Unit = {
     val port = if (args.nonEmpty) args(0).toInt else 8822
-    val cfg = ApalacheConfigLoader.loadJsonWithFallbacks("""{"command":"server"}""")
+    val cfg = ApalacheConfigLoader.load(ApalacheConfig.empty.withCommand("server"))
     run(cfg, port)
   }
 }

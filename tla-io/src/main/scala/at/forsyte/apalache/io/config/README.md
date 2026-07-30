@@ -8,7 +8,7 @@ parsing lives here, in
 ## Data flow
 
 ```text
-CLI/RPC primary config and JSON files (ApalacheConfigLoader)
+CLI primary config + at most one selected JSON file (ApalacheConfigLoader)
         |
         v
 ApalacheConfigJsonParser + mergeWithLower --> merged ApalacheConfig
@@ -33,24 +33,26 @@ value; `checker.tuning` is merged by key.
 loads TLC configuration where required, checks cross-field constraints, and returns the smallest option type needed by
 the selected mode. Execution passes should consume these resolved types rather than interpret patches themselves.
 
-For CLI execution, [Tool.scala] calls `toConfig`, loads file-based fallbacks once, and passes the merged
-`ApalacheConfig` to the command. Commands must not cache or reload configuration.
+For CLI execution, [Tool.scala] calls `toConfig`, selects at most one configuration file, and passes the merged
+`ApalacheConfig` to the command. Commands must not cache or reload configuration. Untrusted service JSON is parsed and
+checked by `RemoteConfigValidator` without invoking `ApalacheConfigLoader`.
 
 Resolved command types also expose `source` and `output` directly.
 `ModuleIoOptions` is only the two-field adapter used by Guice when constructing frontend passes.
 
 ## Files
 
-| File                            | Responsibility                                                                                        |
-|---------------------------------|-------------------------------------------------------------------------------------------------------|
-| [ApalacheConfig.scala]          | Top-level configuration data model, explicit merge rules, and defaults used for diagnostic snapshots. |
-| [ApalacheConfigLoader.scala]    | Configuration-file discovery, loading, and precedence merging.                                        |
-| [ApalacheConfigResolver.scala]  | Defaults, TLC integration, validation, and construction of run options.                               |
+| File                             | Responsibility                                                                                        |
+|----------------------------------|-------------------------------------------------------------------------------------------------------|
+| [ApalacheConfig.scala]           | Top-level configuration data model, explicit merge rules, and defaults used for diagnostic snapshots. |
+| [ApalacheConfigLoader.scala]     | Single-file selection, loading, and precedence merging.                                               |
+| [ApalacheConfigResolver.scala]   | Defaults, TLC integration, validation, and construction of run options.                               |
 | [ApalacheConfigJsonParser.scala] | Strict JSON decoding and canonical JSON writing.                                                      |
-| [ConfigPatch.scala]             | Shared patch marker and sparse section patch types.                                                   |
-| [ResolvedOptions.scala]         | Immutable, validated values consumed during execution.                                                |
-| [ConfigParseResult.scala]       | Expected configuration errors and warnings as values.                                                 |
-| [ConfigEnums.scala]             | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
+| [RemoteConfigValidator.scala]    | Filesystem-free validation for untrusted service request configuration.                               |
+| [ConfigPatch.scala]              | Shared patch marker and sparse section patch types.                                                   |
+| [ResolvedOptions.scala]          | Immutable, validated values consumed during execution.                                                |
+| [ConfigParseResult.scala]        | Expected configuration errors and warnings as values.                                                 |
+| [ConfigEnums.scala]              | Closed sets of supported algorithms, solvers, encodings, and server types.                            |
 
 ## Maintenance rules
 
@@ -85,4 +87,5 @@ Resolved command types also expose `source` and `output` directly.
 [ConfigParseResult.scala]: ConfigParseResult.scala
 [ConfigPatch.scala]: ConfigPatch.scala
 [ResolvedOptions.scala]: ResolvedOptions.scala
+[RemoteConfigValidator.scala]: RemoteConfigValidator.scala
 [Tool.scala]: ../../../../../../../../../mod-tool/src/main/scala/at/forsyte/apalache/tla/Tool.scala

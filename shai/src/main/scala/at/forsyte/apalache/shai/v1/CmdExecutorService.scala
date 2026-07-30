@@ -1,23 +1,21 @@
 package at.forsyte.apalache.shai.v1
 
-import java.io.{PrintWriter, StringWriter}
-import scala.util.Try
-import com.typesafe.scalalogging.Logger
-import io.grpc.Status
-import zio.ZEnv
-import zio.ZIO
-import at.forsyte.apalache.io.config.{ApalacheConfigLoader, ApalacheConfigResolver, ConfigParseResult}
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
-import at.forsyte.apalache.shai.v1.cmdExecutor.{
-  Cmd, CmdError, CmdErrorType, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor,
-}
-import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.passes.imp.ParserModule
-import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
-import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, RemoteConfigValidator}
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
+import at.forsyte.apalache.shai.v1.cmdExecutor._
+import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.passes.imp.ParserModule
+import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
+import com.typesafe.scalalogging.Logger
+import io.grpc.Status
+import zio.{ZEnv, ZIO}
+
+import java.io.{PrintWriter, StringWriter}
+import scala.util.Try
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -43,7 +41,8 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
   def run(req: CmdRequest): Result[CmdResponse] = for {
     cmd <- validateCmd(req.cmd)
-    resp <- executeCmd(cmd, req.config) match {
+    cfg <- validateConfig(req.config)
+    resp <- executeCmd(cmd, cfg) match {
       case Left(err) => ZIO.succeed(CmdResponse.Result.Failure(err))
       case Right(r)  => ZIO.succeed(CmdResponse.Result.Success(r.toString()))
     }
@@ -58,7 +57,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     }
 
     def throwableErr(err: Throwable): CmdError = {
-      val errData = Obj("msg" -> err.getMessage(), "stack_trace" -> err.getStackTrace().map(_.toString()).toList)
+      val errData = Obj("msg" -> err.getMessage, "stack_trace" -> err.getStackTrace.map(_.toString()).toList)
       CmdError(errorType = CmdErrorType.UNEXPECTED, data = ujson.write(errData))
     }
 
@@ -87,12 +86,10 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
   }
 
   import Converters._
-  private def executeCmd(cmd: Cmd, cfgStr: String): Either[CmdError, ujson.Value] = {
+
+  private def executeCmd(cmd: Cmd, cfg: ApalacheConfig): Either[CmdError, ujson.Value] = {
 
     for {
-      loaded <- ApalacheConfigLoader.loadJsonWithFallbacks(cfgStr).toCmdResult
-      cfg = loaded.withCommand("server")
-
       toolModule <- {
         cmd match {
           case Cmd.PARSE | Cmd.TLA =>
@@ -124,7 +121,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     val prettyWriter = new PrettyWriterWithAnnotations(annotationStore, new PrintWriter(buf))
     val modules_to_extend = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache", "Variants")
     prettyWriter.write(module, modules_to_extend)
-    val moduleString = buf.toString()
+    val moduleString = buf.toString
 
     val modifiedModule = extractLetFromFolds(moduleString)
     ujson.Str(modifiedModule)
@@ -153,5 +150,15 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       val msg = s"Invalid protobuf value for Cmd enum: ${cmd}"
       ZIO.fail(Status.INVALID_ARGUMENT.withDescription(msg))
     case cmd => ZIO.succeed(cmd)
+  }
+
+  /** Parse untrusted request JSON without configuration-file discovery and reject filesystem-capable fields. */
+  private def validateConfig(config: String): Result[ApalacheConfig] = {
+    val parsed = RemoteConfigValidator.parse(config)
+    if (parsed.isSuccess) {
+      ZIO.succeed(parsed.requireValue().withCommand("server"))
+    } else {
+      ZIO.fail(Status.INVALID_ARGUMENT.withDescription(parsed.errors.mkString("; ")))
+    }
   }
 }
