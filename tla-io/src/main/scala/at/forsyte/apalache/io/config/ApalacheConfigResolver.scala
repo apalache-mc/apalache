@@ -3,6 +3,7 @@ package at.forsyte.apalache.io.config
 import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
 import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.io.InputSource
+import org.slf4j.LoggerFactory
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
@@ -11,6 +12,7 @@ import scala.collection.mutable.ListBuffer
 
 /** Applies defaults, loads TLC configuration, validates a mode, and constructs its final options. */
 object ApalacheConfigResolver {
+  private val logger = LoggerFactory.getLogger(getClass)
 
   /** Behavior operator used when neither application nor TLC configuration supplies one. */
   val defaultInit: String = "Init"
@@ -319,6 +321,8 @@ object ApalacheConfigResolver {
       return ConfigParseResult.failure(s"Specified TLC config file not found: ${path.toAbsolutePath}")
     }
 
+    logger.info(s"  > ${path.getFileName}: Loading TLC configuration")
+
     val reader =
       try Files.newBufferedReader(path, StandardCharsets.UTF_8)
       catch {
@@ -371,6 +375,9 @@ object ApalacheConfigResolver {
         if (fromTlc.nonEmpty) warnings += s"$field overrides the value from the TLC configuration."
         value
       case None =>
+        if (fromTlc.nonEmpty) {
+          logger.info(s"  > Using ${displayName(field)} predicate(s) $fromTlc from the TLC config")
+        }
         fromTlc
     }
 
@@ -384,6 +391,12 @@ object ApalacheConfigResolver {
         if (fromTlc.nonEmpty) warnings += s"$field overrides the value from the TLC configuration."
         values
       case None =>
+        if (fromTlc.nonEmpty) {
+          logger.info(s"  > Using ${displayName(field)} predicate(s) ${fromTlc.mkString(", ")} from the TLC config")
+        }
         fromTlc
     }
+
+  private def displayName(field: String): String =
+    field.stripPrefix("checker.")
 }
