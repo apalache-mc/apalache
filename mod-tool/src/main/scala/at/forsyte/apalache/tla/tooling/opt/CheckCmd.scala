@@ -132,6 +132,12 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
         ) + " (unlimited)", default = None)
 
   override def toConfig: ConfigParseResult[ApalacheConfig] = {
+    seed match {
+      case Some(value) if value < 0 =>
+        return ConfigParseResult.failure(s"Invalid --$SEED: expected a nonnegative integer, found $value")
+      case _ => ()
+    }
+
     val combinedTuningOptions =
       try {
         val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
@@ -140,12 +146,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
           case Some(value) => Map("search.outputTraces" -> value.toString)
           case None        => Map.empty
         }
-        val combined =
-          overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ outputTraceOptions ++ seedTuningOptions
-        FineTuningParser.fromStrings(seedTuningOptions) match {
-          case Left(error) => throw new PassOptionException(s"Invalid --$SEED: $error")
-          case Right(_)    => combined
-        }
+        overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ outputTraceOptions ++ seedTuningOptions
       } catch {
         case e: PassOptionException => return ConfigParseResult.failure(e.getMessage)
       }
