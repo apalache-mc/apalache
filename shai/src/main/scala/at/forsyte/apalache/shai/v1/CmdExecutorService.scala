@@ -6,9 +6,8 @@ import com.typesafe.scalalogging.Logger
 import io.grpc.Status
 import zio.ZEnv
 import zio.ZIO
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.{ApalacheConfigLoader, ApalacheConfigResolver, ConfigParseResult}
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
-import at.forsyte.apalache.io.ConfigManager
 import at.forsyte.apalache.shai.v1.cmdExecutor.{
   Cmd, CmdError, CmdErrorType, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor,
 }
@@ -68,22 +67,39 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     implicit class TryCmdErr[O](v: Try[O]) {
       def toCmdResult: Either[CmdError, O] = v.toEither.left.map(throwableErr)
     }
+
+    /**
+     * Adapts configuration loading and resolution results to the command executor's `Either` pipeline.
+     *
+     * Successful results expose their value. Failed results combine their diagnostics into an `IllegalArgumentException`,
+     * which [[throwableErr]] reports as an `UNEXPECTED` command error.
+     */
+    implicit class ConfigParseResultCmdErr[O](result: ConfigParseResult[O]) {
+      /** Return the configured value or its errors encoded as a command error. */
+      def toCmdResult: Either[CmdError, O] =
+        if (result.isSuccess) Right(result.requireValue())
+        else {
+          val message = result.errors.mkString("; ")
+          Left(throwableErr(new IllegalArgumentException(message)))
+        }
+    }
   }
 
   import Converters._
   private def executeCmd(cmd: Cmd, cfgStr: String): Either[CmdError, ujson.Value] = {
 
     for {
-      cfg <- ConfigManager(cfgStr).map { cfg =>
-        cfg.copy(common = cfg.common.copy(command = Some("server")))
-      }.toCmdResult
+      loaded <- ApalacheConfigLoader.loadJsonWithFallbacks(cfgStr).toCmdResult
+      cfg = loaded.withCommand("server")
 
       toolModule <- {
-        import OptionGroup._
         cmd match {
-          case Cmd.PARSE | Cmd.TLA => WithIO(cfg).map(new ParserModule(_)).toCmdResult
-          case Cmd.CHECK           => WithCheckerPreds(cfg).map(new CheckerModule(_)).toCmdResult
-          case Cmd.TYPECHECK       => WithTypechecker(cfg).map(new TypeCheckerModule(_)).toCmdResult
+          case Cmd.PARSE | Cmd.TLA =>
+            ApalacheConfigResolver.resolveParse(cfg).toCmdResult.map(new ParserModule(_))
+          case Cmd.CHECK =>
+            ApalacheConfigResolver.resolveCheck(cfg).toCmdResult.map(new CheckerModule(_))
+          case Cmd.TYPECHECK =>
+            ApalacheConfigResolver.resolveTypecheck(cfg).toCmdResult.map(new TypeCheckerModule(_))
           case Cmd.Unrecognized(_) =>
             throw new IllegalArgumentException("programmer error: executeCmd applied before validateCmd")
         }

@@ -1,7 +1,6 @@
 package at.forsyte.apalache.io
 
-import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
-import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.io.config.{CommandInitializationOptions, CommonOptions}
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
@@ -10,9 +9,10 @@ import java.io.PrintWriter
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 /**
  * The OutputManager is the central source of truth, for all IO related locations. Any IO operation should request
@@ -26,8 +26,9 @@ object OutputManager extends LazyLogging {
   }
   import Names._
 
-  // TODO RM once OutputManager isn't a singleton
-  private var config: ApalacheConfig = ApalacheConfig()
+  // TODO: Make OutputManager an injected instance and provide CommonOptions
+  // through its constructor instead of storing mutable global configuration.
+  private var commonOptions: Option[CommonOptions] = None
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
   // This should only be set if the IntermediateFlag is true
@@ -43,20 +44,20 @@ object OutputManager extends LazyLogging {
 
   // Takes effect only when called on a source that is an existing .tla file or
   // a string representing a .tla spec
-  def initSourceLines(source: SourceOption): Unit =
+  def initSourceLines(source: InputSource): Unit =
     if (sourceLinesOpt.isEmpty && source.exists) {
-      // We currently just ignore possible auxiliary sources for  the source lines,
-      // which is why the second value of the uple is ignored here:
-      val (src, _) = source.toSources
-      try sourceLinesOpt = Some(src.getLines().toIndexedSeq)
-      finally src.close()
+      source match {
+        case InputSource.FileSource(path, _) =>
+          sourceLinesOpt = Some(Files.readAllLines(path, StandardCharsets.UTF_8).asScala.toIndexedSeq)
+        case value: InputSource.StringSource =>
+          sourceLinesOpt = Some(value.content.linesIterator.toIndexedSeq)
+      }
     }
 
-  def getLineInSrc(n: Int): Option[String] = sourceLinesOpt.map { _(n) }
   def getAllSrc: Option[String] = sourceLinesOpt.map { _.mkString("\n").trim }
 
   private def setOutDir(base: Path, namespace: String): Unit = {
-    outDirOpt = Some(base.resolve(namespace).toAbsolutePath())
+    outDirOpt = Some(base.resolve(namespace).toAbsolutePath)
   }
 
   /* This should only ever be set if the IntermediateFlag is true */
@@ -105,44 +106,36 @@ object OutputManager extends LazyLogging {
 
   private def ensureDirExists(path: Path): Unit = {
     val f = path.toFile
-    if (!((f.exists() && f.isDirectory()) || f.mkdirs())) {
+    if (!((f.exists() && f.isDirectory) || f.mkdirs())) {
       throw new ConfigurationError(s"Could not find or create directory: ${f.getCanonicalPath}.")
     }
   }
 
   // Sets the customRunDir, if one is given, otherwise is noop
-  private def setCustomRunDir(fopt: Option[File]): Unit = {
-    fopt.foreach { f =>
-      val dir = f.toPath().toAbsolutePath()
+  private def setCustomRunDir(pathOpt: Option[Path]): Unit = {
+    pathOpt.foreach { path =>
+      val dir = path.toAbsolutePath()
       customRunDirOpt = Some(dir)
       ensureDirExists(dir)
     }
   }
 
-  /**
-   * Configure OutputManager
-   */
-  // TODO replace `ApalacheConfig` with derived options
-  def configure(cfg: ApalacheConfig): Unit = {
-    // Mutable update of the `config` object shared within the singleton
-    config = cfg
+  /** Configure output paths for a command. */
+  def configure(initialization: CommandInitializationOptions): Unit = {
+    commonOptions = Some(initialization.common)
 
-    val fileName =
-      config.input.source
-        .flatMap { // Either the name of the file
-          case SourceOption.FileSource(f, _)      => Some(f.getName())
-          case SourceOption.StringSource(_, _, _) => None
-        }
-        .orElse(config.common.command) // Or the name of the command running
-        .get // One of those two will always be available
+    val fileName = initialization.source match {
+      case Some(InputSource.FileSource(path, _)) => path.getFileName.toString
+      case Some(_: InputSource.StringSource) => initialization.command
+      case None => initialization.command
+    }
 
-    val _outDir = config.common.outDir.get
-    setOutDir(_outDir.toPath(), fileName)
+    setOutDir(initialization.common.outDir, fileName)
     ensureDirExists(outDir)
     createRunDirectory()
-    setCustomRunDir(config.common.runDir)
+    setCustomRunDir(initialization.common.runDir)
 
-    if (config.common.writeIntermediate.getOrElse(false)) {
+    if (initialization.common.writeIntermediate) {
       setIntermediateDir()
       intermediateDirOpt.foreach(ensureDirExists)
       customIntermediateRunDir.foreach(ensureDirExists)
@@ -166,7 +159,7 @@ object OutputManager extends LazyLogging {
 
   /** Create a PrintWriter to the file formed by appending `fileParts` to the `base` file */
   def printWriter(base: Path, fileParts: String*): PrintWriter = {
-    printWriter(base.toFile(), fileParts: _*)
+    printWriter(base.toFile, fileParts: _*)
   }
 
   /**
@@ -181,7 +174,7 @@ object OutputManager extends LazyLogging {
   }
 
   /** Apply f to the writer w, being sure to close w */
-  private def withWriter(f: PrintWriter => Unit)(w: PrintWriter) = {
+  private def withWriter(f: PrintWriter => Unit)(w: PrintWriter): Unit = {
     try {
       f(w)
     } finally {
@@ -196,13 +189,11 @@ object OutputManager extends LazyLogging {
   /** Applies `f` to a PrintWriter created by appending the `parts` to the `runDir` */
   def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     val writeToDir: Path => Unit = dir => withWriter(f)(printWriter(dir, parts: _*))
-    runDirOpt
-      .map { runDir =>
-        writeToDir(runDir)
-        customRunDirOpt.foreach(writeToDir)
-        true
-      }
-      .getOrElse(false)
+    runDirOpt.exists { runDir =>
+      writeToDir(runDir)
+      customRunDirOpt.foreach(writeToDir)
+      true
+    }
   }
 
   /**
@@ -218,21 +209,18 @@ object OutputManager extends LazyLogging {
    */
   def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean = {
     val writeToDir: Path => Unit = dir => withWriter(f)(printWriter(dir, parts: _*))
-    intermediateDirOpt
-      .map { dir =>
-        writeToDir(dir)
-        customIntermediateRunDir.foreach(writeToDir)
-        true
-      }
-      .getOrElse(false)
+    intermediateDirOpt.exists { dir =>
+      writeToDir(dir)
+      customIntermediateRunDir.foreach(writeToDir)
+      true
+    }
   }
 
   /**
    * Conditionally write into "profile-rules.txt", depending on whether the `profiling` config is set
    */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
-    // TODO replace config with options
-    if (config.common.profiling.getOrElse(false)) {
+    if (commonOptions.exists(_.profiling)) {
       withWriterInRunDir("profile-rules.txt")(f)
       true
     } else {
@@ -244,9 +232,7 @@ object OutputManager extends LazyLogging {
    * Reads the contents of a file into a string
    */
   def readFileIntoString(file: File): String = {
-    val src = Source.fromFile(file)
-    try src.mkString.trim
-    finally src.close()
+    Files.readString(file.toPath, StandardCharsets.UTF_8).trim
   }
 
   /**

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.CheckerOptions
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -17,7 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   Igor Konnov
  */
 class VCGenPassImpl @Inject() (
-    options: OptionGroup.HasChecker,
+                                checkerOptions: CheckerOptions,
     derivedPredicates: DerivedPredicates,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
@@ -29,7 +29,7 @@ class VCGenPassImpl @Inject() (
     val moduleWithInvariants =
       derivedPredicates.invariants match {
         case List() =>
-          val deadlockMsg = if (options.checker.noDeadlocks) "" else " Only deadlocks will be checked"
+          val deadlockMsg = if (!checkerOptions.checkDeadlocks) "" else " Only deadlocks will be checked"
           logger.info(s"  > No invariant given.$deadlockMsg")
           tlaModule
         case invariants =>

@@ -9,14 +9,14 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, Tra
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.Normalizer
 import com.google.inject.Inject
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.CommonOptions
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * A preprocessing pass that simplifies TLA+ expressions by running multiple transformations.
  */
 class ReTLAPreproPassImpl @Inject() (
-    options: OptionGroup.HasChecker,
+                                      commonOptions: CommonOptions,
     derivedPreds: DerivedPredicates,
     renaming: IncrementalRenaming,
     tracker: TransformationTracker,
@@ -24,7 +24,7 @@ class ReTLAPreproPassImpl @Inject() (
     changeListener: ChangeListener,
     writerFactory: TlaWriterFactory)
     extends PreproPassPartial(
-        options,
+      commonOptions,
         derivedPreds,
         renaming,
         tracker,

@@ -1,6 +1,6 @@
 package com.github.apalachemc.apalache.jsonrpc
 
-import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.io.config.ApalacheConfigLoader
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.junit.runner.RunWith
@@ -35,7 +35,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
   private var service: ExplorationService = _
 
   before {
-    val config = ConfigManager("{common.command: 'server'}")
+    val config = ApalacheConfigLoader.loadJsonWithFallbacks("""{"command":"server"}""")
     service = new ExplorationService(config)
   }
 

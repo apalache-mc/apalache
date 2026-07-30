@@ -4,6 +4,9 @@
 | -------------------------------------- | --------------: |
 | Shon Feder                             | 2022-08-15      |
 
+> **Status: Deprecated.** Superseded by
+> [ADR-026: Explicit configuration and run options](./026adr-explicit-configuration.md).
+
 **Table of Contents**
 
 - [Summary (Overview)](#summary)
@@ -11,6 +14,7 @@
 - [Options (Alternatives)](#options)
 - [Solution (Decision)](#solution)
 - [Consequences (Retrospection)](#consequences)
+- [Retrospective (2026)](#retrospective-2026)
 
 ## Summary
 
@@ -109,6 +113,13 @@ configuration system:
 -->
 
 TBD
+
+## Retrospective (2026)
+
+The unified flow prevented CLI and RPC configuration from drifting. However, the `Config`/`OptionGroup` split evolved
+into a large `Has*`/`With*` hierarchy, and sparse input was easy to confuse with resolved runtime configuration.
+Shapeless and PureConfig further obscured the data flow for maintainers unfamiliar with advanced Scala idioms. ADR-026
+retains one flow for CLI, files, and RPC while replacing this implementation with explicit data and resolution types.
 
 [Shai]: https://github.com/apalache-mc/apalache/milestone/42
 [RFC 010]: ./010rfc-transition-explorer.md

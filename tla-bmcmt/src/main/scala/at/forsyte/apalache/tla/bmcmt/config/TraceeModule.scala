@@ -2,7 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.{
+  CheckerOptions, CommonOptions, ModuleIoOptions, ResolvedTraceOptions, SpecificationOptions, TraceEvaluationOptions,
+  TypecheckerOptions,
+}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -22,20 +25,15 @@ import com.google.inject.TypeLiteral
  * @author
  *   Jure Kukovec
  */
-class TraceeModule(options: OptionGroup.HasTracee) extends ToolModule(options) {
+class TraceeModule(options: ResolvedTraceOptions) extends ToolModule {
 
   override def configure(): Unit = {
-    // Ensure the given `options` will be bound to any OptionGroup interface
-    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
-    // for why we cannot just specify the upper bound.
-    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
-    bind(classOf[OptionGroup.HasInput]).toInstance(options)
-    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
-    bind(classOf[OptionGroup.HasIO]).toInstance(options)
-    bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
-    bind(classOf[OptionGroup.HasChecker]).toInstance(options)
-    bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
-    bind(classOf[OptionGroup.HasTracee]).toInstance(options)
+    bind(classOf[CommonOptions]).toInstance(options.common)
+    bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
+    bind(classOf[TypecheckerOptions]).toInstance(options.typechecker)
+    bind(classOf[CheckerOptions]).toInstance(options.checker)
+    bind(classOf[SpecificationOptions]).toInstance(options.specification)
+    bind(classOf[TraceEvaluationOptions]).toInstance(options.traceEvaluation)
 
     // The `DerivedPredicate` instance used to communicate specification predicates between passes
     val derivedPreds = DerivedPredicates.Impl()

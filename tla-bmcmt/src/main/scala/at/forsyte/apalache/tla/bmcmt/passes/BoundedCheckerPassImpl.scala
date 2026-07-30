@@ -1,10 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
-import at.forsyte.apalache.infra.passes.{DerivedPredicates, FineTuningParser}
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.options.Algorithm.Remote
+import at.forsyte.apalache.io.config.Algorithm.Remote
+import at.forsyte.apalache.io.tuning.FineTuningParser
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
@@ -22,7 +23,7 @@ import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.{Algorithm, OptionGroup}
+import at.forsyte.apalache.io.config.{Algorithm, CheckerOptions, CommonOptions}
 import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 
 /**
@@ -33,7 +34,8 @@ import at.forsyte.apalache.tla.bmcmt.Checker.NoError
  */
 @Singleton()
 class BoundedCheckerPassImpl @Inject() (
-    options: OptionGroup.HasChecker,
+                                         commonOptions: CommonOptions,
+                                         checkerOptions: CheckerOptions,
     derivedPreds: DerivedPredicates,
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
@@ -86,27 +88,27 @@ class BoundedCheckerPassImpl @Inject() (
         verificationConditions,
         persistentDefs,
     )
-    val stepsBound = options.checker.length
-    val debug = options.common.debug
-    val tuning = options.checker.tuning
+    val stepsBound = checkerOptions.length
+    val debug = commonOptions.debug
+    val tuning = checkerOptions.tuning
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
-    val smtEncoding = options.checker.smtEncoding
+    val smtEncoding = checkerOptions.smtEncoding
 
     val params = new ModelCheckerParams(input, stepsBound, tuning)
-    params.discardDisabled = options.checker.discardDisabled
-    params.checkForDeadlocks = !options.checker.noDeadlocks
-    params.nMaxErrors = options.checker.maxError
-    params.timeoutSmtSec = options.checker.timeoutSmtSec
+    params.discardDisabled = checkerOptions.discardDisabled
+    params.checkForDeadlocks = checkerOptions.checkDeadlocks
+    params.nMaxErrors = checkerOptions.maxError
+    params.timeoutSmtSec = checkerOptions.timeoutSmtSeconds
     params.smtEncoding = smtEncoding
 
-    val smtProfile = options.common.smtprof
+    val smtProfile = commonOptions.smtprof
     val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
     val smtStatsSec =
       tuning.getOrElse("smt.statsSec", SolverConfig.default.z3StatsSec.toString).toInt
     // Parse the tuning parameters that are relevant to the selected SMT solver.
     // Currently, `tuning` may contain more configuration options (added by some passes) than we parse in
     // `FineTuningParser`.
-    val solverName = options.checker.smtSolver.toString
+    val solverName = checkerOptions.smtSolver.toString
     val solverNamespace = s"${solverName}."
     val solverParameters = FineTuningParser.fromStrings(tuning.filter(_._1.startsWith(solverNamespace))) match {
       case Right(params) => params.map { case (k, v) => (k.substring(solverNamespace.length), v) }
@@ -119,11 +121,11 @@ class BoundedCheckerPassImpl @Inject() (
           smtRandomSeed,
           smtEncoding,
           smtStatsSec,
-          options.checker.smtSolver,
+        checkerOptions.smtSolver,
           solverParameters,
       )
 
-    val result = options.checker.algo match {
+    val result = checkerOptions.algorithm match {
       case Algorithm.Incremental => runIncrementalChecker(params, input, tuning, solverConfig)
       case Algorithm.Offline     => runOfflineChecker(params, input, tuning, solverConfig)
       case Remote                => prepareRemoteContext(params, input, tuning, solverConfig)

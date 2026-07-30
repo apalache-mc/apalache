@@ -2165,7 +2165,7 @@ $ apalache-mc check --out-dir=./test-out-dir --length=0 --debug Counter.tla | se
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
-application-configs.cfg
+application-config.json
 detailed.log
 log0.smt
 run.txt
@@ -4000,10 +4000,10 @@ $ rm -rf ./test-out-dir ./test-run-dir
 
 ## configuration management
 
-### configuration management: read run-dir from local `.apalache.cfg`
+### configuration management: read run-dir from local `.apalache.json`
 
 ```sh
-$ echo "common.run-dir: ./configured-run-dir" > .apalache.cfg
+$ printf '%s\n' '{"run-dir":"./configured-run-dir"}' > .apalache.json
 $ apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
@@ -4011,32 +4011,42 @@ $ ls ./configured-run-dir | ./sort.sh
 detailed.log
 log0.smt
 run.txt
-$ rm -rf ./configured-run-dir ./.apalache.cfg
+$ rm -rf ./configured-run-dir ./.apalache.json
 ```
 
-### configuration management: CLI config file overrides local `.apalache.cfg`
+### configuration management: reject legacy `.apalache.cfg`
 
 ```sh
-$ echo "common.run-dir: ./to-override-dir" > .apalache.cfg
-$ echo "common.run-dir: ./configured-run-dir" > cli-config.cfg
-$ apalache-mc check --config-file=cli-config.cfg --length=0 Counter.tla | sed 's/[IEW]@.*//'
+$ printf '%s\n' '{"run-dir":"./configured-run-dir"}' > .apalache.cfg
+$ apalache-mc check --length=0 Counter.tla 2>&1 | grep -o -e "Legacy Apalache configuration file" -e "EXITCODE:.*"
+Legacy Apalache configuration file
+EXITCODE: ERROR (255)
+$ rm -f ./.apalache.cfg
+```
+
+### configuration management: CLI config file overrides local `.apalache.json`
+
+```sh
+$ printf '%s\n' '{"run-dir":"./to-override-dir"}' > .apalache.json
+$ printf '%s\n' '{"run-dir":"./configured-run-dir"}' > cli-config.json
+$ apalache-mc check --config-file=cli-config.json --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ ! test -d ./to-override-dir
 $ test -d ./configured-run-dir
-$ rm -rf ./configured-run-dir ./.apalache.cfg ./cli-config.cfg
+$ rm -rf ./configured-run-dir ./.apalache.json ./cli-config.json
 ```
 
 ### configuration management: CLI argument overrides config-file
 
 ```sh
-$ echo "common.run-dir: ./to-override-dir" > cli-config.cfg
-$ apalache-mc check --config-file=cli-config.cfg --run-dir=./configured-run-dir --length=0 Counter.tla | sed 's/[IEW]@.*//'
+$ printf '%s\n' '{"run-dir":"./to-override-dir"}' > cli-config.json
+$ apalache-mc check --config-file=cli-config.json --run-dir=./configured-run-dir --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ ! test -d ./to-override-dir
 $ test -d ./configured-run-dir
-$ rm -rf ./configured-run-dir ./cli-config.cfg
+$ rm -rf ./configured-run-dir ./cli-config.json
 ```
 
 ### configuration management: tilde is expanded in configured paths
@@ -4048,34 +4058,34 @@ NOTE: We need to set the home to a relative path to the cwd in order to
 ensure the tests also works in the docker container.
 
 ```sh
-$ echo "common.run-dir: ~/run-dir" > .apalache.cfg
+$ printf '%s\n' '{"run-dir":"~/run-dir"}' > .apalache.json
 $ JVM_ARGS="-Duser.home=." apalache-mc check --length=0 Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ test -d ./run-dir
-$ rm -rf ./run-dir ./.apalache.cfg
+$ rm -rf ./run-dir ./.apalache.json
 ```
 
 ### configuration management: invalid features are rejected with error
 
 ```sh
-$ echo "common.features: [ invalid-feature ]" > .apalache.cfg
-$ apalache-mc check --length=0 Counter.tla | grep -o "Configuration error: .*'"
+$ printf '%s\n' '{"features":["invalid-feature"]}' > .apalache.json
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error:.*" -e "EXITCODE:.*"
 ...
-Configuration error: at 'common.features.0'
-$ rm -rf ./.apalache.cfg
+Configuration error: .apalache.json: $.features: Unexpected feature: invalid-feature
+EXITCODE: ERROR (255)
+$ rm -rf ./.apalache.json
 ```
 
 ### configuration management: unsupported keys produce an error on load
 
 ```sh
-$ echo "invalid.key: foo" > .apalache.cfg
-$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error:.*" -e ".apalache.cfg:.*" -e "EXITCODE:.*"
+$ printf '%s\n' '{"invalid":{"key":"foo"}}' > .apalache.json
+$ apalache-mc check --length=0 Counter.tla | grep -o -e "Configuration error:.*" -e "EXITCODE:.*"
 ...
-Configuration error: at 'invalid':
-.apalache.cfg: 1) Unknown key.
+Configuration error: .apalache.json: $.invalid: Unknown configuration key.
 EXITCODE: ERROR (255)
-$ rm -rf ./.apalache.cfg
+$ rm -rf ./.apalache.json
 ```
 
 ### configuration management: derived configuration can be dumped to a file
@@ -4083,70 +4093,54 @@ $ rm -rf ./.apalache.cfg
 First, set some custom config options, to ensure they'll be merged into the derived config:
 
 ```sh
-$ printf "checker={length=0,inv=[Inv]}, common{out-dir=./cfg-out, features=[rows]}" > demo-config.cfg
+$ printf '%s\n' '{"out-dir":"./cfg-out","features":["rows"],"checker":{"length":0,"inv":["Inv"],"tuning":{"search.outputTraces":"true"}}}' > demo-config.json
 ```
 
 Then, run a trivial checking command with `--debug` so the derived config will
 be saved into to the `--run-dir`:
 
 ```sh
-$ apalache-mc check --smt-solver=cvc5 --config-file=demo-config.cfg --run-dir=configdump-dir --debug Counter.tla
+$ apalache-mc check --smt-solver=cvc5 --config-file=demo-config.json --run-dir=configdump-dir --debug Counter.tla
 ...
 ```
 
 Finally, confirm that the dumped config looks as expected, and clean up:
 
 ```sh
-$ cat ./configdump-dir/application-configs.cfg
-checker {
-    algo=incremental
-    discard-disabled=true
-    inv=[
-        Inv
-    ]
-    length=0
-    max-error=1
-    smt-encoding {
-        type=oopsla-19
-    }
-    smt-solver=cvc5
-    timeout-smt-sec=0
-    tuning {
-        "search.outputTraces"="false"
-    }
+$ cat ./configdump-dir/application-config.json
+{
+  "command" : "check",
+  "config-file" : "demo-config.json",
+  "out-dir" : "./cfg-out",
+  "run-dir" : "configdump-dir",
+  "debug" : true,
+  "smtprof" : false,
+  "write-intermediate" : false,
+  "profiling" : false,
+  "features" : [ "rows" ],
+  "source" : "Counter.tla",
+  "checker" : {
+    "tuning" : {
+      "search.outputTraces" : "true"
+    },
+    "algo" : "incremental",
+    "discard-disabled" : true,
+    "inv" : [ "Inv" ],
+    "length" : 0,
+    "max-error" : 1,
+    "timeout-smt" : 0,
+    "smt-solver" : "cvc5",
+    "smt-encoding" : "oopsla19"
+  },
+  "typechecker" : {
+    "infer-poly" : true
+  },
+  "server" : {
+    "port" : 8822,
+    "server-type" : "checker"
+  }
 }
-common {
-    command=check
-    config-file="demo-config.cfg"
-    debug=true
-    features=[
-        rows
-    ]
-    out-dir="./cfg-out"
-    profiling=false
-    run-dir=configdump-dir
-    smtprof=false
-    write-intermediate=false
-}
-input {
-    source {
-        file="Counter.tla"
-        format=tla
-        type=file
-    }
-}
-output {}
-server {
-    port=8822
-    server-type {
-        type=checker-server
-    }
-}
-tracee {}
-typechecker {
-    inferpoly=true
-}
-$ rm -rf ./configdump-dir ./demo-config.cfg ./cfg-out
+$ rm -rf ./configdump-dir ./demo-config.json ./cfg-out
 ```
 
 ## module lookup

@@ -1,6 +1,8 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import org.backuity.clist.opt
+
 import java.io.File
 import com.typesafe.scalalogging.LazyLogging
 
@@ -8,6 +10,7 @@ import com.typesafe.scalalogging.LazyLogging
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
 import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.io.config.ApalacheConfig
 
 /**
  * This command initiates the 'config' command line.
@@ -18,10 +21,13 @@ import at.forsyte.apalache.infra.ExitCodes
 class ConfigCmd extends ApalacheCommand(name = "config", description = "Configure Apalache options") with LazyLogging {
 
   var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
-      description = "Let Apalache submit usage statistics to tlapl.us\n"
-        + "(shared with TLC and TLA+ Toolbox)\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
+    description = descriptionWithDefault(
+      "Let Apalache submit usage statistics to tlapl.us\n(shared with TLC and TLA+ Toolbox)",
+      "unchanged",
+    )
+      + "\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
 
-  def run() = {
+  override def run(_config: ApalacheConfig): Either[(TExitCode, String), String] = {
     logger.info("Configuring Apalache")
 
     if (!configDirExistsOrCreated()) {

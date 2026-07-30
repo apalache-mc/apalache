@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.infra.passes.options.SMTSolver
+import at.forsyte.apalache.io.config.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, InvalidTlaExException}
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, SetT1, TlaEx, TlaType1}

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions, TypecheckerOptions}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.imp.src.SourceStore
@@ -16,7 +16,9 @@ import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 class EtcTypeCheckerPassImpl @Inject() (
-    val options: OptionGroup.HasTypechecker,
+                                         val commonOptions: CommonOptions,
+                                         val moduleIoOptions: ModuleIoOptions,
+                                         val typecheckerOptions: TypecheckerOptions,
     val sourceStore: SourceStore,
     changeListener: ChangeListener,
     tracker: TransformationTracker,
@@ -24,11 +26,11 @@ class EtcTypeCheckerPassImpl @Inject() (
     val writerFactory: TlaWriterFactory)
     extends EtcTypeCheckerPass with LazyLogging {
 
-  protected def inferPoly: Boolean = options.typechecker.inferpoly
+  protected def inferPoly: Boolean = typecheckerOptions.inferPoly
 
   // use rows by default, unless the user passed --features=no-rows
   protected def useRows: Boolean =
-    !options.common.features.contains(ImpreciseRecordsFeature())
+    !commonOptions.features.contains(ImpreciseRecordsFeature())
 
   override def name: String = "TypeCheckerSnowcat"
 
@@ -67,7 +69,14 @@ class EtcTypeCheckerPassImpl @Inject() (
 
       logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
       writeOut(writerFactory, newModule)
-      utils.writeToOutput(newModule, options, writerFactory, logger, sourceStore)
+      utils.writeToOutput(
+        newModule,
+        commonOptions,
+        moduleIoOptions.output,
+        writerFactory,
+        logger,
+        sourceStore,
+      )
       Right(newModule)
     }
   }

@@ -96,8 +96,9 @@ The arguments are as follows:
       [Detailed output](#detailed). *`false` by default*
     - `--run-dir=DIRECTORY` write all outputs directly into the specified
       `DIRECTORY`
-    - `--config-file` a file to use for loading configuration parameters. This
-      will prevent Apalache from looking for any local `.apalache.cfg` file.
+    - `--config-file` a file to use for loading configuration parameters. This will prevent Apalache from looking for
+      any local `.apalache.json` file. The file must contain [strict JSON](config.md); legacy `.cfg` filenames are
+      rejected.
     - `--profiling` (Bool): This flag governs the creation of `profile-rules.txt`
       used in [profiling](profiling.md). The file is only created if `profiling`
       is set to `True`.  Setting `profiling` to `False` is incompatible with the

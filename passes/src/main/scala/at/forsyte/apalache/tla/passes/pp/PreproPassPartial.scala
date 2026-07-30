@@ -14,10 +14,10 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 }
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.CommonOptions
 
 abstract class PreproPassPartial(
-    val options: OptionGroup.HasChecker,
+                                  val commonOptions: CommonOptions,
     derivedPreds: DerivedPredicates,
     renaming: IncrementalRenaming,
     tracker: TransformationTracker,
@@ -54,7 +54,7 @@ abstract class PreproPassPartial(
 
   protected def checkLocations(module: TlaModule): Unit = {
     // when --debug is enabled, check that all identifiers are assigned a location
-    if (options.common.debug) {
+    if (commonOptions.debug) {
       val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
       module.operDeclarations.foreach(sourceLocator.checkConsistency)
     }

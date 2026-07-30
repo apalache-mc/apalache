@@ -1,49 +1,49 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.shai
 import org.backuity.clist._
-import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import org.backuity.clist.util.Read
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, ServerPatch, ServerType}
 import com.github.apalachemc.apalache.jsonrpc.JsonRpcServerApp
-
-import scala.util.Try
 
 class ServerCmd extends ApalacheCommand(name = "server", description = "Run in server mode") with LazyLogging {
 
+  implicit val serverTypeRead: Read[ServerType] =
+    Read.reads[ServerType](s"a server type: ${ServerType.values.mkString(", ")}")(ServerType.fromString)
+
   var port: Option[Int] = opt[Option[Int]](
-      description = "the port served by the RPC server, default: 8822 (overrides envvar PORT)", useEnv = true)
+    description = descriptionWithDefault(
+      "the port served by the RPC server",
+      configDefaults.server.port,
+    ) + " (overrides envvar PORT)",
+    useEnv = true)
 
-  var serverType: String = opt[String](
-      description = "the type of server to run: 'checker' (shai-grpc) or 'explorer' (json-rpc), default: checker",
-      default = "checker")
+  var serverType: Option[ServerType] = opt[Option[ServerType]](
+    description = descriptionWithDefault(
+      s"the type of server to run: ${ServerType.values.map(_.displayName).mkString(", ")}",
+      configDefaults.server.serverType,
+    ),
+    default = None)
 
-  override def toConfig(): Try[Config.ApalacheConfig] = {
-    super.toConfig().map { cfg =>
-      val selectedServerType = serverType.toLowerCase match {
-        case "checker"  => Config.CheckerServer()
-        case "explorer" => Config.ExplorerServer()
-        case invalid    =>
-          logger.warn(s"Invalid server type: $invalid, using default (checker)")
-          Config.CheckerServer()
+  override def toConfig: ConfigParseResult[ApalacheConfig] =
+    mergeConfig(
+      super.toConfig,
+      ApalacheConfig(server = ServerPatch(port = port, serverType = serverType)),
+    )
+
+  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+    runWithOptions(ApalacheConfigResolver.resolveServer(config)) { options =>
+      logger.info(s"Starting ${options.server.serverType} server on port ${options.server.port}...")
+      options.server.serverType match {
+        case ServerType.Checker =>
+          val server = shai.v1.RpcServer(options.server.port)
+          server.main(Array())
+        case ServerType.Explorer =>
+          JsonRpcServerApp.run(ConfigParseResult.success(config), options.server.port)
       }
-      cfg.copy(server = Config.Server(port, serverType = selectedServerType))
+      Right("Server terminated")
     }
-  }
-
-  def run(): Right[Nothing, String] = {
-    val cfg = configuration.get
-    val options = OptionGroup.WithServer(cfg).get
-
-    logger.info(s"Starting ${options.server.serverType} server on port ${options.server.port}...")
-    options.server.serverType match {
-      case Config.CheckerServer() =>
-        val server = shai.v1.RpcServer(options.server.port)
-        server.main(Array())
-      case Config.ExplorerServer() =>
-        JsonRpcServerApp.run(configuration, options.server.port)
-    }
-
-    Right("Server terminated")
   }
 }
