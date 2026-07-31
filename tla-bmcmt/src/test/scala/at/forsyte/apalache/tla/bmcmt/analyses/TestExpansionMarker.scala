@@ -117,4 +117,25 @@ class TestExpansionMarker extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(input.build == output)
   }
+
+  // #3385: FoldSet folds over the concrete elements of the set, so the set must be expanded,
+  // otherwise a lazily-represented set contributes no elements and the fold silently returns the base value.
+  test("""marked: ApaFoldSet(Op, v, SUBSET S)""") {
+    val S = tla.name("S", intSetT)
+    def op = tla.lambda("A", tla.int(0), tla.param("acc", IntT1), tla.param("x", intSetT))
+    val input = tla.foldSet(op, tla.int(0), tla.powSet(S))
+    val output = marker.apply(input)
+    val expected = tla.foldSet(op, tla.int(0), tla.expand(tla.powSet(S)))
+    assert(expected.build == output)
+  }
+
+  test("""marked: ApaFoldSet(Op, v, [S -> T])""") {
+    val S = tla.name("S", intSetT)
+    val T = tla.name("T", intSetT)
+    def op = tla.lambda("A", tla.int(0), tla.param("acc", IntT1), tla.param("f", intFunT))
+    val input = tla.foldSet(op, tla.int(0), tla.funSet(S, T))
+    val output = marker.apply(input)
+    val expected = tla.foldSet(op, tla.int(0), tla.expand(tla.funSet(S, T)))
+    assert(expected.build == output)
+  }
 }
