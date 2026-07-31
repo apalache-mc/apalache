@@ -1,21 +1,17 @@
 package at.forsyte.apalache.tla.bmcmt.analyses
 
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaBoolOper, TlaTempOper}
-import at.forsyte.apalache.tla.lir.UntypedPredefs._
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaActionOper, TlaTempOper}
 import com.google.inject.Inject
 
 /**
  * An analysis that computes expression grades, which are used by the rewriter's caches.
- *
- * TODO: add tests
- *
  * @author
  *   Igor Konnov
  */
-class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
+class ExprGradeAnalysis @Inject()(store: ExprGradeStoreImpl) {
   private def update(e: TlaEx, grade: ExprGrade.Value): ExprGrade.Value = {
-    store.store.update(e.ID, grade)
+    store.put(e.ID, grade)
     grade
   }
 
@@ -68,32 +64,5 @@ class ExprGradeAnalysis @Inject() (val store: ExprGradeStoreImpl) {
     }
 
     eachExpr(expr)
-  }
-
-  /**
-   * Replace disjunctions with orParallel when the expression is action-level or higher.
-   *
-   * @param expr
-   *   a TLA+ expression
-   * @return
-   *   an updated expression, all grades are updated if needed.
-   */
-  def refineOrInExpr(expr: TlaEx): TlaEx = {
-    expr match {
-      case OperEx(TlaBoolOper.or, _*) =>
-        store.get(expr.ID) match {
-          case Some(ExprGrade.Constant) | Some(ExprGrade.StateFree) | Some(ExprGrade.StateBound) =>
-            expr // keep it
-
-          case _ =>
-            throw new RuntimeException("ExprGradeAnalysis is broken")
-        }
-
-      case OperEx(oper, args @ _*) =>
-        OperEx(oper, args.map(refineOrInExpr): _*)
-
-      case _ =>
-        expr
-    }
   }
 }
