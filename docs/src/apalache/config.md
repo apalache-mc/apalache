@@ -24,8 +24,7 @@ they contain valid JSON or a
 `$HOME/.tlaplus/apalache.json`, respectively. Explicit `--config-file` paths ending in `.cfg` are rejected as well.
 HOCON syntax is no longer supported.
 
-This does not affect TLC configuration files passed with `--config`, which files conventionally use the `.cfg`
-extension.
+This does not affect TLC configuration files passed with `--config`, that conventionally use the `.cfg` extension.
 
 ## JSON rules
 
