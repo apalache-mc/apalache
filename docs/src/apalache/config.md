@@ -73,7 +73,7 @@ This is a complete, copyable example:
 
 ## Supported keys
 
-An absent default of “none” means that the value is genuinely optional.
+In the table below, a default of "none" means that the value is optional.
 
 | Group         | Key                  | Description                                                  | JSON type                    | Default / values                            |
 |---------------|----------------------|--------------------------------------------------------------|------------------------------|---------------------------------------------|
