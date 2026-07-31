@@ -5,7 +5,7 @@ Apalache configuration files use **strict JSON**. The supported filenames are
 
 ## Loading and precedence
 
-Values are applied in this order, from highest to lowest precedence:
+The following sources are considered, in decreasing order of precedence:
 
 1. command-line arguments;
 2. environment variables used by command-line options;
