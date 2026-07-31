@@ -17,8 +17,9 @@ import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
+import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -26,11 +27,11 @@ import com.google.inject.Injector
 import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
-import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.gzip.GzipCompression
+import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.zstandard.ZstandardCompression
+import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
+import org.eclipse.jetty.server.Server
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.{Lock, ReentrantLock}
@@ -417,6 +418,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
 
     for {
       checkerContext <- getCheckerContext(sessionId)
+      variableDescriptionsStore <- getVariableDescriptionsStore(sessionId)
       // check the invariant IDs, so we don't have to waste compute on obvious errors
       _ <- {
         val nStateInvs = checkerContext.checkerInput.verificationConditions.stateInvariantsAndNegations.size
@@ -453,7 +455,9 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           checkerContext.trex.assertState(notInvExpr)
           // ...and check whether the negation is satisfiable
           val (status, jsonTrace) = checkerContext.trex.sat(params.timeoutSec) match {
-            case Some(true)  => (InvariantStatus.VIOLATED, getTraceInJson(checkerContext, params.timeoutSec))
+            case Some(true) =>
+              (InvariantStatus.VIOLATED,
+                getTraceInJson(checkerContext, params.timeoutSec, variableDescriptionsStore.toMap))
             case Some(false) => (InvariantStatus.SATISFIED, NullNode.getInstance())
             case None        => (InvariantStatus.UNKNOWN, NullNode.getInstance())
           }
@@ -475,21 +479,27 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    *   either an error or [[QueryResult]]
    */
   def query(params: QueryParams): Either[ServiceError, QueryResult] =
-    withSessionLock(params.sessionId) { checkerContext =>
-      val traceInJson =
-        if (params.kinds.contains(QueryKind.TRACE)) getTraceInJson(checkerContext, params.timeoutSec)
-        else NullNode.getInstance()
-      val stateInJson =
-        if (params.kinds.contains(QueryKind.STATE)) getLastStateInJson(checkerContext, params.timeoutSec)
-        else NullNode.getInstance()
-      for {
-        viewInJson <-
-          if (!params.kinds.contains(QueryKind.OPERATOR)) Right(NullNode.getInstance(): JsonNode)
-          else
-            getViewInJson(checkerContext, params.operator, params.timeoutSec).left.map(msg =>
-              ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
-      } yield QueryResult(params.sessionId, trace = traceInJson, state = stateInJson, operatorValue = viewInJson)
-    }
+    for {
+      variableDescriptionsStore <- getVariableDescriptionsStore(params.sessionId)
+      result <- withSessionLock(params.sessionId) { checkerContext =>
+        val traceInJson =
+          if (params.kinds.contains(QueryKind.TRACE)) {
+            getTraceInJson(checkerContext, params.timeoutSec, variableDescriptionsStore.toMap)
+          } else {
+            NullNode.getInstance()
+          }
+        val stateInJson =
+          if (params.kinds.contains(QueryKind.STATE)) getLastStateInJson(checkerContext, params.timeoutSec)
+          else NullNode.getInstance()
+        for {
+          viewInJson <-
+            if (!params.kinds.contains(QueryKind.OPERATOR)) Right(NullNode.getInstance(): JsonNode)
+            else
+              getViewInJson(checkerContext, params.operator, params.timeoutSec).left.map(msg =>
+                ServiceError(JsonRpcCodes.INTERNAL_ERROR, msg))
+        } yield QueryResult(params.sessionId, trace = traceInJson, state = stateInJson, operatorValue = viewInJson)
+      }
+    } yield result
 
   /**
    * Try switching to the next model, if it exists.
@@ -602,7 +612,8 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    */
   private def getTraceInJson(
       checkerContext: ModelCheckerContext[IncrementalExecutionContextSnapshot],
-      timeoutSec: Int): JsonNode =
+      timeoutSec: Int,
+      variableDescriptions: Map[String, String]): JsonNode =
     checkerContext.trex.sat(timeoutSec) match {
       case Some(true) =>
         // extract the trace
@@ -612,7 +623,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
         val counterexample = Trace(checkerContext.checkerInput.rootModule, path.map(_.assignments).toIndexedSeq,
             path.map(_ => SortedSet[String]()).toIndexedSeq, ())
         // Serialize the counterexample to JSON
-        itfJson.mkJson(checkerContext.checkerInput.rootModule, counterexample.states).value
+        itfJson.mkJson(checkerContext.checkerInput.rootModule, counterexample.states, variableDescriptions).value
 
       case _ =>
         // no trace or unknown
@@ -737,6 +748,15 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
     sessions.get(sessionId) match {
       case Some(injector) =>
         Right(injector.getInstance(classOf[BoundedCheckerPassImpl]).modelCheckerContext.get)
+      case None =>
+        Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
+    }
+
+  /** Look up the session's variable descriptions, or return a ServiceError. */
+  private def getVariableDescriptionsStore(sessionId: String): Either[ServiceError, VariableDescriptionsStore] =
+    sessions.get(sessionId) match {
+      case Some(injector) =>
+        Right(injector.getInstance(classOf[VariableDescriptionsStore]))
       case None =>
         Left(ServiceError(JsonRpcCodes.SERVER_ERROR_SESSION_NOT_FOUND, s"Session not found: $sessionId"))
     }

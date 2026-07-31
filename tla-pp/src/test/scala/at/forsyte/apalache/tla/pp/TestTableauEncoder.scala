@@ -1,28 +1,16 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.lir.OperEx
-import at.forsyte.apalache.tla.lir.TlaEx
-import at.forsyte.apalache.tla.lir.TlaLevelFinder
-import at.forsyte.apalache.tla.lir.TlaLevelTemporal
-import at.forsyte.apalache.tla.lir.TlaModule
-import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.lir.Typed
-import at.forsyte.apalache.tla.lir.ValEx
-import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.lir.oper.TlaTempOper
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper, TlaTempOper}
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.pp.temporal.LoopEncoder
+import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, TableauEncoder}
 import at.forsyte.apalache.tla.pp.temporal.utils.builder
-import at.forsyte.apalache.tla.pp.temporal.TableauEncoder
 import org.junit.runner.RunWith
-import org.scalacheck.Gen
 import org.scalacheck.Gen.oneOf
-import org.scalacheck.Prop
-import org.scalacheck.Prop.AnyOperators
-import org.scalacheck.Prop.forAll
+import org.scalacheck.{Gen, Prop}
+import org.scalacheck.Prop.{AnyOperators, forAll}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.Checkers
@@ -45,7 +33,30 @@ class TestTableauEncoder extends AnyFunSuite with Checkers {
         new UniqueNameGenerator(),
         loopEncoder,
         new IdleTracker(),
+      new VariableDescriptionsStore(),
     )
+
+  test("records descriptions for generated temporal variables") {
+    val variableDescriptionsStore = new VariableDescriptionsStore()
+    val encoder = new TableauEncoder(
+      modWithPreds.module,
+      new UniqueNameGenerator(),
+      loopEncoder,
+      new IdleTracker(),
+      variableDescriptionsStore,
+    )
+    val formula = OperEx(TlaTempOper.diamond, ValEx(TlaBool(true))(Typed(BoolT1)))(Typed(BoolT1))
+
+    val output =
+      encoder.temporalsToInvariants(
+        modWithPreds,
+        new TlaOperDecl("__formula", List.empty, formula)(Typed(BoolT1)),
+      )
+
+    val describedVariables = output.varDeclarations.filter(decl => variableDescriptionsStore.get(decl.name).nonEmpty)
+    assert(describedVariables.exists(_.name.startsWith(TableauEncoder.NAME_PREFIX)))
+    assert(describedVariables.exists(_.name.startsWith(LoopEncoder.NAME_PREFIX)))
+  }
 
   // ad hoc builder for well-typed temporal expressions (everything is typed boolean)
   def formulaGen: Gen[TlaEx] = Gen.sized { size =>

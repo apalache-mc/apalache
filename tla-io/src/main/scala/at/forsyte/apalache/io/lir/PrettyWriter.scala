@@ -5,12 +5,12 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper._
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
 import at.forsyte.apalache.tla.lir.values._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.{File, FileWriter, PrintWriter, StringWriter}
 import scala.collection.immutable.{HashMap, HashSet}
-import java.io.StringWriter
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -46,7 +46,8 @@ class PrettyWriter(
 
   /**
    * Pretty-prints the given decl twice: Once as valid TLA, and once (before the TLA expression) in a comment, where
-   * names of NameExs are replaced by their mapping in the nameReplacementMap. The output looks, for example, like this:
+   * names of NameExs are replaced by their descriptions in the variableDescriptionsStore. The output looks, for
+   * example, like this:
    *
    * {{{
    *  (* State0 ==
@@ -57,13 +58,7 @@ class PrettyWriter(
    * /\ __temporal_t_1_unroll = FALSE
    * }}}
    *
-   * Here, the NameReplacementMap used was
-   * {{{
-   *  "__temporal_t_1" -> "♢(x = 11)",
-   *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
-   * }}}
-   *
-   * Here, the nameReplacementMap used was
+   * Here, the variableDescriptionsStore used was
    * {{{
    *  "__temporal_t_1" -> "♢(x = 11)",
    *  "__temporal_t_1_unroll" -> "♢(x = 11)_unroll"
@@ -71,15 +66,15 @@ class PrettyWriter(
    *
    * Note that the expression and its comment are the same, but the names for {{{__temporal_t_1}}} and
    * {{{__temporal_t_1_unroll}}} were substituted.
-   * @see
-   *   NameReplacementMap
    */
-  def writeWithNameReplacementComment(decl: TlaDecl): Unit = {
+  def writeWithVariableDescriptionComment(
+                                           decl: TlaDecl,
+                                           variableDescriptionsStore: VariableDescriptionsStore): Unit = {
     val declDoc = declToDoc(decl) <> line <> line
-    if (NameReplacementMap.store.isEmpty) {
+    if (variableDescriptionsStore.isEmpty) {
       prettyWriteDoc(declDoc)
     } else {
-      val declComment = toCommentDoc(decl)
+      val declComment = toVariableDescriptionCommentDoc(decl, variableDescriptionsStore)
       prettyWriteDoc(declComment <> line <> declDoc)
     }
   }
@@ -561,13 +556,15 @@ class PrettyWriter(
   }
 
   /**
-   * Pretty-writes the given decl, while replacing names with the values in the NameReplacementMap. Then, wrap the
-   * result as a comment, since the substituted names might not be valid TLA.
+   * Pretty-writes the given decl, while replacing generated variable names with their descriptions. Then, wrap the
+   * result as a comment, since the descriptions might not be valid TLA.
    */
-  def toCommentDoc(decl: TlaDecl): Doc = {
+  def toVariableDescriptionCommentDoc(
+                                       decl: TlaDecl,
+                                       variableDescriptionsStore: VariableDescriptionsStore): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
-              NameReplacementMap.store.getOrElse(x, x)
+              variableDescriptionsStore.get(x).getOrElse(x)
             }))
   }
 

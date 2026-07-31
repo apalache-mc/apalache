@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
@@ -28,6 +29,23 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
   override protected def beforeEach(): Unit = {
     stringWriter = new StringWriter()
     printWriter = new PrintWriter(stringWriter)
+  }
+
+  test("writes generated variable descriptions in a comment") {
+    val variableDescriptionsStore = new VariableDescriptionsStore()
+    variableDescriptionsStore.put("__temporal_t_1", "◇(x = 1)")
+    val decl = new TlaOperDecl(
+      "State0",
+      List.empty,
+      NameEx("__temporal_t_1")(Typed(BoolT1)),
+    )(Typed(BoolT1))
+    val writer = new PrettyWriter(printWriter, layout80)
+
+    writer.writeWithVariableDescriptionComment(decl, variableDescriptionsStore)
+    printWriter.flush()
+
+    assert(stringWriter.toString.contains("◇(x = 1)"))
+    assert(stringWriter.toString.contains("__temporal_t_1"))
   }
 
   test("name") {

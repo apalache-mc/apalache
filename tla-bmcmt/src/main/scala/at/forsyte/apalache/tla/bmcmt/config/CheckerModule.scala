@@ -2,22 +2,19 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
+import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.lir.storage.ChangeListener
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, VariableDescriptionsStore}
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
-import com.google.inject.TypeLiteral
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.tla.passes.assignments.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
 import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.tla.passes.pp.{
-  ConfigurationPass, ConfigurationPassImpl, DesugarerPass, DesugarerPassImpl, InlinePass, InlinePassImpl, OptPass,
-  OptPassImpl, PreproPass, PreproPassImpl, TemporalPass, TemporalPassImpl,
-}
+import at.forsyte.apalache.tla.passes.pp._
 import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
+import com.google.inject.TypeLiteral
 
 /**
  * A configuration that binds all the passes from the parser to the checker. If you are not sure how the binding works,
@@ -58,6 +55,7 @@ class CheckerModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(opt
       .toProvider(classOf[AnnotationStoreProvider])
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
+    bind(classOf[VariableDescriptionsStore])
 
     // writers
     bind(classOf[TlaWriterFactory])

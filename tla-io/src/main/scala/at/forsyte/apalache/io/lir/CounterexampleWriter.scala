@@ -2,9 +2,10 @@ package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
-import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
+import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, build}
 import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
@@ -22,7 +23,8 @@ trait CounterexampleWriter {
   def write(trace: Trace[TlaEx]): Unit
 }
 
-class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class TlaCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: VariableDescriptionsStore)
+  extends CounterexampleWriter {
 
   import CounterexampleWriter.stateToEx
 
@@ -59,10 +61,13 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
           pretty.writeComment(s"State$i$labels_str")
         }
         val decl = tla.decl(s"State$i", stateToEx(state))
-        pretty.writeWithNameReplacementComment(decl)
+        pretty.writeWithVariableDescriptionComment(decl, variableDescriptionsStore)
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
-    pretty.writeWithNameReplacementComment(tla.decl("InvariantViolation", tla.unchecked(trace.data)))
+    pretty.writeWithVariableDescriptionComment(
+      tla.decl("InvariantViolation", tla.unchecked(trace.data)),
+      variableDescriptionsStore,
+    )
 
     pretty.writeFooter()
     pretty.writeComment("Created by Apalache on %s".format(Calendar.getInstance().getTime))
@@ -71,7 +76,8 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   }
 }
 
-class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
+class TlcCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: VariableDescriptionsStore)
+  extends TlaCounterexampleWriter(writer, variableDescriptionsStore) {
   override def write(trace: Trace[TlaEx]): Unit = {
     // `states` must always contain at least 1 state: the constant initialization
     // This makes `states.tail` safe, since we have a nonempty sequence
@@ -154,9 +160,10 @@ object CounterexampleWriter extends LazyLogging {
   def writeAllFormats(
       prefix: String,
       suffix: String,
-      trace: Trace[TlaEx]): List[String] = {
+      trace: Trace[TlaEx],
+      variableDescriptionsStore: VariableDescriptionsStore): List[String] = {
     val writerHelper: String => PrintWriter => Unit =
-      kind => writer => apply(kind, writer).write(trace)
+      kind => writer => apply(kind, writer, variableDescriptionsStore).write(trace)
 
     val fileNames = List(
         ("tla", s"$prefix$suffix.tla"),
@@ -175,12 +182,15 @@ object CounterexampleWriter extends LazyLogging {
   }
 
   // factory method to get the desired CE writer
-  def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
+  def apply(
+             kind: String,
+             writer: PrintWriter,
+             variableDescriptionsStore: VariableDescriptionsStore): CounterexampleWriter = {
     kind match {
-      case "tla"      => new TlaCounterexampleWriter(writer)
-      case "tlc"      => new TlcCounterexampleWriter(writer)
+      case "tla" => new TlaCounterexampleWriter(writer, variableDescriptionsStore)
+      case "tlc" => new TlcCounterexampleWriter(writer, variableDescriptionsStore)
       case "json"     => new JsonCounterexampleWriter(writer)
-      case "itf.json" => new ItfCounterexampleWriter(writer)
+      case "itf.json" => new ItfCounterexampleWriter(writer, variableDescriptionsStore)
       case fmt        => throw new Exception(s"unknown counterexample format requested: $fmt")
     }
   }

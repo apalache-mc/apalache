@@ -1,17 +1,16 @@
 package at.forsyte.apalache.tla.passes.pp
 
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
+import at.forsyte.apalache.infra.passes.DerivedPredicates
+import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.lir.TlaWriterFactory
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
+import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
+import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.pp.{Inliner, UniqueNameGenerator}
 import at.forsyte.apalache.tla.pp.temporal.{LoopEncoder, TableauEncoder}
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.pp.UniqueNameGenerator
-import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
-import at.forsyte.apalache.tla.pp.Inliner
-import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
-import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -23,7 +22,8 @@ class TemporalPassImpl @Inject() (
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
     writerFactory: TlaWriterFactory,
-    renaming: IncrementalRenaming)
+    renaming: IncrementalRenaming,
+    variableDescriptionsStore: VariableDescriptionsStore)
     extends TemporalPass with LazyLogging {
 
   override def name: String = "TemporalPass"
@@ -52,17 +52,16 @@ class TemporalPassImpl @Inject() (
       .map(propName => {
         module.declarations.find(_.name == propName)
       })
-      .filter(propOption =>
-        propOption match {
-          case Some(temporalProp: TlaOperDecl) if temporalProp.formalParams.isEmpty =>
-            val level = levelFinder.getLevelOfDecl(temporalProp)
-            if (level != TlaLevelTemporal) {
-              logger.warn(
-                  s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property of the initial state. Should ${temporalProp.name} be an invariant instead (--inv)?")
-            }
-            true
-          case _ => false
-        })
+      .filter {
+        case Some(temporalProp: TlaOperDecl) if temporalProp.formalParams.isEmpty =>
+          val level = levelFinder.getLevelOfDecl(temporalProp)
+          if (level != TlaLevelTemporal) {
+            logger.warn(
+              s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property of the initial state. Should ${temporalProp.name} be an invariant instead (--inv)?")
+          }
+          true
+        case _ => false
+      }
       .map(propOption => propOption.get.asInstanceOf[TlaOperDecl])
 
     if (temporalFormulas.isEmpty) {
@@ -93,7 +92,8 @@ class TemporalPassImpl @Inject() (
       // list of invariants (otherwise, they would not be treated as invariants by later passes)
       derivedPreds.addInvariants(inlinedTemporalFormulas.map(_.name))
 
-      val tableauEncoder = new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker)
+      val tableauEncoder =
+        new TableauEncoder(loopModWithPreds.module, gen, loopEncoder, tracker, variableDescriptionsStore)
       tableauEncoder.temporalsToInvariants(loopModWithPreds, inlinedTemporalFormulas: _*)
     }
   }
