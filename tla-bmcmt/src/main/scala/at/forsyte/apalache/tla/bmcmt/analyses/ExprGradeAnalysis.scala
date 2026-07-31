@@ -9,7 +9,7 @@ import com.google.inject.Inject
  * @author
  *   Igor Konnov
  */
-class ExprGradeAnalysis @Inject()(store: ExprGradeStoreImpl) {
+class ExprGradeAnalysis @Inject() (store: ExprGradeStoreImpl) {
   private def update(e: TlaEx, grade: ExprGrade.Value): ExprGrade.Value = {
     store.put(e.ID, grade)
     grade

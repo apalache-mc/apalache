@@ -62,16 +62,16 @@ class TestTlaExpr extends AnyFunSuite {
     val y = OperEx(TlaSetOper.enumSet, ValEx(TlaInt(4)))
     val i = NameEx("i")
     val cases = Seq(
-      TlaSetOper.cup -> Seq(x, y),
-      TlaSetOper.cap -> Seq(x, y),
-      TlaSetOper.in -> Seq(x, y),
-      TlaSetOper.notin -> Seq(x, y),
-      TlaSetOper.setminus -> Seq(x, y),
-      TlaSetOper.subseteq -> Seq(x, y),
-      TlaSetOper.powerset -> Seq(y),
-      TlaSetOper.union -> Seq(x),
-      TlaSetOper.filter -> Seq(i, x, OperEx(TlaSetOper.in, i, y)),
-      TlaSetOper.map -> Seq(OperEx(TlaSetOper.cup, i, y), i, x),
+        TlaSetOper.cup -> Seq(x, y),
+        TlaSetOper.cap -> Seq(x, y),
+        TlaSetOper.in -> Seq(x, y),
+        TlaSetOper.notin -> Seq(x, y),
+        TlaSetOper.setminus -> Seq(x, y),
+        TlaSetOper.subseteq -> Seq(x, y),
+        TlaSetOper.powerset -> Seq(y),
+        TlaSetOper.union -> Seq(x),
+        TlaSetOper.filter -> Seq(i, x, OperEx(TlaSetOper.in, i, y)),
+        TlaSetOper.map -> Seq(OperEx(TlaSetOper.cup, i, y), i, x),
     )
 
     cases.foreach { case (operator, args) =>

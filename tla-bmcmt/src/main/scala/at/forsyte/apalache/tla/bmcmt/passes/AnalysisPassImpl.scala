@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.transformations.{TransformationTracker, fromTouchToExTransformation}
+import at.forsyte.apalache.tla.lir.transformations.{fromTouchToExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.LetInOptimizer
 import com.google.inject.Inject

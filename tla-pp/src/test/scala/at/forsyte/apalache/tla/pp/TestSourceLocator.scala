@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRe
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator, SourceMap}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.transformations.standard._
-import at.forsyte.apalache.tla.lir.transformations.{TlaExTransformation, TransformationTracker, decorateWithPrime}
+import at.forsyte.apalache.tla.lir.transformations.{decorateWithPrime, TlaExTransformation, TransformationTracker}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
@@ -23,10 +23,10 @@ class TestSourceLocator extends AnyFunSuite {
   private val plusDecl: TlaOperDecl =
     tla
       .decl(
-        "plus",
-        tla.plus(tla.name("a", IntT1), tla.name("b", IntT1)),
-        tla.param("a", IntT1),
-        tla.param("b", IntT1),
+          "plus",
+          tla.plus(tla.name("a", IntT1), tla.name("b", IntT1)),
+          tla.param("a", IntT1),
+          tla.param("b", IntT1),
       )
       .build
 
@@ -34,16 +34,16 @@ class TestSourceLocator extends AnyFunSuite {
   private val applyDecl: TlaOperDecl =
     tla
       .decl(
-        "App",
-        tla.appOp(tla.name("X", intToInt), tla.name("p", IntT1)),
-        tla.param("X", intToInt),
-        tla.param("p", IntT1),
+          "App",
+          tla.appOp(tla.name("X", intToInt), tla.name("p", IntT1)),
+          tla.param("X", intToInt),
+          tla.param("p", IntT1),
       )
       .build
 
   private val declarations = List(
-    plusDecl,
-    applyDecl,
+      plusDecl,
+      applyDecl,
   )
 
   // x' /\ y
@@ -54,8 +54,8 @@ class TestSourceLocator extends AnyFunSuite {
   private val localApplication =
     tla
       .letIn(
-        tla.ge(tla.appOp(tla.name("A", intToInt), tla.int(1)), tla.int(0)),
-        tla.decl("A", tla.plus(tla.name("p", IntT1), tla.int(1)), tla.param("p", IntT1)),
+          tla.ge(tla.appOp(tla.name("A", intToInt), tla.int(1)), tla.int(0)),
+          tla.decl("A", tla.plus(tla.name("p", IntT1), tla.int(1)), tla.param("p", IntT1)),
       )
       .build
   // plus(x, 1)
@@ -66,12 +66,12 @@ class TestSourceLocator extends AnyFunSuite {
   private val higherOrderApplication =
     tla
       .letIn(
-        tla.ite(
-          tla.name("y", BoolT1),
-          tla.appOp(tla.name("App", higherOrderToInt), tla.name("I", intToInt), tla.int(0)),
-          tla.int(1),
-        ),
-        tla.decl("I", tla.name("p", IntT1), tla.param("p", IntT1)),
+          tla.ite(
+              tla.name("y", BoolT1),
+              tla.appOp(tla.name("App", higherOrderToInt), tla.name("I", intToInt), tla.int(0)),
+              tla.int(1),
+          ),
+          tla.decl("I", tla.name("p", IntT1), tla.param("p", IntT1)),
       )
       .build
   // LET A(p, q) == IntentionallyUndefinedOper(p, q) IN
@@ -83,32 +83,32 @@ class TestSourceLocator extends AnyFunSuite {
   private val nestedLetIn =
     tla
       .letIn(
-        tla.letIn(
           tla.letIn(
-            tla.appOp(tla.name("C", intToInt), tla.appOp(tla.name("D", nullaryInt))),
-            tla.decl("D", tla.name("x", IntT1)),
+              tla.letIn(
+                  tla.appOp(tla.name("C", intToInt), tla.appOp(tla.name("D", nullaryInt))),
+                  tla.decl("D", tla.name("x", IntT1)),
+              ),
+              tla.decl("B", tla.name("b", IntT1)),
+              tla.decl(
+                  "C",
+                  tla.appOp(
+                      tla.name("A", intIntToInt),
+                      tla.name("p", IntT1),
+                      tla.appOp(tla.name("B", nullaryInt)),
+                  ),
+                  tla.param("p", IntT1),
+              ),
           ),
-          tla.decl("B", tla.name("b", IntT1)),
           tla.decl(
-            "C",
-            tla.appOp(
-              tla.name("A", intIntToInt),
-              tla.name("p", IntT1),
-              tla.appOp(tla.name("B", nullaryInt)),
-            ),
-            tla.param("p", IntT1),
+              "A",
+              tla.appOp(
+                  tla.name("IntentionallyUndefinedOper", intIntToInt),
+                  tla.name("p", IntT1),
+                  tla.name("q", IntT1),
+              ),
+              tla.param("p", IntT1),
+              tla.param("q", IntT1),
           ),
-        ),
-        tla.decl(
-          "A",
-          tla.appOp(
-            tla.name("IntentionallyUndefinedOper", intIntToInt),
-            tla.name("p", IntT1),
-            tla.name("q", IntT1),
-          ),
-          tla.param("p", IntT1),
-          tla.param("q", IntT1),
-        ),
       )
       .build
   // UNCHANGED x
@@ -120,22 +120,22 @@ class TestSourceLocator extends AnyFunSuite {
   private val recordAccess = tla.app(tla.rec("x" -> tla.int(1)), tla.str("x")).build
 
   private val expressions = List(
-    primedConjunction,
-    localApplication,
-    topLevelApplication,
-    higherOrderApplication,
-    nestedLetIn,
-    unchangedName,
-    unchangedTuple,
-    recordAccess,
+      primedConjunction,
+      localApplication,
+      topLevelApplication,
+      higherOrderApplication,
+      nestedLetIn,
+      unchangedName,
+      unchangedTuple,
+      recordAccess,
   )
 
   private def generateLocation(uid: UID) =
     new SourceLocation(
         "filename",
-      SourceRegion(
-        SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
-        SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
+        SourceRegion(
+            SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
+            SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
         ),
     )
 
