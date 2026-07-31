@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.annotations
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.json.JsonTlaWriter
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import com.google.inject.{Inject, Singleton}

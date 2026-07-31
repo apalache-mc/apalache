@@ -5,7 +5,7 @@ import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions, TypecheckerOptions}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.imp.utils
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}

@@ -1,6 +1,5 @@
-package at.forsyte.apalache.tla.imp.src
+package at.forsyte.apalache.tla.lir.src
 
-import at.forsyte.apalache.tla.lir.src.{RegionTree, SourcePosition, SourceRegion}
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner

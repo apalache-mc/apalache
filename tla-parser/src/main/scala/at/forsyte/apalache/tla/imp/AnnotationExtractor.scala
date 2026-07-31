@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationStr}
 import at.forsyte.apalache.io.annotations.parser.CommentPreprocessor
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.AnnotationExtractor.FREE_TEXT
+import at.forsyte.apalache.io.annotations.StandardAnnotations.FREE_TEXT
 import at.forsyte.apalache.tla.lir.UID
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
@@ -66,12 +66,4 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
       // in this case, we just get the comment above the declaration, e.g., of a VARIABLE or a CONSTANT.
       node.getComment
   }
-}
-
-object AnnotationExtractor {
-
-  /**
-   * The name of the meta annotation that contains the text of the comments free of annotations.
-   */
-  val FREE_TEXT = "#freeText"
 }

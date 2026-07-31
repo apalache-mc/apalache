@@ -1,7 +1,8 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.imp.src.SourceLocation
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{InstanceNode, ModuleNode, OpDefNode}

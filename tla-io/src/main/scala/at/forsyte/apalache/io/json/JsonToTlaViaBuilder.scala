@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.json
 
 import at.forsyte.apalache.io.json.impl.BuilderCallByName
 import at.forsyte.apalache.io.lir.TypeTagReader
-import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}

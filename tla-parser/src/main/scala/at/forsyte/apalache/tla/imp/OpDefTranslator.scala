@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.{SaveToStoreTransformationListener, SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.imp.src.SourceLocation
+import at.forsyte.apalache.tla.lir.src.{SaveToStoreTransformationListener, SourceStore}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
