@@ -533,6 +533,40 @@ class TestConstSimplifier extends AnyFunSuite with BeforeAndAfterEach with Check
     assert(output == expected)
   }
 
+  // #1238: set simplifications that hold for an arbitrary set S, not only set enumerations
+
+  test("""x \in {} becomes FALSE""") {
+    val input = in(name("x").as(IntT1), enumSet().as(intSetT)).as(BoolT1)
+    assert(simplifier.apply(input) == bool(false).as(BoolT1))
+  }
+
+  test("""{} \subseteq S and S \subseteq S become TRUE""") {
+    val s = name("S").as(intSetT)
+    assert(simplifier.apply(subseteq(enumSet().as(intSetT), s).as(BoolT1)) == bool(true).as(BoolT1))
+    assert(simplifier.apply(subseteq(s, s).as(BoolT1)) == bool(true).as(BoolT1))
+  }
+
+  test("""union with the empty set and S \cup S simplify""") {
+    val s = name("S").as(intSetT)
+    assert(simplifier.apply(cup(enumSet().as(intSetT), s).as(intSetT)) == s)
+    assert(simplifier.apply(cup(s, enumSet().as(intSetT)).as(intSetT)) == s)
+    assert(simplifier.apply(cup(s, s).as(intSetT)) == s)
+  }
+
+  test("""intersection with the empty set and S \cap S simplify""") {
+    val s = name("S").as(intSetT)
+    assert(simplifier.apply(cap(enumSet().as(intSetT), s).as(intSetT)) == enumSet().as(intSetT))
+    assert(simplifier.apply(cap(s, enumSet().as(intSetT)).as(intSetT)) == enumSet().as(intSetT))
+    assert(simplifier.apply(cap(s, s).as(intSetT)) == s)
+  }
+
+  test("""setminus with the empty set and S \ S simplify""") {
+    val s = name("S").as(intSetT)
+    assert(simplifier.apply(setminus(enumSet().as(intSetT), s).as(intSetT)) == enumSet().as(intSetT))
+    assert(simplifier.apply(setminus(s, enumSet().as(intSetT)).as(intSetT)) == s)
+    assert(simplifier.apply(setminus(s, s).as(intSetT)) == enumSet().as(intSetT))
+  }
+
   test("""Cardinality({"a", "b", "c"}) becomes 3""") {
     val input = card(enumSet(str("a"), str("b"), str("c")).as(strSetT)).as(intT)
     val output = simplifier.apply(input)

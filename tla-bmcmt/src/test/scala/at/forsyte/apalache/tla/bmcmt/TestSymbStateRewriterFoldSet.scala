@@ -78,4 +78,25 @@ trait TestSymbStateRewriterFoldSet extends RewriterBase {
 
     assertTlaExAndRestore(create(rewriterType), state)
   }
+
+  // Regression test for #1691: folding over an infinite set such as Nat or Int is unsound
+  // (the set has no concrete members, so the fold would silently return the base value).
+  // The rewriter must reject it instead.
+  test("""FoldSet( LAMBDA x,y: ..., v, Nat ) is rejected""") { rewriterType: SMTEncoding =>
+    val a = IntT1
+    val b = IntT1
+    val letEx = tla.lambda("A", tla.int(0), tla.param("p", a), tla.param("q", b))
+    val foldEx = tla.foldSet(letEx, tla.int(0), tla.natSet())
+    val state = new SymbState(foldEx, arena, Binding())
+    assertThrows[RewriterKnownLimitationError](create(rewriterType).rewriteUntilDone(state))
+  }
+
+  test("""FoldSet( LAMBDA x,y: ..., v, Int ) is rejected""") { rewriterType: SMTEncoding =>
+    val a = IntT1
+    val b = IntT1
+    val letEx = tla.lambda("A", tla.int(0), tla.param("p", a), tla.param("q", b))
+    val foldEx = tla.foldSet(letEx, tla.int(0), tla.intSet())
+    val state = new SymbState(foldEx, arena, Binding())
+    assertThrows[RewriterKnownLimitationError](create(rewriterType).rewriteUntilDone(state))
+  }
 }

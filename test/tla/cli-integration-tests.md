@@ -465,6 +465,17 @@ EXITCODE: OK
 $ rm output.json
 ```
 
+### typecheck accepts string and integer TLC registers
+
+Regression test for #3274: `TLCGet`/`TLCSet` must accept both string (named) and
+integer (numbered) registers in the same operator.
+
+```sh
+$ apalache-mc typecheck Bug3274.tla | sed 's/I@.*//'
+...
+EXITCODE: OK
+```
+
 ### parse FormulaRefs fails
 
 ```sh
@@ -639,6 +650,20 @@ EXITCODE: OK
 $ apalache-mc check Bug593.tla | sed 's/I@.*//'
 ...
 EXITCODE: ERROR (255)
+```
+
+### check Bug3400 reports SANY semantic error
+
+Out-of-order definitions should report SANY's semantic error details instead of
+only reporting an unknown SANY exit code.
+
+```sh
+$ apalache-mc check --init=IndInv1 --next=Next --inv=IndInv1 Bug3400.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "Parsing error: Semantic errors:|line 14, col 12 to line 14, col 18|Unknown operator: .IndInv1.|EXITCODE: ERROR \\(255\\)"
+Parsing error: Semantic errors:
+line 14, col 12 to line 14, col 18 of module Bug3400
+Unknown operator: `IndInv1'.
+EXITCODE: ERROR (255)
+$ apalache-mc check --init=IndInv1 --next=Next --inv=IndInv1 Bug3400.tla 2>&1 | grep -q "Unknown SANY error"; test $? -eq 1
 ```
 
 ### check Bug20190118 succeeds
