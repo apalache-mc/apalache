@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.BuilderT
 
 /**
  * The oracle for sparse values, that is, a set S of naturals. This oracle is mapped on a smaller contiguous range

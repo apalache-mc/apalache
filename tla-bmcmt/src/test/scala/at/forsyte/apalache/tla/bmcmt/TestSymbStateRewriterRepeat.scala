@@ -21,7 +21,7 @@ trait TestSymbStateRewriterRepeat extends RewriterBase {
     val asCell = state.asCell
 
     // compare the value
-    val eqn = tla.eql(cellEx(asCell), tla.int(5))
+    val eqn = tla.eql(asCell.toBuilder, tla.int(5))
     assertTlaExAndRestore(rewriter, state.setRex(eqn))
   }
 
@@ -40,7 +40,7 @@ trait TestSymbStateRewriterRepeat extends RewriterBase {
     val asCell = state.asCell
 
     // compare the value
-    val eqn = tla.eql(cellEx(asCell), tla.int(15))
+    val eqn = tla.eql(asCell.toBuilder, tla.int(15))
     assertTlaExAndRestore(rewriter, state.setRex(eqn))
   }
 }

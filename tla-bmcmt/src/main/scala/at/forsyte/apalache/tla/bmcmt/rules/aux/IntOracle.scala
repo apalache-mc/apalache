@@ -4,7 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState}
 import at.forsyte.apalache.tla.lir.{IntT1, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,

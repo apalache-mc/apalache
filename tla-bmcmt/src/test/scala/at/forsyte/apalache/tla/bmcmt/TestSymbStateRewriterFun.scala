@@ -170,13 +170,13 @@ trait TestSymbStateRewriterFun extends RewriterBase {
         val cell = nextState.arena.findCellByName(name)
         cell.cellType match {
           case CellTFrom(IntT1) =>
-            val eq1 = tla.eql(cellEx(cell), tla.int(12))
+            val eq1 = tla.eql(cell.toBuilder, tla.int(12))
 
             solverContext.assertGroundExpr(eq1)
             rewriter.push()
             assert(solverContext.sat())
             rewriter.pop()
-            val eq2 = tla.neql(cellEx(cell), tla.int(12))
+            val eq2 = tla.neql(cell.toBuilder, tla.int(12))
 
             solverContext.assertGroundExpr(eq2)
             assert(!solverContext.sat())

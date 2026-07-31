@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle {
 
@@ -18,7 +18,7 @@ class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle
 
         case hd +: tl =>
           // the least significant bit comes first
-          val lit =
+          val lit: BuilderT =
             if ((n & 1) == 1) hd.toBuilder else tla.not(hd.toBuilder)
           lit +: mkLits(n >> 1, tl)
       }

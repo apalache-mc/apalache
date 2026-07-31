@@ -48,7 +48,7 @@ trait TestUninterpretedConstOracle extends RewriterBase {
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 2)
     // assert flag == true iff oracle = 0
     rewriter.solverContext
-      .assertGroundExpr(oracle.caseAssertions(nextState, Seq(cellEx(flag), tla.not(cellEx(flag)))))
+      .assertGroundExpr(oracle.caseAssertions(nextState, Seq(flag.toBuilder, tla.not(flag.toBuilder))))
     // assert oracle = 1
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 1))

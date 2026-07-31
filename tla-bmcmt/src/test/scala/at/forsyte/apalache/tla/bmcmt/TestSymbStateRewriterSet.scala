@@ -32,11 +32,11 @@ trait TestSymbStateRewriterSet extends RewriterBase {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case set @ NameEx(_) =>
-            val falseInSet = tla.selectInSet(cellEx(arena.cellFalse()), unchecked(set))
+            val falseInSet = tla.selectInSet(arena.cellFalse().toBuilder, unchecked(set))
             solverContext.assertGroundExpr(falseInSet)
             assert(solverContext.sat())
             val notTrueInSet =
-              tla.not(tla.selectInSet(cellEx(arena.cellTrue()), unchecked(set)))
+              tla.not(tla.selectInSet(arena.cellTrue().toBuilder, unchecked(set)))
             solverContext.assertGroundExpr(notTrueInSet)
             assert(!solverContext.sat())
 
@@ -222,7 +222,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     arena = arena.appendCell(BoolT1)
     val cell = arena.topCell
     val ex =
-      tla.in(cellEx(cell), tla.enumSet(tla.bool(true), tla.bool(true)))
+      tla.in(cell.toBuilder, tla.enumSet(tla.bool(true), tla.bool(true)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
@@ -231,14 +231,16 @@ trait TestSymbStateRewriterSet extends RewriterBase {
           case predEx @ NameEx(_) =>
             rewriter.push()
             // cell = \TRUE
-            solverContext.assertGroundExpr(tla.eql(cellEx(arena.cellTrue()), cellEx(cell)))
+            solverContext
+              .assertGroundExpr(tla.eql(arena.cellTrue().toBuilder, cell.toBuilder))
             // and membership holds true
             solverContext.assertGroundExpr(predEx)
             assert(solverContext.sat())
             rewriter.pop()
             // another query
             // cell = \FALSE
-            solverContext.assertGroundExpr(tla.eql(cellEx(arena.cellFalse()), cellEx(cell)))
+            solverContext
+              .assertGroundExpr(tla.eql(arena.cellFalse().toBuilder, cell.toBuilder))
             // and membership holds true
             solverContext.assertGroundExpr(predEx)
             // contradiction
@@ -281,21 +283,23 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     arena = arena.appendCell(BoolT1)
     val cell = arena.topCell
     val ex =
-      tla.not(tla.in(cellEx(cell), tla.enumSet(tla.bool(true), tla.bool(true))))
+      tla.not(tla.in(cell.toBuilder, tla.enumSet(tla.bool(true), tla.bool(true))))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state).ex match {
       case predEx @ NameEx(_) =>
         rewriter.push()
         // cell = TRUE
-        solverContext.assertGroundExpr(tla.eql(cellEx(arena.cellTrue()), cellEx(cell)))
+        solverContext
+          .assertGroundExpr(tla.eql(arena.cellTrue().toBuilder, cell.toBuilder))
         // and membership holds true
         solverContext.assertGroundExpr(predEx)
         assert(!solverContext.sat())
         rewriter.pop()
         // another query
         // cell = \FALSE
-        solverContext.assertGroundExpr(tla.eql(cellEx(arena.cellFalse()), cellEx(cell)))
+        solverContext
+          .assertGroundExpr(tla.eql(arena.cellFalse().toBuilder, cell.toBuilder))
         // and membership holds true
         solverContext.assertGroundExpr(predEx)
         // no contradiction here

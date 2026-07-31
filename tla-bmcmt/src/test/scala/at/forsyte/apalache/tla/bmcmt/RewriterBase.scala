@@ -25,7 +25,6 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def boolName(name: String): BuilderT = tla.name(name, BoolT1)
   protected def intName(name: String): BuilderT = tla.name(name, IntT1)
-  protected def cellEx(cell: ArenaCell): BuilderT = tla.name(cell.toString, cell.cellType.toTlaType1)
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {

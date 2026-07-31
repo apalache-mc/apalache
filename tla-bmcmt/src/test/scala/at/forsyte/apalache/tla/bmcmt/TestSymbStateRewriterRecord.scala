@@ -18,7 +18,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
     val (newArena2, set2) =
       rewriter.recordDomainCache.create(newArena1, (SortedSet("a", "b", "c"), SortedSet[String]()))
     // the domains should not be equal
-    val neq = tla.not(tla.eql(cellEx(set1), cellEx(set2)))
+    val neq = tla.not(tla.eql(set1.toBuilder, set2.toBuilder))
     val state = new SymbState(neq, newArena2, Binding())
     assertTlaExAndRestore(rewriter, state)
   }
@@ -51,7 +51,7 @@ trait TestSymbStateRewriterRecord extends RewriterBase {
             // also make sure that the domain equality works
             val (newArena, expectedDom) =
               rewriter.recordDomainCache.getOrCreate(nextState.arena, (SortedSet("a", "b", "c"), SortedSet[String]()))
-            val eq = tla.eql(cellEx(expectedDom), tla.dom(cellEx(cell)))
+            val eq = tla.eql(expectedDom.toBuilder, tla.dom(cell.toBuilder))
             assertTlaExAndRestore(rewriter, nextState.setArena(newArena).setRex(eq))
 
           // we check the actual contents in the later tests that access elements
