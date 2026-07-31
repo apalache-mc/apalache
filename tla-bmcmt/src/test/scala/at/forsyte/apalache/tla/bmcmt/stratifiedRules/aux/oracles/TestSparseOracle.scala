@@ -6,8 +6,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import org.junit.runner.RunWith
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll

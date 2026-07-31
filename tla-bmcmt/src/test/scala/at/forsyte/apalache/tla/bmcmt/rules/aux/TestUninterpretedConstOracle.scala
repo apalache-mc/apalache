@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestUninterpretedConstOracle extends RewriterBase {
   test("""UninterpretedConst Oracle.create""") { rewriterType: SMTEncoding =>
@@ -48,7 +48,7 @@ trait TestUninterpretedConstOracle extends RewriterBase {
     val (nextState, oracle) = UninterpretedConstOracle.create(rewriter, state, 2)
     // assert flag == true iff oracle = 0
     rewriter.solverContext
-      .assertGroundExpr(oracle.caseAssertions(nextState, Seq(flag.toBuilder, tla.not(flag.toBuilder))))
+      .assertGroundExpr(oracle.caseAssertions(nextState, Seq(cellEx(flag), tla.not(cellEx(flag)))))
     // assert oracle = 1
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(oracle.whenEqualTo(nextState, 1))

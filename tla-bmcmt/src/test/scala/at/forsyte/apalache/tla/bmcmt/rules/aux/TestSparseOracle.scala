@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}
 import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSparseOracle extends RewriterBase {
   test("""Sparse Oracle.create""") { rewriterType: SMTEncoding =>
@@ -50,7 +50,7 @@ trait TestSparseOracle extends RewriterBase {
     val sparseOracle = new SparseOracle(oracle, Set(1, 5))
     // assert flag == true iff oracle = 1
     rewriter.solverContext
-      .assertGroundExpr(sparseOracle.caseAssertions(nextState, Seq(flag.toBuilder, tla.not(flag.toBuilder))))
+      .assertGroundExpr(sparseOracle.caseAssertions(nextState, Seq(cellEx(flag), tla.not(cellEx(flag)))))
     // assert oracle = 5
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(sparseOracle.whenEqualTo(nextState, 5))

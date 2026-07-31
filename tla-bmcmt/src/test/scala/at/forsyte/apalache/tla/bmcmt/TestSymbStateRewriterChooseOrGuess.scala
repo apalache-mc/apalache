@@ -2,20 +2,21 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.infra.passes.options.SMTEncoding
 import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.types.tlaU._
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   test("""CHOOSE x \in { 1, 2, 3 }: x > 1""") { rewriterType: SMTEncoding =>
-    val cond = gt(name("x", IntT1), int(1))
+    val cond = tla.gt(tla.name("x", IntT1), tla.int(1))
     val ex =
-      choose(name("x", IntT1), enumSet(int(1), int(2), int(3)), cond)
+      tla.choose(tla.name("x", IntT1), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)), cond)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(unchecked(nextState.ex), int(i))))
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(tla.unchecked(nextState.ex), tla.int(i))))
       solverContext.assertGroundExpr(ns.ex)
     }
 
@@ -39,14 +40,14 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   }
 
   test("""Guess({ 2, 3 })""") { rewriterType: SMTEncoding =>
-    val ex = guess(enumSet(int(2), int(3)))
+    val ex = tla.guess(tla.enumSet(tla.int(2), tla.int(3)))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val ns = rewriter.rewriteUntilDone(nextState.setRex(eql(unchecked(nextState.ex), int(i))))
+      val ns = rewriter.rewriteUntilDone(nextState.setRex(tla.eql(tla.unchecked(nextState.ex), tla.int(i))))
       solverContext.assertGroundExpr(ns.ex)
     }
 
@@ -61,8 +62,8 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   }
 
   test("""CHOOSE x \in { 1 }: x > 1""") { rewriterType: SMTEncoding =>
-    val cond = gt(name("x", IntT1), int(1))
-    val ex = choose(name("x", IntT1), enumSet(int(1)), cond)
+    val cond = tla.gt(tla.name("x", IntT1), tla.int(1))
+    val ex = tla.choose(tla.name("x", IntT1), tla.enumSet(tla.int(1)), cond)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteUntilDone(state)
@@ -74,8 +75,8 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   }
 
   test("""CHOOSE x \in {}: x > 1""") { rewriterType: SMTEncoding =>
-    val cond = gt(name("x", IntT1), int(1))
-    val ex = choose(name("x", IntT1), emptySet(IntT1), cond)
+    val cond = tla.gt(tla.name("x", IntT1), tla.int(1))
+    val ex = tla.choose(tla.name("x", IntT1), tla.emptySet(IntT1), cond)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -83,7 +84,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val eq = eql(unchecked(nextState.ex), int(i))
+      val eq = tla.eql(tla.unchecked(nextState.ex), tla.int(i))
       val ns = rewriter.rewriteUntilDone(nextState.setRex(eq))
       solverContext.assertGroundExpr(ns.ex)
     }
@@ -100,7 +101,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
   }
 
   test("""Guess({})""") { rewriterType: SMTEncoding =>
-    val ex = guess(emptySet(IntT1))
+    val ex = tla.guess(tla.emptySet(IntT1))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -108,7 +109,7 @@ trait TestSymbStateRewriterChooseOrGuess extends RewriterBase {
     assert(solverContext.sat())
 
     def assertEq(i: Int): Unit = {
-      val eq = eql(unchecked(nextState.ex), int(i))
+      val eq = tla.eql(tla.unchecked(nextState.ex), tla.int(i))
       val ns = rewriter.rewriteUntilDone(nextState.setRex(eq))
       solverContext.assertGroundExpr(ns.ex)
     }
