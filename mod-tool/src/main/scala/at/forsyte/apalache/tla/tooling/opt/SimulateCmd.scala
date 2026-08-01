@@ -15,7 +15,7 @@ class SimulateCmd extends CheckCmd(name = SIMULATE, "Symbolically simulate a TLA
         ), default = None)
 
   override def toConfig: ConfigParseResult[ApalacheConfig] = {
-    val simulationOptions = maxRun match {
+    val tuning = maxRun match {
       case Some(value) =>
         Map(
             "search.simulation" -> "true",
@@ -26,7 +26,7 @@ class SimulateCmd extends CheckCmd(name = SIMULATE, "Symbolically simulate a TLA
     }
     mergeConfig(
         super.toConfig,
-        ApalacheConfig(checker = CheckerPatch(tuning = Some(simulationOptions))),
+        ApalacheConfig(checker = CheckerPatch(tuning = Some(tuning))),
     )
   }
 }

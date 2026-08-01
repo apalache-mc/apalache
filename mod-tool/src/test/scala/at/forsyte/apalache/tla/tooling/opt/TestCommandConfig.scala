@@ -71,6 +71,7 @@ class TestCommandConfig extends AnyFunSuite {
         common = CommonPatch(debug = Some(true)),
         checker = CheckerPatch(tuning = Some(Map(
                 "custom" -> "value",
+                "search.seed" -> "17",
                 "search.outputTraces" -> "true",
             ))),
     )
@@ -82,12 +83,31 @@ class TestCommandConfig extends AnyFunSuite {
     assert(sparse.typechecker.inferPoly.isEmpty)
     val inherited = sparse.mergeWithLower(lower)
     assert(inherited.common.debug.contains(true))
+    assert(inherited.checker.tuning.flatMap(_.get("search.seed")).contains("17"))
     assert(inherited.checker.tuning.flatMap(_.get("search.outputTraces")).contains("true"))
 
     command.saveRuns = Some(false)
+    command.seed = Some(42)
     val explicit = command.toConfig.requireValue().mergeWithLower(lower)
     assert(explicit.checker.tuning.flatMap(_.get("custom")).contains("value"))
+    assert(explicit.checker.tuning.flatMap(_.get("search.seed")).contains("42"))
     assert(explicit.checker.tuning.flatMap(_.get("search.outputTraces")).contains("false"))
+  }
+
+  test("seed is validated and overrides the equivalent tuning option") {
+    val invalid = new CheckCmd()
+    invalid.read(List("CommandConfig.tla"))
+    invalid.seed = Some(-1)
+    val invalidResult = invalid.toConfig
+    assert(!invalidResult.isSuccess)
+    assert(invalidResult.errors.contains("Invalid --seed: expected a nonnegative integer, found -1"))
+
+    val command = new CheckCmd()
+    command.read(List("CommandConfig.tla"))
+    command.tuningOptions = Some("search.seed=7")
+    command.seed = Some(42)
+    val config = command.toConfig.requireValue()
+    assert(config.checker.tuning.flatMap(_.get("search.seed")).contains("42"))
   }
 
   test("server and simulation parser defaults remain lower precedence") {

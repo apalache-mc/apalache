@@ -1885,8 +1885,8 @@ $ apalache-mc simulate --seed=4242 --smt-solver=z3 --run-dir=./seed-run-cli-2 --
 $ apalache-mc simulate --tuning-options=search.seed=4242 --smt-solver=z3 --run-dir=./seed-run-tuning --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-tuning.txt
 $ test -s seed-cli-1.txt && cmp -s seed-cli-1.txt seed-cli-2.txt && cmp -s seed-cli-1.txt seed-tuning.txt; echo $?
 0
-$ grep '"search.seed"="4242"' ./seed-run-cli-1/application-configs.cfg
-        "search.seed"="4242"
+$ grep '"search.seed" : "4242"' ./seed-run-cli-1/application-config.json
+      "search.seed" : "4242",
 $ head -n 6 ./seed-run-cli-1/log0.smt
 (set-option :fp.spacer.random_seed 4242)
 (set-option :nlsat.seed 4242)

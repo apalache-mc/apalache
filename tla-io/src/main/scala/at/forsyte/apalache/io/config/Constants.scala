@@ -5,7 +5,6 @@ object Constants {
   // Commands and top-level sections. Some names intentionally serve both roles.
   val CHECK = "check"
   val CONFIG = "config"
-  val SEED = "seed"
   val PARSE = "parse"
   val SERVER = "server"
   val SIMULATE = "simulate"
@@ -80,6 +79,7 @@ object Constants {
   val ENABLE_STATS = "enable-stats"
   val MAX_RUN = "max-run"
   val OUTPUT_TRACES = "output-traces"
+  val SEED = "seed"
   val TUNING_OPTIONS = "tuning-options"
   val TUNING_OPTIONS_FILE = "tuning-options-file"
 
