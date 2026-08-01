@@ -40,15 +40,15 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     assert(nextState.binding.contains("x'"))
     val boundCell = nextState.binding("x'")
     rewriter.push()
-    solverContext.assertGroundExpr(tla.eql(cellEx(boundCell), tla.int(1)))
+    solverContext.assertGroundExpr(tla.eql(boundCell.toBuilder, tla.int(1)))
     assert(solverContext.sat()) // ok
     rewriter.pop()
     rewriter.push()
-    solverContext.assertGroundExpr(tla.eql(cellEx(boundCell), tla.int(2)))
+    solverContext.assertGroundExpr(tla.eql(boundCell.toBuilder, tla.int(2)))
     assert(solverContext.sat()) // also possible
     rewriter.pop()
     rewriter.push()
-    solverContext.assertGroundExpr(tla.eql(cellEx(boundCell), tla.int(3)))
+    solverContext.assertGroundExpr(tla.eql(boundCell.toBuilder, tla.int(3)))
     assertUnsatOrExplain() // should not be possible
   }
 
@@ -62,8 +62,8 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val state = new SymbState(and1, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
-    val x_cell = cellEx(nextState.binding("x'"))
-    val y_cell = cellEx(nextState.binding("y'"))
+    val x_cell = nextState.binding("x'").toBuilder
+    val y_cell = nextState.binding("y'").toBuilder
 
     assert(solverContext.sat()) // no contradiction introduced
     rewriter.push()
@@ -158,21 +158,21 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
 
     // may equal to {1, 2}
     rewriter.push()
-    val eq12 = tla.eql(cellEx(boundCell), set12)
+    val eq12 = tla.eql(boundCell.toBuilder, set12)
     val eqState12 = rewriter.rewriteUntilDone(nextState.setRex(eq12))
     solverContext.assertGroundExpr(eqState12.ex)
     assert(solverContext.sat()) // ok
     rewriter.pop()
     // may equal to {2, 3}
     rewriter.push()
-    val eq23 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(2), tla.int(3)))
+    val eq23 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(2), tla.int(3)))
     val eqState23 = rewriter.rewriteUntilDone(nextState.setRex(eq23))
     solverContext.assertGroundExpr(eqState23.ex)
     assert(solverContext.sat()) // also possible
     rewriter.pop()
     // not equal to {1, 3}
     rewriter.push()
-    val eq13 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(1), tla.int(3)))
+    val eq13 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(1), tla.int(3)))
     val eqState13 = rewriter.rewriteUntilDone(nextState.setRex(eq13))
     solverContext.assertGroundExpr(eqState13.ex)
     assertUnsatOrExplain() // should not be possible
@@ -208,7 +208,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
 
       // may equal to {1, 2}
       rewriter.push()
-      val eq12 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(1), tla.int(2)))
+      val eq12 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(1), tla.int(2)))
 
       val eqState12 = rewriter.rewriteUntilDone(nextState.setRex(eq12))
       solverContext.assertGroundExpr(eqState12.ex)
@@ -216,7 +216,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
       rewriter.pop()
       // not equal to {1, 3}
       rewriter.push()
-      val eq13 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(1), tla.int(3)))
+      val eq13 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(1), tla.int(3)))
 
       val eqState13 = rewriter.rewriteUntilDone(nextState.setRex(eq13))
       solverContext.assertGroundExpr(eqState13.ex)
@@ -224,7 +224,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
       rewriter.pop()
       // not equal to {2, 3}
       rewriter.push()
-      val eq23 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(2), tla.int(3)))
+      val eq23 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(2), tla.int(3)))
 
       val eqState23 = rewriter.rewriteUntilDone(nextState.setRex(eq23))
       solverContext.assertGroundExpr(eqState23.ex)
@@ -232,7 +232,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
       rewriter.pop()
       // 2 is in the result
       rewriter.push()
-      val in23 = tla.in(tla.int(2), cellEx(boundCell))
+      val in23 = tla.in(tla.int(2), boundCell.toBuilder)
 
       val inState23 = rewriter.rewriteUntilDone(nextState.setRex(in23))
       solverContext.assertGroundExpr(inState23.ex)
@@ -264,7 +264,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     assert(solverContext.sat())
     // may equal to {1, 2}
     rewriter.push()
-    val eq12 = tla.eql(cellEx(boundCell), set12)
+    val eq12 = tla.eql(boundCell.toBuilder, set12)
 
     val eqState12 = rewriter.rewriteUntilDone(nextState.setRex(eq12))
     solverContext.assertGroundExpr(eqState12.ex)
@@ -272,7 +272,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     // may equal to {1}
     rewriter.push()
-    val eq1 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(1)))
+    val eq1 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(1)))
 
     val eqState1 = rewriter.rewriteUntilDone(nextState.setRex(eq1))
     solverContext.assertGroundExpr(eqState1.ex)
@@ -280,7 +280,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     // may equal to {2}
     rewriter.push()
-    val eq2 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(2)))
+    val eq2 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(2)))
 
     val eqState2 = rewriter.rewriteUntilDone(nextState.setRex(eq2))
     solverContext.assertGroundExpr(eqState2.ex)
@@ -288,7 +288,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     // may equal to {}, but this needs a type annotation
     rewriter.push()
-    val eqEmpty = tla.eql(cellEx(boundCell), tla.emptySet(IntT1))
+    val eqEmpty = tla.eql(boundCell.toBuilder, tla.emptySet(IntT1))
 
     val eqStateEmpty = rewriter.rewriteUntilDone(nextState.setRex(eqEmpty))
     solverContext.assertGroundExpr(eqStateEmpty.ex)
@@ -296,7 +296,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     rewriter.pop()
     // not equal to {1, 2, 3}
     rewriter.push()
-    val eq13 = tla.eql(cellEx(boundCell), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)))
+    val eq13 = tla.eql(boundCell.toBuilder, tla.enumSet(tla.int(1), tla.int(2), tla.int(3)))
 
     val eqState13 = rewriter.rewriteUntilDone(nextState.setRex(eq13))
     solverContext.assertGroundExpr(eqState13.ex)
@@ -324,21 +324,21 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
 
       // may equal to fun0
       rewriter.push()
-      val eqFun0 = tla.eql(cellEx(boundCell), fun0)
+      val eqFun0 = tla.eql(boundCell.toBuilder, fun0)
       val eqStateFun0 = rewriter.rewriteUntilDone(nextState.setRex(eqFun0))
       solverContext.assertGroundExpr(eqStateFun0.ex)
       assert(solverContext.sat()) // ok
       rewriter.pop()
       // may equal to fun1
       rewriter.push()
-      val eqFun1 = tla.eql(cellEx(boundCell), fun1)
+      val eqFun1 = tla.eql(boundCell.toBuilder, fun1)
       val eqStateFun1 = rewriter.rewriteUntilDone(nextState.setRex(eqFun1))
       solverContext.assertGroundExpr(eqStateFun1.ex)
       assert(solverContext.sat()) // also possible
       rewriter.pop()
       // not equal to fun2
       rewriter.push()
-      val eqFun2 = tla.eql(cellEx(boundCell), fun2)
+      val eqFun2 = tla.eql(boundCell.toBuilder, fun2)
       val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setRex(eqFun2))
       solverContext.assertGroundExpr(eqStateFun2.ex)
       assertUnsatOrExplain() // should not be possible
@@ -371,21 +371,21 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     assert(solverContext.sat())
     // may equal to fun0
     rewriter.push()
-    val eqFun0 = tla.eql(cellEx(boundCell), fun0)
+    val eqFun0 = tla.eql(boundCell.toBuilder, fun0)
     val eqStateFun0 = rewriter.rewriteUntilDone(nextState.setRex(eqFun0))
     solverContext.assertGroundExpr(eqStateFun0.ex)
     assert(solverContext.sat()) // ok
     rewriter.pop()
     // may equal to fun1
     rewriter.push()
-    val eqFun1 = tla.eql(cellEx(boundCell), fun1)
+    val eqFun1 = tla.eql(boundCell.toBuilder, fun1)
     val eqStateFun1 = rewriter.rewriteUntilDone(nextState.setRex(eqFun1))
     solverContext.assertGroundExpr(eqStateFun1.ex)
     assert(solverContext.sat()) // also possible
     rewriter.pop()
     // not equal to fun2
     rewriter.push()
-    val eqFun2 = tla.eql(cellEx(boundCell), fun2)
+    val eqFun2 = tla.eql(boundCell.toBuilder, fun2)
     val eqStateFun2 = rewriter.rewriteUntilDone(nextState.setRex(eqFun2))
     solverContext.assertGroundExpr(eqStateFun2.ex)
     assertUnsatOrExplain() // should not be possible
@@ -439,7 +439,7 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val nextState = rewriter.rewriteUntilDone(state)
     assert(rewriter.solverContext.sat())
     val x = nextState.binding("x'")
-    val pred = tla.ge(tla.app(cellEx(x), tla.int(1)), tla.int(0))
+    val pred = tla.ge(tla.app(x.toBuilder, tla.int(1)), tla.int(0))
 
     assertTlaExAndRestore(rewriter, nextState.setRex(pred))
   }

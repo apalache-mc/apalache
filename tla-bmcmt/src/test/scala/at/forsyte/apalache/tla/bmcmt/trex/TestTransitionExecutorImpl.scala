@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.{Binding, StateInvariant}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 /**
  * An abstract test suite that is parameterized by the snapshot type.
@@ -112,12 +112,12 @@ trait TestTransitionExecutorImpl[SnapshotT] extends ExecutorBase[SnapshotT] {
 
   test("Init + 3x Next") { exeCtx: ExecutorContextT =>
     // x' := 1 /\ y' := 1
-    val init: TlaEx = tla.and(mkAssign("y", 1), mkAssign("x", 1))
+    val init: BuilderT = tla.and(mkAssign("y", 1), mkAssign("x", 1))
     // x' := y /\ y' := x + y
-    val trans1: TlaEx =
+    val trans1: BuilderT =
       tla.and(mkAssignInt("x", nY), mkAssignInt("y", tla.plus(nX, nY)))
     // x' := x /\ y' := y
-    val trans2: TlaEx = tla.and(mkAssignInt("x", nX), mkAssignInt("y", nY))
+    val trans2: BuilderT = tla.and(mkAssignInt("x", nX), mkAssignInt("y", nY))
     val trex = new TransitionExecutorImpl(Set.empty, Set("x", "y"), exeCtx)
     trex.prepareTransition(1, init)
     trex.pickTransition()
