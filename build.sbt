@@ -15,15 +15,15 @@ ThisBuild / organizationHomepage := Some(url("https://apalache-mc.org"))
 ThisBuild / homepage := Some(url("https://github.com/apalache-mc/apalache"))
 ThisBuild / licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
 ThisBuild / scmInfo := Some(ScmInfo(
-  url("https://github.com/apalache-mc/apalache"),
-  "scm:git:git@github.com:apalache-mc/apalache.git",
-))
+        url("https://github.com/apalache-mc/apalache"),
+        "scm:git:git@github.com:apalache-mc/apalache.git",
+    ))
 ThisBuild / developers := List(Developer(
-  "apalache-mc",
-  "Apalache Development Team",
-  "",
-  url("https://github.com/apalache-mc"),
-))
+        "apalache-mc",
+        "Apalache Development Team",
+        "",
+        url("https://github.com/apalache-mc"),
+    ))
 
 // We store the version in a bare file to make accessing and updating the version trivial
 ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
@@ -163,26 +163,26 @@ browseApiDocs := {
 lazy val tlair = (project in file("tlair"))
   .settings(
       testSettings,
-    name := "tla-ir",
-    moduleName := "tla-ir",
-    description := "Apalache's typed intermediate representation and builder APIs for TLA+",
-    publish / skip := false,
-    publishTo := {
-      if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
-      else sonatypePublishToBundle.value
-    },
-    libraryDependencies := Seq(
-      scalaOrganization.value % "scala-library" % scalaVersion.value,
-      Deps.guice,
-      Deps.logging,
-      Deps.scalaParserCombinators,
-      Deps.scalaz,
-      TestDeps.junit,
-      TestDeps.scalatest,
-      TestDeps.scalacheck,
-      TestDeps.scalatestplusEasymock,
-      TestDeps.scalatestplusJunit,
-      TestDeps.scalatestplusScalacheck,
+      name := "tla-ir",
+      moduleName := "tla-ir",
+      description := "Apalache's typed intermediate representation and builder APIs for TLA+",
+      publish / skip := false,
+      publishTo := {
+        if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+        else sonatypePublishToBundle.value
+      },
+      libraryDependencies := Seq(
+          scalaOrganization.value % "scala-library" % scalaVersion.value,
+          Deps.guice,
+          Deps.logging,
+          Deps.scalaParserCombinators,
+          Deps.scalaz,
+          TestDeps.junit,
+          TestDeps.scalatest,
+          TestDeps.scalacheck,
+          TestDeps.scalatestplusEasymock,
+          TestDeps.scalatestplusJunit,
+          TestDeps.scalatestplusScalacheck,
           Deps.shapeless % Test,
       ),
   )
@@ -208,30 +208,30 @@ lazy val tla_io = (project in file("tla-io"))
   )
   .settings(
       testSettings,
-    name := "tla-io",
-    moduleName := "tla-io",
-    description := "Readers, writers, and configuration and trace serialization for Apalache's TLA+ IR",
-    publish / skip := false,
-    publishTo := {
-      if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
-      else sonatypePublishToBundle.value
-    },
-    libraryDependencies := Seq(
-      scalaOrganization.value % "scala-library" % scalaVersion.value,
-      Deps.guice,
+      name := "tla-io",
+      moduleName := "tla-io",
+      description := "Readers, writers, and configuration and trace serialization for Apalache's TLA+ IR",
+      publish / skip := false,
+      publishTo := {
+        if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+        else sonatypePublishToBundle.value
+      },
+      libraryDependencies := Seq(
+          scalaOrganization.value % "scala-library" % scalaVersion.value,
+          Deps.guice,
           Deps.jacksonDatabind,
-      Deps.kiama,
-      Deps.logging,
-      Deps.scalaParserCombinators,
-      Deps.scalaz,
-      Deps.slf4j,
-      Deps.ujson,
-      Deps.upickle,
-      TestDeps.junit,
-      TestDeps.scalatest,
-      TestDeps.scalacheck,
-      TestDeps.scalatestplusJunit,
-      TestDeps.scalatestplusScalacheck,
+          Deps.kiama,
+          Deps.logging,
+          Deps.scalaParserCombinators,
+          Deps.scalaz,
+          Deps.slf4j,
+          Deps.ujson,
+          Deps.upickle,
+          TestDeps.junit,
+          TestDeps.scalatest,
+          TestDeps.scalacheck,
+          TestDeps.scalatestplusJunit,
+          TestDeps.scalatestplusScalacheck,
       ),
   )
 

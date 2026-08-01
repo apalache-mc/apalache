@@ -3,7 +3,7 @@ package at.forsyte.apalache.io.tlc.config
 import at.forsyte.apalache.io.tlc.config.ConfigModelValue.STR_PREFIX
 import at.forsyte.apalache.tla.lir.{TlaType1, Typed, VarT1}
 import at.forsyte.apalache.tla.typecomp.TBuilderInstruction
-import at.forsyte.apalache.tla.types.{ModelValueHandler, tla}
+import at.forsyte.apalache.tla.types.{tla, ModelValueHandler}
 
 import scala.util.parsing.input.NoPosition
 
