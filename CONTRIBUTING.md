@@ -549,8 +549,8 @@ The Scala 2.13 libraries `org.apalache-mc:tla-ir_2.13` and
 - a secret GPG key in the local keyring, with its public key available from a public keyserver; and
 - optionally, `PGP_PASSPHRASE` for noninteractive signing. Local publishing can instead use GnuPG pinentry.
 
-The publication version is always read from `VERSION`; the script does not permit an override. Use one of these explicit
-modes:
+The publication version is always read from `VERSION`; the script does not permit an override. It wraps sbt's native
+`localStaging`, `sonaUpload`, and `sonaRelease` support. Use one of these explicit modes:
 
 ```sh
 # VERSION must end in -SNAPSHOT. This publishes directly to Central snapshots.

@@ -98,10 +98,10 @@ case "$MODE" in
         sbt -batch \
             "tlair / test" \
             "tla_io / test" \
-            sonatypeBundleClean \
+            cleanMavenCentralStaging \
             "tlair / publishSigned" \
             "tla_io / publishSigned" \
-            sonatypeCentralUpload
+            sonaUpload
         echo "Deployment uploaded. Review and publish it at https://central.sonatype.com/publishing/deployments"
         ;;
     release)
@@ -109,9 +109,9 @@ case "$MODE" in
         sbt -batch \
             "tlair / test" \
             "tla_io / test" \
-            sonatypeBundleClean \
+            cleanMavenCentralStaging \
             "tlair / publishSigned" \
             "tla_io / publishSigned" \
-            sonatypeCentralRelease
+            sonaRelease
         ;;
 esac

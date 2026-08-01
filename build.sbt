@@ -38,8 +38,6 @@ ThisBuild / scalaVersion := "2.13.18"
 ThisBuild / publish / skip := true
 ThisBuild / publishMavenStyle := true
 ThisBuild / pomIncludeRepository := { _ => false }
-ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeCentralHost
-ThisBuild / sonatypeProfileName := "org.apalache-mc"
 
 // Resolve and publish development builds through the Central Portal snapshot repository.
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
@@ -169,7 +167,7 @@ lazy val tlair = (project in file("tlair"))
       publish / skip := false,
       publishTo := {
         if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
-        else sonatypePublishToBundle.value
+        else localStaging.value
       },
       libraryDependencies := Seq(
           scalaOrganization.value % "scala-library" % scalaVersion.value,
@@ -214,7 +212,7 @@ lazy val tla_io = (project in file("tla-io"))
       publish / skip := false,
       publishTo := {
         if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
-        else sonatypePublishToBundle.value
+        else localStaging.value
       },
       libraryDependencies := Seq(
           scalaOrganization.value % "scala-library" % scalaVersion.value,
@@ -532,6 +530,12 @@ docker / dockerfile := {
 Global / excludeLintKeys ++= Set(scalafmtFilter, pomIncludeRepository, publishMavenStyle)
 
 lazy val versionFile = settingKey[File]("Location of the file tracking the project version")
+
+lazy val cleanMavenCentralStaging = taskKey[Unit]("Remove files from the local Maven Central staging area")
+cleanMavenCentralStaging := {
+  IO.delete(sbt.Keys.stagingDirectory.value)
+  IO.delete((ThisBuild / baseDirectory).value / "target" / "sona-bundle")
+}
 
 // These tasks are used in our bespoke release pipeline
 // TODO(shon): Once we've changed our packaging to conform to more standard SBT structures and practices,
