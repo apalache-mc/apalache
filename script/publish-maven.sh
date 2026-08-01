@@ -6,8 +6,7 @@ set -euo pipefail
 # the user's GnuPG keyring, never from repository files.
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-# shellcheck source=./shared.sh
-. "$DIR/shared.sh"
+PROJ_ROOT="$(cd "$DIR/.." >/dev/null 2>&1 && pwd)"
 
 usage() {
     cat <<'EOF'
@@ -42,7 +41,7 @@ case "$MODE" in
 esac
 
 cd "$PROJ_ROOT"
-VERSION=$("$DIR/get-version.sh")
+VERSION=$(<"$PROJ_ROOT/VERSION")
 
 if [[ "$MODE" == "snapshot" ]]
 then
