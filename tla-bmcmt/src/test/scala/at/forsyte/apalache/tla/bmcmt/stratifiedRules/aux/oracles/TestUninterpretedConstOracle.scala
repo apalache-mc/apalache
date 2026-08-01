@@ -7,8 +7,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLit
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, TestingRewriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Prop}
@@ -88,7 +88,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
         val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
         if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
           Prop.throws(classOf[IllegalArgumentException]) {
-            oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
+            oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt.map(_.map(_.build)))
           }
         else true
       }
@@ -105,7 +105,8 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
     val prop =
       forAll(gen) { case (size, assertionsIfTrue, assertionsIfFalseOpt) =>
         val (scope, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope, size)
-        val caseEx: TlaEx = oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt)
+        val caseEx: TlaEx =
+          oracle.caseAssertions(scope, assertionsIfTrue, assertionsIfFalseOpt.map(_.map(_.build)))
         size match {
           case 0 =>
             caseEx == PureArena.cellTrue(scope.arena).toBuilder.build
@@ -115,12 +116,16 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
             assertionsIfFalseOpt match {
               case None =>
                 val ites = assertionsIfTrue.zip(oracle.valueCells).map { case (a, c) =>
-                  tla.ite(tla.eql(oracle.oracleCell.toBuilder, c.toBuilder), a, tla.bool(true))
+                  tla.ite(
+                      tla.eql(tla.unchecked(oracle.oracleCell.toBuilder), tla.unchecked(c.toBuilder)),
+                      a,
+                      tla.bool(true),
+                  )
                 }
                 caseEx == tla.and(ites: _*).build
               case Some(assertionsIfFalse) =>
                 val ites = assertionsIfTrue.zip(assertionsIfFalse).zip(oracle.valueCells).map { case ((at, af), c) =>
-                  tla.ite(tla.eql(oracle.oracleCell.toBuilder, c.toBuilder), at, af)
+                  tla.ite(tla.eql(tla.unchecked(oracle.oracleCell.toBuilder), tla.unchecked(c.toBuilder)), at, af)
                 }
                 caseEx == tla.and(ites: _*).build
             }

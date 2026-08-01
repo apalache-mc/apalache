@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.values.TlaBool
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Prop}
@@ -77,7 +77,7 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
         val oracle = MockOracle.create(fixed)
         if (assertionsIfTrue.size != oracle.size || assertionsIfFalseOpt.exists { _.size != oracle.size })
           Prop.throws(classOf[IllegalArgumentException]) {
-            oracle.caseAssertions(initScope, assertionsIfTrue, assertionsIfFalseOpt)
+            oracle.caseAssertions(initScope, assertionsIfTrue, assertionsIfFalseOpt.map(_.map(_.build)))
           }
         else true
       }
@@ -94,7 +94,8 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
     val prop =
       forAll(gen) { case (fixed, assertionsIfTrue, assertionsIfFalseOpt) =>
         val oracle = MockOracle.create(fixed)
-        val caseEx: TlaEx = oracle.caseAssertions(initScope, assertionsIfTrue, assertionsIfFalseOpt)
+        val caseEx: TlaEx =
+          oracle.caseAssertions(initScope, assertionsIfTrue, assertionsIfFalseOpt.map(_.map(_.build)))
         caseEx == assertionsIfTrue(fixed).build
       }
 
