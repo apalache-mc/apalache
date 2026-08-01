@@ -74,7 +74,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
     opt[Option[Int]](name = SEED,
         description = descriptionWithDefault(
             "set a nonnegative random seed for reproducible SMT solving and, with simulate, transition selection",
-          "generated per run",
+            "generated per run",
         ), default = None)
   var tuningOptionsFile: Option[String] =
     opt[Option[String]](name = TUNING_OPTIONS_FILE, default = None,
@@ -120,7 +120,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
     opt[Option[Boolean]](name = OUTPUT_TRACES,
         description = descriptionWithDefault(
             "save an example trace for each symbolic run",
-          configDefaults.checker.outputTraces,
+            configDefaults.checker.outputTraces,
         ), default = None)
 
   var timeoutSmtSec: Option[Int] =
@@ -150,9 +150,9 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
         ApalacheConfig(
             checker = CheckerPatch(
                 algorithm = algo,
-              searchKind = Some(SearchKind.Check),
-              seed = seed,
-              outputTraces = outputTraces,
+                searchKind = Some(SearchKind.Check),
+                seed = seed,
+                outputTraces = outputTraces,
                 smtSolver = smtSolver,
                 smtEncoding = smtEncoding,
                 tuning = tuning,

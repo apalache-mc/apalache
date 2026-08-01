@@ -17,7 +17,9 @@ import at.forsyte.apalache.tla.bmcmt.trex._
 import at.forsyte.apalache.tla.imp.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
-import at.forsyte.apalache.tla.lir.transformations.standard.{IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred}
+import at.forsyte.apalache.tla.lir.transformations.standard.{
+  IncrementalRenaming, KeraLanguagePred, MonotypeLanguagePred,
+}
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.{Inject, Singleton}
@@ -93,13 +95,13 @@ class BoundedCheckerPassImpl @Inject() (
 
     val params =
       new ModelCheckerParams(
-        input,
-        stepsBound,
-        tuning,
-        checkerOptions.searchKind,
-        checkerOptions.seed,
-        checkerOptions.maxRun,
-        checkerOptions.outputTraces,
+          input,
+          stepsBound,
+          tuning,
+          checkerOptions.searchKind,
+          checkerOptions.seed,
+          checkerOptions.maxRun,
+          checkerOptions.outputTraces,
       )
     params.discardDisabled = checkerOptions.discardDisabled
     params.checkForDeadlocks = checkerOptions.checkDeadlocks

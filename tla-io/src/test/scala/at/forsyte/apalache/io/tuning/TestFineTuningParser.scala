@@ -52,10 +52,10 @@ class TestFineTuningParser extends AnyFunSuite {
 
   test("rejects typed search controls as tuning options") {
     Seq(
-      "search.seed",
-      "search.simulation",
-      "search.simulation.maxRun",
-      "search.outputTraces",
+        "search.seed",
+        "search.simulation",
+        "search.simulation.maxRun",
+        "search.outputTraces",
     ).foreach { key =>
       assert(FineTuningParser.fromStrings(Map(key -> "1")).isLeft)
     }

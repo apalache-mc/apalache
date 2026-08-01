@@ -69,13 +69,13 @@ class TestCommandConfig extends AnyFunSuite {
   test("omitted checker flags do not override lower-precedence tuning") {
     val lower = ApalacheConfig(
         common = CommonPatch(debug = Some(true)),
-      checker = CheckerPatch(
-        seed = Some(17),
-        searchKind = Some(SearchKind.Simulate),
-        maxRun = Some(9),
-        outputTraces = Some(true),
-        tuning = Some(Map("custom" -> "value")),
-      ),
+        checker = CheckerPatch(
+            seed = Some(17),
+            searchKind = Some(SearchKind.Simulate),
+            maxRun = Some(9),
+            outputTraces = Some(true),
+            tuning = Some(Map("custom" -> "value")),
+        ),
     )
     val command = new CheckCmd()
     command.read(List("CommandConfig.tla"))
@@ -139,9 +139,9 @@ class TestCommandConfig extends AnyFunSuite {
     simulateCommand.read(List("CommandConfig.tla"))
     val simulationPatch = simulateCommand.toConfig.requireValue()
     val simulationConfig = simulationPatch.mergeWithLower(ApalacheConfig(checker = CheckerPatch(
-      searchKind = Some(SearchKind.Check),
-      maxRun = Some(17),
-    )))
+            searchKind = Some(SearchKind.Check),
+            maxRun = Some(17),
+        )))
     assert(simulationConfig.checker.searchKind.contains(SearchKind.Simulate))
     assert(simulationConfig.checker.maxRun.contains(17))
 

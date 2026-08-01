@@ -129,10 +129,10 @@ class TestOptions extends AnyFunSuite {
 
   test("checker search controls are resolved and validated") {
     val configured = checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(checker = CheckerPatch(
-      seed = Some(42),
-      searchKind = Some(SearchKind.Simulate),
-      maxRun = Some(7),
-      outputTraces = Some(true),
+        seed = Some(42),
+        searchKind = Some(SearchKind.Simulate),
+        maxRun = Some(7),
+        outputTraces = Some(true),
     ))
     val resolved = ApalacheConfigResolver.resolveCheck(configured)
     assert(resolved.isSuccess)
@@ -142,9 +142,9 @@ class TestOptions extends AnyFunSuite {
     assert(resolved.requireValue().checker.outputTraces)
 
     Seq(
-      CheckerPatch(seed = Some(-1)) -> "checker.seed must be nonnegative",
-      CheckerPatch(maxRun = Some(0)) -> "checker.max-run must be positive",
-      CheckerPatch(maxRun = Some(-1)) -> "checker.max-run must be positive",
+        CheckerPatch(seed = Some(-1)) -> "checker.seed must be nonnegative",
+        CheckerPatch(maxRun = Some(0)) -> "checker.max-run must be positive",
+        CheckerPatch(maxRun = Some(-1)) -> "checker.max-run must be positive",
     ).foreach { case (patch, expected) =>
       val result =
         ApalacheConfigResolver.resolveCheck(checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(checker = patch))

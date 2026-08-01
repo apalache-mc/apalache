@@ -71,10 +71,10 @@ class TraceeCmd(name: String = TRACEE, description: String = "Evaluate expressio
     mergeConfig(
         base,
         ApalacheConfig(
-          checker = CheckerPatch(
-            tuning = Some(tuning),
-            outputTraces = Some(true),
-          ),
+            checker = CheckerPatch(
+                tuning = Some(tuning),
+                outputTraces = Some(true),
+            ),
             traceEvaluation = TraceEvaluationPatch(
                 trace = Some(src),
                 expressions = Some(expressions),

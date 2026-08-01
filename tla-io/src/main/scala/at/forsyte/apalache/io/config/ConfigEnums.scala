@@ -84,9 +84,9 @@ object SearchKind {
 
   def fromString(value: String): SearchKind =
     value.toLowerCase match {
-      case Constants.CHECK => Check
+      case Constants.CHECK    => Check
       case Constants.SIMULATE => Simulate
-      case other => throw new IllegalArgumentException(s"Unexpected search kind: $other")
+      case other              => throw new IllegalArgumentException(s"Unexpected search kind: $other")
     }
 }
 

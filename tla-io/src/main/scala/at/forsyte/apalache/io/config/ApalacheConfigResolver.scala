@@ -135,10 +135,10 @@ object ApalacheConfigResolver {
     val seed = checkerWithDefaults.seed.getOrElse(generateSeed())
     val checker = CheckerOptions(
         algorithm = requireDefault(checkerWithDefaults.algorithm, s"$CHECKER.$ALGO"),
-      searchKind = requireDefault(checkerWithDefaults.searchKind, s"$CHECKER.$SEARCH_KIND"),
-      seed = seed,
-      maxRun = maxRun,
-      outputTraces = requireDefault(checkerWithDefaults.outputTraces, s"$CHECKER.$OUTPUT_TRACES"),
+        searchKind = requireDefault(checkerWithDefaults.searchKind, s"$CHECKER.$SEARCH_KIND"),
+        seed = seed,
+        maxRun = maxRun,
+        outputTraces = requireDefault(checkerWithDefaults.outputTraces, s"$CHECKER.$OUTPUT_TRACES"),
         discardDisabled = requireDefault(checkerWithDefaults.discardDisabled, s"$CHECKER.$DISCARD_DISABLED"),
         length = requireDefault(checkerWithDefaults.length, s"$CHECKER.$LENGTH"),
         maxError = maxError,
@@ -151,12 +151,12 @@ object ApalacheConfigResolver {
     val typecheck = typecheckResult.requireValue()
     ConfigParseResult.success(
         ValidatedCheckOptions(
-          common = typecheck.common,
-          source = typecheck.source,
-          output = typecheck.output,
-          typechecker = typecheck.typechecker,
-          checker = checker,
-          specification = specification,
+            common = typecheck.common,
+            source = typecheck.source,
+            output = typecheck.output,
+            typechecker = typecheck.typechecker,
+            checker = checker,
+            specification = specification,
         ),
         warnings.toList,
     )
@@ -189,13 +189,13 @@ object ApalacheConfigResolver {
       val check = checkResult.requireValue()
       ConfigParseResult.success(
           ValidatedTraceOptions(
-            common = check.common,
-            source = check.source,
-            output = check.output,
-            typechecker = check.typechecker,
-            checker = check.checker,
-            specification = check.specification,
-            traceEvaluation = TraceEvaluationOptions(
+              common = check.common,
+              source = check.source,
+              output = check.output,
+              typechecker = check.typechecker,
+              checker = check.checker,
+              specification = check.specification,
+              traceEvaluation = TraceEvaluationOptions(
                   config.traceEvaluation.trace.get,
                   config.traceEvaluation.expressions.get,
               ),
@@ -244,7 +244,7 @@ object ApalacheConfigResolver {
             timeoutSmtSeconds = Some(0),
             checkDeadlocks = Some(false),
             smtEncoding = Some(SMTEncoding.OOPSLA19),
-          searchKind = Some(SearchKind.Check),
+            searchKind = Some(SearchKind.Check),
             tuning = Some(Map.empty),
         ),
     )

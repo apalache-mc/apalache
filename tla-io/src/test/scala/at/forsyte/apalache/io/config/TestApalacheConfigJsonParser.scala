@@ -53,10 +53,10 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("round-trips typed checker search controls") {
     val config = ApalacheConfig(checker = CheckerPatch(
-      seed = Some(42),
-      searchKind = Some(SearchKind.Simulate),
-      maxRun = Some(7),
-      outputTraces = Some(true),
+        seed = Some(42),
+        searchKind = Some(SearchKind.Simulate),
+        maxRun = Some(7),
+        outputTraces = Some(true),
     ))
 
     val json = ApalacheConfigJsonParser.write(config)
