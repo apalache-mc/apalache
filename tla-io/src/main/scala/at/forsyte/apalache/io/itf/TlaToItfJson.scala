@@ -30,9 +30,9 @@ class TlaToItfJson[T <: JsonRepresentation](adapter: ScalaToJsonAdapter[T]) {
    *   the JSON representation of the counterexample in the ITF format
    */
   def mkJson(
-              rootModule: TlaModule,
-              states: IndexedSeq[Trace.State],
-              variableDescriptions: Map[String, String] = Map.empty): T = {
+      rootModule: TlaModule,
+      states: IndexedSeq[Trace.State],
+      variableDescriptions: Map[String, String] = Map.empty): T = {
     val state0 = states match {
       case constInit +: Seq()          => constInit
       case constInit +: initState +: _ => constInit ++ initState
@@ -48,7 +48,7 @@ class TlaToItfJson[T <: JsonRepresentation](adapter: ScalaToJsonAdapter[T]) {
           varDecl.name -> adapter.fromStr(TlaType1.fromTypeTag(varDecl.typeTag).toString)
         }: _*),
     ) ++ Option.when(variableDescriptions.nonEmpty)(
-      VARIABLES_TO_EXPRESSIONS_FIELD -> adapter.mkObj(variableDescriptions.toSeq.map { case (name, expression) =>
+        VARIABLES_TO_EXPRESSIONS_FIELD -> adapter.mkObj(variableDescriptions.toSeq.map { case (name, expression) =>
           name -> adapter.fromStr(expression)
         }: _*)
     )

@@ -68,8 +68,8 @@ class TestTlaToItfJson extends AnyFunSuite {
     val intTag = Typed(IntT1)
     val module = TlaModule("test", List(TlaVarDecl("generated")(intTag)))
     val trace = IndexedSeq[Trace.State](
-      SortedMap(),
-      SortedMap("generated" -> tla.int(1).build),
+        SortedMap(),
+        SortedMap("generated" -> tla.int(1).build),
     )
 
     val withoutDescriptions = ujsonEncoder.mkJson(module, trace).value

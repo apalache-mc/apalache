@@ -68,8 +68,8 @@ class PrettyWriter(
    * {{{__temporal_t_1_unroll}}} were substituted.
    */
   def writeWithVariableDescriptionComment(
-                                           decl: TlaDecl,
-                                           variableDescriptionsStore: VariableDescriptionsStore): Unit = {
+      decl: TlaDecl,
+      variableDescriptionsStore: VariableDescriptionsStore): Unit = {
     val declDoc = declToDoc(decl) <> line <> line
     if (variableDescriptionsStore.isEmpty) {
       prettyWriteDoc(declDoc)
@@ -560,8 +560,8 @@ class PrettyWriter(
    * result as a comment, since the descriptions might not be valid TLA.
    */
   def toVariableDescriptionCommentDoc(
-                                       decl: TlaDecl,
-                                       variableDescriptionsStore: VariableDescriptionsStore): Doc = {
+      decl: TlaDecl,
+      variableDescriptionsStore: VariableDescriptionsStore): Doc = {
     wrapWithComment(declToDoc(decl,
             nameResolver = (x: String) => {
               variableDescriptionsStore.get(x).getOrElse(x)

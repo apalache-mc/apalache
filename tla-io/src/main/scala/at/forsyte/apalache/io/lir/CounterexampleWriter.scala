@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
-import at.forsyte.apalache.tla.typecomp.{TBuilderInstruction, build}
+import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction}
 import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
@@ -24,7 +24,7 @@ trait CounterexampleWriter {
 }
 
 class TlaCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: VariableDescriptionsStore)
-  extends CounterexampleWriter {
+    extends CounterexampleWriter {
 
   import CounterexampleWriter.stateToEx
 
@@ -65,8 +65,8 @@ class TlaCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: Va
     }
     pretty.writeComment("The following formula holds true in the last state and violates the invariant")
     pretty.writeWithVariableDescriptionComment(
-      tla.decl("InvariantViolation", tla.unchecked(trace.data)),
-      variableDescriptionsStore,
+        tla.decl("InvariantViolation", tla.unchecked(trace.data)),
+        variableDescriptionsStore,
     )
 
     pretty.writeFooter()
@@ -77,7 +77,7 @@ class TlaCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: Va
 }
 
 class TlcCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: VariableDescriptionsStore)
-  extends TlaCounterexampleWriter(writer, variableDescriptionsStore) {
+    extends TlaCounterexampleWriter(writer, variableDescriptionsStore) {
   override def write(trace: Trace[TlaEx]): Unit = {
     // `states` must always contain at least 1 state: the constant initialization
     // This makes `states.tail` safe, since we have a nonempty sequence
@@ -183,12 +183,12 @@ object CounterexampleWriter extends LazyLogging {
 
   // factory method to get the desired CE writer
   def apply(
-             kind: String,
-             writer: PrintWriter,
-             variableDescriptionsStore: VariableDescriptionsStore): CounterexampleWriter = {
+      kind: String,
+      writer: PrintWriter,
+      variableDescriptionsStore: VariableDescriptionsStore): CounterexampleWriter = {
     kind match {
-      case "tla" => new TlaCounterexampleWriter(writer, variableDescriptionsStore)
-      case "tlc" => new TlcCounterexampleWriter(writer, variableDescriptionsStore)
+      case "tla"      => new TlaCounterexampleWriter(writer, variableDescriptionsStore)
+      case "tlc"      => new TlcCounterexampleWriter(writer, variableDescriptionsStore)
       case "json"     => new JsonCounterexampleWriter(writer)
       case "itf.json" => new ItfCounterexampleWriter(writer, variableDescriptionsStore)
       case fmt        => throw new Exception(s"unknown counterexample format requested: $fmt")

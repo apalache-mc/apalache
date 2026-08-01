@@ -19,8 +19,8 @@ import com.typesafe.scalalogging.LazyLogging
  *   - "violation" and `errorIndex` for counterexamples, and
  *   - "example" and `exampleIndex` for examples.
  */
-class DumpFilesModelCheckerListener @Inject()(variableDescriptionsStore: VariableDescriptionsStore)
-  extends ModelCheckerListener with LazyLogging {
+class DumpFilesModelCheckerListener @Inject() (variableDescriptionsStore: VariableDescriptionsStore)
+    extends ModelCheckerListener with LazyLogging {
 
   override def onCounterexample(counterexample: Trace[TlaEx], errorIndex: Int): Unit = {
     dump(counterexample, errorIndex, "violation")
@@ -39,7 +39,7 @@ class DumpFilesModelCheckerListener @Inject()(variableDescriptionsStore: Variabl
           prefix,
           suffix,
           counterexample,
-        variableDescriptionsStore,
+          variableDescriptionsStore,
       )
     }
 

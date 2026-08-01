@@ -16,12 +16,12 @@ import java.io.PrintWriter
  *   Igor Konnov
  */
 class ItfCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: VariableDescriptionsStore)
-  extends CounterexampleWriter {
+    extends CounterexampleWriter {
   override def write(trace: Trace[TlaEx]): Unit = {
     writer.write(ujson.write(
-      ItfCounterexampleWriter.mkJson(trace.module, trace.states, variableDescriptionsStore.toMap),
-      indent = 2,
-    ))
+            ItfCounterexampleWriter.mkJson(trace.module, trace.states, variableDescriptionsStore.toMap),
+            indent = 2,
+        ))
   }
 }
 
@@ -39,9 +39,9 @@ object ItfCounterexampleWriter {
    *   the JSON representation of the counterexample in the ITF format
    */
   def mkJson(
-              rootModule: TlaModule,
-              states: IndexedSeq[Trace.State],
-              variableDescriptions: Map[String, String] = Map.empty): ujson.Value =
+      rootModule: TlaModule,
+      states: IndexedSeq[Trace.State],
+      variableDescriptions: Map[String, String] = Map.empty): ujson.Value =
     ujsonEncoder.mkJson(rootModule, states, variableDescriptions).value
 
   def stateToJson(state: Trace.State, index: Int): ujson.Value =

@@ -35,9 +35,9 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     val variableDescriptionsStore = new VariableDescriptionsStore()
     variableDescriptionsStore.put("__temporal_t_1", "◇(x = 1)")
     val decl = new TlaOperDecl(
-      "State0",
-      List.empty,
-      NameEx("__temporal_t_1")(Typed(BoolT1)),
+        "State0",
+        List.empty,
+        NameEx("__temporal_t_1")(Typed(BoolT1)),
     )(Typed(BoolT1))
     val writer = new PrettyWriter(printWriter, layout80)
 

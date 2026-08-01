@@ -57,7 +57,7 @@ class TemporalPassImpl @Inject() (
           val level = levelFinder.getLevelOfDecl(temporalProp)
           if (level != TlaLevelTemporal) {
             logger.warn(
-              s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property of the initial state. Should ${temporalProp.name} be an invariant instead (--inv)?")
+                s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property of the initial state. Should ${temporalProp.name} be an invariant instead (--inv)?")
           }
           true
         case _ => false

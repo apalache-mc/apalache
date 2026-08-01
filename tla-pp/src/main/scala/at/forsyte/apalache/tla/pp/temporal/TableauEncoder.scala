@@ -173,8 +173,8 @@ class TableauEncoder(
             val nodeLoopVarDecl = loopEnc.createVarCopyVariableInLoop(nodeVarDecl)
 
             variableDescriptionsStore.put(
-              nodeLoopVarDecl.name,
-              LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"),
+                nodeLoopVarDecl.name,
+                LoopEncoder.NAME_PREFIX + curNode.toString().replace("\"", "\'"),
             )
 
             val nodeVarEx = builder.varDeclAsNameEx(nodeVarDecl)

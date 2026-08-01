@@ -457,7 +457,7 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
           val (status, jsonTrace) = checkerContext.trex.sat(params.timeoutSec) match {
             case Some(true) =>
               (InvariantStatus.VIOLATED,
-                getTraceInJson(checkerContext, params.timeoutSec, variableDescriptionsStore.toMap))
+                  getTraceInJson(checkerContext, params.timeoutSec, variableDescriptionsStore.toMap))
             case Some(false) => (InvariantStatus.SATISFIED, NullNode.getInstance())
             case None        => (InvariantStatus.UNKNOWN, NullNode.getInstance())
           }
