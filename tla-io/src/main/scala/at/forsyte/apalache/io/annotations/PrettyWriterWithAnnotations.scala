@@ -32,15 +32,7 @@ class PrettyWriterWithAnnotations(
           typeAnnotation
 
         case Some(annotations) =>
-          val annotationsAsStr = annotations.map {
-            case Annotation(StandardAnnotations.FREE_TEXT, AnnotationStr(contents)) =>
-              // print the free text as is
-              contents
-
-            case a =>
-              // print other annotations in the proper syntax
-              a.toPrettyString
-          }
+          val annotationsAsStr = annotations.map(_.toPrettyString)
           Some(typeAnnotation.getOrElse(List()) ++ annotationsAsStr)
       }
     }
