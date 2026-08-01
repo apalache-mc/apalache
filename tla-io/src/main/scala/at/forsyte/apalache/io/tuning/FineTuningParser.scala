@@ -29,7 +29,6 @@ object FineTuningParser {
       "search.invariant.mode" -> EnumFieldType("before", "after"),
       "search.transitionFilter" -> RegexFieldType(),
       "search.invariantFilter" -> RegexFieldType(),
-      "search.seed" -> UnsignedIntFieldType(),
       "rewriter.shortCircuit" -> BoolFieldType(),
       // setting the SMT logic in CVC5
       "cvc5.smt.logic" -> StringFieldType(),

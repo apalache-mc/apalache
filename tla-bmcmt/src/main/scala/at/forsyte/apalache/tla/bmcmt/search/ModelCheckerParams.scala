@@ -1,16 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
-import at.forsyte.apalache.io.config.SMTEncoding
+import at.forsyte.apalache.io.config.SearchKind.Check
+import at.forsyte.apalache.io.config.{SMTEncoding, SearchKind}
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
 
 object ModelCheckerParams {
-
-  /** Number of simulation runs used when tuning does not override it. */
-  val defaultSimulationRuns: Int = 100
-
-  /** Whether symbolic runs emit traces when tuning does not override it. */
-  val defaultOutputTraces: Boolean = false
 
   /**
    * The invariant checking mode. See tuning.md.
@@ -34,7 +29,11 @@ object ModelCheckerParams {
 class ModelCheckerParams(
     checkerInput: CheckerInput,
     val stepsBound: Int,
-    tuningOptions: Map[String, String] = Map()) {
+    tuningOptions: Map[String, String] = Map(),
+    val searchKind: SearchKind = Check,
+    val seed: Int = 0,
+    val maxRun: Int = 100,
+    val outputTraces: Boolean = false) {
 
   /**
    * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
@@ -111,29 +110,5 @@ class ModelCheckerParams(
    * The SMT encoding to be used.
    */
   var smtEncoding: SMTEncoding = SMTEncoding.OOPSLA19
-
-  /**
-   * Is random simulation mode enabled.
-   */
-  val isRandomSimulation: Boolean =
-    tuningOptions.getOrElse("search.simulation", "false").toBoolean
-
-  /**
-   * The random seed used by the search. When absent, random number generators use their default initialization.
-   */
-  val searchSeed: Option[Int] =
-    tuningOptions.get("search.seed").map(_.toInt)
-
-  /**
-   * The number of random simulation runs to try.
-   */
-  val nSimulationRuns: Int =
-    tuningOptions.getOrElse("search.simulation.maxRun", ModelCheckerParams.defaultSimulationRuns.toString).toInt
-
-  /**
-   * Whether to save an example trace for each symbolic run.
-   */
-  val saveRuns: Boolean =
-    tuningOptions.getOrElse("search.outputTraces", ModelCheckerParams.defaultOutputTraces.toString).toBoolean
 
 }

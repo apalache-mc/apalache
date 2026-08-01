@@ -15,6 +15,7 @@ class TestOptions extends AnyFunSuite {
     SMTEncoding.values.foreach(value => assert(SMTEncoding.fromString(value.name) == value))
     SMTSolver.values.foreach(value => assert(SMTSolver.fromString(value.name) == value))
     Algorithm.values.foreach(value => assert(Algorithm.fromString(value.name) == value))
+    SearchKind.values.foreach(value => assert(SearchKind.fromString(value.name) == value))
     ServerType.values.foreach(value => assert(ServerType.fromString(value.name) == value))
   }
 
@@ -78,6 +79,10 @@ class TestOptions extends AnyFunSuite {
     assert(options.checker.smtSolver == defaults.checker.smtSolver.get)
     assert(options.checker.smtEncoding == defaults.checker.smtEncoding.get)
     assert(options.checker.tuning == defaults.checker.tuning.get)
+    assert(options.checker.seed >= 0)
+    assert(options.checker.searchKind == defaults.checker.searchKind.get)
+    assert(options.checker.maxRun == defaults.checker.maxRun.get)
+    assert(options.checker.outputTraces == defaults.checker.outputTraces.get)
 
     val serverResult = ApalacheConfigResolver.resolveServer(config.withCommand(SERVER))
     assert(serverResult.isSuccess)
@@ -120,6 +125,32 @@ class TestOptions extends AnyFunSuite {
     assert(message.contains("checker.smt-solver=cvc5"))
     assert(message.contains("checker.smt-encoding=oopsla19"))
     assert(message.contains("arrays"))
+  }
+
+  test("checker search controls are resolved and validated") {
+    val configured = checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(checker = CheckerPatch(
+      seed = Some(42),
+      searchKind = Some(SearchKind.Simulate),
+      maxRun = Some(7),
+      outputTraces = Some(true),
+    ))
+    val resolved = ApalacheConfigResolver.resolveCheck(configured)
+    assert(resolved.isSuccess)
+    assert(resolved.requireValue().checker.seed == 42)
+    assert(resolved.requireValue().checker.searchKind == SearchKind.Simulate)
+    assert(resolved.requireValue().checker.maxRun == 7)
+    assert(resolved.requireValue().checker.outputTraces)
+
+    Seq(
+      CheckerPatch(seed = Some(-1)) -> "checker.seed must be nonnegative",
+      CheckerPatch(maxRun = Some(0)) -> "checker.max-run must be positive",
+      CheckerPatch(maxRun = Some(-1)) -> "checker.max-run must be positive",
+    ).foreach { case (patch, expected) =>
+      val result =
+        ApalacheConfigResolver.resolveCheck(checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(checker = patch))
+      assert(!result.isSuccess)
+      assert(result.errors.exists(_.contains(expected)))
+    }
   }
 
   test("TLC deadlock settings are resolved once, with application config taking precedence") {

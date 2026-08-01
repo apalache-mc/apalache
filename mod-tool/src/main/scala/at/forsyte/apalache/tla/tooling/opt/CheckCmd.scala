@@ -8,7 +8,6 @@ import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.tuning.FineTuningParser
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import org.apache.commons.configuration2.builder.fluent.Configurations
 import org.apache.commons.configuration2.ex.ConfigurationException
 import org.apache.commons.io.FilenameUtils
@@ -75,7 +74,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
     opt[Option[Int]](name = SEED,
         description = descriptionWithDefault(
             "set a nonnegative random seed for reproducible SMT solving and, with simulate, transition selection",
-            configDefaults.checker.tuning.flatMap(_.get("search.seed")),
+          "generated per run",
         ), default = None)
   var tuningOptionsFile: Option[String] =
     opt[Option[String]](name = TUNING_OPTIONS_FILE, default = None,
@@ -117,11 +116,11 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
             configDefaults.checker.view,
         ), default = None)
 
-  var saveRuns: Option[Boolean] =
+  var outputTraces: Option[Boolean] =
     opt[Option[Boolean]](name = OUTPUT_TRACES,
         description = descriptionWithDefault(
             "save an example trace for each symbolic run",
-            ModelCheckerParams.defaultOutputTraces,
+          configDefaults.checker.outputTraces,
         ), default = None)
 
   var timeoutSmtSec: Option[Int] =
@@ -132,21 +131,10 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
         ) + " (unlimited)", default = None)
 
   override def toConfig: ConfigParseResult[ApalacheConfig] = {
-    seed match {
-      case Some(value) if value < 0 =>
-        return ConfigParseResult.failure(s"Invalid --$SEED: expected a nonnegative integer, found $value")
-      case _ => ()
-    }
-
     val combinedTuningOptions =
       try {
         val loadedTuningOptions = tuningOptionsFile.map(f => loadProperties(f)).getOrElse(Map())
-        val outputTraceOptions = saveRuns match {
-          case Some(value) => Map("search.outputTraces" -> value.toString)
-          case None        => Map.empty
-        }
-        val seedOptions = seed.map(value => "search.seed" -> value.toString).toMap
-        overrideProperties(loadedTuningOptions, tuningOptions.getOrElse("")) ++ outputTraceOptions ++ seedOptions
+        overrideProperties(loadedTuningOptions, tuningOptions.getOrElse(""))
       } catch {
         case e: PassOptionException => return ConfigParseResult.failure(e.getMessage)
       }
@@ -162,6 +150,9 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
         ApalacheConfig(
             checker = CheckerPatch(
                 algorithm = algo,
+              searchKind = Some(SearchKind.Check),
+              seed = seed,
+              outputTraces = outputTraces,
                 smtSolver = smtSolver,
                 smtEncoding = smtEncoding,
                 tuning = tuning,

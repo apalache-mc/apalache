@@ -41,13 +41,15 @@ class TestCmd extends ApalacheCommand(name = TEST, description = "Quickly test a
     // Tune for testing:
     //   1. Check the invariant only after the action took place.
     //   2. Randomize
-    val seed = Math.abs(System.currentTimeMillis().toInt)
+    val seed = System.currentTimeMillis().toInt & Int.MaxValue
     mergeConfig(
         base,
         ApalacheConfig(
             source = Some(source.requireValue()),
             checker = CheckerPatch(
-                tuning = Some(Map("search.invariantFilter" -> "1->.*", "search.seed" -> seed.toString)),
+              tuning = Some(Map("search.invariantFilter" -> "1->.*")),
+              searchKind = Some(SearchKind.Check),
+              seed = Some(seed),
                 init = Some(before),
                 next = Some(action),
                 invariants = Some(List(assertion)),

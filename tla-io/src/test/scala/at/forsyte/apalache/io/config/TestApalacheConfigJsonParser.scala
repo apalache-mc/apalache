@@ -16,11 +16,14 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("reports invalid option values as configuration errors") {
     val solverResult = ApalacheConfigJsonParser.parse("""{"checker":{"smt-solver":"unknown"}}""")
+    val searchKindResult = ApalacheConfigJsonParser.parse("""{"checker":{"search-kind":"unknown"}}""")
     val formatResult =
       ApalacheConfigJsonParser.parse("""{"source":{"kind":"string","content":"x","format":"unknown"}}""")
 
     assert(!solverResult.isSuccess)
     assert(solverResult.errors.contains("$.checker.smt-solver: Unexpected SMT solver backend: unknown"))
+    assert(!searchKindResult.isSuccess)
+    assert(searchKindResult.errors.contains("$.checker.search-kind: Unexpected search kind: unknown"))
     assert(!formatResult.isSuccess)
     assert(formatResult.errors.contains("$.source.format: Unsupported source format: unknown"))
   }
@@ -46,6 +49,24 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     val config = ApalacheConfig(checker = CheckerPatch(smtSolver = Some(SMTSolver.CVC5)))
 
     assert(ApalacheConfigJsonParser.write(config).contains(""""smt-solver":"cvc5""""))
+  }
+
+  test("round-trips typed checker search controls") {
+    val config = ApalacheConfig(checker = CheckerPatch(
+      seed = Some(42),
+      searchKind = Some(SearchKind.Simulate),
+      maxRun = Some(7),
+      outputTraces = Some(true),
+    ))
+
+    val json = ApalacheConfigJsonParser.write(config)
+    val decoded = ApalacheConfigJsonParser.parse(json)
+    assert(decoded.isSuccess)
+    assert(decoded.requireValue() == config)
+    assert(json.contains(""""seed":42"""))
+    assert(json.contains(""""search-kind":"simulate""""))
+    assert(json.contains(""""max-run":7"""))
+    assert(json.contains(""""output-traces":true"""))
   }
 
   test("preserves an explicit source format when a filename cannot express it") {

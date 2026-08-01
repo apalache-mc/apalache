@@ -120,7 +120,7 @@ The initial implementation should be intentionally conservative:
 2. Preserve the current cell/sort naming conventions so that existing logging, recording, and model-decoding assumptions
    remain easy to compare against Z3.
 3. Add a solver choice to configuration separately from `smtEncoding`; those are independent dimensions.
-4. Keep backend-neutral SMT controls separate from solver-specific options. For example, `search.seed`, `smt.statsSec`,
+4. Keep backend-neutral SMT controls separate from solver-specific options. For example, `checker.seed`, `smt.statsSec`,
    and SMT timeouts are concepts Apalache can define once and map to each backend. Low-level solver parameters should
    remain namespaced, for example `z3.*` and `cvc5.*`.
 5. Add differential property-based tests between Z3 and cvc5 at the `SolverContext` level for operations supported by

@@ -168,6 +168,10 @@ object ApalacheConfigJsonParser {
                       Set(
                           TUNING,
                           ALGO,
+                        SEARCH_KIND,
+                        SEED,
+                        MAX_RUN,
+                        OUTPUT_TRACES,
                           CONFIG,
                           DISCARD_DISABLED,
                           CINIT,
@@ -187,6 +191,12 @@ object ApalacheConfigJsonParser {
               update(stringMap(obj, TUNING, path))((checker: CheckerPatch, value) => checker.copy(tuning = value)),
               update(enumValue(obj, ALGO, path, Algorithm.fromString))((checker: CheckerPatch, value) =>
                 checker.copy(algorithm = value)),
+            update(enumValue(obj, SEARCH_KIND, path, SearchKind.fromString))((checker: CheckerPatch, value) =>
+              checker.copy(searchKind = value)),
+            update(integer(obj, SEED, path))((checker: CheckerPatch, value) => checker.copy(seed = value)),
+            update(integer(obj, MAX_RUN, path))((checker: CheckerPatch, value) => checker.copy(maxRun = value)),
+            update(boolean(obj, OUTPUT_TRACES, path))((checker: CheckerPatch, value) =>
+              checker.copy(outputTraces = value)),
               update(pathValue(obj, CONFIG, path))((checker: CheckerPatch, value) => checker.copy(tlcConfig = value)),
               update(boolean(obj, DISCARD_DISABLED, path))((checker: CheckerPatch, value) =>
                 checker.copy(discardDisabled = value)),
@@ -550,6 +560,10 @@ object ApalacheConfigJsonParser {
       values.foreach { case (key, value) => tuning.put(key, value) }
     }
     putNamed(obj, ALGO, checker.algorithm, (value: Algorithm) => value.name)
+    putNamed(obj, SEARCH_KIND, checker.searchKind, (value: SearchKind) => value.name)
+    putInt(obj, SEED, checker.seed)
+    putInt(obj, MAX_RUN, checker.maxRun)
+    putBoolean(obj, OUTPUT_TRACES, checker.outputTraces)
     putPath(obj, CONFIG, checker.tlcConfig)
     putBoolean(obj, DISCARD_DISABLED, checker.discardDisabled)
     put(obj, CINIT, checker.constantInitializer)

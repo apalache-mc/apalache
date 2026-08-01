@@ -50,6 +50,9 @@ This is a complete, copyable example:
    "output": "./Parsed.tla",
    "checker": {
       "algo": "incremental",
+     "search-kind": "check",
+     "max-run": 100,
+     "output-traces": false,
       "discard-disabled": true,
       "length": 10,
       "max-error": 1,
@@ -86,6 +89,10 @@ In the table below, a default of "none" means that the value is optional.
 |               | `output`             | Write the processed module to this file.                     | path string                  | none; `.tla` and `.json` are supported      |
 | `checker`     | `tuning`             | Set advanced checker and solver parameters.                  | object of string values      | `{}`                                        |
 |               | `algo`               | Select the model-checking algorithm.                         | string                       | `incremental`; also `offline`, `remote`     |
+|               | `search-kind`        | Select ordinary checking or symbolic simulation.             | string                       | `check`; also `simulate`                    |
+|               | `seed`               | Seed transition selection and the selected SMT backend.      | nonnegative integer          | generated separately for every run          |
+|               | `max-run`            | Limit the number of symbolic runs in simulation mode.        | positive integer             | `100`                                       |
+|               | `output-traces`      | Save an example trace for each symbolic run.                 | boolean                      | `false`                                     |
 |               | `config`             | Read behavior and properties from a TLC configuration file.  | path string                  | none                                        |
 |               | `discard-disabled`   | Pre-check and discard disabled transitions.                  | boolean                      | `true`                                      |
 |               | `cinit`              | Name the operator that initializes constants.                | string                       | none                                        |

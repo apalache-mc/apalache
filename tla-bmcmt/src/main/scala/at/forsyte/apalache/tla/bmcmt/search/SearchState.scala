@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
+import at.forsyte.apalache.io.config.SearchKind
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.bmcmt.Checker
 import at.forsyte.apalache.tla.lir.TlaEx
@@ -24,7 +25,7 @@ class SearchState(params: ModelCheckerParams) {
   private var _nTimeouts: Int = 0
   private val _counterexamples: ListBuffer[Trace[TlaEx]] = ListBuffer.empty
   private var _nRunsLeft: Int =
-    if (params.isRandomSimulation) params.nSimulationRuns else 1
+    if (params.searchKind == SearchKind.Simulate) params.maxRun else 1
 
   /**
    * Get the number of errors that were found so far (excluding deadlocks and runtime errors).

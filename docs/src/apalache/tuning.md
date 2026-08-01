@@ -143,19 +143,6 @@ Technically, Apalache propagates all the parameters that start with `z3.` to Z3.
 However, some of these parameters fail in the solver, even when they work in the
 command line. Hence, you have to experiment with the choice of parameters.
 
-## Randomization
-
-`search.seed=<int>` sets the search seed. It is used by `simulate` to choose
-transitions. The `check --seed=<int>` option, inherited by `simulate`, sets this
-tuning parameter and takes priority over the same tuning parameter. When
-`search.seed` is absent, the simulator's random number generator uses its
-default initialization.
-
-The search seed is also passed to the selected SMT backend. For Z3, Apalache
-maps it to its supported random-seed parameters. For CVC5, Apalache maps it to
-CVC5's `seed` and `sat-random-seed` options. When `search.seed` is absent, the
-SMT backend uses its default seed.
-
 ## Translation to SMT
 
 ### Short-circuiting

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
+import java.util.concurrent.ThreadLocalRandom
 import scala.collection.mutable.ListBuffer
 
 /** Applies defaults, loads TLC configuration, validates a mode, and constructs its final options. */
@@ -101,7 +102,16 @@ object ApalacheConfigResolver {
     val solver = requireDefault(checkerWithDefaults.smtSolver, s"$CHECKER.$SMT_SOLVER")
     val encoding = requireDefault(checkerWithDefaults.smtEncoding, s"$CHECKER.$SMT_ENCODING")
     val maxError = requireDefault(checkerWithDefaults.maxError, s"$CHECKER.$MAX_ERROR")
+    val maxRun = requireDefault(checkerWithDefaults.maxRun, s"$CHECKER.$MAX_RUN")
 
+    configuredChecker.seed.foreach { seed =>
+      if (seed < 0) {
+        errors += s"Option $CHECKER.$SEED must be nonnegative, but got $seed."
+      }
+    }
+    if (maxRun <= 0) {
+      errors += s"Option $CHECKER.$MAX_RUN must be positive, but got $maxRun."
+    }
     if (solver == SMTSolver.CVC5 && encoding != SMTEncoding.OOPSLA19) {
       errors +=
         s"$CHECKER.$SMT_SOLVER=${SMTSolver.CVC5.name} currently supports only " +
@@ -122,8 +132,13 @@ object ApalacheConfigResolver {
     }
 
     val specification = specificationResult.requireValue()
+    val seed = checkerWithDefaults.seed.getOrElse(generateSeed())
     val checker = CheckerOptions(
         algorithm = requireDefault(checkerWithDefaults.algorithm, s"$CHECKER.$ALGO"),
+      searchKind = requireDefault(checkerWithDefaults.searchKind, s"$CHECKER.$SEARCH_KIND"),
+      seed = seed,
+      maxRun = maxRun,
+      outputTraces = requireDefault(checkerWithDefaults.outputTraces, s"$CHECKER.$OUTPUT_TRACES"),
         discardDisabled = requireDefault(checkerWithDefaults.discardDisabled, s"$CHECKER.$DISCARD_DISABLED"),
         length = requireDefault(checkerWithDefaults.length, s"$CHECKER.$LENGTH"),
         maxError = maxError,
@@ -136,12 +151,12 @@ object ApalacheConfigResolver {
     val typecheck = typecheckResult.requireValue()
     ConfigParseResult.success(
         ValidatedCheckOptions(
-            typecheck.common,
-            typecheck.source,
-            typecheck.output,
-            typecheck.typechecker,
-            checker,
-            specification,
+          common = typecheck.common,
+          source = typecheck.source,
+          output = typecheck.output,
+          typechecker = typecheck.typechecker,
+          checker = checker,
+          specification = specification,
         ),
         warnings.toList,
     )
@@ -174,13 +189,13 @@ object ApalacheConfigResolver {
       val check = checkResult.requireValue()
       ConfigParseResult.success(
           ValidatedTraceOptions(
-              check.common,
-              check.source,
-              check.output,
-              check.typechecker,
-              check.checker,
-              check.specification,
-              TraceEvaluationOptions(
+            common = check.common,
+            source = check.source,
+            output = check.output,
+            typechecker = check.typechecker,
+            checker = check.checker,
+            specification = check.specification,
+            traceEvaluation = TraceEvaluationOptions(
                   config.traceEvaluation.trace.get,
                   config.traceEvaluation.expressions.get,
               ),
@@ -229,6 +244,7 @@ object ApalacheConfigResolver {
             timeoutSmtSeconds = Some(0),
             checkDeadlocks = Some(false),
             smtEncoding = Some(SMTEncoding.OOPSLA19),
+          searchKind = Some(SearchKind.Check),
             tuning = Some(Map.empty),
         ),
     )
@@ -272,6 +288,9 @@ object ApalacheConfigResolver {
   /** Return a static default after [[ApalacheConfig.mergeWithDefaults]] has supplied it. */
   private def requireDefault[A](value: Option[A], field: String): A =
     value.getOrElse(throw new IllegalStateException(s"Missing built-in default for $field"))
+
+  /** Generate one concrete nonnegative seed for an otherwise unseeded checker run. */
+  private def generateSeed(): Int = ThreadLocalRandom.current().nextInt() & Int.MaxValue
 
   private def resolveSpecification(checker: CheckerPatch): ConfigParseResult[SpecificationOptions] = {
     if (checker.tlcConfig.isEmpty) {
