@@ -1,12 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
-import at.forsyte.apalache.tla.lir.transformations.{fromTouchToExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
-import at.forsyte.apalache.tla.lir.{TlaAssumeDecl, TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.transformations.{fromTouchToExTransformation, TransformationTracker}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.LetInOptimizer
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
@@ -21,10 +20,6 @@ class AnalysisPassImpl @Inject() (
     extends AnalysisPass with LazyLogging {
 
   override def name: String = "AnalysisPass"
-
-  object StringOrdering extends Ordering[Object] {
-    override def compare(x: Object, y: Object): Int = x.toString.compare(y.toString)
-  }
 
   override def execute(module: TlaModule): PassResult = {
     val transformationSequence =

@@ -1,7 +1,6 @@
-import scala.util.Failure
-import Dependencies._
+import Dependencies.*
 
-import scala.sys.process._
+import scala.sys.process.*
 
 ///////////////////////////
 // Project-wide settings //
@@ -83,9 +82,6 @@ ThisBuild / scalacOptions ++= {
 ////////////////////////////
 
 // scalafmt
-// TODO: Remove if we decide we are happy with allways reformatting all
-// Only check/fix against (tracked) files that have changed relative to the trunk
-// ThisBuild / scalafmtFilter := "diff-ref=origin/main"
 ThisBuild / scalafmtPrintDiff := true
 
 // scalafix
