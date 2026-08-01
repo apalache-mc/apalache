@@ -1,7 +1,6 @@
-package at.forsyte.apalache.infra.tlc.config
+package at.forsyte.apalache.io.tlc.config
 
 import java.io.Reader
-
 import scala.util.matching.Regex
 import scala.util.parsing.combinator.RegexParsers
 

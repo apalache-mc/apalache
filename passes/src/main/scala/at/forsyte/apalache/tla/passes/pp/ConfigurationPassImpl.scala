@@ -1,26 +1,23 @@
 package at.forsyte.apalache.tla.passes.pp
 
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.io.config.Constants.CINIT
+import at.forsyte.apalache.io.config.SpecificationOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
+import at.forsyte.apalache.io.tlc.config.{InitNextSpec, NullSpec, TemporalSpec, TlcConfig}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.standard.NonrecursiveLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.pp._
+import at.forsyte.apalache.tla.typecheck.TypingInputException
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
-import at.forsyte.apalache.infra.passes.DerivedPredicates
-import at.forsyte.apalache.io.config.SpecificationOptions
-import at.forsyte.apalache.io.config.Constants.CINIT
-import at.forsyte.apalache.infra.tlc.config.TlcConfig
-import at.forsyte.apalache.infra.tlc.config.InitNextSpec
-import at.forsyte.apalache.infra.tlc.config.TemporalSpec
-import at.forsyte.apalache.infra.tlc.config.NullSpec
-import at.forsyte.apalache.tla.typecheck.TypingInputException
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions. This pass also

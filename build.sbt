@@ -12,7 +12,18 @@ maintainer := "apalache@konnov.phd"
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
 ThisBuild / organizationName := "Apalache Development Team"
 ThisBuild / organizationHomepage := Some(url("https://apalache-mc.org"))
-ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
+ThisBuild / homepage := Some(url("https://github.com/apalache-mc/apalache"))
+ThisBuild / licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / scmInfo := Some(ScmInfo(
+  url("https://github.com/apalache-mc/apalache"),
+  "scm:git:git@github.com:apalache-mc/apalache.git",
+))
+ThisBuild / developers := List(Developer(
+  "apalache-mc",
+  "Apalache Development Team",
+  "",
+  url("https://github.com/apalache-mc"),
+))
 
 // We store the version in a bare file to make accessing and updating the version trivial
 ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
@@ -23,7 +34,14 @@ ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 ThisBuild / organization := "org.apalache-mc"
 ThisBuild / scalaVersion := "2.13.18"
 
-// Add resolver for Sonatype OSS Snapshots and Releases Maven repository
+// Maven Central publication is opt-in for individual library sub-projects.
+ThisBuild / publish / skip := true
+ThisBuild / publishMavenStyle := true
+ThisBuild / pomIncludeRepository := { _ => false }
+ThisBuild / sonatypeCredentialHost := xerial.sbt.Sonatype.sonatypeCentralHost
+ThisBuild / sonatypeProfileName := "org.apalache-mc"
+
+// Resolve and publish development builds through the Central Portal snapshot repository.
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
 
 // Shared dependencies accross all sub projects
@@ -145,9 +163,26 @@ browseApiDocs := {
 lazy val tlair = (project in file("tlair"))
   .settings(
       testSettings,
-      libraryDependencies ++= Seq(
-          Deps.ujson,
-          Deps.kiama,
+    name := "tla-ir",
+    moduleName := "tla-ir",
+    description := "Apalache's typed intermediate representation and builder APIs for TLA+",
+    publish / skip := false,
+    publishTo := {
+      if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+      else sonatypePublishToBundle.value
+    },
+    libraryDependencies := Seq(
+      scalaOrganization.value % "scala-library" % scalaVersion.value,
+      Deps.guice,
+      Deps.logging,
+      Deps.scalaParserCombinators,
+      Deps.scalaz,
+      TestDeps.junit,
+      TestDeps.scalatest,
+      TestDeps.scalacheck,
+      TestDeps.scalatestplusEasymock,
+      TestDeps.scalatestplusJunit,
+      TestDeps.scalatestplusScalacheck,
           Deps.shapeless % Test,
       ),
   )
@@ -170,18 +205,38 @@ lazy val tla_io = (project in file("tla-io"))
       // property based tests depend on IR generators defined in the tlair tests
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
       tlair % "test->test",
-      infra,
   )
   .settings(
       testSettings,
-      libraryDependencies ++= Seq(
-          Deps.commonsIo,
+    name := "tla-io",
+    moduleName := "tla-io",
+    description := "Readers, writers, and configuration and trace serialization for Apalache's TLA+ IR",
+    publish / skip := false,
+    publishTo := {
+      if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+      else sonatypePublishToBundle.value
+    },
+    libraryDependencies := Seq(
+      scalaOrganization.value % "scala-library" % scalaVersion.value,
+      Deps.guice,
           Deps.jacksonDatabind,
+      Deps.kiama,
+      Deps.logging,
+      Deps.scalaParserCombinators,
+      Deps.scalaz,
+      Deps.slf4j,
+      Deps.ujson,
+      Deps.upickle,
+      TestDeps.junit,
+      TestDeps.scalatest,
+      TestDeps.scalacheck,
+      TestDeps.scalatestplusJunit,
+      TestDeps.scalatestplusScalacheck,
       ),
   )
 
-// The SANY frontend. This is the only sub-project that depends on tla2tools, which is not resolvable from
-// Maven Central. Keeping it separate from `tla_io` lets us publish `tlair` and `tla_io` as libraries.
+// The SANY frontend depends on tla2tools, which is not resolvable from Maven Central. Keeping it separate from
+// `tla_io` lets us publish `tlair` and `tla_io` as libraries.
 lazy val tla_parser = (project in file("tla-parser"))
   .dependsOn(
       tlair,
@@ -474,7 +529,7 @@ docker / dockerfile := {
 
 // For some reason `scalafmtFilter` doesn't register as being used, tho it is
 // so this quiets the erroneous linting.
-Global / excludeLintKeys += scalafmtFilter
+Global / excludeLintKeys ++= Set(scalafmtFilter, pomIncludeRepository, publishMavenStyle)
 
 lazy val versionFile = settingKey[File]("Location of the file tracking the project version")
 

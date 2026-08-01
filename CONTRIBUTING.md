@@ -537,6 +537,39 @@ When the PR is merged into `main`:
   - create the release on github
 - [ ] Update the download links at https://github.com/apalache-mc/apalache/blob/gh-pages/_config.yml#L7
 
+### Publishing libraries to Maven Central
+
+The Scala 2.13 libraries `org.apalache-mc:tla-ir_2.13` and
+`org.apalache-mc:tla-io_2.13` can be published independently of the Apalache distribution. Publishing requires:
+
+- a [Central Portal user token](https://central.sonatype.org/publish/generate-portal-token/), exposed as
+  `SONATYPE_USERNAME` and `SONATYPE_PASSWORD`;
+- for snapshot publishing, snapshots enabled for the `org.apalache-mc`
+  namespace in the Central Portal;
+- a secret GPG key in the local keyring, with its public key available from a public keyserver; and
+- optionally, `PGP_PASSPHRASE` for noninteractive signing. Local publishing can instead use GnuPG pinentry.
+
+The publication version is always read from `VERSION`; the script does not permit an override. Use one of these explicit
+modes:
+
+```sh
+# VERSION must end in -SNAPSHOT. This publishes directly to Central snapshots.
+./script/publish-maven.sh snapshot
+
+# VERSION must be stable and tracked files must be clean. This uploads and
+# validates the deployment, but leaves the irreversible Publish action to a
+# human in the Central Portal.
+./script/publish-maven.sh stage
+
+# The same stable-version checks, followed by automatic publication after
+# Central validation succeeds.
+./script/publish-maven.sh release
+```
+
+Use `stage` for the first stable publication. Review the deployment at
+https://central.sonatype.com/publishing/deployments before publishing or dropping it. Released Maven Central coordinates
+are immutable.
+
 [Github Issue]: https://github.com/apalache-mc/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
 [adr]: https://en.wikipedia.org/wiki/Architectural_decision
