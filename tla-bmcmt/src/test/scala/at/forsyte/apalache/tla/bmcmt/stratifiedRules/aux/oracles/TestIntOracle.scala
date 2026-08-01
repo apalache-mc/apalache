@@ -110,12 +110,12 @@ class TestIntOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
             assertionsIfFalseOpt match {
               case None =>
                 val ites = assertionsIfTrue.zipWithIndex.map { case (a, i) =>
-                  tla.ite(tla.eql(tla.unchecked(oracle.intCell.toBuilder), tla.int(i)), a, tla.bool(true))
+                  tla.ite(tla.eql(oracle.intCell.toBuilder, tla.int(i)), a, tla.bool(true))
                 }
                 caseEx == tla.and(ites: _*).build
               case Some(assertionsIfFalse) =>
                 val ites = assertionsIfTrue.zip(assertionsIfFalse).zipWithIndex.map { case ((at, af), i) =>
-                  tla.ite(tla.eql(tla.unchecked(oracle.intCell.toBuilder), tla.int(i)), at, af)
+                  tla.ite(tla.eql(oracle.intCell.toBuilder, tla.int(i)), at, af)
                 }
                 caseEx == tla.and(ites: _*).build
             }

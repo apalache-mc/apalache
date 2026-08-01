@@ -36,7 +36,7 @@ trait TestCherryPick extends RewriterBase {
       // introduce integer cells directly
       arena = state.arena.appendCell(IntT1)
       val cell = arena.topCell
-      solverContext.assertGroundExpr(tla.eql(cellEx(cell), tla.int(i)))
+      solverContext.assertGroundExpr(tla.eql(cell.toBuilder, tla.int(i)))
       state = state.setArena(arena)
       cell
     }
@@ -68,8 +68,8 @@ trait TestCherryPick extends RewriterBase {
       .pickTuple(TupT1(IntT1, IntT1), state, oracle, tuples, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK {<<1, <<2, 3>> >>, <<3, <<4, 5>> >>}""") { rewriterType: SMTEncoding =>
@@ -89,8 +89,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickTuple(tupleT, state, oracle, tuples, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4>>}""") { rewriterType: SMTEncoding =>
@@ -112,8 +112,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1), state, oracle, seqs, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK-SEQ {<<1, 2>>, <<3, 4, 5>>, <<>>}""") { rewriterType: SMTEncoding =>
@@ -135,9 +135,9 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickSequence(SeqT1(IntT1), state, oracle, seqs, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
-    assertEqWhenChosen(rewriter, state, oracle, 2, cellEx(c))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 2, c.toBuilder)
   }
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3, b |-> 4]}""") { rewriterType: SMTEncoding =>
@@ -157,8 +157,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickOldRecord(state, oracle, records, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { [a |-> 1, b |-> 2], [a |-> 3, b |-> 4]} with rows""") { rewriterType: SMTEncoding =>
@@ -179,8 +179,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickRecord(state, oracle, records, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK [a |-> 1, b |-> 2] or [a |-> 3]""") { rewriterType: SMTEncoding =>
@@ -203,8 +203,8 @@ trait TestCherryPick extends RewriterBase {
         state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(rec1Cell))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(rec2Cell))
+    assertEqWhenChosen(rewriter, state, oracle, 0, rec1Cell.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, rec2Cell.toBuilder)
   }
 
   test("""CHERRY-PICK {[a |-> 1, b |-> 2], [a |-> 3]}""") { rewriterType: SMTEncoding =>
@@ -221,8 +221,8 @@ trait TestCherryPick extends RewriterBase {
     state = rewriter.rewriteUntilDone(state.setRex(rec2))
     val rec2Cell = state.asCell
     val set = tla.enumSet(
-        cellEx(rec1Cell),
-        cellEx(rec2Cell),
+        rec1Cell.toBuilder,
+        rec2Cell.toBuilder,
     )
     state = rewriter.rewriteUntilDone(state.setRex(set))
     val setCell = state.asCell
@@ -231,8 +231,8 @@ trait TestCherryPick extends RewriterBase {
     assert(solverContext.sat())
     val result = state.asCell
     // check that the result is equal to one of the records and nothing else
-    val eq1 = tla.eql(cellEx(result), cellEx(rec1Cell))
-    val eq2 = tla.eql(cellEx(result), cellEx(rec2Cell))
+    val eq1 = tla.eql(result.toBuilder, rec1Cell.toBuilder)
+    val eq2 = tla.eql(result.toBuilder, rec2Cell.toBuilder)
     val eq1or2 = tla.or(eq1, eq2)
     assertTlaExAndRestore(rewriter, state.setRex(eq1or2))
   }
@@ -254,8 +254,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickVariant(state, oracle, variants, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { {1, 2}, {3, 4} }""") { rewriterType: SMTEncoding =>
@@ -275,8 +275,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { {1, 2}, {} }""") { rewriterType: SMTEncoding =>
@@ -295,8 +295,8 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { {} }""") { rewriterType: SMTEncoding =>
@@ -315,7 +315,7 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickSet(SetT1(IntT1), state, oracle, sets, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
   }
 
   test("""CHERRY-PICK { {{1, 2}, {3, 4}}, {{5, 6}} }""") { rewriterType: SMTEncoding =>
@@ -339,8 +339,8 @@ trait TestCherryPick extends RewriterBase {
         state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(a))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(b))
+    assertEqWhenChosen(rewriter, state, oracle, 0, a.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, b.toBuilder)
   }
 
   test("""CHERRY-PICK { [x \in {1, 2} |-> 2 + x], [x \in {2, 3} |-> 2 * x] }""") { rewriterType: SMTEncoding =>
@@ -365,7 +365,7 @@ trait TestCherryPick extends RewriterBase {
     state = new CherryPick(rewriter).pickFun(funT, state, oracle, funs, state.arena.cellFalse().toBuilder)
     assert(solverContext.sat())
 
-    assertEqWhenChosen(rewriter, state, oracle, 0, cellEx(fun1))
-    assertEqWhenChosen(rewriter, state, oracle, 1, cellEx(fun2))
+    assertEqWhenChosen(rewriter, state, oracle, 0, fun1.toBuilder)
+    assertEqWhenChosen(rewriter, state, oracle, 1, fun2.toBuilder)
   }
 }

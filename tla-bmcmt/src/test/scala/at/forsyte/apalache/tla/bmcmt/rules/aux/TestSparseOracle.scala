@@ -50,7 +50,7 @@ trait TestSparseOracle extends RewriterBase {
     val sparseOracle = new SparseOracle(oracle, Set(1, 5))
     // assert flag == true iff oracle = 1
     rewriter.solverContext
-      .assertGroundExpr(sparseOracle.caseAssertions(nextState, Seq(cellEx(flag), tla.not(cellEx(flag)))))
+      .assertGroundExpr(sparseOracle.caseAssertions(nextState, Seq(flag.toBuilder, tla.not(flag.toBuilder))))
     // assert oracle = 5
     rewriter.push()
     rewriter.solverContext.assertGroundExpr(sparseOracle.whenEqualTo(nextState, 5))

@@ -1,8 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.tla.bmcmt.PureArena.namePrefix
-import at.forsyte.apalache.tla.lir.{NameEx, TlaEx}
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.lir.NameEx
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.typecomp._
 
@@ -45,8 +45,6 @@ class ArenaCell(val id: Int, val cellType: CellT, val isUnconstrained: Boolean =
    *   a builder instruction that can be used with the typed builder
    */
   def toBuilder: BuilderT = tla.name(toString, cellType.toTlaType1)
-
-  def mkTlaEq(rhs: ArenaCell): TlaEx = tla.eql(this.toBuilder, rhs.toBuilder)
 
   override def compareTo(t: ArenaCell): Int = id.compareTo(t.id)
 

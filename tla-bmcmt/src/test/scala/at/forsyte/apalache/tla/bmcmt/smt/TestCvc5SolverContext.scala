@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.smt
 import at.forsyte.apalache.infra.passes.options.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.IntT1
-import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestCvc5SolverContext extends AnyFunSuite {

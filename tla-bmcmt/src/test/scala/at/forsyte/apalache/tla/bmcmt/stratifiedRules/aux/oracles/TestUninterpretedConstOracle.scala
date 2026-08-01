@@ -117,7 +117,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
               case None =>
                 val ites = assertionsIfTrue.zip(oracle.valueCells).map { case (a, c) =>
                   tla.ite(
-                      tla.eql(tla.unchecked(oracle.oracleCell.toBuilder), tla.unchecked(c.toBuilder)),
+                      tla.eql(oracle.oracleCell.toBuilder, c.toBuilder),
                       a,
                       tla.bool(true),
                   )
@@ -125,7 +125,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
                 caseEx == tla.and(ites: _*).build
               case Some(assertionsIfFalse) =>
                 val ites = assertionsIfTrue.zip(assertionsIfFalse).zip(oracle.valueCells).map { case ((at, af), c) =>
-                  tla.ite(tla.eql(tla.unchecked(oracle.oracleCell.toBuilder), tla.unchecked(c.toBuilder)), at, af)
+                  tla.ite(tla.eql(oracle.oracleCell.toBuilder, c.toBuilder), at, af)
                 }
                 caseEx == tla.and(ites: _*).build
             }
