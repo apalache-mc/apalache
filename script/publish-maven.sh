@@ -10,11 +10,10 @@ PROJ_ROOT="$(cd "$DIR/.." >/dev/null 2>&1 && pwd)"
 
 usage() {
     cat <<'EOF'
-Usage: ./script/publish-maven.sh snapshot|stage|release
+Usage: ./script/publish-maven.sh snapshot|release
 
   snapshot  Publish a VERSION ending in -SNAPSHOT to Central snapshots.
-  stage     Upload a stable VERSION for validation and manual Portal approval.
-  release   Upload a stable VERSION and publish it automatically after validation.
+  release   Upload a release VERSION and publish it automatically after validation.
 
 Required environment variables:
   SONATYPE_USERNAME  Username from a Central Portal user token.
@@ -33,7 +32,7 @@ fi
 
 MODE=$1
 case "$MODE" in
-    snapshot|stage|release) ;;
+    snapshot|release) ;;
     *)
         usage >&2
         exit 2
@@ -53,7 +52,7 @@ then
 else
     if [[ "$VERSION" == *-SNAPSHOT ]]
     then
-        echo "error: $MODE mode requires a stable VERSION (found: $VERSION)" >&2
+        echo "error: $MODE mode requires a release VERSION (found: $VERSION)" >&2
         exit 3
     fi
 
@@ -92,16 +91,6 @@ case "$MODE" in
             "tla_io / test" \
             "tlair / publishSigned" \
             "tla_io / publishSigned"
-        ;;
-    stage)
-        sbt -batch \
-            "tlair / test" \
-            "tla_io / test" \
-            cleanMavenCentralStaging \
-            "tlair / publishSigned" \
-            "tla_io / publishSigned" \
-            sonaUpload
-        echo "Deployment uploaded. Review and publish it at https://central.sonatype.com/publishing/deployments"
         ;;
     release)
         echo "Publishing org.apalache-mc:tla-ir_2.13 and org.apalache-mc:tla-io_2.13 version $VERSION"

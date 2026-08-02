@@ -548,7 +548,7 @@ The Scala 2.13 libraries `org.apalache-mc:tla-ir_2.13` and
 
 #### Automated publishing
 
-Publishing a stable GitHub release automatically runs the
+Publishing a GitHub release automatically runs the
 `publish-to-maven-central` workflow against the tagged commit. The workflow checks that the tag is `v${VERSION}`,
 imports the signing key, and invokes
 `./script/publish-maven.sh release`. GitHub prereleases are skipped.
@@ -585,25 +585,18 @@ Manual publishing requires:
 - optionally, `PGP_PASSPHRASE` for noninteractive signing. Local publishing can instead use GnuPG pinentry.
 
 The publication version is always read from `VERSION`; the script does not permit an override. It wraps sbt's native
-`localStaging`, `sonaUpload`, and `sonaRelease` support. Use one of these explicit modes:
+`localStaging` and `sonaRelease` support. Use one of these explicit modes:
 
 ```sh
 # VERSION must end in -SNAPSHOT. This publishes directly to Central snapshots.
 ./script/publish-maven.sh snapshot
 
-# VERSION must be stable and tracked files must be clean. This uploads and
-# validates the deployment, but leaves the irreversible Publish action to a
-# human in the Central Portal.
-./script/publish-maven.sh stage
-
-# The same stable-version checks, followed by automatic publication after
-# Central validation succeeds.
+# VERSION must have no -SNAPSHOT and tracked files must be clean.
+# This publishes automatically after Central validation succeeds.
 ./script/publish-maven.sh release
 ```
 
-Use `stage` for the first stable publication. Review the deployment at
-https://central.sonatype.com/publishing/deployments before publishing or dropping it. Released Maven Central coordinates
-are immutable.
+Released Maven Central coordinates are immutable.
 
 [Github Issue]: https://github.com/apalache-mc/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments

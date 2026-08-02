@@ -35,7 +35,7 @@
 
 ## [./publish-to-maven-central.yml](./publish-to-maven-central.yml)
 
-- Triggered by publishing a stable GitHub release.
+- Triggered by publishing a GitHub release (but not a pre-release).
 - The workflow signs and publishes `tla-ir` and `tla-io` to Maven Central.
 - **Requirements**:
     - A `maven-central` GitHub Environment containing the Central Portal token and PGP signing secrets documented in [
