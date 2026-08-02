@@ -1,8 +1,8 @@
 # ADR-026: Explicit configuration and command options
 
-| authors     | last revised    |
-|-------------| --------------: |
-| Igor Konnov | 2026-07-30      |
+| authors     | last revised |
+|-------------|-------------:|
+| Igor Konnov |   2026-08-04 |
 
 **Table of Contents**
 
@@ -87,11 +87,11 @@ This ADR is written with the following goals in mind:
    an instance of `ApalacheConfig`. The parser is strict in that it rejects
    unknown fields.
  - `ApalacheConfigResolver` does command-specific validation of the options.
-   It produces `Resolved*Options` for various consumers, e.g., it produces
-   `ResolvedTypecheckOptions` for the type checker and `ResolvedCheckOptions`
+   It produces instances of `ValidatedOptions` for various consumers, e.g., it produces
+   `TypecheckerOptions` for the type checker and `CheckerOptions`
    for the model checker.
- - `Resolved*Options` are injected into passes via Guice. No conversion or
-   interface manipulation is required.
+ - Instances of `ValidatedOptions` are injected into passes via Guice.
+   No conversion or interface manipulation is required.
  - `ApalacheConfigLoader` is the entry point to the configuration framework
    that is used by the CLI tooling or RPC services.
 
