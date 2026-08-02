@@ -57,7 +57,7 @@ jobs:
 
           if [[ "$RELEASE_TAG" != "$expected_tag" ]]
           then
-              echo "error: release tag $RELEASE_TAG does not match VERSION $version (expected: $expected_tag)" >&2
+              echo "error: version tag $RELEASE_TAG does not match VERSION $version (expected: $expected_tag)" >&2
               exit 1
           fi
 
