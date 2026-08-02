@@ -6,7 +6,8 @@ set -euo pipefail
 # the user's GnuPG keyring, never from repository files.
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-PROJ_ROOT="$(cd "$DIR/.." >/dev/null 2>&1 && pwd)"
+DEFAULT_PROJ_ROOT="$(cd "$DIR/.." >/dev/null 2>&1 && pwd)"
+PROJ_ROOT="${PUBLISH_MAVEN_PROJECT_ROOT:-$DEFAULT_PROJ_ROOT}"
 
 usage() {
     cat <<'EOF'
