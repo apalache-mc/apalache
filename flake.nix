@@ -83,15 +83,16 @@
 
             # Built inputs are the packages that we provide in the PATH in the nix shell
             buildInputs = with pkgs; [
-              # Java / Scala
+              # Java
               jdk25_headless
-              scala_2_13
 
               # Build
-              sbt
+              # Nixpkgs wraps sbt with its default JRE, independently of PATH.
+              # Override it so Scala sees Java 25 when validating -release:25.
+              (sbt.override { jre = jdk25_headless; })
 
               # Development
-              metals
+              (metals.override { jre = jdk25_headless; })
 
               # Testing
               pkgsOldMdx.ocamlPackages.mdx

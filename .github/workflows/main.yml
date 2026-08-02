@@ -206,9 +206,11 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-      - name: Build dev-shell
+      - name: Validate dev-shell Java toolchain
         if: runner.os == 'Linux'
-        run: nix develop -c bash -c exit
+        run: |
+          nix develop -c java -version
+          nix develop -c sbt -batch 'eval require(System.getProperty("java.specification.version") == "25", "sbt must run on Java 25")'
       - name: Build and run integration tests
         if: runner.os == 'Linux'
         run: nix develop -c make integration
@@ -285,10 +287,8 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-      - name: Build dev-shell
-        run: nix develop -c bash -c exit
       - name: Build the docker image
-        run: make docker
+        run: nix develop -c make docker
       - name: Run integration tests in docker container
         run: |
           nix develop -c bash -c '
