@@ -2,7 +2,7 @@
 
 1. Install `git`.
 2. Install the [Eclipse Temurin][] or [Zulu][] builds of OpenJDK 25.
-   - Java 25 is the minimum supported JVM and is the latest LTS release.
+   - Java 25 is the required build JDK and is the latest LTS release. Released artifacts target Java 17.
    - The Scala and sbt versions used by the build are compatible with Java 25; see the [compatibility table][].
 3. Install [sbt][].
    - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)

@@ -134,6 +134,18 @@ jobs:
       - uses: sbt/setup-sbt@v1
       - name: Build universal package
         run: sbt "Universal/packageBin"
+      - name: Set up JDK 17 for artifact compatibility smoke test
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Run packaged Unix launcher on Java 17
+        shell: bash
+        run: |
+          unzip target/universal/apalache-*.zip -d target/java17-smoke
+          package_dir=$(find target/java17-smoke -mindepth 1 -maxdepth 1 -type d -name 'apalache-*' -print -quit)
+          APALACHE_HOME="$package_dir" "$package_dir/bin/apalache-mc" check --smt-solver=z3 --length=1 test/tla/NoVars.tla
+          APALACHE_HOME="$package_dir" "$package_dir/bin/apalache-mc" check --smt-solver=cvc5 --length=1 test/tla/NoVars.tla
       - name: Upload universal package
         uses: actions/upload-artifact@v7
         with:
@@ -144,15 +156,19 @@ jobs:
   windows-package-smoke:
     needs: windows-package
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [17, 25]
     steps:
       # The repository contains a directory named `aux`, which Windows cannot
       # check out because AUX is a reserved device name. Build on Linux and
       # exercise the platform-independent package on Windows instead.
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 25
+          java-version: ${{ matrix.java-version }}
       - name: Download universal package
         uses: actions/download-artifact@v8
         with:

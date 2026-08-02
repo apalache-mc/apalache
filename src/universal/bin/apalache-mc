@@ -22,10 +22,16 @@ DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 APALACHE_JAR=${APALACHE_JAR:-"$DIR/../lib/apalache.jar"}
 JVM_ARGS=${JVM_ARGS:-""}
 JVM_GC_ARGS=${JVM_GC_ARGS:-""}
-# Guice and other bundled dependencies still use sun.misc.Unsafe. Java 25 warns
-# unless the application explicitly permits those calls (JEP 498). Keep this
-# before JVM_ARGS so callers can override the default policy when necessary.
-JVM_COMPAT_ARGS="--sun-misc-unsafe-memory-access=allow"
+# Guice and other bundled dependencies still use sun.misc.Unsafe. Recent Java
+# runtimes warn unless the application explicitly permits those calls (JEP 498),
+# while Java 17 rejects the compatibility option. Probe the selected runtime so
+# the same package works on both. Keep this before JVM_ARGS so callers can
+# override the default policy when necessary.
+JVM_COMPAT_ARGS=""
+if java --sun-misc-unsafe-memory-access=allow -version >/dev/null 2>&1
+then
+    JVM_COMPAT_ARGS="--sun-misc-unsafe-memory-access=allow"
+fi
 
 if ! test -f "$APALACHE_JAR"
 then
