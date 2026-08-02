@@ -36,9 +36,9 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
         "$.debug: Expected a JSON boolean.",
         "$.checker.inv[0]: Expected a JSON string.",
         "$.checker.inv[1]: Expected a JSON string.",
-        "$.checker.length: Expected a 32-bit JSON integer.",
+        "$.checker.length: Expected a JSON integer in -2147483648..2147483647.",
         "$.checker.smt-solver: Unexpected SMT solver backend: unknown",
-        "$.server.port: Expected a 32-bit JSON integer.",
+        "$.server.port: Expected a JSON integer in -2147483648..2147483647.",
     )
 
     assert(!result.isSuccess)
@@ -76,7 +76,7 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
     val overflow = ApalacheConfigJsonParser.parse("""{"checker":{"seed":2147483648}}""")
     assert(!overflow.isSuccess)
-    assert(overflow.errors.contains("$.checker.seed: Expected a 32-bit JSON integer."))
+    assert(overflow.errors.contains("$.checker.seed: Expected a JSON integer in -2147483648..2147483647."))
   }
 
   test("preserves an explicit source format when a filename cannot express it") {

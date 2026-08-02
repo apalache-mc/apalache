@@ -470,7 +470,7 @@ object ApalacheConfigJsonParser {
         case Some(value) if value.isIntegralNumber && value.canConvertToInt =>
           Right(Some(value.intValue()))
         case Some(_) =>
-          decodeFailure(s"$path: Expected a 32-bit JSON integer.")
+          decodeFailure(s"$path: Expected a JSON integer in ${Int.MinValue}..${Int.MaxValue}.")
       }
 
     private def negate(value: DecodeResult[Option[Boolean]]): DecodeResult[Option[Boolean]] =

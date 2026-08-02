@@ -112,7 +112,7 @@ object ApalacheConfigResolver {
 
     configuredChecker.seed.foreach { seed =>
       if (seed < 0) {
-        errors += s"Option $CHECKER.$SEED must be nonnegative, but got $seed."
+        errors += s"Option $CHECKER.$SEED must be between 0 and ${Int.MaxValue}, but got $seed."
       }
     }
     if (maxRun <= 0) {

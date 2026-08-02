@@ -154,7 +154,7 @@ class TestOptions extends AnyFunSuite {
     assert(explicitSingleCheck.isSuccess)
 
     Seq(
-        CheckerPatch(seed = Some(-1)) -> "checker.seed must be nonnegative",
+        CheckerPatch(seed = Some(-1)) -> "checker.seed must be between 0 and 2147483647",
         CheckerPatch(maxRun = Some(0)) -> "checker.max-run must be positive",
         CheckerPatch(maxRun = Some(-1)) -> "checker.max-run must be positive",
         CheckerPatch(searchKind = Some(SearchKind.Check), maxRun = Some(2)) ->
@@ -165,6 +165,14 @@ class TestOptions extends AnyFunSuite {
       assert(!result.isSuccess)
       assert(result.errors.exists(_.contains(expected)))
     }
+  }
+
+  test("checker seed accepts Int.MaxValue during resolution") {
+    val upperBound =
+      ApalacheConfigResolver.resolveCheck(checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(
+              checker = CheckerPatch(seed = Some(Int.MaxValue))))
+    assert(upperBound.isSuccess)
+    assert(upperBound.requireValue().checker.seed == Int.MaxValue)
   }
 
   test("TLC deadlock settings are resolved once, with application config taking precedence") {

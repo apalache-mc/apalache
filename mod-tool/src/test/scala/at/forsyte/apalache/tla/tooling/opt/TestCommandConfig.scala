@@ -109,7 +109,7 @@ class TestCommandConfig extends AnyFunSuite {
     invalid.seed = Some(-1)
     val invalidResult = ApalacheConfigResolver.resolveCheck(invalid.toConfig.requireValue())
     assert(!invalidResult.isSuccess)
-    assert(invalidResult.errors.contains("Option checker.seed must be nonnegative, but got -1."))
+    assert(invalidResult.errors.contains("Option checker.seed must be between 0 and 2147483647, but got -1."))
 
     val command = new CheckCmd()
     command.read(List("CommandConfig.tla"))
