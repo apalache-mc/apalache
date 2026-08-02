@@ -12,9 +12,7 @@
   # dependencies.
   inputs = {
     # Nix Inputs
-    # Nixpkgs 26.11 dropped x86_64-darwin. Stay on the current stable line so
-    # the development shell remains available on all four default systems.
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -26,7 +24,7 @@
   # https://zimbatm.com/NixFlakes/#output-schema
   outputs = { self, nixpkgs, flake-utils }:
     with flake-utils.lib;
-    eachDefaultSystem (system:
+    eachSystem [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ] (system:
       let
         pkgs = import nixpkgs { inherit system; };
         # FIXME(#2565): pin old nixpkgs, to pull in mdx 2.1.0, need to workaround this regression:
