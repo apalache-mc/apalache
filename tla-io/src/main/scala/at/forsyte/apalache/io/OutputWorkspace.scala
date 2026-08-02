@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * Owns the output paths for one Apalache execution. It creates all configured directories during construction and
+ * Owns the output workspace for one Apalache execution. It creates all configured directories during construction and
  * mirrors run output to an additional run directory when requested. See <a
  * href="https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/009adr-outputs.md">ADR-009</a> for the output
  * layout.
@@ -22,7 +22,7 @@ import java.time.format.DateTimeFormatter
  * @author
  *   Jure Kukovec, Shon Feder, Igor Konnov
  */
-final class OutputManager(initialization: CommandInitializationOptions) {
+final class OutputWorkspace(initialization: CommandInitializationOptions) {
 
   /** Namespace shared by all runs of the same input file or command. */
   private val outDir: Path = {
@@ -50,7 +50,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
   /** Intermediate-output directory inside `runDir`, present only when intermediate output is enabled. */
   private val intermediateDirOpt: Option[Path] =
     if (initialization.common.writeIntermediate) {
-      Some(ensureDirExists(runDir.resolve(OutputManager.IntermediateDirName)))
+      Some(ensureDirExists(runDir.resolve(OutputWorkspace.IntermediateDirName)))
     } else {
       None
     }
@@ -59,7 +59,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
   private val additionalIntermediateRunDirOpt: Option[Path] =
     intermediateDirOpt.flatMap(_ =>
       additionalRunDir.map { path =>
-        ensureDirExists(path.resolve(OutputManager.IntermediateDirName))
+        ensureDirExists(path.resolve(OutputWorkspace.IntermediateDirName))
       })
 
   /** Open a UTF-8 writer that the caller must close. Prefer [[withWriter]] for scoped writes. */
@@ -94,7 +94,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
   /** Write the rule-profiling report when profiling is enabled; return whether a write occurred. */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
     if (initialization.common.profiling) {
-      withWriterInRunDir(OutputManager.RuleProfileFile)(f)
+      withWriterInRunDir(OutputWorkspace.RuleProfileFile)(f)
       true
     } else {
       false
@@ -121,7 +121,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
 }
 
 /** Names shared by output producers. */
-object OutputManager {
+object OutputWorkspace {
 
   /** Name of the subdirectory that stores intermediate representations produced during a run. */
   private[io] val IntermediateDirName = "intermediate"

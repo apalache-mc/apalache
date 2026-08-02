@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.TlaModule
 
 import java.io.{File, PrintWriter}
@@ -13,7 +13,7 @@ import java.io.{File, PrintWriter}
  */
 trait TlaWriterFactory {
 
-  protected def outputManager: OutputManager
+  protected def outputWorkspace: OutputWorkspace
 
   def createTlaWriter(printWriter: PrintWriter): TlaWriter
 
@@ -44,8 +44,8 @@ trait TlaWriterFactory {
     )(module: TlaModule,
       extendedModuleNames: List[String]): Unit = {
     val writeHelper: (PrintWriter => Unit) => Unit = file match {
-      case Some(f) => outputManager.withWriter(f.toPath)
-      case None    => outputManager.withWriterInIntermediateDir(module.name + extension)
+      case Some(f) => outputWorkspace.withWriter(f.toPath)
+      case None    => outputWorkspace.withWriterInIntermediateDir(module.name + extension)
     }
     writeHelper(createWriter(_).write(module, extendedModuleNames))
   }

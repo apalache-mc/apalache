@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.config
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.config._
@@ -24,10 +24,10 @@ import com.google.inject.TypeLiteral
  * @author
  *   Igor Konnov
  */
-class CheckerModule(options: ValidatedCheckOptions, outputManager: OutputManager) extends ToolModule {
+class CheckerModule(options: ValidatedCheckOptions, outputWorkspace: OutputWorkspace) extends ToolModule {
 
   override def configure(): Unit = {
-    bind(classOf[OutputManager]).toInstance(outputManager)
+    bind(classOf[OutputWorkspace]).toInstance(outputWorkspace)
     bind(classOf[CommonOptions]).toInstance(options.common)
     bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
     bind(classOf[TypecheckerOptions]).toInstance(options.typechecker)

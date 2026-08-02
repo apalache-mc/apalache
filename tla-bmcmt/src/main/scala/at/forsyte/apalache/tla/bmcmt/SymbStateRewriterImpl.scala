@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.{Continue, Done, NoRule, RewritingResult}
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches._
@@ -43,7 +43,7 @@ class SymbStateRewriterImpl(
     val renaming: IncrementalRenaming,
     val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     val profilerListener: Option[MetricProfilerListener] = None,
-    val outputManager: Option[OutputManager] = None)
+    val outputWorkspace: Option[OutputWorkspace] = None)
     extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
 
   /**
@@ -144,7 +144,7 @@ class SymbStateRewriterImpl(
    * consume too many resources?
    */
   @transient
-  lazy val statListener: RuleStatListener = new RuleStatListener(outputManager)
+  lazy val statListener: RuleStatListener = new RuleStatListener(outputWorkspace)
   solverContext.setSmtListener(statListener) // subscribe to the SMT solver
 
   @transient

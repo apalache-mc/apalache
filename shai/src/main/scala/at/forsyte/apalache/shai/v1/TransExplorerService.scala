@@ -13,7 +13,7 @@ package at.forsyte.apalache.shai.v1
  */
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.{InputSource, OutputManager}
+import at.forsyte.apalache.io.{InputSource, OutputWorkspace}
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config.{
   ApalacheConfig, ApalacheConfigResolver, CommandInitializationOptions, CommonPatch, RunContextPatch,
@@ -179,8 +179,8 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
         }
         val options = resolved.requireValue()
         val initialization = CommandInitializationOptions(SERVER, options.common, Some(options.source))
-        val outputManager = new OutputManager(initialization)
-        PassChainExecutor(new ParserModule(options, outputManager))
+        val outputWorkspace = new OutputWorkspace(initialization)
+        PassChainExecutor(new ParserModule(options, outputWorkspace))
           .run()
           .left
           .map { err =>

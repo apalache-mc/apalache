@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.{InputSource, OutputManager}
+import at.forsyte.apalache.io.{InputSource, OutputWorkspace}
 import at.forsyte.apalache.io.config.Constants.{INFER_POLY, OUTPUT, TYPECHECK}
 import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, TypecheckerPatch}
 import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
@@ -53,10 +53,10 @@ class TypeCheckCmd
     }
   }
 
-  override def run(config: ApalacheConfig, outputManager: OutputManager): Either[(TExitCode, String), String] = {
+  override def run(config: ApalacheConfig, outputWorkspace: OutputWorkspace): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveTypecheck(config)) { options =>
       logger.info("Type checking " + file)
-      PassChainExecutor(new TypeCheckerModule(options, outputManager)).run() match {
+      PassChainExecutor(new TypeCheckerModule(options, outputWorkspace)).run() match {
         case Right(_)      => Right("Type checker [OK]")
         case Left(failure) => Left(failure.exitCode, "Type checker [FAILED]")
       }

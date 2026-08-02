@@ -6,31 +6,31 @@ import java.nio.file.Files
 import java.util.regex.Matcher
 
 object ReportGenerator {
-  def getLog(outputManager: OutputManager): String = {
-    val path = OutputManager.detailedLogPath(outputManager.runDir)
+  def getLog(outputWorkspace: OutputWorkspace): String = {
+    val path = OutputWorkspace.detailedLogPath(outputWorkspace.runDir)
     Matcher.quoteReplacement(Files.readString(path, StandardCharsets.UTF_8).trim)
   } // handle $s in log
 
   // Can't access Version or Command in IO, have to pass at call site
   def prepareReportFile(
-      outputManager: OutputManager,
+      outputWorkspace: OutputWorkspace,
       sourceText: Option[String],
       cmdStr: String,
       versionStr: String): String = {
     val specTxt = sourceText
       .map(spec => s"```\n${spec.trim}\n````")
       .getOrElse("<!-- TLA+ specification not found. -->")
-    val log = getLog(outputManager)
+    val log = getLog(outputWorkspace)
     val os = System.getProperty("os.name")
     val jdk = System.getProperty("java.version")
 
     val filledTemplate = template(specTxt, cmdStr, log, versionStr, os, jdk)
 
-    outputManager.withWriterInRunDir(OutputManager.ReportFile) {
+    outputWorkspace.withWriterInRunDir(OutputWorkspace.ReportFile) {
       _.println(filledTemplate)
     }
 
-    new File(outputManager.runDir.toFile, OutputManager.ReportFile).getCanonicalPath
+    new File(outputWorkspace.runDir.toFile, OutputWorkspace.ReportFile).getCanonicalPath
   }
 
   private def template(

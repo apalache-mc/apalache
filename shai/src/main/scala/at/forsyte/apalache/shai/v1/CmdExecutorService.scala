@@ -1,7 +1,7 @@
 package at.forsyte.apalache.shai.v1
 
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.config.Constants.SERVER
@@ -93,15 +93,15 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
     for {
       initialization <- ApalacheConfigResolver.resolveCommandInitialization(cfg).toCmdResult
-      outputManager <- Try(new OutputManager(initialization)).toCmdResult
+      outputWorkspace <- Try(new OutputWorkspace(initialization)).toCmdResult
       toolModule <- {
         cmd match {
           case Cmd.PARSE | Cmd.TLA =>
-            ApalacheConfigResolver.resolveParse(cfg).toCmdResult.map(new ParserModule(_, outputManager))
+            ApalacheConfigResolver.resolveParse(cfg).toCmdResult.map(new ParserModule(_, outputWorkspace))
           case Cmd.CHECK =>
-            ApalacheConfigResolver.resolveCheck(cfg).toCmdResult.map(new CheckerModule(_, outputManager))
+            ApalacheConfigResolver.resolveCheck(cfg).toCmdResult.map(new CheckerModule(_, outputWorkspace))
           case Cmd.TYPECHECK =>
-            ApalacheConfigResolver.resolveTypecheck(cfg).toCmdResult.map(new TypeCheckerModule(_, outputManager))
+            ApalacheConfigResolver.resolveTypecheck(cfg).toCmdResult.map(new TypeCheckerModule(_, outputWorkspace))
           case Cmd.Unrecognized(_) =>
             throw new IllegalArgumentException("programmer error: executeCmd applied before validateCmd")
         }
