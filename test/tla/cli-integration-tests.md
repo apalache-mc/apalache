@@ -99,6 +99,7 @@ We can set some JVM args and still have the default max heap size supplied.
 ```sh
 $ JVM_ARGS="-Xms1m" apalache-mc version --debug
 ...
+# JVM compatibility args: --sun-misc-unsafe-memory-access=allow
 # JVM args: -Xms1m -Xmx4096m
 ...
 ```
@@ -108,6 +109,7 @@ If we set the max heap size (with `-Xmx`) it will override the default max heap 
 ```sh
 $ JVM_ARGS="-Xmx16m" apalache-mc version --debug
 ...
+# JVM compatibility args: --sun-misc-unsafe-memory-access=allow
 # JVM args: -Xmx16m
 ...
 ```
@@ -525,7 +527,7 @@ EXITCODE: ERROR (12)
 ### check Fix531.tla reports no error: regression for issue 531 (array-encoding)
 
 ```sh
-$ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
+$ output="$(apalache-mc check --length=1 Fix531.tla 2>&1)"; if printf '%s\n' "$output" | grep -Eiq 'terminally deprecated|restricted method'; then exit 1; fi; printf '%s\n' "$output" | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...

@@ -31,11 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
           cache: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
@@ -48,11 +48,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Check scaladoc
@@ -64,11 +64,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Coursier cache
@@ -102,7 +102,7 @@ jobs:
       - name: Coursier setup
         uses: coursier/setup-action@v1
         with:
-          jvm: temurin:1.17
+          jvm: temurin:25
           apps: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
@@ -120,6 +120,35 @@ jobs:
           find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
+
+  windows-package-smoke:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Set APALACHE_HOME env
+        shell: pwsh
+        run: '"APALACHE_HOME=$env:GITHUB_WORKSPACE" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append'
+      - name: Build Windows package
+        run: sbt "Universal/packageBin"
+      - name: Run packaged Windows launcher
+        shell: pwsh
+        run: |
+          $archive = Get-ChildItem target/universal/apalache-*.zip | Select-Object -First 1
+          Expand-Archive -LiteralPath $archive.FullName -DestinationPath target/windows-smoke
+          $launcher = Get-ChildItem target/windows-smoke -Recurse -Filter apalache-mc.bat | Select-Object -First 1
+          $output = & $launcher.FullName version --debug 2>&1
+          $output | Write-Output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($output -match "terminally deprecated|restricted method") {
+            throw "Java 25 runtime warnings were emitted by the packaged launcher"
+          }
 
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
@@ -189,17 +218,17 @@ jobs:
           TEST_FILTER: ${{ matrix.test-filter }}
 
       # ── Direct path (macOS only, no Nix) ─────────────────────────────────────
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         if: runner.os == 'macOS'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       - name: Coursier setup
         if: runner.os == 'macOS'
         uses: coursier/setup-action@v1
         with:
-          jvm: temurin:1.17
+          jvm: temurin:25
           apps: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
@@ -252,7 +281,7 @@ jobs:
             ${{ runner.os }}-nix-
             ${{ runner.os }}-
       - name: Install Nix
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}

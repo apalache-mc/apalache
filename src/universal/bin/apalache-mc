@@ -22,6 +22,10 @@ DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 APALACHE_JAR=${APALACHE_JAR:-"$DIR/../lib/apalache.jar"}
 JVM_ARGS=${JVM_ARGS:-""}
 JVM_GC_ARGS=${JVM_GC_ARGS:-""}
+# Guice and other bundled dependencies still use sun.misc.Unsafe. Java 25 warns
+# unless the application explicitly permits those calls (JEP 498). Keep this
+# before JVM_ARGS so callers can override the default policy when necessary.
+JVM_COMPAT_ARGS="--sun-misc-unsafe-memory-access=allow"
 
 if ! test -f "$APALACHE_JAR"
 then
@@ -60,6 +64,7 @@ if [[ "$*" =~ '--debug' ]]
 then
     echo "# Tool home: $DIR"
     echo "# Package:   $APALACHE_JAR"
+    echo "# JVM compatibility args: $JVM_COMPAT_ARGS"
     echo "# JVM args: $JVM_ARGS"
     echo "# JVM GC args: $JVM_GC_ARGS"
     echo "# -Djava.io.tmpdir: $JAVA_IO_TMPDIR"
@@ -69,4 +74,4 @@ fi
 # Run with `exec` to replace the PID, rather than running in a subshell.
 # This saves one process, and ensures signals are sent to the replacement process
 # C.f. https://github.com/sbt/sbt-native-packager/blob/e72f2f45b8cab5881add1cd62743bfc69c2b9b4d/src/main/resources/com/typesafe/sbt/packager/archetypes/scripts/bash-template#L141-L142
-exec java $JVM_ARGS $JVM_GC_ARGS -Djava.io.tmpdir=$JAVA_IO_TMPDIR -jar "$APALACHE_JAR" "$@"
+exec java $JVM_COMPAT_ARGS $JVM_ARGS $JVM_GC_ARGS -Djava.io.tmpdir=$JAVA_IO_TMPDIR -jar "$APALACHE_JAR" "$@"

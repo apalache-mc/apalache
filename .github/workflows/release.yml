@@ -17,10 +17,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           # We only need the two commits of the release prep branch
           fetch-depth: 2
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Cut Release

@@ -12,7 +12,9 @@
   # dependencies.
   inputs = {
     # Nix Inputs
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
+    # Nixpkgs 26.11 dropped x86_64-darwin. Stay on the current stable line so
+    # the development shell remains available on all four default systems.
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -82,7 +84,7 @@
             # Built inputs are the packages that we provide in the PATH in the nix shell
             buildInputs = with pkgs; [
               # Java / Scala
-              jdk17_headless
+              jdk25_headless
               scala_2_13
 
               # Build
@@ -93,8 +95,7 @@
 
               # Testing
               pkgsOldMdx.ocamlPackages.mdx
-              python39Full
-              python39Packages.requests
+              (python3.withPackages (ps: [ ps.requests ]))
             ];
           };
         };
