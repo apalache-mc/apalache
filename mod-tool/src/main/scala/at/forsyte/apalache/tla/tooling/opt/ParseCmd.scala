@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.{InputSource, OutputManager}
 import at.forsyte.apalache.io.config.Constants.{OUTPUT, PARSE}
 import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult}
 import at.forsyte.apalache.tla.passes.imp.ParserModule
@@ -47,10 +47,10 @@ class ParseCmd
     }
   }
 
-  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+  override def run(config: ApalacheConfig, outputManager: OutputManager): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveParse(config)) { options =>
       logger.info("Parse " + file)
-      PassChainExecutor(new ParserModule(options)).run() match {
+      PassChainExecutor(new ParserModule(options, outputManager)).run() match {
         case Right(m) =>
           Right(s"Parsed successfully\nRoot module: ${m.name} with ${m.declarations.length} declarations.")
         case Left(failure) => Left(failure.exitCode, "Parser has failed")

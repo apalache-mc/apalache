@@ -1,7 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.{InputSource, OutputManager}
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
@@ -91,8 +91,15 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
           ))
     }
     val options = optionsResult.requireValue()
+    val initialization = CommandInitializationOptions(SERVER, options.common, Some(options.source))
+    val outputManager =
+      try new OutputManager(initialization)
+      catch {
+        case e: Exception =>
+          return Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, s"Failed to initialize output: ${e.getMessage}"))
+      }
     // call the parser
-    val passChainExecutor = PassChainExecutor(new CheckerModule(options))
+    val passChainExecutor = PassChainExecutor(new CheckerModule(options, outputManager))
     passChainExecutor.run() match {
       case Left(failure) =>
         Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))

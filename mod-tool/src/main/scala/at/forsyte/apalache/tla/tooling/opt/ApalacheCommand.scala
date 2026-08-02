@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.io.config.{ApalacheConfig, CommonPatch, ConfigParseResult, RunContextPatch}
 import at.forsyte.apalache.tla.lir.Feature
@@ -46,17 +47,17 @@ abstract class ApalacheCommand(name: String, description: String)
       ) + " (overrides envvar CONFIG_FILE)", useEnv = true)
   var debug: Option[Boolean] = opt[Option[Boolean]](name = DEBUG,
       description = descriptionWithDefault(
-          "extensive logging in detailed.log and log.smt",
+          s"extensive logging in ${OutputManager.DetailedLogFile} and log.smt",
           configDefaults.common.debug,
       ))
   var smtprof: Option[Boolean] = opt[Option[Boolean]](name = SMTPROF,
       description = descriptionWithDefault(
-          "profile SMT constraints in profile.csv",
+          s"profile SMT constraints in ${OutputManager.SmtProfileFile}",
           configDefaults.common.smtprof,
       ))
   var profiling: Option[Boolean] = opt[Option[Boolean]](name = PROFILING,
       description = descriptionWithDefault(
-          "write general profiling data to profile-rules.txt in the run directory",
+          s"write general profiling data to ${OutputManager.RuleProfileFile} in the run directory",
           configDefaults.common.profiling,
       ) + " (overrides envvar PROFILING)", useEnv = true)
   var outDir: Option[File] = opt[Option[File]](name = OUT_DIR,
@@ -115,12 +116,14 @@ abstract class ApalacheCommand(name: String, description: String)
    *
    * @param config
    *   The merged configuration produced after parsing the command line.
+   * @param outputManager
+   *   The configured output manager for this command execution.
    * @return
    *   `Right(msg)` on a successful execution or `Left((errCode, msg))` if the process fails, where `errCode` is the
    *   return code with the which the program will be terminated. In either case `msg` is the final message reported to
    *   the user.
    */
-  def run(config: ApalacheConfig): Either[(ExitCodes.TExitCode, String), String]
+  def run(config: ApalacheConfig, outputManager: OutputManager): Either[(ExitCodes.TExitCode, String), String]
 
   private var _invocation = ""
   private var _env = ""

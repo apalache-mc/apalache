@@ -13,6 +13,8 @@ import java.io.{File, PrintWriter}
  */
 trait TlaWriterFactory {
 
+  protected def outputManager: OutputManager
+
   def createTlaWriter(printWriter: PrintWriter): TlaWriter
 
   def createJsonWriter(printWriter: PrintWriter): TlaWriter
@@ -22,6 +24,8 @@ trait TlaWriterFactory {
    *
    * @param module
    *   TLA module to write
+   * @param extendedModuleNames
+   *   names of the modules to include in the module's `EXTENDS` declaration
    */
   def writeModuleAllFormats(module: TlaModule, extendedModuleNames: List[String]): Unit = {
     writeModuleToTla(module, extendedModuleNames, None)
@@ -40,8 +44,8 @@ trait TlaWriterFactory {
     )(module: TlaModule,
       extendedModuleNames: List[String]): Unit = {
     val writeHelper: (PrintWriter => Unit) => Unit = file match {
-      case Some(f) => OutputManager.withWriterToFile(f)
-      case None    => OutputManager.withWriterInIntermediateDir(module.name + extension)
+      case Some(f) => outputManager.withWriter(f.toPath)
+      case None    => outputManager.withWriterInIntermediateDir(module.name + extension)
     }
     writeHelper(createWriter(_).write(module, extendedModuleNames))
   }
@@ -51,9 +55,10 @@ trait TlaWriterFactory {
    *
    * @param module
    *   TLA module to write
-   * @param writer
-   *   The writer into which the module should be written (defaults to a file in the intermdiate output directory, with
-   *   the name derived from the module name)
+   * @param extendedModuleNames
+   *   names of the modules to include in the module's `EXTENDS` declaration
+   * @param file
+   *   target file, or `None` to write to a file derived from the module name in the intermediate output directory
    */
   def writeModuleToTla(
       module: TlaModule,
@@ -66,9 +71,10 @@ trait TlaWriterFactory {
    *
    * @param module
    *   TLA module to write
+   * @param extendedModuleNames
+   *   names of the modules to include in the module's `EXTENDS` declaration
    * @param file
-   *   The file into which the module should be written (defaults to a file in the intermdiate output directory, with
-   *   the name derived from the module name)
+   *   target file, or `None` to write to a file derived from the module name in the intermediate output directory
    */
   def writeModuleToJson(
       module: TlaModule,

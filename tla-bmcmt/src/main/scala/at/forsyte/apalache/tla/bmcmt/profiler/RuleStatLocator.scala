@@ -11,7 +11,7 @@ import scala.collection.immutable.SortedMap
  * @author
  *   Igor Konnov
  */
-class RuleStatLocator {
+class RuleStatLocator(outputManager: Option[OutputManager] = None) {
   private var ruleStats: Map[String, RuleStat] = Map()
 
   def getRuleStat(ruleName: String): RuleStat = {
@@ -27,7 +27,7 @@ class RuleStatLocator {
   def getStats = SortedMap(ruleStats.toSeq: _*)
 
   def writeStats(): Unit =
-    OutputManager.withProfilingWriter { writer =>
+    outputManager.foreach(_.withProfilingWriter { writer =>
       writer.println("Rule profiling statistics")
       val hrule = List.fill(80)('-').mkString
       writer.println(hrule)
@@ -46,5 +46,5 @@ class RuleStatLocator {
                   rs.smtAssertsSizeAvg,
               ))
       }
-    }
+    })
 }

@@ -31,7 +31,8 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Igor Konnov, Rodrigo Otoni
  */
-class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
+class Z3SolverContext(val config: SolverConfig, outputManager: Option[OutputManager] = None)
+    extends SolverContext with LazyLogging {
   private val id: Long = Z3SolverContext.createId()
 
   logger.debug(s"Creating Z3 solver context ${id}")
@@ -424,12 +425,13 @@ class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyL
   }
 
   /**
-   * Initialize up to two log writers, one in the run directory and one in the custom run directory, if those are set.
+   * Initialize up to two log writers, one in the run directory and one in the additional run directory, if set.
    */
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers =
-      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+    val writers = outputManager.toSeq.flatMap { manager =>
+      (Some(manager.runDir) ++ manager.additionalRunDir).map(dir => manager.openWriter(dir.resolve(filePart)))
+    }
 
     if (!config.debug) {
       writers.foreach { writer =>

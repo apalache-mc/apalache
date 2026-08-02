@@ -17,7 +17,7 @@ import scalaz.unused
  * @author
  *   Jure Kukovec
  */
-class TlaExToVMTWriter(gen: UniqueNameGenerator) {
+class TlaExToVMTWriter(gen: UniqueNameGenerator, outputManager: OutputManager) {
   // Main entry point.
   def annotateAndWrite(
       varDecls: Seq[TlaVarDecl],
@@ -99,7 +99,7 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermToVMTWriter.assertDistinct)
     }
 
-    OutputManager.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
+    outputManager.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
       writer.println(";Sorts")
       sortDecls.foreach(writer.println)
       writer.println()

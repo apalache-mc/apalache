@@ -48,33 +48,34 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def outputAndLogConfig(cmd: ApalacheCommand, cfg: ApalacheConfig): Try[Unit] = for {
+  private def outputAndLogConfig(cmd: ApalacheCommand, cfg: ApalacheConfig): Try[OutputManager] = for {
     initialization <- {
       val result = ApalacheConfigResolver.resolveCommandInitialization(cfg)
       if (result.isSuccess) Try(result.requireValue())
       else Failure(new ConfigurationError(result.errors.mkString("; ")))
     }
-    _ <- Try(OutputManager.configure(initialization))
+    outputManager <- Try(new OutputManager(initialization))
   } yield {
-    initialization.source.foreach(OutputManager.initSourceLines)
-    println(s"Output directory: ${OutputManager.runDir.normalize()}")
-    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
+    println(s"Output directory: ${outputManager.runDir.normalize()}")
+    outputManager.withWriterInRunDir(OutputManager.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
 
     // Write the application configuration, if debug is enabled
     if (initialization.common.debug) {
-      OutputManager.withWriterInRunDir("application-config.json") { writer =>
+      outputManager.withWriterInRunDir(OutputManager.ConfigFile) { writer =>
         writer.print(ApalacheConfigJsonParser.write(cfg.mergeWithDefaults, usePrettyPrinter = true))
       }
     }
 
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
-    // TODO: update workers when the multicore branch is integrated
+    val logFiles = (outputManager.runDir +: outputManager.additionalRunDir.toSeq).map(OutputManager.detailedLogPath)
+    new LogbackConfigurator(logFiles)
+      .configureDefaultContext()
     logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
 
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
+    outputManager
   }
 
   /** Build the CLI configuration, then select and merge at most one file-based configuration. */
@@ -100,7 +101,7 @@ object Tool extends LazyLogging {
    */
   def run(args: Array[String]): Int = {
     // Configure the silent logger first. Otherwise, Apache Commons spills a lot of text to the console.
-    new LogbackConfigurator(None, None).configureDefaultContext()
+    new LogbackConfigurator(Nil).configureDefaultContext()
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
       .parse(args)
@@ -137,11 +138,11 @@ object Tool extends LazyLogging {
                 logger.error(s"Configuration error: ${cfgErr.getMessage}")
                 ExitCodes.ERROR
               }
-              case Success(()) => {
+              case Success(outputManager) => {
                 configResult.warnings.foreach(warning => logger.warn(warning))
                 val startTime = LocalDateTime.now()
                 try {
-                  runCommand(cmd, config)
+                  runCommand(cmd, config, outputManager)
                 } finally {
                   printTimeDiff(startTime)
                 }
@@ -160,9 +161,15 @@ object Tool extends LazyLogging {
   }
 
   // Execute the program specified by the subcommand cmd, handling errors as needed
-  private def runCommand(cmd: ApalacheCommand, config: ApalacheConfig): ExitCodes.TExitCode =
+  private def runCommand(
+      cmd: ApalacheCommand,
+      config: ApalacheConfig,
+      outputManager: OutputManager): ExitCodes.TExitCode = {
+    // a helper for submitting bug reports
+    def readSourceCode(): Option[String] = config.source.flatMap(_.readUtf8.value)
+
     try {
-      cmd.run(config) match {
+      cmd.run(config, outputManager) match {
         case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
         case Right(msg)                 => { logger.info(msg); ExitCodes.OK }
       }
@@ -170,7 +177,9 @@ object Tool extends LazyLogging {
       case e: AdaptedException =>
         e.err match {
           case NormalErrorMessage(text) => logger.error(text)
-          case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd) }
+          case FailureMessage(text)     =>
+            logger.error(text, e)
+            generateBugReport(e, cmd, readSourceCode(), outputManager)
         }
         ExitCodes.ERROR
 
@@ -181,9 +190,10 @@ object Tool extends LazyLogging {
 
       case e: Throwable =>
         logger.error("Unhandled exception", e)
-        generateBugReport(e, cmd)
+        generateBugReport(e, cmd, readSourceCode(), outputManager)
         ExitCodes.ERROR
     }
+  }
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
@@ -238,8 +248,14 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def generateBugReport(e: Throwable, cmd: ApalacheCommand): Unit = {
+  private def generateBugReport(
+      e: Throwable,
+      cmd: ApalacheCommand,
+      sourceText: Option[String],
+      outputManager: OutputManager): Unit = {
     val absPath = ReportGenerator.prepareReportFile(
+        outputManager,
+        sourceText,
         cmd.invocation.split(" ").dropRight(1).mkString(" "),
         s"${BuildInfo.version} build ${BuildInfo.build}",
     )

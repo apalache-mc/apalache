@@ -16,9 +16,8 @@ import at.forsyte.apalache.io.OutputManager
  * @param changeListener
  *   the tracer of expression updates
  */
-class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener)
+class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeListener, outputManager: OutputManager)
     extends SymbStateRewriterListener with LazyLogging {
-  private val profileFileName: String = "profile.csv"
   private var _metricsPerId: Map[UID, SolverContextMetrics] = Map()
   private val sourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
   private var syncTimestampSecMillis: Long = System.currentTimeMillis()
@@ -57,7 +56,7 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
       .toList
       .sorted(MetricProfilerListener.EntryOrdering)
 
-    OutputManager.withWriterInRunDir(profileFileName) { writer =>
+    outputManager.withWriterInRunDir(OutputManager.SmtProfileFile) { writer =>
       writer.println("# weight,nCells,nConsts,nSmtExprs,location")
       for (entry <- sortedEntries) {
         writer.println(stringOfEntry(entry))
@@ -66,7 +65,7 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
 
     logger
       .info("%d profile entries to be found in %s".format(sortedEntries.size,
-              OutputManager.runDir.resolve(profileFileName)))
+              OutputManager.smtProfilePath(outputManager.runDir)))
   }
 
   private def stringOfEntry(entry: (UID, SolverContextMetrics)): String = {

@@ -26,7 +26,8 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Thomas Pani
  */
-class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
+class Cvc5SolverContext(val config: SolverConfig, outputManager: Option[OutputManager] = None)
+    extends SolverContext with LazyLogging {
   private val id: Long = Cvc5SolverContext.createId()
   private val logWriters: Iterable[PrintWriter] = initLogs()
 
@@ -221,8 +222,9 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
 
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers =
-      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+    val writers = outputManager.toSeq.flatMap { manager =>
+      (Some(manager.runDir) ++ manager.additionalRunDir).map(dir => manager.openWriter(dir.resolve(filePart)))
+    }
 
     if (!config.debug) {
       writers.foreach { writer =>

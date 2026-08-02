@@ -152,6 +152,7 @@ object CounterexampleWriter extends LazyLogging {
    *   sequence of states that represent the counterexample
    */
   def writeAllFormats(
+      outputManager: OutputManager,
       prefix: String,
       suffix: String,
       trace: Trace[TlaEx]): List[String] = {
@@ -165,12 +166,9 @@ object CounterexampleWriter extends LazyLogging {
         ("itf.json", s"$prefix$suffix.itf.json"),
     )
 
-    fileNames.flatMap { case (kind, name) =>
-      if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
-        Some(OutputManager.runDir.resolve(name).normalize.toString)
-      } else {
-        None
-      }
+    fileNames.map { case (kind, name) =>
+      outputManager.withWriterInRunDir(name)(writerHelper(kind))
+      outputManager.runDir.resolve(name).normalize.toString
     }
   }
 

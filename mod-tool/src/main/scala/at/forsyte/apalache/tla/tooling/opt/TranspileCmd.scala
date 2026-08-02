@@ -10,15 +10,11 @@ import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 
 class TranspileCmd extends AbstractCheckerCmd(name = TRANSPILE, description = "Transpile and quit") {
 
-  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+  override def run(config: ApalacheConfig, outputManager: OutputManager): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveCheck(config)) { options =>
-      val outFilePath = OutputManager.runDirPathOpt
-        .map { p =>
-          p.resolve(TlaExToVMTWriter.outFileName).toAbsolutePath
-        }
-        .getOrElse(TlaExToVMTWriter.outFileName)
+      val outFilePath = outputManager.runDir.resolve(TlaExToVMTWriter.outFileName).toAbsolutePath
 
-      PassChainExecutor(new ReTLAToVMTModule(options)).run() match {
+      PassChainExecutor(new ReTLAToVMTModule(options, outputManager)).run() match {
         case Right(_)      => Right(s"VMT constraints successfully generated at\n$outFilePath")
         case Left(failure) => Left(failure.exitCode, "Failed to generate constraints")
       }
