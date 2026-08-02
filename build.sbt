@@ -65,8 +65,8 @@ fatalWarnings := sys.env.get("APALACHE_FATAL_WARNINGS").getOrElse("false").toBoo
 ThisBuild / javacOptions ++= Seq("--release", minimumJavaVersion)
 ThisBuild / scalacOptions ++= {
   val commonOptions = Seq(
-    // Compile all published classes for the minimum supported JVM.
-    s"-release:${minimumJavaVersion}",
+      // Compile all published classes for the minimum supported JVM.
+      s"-release:${minimumJavaVersion}",
       // Enable deprecation and feature warnings
       "-deprecation",
       "-feature",
@@ -383,11 +383,11 @@ lazy val root = (project in file("."))
       // Assembly constructs our "fat jar"
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
-    // z3-turnkey loads native libraries from the class path. Java 25 requires
-    // executable JARs to opt in to native access explicitly (JEP 472).
-    assembly / packageOptions += Package.ManifestAttributes(
-      "Enable-Native-Access" -> "ALL-UNNAMED"
-    ),
+      // z3-turnkey loads native libraries from the class path. Java 25 requires
+      // executable JARs to opt in to native access explicitly (JEP 472).
+      assembly / packageOptions += Package.ManifestAttributes(
+          "Enable-Native-Access" -> "ALL-UNNAMED"
+      ),
       assembly / assembledMappings += {
         // To make our custom TLA modules available for import in TLA specs, we add them
         // to the tla2sany/StandardModules directory.
