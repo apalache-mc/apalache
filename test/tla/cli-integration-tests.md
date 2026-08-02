@@ -502,6 +502,17 @@ EXITCODE: ERROR (12)
 
 ## running the check command
 
+### check command emits no Java 25 compatibility warnings
+
+The packaged launcher suppresses warnings from bundled dependencies that use
+`sun.misc.Unsafe` and restricted native-access methods. Check the minimal no-variable specification to exercise both
+application startup and native solver loading.
+
+```sh
+$ apalache-mc check --length=1 NoVars.tla 2>&1 | grep -Ei 'terminally deprecated|restricted method'
+[1]
+```
+
 ### Prints default computation length of 10 (regression #2087)
 
 ```sh
@@ -527,7 +538,7 @@ EXITCODE: ERROR (12)
 ### check Fix531.tla reports no error: regression for issue 531 (array-encoding)
 
 ```sh
-$ output="$(apalache-mc check --length=1 Fix531.tla 2>&1)"; if printf '%s\n' "$output" | grep -Eiq 'terminally deprecated|restricted method'; then exit 1; fi; printf '%s\n' "$output" | sed 's/I@.*//'
+$ apalache-mc check --length=1 Fix531.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
