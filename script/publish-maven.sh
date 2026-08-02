@@ -16,8 +16,8 @@ Usage: ./script/publish-maven.sh snapshot|release
   release   Upload a release VERSION and publish it automatically after validation.
 
 Required environment variables:
-  SONATYPE_USERNAME  Username from a Central Portal user token.
-  SONATYPE_PASSWORD  Password from a Central Portal user token.
+  SONATYPE_TOKEN_USERNAME  Username from a Central Portal user token.
+  SONATYPE_TOKEN_PASSWORD  Password from a Central Portal user token.
 
 Artifacts are signed with the default secret key in the local GnuPG keyring.
 GnuPG may use pinentry interactively; PGP_PASSPHRASE is supported for CI.
@@ -63,7 +63,7 @@ else
     fi
 fi
 
-for variable in SONATYPE_USERNAME SONATYPE_PASSWORD
+for variable in SONATYPE_TOKEN_USERNAME SONATYPE_TOKEN_PASSWORD
 do
     if [[ -z "${!variable:-}" ]]
     then
