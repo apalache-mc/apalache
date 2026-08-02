@@ -73,7 +73,7 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
   var seed: Option[Int] =
     opt[Option[Int]](name = SEED,
         description = descriptionWithDefault(
-            "set a nonnegative random seed for reproducible SMT solving and, with simulate, transition selection",
+            "set a random seed in 0..2147483647 for reproducible SMT solving and, with simulate, transition selection",
             "generated per run",
         ), default = None)
   var tuningOptionsFile: Option[String] =

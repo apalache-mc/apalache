@@ -50,9 +50,9 @@ This is a complete, copyable example:
    "output": "./Parsed.tla",
    "checker": {
       "algo": "incremental",
-     "search-kind": "check",
-     "max-run": 100,
-     "output-traces": false,
+      "search-kind": "check",
+      "max-run": 1,
+      "output-traces": false,
       "discard-disabled": true,
       "length": 10,
       "max-error": 1,
@@ -74,7 +74,10 @@ This is a complete, copyable example:
 
 ## Supported keys
 
-In the table below, a default of "none" means that the value is optional.
+In the table below, a default of "none" means that the value is optional. Groups indicate which settings are resolved
+together, but not every command consumes every top-level key. In particular, server startup uses the common top-level
+settings and the `server` group, but not `source` or `output`. Remote checker requests accept in-memory `source` content
+and reject filesystem-backed sources and `output`, as detailed below.
 
 | Group         | Key                  | Description                                                  | JSON type                    | Default / values                            |
 |---------------|----------------------|--------------------------------------------------------------|------------------------------|---------------------------------------------|
@@ -90,8 +93,8 @@ In the table below, a default of "none" means that the value is optional.
 | `checker`     | `tuning`             | Set advanced checker and solver parameters.                  | object of string values      | `{}`                                        |
 |               | `algo`               | Select the model-checking algorithm.                         | string                       | `incremental`; also `offline`, `remote`     |
 |               | `search-kind`        | Select ordinary checking or symbolic simulation.             | string                       | `check`; also `simulate`                    |
-|               | `seed`               | Seed transition selection and the selected SMT backend.      | nonnegative integer          | generated separately for every run          |
-|               | `max-run`            | Limit the number of symbolic runs in simulation mode.        | positive integer             | `100`                                       |
+|               | `seed`               | Seed transition selection and the selected SMT backend.      | integer, `0..2147483647`     | generated separately for every run          |
+|               | `max-run`            | Limit the number of symbolic runs.                           | positive integer             | `1` for check; `100` for simulate           |
 |               | `output-traces`      | Save an example trace for each symbolic run.                 | boolean                      | `false`                                     |
 |               | `config`             | Read behavior and properties from a TLC configuration file.  | path string                  | none                                        |
 |               | `discard-disabled`   | Pre-check and discard disabled transitions.                  | boolean                      | `true`                                      |

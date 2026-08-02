@@ -2,16 +2,22 @@
 
 | authors                                | last revised    |
 | -------------------------------------- | --------------: |
-| Thomas Pani                            | 2026-05-11      |
+| Thomas Pani                            | 2026-08-02      |
 
 **Table of Contents**
 
+- [Revisions](#revisions)
 - [Summary (Overview)](#summary)
 - [Context (Problem)](#context)
 - [Options (Alternatives)](#options)
 - [Solution (Decision)](#solution)
 - [Consequences (Retrospection)](#consequences)
 - [References](#references)
+
+## Revisions
+
+**Rev. 2026-08-02.** The backend-neutral seed control discussed below as `smt.randomSeed` was retired in favor of the
+typed `checker.seed` configuration field, see #3404. The original decision text is retained for historical accuracy.
 
 ## Summary
 
@@ -120,9 +126,9 @@ The initial implementation should be intentionally conservative:
 2. Preserve the current cell/sort naming conventions so that existing logging, recording, and model-decoding assumptions
    remain easy to compare against Z3.
 3. Add a solver choice to configuration separately from `smtEncoding`; those are independent dimensions.
-4. Keep backend-neutral SMT controls separate from solver-specific options. For example, `checker.seed`, `smt.statsSec`,
-   and SMT timeouts are concepts Apalache can define once and map to each backend. Low-level solver parameters should
-   remain namespaced, for example `z3.*` and `cvc5.*`.
+4. Keep backend-neutral SMT controls separate from solver-specific options. For example, `smt.randomSeed`,
+   `smt.statsSec`, and SMT timeouts are concepts Apalache can define once and map to each backend. Low-level solver
+   parameters should remain namespaced, for example `z3.*` and `cvc5.*`.
 5. Add differential property-based tests between Z3 and cvc5 at the `SolverContext` level for operations supported by
    both implementations.
 6. Use SMT-LIB dumps as a comparison aid.

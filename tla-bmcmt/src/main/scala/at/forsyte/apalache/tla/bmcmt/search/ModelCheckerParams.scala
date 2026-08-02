@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
-import at.forsyte.apalache.io.config.SearchKind.Check
 import at.forsyte.apalache.io.config.{SMTEncoding, SearchKind}
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
@@ -29,11 +28,11 @@ object ModelCheckerParams {
 class ModelCheckerParams(
     checkerInput: CheckerInput,
     val stepsBound: Int,
-    tuningOptions: Map[String, String] = Map(),
-    val searchKind: SearchKind = Check,
-    val seed: Int = 0,
-    val maxRun: Int = 100,
-    val outputTraces: Boolean = false) {
+    tuningOptions: Map[String, String],
+    val searchKind: SearchKind,
+    val seed: Int,
+    val maxRun: Int,
+    val outputTraces: Boolean) {
 
   /**
    * If pruneDisabled is set to false, there will be no check of whether a transition is enabled.
@@ -77,34 +76,6 @@ class ModelCheckerParams(
    * The limit on a single SMT query. The default value is 0 (unlimited).
    */
   var timeoutSmtSec: Int = 0
-
-  /**
-   * A timeout upon which a transition is split in its own group. This is the minimal timeout. The actual timeout is
-   * updated at every step using `search.split.timeout.factor`. In our experiments, small timeouts lead to explosion of
-   * the search tree.
-   */
-  val jailTimeoutMinSec: Long =
-    BigInt(tuningOptions.getOrElse("search.split.timeout.minimum", "1800")).toLong
-
-  /**
-   * At every step, the jail timeout for the next step is computed as `maxTime * factor / 100`, where `maxTime` is the
-   * maximum checking time among all enabled or disabled transitions.
-   */
-  val jailTimeoutFactor: Long =
-    BigInt(tuningOptions.getOrElse("search.split.timeout.factor", "200")).toInt
-
-  /**
-   * A timeout (in seconds) that indicates for how long an idle worker has to wait until splitting an active tree node
-   * into two.
-   */
-  val idleTimeoutSec: Long =
-    BigInt(tuningOptions.getOrElse("search.idle.timeout", "1800")).toLong
-
-  /**
-   * A timeout (in milliseconds) that indicates for how long an idle worker has to wait until splitting an active tree
-   * node into two.
-   */
-  def idleTimeoutMs: Long = idleTimeoutSec * 1000
 
   /**
    * The SMT encoding to be used.

@@ -26,6 +26,9 @@ object ApalacheConfigResolver {
   /** Deadlock setting used when neither application nor TLC configuration supplies one. */
   val defaultCheckDeadlocks: Boolean = true
 
+  /** Number of runs used when simulation does not provide an explicit limit. */
+  val defaultSimulationRuns: Int = 100
+
   /** Resolve the values needed to initialize output and logging for a command. */
   def resolveCommandInitialization(config: ApalacheConfig): ConfigParseResult[CommandInitializationOptions] = {
     val commandResult = requireCommand(config)
@@ -102,7 +105,10 @@ object ApalacheConfigResolver {
     val solver = requireDefault(checkerWithDefaults.smtSolver, s"$CHECKER.$SMT_SOLVER")
     val encoding = requireDefault(checkerWithDefaults.smtEncoding, s"$CHECKER.$SMT_ENCODING")
     val maxError = requireDefault(checkerWithDefaults.maxError, s"$CHECKER.$MAX_ERROR")
-    val maxRun = requireDefault(checkerWithDefaults.maxRun, s"$CHECKER.$MAX_RUN")
+    val searchKind = requireDefault(checkerWithDefaults.searchKind, s"$CHECKER.$SEARCH_KIND")
+    val maxRun = configuredChecker.maxRun.getOrElse {
+      if (searchKind == SearchKind.Simulate) defaultSimulationRuns else 1
+    }
 
     configuredChecker.seed.foreach { seed =>
       if (seed < 0) {
@@ -111,6 +117,9 @@ object ApalacheConfigResolver {
     }
     if (maxRun <= 0) {
       errors += s"Option $CHECKER.$MAX_RUN must be positive, but got $maxRun."
+    } else if (searchKind == SearchKind.Check && maxRun != 1) {
+      errors +=
+        s"Option $CHECKER.$MAX_RUN must equal 1 when $CHECKER.$SEARCH_KIND=${SearchKind.Check.name}, but got $maxRun."
     }
     if (solver == SMTSolver.CVC5 && encoding != SMTEncoding.OOPSLA19) {
       errors +=
@@ -135,7 +144,7 @@ object ApalacheConfigResolver {
     val seed = checkerWithDefaults.seed.getOrElse(generateSeed())
     val checker = CheckerOptions(
         algorithm = requireDefault(checkerWithDefaults.algorithm, s"$CHECKER.$ALGO"),
-        searchKind = requireDefault(checkerWithDefaults.searchKind, s"$CHECKER.$SEARCH_KIND"),
+        searchKind = searchKind,
         seed = seed,
         maxRun = maxRun,
         outputTraces = requireDefault(checkerWithDefaults.outputTraces, s"$CHECKER.$OUTPUT_TRACES"),
@@ -245,6 +254,7 @@ object ApalacheConfigResolver {
             checkDeadlocks = Some(false),
             smtEncoding = Some(SMTEncoding.OOPSLA19),
             searchKind = Some(SearchKind.Check),
+            maxRun = Some(1),
             tuning = Some(Map.empty),
         ),
     )
@@ -290,6 +300,7 @@ object ApalacheConfigResolver {
     value.getOrElse(throw new IllegalStateException(s"Missing built-in default for $field"))
 
   /** Generate one concrete nonnegative seed for an otherwise unseeded checker run. */
+  // Java `int`s use two's complement, so masking the sign bit preserves uniform sampling.
   private def generateSeed(): Int = ThreadLocalRandom.current().nextInt() & Int.MaxValue
 
   private def resolveSpecification(checker: CheckerPatch): ConfigParseResult[SpecificationOptions] = {

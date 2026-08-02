@@ -80,8 +80,9 @@ The arguments are as follows:
       and integer arithmetic; `arrays` (experimental) and `funArrays` (experimental) use SMT arrays with extensionality.
       This parameter can also be set via the `SMT_ENCODING` environment variable. See the [alternative SMT encoding
       using arrays] for details.
-    - `--seed=NUM` sets a nonnegative search seed. The seed initializes SMT solving and, with `simulate`, is also used
-      for transition selection. When omitted, Apalache generates and logs a fresh seed for the run.
+    - `--seed=NUM` sets a search seed in the inclusive range `0..2147483647`. The seed initializes SMT solving and, with
+      `simulate`, is also used for transition selection. When omitted, Apalache generates and logs a fresh seed for the
+      run.
     - `--discard-disabled` does a pre-check on transitions and discard the disabled ones at every step. If you know that
       many transitions are always enabled, set it to false. Sometimes, this pre-check may be slower than checking the
       invariant. Default: true.
@@ -135,9 +136,10 @@ The arguments are as follows:
 
 * Special parameters:
 
-  - `--max-run=NUM`: but produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
-  - `--seed=NUM`: initialize the SMT backend and use the same seed for reproducible transition selection. When omitted,
-    Apalache generates and logs a fresh seed that can be supplied to a later run.
+  - `--max-run=NUM`: produce up to `NUM` simulation runs (unless `--max-error` errors have been found), default: `100`
+  - `--seed=NUM`: initialize the SMT backend and use the same seed in the inclusive range `0..2147483647` for
+    reproducible transition selection. When omitted, Apalache generates and logs a fresh seed that can be supplied to a
+    later run.
 
 ### <a id="supplying-jvm-arguments"></a> 1.3. Supplying JVM arguments
 

@@ -81,7 +81,8 @@ class TestOptions extends AnyFunSuite {
     assert(options.checker.tuning == defaults.checker.tuning.get)
     assert(options.checker.seed >= 0)
     assert(options.checker.searchKind == defaults.checker.searchKind.get)
-    assert(options.checker.maxRun == defaults.checker.maxRun.get)
+    assert(defaults.checker.maxRun.isEmpty)
+    assert(options.checker.maxRun == 1)
     assert(options.checker.outputTraces == defaults.checker.outputTraces.get)
 
     val serverResult = ApalacheConfigResolver.resolveServer(config.withCommand(SERVER))
@@ -141,10 +142,23 @@ class TestOptions extends AnyFunSuite {
     assert(resolved.requireValue().checker.maxRun == 7)
     assert(resolved.requireValue().checker.outputTraces)
 
+    val defaultSimulation =
+      ApalacheConfigResolver.resolveCheck(checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(
+              checker = CheckerPatch(searchKind = Some(SearchKind.Simulate))))
+    assert(defaultSimulation.isSuccess)
+    assert(defaultSimulation.requireValue().checker.maxRun == ApalacheConfigResolver.defaultSimulationRuns)
+
+    val explicitSingleCheck =
+      ApalacheConfigResolver.resolveCheck(checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(
+              checker = CheckerPatch(searchKind = Some(SearchKind.Check), maxRun = Some(1))))
+    assert(explicitSingleCheck.isSuccess)
+
     Seq(
         CheckerPatch(seed = Some(-1)) -> "checker.seed must be nonnegative",
         CheckerPatch(maxRun = Some(0)) -> "checker.max-run must be positive",
         CheckerPatch(maxRun = Some(-1)) -> "checker.max-run must be positive",
+        CheckerPatch(searchKind = Some(SearchKind.Check), maxRun = Some(2)) ->
+          "checker.max-run must equal 1 when checker.search-kind=check",
     ).foreach { case (patch, expected) =>
       val result =
         ApalacheConfigResolver.resolveCheck(checkConfig(SMTSolver.Z3, SMTEncoding.OOPSLA19).copy(checker = patch))

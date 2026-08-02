@@ -69,6 +69,16 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     assert(json.contains(""""output-traces":true"""))
   }
 
+  test("seed parsing accepts the upper bound and rejects overflow") {
+    val boundary = ApalacheConfigJsonParser.parse(s"""{"checker":{"seed":${Int.MaxValue}}}""")
+    assert(boundary.isSuccess)
+    assert(boundary.requireValue().checker.seed.contains(Int.MaxValue))
+
+    val overflow = ApalacheConfigJsonParser.parse("""{"checker":{"seed":2147483648}}""")
+    assert(!overflow.isSuccess)
+    assert(overflow.errors.contains("$.checker.seed: Expected a 32-bit JSON integer."))
+  }
+
   test("preserves an explicit source format when a filename cannot express it") {
     val source = InputSource.FileSource(Path.of("trace.json"), InputSource.Format.Itf)
     val config = ApalacheConfig(source = Some(source))

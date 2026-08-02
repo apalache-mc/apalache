@@ -58,7 +58,6 @@ object ApalacheConfig {
           tuning = Some(Map.empty),
           algorithm = Some(Algorithm.Incremental),
           searchKind = Some(SearchKind.Check),
-          maxRun = Some(100),
           outputTraces = Some(false),
           discardDisabled = Some(true),
           length = Some(10),

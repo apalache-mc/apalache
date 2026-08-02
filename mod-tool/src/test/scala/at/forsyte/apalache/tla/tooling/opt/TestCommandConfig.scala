@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.io.config._
+import org.backuity.clist.ParsingException
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestCommandConfig extends AnyFunSuite {
@@ -115,6 +116,18 @@ class TestCommandConfig extends AnyFunSuite {
     command.seed = Some(42)
     val config = ApalacheConfigResolver.resolveCheck(command.toConfig.requireValue()).requireValue()
     assert(config.checker.seed == 42)
+  }
+
+  test("seed parsing accepts the upper bound and rejects overflow") {
+    val boundary = new CheckCmd()
+    boundary.read(List(s"--$SEED=${Int.MaxValue}", "CommandConfig.tla"))
+    val config = ApalacheConfigResolver.resolveCheck(boundary.toConfig.requireValue()).requireValue()
+    assert(config.checker.seed == Int.MaxValue)
+
+    val overflow = intercept[ParsingException] {
+      new CheckCmd().read(List(s"--$SEED=2147483648", "CommandConfig.tla"))
+    }
+    assert(overflow.getMessage.contains("expected an Int"))
   }
 
   test("server and simulation parser defaults remain lower precedence") {
