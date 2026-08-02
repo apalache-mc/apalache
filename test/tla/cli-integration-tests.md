@@ -4205,7 +4205,6 @@ $ cat ./configdump-dir/application-config.json
     "tuning" : { },
     "algo" : "incremental",
     "search-kind" : "check",
-    "max-run" : 100,
     "output-traces" : true,
     "discard-disabled" : true,
     "inv" : [ "Inv" ],
