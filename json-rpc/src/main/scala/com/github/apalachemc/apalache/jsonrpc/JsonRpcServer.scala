@@ -1,13 +1,9 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.infra.passes.options.Algorithm.Remote
-import at.forsyte.apalache.infra.passes.options.Config.ApalacheConfig
-import at.forsyte.apalache.infra.passes.options.OptionGroup.{HasCheckerPreds, WithCheckerPreds}
-import at.forsyte.apalache.infra.passes.options.SMTEncoding.OOPSLA19
-import at.forsyte.apalache.infra.passes.options.{Config, SourceOption}
-import at.forsyte.apalache.infra.tlc.config.InitNextSpec
-import at.forsyte.apalache.io.ConfigManager
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.SERVER
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
 import at.forsyte.apalache.io.json.jackson.{JacksonRepresentation, ScalaFromJacksonAdapter, ScalaToJacksonAdapter}
 import at.forsyte.apalache.io.lir.Trace
@@ -17,8 +13,8 @@ import at.forsyte.apalache.tla.bmcmt.passes.BoundedCheckerPassImpl
 import at.forsyte.apalache.tla.bmcmt.trex.IncrementalExecutionContextSnapshot
 import at.forsyte.apalache.tla.bmcmt.util.TlaExUtil
 import at.forsyte.apalache.tla.lir.TlaOperDecl
-import at.forsyte.apalache.tla.types.tla
 import at.forsyte.apalache.tla.lir.TypedPredefs._
+import at.forsyte.apalache.tla.types.tla
 import com.fasterxml.jackson.databind.node.{NullNode, ObjectNode}
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
@@ -26,19 +22,17 @@ import com.google.inject.Injector
 import com.typesafe.scalalogging.LazyLogging
 import jakarta.servlet.annotation.WebServlet
 import jakarta.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
-import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.gzip.GzipCompression
+import org.eclipse.jetty.compression.server.CompressionHandler
 import org.eclipse.jetty.compression.zstandard.ZstandardCompression
+import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
+import org.eclipse.jetty.server.Server
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.{Lock, ReentrantLock}
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 import scala.collection.concurrent.TrieMap
-import scala.collection.immutable
 import scala.collection.immutable.SortedSet
-import scala.util.Try
 
 /**
  * An error that can occur in the exploration service.
@@ -51,13 +45,13 @@ case class ServiceError(code: Int, message: String)
 
 /**
  * A transition exploration service.
- * @param config
- *   the service configuration, typically, constructed with [[at.forsyte.apalache.io.ConfigManager]].
  *
+ * @param config
+ *   the service configuration, typically constructed with [[at.forsyte.apalache.io.config.ApalacheConfigLoader]].
  * @author
  *   Igor Konnov, 2025
  */
-class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging {
+class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends LazyLogging {
   // Guice injector instantiated for each session. This injector contains objects that are
   // configured via CheckerModule. Instead of doing model checking, it just prepares
   // ModelCheckerContext in the `remote` mode. We are using TrieMap to allow concurrent reads and updates.
@@ -89,7 +83,14 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
   def loadSpec(params: LoadSpecParams): Either[ServiceError, LoadSpecResult] = {
     val sessionId = lastSessionId.incrementAndGet().toHexString
     logger.info(s"Session $sessionId: Loading specification with ${params.sources.length} sources.")
-    val options = createConfigFromParams(params).get
+    val optionsResult = createConfigFromParams(params)
+    if (!optionsResult.isSuccess) {
+      return Left(ServiceError(
+              JsonRpcCodes.INVALID_PARAMS,
+              optionsResult.errors.mkString("Invalid configuration: ", "; ", ""),
+          ))
+    }
+    val options = optionsResult.requireValue()
     // call the parser
     val passChainExecutor = PassChainExecutor(new CheckerModule(options))
     passChainExecutor.run() match {
@@ -699,36 +700,22 @@ class ExplorationService(config: Try[Config.ApalacheConfig]) extends LazyLogging
    * @return
    *   the configuration for spawning a CheckerModule
    */
-  private def createConfigFromParams(params: LoadSpecParams): Try[HasCheckerPreds] = {
-    // pack the sources into the config
-    val source = SourceOption.StringSource(params.sources.head, params.sources.tail)
-    val input = config.get.input.copy(source = Some(source))
-    val configWithInput = config.get.copy(input = input, output = config.get.output.copy(output = None))
-    WithCheckerPreds(configWithInput)
-      .map { cfg =>
-        // We do not need to set the checker options, as we do not run the model checker.
-        // We just prepare the context for the remote mode.
-        // Most of the options are irrelevant, as the remote algorithm does its own exploration.
-        cfg.copy(
-            checker = cfg.checker.copy(
-                algo = Remote,
-                smtEncoding = OOPSLA19,
-                // TODO: propagate the tuning options from LoadSpecParams
-                tuning = immutable.Map[String, String](),
-                discardDisabled = false,
-                noDeadlocks = true,
-                maxError = 1,
-                // TODO: propagate from LoadSpecParams
-                timeoutSmtSec = 0,
-            ),
-            // TODO: add other options
-            predicates = cfg.predicates.copy(
-                behaviorSpec = InitNextSpec(params.init, params.next),
-                invariants = params.invariants,
-                persistent = params.exports,
-            ),
-        )
-      }
+  private def createConfigFromParams(params: LoadSpecParams): ConfigParseResult[ValidatedCheckOptions] = {
+    if (!config.isSuccess) {
+      ConfigParseResult.failureFrom(config)
+    } else if (params.sources.isEmpty) {
+      ConfigParseResult.failure("loadSpec requires at least one source.")
+    } else {
+      val source = InputSource.StringSource(params.sources.head, params.sources.tail.toList)
+      ApalacheConfigResolver.resolveRemote(
+          base = config.requireValue(),
+          source = source,
+          init = params.init,
+          next = params.next,
+          invariants = params.invariants,
+          persistent = params.exports,
+      )
+    }
   }
 
   /** Look up the session's checker context, or return a ServiceError. */
@@ -886,7 +873,7 @@ object JsonRpcServerApp {
   /** Minimum response size in bytes to apply compression. Smaller payloads are sent uncompressed. */
   private val MIN_COMPRESS_SIZE = 512
 
-  def run(config: Try[ApalacheConfig], port: Int): Unit = {
+  def run(config: ConfigParseResult[ApalacheConfig], port: Int): Unit = {
     val server = new Server(port)
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")
@@ -915,7 +902,7 @@ object JsonRpcServerApp {
 
   def main(args: Array[String]): Unit = {
     val port = if (args.nonEmpty) args(0).toInt else 8822
-    val cfg = ConfigManager("{common.command: 'server'}")
+    val cfg = ApalacheConfigLoader.load(ApalacheConfig.empty.withCommand(SERVER))
     run(cfg, port)
   }
 }

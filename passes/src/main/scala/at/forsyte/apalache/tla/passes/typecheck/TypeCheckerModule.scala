@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.ExceptionAdapter
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.{DerivedPredicates, Pass, ToolModule}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
+import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions, TypecheckerOptions, ValidatedTypecheckOptions}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -12,16 +12,11 @@ import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, Tran
 import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import com.google.inject.TypeLiteral
 
-class TypeCheckerModule(options: OptionGroup.HasTypechecker) extends ToolModule(options) {
+class TypeCheckerModule(options: ValidatedTypecheckOptions) extends ToolModule {
   override def configure(): Unit = {
-    // Ensure the given `options` will be bound to any OptionGroup interface
-    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
-    // for why we cannot just specify the upper bound.
-    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
-    bind(classOf[OptionGroup.HasInput]).toInstance(options)
-    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
-    bind(classOf[OptionGroup.HasIO]).toInstance(options)
-    bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
+    bind(classOf[CommonOptions]).toInstance(options.common)
+    bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
+    bind(classOf[TypecheckerOptions]).toInstance(options.typechecker)
 
     // The `DerivedPredicate` instance used to communicate specification predicates between passes
     val derivedPreds = DerivedPredicates.Impl()

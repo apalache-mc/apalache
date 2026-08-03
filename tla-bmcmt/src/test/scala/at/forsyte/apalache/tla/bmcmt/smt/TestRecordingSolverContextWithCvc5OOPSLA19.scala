@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.infra.passes.options.{SMTEncoding, SMTSolver}
+import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import org.junit.runner.RunWith
 import org.scalatest.Outcome
 import org.scalatestplus.junit.JUnitRunner

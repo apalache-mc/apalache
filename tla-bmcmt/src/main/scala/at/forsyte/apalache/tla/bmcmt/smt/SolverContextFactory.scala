@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.infra.passes.options.SMTSolver
+import at.forsyte.apalache.io.config.SMTSolver
 
 /**
  * Creates concrete SMT solver contexts from solver configuration.

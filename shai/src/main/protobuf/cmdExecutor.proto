@@ -25,7 +25,8 @@ message PongResponse {
 message CmdRequest {
   Cmd cmd = 1;
 
-  // A JSON encoded string with the application configuration
+  // A JSON-encoded, request-local configuration. Sources must be in memory;
+  // configuration, input, and output filesystem paths are rejected.
   string config = 2;
 }
 

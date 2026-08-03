@@ -4,7 +4,9 @@ package at.forsyte.apalache.tla
 import apalache.BuildInfo
 import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
-import at.forsyte.apalache.io.{OutputManager, ReportGenerator}
+import at.forsyte.apalache.io.config._
+import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
+import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -13,11 +15,7 @@ import util.ExecutionStatisticsCollector
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters._
-import scala.util.Random
-import scala.util.Try
-import scala.util.Failure
-import scala.util.Success
-import at.forsyte.apalache.io.ConfigManager
+import scala.util.{Failure, Random, Success, Try}
 
 /**
  * Command line access to the APALACHE tools.
@@ -50,19 +48,25 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def outputAndLogConfig(cmd: ApalacheCommand): Try[Unit] = for {
-    cfg <- cmd.configuration
-    _ <- Try(OutputManager.configure(cfg))
+  private def outputAndLogConfig(cmd: ApalacheCommand, cfg: ApalacheConfig): Try[Unit] = for {
+    initialization <- {
+      val result = ApalacheConfigResolver.resolveCommandInitialization(cfg)
+      if (result.isSuccess) Try(result.requireValue())
+      else Failure(new ConfigurationError(result.errors.mkString("; ")))
+    }
+    _ <- Try(OutputManager.configure(initialization))
   } yield {
-    cfg.input.source.foreach(OutputManager.initSourceLines(_))
+    initialization.source.foreach(OutputManager.initSourceLines)
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
     OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
 
     // Write the application configuration, if debug is enabled
-    if (cfg.common.debug.getOrElse(false)) {
-      OutputManager.withWriterInRunDir("application-configs.cfg")(ConfigManager.save(cfg))
+    if (initialization.common.debug) {
+      OutputManager.withWriterInRunDir("application-config.json") { writer =>
+        writer.print(ApalacheConfigJsonParser.write(cfg.mergeWithDefaults, usePrettyPrinter = true))
+      }
     }
 
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
@@ -71,6 +75,19 @@ object Tool extends LazyLogging {
     logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
 
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
+  }
+
+  /** Build the CLI configuration, then select and merge at most one file-based configuration. */
+  private def loadConfig(cmd: ApalacheCommand): ConfigParseResult[ApalacheConfig] = {
+    val primary = cmd.toConfig
+    if (primary.isSuccess) {
+      ConfigParseResult.withWarnings(
+          ApalacheConfigLoader.load(primary.requireValue()),
+          primary.warnings,
+      )
+    } else {
+      ConfigParseResult.failureFrom(primary)
+    }
   }
 
   /**
@@ -106,22 +123,31 @@ object Tool extends LazyLogging {
       case None => ExitCodes.OK
       // One of our commands.
       case Some(cmd) => {
+        val configResult = loadConfig(cmd)
         printStatsConfig()
 
-        val exitcode = outputAndLogConfig(cmd) match {
-          case Failure(cfgErr) => {
-            logger.error(s"Configuration error: ${cfgErr.getMessage()}")
+        val exitcode =
+          if (!configResult.isSuccess) {
+            logger.error(configResult.errors.mkString("Configuration error: ", "; ", ""))
             ExitCodes.ERROR
-          }
-          case Success(()) => {
-            val startTime = LocalDateTime.now()
-            try {
-              runCommand(cmd)
-            } finally {
-              printTimeDiff(startTime)
+          } else {
+            val config = configResult.requireValue()
+            outputAndLogConfig(cmd, config) match {
+              case Failure(cfgErr) => {
+                logger.error(s"Configuration error: ${cfgErr.getMessage}")
+                ExitCodes.ERROR
+              }
+              case Success(()) => {
+                configResult.warnings.foreach(warning => logger.warn(warning))
+                val startTime = LocalDateTime.now()
+                try {
+                  runCommand(cmd, config)
+                } finally {
+                  printTimeDiff(startTime)
+                }
+              }
             }
           }
-        }
 
         if (exitcode == ExitCodes.OK) {
           Console.out.println("EXITCODE: OK")
@@ -134,9 +160,9 @@ object Tool extends LazyLogging {
   }
 
   // Execute the program specified by the subcommand cmd, handling errors as needed
-  private def runCommand(cmd: ApalacheCommand): ExitCodes.TExitCode =
+  private def runCommand(cmd: ApalacheCommand, config: ApalacheConfig): ExitCodes.TExitCode =
     try {
-      cmd.run() match {
+      cmd.run(config) match {
         case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
         case Right(msg)                 => { logger.info(msg); ExitCodes.OK }
       }
@@ -172,12 +198,12 @@ object Tool extends LazyLogging {
     if (new ExecutionStatisticsCollector().isEnabled) {
       // Statistic collection is enabled. Thank the user
       Console.println("# Usage statistics is ON. Thank you!")
-      Console.println("# If you have changed your mind, disable the statistics with config --enable-stats=false.")
+      Console.println(s"# If you have changed your mind, disable the statistics with $CONFIG --$ENABLE_STATS=false.")
     } else {
       // Statistics collection is not enabled. Cry for help.
       Console.println("# Usage statistics is OFF. We care about your privacy.")
       Console.println(
-          "# If you want to help our project, consider enabling statistics with config --enable-stats=true.")
+          s"# If you want to help our project, consider enabling statistics with $CONFIG --$ENABLE_STATS=true.")
     }
     Console.println("")
   }

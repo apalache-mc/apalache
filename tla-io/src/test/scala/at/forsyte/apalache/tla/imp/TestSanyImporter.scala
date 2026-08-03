@@ -65,6 +65,56 @@ class TestSanyImporter extends SanyImporterTestBase {
     assert(exception.getMessage == "No root module defined in file")
   }
 
+  test("in-memory source does not resolve modules from the process user directory") {
+    val hostDirectory = Files.createTempDirectory("sany-host-modules")
+    val hostModule = hostDirectory.resolve("HostOnly.tla")
+    Files.writeString(
+        hostModule,
+        """---- MODULE HostOnly ----
+        |HostValue == TRUE
+        |=========================
+        |""".stripMargin,
+    )
+    val root =
+      """---- MODULE Root ----
+        |EXTENDS HostOnly
+        |=====================
+        |""".stripMargin
+
+    try {
+      val exception = intercept[SanyException] {
+        SANYSyncWrapper.withUserDir(hostDirectory.toString) {
+          sanyImporter.loadFromSource(Source.fromString(root))
+        }
+      }
+      assert(exception.getMessage.contains("HostOnly"))
+    } finally {
+      Files.deleteIfExists(hostModule)
+      Files.deleteIfExists(hostDirectory)
+    }
+  }
+
+  test("in-memory source resolves explicitly supplied auxiliary modules") {
+    val root =
+      """---- MODULE Root ----
+        |EXTENDS Supplied
+        |=====================
+        |""".stripMargin
+    val supplied =
+      """---- MODULE Supplied ----
+        |SuppliedValue == TRUE
+        |=========================
+        |""".stripMargin
+
+    val (rootName, modules) = sanyImporter.loadFromSource(
+        Source.fromString(root),
+        Seq(Source.fromString(supplied)),
+    )
+
+    assert(rootName == "Root")
+    assert(modules.keySet == Set("Root", "Supplied"))
+  }
+
   test("one variable") {
     val text =
       """---- MODULE onevar ----

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.tracee
 
-import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.json.JsonRepresentation
 import at.forsyte.apalache.tla.tracee.TraceReader.TraceJson
 
@@ -11,7 +11,7 @@ import at.forsyte.apalache.tla.tracee.TraceReader.TraceJson
  *   Jure Kukovec
  */
 trait TraceReader[T <: JsonRepresentation] {
-  def read(source: SourceOption): TraceJson[T]
+  def read(source: InputSource): TraceJson[T]
 
   def getTraceLength(traceJson: TraceJson[T]): Int
 

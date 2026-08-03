@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.RewriterBase
 import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, StrT1}
 
