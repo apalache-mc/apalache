@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.aux._
 import at.forsyte.apalache.tla.lir.src.{SourceLocation, SourcePosition, SourceRegion}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator, SourceMap}
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
@@ -138,6 +137,20 @@ class TestSourceLocator extends AnyFunSuite {
             SourcePosition(uid.id.toInt / 1000, uid.id.toInt % 1000),
         ),
     )
+
+  // Collect the UID of this expression and every expression nested beneath it.
+  private def allUidsBelow(ex: TlaEx): Set[UID] = ex match {
+    case LetInEx(body, defs @ _*) =>
+      (body +: defs.map(_.body)).foldLeft(Set(ex.ID)) { (uids, child) =>
+        uids ++ allUidsBelow(child)
+      }
+    case OperEx(_, args @ _*) =>
+      args.foldLeft(Set(ex.ID)) { (uids, child) =>
+        uids ++ allUidsBelow(child)
+      }
+    case _ =>
+      Set(ex.ID)
+  }
 
   // Arbitrary assignment: every source expression gets a unique position derived from its UID.
   private val sourceMap: SourceMap =
