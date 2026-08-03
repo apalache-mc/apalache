@@ -29,7 +29,7 @@ object Tool extends LazyLogging {
 
   /**
    * Run the tool in the standalone mode with the provided arguments. This method calls [[java.lang.System.exit]] with
-   * the computed exit code. To call the tool without System.exit, use [[run]].
+   * the computed exit code. To call the tool without System.exit, use [[run(args:Array[String])*]].
    *
    * @param args
    *   the command line arguments
