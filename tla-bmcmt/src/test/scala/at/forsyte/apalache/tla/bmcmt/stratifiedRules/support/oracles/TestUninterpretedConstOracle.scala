@@ -1,14 +1,14 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLiteralCache
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.caches.UninterpretedLiteralCache
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope, TestingRewriter}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tla, BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderT, tla}
 import org.junit.runner.RunWith
 import org.scalacheck.Prop.forAll
 import org.scalacheck.{Gen, Prop}

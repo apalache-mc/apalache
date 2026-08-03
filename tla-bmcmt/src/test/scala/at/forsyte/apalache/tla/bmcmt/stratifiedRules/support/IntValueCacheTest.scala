@@ -1,7 +1,7 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.IntValueCache
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.caches.IntValueCache
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith

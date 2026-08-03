@@ -1,16 +1,12 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules._
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.apalache.AssignmentStratifiedRule
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.IntValueCache
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.base.{
-  BuiltinConstStratifiedRule, IntConstStratifiedRule, SubstStratifiedRule,
-}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.base.{BuiltinConstStratifiedRule, IntConstStratifiedRule, SubstStratifiedRule}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.bool.{AndStratifiedRule, OrStratifiedRule}
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.{
-  SetCtorStratifiedRule, SetCupStratifiedRule, SetFilterStratifiedRule,
-}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.{SetCtorStratifiedRule, SetCupStratifiedRule, SetFilterStratifiedRule}
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.caches.IntValueCache
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values._

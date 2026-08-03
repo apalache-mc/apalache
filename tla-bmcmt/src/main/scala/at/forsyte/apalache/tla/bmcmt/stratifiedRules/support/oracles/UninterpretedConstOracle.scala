@@ -1,13 +1,13 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches.UninterpretedLiteralCache
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.caches.UninterpretedLiteralCache
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.{Rewriter, RewriterScope}
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.lir.ConstT1
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 
 /**
  * An oracle that uses a fixed collection of potential cells.

@@ -1,9 +1,9 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 
 /**
  * An oracle provides a means of choosing a single value, out of a finite collection of candidate values. It can

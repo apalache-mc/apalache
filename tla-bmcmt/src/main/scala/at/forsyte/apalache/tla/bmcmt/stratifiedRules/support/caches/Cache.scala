@@ -1,7 +1,7 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.DelayedConstraintGenerator
+import at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.DelayedConstraintGenerator
 
 import scala.collection.immutable.HashMap
 

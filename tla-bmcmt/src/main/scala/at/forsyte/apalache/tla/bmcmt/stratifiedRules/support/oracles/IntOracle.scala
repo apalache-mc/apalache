@@ -1,11 +1,11 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.bmcmt.types.CellT
-import at.forsyte.apalache.tla.lir.{IntT1, ValEx}
 import at.forsyte.apalache.tla.lir.values.TlaInt
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.lir.{IntT1, ValEx}
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 
 /**
  * An oracle that uses an integer variable. Although using integers as an oracle is the most straightforward decision,

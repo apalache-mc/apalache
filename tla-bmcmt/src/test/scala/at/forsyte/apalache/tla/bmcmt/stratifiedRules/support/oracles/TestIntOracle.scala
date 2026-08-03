@@ -1,17 +1,17 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.oracles
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
-import at.forsyte.apalache.tla.lir.{BoolT1, NameEx, OperEx, TlaEx, ValEx}
 import at.forsyte.apalache.tla.lir.oper.TlaOper
 import at.forsyte.apalache.tla.lir.values.TlaInt
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tla, BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderT, tla}
 import org.junit.runner.RunWith
-import org.scalacheck.{Gen, Prop}
 import org.scalacheck.Prop.forAll
+import org.scalacheck.{Gen, Prop}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner

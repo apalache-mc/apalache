@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support
 
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.TlaEx

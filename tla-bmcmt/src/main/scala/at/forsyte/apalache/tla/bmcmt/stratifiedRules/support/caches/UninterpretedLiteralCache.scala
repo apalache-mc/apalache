@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.stratifiedRules.aux.caches
+package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.caches
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
