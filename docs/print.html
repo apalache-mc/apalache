@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b5572066.js";
+            window.path_to_searchindex_js = "searchindex-aa14a244.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f88ca4ea.js"></script>
+        <script src="toc-76fb4033.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -4080,13 +4080,17 @@ options on the command line</li>
 <a href="#detailed">Detailed output</a>. <em><code>false</code> by default</em></li>
 <li><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
 <code>DIRECTORY</code></li>
-<li><code>--config-file</code> a file to use for loading configuration parameters. This
-will prevent Apalache from looking for any local <code>.apalache.cfg</code> file.</li>
+<li><code>--config-file</code> selects the only file used for loading configuration parameters. This prevents Apalache from
+considering both <code>.apalache.json</code> in the current working directory and the user-wide configuration. The file must
+contain <a href="#apalache-configuration">strict JSON</a>; legacy <code>.cfg</code> filenames are rejected.
+<ul>
 <li><code>--profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code>
 used in <a href="#profiling-your-specification">profiling</a>. The file is only created if <code>profiling</code>
 is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the
 <code>--smtprof</code> flag. The default is <code>False</code>.</li>
 <li><code>--output-traces</code>: save an example trace for each symbolic run, default: <code>false</code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -4097,8 +4101,10 @@ the command line, the command line parameters take precedence over those in the 
 <ol>
 <li>Command-line value</li>
 <li>Environment variable value</li>
-<li>Configuration file value</li>
+<li>Value from the single selected configuration file</li>
 </ol>
+<p>Without <code>--config-file</code> (or its <code>CONFIG_FILE</code> environment variable), Apalache selects <code>.apalache.json</code> in the current
+working directory, then <code>${user.home}/.tlaplus/apalache.json</code>. It does not search parent directories.</p>
 <h3 id="12-simulator-command-line-parameters"><a class="header" href="#12-simulator-command-line-parameters">1.2. Simulator command-line parameters</a></h3>
 <p>The simulator can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc simulate
@@ -5182,61 +5188,183 @@ does not make a lot of sense to extend <code>Naturals</code> in your own specifi
 as you will have to extend <code>Integers</code> for the type annotation too.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="apalache-configuration"><a class="header" href="#apalache-configuration">Apalache configuration</a></h1>
-<p>Apalache supports configuration of some parameters governing its behavior.</p>
-<p>Application configuration is loaded from the following four sources:</p>
+<p>Apalache configuration files use <strong>strict JSON</strong>. The supported filenames are
+<code>.apalache.json</code> for a project file and <code>${user.home}/.tlaplus/apalache.json</code> for a user-wide file, where <code>user.home</code>
+is the JVM user-home system property.</p>
+<h2 id="loading-and-precedence"><a class="header" href="#loading-and-precedence">Loading and precedence</a></h2>
+<p>The following sources are considered, in decreasing order of precedence:</p>
 <ol>
-<li>Command line arguments</li>
-<li>Environment variables</li>
-<li>A local configuration file</li>
-<li>The global configuration file</li>
+<li>command-line arguments;</li>
+<li>environment variables used by command-line options;</li>
+<li>at most one selected configuration file;</li>
+<li>built-in defaults.</li>
 </ol>
-<p>The order of precedence of the sources follows their numbering: i.e., and any
-configuration set in an earlier numbered source overrides a configuration set in
-a later numbered source.</p>
-<h2 id="command-line-arguments-and-environment-variables"><a class="header" href="#command-line-arguments-and-environment-variables">Command line arguments and environment variables</a></h2>
-<p>To view the available command line arguments, run Apalache with the <code>--help</code>
-flag and consult the section on <a href="#running-the-tool">Running the Tool</a> for more
-details.</p>
-<p><em>Some</em> parameters configurable via the command line are also configurable via environment
-variables. These parameters are noted in the CLI’s inline help. If a parameter
-is configured both through a CLI argument and an environment variable, then the
-CLI argument always takes precedence.</p>
-<h2 id="configuration-files"><a class="header" href="#configuration-files">Configuration files</a></h2>
-<h3 id="file-format-and-supported-parameters"><a class="header" href="#file-format-and-supported-parameters">File format and supported parameters</a></h3>
-<p>Local configuration files support JSON and the JSON superset
-<a href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>.</p>
-<p>Here’s an example of a valid configuration for commonly used
-parameters, along with their default values:</p>
-<pre><code class="language-yaml">common  {
-    # Directory in which to write all log files and records of each run
-    out-dir = "${PWD}/_apalache-out"
-
-    # Whether or not to write additional files, that report on intermediate
-    # processing steps
-    write-intermediate = false
-
-    # Whether or not to write general profiling data into the `out-dir`
-    profiling = false
-
-    # Fixed directory into which generated files are written (absent by default)
-    # run-dir = ~/my-run-dir
+<p>The configuration file is selected by taking the first applicable choice:</p>
+<ol>
+<li>the file passed with <code>--config-file</code>, or a path supplied through its <code>CONFIG_FILE</code> environment variable;</li>
+<li><code>.apalache.json</code> in the current working directory;</li>
+<li><code>${user.home}/.tlaplus/apalache.json</code>;</li>
+<li>no configuration file.</li>
+</ol>
+<p>Apalache previously supported <code>.cfg</code> configuration files in HOCON syntax, as well as recursive merging of configuration
+files. These are no longer supported.</p>
+<p>The above rules to do not apply to the TLC configuration files passed with <code>--config</code>.</p>
+<h2 id="json-rules"><a class="header" href="#json-rules">JSON rules</a></h2>
+<p>Configuration must be one JSON object. Keys and strings require double quotes. The following constructs are
+<strong>rejected</strong>: Comments, substitutions such as <code>${PWD}</code>, unquoted keys, <code>=</code>, trailing commas, duplicate keys, and
+trailing documents. <strong>Unknown keys are rejected</strong> in every group; for example, <code>checker.discardDisabled</code>
+is an error. Moreover, <code>source</code> and <code>output</code> are top-level values. The former <code>input</code> object and object-valued <code>output</code>
+section are rejected. Deprecated aliases and object-form enum values are not accepted.</p>
+<p>A leading <code>~</code> or <code>~/</code> in a path expands to the user’s home directory. Other environment-variable expansion is not
+performed.</p>
+<p>This is a complete, copyable example:</p>
+<pre><code class="language-json">{
+   "out-dir": "./_apalache-out",
+   "debug": false,
+   "smtprof": false,
+   "write-intermediate": false,
+   "profiling": false,
+   "features": [],
+   "source": "./Spec.tla",
+   "output": "./Parsed.tla",
+   "checker": {
+      "algo": "incremental",
+      "discard-disabled": true,
+      "length": 10,
+      "max-error": 1,
+      "timeout-smt": 0,
+      "no-deadlock": false,
+      "smt-solver": "z3",
+      "smt-encoding": "oopsla19",
+      "tuning": {}
+   },
+   "typechecker": {
+      "infer-poly": true
+   },
+   "server": {
+      "port": 8822,
+      "server-type": "checker"
+   }
 }
 </code></pre>
-<p>A <code>~</code> found at the beginning of a file path will be expanded into the value set for
-the user’s home directory.</p>
-<p>Details on the effect of these parameters can be found in <a href="#running-the-tool">Running the
-Tool</a>.</p>
-<h3 id="local-configuration-file"><a class="header" href="#local-configuration-file">Local configuration file</a></h3>
-<p>You can specify a local configuration file explicitly via the <code>config-file</code>
-command line argument. If this is not provided, then Apalache will look for the
-nearest <code>.apalache.cfg</code> file, beginning in the current working directory and
-searching up through its parents.</p>
-<p>Parameters configured in the local configuration file will be overridden by
-values set via CLI arguments or environment variables, and will override
-parameters configured via the global configuration file.</p>
-<h3 id="global-configuration-file"><a class="header" href="#global-configuration-file">Global configuration file</a></h3>
-<p>The final fallback for configuration parameters is the global configuration file
-named <code>$HOME/.tlaplus/apalache.cfg</code>.</p>
+<h2 id="supported-keys"><a class="header" href="#supported-keys">Supported keys</a></h2>
+<p>In the table below, a default of “none” means that the value is optional.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Group</th><th>Key</th><th>Description</th><th>JSON type</th><th>Default / values</th></tr>
+</thead>
+<tbody>
+<tr><td>top level</td><td><code>out-dir</code></td><td>Base directory for generated run directories.</td><td>path string</td><td><code>./_apalache-out</code></td></tr>
+<tr><td></td><td><code>run-dir</code></td><td>Also write this run’s output directly to this directory.</td><td>path string</td><td>none</td></tr>
+<tr><td></td><td><code>debug</code></td><td>Enable detailed logging and a configuration snapshot.</td><td>boolean</td><td><code>false</code></td></tr>
+<tr><td></td><td><code>smtprof</code></td><td>Write an SMT constraint profile.</td><td>boolean</td><td><code>false</code></td></tr>
+<tr><td></td><td><code>write-intermediate</code></td><td>Save intermediate representations produced by passes.</td><td>boolean</td><td><code>false</code></td></tr>
+<tr><td></td><td><code>profiling</code></td><td>Write profiling data for transformation rules.</td><td>boolean</td><td><code>false</code></td></tr>
+<tr><td></td><td><code>features</code></td><td>Enable experimental language or checker features.</td><td>array of strings</td><td><code>[]</code>; names shown by CLI help</td></tr>
+<tr><td></td><td><code>source</code></td><td>Select the specification file or in-memory source.</td><td>path string or source object</td><td>required by modes that read a specification</td></tr>
+<tr><td></td><td><code>output</code></td><td>Write the processed module to this file.</td><td>path string</td><td>none; <code>.tla</code> and <code>.json</code> are supported</td></tr>
+<tr><td><code>checker</code></td><td><code>tuning</code></td><td>Set advanced checker and solver parameters.</td><td>object of string values</td><td><code>{}</code></td></tr>
+<tr><td></td><td><code>algo</code></td><td>Select the model-checking algorithm.</td><td>string</td><td><code>incremental</code>; also <code>offline</code>, <code>remote</code></td></tr>
+<tr><td></td><td><code>config</code></td><td>Read behavior and properties from a TLC configuration file.</td><td>path string</td><td>none</td></tr>
+<tr><td></td><td><code>discard-disabled</code></td><td>Pre-check and discard disabled transitions.</td><td>boolean</td><td><code>true</code></td></tr>
+<tr><td></td><td><code>cinit</code></td><td>Name the operator that initializes constants.</td><td>string</td><td>none</td></tr>
+<tr><td></td><td><code>init</code></td><td>Name the operator that initializes variables.</td><td>string</td><td><code>Init</code>, unless supplied by a TLC file</td></tr>
+<tr><td></td><td><code>inv</code></td><td>Name the invariant operators to check.</td><td>array of strings</td><td><code>[]</code>, unless supplied by a TLC file</td></tr>
+<tr><td></td><td><code>next</code></td><td>Name the transition operator.</td><td>string</td><td><code>Next</code>, unless supplied by a TLC file</td></tr>
+<tr><td></td><td><code>length</code></td><td>Limit the number of <code>Next</code> steps explored.</td><td>integer</td><td><code>10</code></td></tr>
+<tr><td></td><td><code>max-error</code></td><td>Limit the number of reported counterexamples.</td><td>integer</td><td><code>1</code>; values above 1 require <code>view</code></td></tr>
+<tr><td></td><td><code>timeout-smt</code></td><td>Limit the duration of each SMT query.</td><td>integer seconds</td><td><code>0</code> (unlimited)</td></tr>
+<tr><td></td><td><code>no-deadlock</code></td><td>Disable deadlock checking when set to <code>true</code>.</td><td>boolean</td><td><code>false</code></td></tr>
+<tr><td></td><td><code>smt-solver</code></td><td>Select the SMT solver backend.</td><td>string</td><td><code>z3</code>; also <code>cvc5</code></td></tr>
+<tr><td></td><td><code>smt-encoding</code></td><td>Select the SMT encoding.</td><td>string</td><td><code>oopsla19</code>; also <code>arrays</code>, <code>funArrays</code></td></tr>
+<tr><td></td><td><code>temporal</code></td><td>Name the temporal properties to check.</td><td>array of strings</td><td><code>[]</code>, unless supplied by a TLC file</td></tr>
+<tr><td></td><td><code>view</code></td><td>Name the operator used to project states in counterexamples.</td><td>string</td><td>none</td></tr>
+<tr><td><code>typechecker</code></td><td><code>infer-poly</code></td><td>Allow inference of polymorphic types.</td><td>boolean</td><td><code>true</code></td></tr>
+<tr><td><code>tracee</code></td><td><code>trace</code></td><td>Select the trace to evaluate.</td><td>path string or source object</td><td>required by <code>tracee</code>; ITF or Apalache JSON</td></tr>
+<tr><td></td><td><code>expressions</code></td><td>Name the expressions evaluated in each trace state.</td><td>nonempty array of strings</td><td>required by <code>tracee</code></td></tr>
+<tr><td><code>server</code></td><td><code>port</code></td><td>Set the listening port.</td><td>integer</td><td><code>8822</code></td></tr>
+<tr><td></td><td><code>server-type</code></td><td>Select the server implementation.</td><td>string</td><td><code>checker</code>; also <code>explorer</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Top-level <code>command</code> and <code>config-file</code> can appear in trusted JSON and configuration dumps when in debug mode.
+Normal configuration files should not set them; the selected command and <code>--config-file</code> provide those values.
+Remote RPC configuration rejects <code>config-file</code>.</p>
+<p>A file source is normally just a path string. RPC callers must provide an in-memory source:</p>
+<pre><code class="language-json">{
+   "source": {
+      "kind": "string",
+      "content": "---- MODULE M ----\n====",
+      "aux": [],
+      "format": "tla"
+   }
+}
+</code></pre>
+<p>The source formats are <code>tla</code>, <code>json</code>, <code>itf</code>, and <code>qnt</code>. A file with a nonstandard or ambiguous extension can use a
+source object with
+<code>"kind": "file"</code>, <code>"path": "..."</code>, and an explicit <code>"format"</code>.</p>
+<h3 id="remote-rpc-configuration"><a class="header" href="#remote-rpc-configuration">Remote RPC configuration</a></h3>
+<p>Remote request JSON is parsed without configuration-file discovery. The fields <code>config-file</code>, <code>out-dir</code>, <code>run-dir</code>,
+<code>output</code>, and <code>checker.config</code> are rejected, as are file-backed <code>source</code> and <code>tracee.trace</code> values. In-memory source
+content and auxiliary modules remain supported. In-memory TLA+ modules can import only supplied auxiliary modules and
+trusted standard modules, not modules from the server’s working directory.</p>
+<p>The following Z3 tuning keys are also rejected for remote requests, as they can create files:</p>
+<ul>
+<li><code>z3.dot_proof_file</code>,</li>
+<li><code>z3.trace</code>,</li>
+<li><code>z3.trace_file_name</code>,</li>
+<li><code>z3.sat.drat.file</code>,</li>
+<li><code>z3.sat.inprocess.out</code>,</li>
+<li><code>z3.solver.axioms2files</code>,</li>
+<li><code>z3.solver.cancel_backup_file</code>,</li>
+<li><code>z3.solver.proof.log</code>,</li>
+<li><code>z3.solver.smtlib2_log</code>,</li>
+<li><code>z3.opt.dump_benchmarks</code>,</li>
+<li><code>z3.opt.solution_prefix</code>,</li>
+<li><code>z3.smt.arith.dump_lemmas</code>.</li>
+</ul>
+<p>Default output files are still produced by the services.</p>
+<h2 id="tlc-configuration-precedence"><a class="header" href="#tlc-configuration-precedence">TLC configuration precedence</a></h2>
+<p>For <code>init</code>, <code>next</code>, <code>inv</code>, <code>temporal</code>, and deadlock checking, an application configuration value overrides the TLC file.
+Otherwise the TLC value is used, then the application default. <code>CHECK_DEADLOCK FALSE</code> is equivalent to
+<code>"no-deadlock": true</code>.</p>
+<h2 id="migrating-from-hocon"><a class="header" href="#migrating-from-hocon">Migrating from HOCON</a></h2>
+<p>Change HOCON such as:</p>
+<pre><code class="language-text">common {
+  run-dir = ~/apalache-run
+}
+</code></pre>
+<p>to JSON:</p>
+<pre><code class="language-json">{
+   "run-dir": "~/apalache-run"
+}
+</code></pre>
+<p>Then rename <code>.apalache.cfg</code> to <code>.apalache.json</code> before running Apalache. Automatically discovered legacy filenames are
+ignored, while an explicit <code>--config-file</code> ending in <code>.cfg</code> is an error. With <code>--debug</code>, the merged canonical JSON
+configuration is written to <code>application-config.json</code> in the run directory.</p>
+<p>The strict JSON parser accepts only canonical names and values. In particular, apply these changes to older
+configurations:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Former representation</th><th>Canonical JSON</th></tr>
+</thead>
+<tbody>
+<tr><td><code>input.source</code></td><td>top-level <code>source</code></td></tr>
+<tr><td><code>checker.timeout-smt-sec</code></td><td><code>checker.timeout-smt</code></td></tr>
+<tr><td><code>checker.no-deadlocks</code></td><td><code>checker.no-deadlock</code></td></tr>
+<tr><td><code>checker.temporal-props</code></td><td><code>checker.temporal</code></td></tr>
+<tr><td><code>typechecker.inferpoly</code></td><td><code>typechecker.infer-poly</code></td></tr>
+<tr><td>source field <code>type</code></td><td>source field <code>kind</code></td></tr>
+<tr><td>source field <code>file</code></td><td>source field <code>path</code></td></tr>
+<tr><td><code>filesource</code>/<code>stringsource</code></td><td><code>file</code>/<code>string</code></td></tr>
+<tr><td><code>fun-arrays</code>/<code>oopsla-19</code></td><td><code>funArrays</code>/<code>oopsla19</code></td></tr>
+<tr><td><code>checker-server</code>/<code>explorer-server</code></td><td><code>checker</code>/<code>explorer</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Enum values are JSON strings, not objects containing a <code>type</code> field.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="tla-anonymized-execution-statistics"><a class="header" href="#tla-anonymized-execution-statistics">TLA+ Anonymized Execution Statistics</a></h1>
 <p>Apalache participates in the optional <a href="https://github.com/tlaplus/tlaplus/blob/master/tlatools/org.lamport.tlatools/src/util/ExecutionStatisticsCollector.md">anonymized statistics programme</a> along
@@ -5521,6 +5649,9 @@ parameters. For CVC5, Apalache maps this to CVC5’s <code>seed</code> and
 <p>To see how Apalache can use TLC configuration files, check the page
 on <a href="#tlc-configuration-file">Specification Parameters</a>
 and <a href="#running-the-tool">Running the Tool</a>.</p>
+<p>TLC configuration is distinct from Apalache’s JSON application configuration. Files passed with <code>--config</code> may use the
+conventional <code>.cfg</code> extension. <strong>Note:</strong> The option <code>--config</code> will be renamed to <code>--config-tlc</code>, see
+<a href="https://github.com/apalache-mc/apalache/issues/3407">#3407</a>.</p>
 <p>This file presents the syntax of
 <a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a> configuration files
 in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> and
@@ -5656,7 +5787,7 @@ View ::=
 // Whether the tools should check for deadlocks.
 // In Apalache, "CHECK_DEADLOCK FALSE" is equivalent to passing --no-deadlock,
 // while "CHECK_DEADLOCK TRUE" preserves the default behavior of looking for
-// deadlocks. The CLI flag --no-deadlock (or apalache.cfg) takes precedence
+// deadlocks. The CLI flag --no-deadlock (or .apalache.json) takes precedence
 // over the value declared in the TLC config file.
 CheckDeadlock ::=
     "CHECK_DEADLOCK" ("FALSE" | "TRUE")
@@ -15333,6 +15464,10 @@ in its native context of “design patterns”.</p>
 </tbody>
 </table>
 </div>
+<blockquote>
+<p><strong>Status: Deprecated.</strong> Superseded by
+<a href="#adr-026-explicit-configuration-and-run-options">ADR-026: Explicit configuration and run options</a>.</p>
+</blockquote>
 <p><strong>Table of Contents</strong></p>
 <ul>
 <li><a href="#summary-1">Summary (Overview)</a></li>
@@ -15340,6 +15475,7 @@ in its native context of “design patterns”.</p>
 <li><a href="#options-1">Options (Alternatives)</a></li>
 <li><a href="#solution-1">Solution (Decision)</a></li>
 <li><a href="#consequences-1">Consequences (Retrospection)</a></li>
+<li><a href="#retrospective-2026">Retrospective (2026)</a></li>
 </ul>
 <h2 id="summary-1"><a class="header" href="#summary-1">Summary</a></h2>
 <!-- Statement to summarize, following the following formula: -->
@@ -15536,6 +15672,12 @@ configuration files useful for tweaking program behavior. We subsequently
 decided to further extend the configuration system by integrating the CLI within
 the configuration system and use it as the basis for statically representing all
 program options. See <a href="#adr-022-unify-configuration-management-and-pass-options">ADR 022</a>.</p>
+<h2 id="retrospective-2026"><a class="header" href="#retrospective-2026">Retrospective (2026)</a></h2>
+<p>The loading and precedence rules proved useful. However, maintenance experience and <a href="https://github.com/apalache-mc/apalache/issues/2999">issue #2999</a> showed that derived
+PureConfig readers hid the external schema and did not reliably reject nested typos. HOCON also added syntax and a
+Scala-specific dependency without a compelling use case. Moreover, we believe that long-term maintenance requires simple
+solutions and stable dependencies. ADR-026 retains the useful loading behavior but replaces PureConfig and HOCON with an
+explicit strict-JSON implementation.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-014-precise-type-inference-for-records-and-variants"><a class="header" href="#adr-014-precise-type-inference-for-records-and-variants">ADR-014: Precise type inference for records and variants</a></h1>
 <div class="table-wrapper">
@@ -17772,6 +17914,10 @@ that came up on the week before that hasn’t been prioritized already.</p>
 </tbody>
 </table>
 </div>
+<blockquote>
+<p><strong>Status: Deprecated.</strong> Superseded by
+<a href="#adr-026-explicit-configuration-and-run-options">ADR-026: Explicit configuration and run options</a>.</p>
+</blockquote>
 <p><strong>Table of Contents</strong></p>
 <ul>
 <li><a href="#summary-9">Summary (Overview)</a></li>
@@ -17779,6 +17925,7 @@ that came up on the week before that hasn’t been prioritized already.</p>
 <li><a href="#options-7">Options (Alternatives)</a></li>
 <li><a href="#solution-7">Solution (Decision)</a></li>
 <li><a href="#consequences-8">Consequences (Retrospection)</a></li>
+<li><a href="#retrospective-2026-1">Retrospective (2026)</a></li>
 </ul>
 <h2 id="summary-9"><a class="header" href="#summary-9">Summary</a></h2>
 <p>In the context of extending Apalache’s functionality and adding new features<br>facing the need to reason about our program configuration and make execution thread safe<br>we decided for unifying our CLI input with our configuration management system<br>to achieve a more modular architecture and greater static guarantees<br>accepting the development costs and possible increased cost of introducing new CLI inputs in the future.</p>
@@ -17858,6 +18005,11 @@ configuration system:</p>
      Did it work, not work, was changed, upgraded, etc.
 -->
 <p>TBD</p>
+<h2 id="retrospective-2026-1"><a class="header" href="#retrospective-2026-1">Retrospective (2026)</a></h2>
+<p>The unified flow prevented CLI and RPC configuration from drifting. However, the <code>Config</code>/<code>OptionGroup</code> split evolved
+into a large <code>Has*</code>/<code>With*</code> hierarchy, and sparse input was easy to confuse with resolved runtime configuration.
+Shapeless and PureConfig further obscured the data flow for maintainers unfamiliar with advanced Scala idioms. ADR-026
+retains one flow for CLI, files, and RPC while replacing this implementation with explicit data and resolution types.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-023-trace-evaluation"><a class="header" href="#adr-023-trace-evaluation">ADR-023: Trace evaluation</a></h1>
 <div class="table-wrapper">
@@ -18488,6 +18640,9 @@ over depending on stale packaging.</p>
 <li>KSMT overview and solver/theory support: <a href="https://ksmt.io/">https://ksmt.io/</a></li>
 <li>KSMT GitHub repository and releases: <a href="https://github.com/UnitTestBot/ksmt">https://github.com/UnitTestBot/ksmt</a></li>
 </ol>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adr-026-explicit-configuration-and-run-options"><a class="header" href="#adr-026-explicit-configuration-and-run-options">ADR-026: Explicit configuration and run options</a></h1>
+<p>TBD in a separate PR</p>
 
                     </main>
 

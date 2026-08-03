@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5572066.js";
+            window.path_to_searchindex_js = "../searchindex-aa14a244.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f88ca4ea.js"></script>
+        <script src="../toc-76fb4033.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -190,6 +190,10 @@
 </tbody>
 </table>
 </div>
+<blockquote>
+<p><strong>Status: Deprecated.</strong> Superseded by
+<a href="./026adr-explicit-configuration.html">ADR-026: Explicit configuration and run options</a>.</p>
+</blockquote>
 <p><strong>Table of Contents</strong></p>
 <ul>
 <li><a href="#summary">Summary (Overview)</a></li>
@@ -197,6 +201,7 @@
 <li><a href="#options">Options (Alternatives)</a></li>
 <li><a href="#solution">Solution (Decision)</a></li>
 <li><a href="#consequences">Consequences (Retrospection)</a></li>
+<li><a href="#retrospective-2026">Retrospective (2026)</a></li>
 </ul>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
 <!-- Statement to summarize, following the following formula: -->
@@ -393,6 +398,12 @@ configuration files useful for tweaking program behavior. We subsequently
 decided to further extend the configuration system by integrating the CLI within
 the configuration system and use it as the basis for statically representing all
 program options. See <a href="./022adr-unification-of-configs-and-options.html">ADR 022</a>.</p>
+<h2 id="retrospective-2026"><a class="header" href="#retrospective-2026">Retrospective (2026)</a></h2>
+<p>The loading and precedence rules proved useful. However, maintenance experience and <a href="https://github.com/apalache-mc/apalache/issues/2999">issue #2999</a> showed that derived
+PureConfig readers hid the external schema and did not reliably reject nested typos. HOCON also added syntax and a
+Scala-specific dependency without a compelling use case. Moreover, we believe that long-term maintenance requires simple
+solutions and stable dependencies. ADR-026 retains the useful loading behavior but replaces PureConfig and HOCON with an
+explicit strict-JSON implementation.</p>
 
                     </main>
 

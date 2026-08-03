@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5572066.js";
+            window.path_to_searchindex_js = "../searchindex-aa14a244.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f88ca4ea.js"></script>
+        <script src="../toc-76fb4033.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -278,13 +278,17 @@ options on the command line</li>
 <a href="#detailed">Detailed output</a>. <em><code>false</code> by default</em></li>
 <li><code>--run-dir=DIRECTORY</code> write all outputs directly into the specified
 <code>DIRECTORY</code></li>
-<li><code>--config-file</code> a file to use for loading configuration parameters. This
-will prevent Apalache from looking for any local <code>.apalache.cfg</code> file.</li>
+<li><code>--config-file</code> selects the only file used for loading configuration parameters. This prevents Apalache from
+considering both <code>.apalache.json</code> in the current working directory and the user-wide configuration. The file must
+contain <a href="config.html">strict JSON</a>; legacy <code>.cfg</code> filenames are rejected.
+<ul>
 <li><code>--profiling</code> (Bool): This flag governs the creation of <code>profile-rules.txt</code>
 used in <a href="profiling.html">profiling</a>. The file is only created if <code>profiling</code>
 is set to <code>True</code>.  Setting <code>profiling</code> to <code>False</code> is incompatible with the
 <code>--smtprof</code> flag. The default is <code>False</code>.</li>
 <li><code>--output-traces</code>: save an example trace for each symbolic run, default: <code>false</code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -295,8 +299,10 @@ the command line, the command line parameters take precedence over those in the 
 <ol>
 <li>Command-line value</li>
 <li>Environment variable value</li>
-<li>Configuration file value</li>
+<li>Value from the single selected configuration file</li>
 </ol>
+<p>Without <code>--config-file</code> (or its <code>CONFIG_FILE</code> environment variable), Apalache selects <code>.apalache.json</code> in the current
+working directory, then <code>${user.home}/.tlaplus/apalache.json</code>. It does not search parent directories.</p>
 <h3 id="12-simulator-command-line-parameters"><a class="header" href="#12-simulator-command-line-parameters">1.2. Simulator command-line parameters</a></h3>
 <p>The simulator can be run as follows:</p>
 <pre><code class="language-bash">$ apalache-mc simulate

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>ADR-008: exceptions - Apalache Documentation</title>
+        <title>ADR-026: Explicit configuration and run options - Apalache Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -179,122 +179,17 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="adr-008-apalache-exceptions"><a class="header" href="#adr-008-apalache-exceptions">ADR-008: Apalache Exceptions</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>author</th><th style="text-align: right">revision</th></tr>
-</thead>
-<tbody>
-<tr><td>Jure Kukovec</td><td style="text-align: right">1</td></tr>
-</tbody>
-</table>
-</div>
-<p>This ADR documents the various exception thrown in Apalache, and the circumstances that trigger them.</p>
-<h2 id="1-user-input-exceptions"><a class="header" href="#1-user-input-exceptions">1. User input exceptions</a></h2>
-<p>Exceptions in this family are caused by incorrect input from the user. All of these exceptions should exit cleanly and should NOT report a stack trace. We should be able to statically enforce that none of these exceptions can be left unhandled.</p>
-<h3 id="11-parser-level"><a class="header" href="#11-parser-level">1.1. Parser-level</a></h3>
-<p>Since we depend on Sany for parsing, Apalache rejects any syntax which Sany cannot parse.
-If Sany produces an exception Apalache catches it and re-throws a class extending</p>
-<pre><code>ParserException
-</code></pre>
-<p>The exception should report the following details:</p>
-<ul>
-<li>Location of at least one parser issue</li>
-</ul>
-<h3 id="12-apalache-specific-input-exceptions"><a class="header" href="#12-apalache-specific-input-exceptions">1.2. Apalache-specific input exceptions</a></h3>
-<p>This category of exceptions deals with problems triggered by incorrect or incomplete information regarding Apalache inputs. Examples include:</p>
-<ul>
-<li>Malformed config files</li>
-<li>Incorrect or missing <code>OVERRIDE_</code></li>
-<li>Incorrect or missing <code>UNROLL_</code></li>
-<li>Problems with <code>--init/next/cinit/...</code></li>
-</ul>
-<p>Exceptions thrown in response to these issues should extend</p>
-<pre><code>ApalacheInputException
-</code></pre>
-<p>The exceptions should report the following details:</p>
-<ul>
-<li>If an input is missing: the name of the expected input</li>
-<li>If an input is incorrect: the way in which it is incorrect</li>
-</ul>
-<h3 id="13-type-related-exceptions"><a class="header" href="#13-type-related-exceptions">1.3. Type-related exceptions</a></h3>
-<p>This category of exceptions deals with problems arising from the type-system used by Apalache. Examples include:</p>
-<ul>
-<li>Missing or incorrect type annotations</li>
-<li>Incompatibility of argument types and operator types</li>
-</ul>
-<p>Exceptions thrown in response to these issues should extend</p>
-<pre><code>TypeingException
-</code></pre>
-<p>The exceptions should report the following details:</p>
-<ul>
-<li>If an annotation is missing: the declaration with the missing annotation and its location</li>
-<li>If the types of the arguments at a built-in operator application site are incompatible with the operator type: Both the computed and expected types, and the location of the application site</li>
-<li>If the types of the arguments at a user-defined operator application site are incompatible with the operator annotation: Both the computed and expected types, the operator declaration, and the location of the application site</li>
-</ul>
-<h3 id="14-static-analysis-exceptions"><a class="header" href="#14-static-analysis-exceptions">1.4. Static-analysis exceptions</a></h3>
-<p>This category of exceptions deals with problems arising from the various static analysis passes performed by Apalache. Examples include:</p>
-<ul>
-<li>Missing or incorrect variable assignments</li>
-<li>Other analyses we might run in the future</li>
-</ul>
-<p>Exceptions thrown in response to these issues should extend</p>
-<pre><code>StaticAnalysisException
-</code></pre>
-<p>The exceptions should report the following details:</p>
-<ul>
-<li>The location in the specification where the analysis failed and the expected result</li>
-</ul>
-<h3 id="15-unsupported-language-exceptions"><a class="header" href="#15-unsupported-language-exceptions">1.5. Unsupported language exceptions</a></h3>
-<p>This category of exceptions deals with user input, which falls outside of the TLA+ fragment supported by Apalache. Examples include:</p>
-<ul>
-<li>Unbounded quantification</li>
-<li>(Unbounded) <code>CHOOSE</code></li>
-<li><code>SelectSeq</code></li>
-<li>Fragments of community modules</li>
-</ul>
-<p>Exceptions thrown in response to these issues should extend</p>
-<pre><code>UnsupportedFeatureException
-</code></pre>
-<p>The exceptions should report the following details:</p>
-<ul>
-<li>The location of the unsupported expression(s)</li>
-</ul>
-<h2 id="2-tool-failures"><a class="header" href="#2-tool-failures">2. Tool failures</a></h2>
-<p>These exceptions are caused by bugs in Apalache. They are fatal and should throw with a stack trace.</p>
-<h3 id="21-assumption-violations"><a class="header" href="#21-assumption-violations">2.1. Assumption violations</a></h3>
-<p>Whenever possible, it’s recommended to test against the assumptions of a given pass/transformation. If the assumptions are violated, an</p>
-<pre><code>AssumptionViolationException
-</code></pre>
-<p>should be thrown. It should report the following details:</p>
-<ul>
-<li>The assumption being violated</li>
-<li>The pass/class/method in which the assumption is made</li>
-</ul>
-<h3 id="22-passtransformation-specific-exceptions"><a class="header" href="#22-passtransformation-specific-exceptions">2.2. Pass/Transformation-specific exceptions</a></h3>
-<p>Depending on the pass/transformation, specialized exceptions may be thrown, to indicate some problem in either the pipeline, malformed input, missing or incomplete metadata or any other issue that cannot be circumvented. The exceptions should include a reasonable (concise) explanation and, whenever possible, source information for relevant expressions.</p>
-<h2 id="3-exception-explanations"><a class="header" href="#3-exception-explanations">3. Exception explanations</a></h2>
-<p>On their own, exceptions should include concise messages with all the relevant information components, outlined above. In addition to that, we should implement an advanced variant of <code>ExceptionAdapter</code>, called <code>ExceptionExplainer</code>, that is enabled by default, but can be quieted if Apalache is invoked with the flag <code>--quiet-exceptions</code> .</p>
-<p>The purpose of this class is to offer users a comprehensive explanation of the exceptions defined in Section 1. Whenever an exception is thrown, <code>ExceptionExplainer</code> should offer:</p>
-<ul>
-<li>Inlined TLA+ code, in place of source location references</li>
-<li>Examples of similar malformed inputs, if relevant</li>
-<li>Suggestions on how to fix the exception</li>
-<li>A link to the manual, explaining the cause of the exception</li>
-</ul>
+                        <h1 id="adr-026-explicit-configuration-and-run-options"><a class="header" href="#adr-026-explicit-configuration-and-run-options">ADR-026: Explicit configuration and run options</a></h1>
+<p>TBD in a separate PR</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../adr/007adr-restructuring.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../adr/025adr-cvc5-solver-backend.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../adr/009adr-outputs.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -302,13 +197,10 @@ If Sany produces an exception Apalache catches it and re-throws a class extendin
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../adr/007adr-restructuring.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../adr/025adr-cvc5-solver-backend.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../adr/009adr-outputs.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                    </a>
             </nav>
 
         </div>

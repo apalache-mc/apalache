@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b5572066.js";
+            window.path_to_searchindex_js = "../searchindex-aa14a244.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f88ca4ea.js"></script>
+        <script src="../toc-76fb4033.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,6 +184,9 @@
 <p>To see how Apalache can use TLC configuration files, check the page
 on <a href="./parameters.html#tlc-configuration-file">Specification Parameters</a>
 and <a href="./running.html">Running the Tool</a>.</p>
+<p>TLC configuration is distinct from Apalache’s JSON application configuration. Files passed with <code>--config</code> may use the
+conventional <code>.cfg</code> extension. <strong>Note:</strong> The option <code>--config</code> will be renamed to <code>--config-tlc</code>, see
+<a href="https://github.com/apalache-mc/apalache/issues/3407">#3407</a>.</p>
 <p>This file presents the syntax of
 <a href="http://lamport.azurewebsites.net/tla/tools.html">TLC</a> configuration files
 in <a href="https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form">EBNF</a> and
@@ -319,7 +322,7 @@ View ::=
 // Whether the tools should check for deadlocks.
 // In Apalache, "CHECK_DEADLOCK FALSE" is equivalent to passing --no-deadlock,
 // while "CHECK_DEADLOCK TRUE" preserves the default behavior of looking for
-// deadlocks. The CLI flag --no-deadlock (or apalache.cfg) takes precedence
+// deadlocks. The CLI flag --no-deadlock (or .apalache.json) takes precedence
 // over the value declared in the TLC config file.
 CheckDeadlock ::=
     "CHECK_DEADLOCK" ("FALSE" | "TRUE")
