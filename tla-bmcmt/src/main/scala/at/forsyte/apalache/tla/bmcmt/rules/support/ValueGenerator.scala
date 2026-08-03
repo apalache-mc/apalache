@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.support.AuxOps.constrainRelationArgs
+import at.forsyte.apalache.tla.bmcmt.rules.support.SupportOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.{tlaU => tla}

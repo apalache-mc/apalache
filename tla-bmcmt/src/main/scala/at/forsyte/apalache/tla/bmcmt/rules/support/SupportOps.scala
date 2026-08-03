@@ -12,7 +12,7 @@ import at.forsyte.apalache.tla.types.{BuilderT, tla}
  * @author
  *   Rodrigo Otoni
  */
-object AuxOps {
+object SupportOps {
   private lazy val simplifier = new ConstSimplifierForSmt
 
   /**
