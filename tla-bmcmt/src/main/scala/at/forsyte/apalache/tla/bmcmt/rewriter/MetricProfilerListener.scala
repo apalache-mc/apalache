@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rewriter
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContextMetrics
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaEx, UID}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging

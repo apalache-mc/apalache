@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.{ErrorMessage, ExceptionAdapter, FailureMessage, NormalErrorMessage}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{OutdatedAnnotationsError, TypingException, UID}
 import at.forsyte.apalache.tla.typecheck.TypingInputException

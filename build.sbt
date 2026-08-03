@@ -18,7 +18,9 @@ ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LIC
 ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
-ThisBuild / organization := "at.forsyte"
+// The reverse domain name of https://apalache-mc.org, which is owned by the project.
+// This is a Maven groupId only: the Scala packages remain `at.forsyte.apalache.*`.
+ThisBuild / organization := "org.apalache-mc"
 ThisBuild / scalaVersion := "2.13.18"
 
 // Add resolver for Sonatype OSS Snapshots and Releases Maven repository
@@ -33,7 +35,9 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.scalaParserCombinators,
     Deps.scalaz,
     Deps.slf4j,
-    Deps.tla2tools,
+    // NOTE: tla2tools is deliberately NOT declared here. It cannot be resolved from Maven Central,
+    // so it is declared only by the sub-projects that need it: `tla_parser`, `infra`, and `tool`.
+    // Keeping it out of `tlair` and `tla_io` is what makes those two publishable as libraries.
     Deps.cvc5,
     Deps.cvc5LinuxAarch64,
     Deps.cvc5LinuxX86_64,
@@ -155,6 +159,8 @@ lazy val infra = (project in file("mod-infra"))
       libraryDependencies ++= Seq(
           Deps.ujson,
           Deps.upickle,
+          // ExitCodes reuses TLC's error codes (tlc2.output.EC)
+          Deps.tla2tools,
       ),
   )
 
@@ -171,6 +177,25 @@ lazy val tla_io = (project in file("tla-io"))
       libraryDependencies ++= Seq(
           Deps.commonsIo,
           Deps.jacksonDatabind,
+      ),
+  )
+
+// The SANY frontend. This is the only sub-project that depends on tla2tools, which is not resolvable from
+// Maven Central. Keeping it separate from `tla_io` lets us publish `tlair` and `tla_io` as libraries.
+lazy val tla_parser = (project in file("tla-parser"))
+  .dependsOn(
+      tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test",
+      infra,
+      tla_io,
+  )
+  .settings(
+      testSettings,
+      libraryDependencies ++= Seq(
+          Deps.commonsIo,
+          Deps.tla2tools,
       ),
   )
 
@@ -192,6 +217,8 @@ lazy val tla_pp = (project in file("tla-pp"))
       tlair % "test->test",
       infra,
       tla_io,
+      // only the tests parse TLA+ specs with SANY
+      tla_parser % "test->compile",
   )
   .settings(
       testSettings,
@@ -210,6 +237,8 @@ lazy val passes = (project in file("passes"))
       tlair,
       infra,
       tla_io,
+      // the SANY parser pass is the only consumer of the frontend
+      tla_parser,
       tla_pp,
       tla_assignments,
       tla_typechecker,
@@ -230,6 +259,8 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       tla_pp,
       tla_assignments,
       passes,
+      // only the tests parse TLA+ specs with SANY
+      tla_parser % "test->compile",
   )
   .settings(
       testSettings,
@@ -296,6 +327,8 @@ lazy val tool = (project in file("mod-tool"))
           Deps.commonsBeanutils,
           Deps.clistCore,
           Deps.clistMacros,
+          // Tool and ConfigCmd configure SANY and TLC directly
+          Deps.tla2tools,
       ),
   )
 
@@ -320,6 +353,7 @@ lazy val root = (project in file("."))
       tlair,
       infra,
       tla_io,
+      tla_parser,
       tla_typechecker,
       tla_pp,
       tla_assignments,

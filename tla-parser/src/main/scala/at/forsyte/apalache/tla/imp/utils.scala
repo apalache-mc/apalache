@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.Logger

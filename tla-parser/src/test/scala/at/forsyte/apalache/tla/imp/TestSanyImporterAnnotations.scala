@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.annotations.Annotation
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner

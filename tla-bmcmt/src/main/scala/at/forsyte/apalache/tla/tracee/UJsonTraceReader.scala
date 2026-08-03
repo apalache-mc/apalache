@@ -6,7 +6,7 @@ import at.forsyte.apalache.io.itf.ItfJsonToTla
 import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.io.json.ujsonimpl.{ScalaFromUJsonAdapter, UJsonRepresentation, UJsonToTlaViaBuilder}
 import at.forsyte.apalache.io.lir.TypeTagReader
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{NameEx, OperEx, TlaEx, TlaOperDecl}
 import at.forsyte.apalache.tla.tracee.TraceReader.{ApalacheJson, ITFJson, TraceJson}

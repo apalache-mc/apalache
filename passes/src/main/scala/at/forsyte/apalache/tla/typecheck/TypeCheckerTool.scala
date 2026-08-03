@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.typecheck
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{Annotation, AnnotationStr, StandardAnnotations}
 import at.forsyte.apalache.io.config.Constants.FEATURES
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.etc._
