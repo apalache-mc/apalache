@@ -123,6 +123,9 @@ lazy val testSettings = Seq(
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
+lazy val CliIntegration = config("cliIntegration").extend(Test)
+lazy val cliIntegrationTest = taskKey[Unit]("Run the ScalaTest CLI integration suite")
+
 ThisBuild / assembly / assemblyMergeStrategy := {
   // Workaround for conflict with grpc-netty manifest files
   // See https://github.com/sbt/sbt-assembly/issues/362
@@ -365,8 +368,34 @@ lazy val json_rpc = (project in file("json-rpc"))
 lazy val tool = (project in file("mod-tool"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, json_rpc, passes)
   .enablePlugins(BuildInfoPlugin)
+  .configs(CliIntegration)
   .settings(
       testSettings,
+      inConfig(CliIntegration)(Defaults.testSettings),
+      CliIntegration / scalaSource := (Test / scalaSource).value,
+      CliIntegration / unmanagedSources := {
+        val integrationDir = (CliIntegration / scalaSource).value / "org" / "apalachemc" / "integration"
+        (integrationDir ** "*.scala").get.filterNot(HiddenFileFilter.accept)
+      },
+      CliIntegration / resourceDirectory := (Test / resourceDirectory).value,
+      CliIntegration / fork := true,
+      CliIntegration / parallelExecution := false,
+      CliIntegration / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
+      CliIntegration / javaOptions ++= {
+        val javaFeature = java.lang.Runtime.version().feature()
+        val compatibilityOptions =
+          (if (javaFeature >= 22) Seq("--enable-native-access=ALL-UNNAMED") else Seq.empty) ++
+            (if (javaFeature >= 24) Seq("--sun-misc-unsafe-memory-access=allow") else Seq.empty)
+        compatibilityOptions ++ Seq(
+            s"-Dapalache.cli.test.repo-root=${(ThisBuild / baseDirectory).value.getAbsolutePath}",
+            s"-Dapalache.cli.test.classpath=${(CliIntegration / fullClasspath).value.files.mkString(java.io.File.pathSeparator)}",
+        )
+      },
+      Test / unmanagedSources / excludeFilter := {
+        val integrationDir = (Test / scalaSource).value / "org" / "apalachemc" / "integration"
+        HiddenFileFilter || new SimpleFileFilter(_.toPath.startsWith(integrationDir.toPath))
+      },
+      cliIntegrationTest := (CliIntegration / test).value,
       // The following buildInfo values will be available in the source
       // code in the `apalache.BuildInfo` singleton.
       // See https://github.com/sbt/sbt-buildinfo

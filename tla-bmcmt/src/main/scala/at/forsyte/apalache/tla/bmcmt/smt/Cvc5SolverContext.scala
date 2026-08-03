@@ -584,6 +584,8 @@ class Cvc5SolverContext(val config: SolverConfig, outputWorkspace: Option[Output
 object Cvc5SolverContext {
   private val nextId: AtomicLong = new AtomicLong(0)
 
+  private[tla] def resetIds(): Unit = nextId.set(0)
+
   private def createId(): Long = {
     nextId.getAndIncrement()
   }

@@ -7,6 +7,7 @@ import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
 import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, ReportGenerator}
+import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -48,7 +49,10 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def outputAndLogConfig(cmd: ApalacheCommand, cfg: ApalacheConfig): Try[OutputWorkspace] = for {
+  private def outputAndLogConfig(
+      cmd: ApalacheCommand,
+      cfg: ApalacheConfig,
+      isConsoleDecorated: Boolean): Try[OutputWorkspace] = for {
     initialization <- {
       val result = ApalacheConfigResolver.resolveCommandInitialization(cfg)
       if (result.isSuccess) Try(result.requireValue())
@@ -71,7 +75,7 @@ object Tool extends LazyLogging {
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
     val logFiles =
       (outputWorkspace.runDir +: outputWorkspace.additionalRunDir.toSeq).map(OutputWorkspace.detailedLogPath)
-    new LogbackConfigurator(logFiles)
+    new LogbackConfigurator(logFiles, isConsoleDecorated)
       .configureDefaultContext()
     logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
 
@@ -92,17 +96,32 @@ object Tool extends LazyLogging {
     }
   }
 
+  /** Run the tool in library mode without resetting process-global state. */
+  def run(args: Array[String]): Int = run(args, isReset = false)
+
+  /** Run the tool in library mode with the default decorated console logger. */
+  def run(args: Array[String], isReset: Boolean): Int =
+    run(args, isReset, isConsoleDecorated = true)
+
   /**
-   * Run the tool in a library mode, that is, with a call to System.exit.
+   * Run the tool in library mode, that is, without a call to System.exit.
    *
    * @param args
    *   the command line arguments
+   * @param isReset
+   *   whether to reset process-global solver log IDs before this invocation
+   * @param isConsoleDecorated
+   *   whether console log messages include their level and timestamp decoration
    * @return
    *   the exit code; as usual, 0 means success.
    */
-  def run(args: Array[String]): Int = {
+  def run(args: Array[String], isReset: Boolean, isConsoleDecorated: Boolean): Int = {
+    if (isReset) {
+      Z3SolverContext.resetIds()
+      Cvc5SolverContext.resetIds()
+    }
     // Configure the silent logger first. Otherwise, Apache Commons spills a lot of text to the console.
-    new LogbackConfigurator(Nil).configureDefaultContext()
+    new LogbackConfigurator(Nil, isConsoleDecorated).configureDefaultContext()
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
       .parse(args)
@@ -134,7 +153,7 @@ object Tool extends LazyLogging {
             ExitCodes.ERROR
           } else {
             val config = configResult.requireValue()
-            outputAndLogConfig(cmd, config) match {
+            outputAndLogConfig(cmd, config, isConsoleDecorated) match {
               case Failure(cfgErr) => {
                 logger.error(s"Configuration error: ${cfgErr.getMessage}")
                 ExitCodes.ERROR

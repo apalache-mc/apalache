@@ -17,7 +17,8 @@ import java.nio.file.Path
  * @author
  *   Igor Konnov
  */
-class LogbackConfigurator(logFiles: Seq[Path]) extends ContextAwareBase with Configurator {
+class LogbackConfigurator(logFiles: Seq[Path], isConsoleDecorated: Boolean = true)
+    extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
@@ -40,7 +41,7 @@ class LogbackConfigurator(logFiles: Seq[Path]) extends ContextAwareBase with Con
     addInfo("Setting up a logback configuration")
     loggerContext.reset() // forget everything that was configured automagically
     val rootLogger = loggerContext.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
-    val consoleAppender = mkConsoleAppender(loggerContext, isDecorated = true)
+    val consoleAppender = mkConsoleAppender(loggerContext, isDecorated = isConsoleDecorated)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
     logFiles.foreach(path => rootLogger.addAppender(mkFileAppender(loggerContext, path.toFile)))
@@ -65,7 +66,7 @@ class LogbackConfigurator(logFiles: Seq[Path]) extends ContextAwareBase with Con
     filter.start()
     app.addFilter(filter)
     val layout = new PatternLayout()
-    layout.setPattern(if (isDecorated) "%-65msg %.-1level@%d{HH:mm:ss.SSS}%n" else "%-80msg%n")
+    layout.setPattern(if (isDecorated) "%-65msg %.-1level@%d{HH:mm:ss.SSS}%n" else "%msg%n")
     layout.setContext(loggerContext)
     layout.start()
     val encoder = new LayoutWrappingEncoder[ILoggingEvent]()
