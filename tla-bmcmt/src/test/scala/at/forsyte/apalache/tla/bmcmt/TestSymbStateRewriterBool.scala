@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriter.NoRule
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.lir._
@@ -83,7 +83,7 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     val left = arena.topCell
     arena = arena.appendCell(BoolT1)
     val right = arena.topCell
-    val ex = tla.equiv(cellEx(left), cellEx(right))
+    val ex = tla.equiv(left.toBuilder, right.toBuilder)
     val state = new SymbState(ex, arena, xyBinding)
     assert(NoRule() == create(rewriterType).rewriteOnce(state))
   }
@@ -110,14 +110,14 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     arena = arena.appendCell(BoolT1)
     val cell = arena.topCell
 
-    val ex = tla.not(cellEx(cell))
+    val ex = tla.not(cell.toBuilder)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(_) =>
-            val eq = tla.eql(cellEx(cell), cellEx(arena.cellFalse()))
+            val eq = tla.eql(cell.toBuilder, arena.cellFalse().toBuilder)
             solverContext.assertGroundExpr(eq)
             solverContext.assertGroundExpr(nextState.ex)
             rewriter.push()
@@ -147,11 +147,11 @@ trait TestSymbStateRewriterBool extends RewriterBase {
 
   test("""FALSE = TRUE ~~> FALSE""") { rewriterType: SMTEncoding =>
     prepareArena()
-    val ex = tla.eql(cellEx(arena.cellFalse()), cellEx(arena.cellTrue()))
+    val ex = tla.eql(arena.cellFalse().toBuilder, arena.cellTrue().toBuilder)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
-    val eq = tla.eql(tla.unchecked(nextState.ex), cellEx(arena.cellFalse()))
+    val eq = tla.eql(tla.unchecked(nextState.ex), arena.cellFalse().toBuilder)
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
@@ -198,7 +198,7 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     arena = arena.appendCell(BoolT1)
     val c2 = arena.topCell
 
-    val ex = tla.and(cellEx(c1), cellEx(c2))
+    val ex = tla.and(c1.toBuilder, c2.toBuilder)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
@@ -208,14 +208,14 @@ trait TestSymbStateRewriterBool extends RewriterBase {
             assert(solverContext.sat())
             solverContext.assertGroundExpr(nextState.ex)
             rewriter.push()
-            val eq1 = tla.eql(cellEx(c1), cellEx(arena.cellFalse()))
+            val eq1 = tla.eql(c1.toBuilder, arena.cellFalse().toBuilder)
             solverContext.assertGroundExpr(eq1)
             assert(!solverContext.sat())
             rewriter.pop()
-            val eq2 = tla.eql(cellEx(c1), cellEx(arena.cellTrue()))
+            val eq2 = tla.eql(c1.toBuilder, arena.cellTrue().toBuilder)
             solverContext.assertGroundExpr(eq2)
             assert(solverContext.sat())
-            val eq3 = tla.eql(cellEx(c2), cellEx(arena.cellTrue()))
+            val eq3 = tla.eql(c2.toBuilder, arena.cellTrue().toBuilder)
             solverContext.assertGroundExpr(eq3)
             assert(solverContext.sat())
 
@@ -277,19 +277,19 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     arena = arena.appendCell(BoolT1)
     val right = arena.topCell
 
-    val ex = tla.or(cellEx(left), cellEx(right))
+    val ex = tla.or(left.toBuilder, right.toBuilder)
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     rewriter.rewriteOnce(state) match {
       case SymbStateRewriter.Continue(nextState) =>
         nextState.ex match {
           case NameEx(_) =>
-            val eq1 = tla.eql(cellEx(left), cellEx(arena.cellFalse()))
+            val eq1 = tla.eql(left.toBuilder, arena.cellFalse().toBuilder)
             solverContext.assertGroundExpr(eq1)
             solverContext.assertGroundExpr(nextState.ex)
             rewriter.push()
             assert(solverContext.sat())
-            val eq2 = tla.eql(cellEx(right), cellEx(arena.cellFalse()))
+            val eq2 = tla.eql(right.toBuilder, arena.cellFalse().toBuilder)
             solverContext.assertGroundExpr(eq2)
             assert(!solverContext.sat())
 
@@ -309,7 +309,7 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     arena = arena.appendCell(BoolT1)
     val right = arena.topCell
 
-    val ex = tla.not(tla.eql(cellEx(left), cellEx(right)))
+    val ex = tla.not(tla.eql(left.toBuilder, right.toBuilder))
     val state = new SymbState(ex, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
@@ -319,28 +319,28 @@ trait TestSymbStateRewriterBool extends RewriterBase {
         rewriter.push()
         // both false
         assert(solverContext.sat())
-        val eq1 = tla.eql(cellEx(left), cellEx(arena.cellFalse()))
+        val eq1 = tla.eql(left.toBuilder, arena.cellFalse().toBuilder)
         solverContext.assertGroundExpr(eq1)
         assert(solverContext.sat())
         rewriter.push()
-        val eq2 = tla.eql(cellEx(right), cellEx(arena.cellFalse()))
+        val eq2 = tla.eql(right.toBuilder, arena.cellFalse().toBuilder)
         solverContext.assertGroundExpr(eq2)
         assert(!solverContext.sat())
         rewriter.pop()
-        val eq3 = tla.eql(cellEx(right), cellEx(arena.cellTrue()))
+        val eq3 = tla.eql(right.toBuilder, arena.cellTrue().toBuilder)
         solverContext.assertGroundExpr(eq3)
         assert(solverContext.sat())
         rewriter.pop()
         // both true
-        val eq4 = tla.eql(cellEx(left), cellEx(arena.cellTrue()))
+        val eq4 = tla.eql(left.toBuilder, arena.cellTrue().toBuilder)
         solverContext.assertGroundExpr(eq4)
         assert(solverContext.sat())
         rewriter.push()
-        val eq5 = tla.eql(cellEx(right), cellEx(arena.cellTrue()))
+        val eq5 = tla.eql(right.toBuilder, arena.cellTrue().toBuilder)
         solverContext.assertGroundExpr(eq5)
         assert(!solverContext.sat())
         rewriter.pop()
-        val eq6 = tla.eql(cellEx(right), cellEx(arena.cellFalse()))
+        val eq6 = tla.eql(right.toBuilder, arena.cellFalse().toBuilder)
         solverContext.assertGroundExpr(eq6)
         assert(solverContext.sat())
 
@@ -400,13 +400,13 @@ trait TestSymbStateRewriterBool extends RewriterBase {
       rewriter.pop()
       rewriter.push()
       solverContext.assertGroundExpr(nextState.ex)
-      val eq1 = tla.eql(tla.int(1), cellEx(nextState.binding("y'")))
+      val eq1 = tla.eql(tla.int(1), nextState.binding("y'").toBuilder)
       solverContext.assertGroundExpr(eq1)
       assert(solverContext.sat())
       rewriter.pop()
       rewriter.push()
       solverContext.assertGroundExpr(nextState.ex)
-      val eq2 = tla.eql(tla.int(2), cellEx(nextState.binding("y'")))
+      val eq2 = tla.eql(tla.int(2), nextState.binding("y'").toBuilder)
       solverContext.assertGroundExpr(eq2)
       assert(solverContext.sat())
       rewriter.pop()
@@ -465,7 +465,7 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
     val xp = nextState.binding("x'")
-    val eql = tla.eql(cellEx(xp), tla.int(10))
+    val eql = tla.eql(xp.toBuilder, tla.int(10))
     assertTlaExAndRestore(rewriter, nextState.setRex(eql))
   }
 
@@ -496,7 +496,7 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     assert(solverContext.sat())
     solverContext.assertGroundExpr(nextState.ex)
     val xp = nextState.binding("x'")
-    val eq = tla.eql(cellEx(xp), tla.int(7))
+    val eq = tla.eql(xp.toBuilder, tla.int(7))
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 

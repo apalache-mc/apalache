@@ -4,7 +4,7 @@ import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.tla.tracee._
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.TraceEvaluationOptions
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -25,7 +25,7 @@ import com.typesafe.scalalogging.LazyLogging
  */
 class TraceePassImpl @Inject() (
     derivedPreds: DerivedPredicates.Configurable,
-    options: OptionGroup.HasTracee,
+    traceOptions: TraceEvaluationOptions,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory,
     sourceStore: SourceStore)
@@ -36,7 +36,7 @@ class TraceePassImpl @Inject() (
   // TODO: turn requires into proper error handling?
   override def execute(module: TlaModule): PassResult = {
 
-    val traceSource = options.tracee.trace
+    val traceSource = traceOptions.trace
     val traceReader = new UJsonTraceReader(Some(sourceStore), DefaultTagJsonReader)
 
     val trace = traceReader.convert(traceReader.read(traceSource))
@@ -45,7 +45,7 @@ class TraceePassImpl @Inject() (
     } else {
 
       // TODO: make findBodyOf return Option? (unrelated to MVP)
-      val expressions = options.tracee.expressions.map { exName =>
+      val expressions = traceOptions.expressions.map { exName =>
         findBodyOf(exName, module.operDeclarations: _*) match {
           case NullEx => throw new ConfigurationError(s"Operator $exName undefined in module ${module.name}.")
           case ex     => exName -> ex

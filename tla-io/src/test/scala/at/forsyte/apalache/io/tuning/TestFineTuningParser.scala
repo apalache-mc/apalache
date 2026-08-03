@@ -1,4 +1,4 @@
-package at.forsyte.apalache.infra.passes
+package at.forsyte.apalache.io.tuning
 
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite

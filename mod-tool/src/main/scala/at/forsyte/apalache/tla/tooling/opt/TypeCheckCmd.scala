@@ -1,12 +1,15 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import java.io.File
-import org.backuity.clist._
-import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.infra.passes.options.OptionGroup
-import at.forsyte.apalache.infra.passes.options.SourceOption
+import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.{INFER_POLY, OUTPUT, TYPECHECK}
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, TypecheckerPatch}
 import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
+import com.typesafe.scalalogging.LazyLogging
+import org.backuity.clist._
+
+import java.io.File
 
 /**
  * This command initiates the 'typecheck' command line.
@@ -15,32 +18,48 @@ import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
  *   Igor Konnov
  */
 class TypeCheckCmd
-    extends ApalacheCommand(name = "typecheck", description = "Check types in a TLA+ specification") with LazyLogging {
+    extends ApalacheCommand(name = TYPECHECK, description = "Check types in a TLA+ specification") with LazyLogging {
 
   var file: File = arg[File](description = "a TLA+ specification (.tla or .json)")
-  var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = "infer-poly", default = None,
-      description = "allow the type checker to infer polymorphic types, default: true")
-  var output: Option[File] = opt[Option[File]](name = "output",
-      description = "file to which the typechecked source is written (.tla or .json), default: None")
+  var inferPoly: Option[Boolean] = opt[Option[Boolean]](name = INFER_POLY, default = None,
+      description = descriptionWithDefault(
+          "allow the type checker to infer polymorphic types",
+          configDefaults.typechecker.inferPoly,
+      ))
+  var output: Option[File] = opt[Option[File]](name = OUTPUT,
+      description = descriptionWithDefault(
+          "file to which the typechecked source is written (.tla or .json)",
+          configDefaults.output,
+      ))
 
-  override def toConfig() = for {
-    cfg <- super.toConfig()
-    input <- SourceOption.FileSource(file).map(src => cfg.input.copy(source = Some(src)))
-  } yield cfg.copy(
-      input = input,
-      output = cfg.output.copy(output = output),
-      typechecker = cfg.typechecker.copy(inferpoly = inferPoly),
-  )
+  override def toConfig: ConfigParseResult[ApalacheConfig] = {
+    val base = super.toConfig
+    if (!base.isSuccess) {
+      ConfigParseResult.failureFrom(base)
+    } else {
+      val source = InputSource.FileSource(file)
+      if (!source.isSuccess) {
+        ConfigParseResult.failureFrom(source)
+      } else {
+        mergeConfig(
+            base,
+            ApalacheConfig(
+                source = Some(source.requireValue()),
+                output = output.map(_.toPath),
+                typechecker = TypecheckerPatch(inferPoly),
+            ),
+        )
+      }
+    }
+  }
 
-  override def run() = {
-    val cfg = configuration.get
-    val options = OptionGroup.WithTypechecker(cfg).get
-
-    logger.info("Type checking " + file)
-
-    PassChainExecutor(new TypeCheckerModule(options)).run() match {
-      case Right(_)      => Right("Type checker [OK]")
-      case Left(failure) => Left(failure.exitCode, "Type checker [FAILED]")
+  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+    runWithOptions(ApalacheConfigResolver.resolveTypecheck(config)) { options =>
+      logger.info("Type checking " + file)
+      PassChainExecutor(new TypeCheckerModule(options)).run() match {
+        case Right(_)      => Right("Type checker [OK]")
+        case Left(failure) => Left(failure.exitCode, "Type checker [FAILED]")
+      }
     }
   }
 }

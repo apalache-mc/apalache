@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
@@ -98,8 +98,8 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     assert(CellTFrom(FunT1(IntT1, SetT1(BoolT1))) == gprime.cellType)
     solverContext.assertGroundExpr(nextState.ex)
     // it should be impossible to return two different values for 1
-    val app1 = tla.app(cellEx(gprime), tla.minus(tla.int(2), tla.int(1)))
-    val app2 = tla.app(cellEx(gprime), tla.minus(tla.int(3), tla.int(2)))
+    val app1 = tla.app(gprime.toBuilder, tla.minus(tla.int(2), tla.int(1)))
+    val app2 = tla.app(gprime.toBuilder, tla.minus(tla.int(3), tla.int(2)))
     val app1eqApp2 = tla.eql(app1, app2)
     assertTlaExAndRestore(rewriter, nextState.setRex(app1eqApp2))
   }

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
@@ -8,7 +8,8 @@ import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import scalaz.unused
 
 import scala.collection.immutable.SortedMap
@@ -323,13 +324,13 @@ class LazyEquality(rewriter: SymbStateRewriter)
         simplifier.applySimplifyShallowToBuilderEx(tla.or(inAndEqList: _*))
       }
 
-      def notInOrExists(lelem: ArenaCell) = {
+      def notInOrExists(lelem: ArenaCell): BuilderT = {
         val notInOrExists =
           simplifier.applySimplifyShallowToBuilderEx(
               tla.or(tla.not(tla.selectInSet(lelem.toBuilder, left.toBuilder)), exists(lelem))
           )
 
-        if (simplifier.isBoolConst(notInOrExists)) {
+        if (simplifier.isBoolConst(notInOrExists.build)) {
           notInOrExists // just return the constant
         } else {
           // BUG: this produced OOM on the inductive invariant of Paxos

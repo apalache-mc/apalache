@@ -1,12 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules.aux
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
 import at.forsyte.apalache.tla.bmcmt.types.{CellT, CellTFrom}
-import at.forsyte.apalache.tla.lir.TypedPredefs._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.lir.convenience.{tla => tlaLegacy}
 import at.forsyte.apalache.tla.types.{tlaU => tla}
 import scalaz.unused
 
@@ -172,11 +170,10 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
       for (elem <- elemPtrs.map(_.elem)) {
         nextState = nextState.updateArena(_.appendCell(BoolT1))
         val pred = nextState.arena.topCell.toNameEx
-        // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
-        val storeElem = tlaLegacy.apalacheStoreInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
-        val notStoreElem = tlaLegacy.apalacheStoreNotInSet(elem.toNameEx, setCell.toNameEx).typed(SetT1(elemType))
+        val storeElem = tla.storeInSet(elem.toBuilder, setCell.toBuilder)
+        val notStoreElem = tla.storeNotInSet(elem.toBuilder, setCell.toBuilder)
         // elem is added to setCell based on the unconstrained predicate pred
-        val ite = tlaLegacy.ite(pred, storeElem, notStoreElem).typed(SetT1(elemType))
+        val ite = tla.ite(pred, storeElem, notStoreElem)
         rewriter.solverContext.assertGroundExpr(ite)
       }
     }
@@ -232,8 +229,7 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         nextState = nextState.updateArena(_.appendHas(domainCell, domainCells.map { FixedElemPtr }: _*))
         // In the arrays encoding, set membership constraints are not generated in appendHas, so we add them below
         for (domainElem <- domainCells) {
-          // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
-          val inExpr = tlaLegacy.apalacheStoreInSet(domainElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
+          val inExpr = tla.storeInSet(domainElem.toBuilder, domainCell.toBuilder)
           rewriter.solverContext.assertGroundExpr(inExpr)
         }
         nextState = nextState.updateArena(_.setDom(funCell, domainCell))
@@ -241,13 +237,11 @@ class ValueGenerator(rewriter: SymbStateRewriter, bound: Int) {
         nextState = constrainRelationArgs(nextState, rewriter, domainCell, relationCell)
 
         def addCellCons(domElem: ArenaCell, rangeElem: ArenaCell): Unit = {
-          // TODO: when #1916 is closed, remove tlaLegacy and use tla directly
-          val inDomain = tlaLegacy.apalacheSelectInFun(domElem.toNameEx, domainCell.toNameEx).typed(BoolT1)
-          val inRange =
-            tlaLegacy.apalacheStoreInFun(rangeElem.toNameEx, funCell.toNameEx, domElem.toNameEx).typed(BoolT1)
-          val notInRange = tlaLegacy.apalacheStoreNotInFun(domElem.toNameEx, funCell.toNameEx).typed(BoolT1)
+          val inDomain = tla.selectInSet(domElem.toBuilder, domainCell.toBuilder)
+          val inRange = tla.storeInSet(rangeElem.toBuilder, funCell.toBuilder, domElem.toBuilder)
+          val notInRange = tla.storeNotInFun(domElem.toBuilder, funCell.toBuilder)
           // function updates are guarded by the inDomain predicate
-          val ite = tlaLegacy.ite(inDomain, inRange, notInRange).as(BoolT1)
+          val ite = tla.ite(inDomain, inRange, notInRange)
           rewriter.solverContext.assertGroundExpr(ite)
         }
 

@@ -6,6 +6,10 @@ To see how Apalache can use TLC configuration files, check the page
 on [Specification Parameters](./parameters.md#tlc-configuration-file)
 and [Running the Tool](./running.md).
 
+TLC configuration is distinct from Apalache's JSON application configuration. Files passed with `--config` may use the
+conventional `.cfg` extension. **Note:** The option `--config` will be renamed to `--config-tlc`, see
+[#3407](https://github.com/apalache-mc/apalache/issues/3407).
+
 This file presents the syntax of
 [TLC](http://lamport.azurewebsites.net/tla/tools.html) configuration files
 in [EBNF](https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form) and
@@ -143,7 +147,7 @@ View ::=
 // Whether the tools should check for deadlocks.
 // In Apalache, "CHECK_DEADLOCK FALSE" is equivalent to passing --no-deadlock,
 // while "CHECK_DEADLOCK TRUE" preserves the default behavior of looking for
-// deadlocks. The CLI flag --no-deadlock (or apalache.cfg) takes precedence
+// deadlocks. The CLI flag --no-deadlock (or .apalache.json) takes precedence
 // over the value declared in the TLC config file.
 CheckDeadlock ::=
     "CHECK_DEADLOCK" ("FALSE" | "TRUE")
@@ -165,4 +169,3 @@ ident ::=
 ```
 
 [Specifying Systems]: http://lamport.azurewebsites.net/tla/book.html
-

@@ -12,6 +12,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
 import at.forsyte.apalache.infra.passes.DerivedPredicates
+import at.forsyte.apalache.io.config.Constants.INV
 
 /**
  * The temporal pass takes a module with temporal properties, and outputs a module without temporal properties and an
@@ -58,7 +59,8 @@ class TemporalPassImpl @Inject() (
             val level = levelFinder.getLevelOfDecl(temporalProp)
             if (level != TlaLevelTemporal) {
               logger.warn(
-                  s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property of the initial state. Should ${temporalProp.name} be an invariant instead (--inv)?")
+                  s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property " +
+                    s"of the initial state. Should ${temporalProp.name} be an invariant instead (--$INV)?")
             }
             true
           case _ => false

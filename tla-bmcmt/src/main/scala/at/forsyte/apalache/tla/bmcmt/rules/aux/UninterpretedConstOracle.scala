@@ -3,8 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.lir.ConstT1
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 class UninterpretedConstOracle(valueCells: Seq[ArenaCell], oracleCell: ArenaCell, nvalues: Int) extends Oracle {
 

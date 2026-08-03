@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
-import at.forsyte.apalache.infra.passes.options.SMTSolver
+import at.forsyte.apalache.io.config.SMTEncoding
+import at.forsyte.apalache.io.config.SMTSolver
 
 /**
  * Configuration option to be passed to SolverContext. This class is declared as a case class to enable the concise copy

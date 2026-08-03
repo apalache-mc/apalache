@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.infra.passes.options.{SMTEncoding, SMTSolver}
+import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming

@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, Binding, PureArena}
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -57,7 +57,12 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(rewriter.assertSeq ==
       Seq(
-          tla.eql(endCell.toBuilder, tla.and(xCell.toBuilder, yCell.toBuilder)).build
+          tla
+            .eql(
+                endCell.toBuilder,
+                tla.and(xCell.toBuilder, yCell.toBuilder),
+            )
+            .build
       ))
 
     rewriter.assertSeq = Seq.empty
@@ -68,7 +73,12 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(rewriter.assertSeq ==
       Seq(
-          tla.eql(endCell2.toBuilder, tla.and(xCell.toBuilder, yCell.toBuilder)).build
+          tla
+            .eql(
+                endCell2.toBuilder,
+                tla.and(xCell.toBuilder, yCell.toBuilder),
+            )
+            .build
       ))
 
     rewriter.assertSeq = Seq.empty
@@ -103,7 +113,12 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(rewriter.assertSeq ==
       Seq(
-          tla.eql(endCell.toBuilder, tla.or(xCell.toBuilder, yCell.toBuilder)).build
+          tla
+            .eql(
+                endCell.toBuilder,
+                tla.or(xCell.toBuilder, yCell.toBuilder),
+            )
+            .build
       ))
 
     rewriter.assertSeq = Seq.empty
@@ -114,7 +129,12 @@ class BoolRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
 
     assert(rewriter.assertSeq ==
       Seq(
-          tla.eql(endCell2.toBuilder, tla.or(xCell.toBuilder, yCell.toBuilder)).build
+          tla
+            .eql(
+                endCell2.toBuilder,
+                tla.or(xCell.toBuilder, yCell.toBuilder),
+            )
+            .build
       ))
 
     rewriter.assertSeq = Seq.empty

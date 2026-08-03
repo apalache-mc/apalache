@@ -1,22 +1,32 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.io.config.Constants.{MAX_ERROR, MAX_RUN, SIMULATE}
+import at.forsyte.apalache.io.config.{ApalacheConfig, CheckerPatch, ConfigParseResult}
+import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import org.backuity.clist.opt
 
-class SimulateCmd extends CheckCmd(name = "simulate", "Symbolically simulate a TLA+ specification") {
-  var maxRun: Int =
-    opt[Int](name = "max-run",
-        description =
-          "do not stop after a first simulation run, but produce up to a given number of runs (unless reached --max-error), default: 100",
-        default = 100)
+class SimulateCmd extends CheckCmd(name = SIMULATE, "Symbolically simulate a TLA+ specification") {
+  var maxRun: Option[Int] =
+    opt[Option[Int]](name = MAX_RUN,
+        description = descriptionWithDefault(
+            s"do not stop after a first simulation run, but produce up to a given number of runs " +
+              s"(unless reached --$MAX_ERROR)",
+            ModelCheckerParams.defaultSimulationRuns,
+        ), default = None)
 
-  override def toConfig() = {
-    val newTuningOptions = Map(
-        "search.simulation" -> "true",
-        "search.simulation.maxRun" -> maxRun.toString,
+  override def toConfig: ConfigParseResult[ApalacheConfig] = {
+    val tuning = maxRun match {
+      case Some(value) =>
+        Map(
+            "search.simulation" -> "true",
+            "search.simulation.maxRun" -> value.toString,
+        )
+      case None =>
+        Map("search.simulation" -> "true")
+    }
+    mergeConfig(
+        super.toConfig,
+        ApalacheConfig(checker = CheckerPatch(tuning = Some(tuning))),
     )
-    for {
-      cfg <- super.toConfig()
-      tuning = cfg.checker.tuning.map(m => m ++ newTuningOptions)
-    } yield cfg.copy(checker = cfg.checker.copy(tuning = tuning))
   }
 }
