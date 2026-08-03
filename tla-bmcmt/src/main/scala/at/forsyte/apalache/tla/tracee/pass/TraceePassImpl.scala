@@ -9,8 +9,8 @@ import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.assignments.{AssignmentOperatorIntroduction, ModuleAdapter}
-import at.forsyte.apalache.tla.imp.findBodyOf
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.findBodyOf
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.{ModuleProperty, NullEx, TlaModule, TlaVarDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames

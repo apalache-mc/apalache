@@ -3,7 +3,6 @@ package at.forsyte.apalache.io.annotations
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout, TlaDeclAnnotator, TlaWriter}
-import at.forsyte.apalache.tla.imp.AnnotationExtractor
 import at.forsyte.apalache.tla.lir._
 
 import java.io.PrintWriter
@@ -34,7 +33,7 @@ class PrettyWriterWithAnnotations(
 
         case Some(annotations) =>
           val annotationsAsStr = annotations.map {
-            case Annotation(AnnotationExtractor.FREE_TEXT, AnnotationStr(contents)) =>
+            case Annotation(StandardAnnotations.FREE_TEXT, AnnotationStr(contents)) =>
               // print the free text as is
               contents
 

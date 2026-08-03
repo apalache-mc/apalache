@@ -5,7 +5,7 @@ import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.io.json.ujsonimpl.{TlaToUJson, UJsonToTla}
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.imp.SanyImporter
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
 import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}

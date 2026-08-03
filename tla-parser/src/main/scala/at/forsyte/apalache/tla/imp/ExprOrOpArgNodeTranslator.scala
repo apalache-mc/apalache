@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.tla.imp.src.{SourceLocation, SourceStore}
+import at.forsyte.apalache.tla.imp.src.SourceLocation
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{FixedArity, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.{TlaDecimal, TlaInt, TlaStr}

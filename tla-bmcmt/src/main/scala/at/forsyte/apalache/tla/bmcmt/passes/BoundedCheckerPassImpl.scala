@@ -13,7 +13,7 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterC
 import at.forsyte.apalache.tla.bmcmt.search._
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig, SolverContext, SolverContextFactory}
 import at.forsyte.apalache.tla.bmcmt.trex._
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.LanguageWatchdog
 import at.forsyte.apalache.tla.lir.transformations.standard.{

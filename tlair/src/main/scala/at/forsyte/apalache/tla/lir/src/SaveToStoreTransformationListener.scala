@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.imp.src
+package at.forsyte.apalache.tla.lir.src
 
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx}
 import at.forsyte.apalache.tla.lir.transformations.TransformationListener

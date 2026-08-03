@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaAssumeDecl, Untyped}
 import tla2sany.semantic.AssumeNode
 
