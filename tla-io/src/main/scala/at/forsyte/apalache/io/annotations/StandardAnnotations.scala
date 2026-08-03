@@ -6,11 +6,6 @@ package at.forsyte.apalache.io.annotations
 object StandardAnnotations {
 
   /**
-   * The name of the meta annotation that contains the text of the comments free of annotations.
-   */
-  val FREE_TEXT: String = "#freeText"
-
-  /**
    * Type annotation. It should have a single string argument.
    */
   val TYPE: String = "type"

@@ -1,9 +1,8 @@
 package at.forsyte.apalache.tla.imp
 
-import at.forsyte.apalache.io.annotations.{Annotation, AnnotationParser, AnnotationStr}
+import at.forsyte.apalache.io.annotations.AnnotationParser
 import at.forsyte.apalache.io.annotations.parser.CommentPreprocessor
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.io.annotations.StandardAnnotations.FREE_TEXT
 import at.forsyte.apalache.tla.lir.UID
 import com.typesafe.scalalogging.LazyLogging
 import tla2sany.semantic.{OpDefNode, OpDefOrDeclNode}
@@ -22,7 +21,7 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
       // and removing blank lines in comment scannot break the annotation parsing semantics,
       // and makes them more regular anyhow.
       .replace("\n\n", "\n")
-    val (freeText, annotationsAsText) = CommentPreprocessor()(commentText)
+    val (_, annotationsAsText) = CommentPreprocessor()(commentText)
     val annotations = annotationsAsText.map(AnnotationParser.parse).flatMap {
       case Right(parsed) =>
         Some(parsed)
@@ -45,13 +44,7 @@ class AnnotationExtractor(annotationStore: AnnotationStore) extends LazyLogging 
         None
     }
 
-    val freeTextTrimmed = freeText.trim()
-    if (freeTextTrimmed.nonEmpty) {
-      val annotationsAndText = Annotation(FREE_TEXT, AnnotationStr(freeTextTrimmed)) :: annotations
-      annotationStore += uid -> annotationsAndText
-    } else {
-      annotationStore += uid -> annotations
-    }
+    annotationStore += uid -> annotations
   }
 
   private def locateComments: OpDefOrDeclNode => String = {
