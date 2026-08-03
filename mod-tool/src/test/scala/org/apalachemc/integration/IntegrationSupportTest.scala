@@ -37,7 +37,7 @@ class IntegrationSupportTest extends AnyFunSuite {
     try {
       assert(workspace.read(workspace.home.resolve(".tlaplus").resolve("esc.txt")) == "NO_STATISTICS\n")
       assert(workspace.outDir.startsWith(workspace.root))
-      assert(workspace.fixture("Empty.tla").getFileName.toString == "Empty.tla")
+      assert(workspace.path("Empty.tla").getFileName.toString == "Empty.tla")
     } finally {
       workspace.close()
     }
@@ -52,14 +52,14 @@ class IntegrationSupportTest extends AnyFunSuite {
     }
   }
 
-  test("workspace finds repository fixtures when the root property is absent") {
+  test("workspace finds repository input files when the root property is absent") {
     val property = "apalache.cli.test.repo-root"
     val previousRoot = Option(System.getProperty(property))
     try {
       System.clearProperty(property)
       val workspace = TestWorkspace.create()
       try {
-        assert(workspace.fixture("factorization.tla").getFileName.toString == "factorization.tla")
+        assert(workspace.path("factorization.tla").getFileName.toString == "factorization.tla")
       } finally {
         workspace.close()
       }

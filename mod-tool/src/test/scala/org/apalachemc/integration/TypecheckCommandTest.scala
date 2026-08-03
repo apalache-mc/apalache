@@ -11,7 +11,7 @@ class TypecheckCommandTest extends IntegrationTestBase {
 
     typecheck(
         s"--output=$output",
-        workspace.fixture("Annotations.tla").toString,
+        workspace.filename("Annotations.tla"),
     ).expectSuccess()
 
     val json = ujson.read(workspace.read(output))
@@ -27,7 +27,7 @@ class TypecheckCommandTest extends IntegrationTestBase {
   }
 
   test("typecheck Bug914 fails") {
-    typecheck(workspace.fixture("Bug914.tla").toString)
+    typecheck(workspace.filename("Bug914.tla"))
       .expectExit(120)
       .expectOutput("""
           |...

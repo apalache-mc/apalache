@@ -24,7 +24,7 @@ class ParseCommandTest extends IntegrationTestBase {
 
     parse(
         s"--output=$output",
-        workspace.fixture("Annotations.tla").toString,
+        workspace.filename("Annotations.tla"),
     ).expectSuccess()
       .expectOutput("""
           |...

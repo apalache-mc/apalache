@@ -21,7 +21,7 @@ class ParseCommandTest extends IntegrationTestBase {
 }
 ```
 
-Use `workspace.write` for test-local input and `workspace.fixture("Spec.tla")` for files under
+Use `workspace.write` for test-local input and `workspace.filename("Spec.tla")` for files under
 `test/tla`. Tool output goes below `workspace.outDir`; the workspace is deleted after each test.
 
 `CommandResult` provides `expectSuccess`, `expectExit`, `expectContains`, `expectNotContains`, and

@@ -15,11 +15,14 @@ final class TestWorkspace private (val root: Path, val repoRoot: Path) extends A
   private val statisticsDirectory = Files.createDirectories(home.resolve(".tlaplus"))
   Files.writeString(statisticsDirectory.resolve("esc.txt"), "NO_STATISTICS\n", StandardCharsets.UTF_8)
 
-  /** Resolves a named fixture from the repository's shared TLA fixture directory. */
-  def fixture(name: String): Path = {
-    val path = repoRoot.resolve("test").resolve("tla").resolve(name).normalize()
-    require(Files.isRegularFile(path), s"CLI integration fixture does not exist: $path")
-    path
+  /** Returns a named repository input as a command-line argument. */
+  def filename(name: String): String = path(name).toString
+
+  /** Resolves a named repository input as a path. */
+  def path(name: String): Path = {
+    val resolvedPath = repoRoot.resolve("test").resolve("tla").resolve(name).normalize()
+    require(Files.isRegularFile(resolvedPath), s"CLI integration input file does not exist: $resolvedPath")
+    resolvedPath
   }
 
   /** Writes UTF-8 content to a path relative to this workspace. */
@@ -77,11 +80,11 @@ final class TestWorkspace private (val root: Path, val repoRoot: Path) extends A
   }
 }
 
-/** Creates isolated workspaces with optional access to repository fixtures. */
+/** Creates isolated workspaces with optional access to repository input files. */
 object TestWorkspace {
   private val RepoRootProperty = "apalache.cli.test.repo-root"
 
-  /** Creates a temporary workspace and locates the repository fixtures when available. */
+  /** Creates a temporary workspace and locates the repository input files when available. */
   def create(): TestWorkspace = {
     val repoRoot = Option(System.getProperty(RepoRootProperty))
       .map(Paths.get(_))
@@ -96,7 +99,7 @@ object TestWorkspace {
     new TestWorkspace(root, repoRoot)
   }
 
-  /** Finds the nearest ancestor containing this repository's fixture directory. */
+  /** Finds the nearest ancestor containing this repository's input directory. */
   private[integration] def findRepoRoot(start: Path): Option[Path] = {
     @tailrec
     def search(candidate: Path): Option[Path] = {

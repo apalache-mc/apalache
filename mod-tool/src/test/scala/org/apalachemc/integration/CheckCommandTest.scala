@@ -16,7 +16,7 @@ class CheckCommandTest extends IntegrationTestBase {
   private def check(arguments: String*) = runWithOutDir("check", arguments: _*)
 
   test("check command emits no Java 25 compatibility warnings", Forked) {
-    val result = check("--length=1", workspace.fixture("NoVars.tla").toString)
+    val result = check("--length=1", workspace.filename("NoVars.tla"))
       .expectSuccess()
 
     Seq(result.stdout, result.stderr).foreach { output =>
@@ -27,7 +27,7 @@ class CheckCommandTest extends IntegrationTestBase {
   }
 
   test("Prints default computation length of 10 (regression #2087)") {
-    check(workspace.fixture("y2k_instance.tla").toString)
+    check(workspace.filename("y2k_instance.tla"))
       .expectSuccess()
       .expectOutput("""
           |...
@@ -43,7 +43,7 @@ class CheckCommandTest extends IntegrationTestBase {
         "--tuning-options=cvc5.smt.logic=QF_UFNIA",
         "--length=2",
         "--inv=Inv",
-        workspace.fixture("factorization.tla").toString,
+        workspace.filename("factorization.tla"),
     ).expectExit(12)
       .expectOutput("""
           |...
@@ -55,7 +55,7 @@ class CheckCommandTest extends IntegrationTestBase {
   }
 
   test("check Fix531.tla reports no error: regression for issue 531", ArrayEncoding) {
-    check("--length=1", workspace.fixture("Fix531.tla").toString)
+    check("--length=1", workspace.filename("Fix531.tla"))
       .expectSuccess()
       .expectOutput("""
           |...
@@ -69,7 +69,7 @@ class CheckCommandTest extends IntegrationTestBase {
     check(
         "--cinit=ConstInit",
         "--length=1",
-        workspace.fixture("UnchangedExpr471.tla").toString,
+        workspace.filename("UnchangedExpr471.tla"),
     ).expectSuccess()
       .expectOutput("""
           |...
@@ -80,7 +80,7 @@ class CheckCommandTest extends IntegrationTestBase {
   }
 
   test("check Bug593 fails correctly: regression for issue 593", ArrayEncoding) {
-    check(workspace.fixture("Bug593.tla").toString)
+    check(workspace.filename("Bug593.tla"))
       .expectExit(255)
       .expectOutput("""
           |...
@@ -93,7 +93,7 @@ class CheckCommandTest extends IntegrationTestBase {
         "--init=IndInv1",
         "--next=Next",
         "--inv=IndInv1",
-        workspace.fixture("Bug3400.tla").toString,
+        workspace.filename("Bug3400.tla"),
     ).expectExit(255)
 
     result
@@ -108,7 +108,7 @@ class CheckCommandTest extends IntegrationTestBase {
     check(
         "--length=5",
         "--inv=Inv",
-        workspace.fixture("HandshakeWithTypes.tla").toString,
+        workspace.filename("HandshakeWithTypes.tla"),
     ).expectExit(12)
       .expectOutput("""
           |...
@@ -123,7 +123,7 @@ class CheckCommandTest extends IntegrationTestBase {
         "--length=5",
         "--no-deadlock=1",
         "--inv=Inv",
-        workspace.fixture("HandshakeWithTypes.tla").toString,
+        workspace.filename("HandshakeWithTypes.tla"),
     ).expectSuccess()
       .expectOutput("""
           |...
@@ -137,7 +137,7 @@ class CheckCommandTest extends IntegrationTestBase {
     check(
         "--length=5",
         "--inv=Inv",
-        workspace.fixture("Rec1.tla").toString,
+        workspace.filename("Rec1.tla"),
     ).expectExit(255)
       .expectOutput("""
           |...
@@ -148,7 +148,7 @@ class CheckCommandTest extends IntegrationTestBase {
   test("check FalseLiveness fails", Temporal) {
     check(
         "--temporal=FalseLiveness",
-        workspace.fixture("LongPrefix.tla").toString,
+        workspace.filename("LongPrefix.tla"),
     ).expectExit(12)
       .expectOutput("""
           |...
@@ -161,7 +161,7 @@ class CheckCommandTest extends IntegrationTestBase {
         "--smt-solver=cvc5",
         "--length=0",
         "--inv=SquareNonNegative",
-        workspace.fixture("NonLinearArithmetic.tla").toString,
+        workspace.filename("NonLinearArithmetic.tla"),
     ).expectExit(255)
       .expectContains(
           "cvc5 is using SMT logic QF_UFLIA, which only permits linear integer arithmetic, but the solver saw a nonlinear arithmetic term")
@@ -171,10 +171,10 @@ class CheckCommandTest extends IntegrationTestBase {
 
   test("configure via TLC config and override it via CLI") {
     check(
-        s"--config=${workspace.fixture("Config1.cfg")}",
+        s"--config=${workspace.filename("Config1.cfg")}",
         "--init=Init2",
         "--next=Next2",
-        workspace.fixture("Config.tla").toString,
+        workspace.filename("Config.tla"),
     ).expectExit(12)
       .expectOutput("""
           |...
@@ -197,7 +197,7 @@ class CheckCommandTest extends IntegrationTestBase {
     check(
         "--write-intermediate=true",
         "--length=0",
-        workspace.fixture("Counter.tla").toString,
+        workspace.filename("Counter.tla"),
     ).expectSuccess()
 
     val passNames = Vector(
@@ -230,7 +230,7 @@ class CheckCommandTest extends IntegrationTestBase {
         "--init=init",
         "--next=step",
         "--inv=inv",
-        workspace.fixture("bigint.qnt.json").toString,
+        workspace.filename("bigint.qnt.json"),
     ).expectExit(12)
       .expectOutput("""
           |...
