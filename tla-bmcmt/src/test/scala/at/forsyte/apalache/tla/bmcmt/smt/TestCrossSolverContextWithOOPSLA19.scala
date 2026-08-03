@@ -4,7 +4,8 @@ import at.forsyte.apalache.io.config.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, InvalidTlaExException}
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, SetT1, TlaEx, TlaType1}
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import org.scalacheck.Gen
 import org.scalacheck.Prop.forAll
 import org.scalatest.funsuite.AnyFunSuite

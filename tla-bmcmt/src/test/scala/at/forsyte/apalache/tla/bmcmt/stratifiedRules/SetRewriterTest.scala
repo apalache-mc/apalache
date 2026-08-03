@@ -4,8 +4,8 @@ import at.forsyte.apalache.tla.bmcmt.stratifiedRules.set.SetFilterStratifiedRule
 import at.forsyte.apalache.tla.bmcmt.types.CellT
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{tlaU => tla}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
@@ -94,9 +94,13 @@ class SetRewriterTest extends AnyFunSuite with BeforeAndAfterEach {
       arena2.appendHas(lSetCell, lElems.map(FixedElemPtr): _*).appendHas(rSetCell, rElems.map(FixedElemPtr): _*)
 
     val exSetOfSets =
-      tla.enumSet(lSetCell.toBuilder, rSetCell.toBuilder, emptySetCell.toBuilder)
+      tla.enumSet(
+          lSetCell.toBuilder,
+          rSetCell.toBuilder,
+          emptySetCell.toBuilder,
+      )
 
-    // We don't have the rewriting of cell.toBuilder ~~> cell implemented
+    // We don't have the rewriting of arena-cell names to their corresponding cells implemented
     val extendedBinding = Binding(
         binding.toMap ++ Map(
             lSetCell.toString -> lSetCell,

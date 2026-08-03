@@ -2,7 +2,8 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{tlaU => tla}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.tla
 
 trait TestSymbStateRewriterRepeat extends RewriterBase {
   test("""Repeat(LET Op(a,i) == a + 1 IN Op, 5, 0) = 5""") { rewriterType: SMTEncoding =>

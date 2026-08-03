@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.bmcmt.rules.aux
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 /**
  * Auxiliary methods for handling rewriting rules.
@@ -46,7 +47,7 @@ object AuxOps {
         val relationElems = nextState.arena.getHas(relation)
 
         def eqAndInDomain(domainElem: ArenaCell, checkedElem: ArenaCell): BuilderT = {
-          val eq = tla.unchecked(rewriter.lazyEq.safeEq(domainElem, checkedElem))
+          val eq = rewriter.lazyEq.safeEq(domainElem, checkedElem)
           val selectInSet = tla.selectInSet(domainElem.toBuilder, domain.toBuilder)
           tla.and(eq, selectInSet)
         }
