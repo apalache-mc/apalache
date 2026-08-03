@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.CherryPick
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.TlaControlOper
 import at.forsyte.apalache.tla.lir.{BoolT1, ConstT1, IntT1, OperEx}
-import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * Rewriting rule for IF A THEN B ELSE C.

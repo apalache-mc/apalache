@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.{ProtoSeqOps, RecordAndVarian
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{BuilderT, tla}
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import scalaz.unused
 
 import scala.collection.immutable.SortedMap

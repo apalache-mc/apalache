@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.tla.bmcmt.SymbState
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
-import at.forsyte.apalache.tla.types.{BuilderT, tla}
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 /**
  * An abstract version of an oracle that is used e.g. in CherryPick.

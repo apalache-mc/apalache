@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.{ProtoSeqOps, RecordAndVarian
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaFunOper
 import at.forsyte.apalache.tla.lir.values.{TlaInt, TlaStr}
-import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import scalaz.unused
 
 /**

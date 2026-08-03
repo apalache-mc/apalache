@@ -4,7 +4,7 @@ import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{BuilderT, tla}
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 /**
  * Auxiliary methods for handling rewriting rules.

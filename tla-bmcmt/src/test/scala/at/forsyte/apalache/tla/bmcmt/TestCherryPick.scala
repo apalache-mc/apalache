@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.{CherryPick, Oracle, OracleFa
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.parser.DefaultType1Parser
-import at.forsyte.apalache.tla.types.{BuilderT, tla}
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 
 trait TestCherryPick extends RewriterBase {
   private val parser = DefaultType1Parser
