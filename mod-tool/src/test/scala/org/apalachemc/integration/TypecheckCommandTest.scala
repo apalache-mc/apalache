@@ -4,12 +4,12 @@ import org.apalachemc.integration.framework.IntegrationTestBase
 
 /** Exercises representative CLI typecheck scenarios. */
 class TypecheckCommandTest extends IntegrationTestBase {
+  private def typecheck(arguments: String*) = runWithOutDir("typecheck", arguments: _*)
+
   test("typecheck can consume own --output") {
     val output = workspace.root.resolve("output.json")
 
-    run(
-        "typecheck",
-        outDirArgument,
+    typecheck(
         s"--output=$output",
         workspace.fixture("Annotations.tla").toString,
     ).expectSuccess()
@@ -18,7 +18,7 @@ class TypecheckCommandTest extends IntegrationTestBase {
     assert(json("name").str == "ApalacheIR")
     assert(json("modules").arr.nonEmpty)
 
-    run("typecheck", outDirArgument, output.toString)
+    typecheck(output.toString)
       .expectSuccess()
       .expectOutput("""
           |...
@@ -27,7 +27,7 @@ class TypecheckCommandTest extends IntegrationTestBase {
   }
 
   test("typecheck Bug914 fails") {
-    run("typecheck", outDirArgument, workspace.fixture("Bug914.tla").toString)
+    typecheck(workspace.fixture("Bug914.tla").toString)
       .expectExit(120)
       .expectOutput("""
           |...

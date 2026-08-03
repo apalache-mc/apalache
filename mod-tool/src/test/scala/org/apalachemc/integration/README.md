@@ -9,10 +9,12 @@ package org.apalachemc.integration
 import org.apalachemc.integration.framework.IntegrationTestBase
 
 class ParseCommandTest extends IntegrationTestBase {
+  private def parse(arguments: String*) = runWithOutDir("parse", arguments: _*)
+
   test("parse an empty module") {
     val input = workspace.write("Empty.tla", "---- MODULE Empty ----\n====\n")
 
-    run("parse", outDirArgument, input.toString)
+    parse(input.toString)
       .expectSuccess()
       .expectContains("EXITCODE: OK")
   }

@@ -11,13 +11,13 @@ abstract class IntegrationTestBase extends AnyFunSuite with BeforeAndAfterEach {
   private var currentWorkspace: TestWorkspace = _
 
   /** Returns the isolated workspace belonging to the current test. */
-  protected final def workspace: TestWorkspace = {
+  final protected def workspace: TestWorkspace = {
     require(currentWorkspace != null, "The test workspace is only available while a test is running")
     currentWorkspace
   }
 
   /** Runs Tool with the current test's execution mode and workspace. */
-  protected final def run(arguments: String*): CommandResult = {
+  final protected def run(arguments: String*): CommandResult = {
     require(currentRunner != null, "The Tool runner is only available while a test is running")
     val result = currentRunner.run(workspace, arguments)
     if (reportTimings) {
@@ -26,8 +26,9 @@ abstract class IntegrationTestBase extends AnyFunSuite with BeforeAndAfterEach {
     result
   }
 
-  /** Returns the CLI argument that directs output into the current workspace. */
-  protected final def outDirArgument: String = s"--out-dir=${workspace.outDir}"
+  /** Runs a command with its output directory set to the current workspace. */
+  final protected def runWithOutDir(command: String, arguments: String*): CommandResult =
+    run((Seq(command, s"--out-dir=${workspace.outDir}") ++ arguments): _*)
 
   /** Selects the runner indicated by the current test's tags. */
   override protected def withFixture(test: NoArgTest): Outcome = {

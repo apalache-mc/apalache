@@ -4,10 +4,12 @@ import org.apalachemc.integration.framework.IntegrationTestBase
 
 /** Exercises representative CLI parse scenarios. */
 class ParseCommandTest extends IntegrationTestBase {
+  private def parse(arguments: String*) = runWithOutDir("parse", arguments: _*)
+
   test("parse blank file fails nicely") {
     val blank = workspace.write("blank.tla", "")
 
-    run("parse", outDirArgument, blank.toString)
+    parse(blank.toString)
       .expectExit(255)
       .expectOutput("""
           |...
@@ -20,9 +22,7 @@ class ParseCommandTest extends IntegrationTestBase {
   test("parse --output=annotations.json Annotations succeeds") {
     val output = workspace.root.resolve("output.json")
 
-    run(
-        "parse",
-        outDirArgument,
+    parse(
         s"--output=$output",
         workspace.fixture("Annotations.tla").toString,
     ).expectSuccess()
