@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.config.SMTEncoding
-import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
+import at.forsyte.apalache.tla.bmcmt.rules.support.PowSetCtor
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, PowSetT}
 import at.forsyte.apalache.tla.lir.{IntT1, NameEx, SetT1}
 import at.forsyte.apalache.tla.typecomp._

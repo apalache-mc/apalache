@@ -1,11 +1,11 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt.InvariantKind
-import at.forsyte.apalache.tla.bmcmt.rules.aux.Oracle
+import at.forsyte.apalache.tla.bmcmt.rules.support.Oracle
 import at.forsyte.apalache.tla.lir.oper.TlaBoolOper
-import at.forsyte.apalache.tla.lir.{BoolT1, NameEx, OperEx, TlaEx, Typed}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
+import at.forsyte.apalache.tla.lir._
 
 /**
  * ConstrainedTransitionExecutor allows us to add path constraints at certain depths.

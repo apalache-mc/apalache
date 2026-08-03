@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules.aux
+package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, UnknownT}

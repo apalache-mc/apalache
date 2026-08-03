@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules.aux
+package at.forsyte.apalache.tla.bmcmt.rules.support
 import at.forsyte.apalache.tla.bmcmt.{SymbState, SymbStateRewriter}
 
 class OracleFactory(rewriter: SymbStateRewriter) {

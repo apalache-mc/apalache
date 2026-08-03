@@ -1,4 +1,4 @@
-package at.forsyte.apalache.tla.bmcmt.rules.aux
+package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.{Binding, RewriterBase, SymbState}

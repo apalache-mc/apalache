@@ -1,11 +1,11 @@
-package at.forsyte.apalache.tla.bmcmt.rules.aux
+package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types.CellTFrom
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.BoolT1
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tla, BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderT, tla}
 
 class PropositionalOracle(bitCells: Seq[ArenaCell], nvalues: Int) extends Oracle {
 

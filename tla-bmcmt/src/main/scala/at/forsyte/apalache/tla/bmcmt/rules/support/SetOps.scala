@@ -1,8 +1,8 @@
-package at.forsyte.apalache.tla.bmcmt.rules.aux
+package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbState, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.BoolT1
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 
 /**
  * <p>A small collection of operations on sets that can be reused by rewriting rules.</p>

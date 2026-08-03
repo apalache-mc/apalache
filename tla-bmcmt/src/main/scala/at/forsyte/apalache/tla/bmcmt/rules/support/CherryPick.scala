@@ -1,13 +1,13 @@
-package at.forsyte.apalache.tla.bmcmt.rules.aux
+package at.forsyte.apalache.tla.bmcmt.rules.support
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
-import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
+import at.forsyte.apalache.tla.bmcmt.rules.support.AuxOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tla, BuilderT, _}
+import at.forsyte.apalache.tla.types._
 
 import scala.collection.immutable.SortedMap
 

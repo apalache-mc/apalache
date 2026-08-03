@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
-import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps.constrainRelationArgs
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
+import at.forsyte.apalache.tla.bmcmt.rules.support.AuxOps.constrainRelationArgs
+import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
 
 /**
  * Rewriting EXCEPT for functions, tuples, and records.
