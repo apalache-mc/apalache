@@ -121,7 +121,7 @@ jobs:
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
-  windows-package:
+  universal-package:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -134,36 +134,28 @@ jobs:
       - uses: sbt/setup-sbt@v1
       - name: Build universal package
         run: sbt "Universal/packageBin"
-      - name: Set up JDK 17 for artifact compatibility smoke test
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-      - name: Run packaged Unix launcher on Java 17
-        shell: bash
-        run: |
-          unzip target/universal/apalache-*.zip -d target/java17-smoke
-          package_dir=$(find target/java17-smoke -mindepth 1 -maxdepth 1 -type d -name 'apalache-*' -print -quit)
-          APALACHE_HOME="$package_dir" "$package_dir/bin/apalache-mc" check --smt-solver=z3 --length=1 test/tla/NoVars.tla
-          APALACHE_HOME="$package_dir" "$package_dir/bin/apalache-mc" check --smt-solver=cvc5 --length=1 test/tla/NoVars.tla
       - name: Upload universal package
         uses: actions/upload-artifact@v7
         with:
-          name: windows-package
+          name: universal-package
           path: target/universal/apalache-*.zip
           if-no-files-found: error
+      - name: Upload package smoke-test specification
+        uses: actions/upload-artifact@v7
+        with:
+          name: universal-package-smoke-spec
+          path: test/tla/Counter.tla
+          if-no-files-found: error
 
-  windows-package-smoke:
-    needs: windows-package
-    runs-on: windows-latest
+  universal-package-smoke:
+    needs: universal-package
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         java-version: [17, 25]
     steps:
-      # The repository contains a directory named `aux`, which Windows cannot
-      # check out because AUX is a reserved device name. Build on Linux and
-      # exercise the platform-independent package on Windows instead.
+      - uses: actions/checkout@v6
       - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v5
         with:
@@ -172,17 +164,55 @@ jobs:
       - name: Download universal package
         uses: actions/download-artifact@v8
         with:
-          name: windows-package
+          name: universal-package
           path: package
+      - name: Run packaged launcher on Java ${{ matrix.java-version }}
+        shell: bash
+        run: |
+          unzip package/apalache-*.zip -d package-smoke
+          package_dir=$(find package-smoke -mindepth 1 -maxdepth 1 -type d -name 'apalache-*' -print -quit)
+          APALACHE_HOME="$package_dir" "$package_dir/bin/apalache-mc" check --smt-solver=z3 --length=2 --inv=Inv test/tla/Counter.tla
+          APALACHE_HOME="$package_dir" "$package_dir/bin/apalache-mc" check --smt-solver=cvc5 --length=2 --inv=Inv test/tla/Counter.tla
+
+  universal-package-windows-smoke:
+    needs: universal-package
+    runs-on: windows-latest
+    steps:
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Download universal package
+        uses: actions/download-artifact@v8
+        with:
+          name: universal-package
+          path: package
+      - name: Download package smoke-test specification
+        uses: actions/download-artifact@v8
+        with:
+          name: universal-package-smoke-spec
+          path: smoke-spec
       - name: Run packaged Windows launcher
         shell: pwsh
         run: |
           $archive = Get-ChildItem package/apalache-*.zip | Select-Object -First 1
-          Expand-Archive -LiteralPath $archive.FullName -DestinationPath windows-smoke
-          $launcher = Get-ChildItem windows-smoke -Recurse -Filter apalache-mc.bat | Select-Object -First 1
+          Expand-Archive -LiteralPath $archive.FullName -DestinationPath package-smoke
+          $launcher = Get-ChildItem package-smoke -Recurse -Filter apalache-mc.bat | Select-Object -First 1
+          $env:APALACHE_HOME = $launcher.Directory.Parent.FullName
+          $spec = (Resolve-Path smoke-spec/Counter.tla).Path
+
           $output = & $launcher.FullName version --debug 2>&1
+          $exitCode = $LASTEXITCODE
           $output | Write-Output
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($exitCode -ne 0) { exit $exitCode }
+
+          foreach ($solver in @("z3", "cvc5")) {
+            $output = & $launcher.FullName check "--smt-solver=$solver" --length=2 --inv=Inv $spec 2>&1
+            $exitCode = $LASTEXITCODE
+            $output | Write-Output
+            if ($exitCode -ne 0) { exit $exitCode }
+          }
 
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
