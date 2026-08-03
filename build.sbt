@@ -126,6 +126,31 @@ lazy val testSettings = Seq(
 lazy val CliIntegration = config("cliIntegration").extend(Test)
 lazy val cliIntegrationTest = taskKey[Unit]("Run the ScalaTest CLI integration suite")
 
+val cliIntegrationWorkers = Vector(
+    "general" -> Map.empty[String, String],
+    "oopsla19-z3" -> Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "oopsla19"),
+    "oopsla19-cvc5" -> Map("SMT_SOLVER" -> "cvc5", "SMT_ENCODING" -> "oopsla19"),
+    "arrays-z3" -> Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "arrays"),
+)
+
+def selectedCliIntegrationWorkers(): Vector[(String, Map[String, String])] =
+  sys.env.get("APALACHE_CLI_TEST_CONFIGS") match {
+    case None | Some("") => cliIntegrationWorkers
+    case Some(value)     =>
+      val selectedIds = value.split(',').iterator.map(_.trim).filter(_.nonEmpty).toSet
+      if (selectedIds.isEmpty) {
+        throw new MessageOnlyException("APALACHE_CLI_TEST_CONFIGS must name at least one configuration")
+      }
+      val knownIds = cliIntegrationWorkers.map(_._1).toSet
+      val unknownIds = selectedIds -- knownIds
+      if (unknownIds.nonEmpty) {
+        throw new MessageOnlyException(
+            s"Unknown APALACHE_CLI_TEST_CONFIGS value(s): ${unknownIds.toVector.sorted.mkString(", ")}; " +
+              s"expected ${cliIntegrationWorkers.map(_._1).mkString(", ")}")
+      }
+      cliIntegrationWorkers.filter(worker => selectedIds.contains(worker._1))
+  }
+
 ThisBuild / assembly / assemblyMergeStrategy := {
   // Workaround for conflict with grpc-netty manifest files
   // See https://github.com/sbt/sbt-assembly/issues/362
@@ -379,7 +404,7 @@ lazy val tool = (project in file("mod-tool"))
       },
       CliIntegration / resourceDirectory := (Test / resourceDirectory).value,
       CliIntegration / fork := true,
-      CliIntegration / parallelExecution := false,
+      CliIntegration / parallelExecution := true,
       CliIntegration / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
       CliIntegration / javaOptions ++= {
         val javaFeature = java.lang.Runtime.version().feature()
@@ -390,6 +415,22 @@ lazy val tool = (project in file("mod-tool"))
             s"-Dapalache.cli.test.repo-root=${(ThisBuild / baseDirectory).value.getAbsolutePath}",
             s"-Dapalache.cli.test.classpath=${(CliIntegration / fullClasspath).value.files.mkString(java.io.File.pathSeparator)}",
         )
+      },
+      CliIntegration / testGrouping := {
+        val tests = (CliIntegration / definedTests).value
+        val commonJavaOptions = (CliIntegration / javaOptions).value.toVector
+        val workingDirectory = (ThisBuild / baseDirectory).value
+        selectedCliIntegrationWorkers().map { case (workerId, workerEnvironment) =>
+          val forkOptions = ForkOptions()
+            .withWorkingDirectory(workingDirectory)
+            .withRunJVMOptions(commonJavaOptions :+ s"-Dapalache.cli.test.configuration=$workerId")
+            .withEnvVars(workerEnvironment)
+          Tests.Group(
+              s"cli-integration-$workerId",
+              tests,
+              Tests.SubProcess(forkOptions),
+          )
+        }
       },
       Test / unmanagedSources / excludeFilter := {
         val integrationDir = (Test / scalaSource).value / "org" / "apalachemc" / "integration"

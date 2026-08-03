@@ -1,12 +1,48 @@
 package org.apalachemc.integration
 
-import org.apalachemc.integration.framework.{CommandResult, Forked, OutputMatcher, TestWorkspace, ToolMode, ToolRunner}
-import org.scalatest.funsuite.AnyFunSuite
+import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
+import org.apalachemc.integration.framework.IntegrationTestConfiguration.{ARRAYS_Z3, GENERAL, OOPSLA19_CVC5, OOPSLA19_Z3}
+import org.apalachemc.integration.framework.{CommandResult, Forked, IntegrationTestBase, IntegrationTestConfiguration,
+  OutputMatcher, TestWorkspace, ToolMode, ToolRunner}
 
 import scala.concurrent.duration.Duration
 
 /** Verifies the reusable CLI integration-test support. */
-class IntegrationSupportTest extends AnyFunSuite {
+class IntegrationSupportTest extends IntegrationTestBase {
+  test("integration-test configurations have stable IDs and environment mappings") {
+    assert(IntegrationTestConfiguration.parse("general") == GENERAL)
+    assert(IntegrationTestConfiguration.parse("oopsla19-z3") == OOPSLA19_Z3)
+    assert(IntegrationTestConfiguration.parse("oopsla19-cvc5") == OOPSLA19_CVC5)
+    assert(IntegrationTestConfiguration.parse("arrays-z3") == ARRAYS_Z3)
+
+    assert(OOPSLA19_Z3.solver == SMTSolver.Z3)
+    assert(OOPSLA19_Z3.encoding == SMTEncoding.OOPSLA19)
+    assert(OOPSLA19_Z3.environment == Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "oopsla19"))
+    assert(OOPSLA19_CVC5.environment == Map("SMT_SOLVER" -> "cvc5", "SMT_ENCODING" -> "oopsla19"))
+    assert(ARRAYS_Z3.environment == Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "arrays"))
+  }
+
+  test("integration-test configurations reject unknown IDs and empty supported sets") {
+    val unknown = intercept[IllegalArgumentException] {
+      IntegrationTestConfiguration.parse("arrays-cvc5")
+    }
+    assert(unknown.getMessage.contains("Unknown integration-test configuration 'arrays-cvc5'"))
+
+    val empty = intercept[IllegalArgumentException] {
+      IntegrationTestConfiguration.validateSupported(Set.empty)
+    }
+    assert(empty.getMessage.contains("must support at least one configuration"))
+  }
+
+  test("checker configurations validate their worker environment") {
+    OOPSLA19_Z3.validateEnvironment(Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "oopsla19"))
+
+    val mismatch = intercept[IllegalArgumentException] {
+      OOPSLA19_Z3.validateEnvironment(Map("SMT_SOLVER" -> "cvc5", "SMT_ENCODING" -> "oopsla19"))
+    }
+    assert(mismatch.getMessage.contains("expected SMT_SOLVER=z3, but got cvc5"))
+  }
+
   test("output normalization handles line endings and trailing whitespace") {
     val actual = "first line  \r\nsecond line   \r\n"
     assert(OutputMatcher.normalize(actual) == "first line\nsecond line")
