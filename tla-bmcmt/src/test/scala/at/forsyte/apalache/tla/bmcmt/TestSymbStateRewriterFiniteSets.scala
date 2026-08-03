@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.lir.IntT1
 import at.forsyte.apalache.tla.pp.TlaInputError
 import at.forsyte.apalache.tla.typecomp._

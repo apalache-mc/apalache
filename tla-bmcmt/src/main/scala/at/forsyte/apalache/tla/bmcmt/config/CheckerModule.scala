@@ -4,20 +4,17 @@ import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes._
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
-import com.google.inject.TypeLiteral
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.tla.passes.assignments.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
 import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
-import at.forsyte.apalache.tla.passes.pp.{
-  ConfigurationPass, ConfigurationPassImpl, DesugarerPass, DesugarerPassImpl, InlinePass, InlinePassImpl, OptPass,
-  OptPassImpl, PreproPass, PreproPassImpl, TemporalPass, TemporalPassImpl,
-}
+import at.forsyte.apalache.tla.passes.pp._
 import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
+import com.google.inject.TypeLiteral
 
 /**
  * A configuration that binds all the passes from the parser to the checker. If you are not sure how the binding works,
@@ -26,19 +23,14 @@ import at.forsyte.apalache.tla.passes.typecheck.EtcTypeCheckerPassImpl
  * @author
  *   Igor Konnov
  */
-class CheckerModule(options: OptionGroup.HasCheckerPreds) extends ToolModule(options) {
+class CheckerModule(options: ValidatedCheckOptions) extends ToolModule {
 
   override def configure(): Unit = {
-    // Ensure the given `options` will be bound to any OptionGroup interface
-    // See https://stackoverflow.com/questions/31598703/does-guice-binding-bind-subclass-as-well
-    // for why we cannot just specify the upper bound.
-    bind(classOf[OptionGroup.HasCommon]).toInstance(options)
-    bind(classOf[OptionGroup.HasInput]).toInstance(options)
-    bind(classOf[OptionGroup.HasOutput]).toInstance(options)
-    bind(classOf[OptionGroup.HasIO]).toInstance(options)
-    bind(classOf[OptionGroup.HasTypechecker]).toInstance(options)
-    bind(classOf[OptionGroup.HasChecker]).toInstance(options)
-    bind(classOf[OptionGroup.HasCheckerPreds]).toInstance(options)
+    bind(classOf[CommonOptions]).toInstance(options.common)
+    bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
+    bind(classOf[TypecheckerOptions]).toInstance(options.typechecker)
+    bind(classOf[CheckerOptions]).toInstance(options.checker)
+    bind(classOf[SpecificationOptions]).toInstance(options.specification)
 
     // The `DerivedPredicate` instance used to communicate specification predicates between passes
     val derivedPreds = DerivedPredicates.Impl()

@@ -12,22 +12,21 @@ package at.forsyte.apalache.shai.v1
  * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
-import at.forsyte.apalache.shai.v1.transExplorer.{
-  ConnectRequest, Connection, LoadModelRequest, LoadModelResponse, PingRequest, PongResponse, TransExplorerError,
-  TransExplorerErrorType, ZioTransExplorer,
-}
-import at.forsyte.apalache.infra.passes.options.SourceOption
-import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
-import at.forsyte.apalache.tla.lir.TlaModule
-import io.grpc.Status
-
-import java.util.UUID
-import zio.{Ref, ZEnv, ZIO}
-import com.typesafe.scalalogging.Logger
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.Constants.SERVER
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CommonPatch, RunContextPatch}
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
+import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
+import at.forsyte.apalache.shai.v1.transExplorer._
+import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.tla.passes.imp.ParserModule
+import com.typesafe.scalalogging.Logger
+import io.grpc.Status
+import zio.{Ref, ZEnv, ZIO}
+
+import java.nio.file.Path
+import java.util.UUID
 
 // TODO The connection type will become enriched with more structure
 // as we build out the server
@@ -163,23 +162,20 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
     ZIO.effectTotal {
       try {
         // TODO: replace hard-coded options with options derived from CLI params
-        val options = {
-          import OptionGroup._
-          WithIO(
-              common = Common(
-                  command = "server",
-                  outDir = new java.io.File("."),
-                  runDir = None,
-                  debug = true,
-                  smtprof = false,
-                  writeIntermediate = false,
-                  profiling = false,
-                  features = Seq(),
-              ),
-              input = Input(SourceOption.StringSource(spec, aux)),
-              output = Output(Some(new java.io.File("."))),
-          )
+        val config = ApalacheConfig(
+            context = RunContextPatch(command = Some(SERVER)),
+            common = CommonPatch(
+                outDir = Some(Path.of(".")),
+                debug = Some(true),
+            ),
+            source = Some(InputSource.StringSource(spec, aux.toList)),
+            output = Some(Path.of(".")),
+        )
+        val resolved = ApalacheConfigResolver.resolveParse(config)
+        if (!resolved.isSuccess) {
+          throw new IllegalArgumentException(resolved.errors.mkString("; "))
         }
+        val options = resolved.requireValue()
         PassChainExecutor(new ParserModule(options))
           .run()
           .left

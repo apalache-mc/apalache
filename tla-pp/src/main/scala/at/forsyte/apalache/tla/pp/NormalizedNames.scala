@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
+import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaOperDecl}
 
 /**
@@ -23,7 +24,7 @@ object NormalizedNames {
   val VC_VIEW = "VCView$0"
 
   // the names of the options that capture the critical specification pieces
-  val STANDARD_OPTION_NAMES = Seq("init", "cinit", "next", "inv", "temporal")
+  val STANDARD_OPTION_NAMES = Seq(INIT, CINIT, NEXT, INV, TEMPORAL)
 
   /**
    * Has been an operator declaration produced by the VCGenerator

@@ -1,24 +1,22 @@
 package at.forsyte.apalache.shai.v1
 
-import java.io.{PrintWriter, StringWriter}
-import scala.util.Try
-import com.typesafe.scalalogging.Logger
-import io.grpc.Status
-import zio.ZEnv
-import zio.ZIO
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
-import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.shai.v1.cmdExecutor.{
-  Cmd, CmdError, CmdErrorType, CmdRequest, CmdResponse, PingRequest, PongResponse, ZioCmdExecutor,
-}
-import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
-import at.forsyte.apalache.tla.passes.imp.ParserModule
-import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
-import at.forsyte.apalache.tla.lir.TlaModule
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
+import at.forsyte.apalache.io.config.Constants.SERVER
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, ConfigParseResult, RemoteConfigValidator}
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
+import at.forsyte.apalache.shai.v1.cmdExecutor._
+import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
+import at.forsyte.apalache.tla.lir.TlaModule
+import at.forsyte.apalache.tla.passes.imp.ParserModule
+import at.forsyte.apalache.tla.passes.typecheck.TypeCheckerModule
+import com.typesafe.scalalogging.Logger
+import io.grpc.Status
+import zio.{ZEnv, ZIO}
+
+import java.io.{PrintWriter, StringWriter}
+import scala.util.Try
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -44,7 +42,8 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
   def run(req: CmdRequest): Result[CmdResponse] = for {
     cmd <- validateCmd(req.cmd)
-    resp <- executeCmd(cmd, req.config) match {
+    cfg <- validateConfig(req.config)
+    resp <- executeCmd(cmd, cfg) match {
       case Left(err) => ZIO.succeed(CmdResponse.Result.Failure(err))
       case Right(r)  => ZIO.succeed(CmdResponse.Result.Success(r.toString()))
     }
@@ -59,7 +58,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     }
 
     def throwableErr(err: Throwable): CmdError = {
-      val errData = Obj("msg" -> err.getMessage(), "stack_trace" -> err.getStackTrace().map(_.toString()).toList)
+      val errData = Obj("msg" -> err.getMessage, "stack_trace" -> err.getStackTrace.map(_.toString()).toList)
       CmdError(errorType = CmdErrorType.UNEXPECTED, data = ujson.write(errData))
     }
 
@@ -68,22 +67,38 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     implicit class TryCmdErr[O](v: Try[O]) {
       def toCmdResult: Either[CmdError, O] = v.toEither.left.map(throwableErr)
     }
+
+    /**
+     * Adapts configuration loading and resolution results to the command executor's `Either` pipeline.
+     *
+     * Successful results expose their value. Failed results combine their diagnostics into an
+     * `IllegalArgumentException`, which [[throwableErr]] reports as an `UNEXPECTED` command error.
+     */
+    implicit class ConfigParseResultCmdErr[O](result: ConfigParseResult[O]) {
+
+      /** Return the configured value or its errors encoded as a command error. */
+      def toCmdResult: Either[CmdError, O] =
+        if (result.isSuccess) Right(result.requireValue())
+        else {
+          val message = result.errors.mkString("; ")
+          Left(throwableErr(new IllegalArgumentException(message)))
+        }
+    }
   }
 
   import Converters._
-  private def executeCmd(cmd: Cmd, cfgStr: String): Either[CmdError, ujson.Value] = {
+
+  private def executeCmd(cmd: Cmd, cfg: ApalacheConfig): Either[CmdError, ujson.Value] = {
 
     for {
-      cfg <- ConfigManager(cfgStr).map { cfg =>
-        cfg.copy(common = cfg.common.copy(command = Some("server")))
-      }.toCmdResult
-
       toolModule <- {
-        import OptionGroup._
         cmd match {
-          case Cmd.PARSE | Cmd.TLA => WithIO(cfg).map(new ParserModule(_)).toCmdResult
-          case Cmd.CHECK           => WithCheckerPreds(cfg).map(new CheckerModule(_)).toCmdResult
-          case Cmd.TYPECHECK       => WithTypechecker(cfg).map(new TypeCheckerModule(_)).toCmdResult
+          case Cmd.PARSE | Cmd.TLA =>
+            ApalacheConfigResolver.resolveParse(cfg).toCmdResult.map(new ParserModule(_))
+          case Cmd.CHECK =>
+            ApalacheConfigResolver.resolveCheck(cfg).toCmdResult.map(new CheckerModule(_))
+          case Cmd.TYPECHECK =>
+            ApalacheConfigResolver.resolveTypecheck(cfg).toCmdResult.map(new TypeCheckerModule(_))
           case Cmd.Unrecognized(_) =>
             throw new IllegalArgumentException("programmer error: executeCmd applied before validateCmd")
         }
@@ -107,7 +122,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     val prettyWriter = new PrettyWriterWithAnnotations(annotationStore, new PrintWriter(buf))
     val modules_to_extend = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache", "Variants")
     prettyWriter.write(module, modules_to_extend)
-    val moduleString = buf.toString()
+    val moduleString = buf.toString
 
     val modifiedModule = extractLetFromFolds(moduleString)
     ujson.Str(modifiedModule)
@@ -136,5 +151,15 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
       val msg = s"Invalid protobuf value for Cmd enum: ${cmd}"
       ZIO.fail(Status.INVALID_ARGUMENT.withDescription(msg))
     case cmd => ZIO.succeed(cmd)
+  }
+
+  /** Parse untrusted request JSON without configuration-file discovery and reject filesystem-capable fields. */
+  private def validateConfig(config: String): Result[ApalacheConfig] = {
+    val parsed = RemoteConfigValidator.parse(config)
+    if (parsed.isSuccess) {
+      ZIO.succeed(parsed.requireValue().withCommand(SERVER))
+    } else {
+      ZIO.fail(Status.INVALID_ARGUMENT.withDescription(parsed.errors.mkString("; ")))
+    }
   }
 }

@@ -3,7 +3,6 @@ package at.forsyte.apalache.infra.passes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir.{MissingTransformationError, TlaModule, TlaModuleProperties}
-import at.forsyte.apalache.infra.passes.options.OptionGroup
 import com.google.inject.{Guice, Injector}
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.AdaptedException
@@ -19,7 +18,7 @@ import at.forsyte.apalache.infra.AdaptedException
  * @author
  *   Igor Konnov, Shon Feder
  */
-class PassChainExecutor[O <: OptionGroup](toolModule: ToolModule[O]) extends LazyLogging {
+class PassChainExecutor(toolModule: ToolModule) extends LazyLogging {
   type PassResultModule = Either[Pass.PassFailure, TlaModule with TlaModuleProperties]
 
   /**
@@ -86,7 +85,7 @@ class PassChainExecutor[O <: OptionGroup](toolModule: ToolModule[O]) extends Laz
 }
 
 object PassChainExecutor {
-  def apply(toolModule: ToolModule[_ <: OptionGroup]): PassChainExecutor[_ <: OptionGroup] = {
+  def apply(toolModule: ToolModule): PassChainExecutor = {
     new PassChainExecutor(toolModule)
   }
 }

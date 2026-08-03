@@ -1,4 +1,4 @@
-package at.forsyte.apalache.infra.passes
+package at.forsyte.apalache.io.tuning
 
 import java.util.regex.{Pattern, PatternSyntaxException}
 import scala.collection.immutable
@@ -17,8 +17,7 @@ case class RegexFieldType() extends ConfigFieldType
 /**
  * A configuration class that mirrors the parameters that can be passed via `--tuning-options-file` and
  * `--tuning-options` to the commands `check` and `simulate`. [[FineTuningParser]] ensures that the parameters have
- * proper syntax. It would be great to use [[https://pureconfig.github.io/docs/index.html PureConfig]] here, but it is
- * too opinionated.
+ * proper syntax.
  *
  * @see
  *   [[https://apalache-mc.org/docs/apalache/tuning.html Tuning parameters]].

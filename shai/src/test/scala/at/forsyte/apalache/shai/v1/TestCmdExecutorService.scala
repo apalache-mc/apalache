@@ -1,14 +1,12 @@
 package at.forsyte.apalache.shai.v1
 
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigJsonParser, CheckerPatch}
+import at.forsyte.apalache.shai.v1.cmdExecutor._
+import io.grpc.Status
 import zio._
-import zio.test._
 import zio.test.Assertion._
-
-import at.forsyte.apalache.shai.v1.cmdExecutor.{Cmd, CmdRequest, PingRequest, PongResponse}
-import at.forsyte.apalache.infra.passes.options.Config
-import at.forsyte.apalache.infra.passes.options.SourceOption
-import at.forsyte.apalache.io.ConfigManager
-import at.forsyte.apalache.shai.v1.cmdExecutor.CmdErrorType
+import zio.test._
 
 // Defines the test cases used to test the CmdExecutor service
 object TestCmdExecutorService extends DefaultRunnableSpec {
@@ -37,14 +35,9 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
       cmd: Cmd,
       content: String,
       aux: Seq[String] = Seq(),
-      cfg: Config.ApalacheConfig = Config.ApalacheConfig()): CmdRequest = {
-    val config = {
-      import Config._
-      import SourceOption._
-      val updatedCfg =
-        cfg.copy(input = Input(source = Some(StringSource(content = content, aux = aux, format = Format.Tla))))
-      ConfigManager.serialize(updatedCfg)
-    }
+      cfg: ApalacheConfig = ApalacheConfig.empty): CmdRequest = {
+    val source = InputSource.StringSource(content = content, aux = aux.toList, format = InputSource.Format.Tla)
+    val config = ApalacheConfigJsonParser.write(cfg.copy(source = Some(source)))
 
     CmdRequest(cmd = cmd, config = config)
   }
@@ -72,10 +65,22 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
       testM("rpc with invalid config returns an error") {
         for {
           s <- ZIO.service[CmdExecutorService]
-          config = ConfigManager.serialize(Config.ApalacheConfig())
+          config = ApalacheConfigJsonParser.write(ApalacheConfig.empty)
           resp <- s.run(CmdRequest(cmd = Cmd.PARSE, config = config))
           msg = resp.result.failure.get.data
-        } yield assert(msg)(containsString("Missing value for required option input.source"))
+        } yield assert(msg)(containsString("Missing value for required option source"))
+      },
+      testM("rpc rejects file-backed input as an invalid argument") {
+        for {
+          s <- ZIO.service[CmdExecutorService]
+          result <- s.run(CmdRequest(cmd = Cmd.PARSE, config = """{"source":"does-not-exist.tla"}""")).either
+        } yield result match {
+          case Left(status) =>
+            assert(status.getCode)(equalTo(Status.Code.INVALID_ARGUMENT)) &&
+            assert(status.getDescription)(containsString("$.source"))
+          case Right(_) =>
+            assert(false)(isTrue)
+        }
       },
       testM("running check an invalid spec returns an error") {
         for {
@@ -93,7 +98,7 @@ object TestCmdExecutorService extends DefaultRunnableSpec {
       testM("running check on spec with violated invariant fails") {
         for {
           s <- ZIO.service[CmdExecutorService]
-          config = Config.ApalacheConfig(checker = Config.Checker(inv = Some(List("Inv"))))
+          config = ApalacheConfig(checker = CheckerPatch(invariants = Some(List("Inv"))))
           resp <- s.run(runCmd(Cmd.CHECK, checkableSpec, cfg = config))
           err = resp.result.failure.get
           data = ujson.read(err.data)

@@ -2,7 +2,6 @@ package at.forsyte.apalache.infra.passes
 
 import at.forsyte.apalache.infra.{ExceptionAdapter, ExitCodes}
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.infra.passes.options.OptionGroup.WithNone
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
@@ -37,7 +36,7 @@ class DummyExceptionAdapter extends ExceptionAdapter {}
  * @param passesToExecute
  *   the sequence of passes that this module will execute
  */
-class DummyToolModule(passesToExecute: Class[_ <: Pass]*) extends ToolModule(WithNone()) {
+class DummyToolModule(passesToExecute: Class[_ <: Pass]*) extends ToolModule {
   override def passes: Seq[Class[_ <: Pass]] = passesToExecute
 
   override def configure(): Unit = {

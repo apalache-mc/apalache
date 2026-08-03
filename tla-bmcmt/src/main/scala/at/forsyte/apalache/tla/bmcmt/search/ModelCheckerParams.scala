@@ -1,10 +1,16 @@
 package at.forsyte.apalache.tla.bmcmt.search
 
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode.{AfterJoin, BeforeJoin, InvariantMode}
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.CheckerInput
 
 object ModelCheckerParams {
+
+  /** Number of simulation runs used when tuning does not override it. */
+  val defaultSimulationRuns: Int = 100
+
+  /** Whether symbolic runs emit traces when tuning does not override it. */
+  val defaultOutputTraces: Boolean = false
 
   /**
    * The invariant checking mode. See tuning.md.
@@ -116,12 +122,12 @@ class ModelCheckerParams(
    * The number of random simulation runs to try.
    */
   val nSimulationRuns: Int =
-    tuningOptions.getOrElse("search.simulation.maxRun", "100").toInt
+    tuningOptions.getOrElse("search.simulation.maxRun", ModelCheckerParams.defaultSimulationRuns.toString).toInt
 
   /**
    * Whether to save an example trace for each symbolic run.
    */
   val saveRuns: Boolean =
-    tuningOptions.getOrElse("search.outputTraces", "false").toBoolean
+    tuningOptions.getOrElse("search.outputTraces", ModelCheckerParams.defaultOutputTraces.toString).toBoolean
 
 }

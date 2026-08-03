@@ -1,13 +1,17 @@
 package at.forsyte.apalache.tla.tooling.opt
 
-import org.backuity.clist.opt
-import java.io.File
+import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import com.typesafe.scalalogging.LazyLogging
+import org.backuity.clist.opt
+
+import java.io.File
 
 // imports from Sany utils
+import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.io.config.ApalacheConfig
+import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS, TLA_PLUS_DIRECTORY, USER_HOME_PROPERTY}
 import util.ExecutionStatisticsCollector
 import util.ExecutionStatisticsCollector.Selection
-import at.forsyte.apalache.infra.ExitCodes
 
 /**
  * This command initiates the 'config' command line.
@@ -15,13 +19,16 @@ import at.forsyte.apalache.infra.ExitCodes
  * @author
  *   Igor Konnov
  */
-class ConfigCmd extends ApalacheCommand(name = "config", description = "Configure Apalache options") with LazyLogging {
+class ConfigCmd extends ApalacheCommand(name = CONFIG, description = "Configure Apalache options") with LazyLogging {
 
-  var submitStats: Option[Boolean] = opt[Option[Boolean]](name = "enable-stats",
-      description = "Let Apalache submit usage statistics to tlapl.us\n"
-        + "(shared with TLC and TLA+ Toolbox)\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
+  var submitStats: Option[Boolean] = opt[Option[Boolean]](name = ENABLE_STATS,
+      description = descriptionWithDefault(
+          "Let Apalache submit usage statistics to tlapl.us\n(shared with TLC and TLA+ Toolbox)",
+          "unchanged",
+      )
+        + "\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
 
-  def run() = {
+  override def run(_config: ApalacheConfig): Either[(TExitCode, String), String] = {
     logger.info("Configuring Apalache")
 
     if (!configDirExistsOrCreated()) {
@@ -47,7 +54,7 @@ class ConfigCmd extends ApalacheCommand(name = "config", description = "Configur
 
   private def configDirExistsOrCreated(): Boolean = {
     // A temporary fix for the issue #762: create ~/.tlaplus if it does not exist
-    val configDir = new File(System.getProperty("user.home", ""), ".tlaplus")
+    val configDir = new File(System.getProperty(USER_HOME_PROPERTY, ""), TLA_PLUS_DIRECTORY)
     if (configDir.exists()) {
       true
     } else {
