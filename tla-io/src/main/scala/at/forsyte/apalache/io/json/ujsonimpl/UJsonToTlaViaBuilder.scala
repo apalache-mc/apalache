@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.json.ujsonimpl
 
 import at.forsyte.apalache.io.json.JsonToTlaViaBuilder
 import at.forsyte.apalache.io.lir.TypeTagReader
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 
 /**
  * @author

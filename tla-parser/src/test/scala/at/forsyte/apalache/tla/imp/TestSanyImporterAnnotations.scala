@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.annotations.Annotation
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
@@ -106,9 +106,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
         val expected = Annotation("type", mkStr("Int"))
-        assert(annotations.length == 2)
-        // ignore the #freeText annotation
-        assert(expected == annotations(1))
+        assert(expected :: Nil == annotations)
 
       case _ =>
         fail("Expected an operator")
@@ -288,7 +286,7 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
       .find(_.name == "action")
       .getOrElse(fail("Expected an operator"))
     val annotations = annotationStore(action.ID)
-    assert(annotations.length == 1)
+    assert(annotations.isEmpty)
   }
 
   test("corner cases") {
@@ -311,11 +309,10 @@ class TestSanyImporterAnnotations extends AnyFunSuite with BeforeAndAfter {
     module.declarations.find(_.name == "Corner") match {
       case Some(d @ TlaOperDecl(_, _, _)) =>
         val annotations = annotationStore(d.ID)
-        assert(annotations.length == 4)
-        // the head is #freeText, which we don't care about
-        assert(Annotation("withlinefeed") == annotations(1))
-        assert(Annotation("withstar") == annotations(2))
-        assert(Annotation("witheof") == annotations(3))
+        assert(annotations.length == 3)
+        assert(Annotation("withlinefeed") == annotations(0))
+        assert(Annotation("withstar") == annotations(1))
+        assert(Annotation("witheof") == annotations(2))
 
       case _ =>
         fail("Expected an operator")

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.annotations.store.{createAnnotationStore, AnnotationStore}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import org.scalatest.BeforeAndAfter
 import org.scalatest.funsuite.AnyFunSuite
