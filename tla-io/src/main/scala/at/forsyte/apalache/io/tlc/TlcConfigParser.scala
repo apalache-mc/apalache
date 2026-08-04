@@ -1,8 +1,8 @@
-package at.forsyte.apalache.infra.tlc
+package at.forsyte.apalache.io.tlc
+
+import at.forsyte.apalache.io.tlc.config.TlcConfig
 
 import java.io.Reader
-
-import at.forsyte.apalache.infra.tlc.config.TlcConfig
 
 /**
  * A trait to a parser of TLC configuration files. For the syntax, see [<a

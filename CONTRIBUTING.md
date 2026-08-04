@@ -475,9 +475,10 @@ above example will be included in the changelog for the next release as:
 
 We have configured our GitHub CI to automate the release process. The workflows
 are configured in [./.github/workflows/prepare-release.yml][] and
-[./.github/workflows/release.yml][].
+[./.github/workflows/release.yml][]. Maven publication is handled separately by
+[./.github/workflows/publish-to-maven-central.yml][].
 
-The process proceeds in two steps:
+The process proceeds in three steps:
 
 1. CI prepares a release, and opens a PR with the version changes and release
    notes. These are [manually via the GitHub UI][github-ui].
@@ -491,9 +492,12 @@ The process proceeds in two steps:
    - package the artifact
    - publish it as a GitHub release
    - announce the release in our internal `#releases` slack channel
+3. Publishing the GitHub release triggers a separate workflow that signs and publishes `tla-ir` and `tla-io` to Maven
+   Central.
 
 [./.github/workflows/prepare-release.yml]: ./.github/workflows/prepare-release.yml
-[./.github/workflows/release.yml]: ./.github/workflows/prepare-release.yml
+[./.github/workflows/release.yml]: ./.github/workflows/release.yml
+[./.github/workflows/publish-to-maven-central.yml]: ./.github/workflows/publish-to-maven-central.yml
 [github-ui]: https://github.com/apalache-mc/apalache/actions?query=workflow%3A%22Prepare+Release%22
 
 ### Manually
@@ -536,6 +540,63 @@ When the PR is merged into `main`:
   - package the
   - create the release on github
 - [ ] Update the download links at https://github.com/apalache-mc/apalache/blob/gh-pages/_config.yml#L7
+
+### Publishing libraries to Maven Central
+
+The Scala 2.13 libraries `org.apalache-mc:tla-ir_2.13` and
+`org.apalache-mc:tla-io_2.13` can be published independently of the Apalache distribution.
+
+#### Automated publishing
+
+Publishing a GitHub release automatically runs the
+`publish-to-maven-central` workflow against the tagged commit. The workflow checks that the tag is `v${VERSION}`,
+imports the signing key, and invokes
+`./script/publish-maven.sh release`. GitHub prereleases are skipped.
+
+Configure a GitHub Environment named `maven-central`, without a required reviewer, and add these environment secrets:
+
+- `SONATYPE_TOKEN_USERNAME`: username from a Central Portal user token;
+- `SONATYPE_TOKEN_PASSWORD`: password from the same Central Portal user token;
+- `PGP_SECRET`: base64-encoded, ASCII-armored private signing key; and
+- `PGP_PASSPHRASE`: passphrase for the signing key.
+
+Use a dedicated CI signing key and publish its public key to a supported public keyserver. For example, after creating
+the key:
+
+```sh
+gpg --full-generate-key
+MAVEN_GPG_KEY_ID=replace-with-full-key-id
+gpg --keyserver keyserver.ubuntu.com --send-keys "$MAVEN_GPG_KEY_ID"
+gpg --armor --export-secret-keys "$MAVEN_GPG_KEY_ID" | base64 | tr -d '\n'
+```
+
+Store the final command's output as `PGP_SECRET`; never commit the private key or its passphrase. Because Maven Central
+versions are immutable, rerun a failed publication only after confirming that Central did not already publish it.
+
+#### Manual publishing
+
+Manual publishing requires:
+
+- a [Central Portal user token](https://central.sonatype.org/publish/generate-portal-token/), exposed as
+  `SONATYPE_TOKEN_USERNAME` and `SONATYPE_TOKEN_PASSWORD`;
+- for snapshot publishing, snapshots enabled for the `org.apalache-mc`
+  namespace in the Central Portal;
+- a secret GPG key in the local keyring, with its public key available from a public keyserver; and
+- optionally, `PGP_PASSPHRASE` for noninteractive signing. Local publishing can instead use GnuPG pinentry.
+
+The publication version is always read from `VERSION`; the script does not permit an override. It wraps sbt's native
+`localStaging` and `sonaRelease` support. Use one of these explicit modes:
+
+```sh
+# VERSION must end in -SNAPSHOT. This publishes directly to Central snapshots.
+./script/publish-maven.sh snapshot
+
+# VERSION must have no -SNAPSHOT and tracked files must be clean.
+# This publishes automatically after Central validation succeeds.
+./script/publish-maven.sh release
+```
+
+Released Maven Central coordinates are immutable.
 
 [Github Issue]: https://github.com/apalache-mc/apalache/issues
 [rfc]: https://en.wikipedia.org/wiki/Request_for_Comments
