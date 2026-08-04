@@ -228,14 +228,16 @@ introduce several additional configurations easily, and we found the local
 configuration files useful for tweaking program behavior. We subsequently
 decided to further extend the configuration system by integrating the CLI within
 the configuration system and use it as the basis for statically representing all
-program options. See [ADR 022](./022adr-unification-of-configs-and-options.md).
+program options. See [ADR-022][].
 
 ## Retrospective (2026)
 
 The loading and precedence rules proved useful. However, maintenance experience and [issue #2999][] showed that derived
 PureConfig readers hid the external schema and did not reliably reject nested typos. HOCON also added syntax and a
 Scala-specific dependency without a compelling use case. Moreover, we believe that long-term maintenance requires simple
-solutions and stable dependencies. ADR-026 retains the useful loading behavior but replaces PureConfig and HOCON with an
+solutions and stable dependencies. [ADR-026][] retains the useful loading behavior but replaces PureConfig and HOCON with an
 explicit strict-JSON implementation.
 
 [issue #2999]: https://github.com/apalache-mc/apalache/issues/2999
+[ADR-022]: ./022adr-unification-of-configs-and-options.md
+[ADR-026]: ./026adr-explicit-configuration.md
