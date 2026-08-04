@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-aa14a244.js";
+            window.path_to_searchindex_js = "../searchindex-4e4544e3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-76fb4033.js"></script>
+        <script src="../toc-933c4279.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -231,11 +231,11 @@ concurrent RPC could change the configurations of another RPC call in
 process.</li>
 </ol>
 <p>Thus, we resolved to proceed with unifying the CLI with configuration system
-described in <a href="./013adr-configuration.html">ADR 013</a>, and replacing the mutable, untyped option map
+described in <a href="./013adr-configuration.html">ADR-013</a>, and replacing the mutable, untyped option map
 with an immutable, statically typed data structure representing the possible
 configurable of our various routines.</p>
 <h2 id="solution"><a class="header" href="#solution">Solution</a></h2>
-<p>Following <a href="./013adr-configuration.html">ADR 013</a>, we introduced support for a limited set of configurable
+<p>Following <a href="./013adr-configuration.html">ADR-013</a>, we introduced support for a limited set of configurable
 values that could be read from either a config file or the CLI, and recorded in
 an instance of the small <code>ApalacheConfig</code> class. However, the most CLI inputs
 were fed directly into the options map, without interacting at all with the
@@ -284,8 +284,9 @@ configuration system:</p>
 <h2 id="retrospective-2026"><a class="header" href="#retrospective-2026">Retrospective (2026)</a></h2>
 <p>The unified flow prevented CLI and RPC configuration from drifting. However, the <code>Config</code>/<code>OptionGroup</code> split evolved
 into a large <code>Has*</code>/<code>With*</code> hierarchy, and sparse input was easy to confuse with resolved runtime configuration.
-Shapeless and PureConfig further obscured the data flow for maintainers unfamiliar with advanced Scala idioms. ADR-026
-retains one flow for CLI, files, and RPC while replacing this implementation with explicit data and resolution types.</p>
+Shapeless and PureConfig further obscured the data flow for maintainers unfamiliar with advanced Scala idioms.
+<a href="./026adr-explicit-configuration.html">ADR-026</a> retains one flow for CLI, files, and RPC while replacing this implementation with explicit data and
+resolution types.</p>
 
                     </main>
 

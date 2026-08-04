@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>ADR-026: Explicit configuration and run options - Apalache Documentation</title>
+        <title>ADR-026: Explicit configuration and command options - Apalache Documentation</title>
 
 
         <!-- Custom HTML head -->
@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-aa14a244.js";
+            window.path_to_searchindex_js = "../searchindex-4e4544e3.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-76fb4033.js"></script>
+        <script src="../toc-933c4279.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -179,8 +179,142 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="adr-026-explicit-configuration-and-run-options"><a class="header" href="#adr-026-explicit-configuration-and-run-options">ADR-026: Explicit configuration and run options</a></h1>
-<p>TBD in a separate PR</p>
+                        <h1 id="adr-026-explicit-configuration-and-command-options"><a class="header" href="#adr-026-explicit-configuration-and-command-options">ADR-026: Explicit configuration and command options</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>authors</th><th style="text-align: right">last revised</th></tr>
+</thead>
+<tbody>
+<tr><td>Igor Konnov</td><td style="text-align: right">2026-08-04</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Table of Contents</strong></p>
+<ul>
+<li><a href="#summary">Summary (Overview)</a></li>
+<li><a href="#context">Context (Problem)</a></li>
+<li><a href="#solution">Solution (Decision)</a></li>
+<li><a href="#consequences">Consequences (Retrospection)</a></li>
+</ul>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p><a href="./013adr-configuration.html">ADR-013</a> and <a href="./022adr-unification-of-configs-and-options.html">ADR-022</a> outlined the vision of unified configuration and
+options management. The idea was to have one framework that parses and validates
+the Apalache commands and options independently of how these commands are specified:
+via CLI, via a configuration file, or via an RPC call. Nevertheless, we ran into
+issues when maintaining and extending this framework, see <a href="https://github.com/apalache-mc/apalache/issues/2999">issue #2999</a>.</p>
+<p>This ADR revisits the configuration framework and supersedes <a href="./013adr-configuration.html">ADR-013</a> and
+<a href="./022adr-unification-of-configs-and-options.html">ADR-022</a>.</p>
+<h2 id="context"><a class="header" href="#context">Context</a></h2>
+<p>This ADR is written with the following goals in mind:</p>
+<ul>
+<li>The configuration code should be understandable without onboarding to
+non-standard frameworks and libraries. The code after <a href="./022adr-unification-of-configs-and-options.html">ADR-022</a> had a number of
+workarounds for the idiosynchrasies of <code>pureconfig</code>.</li>
+<li>If the framework uses a library, then this library should be stable and not <em>too opinionated</em>.</li>
+<li>We prefer the well-known idioms, ideally, understandable by Java developers who
+had a bit of onboarding to Scala.</li>
+</ul>
+<h2 id="solution"><a class="header" href="#solution">Solution</a></h2>
+<p><strong>High-level decisions.</strong> We make the following architectural decisions:</p>
+<ul>
+<li>In contrast to <a href="./022adr-unification-of-configs-and-options.html">ADR-022</a>, <strong>we no longer use <code>pureconfig</code> and <code>shapeless</code></strong>.
+These frameworks are relatively hard to understand for someone who does not work
+with the configuration code regularly. Their APIs are changing. In general, it looks
+like Scala frameworks are less maintained these days. Instead, <strong>we use Jackson</strong>.
+It’s an old but a well-maintained Java library.</li>
+<li>Instead of aiming for rich configuration formats (offered by HOCON), <strong>we only accept
+JSON</strong>: This format is simple, it requires zero onboarding, it can be parsed by
+plenty of libraries</li>
+<li>We use <strong>explicit parsing and validation code</strong> instead of frameworks. As we learned
+with <code>pureconfig</code> and HOCON, the users still have to understand how these frameworks
+work, and the users have to accept the design decision of the framework authors.
+In the long run, explicit parsing and validation win over the frameworks.</li>
+<li><strong>Configuration files shall be human-readable and human-writeable.</strong> The configuration
+format of <a href="./022adr-unification-of-configs-and-options.html">ADR-022</a> was mainly aiming at tools, e.g., the Quint tooling.
+In our experience, human-unfriendly formats cause too much friction and are too
+hard to debug. This time, it was no exception.</li>
+<li>The configuration options <strong>must be well-documented</strong>. The configuration options
+of <a href="./022adr-unification-of-configs-and-options.html">ADR-022</a> were not documented for the tool users, as the format was meant to be
+mainly a tool interchange format. As a result, it was hard to write a configuration file
+even after reading the source code.</li>
+</ul>
+<p><strong>Interface boundaries.</strong> The Apalache code interacts with the configuration framework along these points:</p>
+<ul>
+<li><strong>Reasonable defaults.</strong> These are the standard settings for the options
+that are not specified. These are the configuration <strong>producers</strong>.</li>
+<li><strong>CLI commands.</strong> These are command-line options that are specified by the user.
+CLI commands are configuration <strong>producers</strong>.</li>
+<li><strong>JSON config.</strong> This is a configuration file (or multiple files) that are written
+by the user or external tools. A configuration file must be expressive enough
+to replace CLI entirely. JSON configs are configuration <strong>producers</strong>.</li>
+<li><strong>RPC calls.</strong> These are RPC calls to the GRPC or JSON-RPC servers. Some of these
+calls may contain complete configurations that are equivalent to the CLI commands
+<code>parse</code>, <code>check</code>, and <code>simulate</code>. These calls act as <strong>transport</strong> between the
+configuration options and their consumers.</li>
+<li><strong>Apalache passes.</strong> The passes are the <strong>consumers</strong> of the configuration options.</li>
+</ul>
+<p><strong>Concrete design.</strong> As a result, we have rearchitected the configuration framework as follows:</p>
+<ul>
+<li>Configuration loading and validation are organized into a single package
+<code>at.forsyte.apalache.io.config</code>.</li>
+<li>The configuration model is captured in the class <code>ApalacheConfig</code>:
+<ul>
+<li>Partial configurations are captured with implementations of <code>ConfigPatch</code>.
+These partial configurations are organized around command-specific options
+or configuration sections.</li>
+<li>Configuration patches can be merged together, specifying the precedence
+of one patch over another.</li>
+</ul>
+</li>
+<li><code>ApalacheConfigJsonParser</code> reads the configuration file in JSON and produces
+an instance of <code>ApalacheConfig</code>. The parser is strict in that it rejects
+unknown fields.</li>
+<li><code>ApalacheConfigResolver</code> does command-specific validation of the options.
+It produces instances of <code>ValidatedOptions</code> for various consumers, e.g., it produces
+<code>TypecheckerOptions</code> for the type checker and <code>CheckerOptions</code>
+for the model checker.</li>
+<li>Instances of <code>ValidatedOptions</code> are injected into passes via Guice.
+No conversion or interface manipulation is required.</li>
+<li><code>ApalacheConfigLoader</code> is the entry point to the configuration framework
+that is used by the CLI tooling or RPC services.</li>
+</ul>
+<p>The authoritative user-facing schema and discovery rules are specified in the
+<a href="../apalache/config.html">configuration manual</a>.</p>
+<p>The data flow of the configuration framework is shown below. Notice conceptual
+similarities to <a href="./022adr-unification-of-configs-and-options.html">ADR-022</a>. We follow the same vision, just implemented differently.</p>
+<pre><code class="language-mermaid">flowchart TB
+    subgraph producers["Configuration producers"]
+        CLI["CLI commands"]
+        JSON["JSON files&lt;br/&gt;(explicit, local, global)"]
+        DEFAULTS["Built-in defaults"]
+    end
+
+    RPC["RPC transport"]
+    TLC["Optional TLC config"]
+    PARSER["ApalacheConfigJsonParser&lt;br/&gt;strict JSON decoding"]
+    LOADER["ApalacheConfigLoader&lt;br/&gt;discovery and precedence"]
+    CONFIG["ApalacheConfig&lt;br/&gt;merged sparse configuration&lt;br/&gt;with ConfigPatch sections"]
+    RESOLVER["ApalacheConfigResolver&lt;br/&gt;defaults, TLC loading, validation"]
+    OPTIONS["ConfigParseResult&lt;br/&gt;of Resolved*Options"]
+    GUICE["Guice modules"]
+    CONSUMERS["Passes and services"]
+
+    CLI --&gt;|"primary patch"| LOADER
+    JSON --&gt; PARSER
+    RPC --&gt;|"primary JSON"| PARSER
+    PARSER --&gt;|"sparse ApalacheConfig"| LOADER
+    LOADER --&gt;|"mergeWithLower:&lt;br/&gt;primary &gt; explicit/local &gt; global"| CONFIG
+    CONFIG --&gt; RESOLVER
+    DEFAULTS --&gt; RESOLVER
+    TLC --&gt; RESOLVER
+    RESOLVER --&gt; OPTIONS
+    OPTIONS --&gt; GUICE
+    GUICE --&gt; CONSUMERS
+</code></pre>
+<h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
+<p>We hope that the refactored framework is easier to use and maintain in the
+long-term.</p>
 
                     </main>
 
