@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.infra.passes.options.SMTEncoding
+import at.forsyte.apalache.io.config.SMTEncoding
+import at.forsyte.apalache.io.config.Constants.TUNING_OPTIONS
 import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
@@ -291,7 +292,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
           if err.getMessage.contains("A non-linear term was asserted to arithmetic in a linear logic") =>
         val msg =
           s"cvc5 is using SMT logic $smtLogic, which only permits linear integer arithmetic, but the solver saw a " +
-            "nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA."
+            s"nonlinear arithmetic term. Re-run with --$TUNING_OPTIONS=cvc5.smt.logic=QF_UFNIA."
         throw new SmtEncodingException(msg, NullEx)
     }
   }

@@ -24,7 +24,7 @@
   # https://zimbatm.com/NixFlakes/#output-schema
   outputs = { self, nixpkgs, flake-utils }:
     with flake-utils.lib;
-    eachDefaultSystem (system:
+    eachSystem [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" ] (system:
       let
         pkgs = import nixpkgs { inherit system; };
         # FIXME(#2565): pin old nixpkgs, to pull in mdx 2.1.0, need to workaround this regression:
@@ -81,20 +81,21 @@
 
             # Built inputs are the packages that we provide in the PATH in the nix shell
             buildInputs = with pkgs; [
-              # Java / Scala
-              jdk17_headless
-              scala_2_13
+              # Java
+              jdk25_headless
 
               # Build
-              sbt
+              # Nixpkgs wraps sbt with its default JRE, independently of PATH.
+              # Override it so the build and development tools run on Java 25;
+              # released artifacts still target Java 17.
+              (sbt.override { jre = jdk25_headless; })
 
               # Development
-              metals
+              (metals.override { jre = jdk25_headless; })
 
               # Testing
               pkgsOldMdx.ocamlPackages.mdx
-              python39Full
-              python39Packages.requests
+              (python3.withPackages (ps: [ ps.requests ]))
             ];
           };
         };

@@ -7,6 +7,7 @@ import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard.{DeepCopy, ReplaceFixed}
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.{NormalizedNames, TlaInputError}
+import at.forsyte.apalache.io.config.Constants.TEMPORAL
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.annotation.tailrec
@@ -47,7 +48,8 @@ class VCGenerator(tracker: TransformationTracker) extends LazyLogging {
 
             case TlaLevelTemporal =>
               val message =
-                s"Expected a state invariant or an action invariant in $invName, found a temporal property (did you mean to use --temporal?)"
+                s"Expected a state invariant or an action invariant in $invName, found a temporal property " +
+                  s"(did you mean to use --$TEMPORAL?)"
               throw new TlaInputError(message, Some(inv.body.ID))
           }
 

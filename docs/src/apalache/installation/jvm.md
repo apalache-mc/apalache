@@ -1,7 +1,8 @@
 # Prebuilt Packages
 
-You need to download and install a Java Virtual Machine first. 
-We recommend version 17 of the [Eclipse Temurin][] or [Zulu][] builds of OpenJDK.
+You need to download and install a Java Virtual Machine first. We recommend running Apalache on Java 25, using the
+[Eclipse Temurin][] or [Zulu][] builds of OpenJDK. Released artifacts maintain bytecode compatibility with Java 17 and
+should run on Java 17 or newer, but Java 17 is less thoroughly tested than the recommended Java 25 runtime.
 
 Once you have installed Java, download the [latest
 release](https://github.com/apalache-mc/apalache/releases) and unpack into
@@ -15,10 +16,10 @@ better, add the `./bin` directory to your `PATH` and run `apalache-mc`.
 Alternatively, you can run Java directly with
 
 ```
-java.exe -jar ./lib/apalache.jar <args>
+java -jar ./lib/apalache.jar <args>
 ```
 
 The arguments `<args>` are explained in [Running the Tool](../running.md).
 
 [Eclipse Temurin]: https://adoptium.net/
-[Zulu]: https://www.azul.com/downloads/?version=java-17-lts&package=jdk#download-openjdk
+[Zulu]: https://www.azul.com/downloads/?version=java-25-lts&package=jdk#download-openjdk

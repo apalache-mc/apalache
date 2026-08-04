@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, Tra
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
 import at.forsyte.apalache.tla.pp.{Desugarer, Keramelizer, Normalizer, SetMembershipSimplifier, UniqueNameGenerator}
 import com.google.inject.Inject
-import at.forsyte.apalache.infra.passes.options.OptionGroup
+import at.forsyte.apalache.io.config.CommonOptions
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 
 /**
@@ -25,7 +25,7 @@ import at.forsyte.apalache.infra.passes.DerivedPredicates
  *   next pass to call
  */
 class PreproPassImpl @Inject() (
-    options: OptionGroup.HasChecker,
+    commonOptions: CommonOptions,
     derivedPreds: DerivedPredicates,
     gen: UniqueNameGenerator,
     renaming: IncrementalRenaming,
@@ -34,7 +34,7 @@ class PreproPassImpl @Inject() (
     changeListener: ChangeListener,
     writerFactory: TlaWriterFactory)
     extends PreproPassPartial(
-        options,
+        commonOptions,
         derivedPreds,
         renaming,
         tracker,

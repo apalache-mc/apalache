@@ -4,6 +4,9 @@
 | -------------------------------------- | --------------: |
 | Shon Feder                             | 2022-08-15      |
 
+> **Status: Deprecated.** Superseded by
+> [ADR-026: Explicit configuration and run options](./026adr-explicit-configuration.md).
+
 **Table of Contents**
 
 - [Summary (Overview)](#summary)
@@ -11,6 +14,7 @@
 - [Options (Alternatives)](#options)
 - [Solution (Decision)](#solution)
 - [Consequences (Retrospection)](#consequences)
+- [Retrospective (2026)](#retrospective-2026)
 
 ## Summary
 
@@ -50,13 +54,13 @@ We considered trying to implement the needed RPCs without addressing [#1174] and
    process.
 
 Thus, we resolved to proceed with unifying the CLI with configuration system
-described in [ADR 013][], and replacing the mutable, untyped option map
+described in [ADR-013][], and replacing the mutable, untyped option map
 with an immutable, statically typed data structure representing the possible
 configurable of our various routines.
 
 ## Solution
 
-Following [ADR 013][], we introduced support for a limited set of configurable
+Following [ADR-013][], we introduced support for a limited set of configurable
 values that could be read from either a config file or the CLI, and recorded in
 an instance of the small `ApalacheConfig` class. However, the most CLI inputs
 were fed directly into the options map, without interacting at all with the
@@ -110,9 +114,18 @@ configuration system:
 
 TBD
 
+## Retrospective (2026)
+
+The unified flow prevented CLI and RPC configuration from drifting. However, the `Config`/`OptionGroup` split evolved
+into a large `Has*`/`With*` hierarchy, and sparse input was easy to confuse with resolved runtime configuration.
+Shapeless and PureConfig further obscured the data flow for maintainers unfamiliar with advanced Scala idioms.
+[ADR-026][] retains one flow for CLI, files, and RPC while replacing this implementation with explicit data and
+resolution types.
+
 [Shai]: https://github.com/apalache-mc/apalache/milestone/42
 [RFC 010]: ./010rfc-transition-explorer.md
 [#2013]: https://github.com/apalache-mc/apalache/issues/2013
 [#1174]: https://github.com/apalache-mc/apalache/issues/1174
 [#1177]: https://github.com/apalache-mc/apalache/issues/1177
-[ADR 013]: ./013adr-configuration.md
+[ADR-013]: ./013adr-configuration.md
+[ADR-026]: ./026adr-explicit-configuration.md

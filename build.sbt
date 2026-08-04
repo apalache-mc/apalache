@@ -12,16 +12,36 @@ maintainer := "apalache@konnov.phd"
 // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Build-wide+settings
 ThisBuild / organizationName := "Apalache Development Team"
 ThisBuild / organizationHomepage := Some(url("https://apalache-mc.org"))
-ThisBuild / licenses += "Apache 2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
+ThisBuild / homepage := Some(url("https://github.com/apalache-mc/apalache"))
+ThisBuild / licenses := Seq("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / scmInfo := Some(ScmInfo(
+        url("https://github.com/apalache-mc/apalache"),
+        "scm:git:git@github.com:apalache-mc/apalache.git",
+    ))
+ThisBuild / developers := List(Developer(
+        "apalache-mc",
+        "Apalache Development Team",
+        "",
+        url("https://github.com/apalache-mc"),
+    ))
 
 // We store the version in a bare file to make accessing and updating the version trivial
 ThisBuild / versionFile := (ThisBuild / baseDirectory).value / "VERSION"
 ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 
-ThisBuild / organization := "at.forsyte"
+// The reverse domain name of https://apalache-mc.org, which is owned by the project.
+// This is a Maven groupId only: the Scala packages remain `at.forsyte.apalache.*`.
+ThisBuild / organization := "org.apalache-mc"
 ThisBuild / scalaVersion := "2.13.18"
 
-// Add resolver for Sonatype OSS Snapshots and Releases Maven repository
+val artifactJavaVersion = "17"
+
+// Maven Central publication is opt-in for individual library sub-projects.
+ThisBuild / publish / skip := true
+ThisBuild / publishMavenStyle := true
+ThisBuild / pomIncludeRepository := { _ => false }
+
+// Resolve and publish development builds through the Central Portal snapshot repository.
 ThisBuild / resolvers += Resolver.sonatypeCentralSnapshots
 
 // Shared dependencies accross all sub projects
@@ -33,7 +53,9 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.scalaParserCombinators,
     Deps.scalaz,
     Deps.slf4j,
-    Deps.tla2tools,
+    // NOTE: tla2tools is deliberately NOT declared here. It cannot be resolved from Maven Central,
+    // so it is declared only by the sub-projects that need it: `tla_parser`, `infra`, and `tool`.
+    // Keeping it out of `tlair` and `tla_io` is what makes those two publishable as libraries.
     Deps.cvc5,
     Deps.cvc5LinuxAarch64,
     Deps.cvc5LinuxX86_64,
@@ -42,7 +64,6 @@ ThisBuild / libraryDependencies ++= Seq(
     Deps.cvc5WindowsAarch64,
     Deps.cvc5WindowsX86_64,
     Deps.z3,
-    Deps.shapeless,
     TestDeps.junit,
     TestDeps.easymock,
     TestDeps.scalatest,
@@ -57,8 +78,11 @@ ThisBuild / libraryDependencies ++= Seq(
 //////////////////////
 
 fatalWarnings := sys.env.get("APALACHE_FATAL_WARNINGS").getOrElse("false").toBoolean
+ThisBuild / javacOptions ++= Seq("--release", artifactJavaVersion)
 ThisBuild / scalacOptions ++= {
   val commonOptions = Seq(
+      // Compile all published classes for the minimum supported JVM.
+      s"-release:${artifactJavaVersion}",
       // Enable deprecation and feature warnings
       "-deprecation",
       "-feature",
@@ -142,9 +166,27 @@ browseApiDocs := {
 lazy val tlair = (project in file("tlair"))
   .settings(
       testSettings,
-      libraryDependencies ++= Seq(
-          Deps.ujson,
-          Deps.kiama,
+      name := "tla-ir",
+      moduleName := "tla-ir",
+      description := "Apalache's typed intermediate representation and builder APIs for TLA+",
+      publish / skip := false,
+      publishTo := {
+        if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+        else localStaging.value
+      },
+      libraryDependencies := Seq(
+          scalaOrganization.value % "scala-library" % scalaVersion.value,
+          Deps.guice,
+          Deps.logging,
+          Deps.scalaParserCombinators,
+          Deps.scalaz,
+          TestDeps.junit,
+          TestDeps.scalatest,
+          TestDeps.scalacheck,
+          TestDeps.scalatestplusEasymock,
+          TestDeps.scalatestplusJunit,
+          TestDeps.scalatestplusScalacheck,
+          Deps.shapeless % Test,
       ),
   )
 
@@ -153,9 +195,10 @@ lazy val infra = (project in file("mod-infra"))
   .settings(
       testSettings,
       libraryDependencies ++= Seq(
-          Deps.commonsIo,
           Deps.ujson,
           Deps.upickle,
+          // ExitCodes reuses TLC's error codes (tlc2.output.EC)
+          Deps.tla2tools,
       ),
   )
 
@@ -165,15 +208,52 @@ lazy val tla_io = (project in file("tla-io"))
       // property based tests depend on IR generators defined in the tlair tests
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
       tlair % "test->test",
+  )
+  .settings(
+      testSettings,
+      name := "tla-io",
+      moduleName := "tla-io",
+      description := "Readers, writers, and configuration and trace serialization for Apalache's TLA+ IR",
+      publish / skip := false,
+      publishTo := {
+        if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+        else localStaging.value
+      },
+      libraryDependencies := Seq(
+          scalaOrganization.value % "scala-library" % scalaVersion.value,
+          Deps.guice,
+          Deps.jacksonDatabind,
+          Deps.kiama,
+          Deps.logging,
+          Deps.scalaParserCombinators,
+          Deps.scalaz,
+          Deps.slf4j,
+          Deps.ujson,
+          Deps.upickle,
+          TestDeps.junit,
+          TestDeps.scalatest,
+          TestDeps.scalacheck,
+          TestDeps.scalatestplusJunit,
+          TestDeps.scalatestplusScalacheck,
+      ),
+  )
+
+// The SANY frontend depends on tla2tools, which is not resolvable from Maven Central. Keeping it separate from
+// `tla_io` lets us publish `tlair` and `tla_io` as libraries.
+lazy val tla_parser = (project in file("tla-parser"))
+  .dependsOn(
+      tlair,
+      // property based tests depend on IR generators defined in the tlair tests
+      // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
+      tlair % "test->test",
       infra,
+      tla_io,
   )
   .settings(
       testSettings,
       libraryDependencies ++= Seq(
           Deps.commonsIo,
-          Deps.pureConfig,
-          Deps.jacksonDatabind,
-          Deps.jacksonModuleScala,
+          Deps.tla2tools,
       ),
   )
 
@@ -195,6 +275,8 @@ lazy val tla_pp = (project in file("tla-pp"))
       tlair % "test->test",
       infra,
       tla_io,
+      // only the tests parse TLA+ specs with SANY
+      tla_parser % "test->compile",
   )
   .settings(
       testSettings,
@@ -213,6 +295,8 @@ lazy val passes = (project in file("passes"))
       tlair,
       infra,
       tla_io,
+      // the SANY parser pass is the only consumer of the frontend
+      tla_parser,
       tla_pp,
       tla_assignments,
       tla_typechecker,
@@ -233,6 +317,8 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       tla_pp,
       tla_assignments,
       passes,
+      // only the tests parse TLA+ specs with SANY
+      tla_parser % "test->compile",
   )
   .settings(
       testSettings,
@@ -299,6 +385,8 @@ lazy val tool = (project in file("mod-tool"))
           Deps.commonsBeanutils,
           Deps.clistCore,
           Deps.clistMacros,
+          // Tool and ConfigCmd configure SANY and TLC directly
+          Deps.tla2tools,
       ),
   )
 
@@ -323,6 +411,7 @@ lazy val root = (project in file("."))
       tlair,
       infra,
       tla_io,
+      tla_parser,
       tla_typechecker,
       tla_pp,
       tla_assignments,
@@ -347,6 +436,11 @@ lazy val root = (project in file("."))
       // Assembly constructs our "fat jar"
       assembly / assemblyJarName := s"apalache-pkg-${version.value}-full.jar",
       assembly / mainClass := Some("at.forsyte.apalache.tla.Tool"),
+      // z3-turnkey loads native libraries from the class path. Java 25 requires
+      // executable JARs to opt in to native access explicitly (JEP 472).
+      assembly / packageOptions += Package.ManifestAttributes(
+          "Enable-Native-Access" -> "ALL-UNNAMED"
+      ),
       assembly / assembledMappings += {
         // To make our custom TLA modules available for import in TLA specs, we add them
         // to the tla2sany/StandardModules directory.
@@ -416,7 +510,7 @@ docker / dockerfile := {
   val readme = rootDir / "README.md"
 
   new Dockerfile {
-    from("eclipse-temurin:17-jdk-noble")
+    from("eclipse-temurin:25-jdk-noble")
 
     workDir(dwd)
 
@@ -443,9 +537,15 @@ docker / dockerfile := {
 
 // For some reason `scalafmtFilter` doesn't register as being used, tho it is
 // so this quiets the erroneous linting.
-Global / excludeLintKeys += scalafmtFilter
+Global / excludeLintKeys ++= Set(scalafmtFilter, pomIncludeRepository, publishMavenStyle)
 
 lazy val versionFile = settingKey[File]("Location of the file tracking the project version")
+
+lazy val cleanMavenCentralStaging = taskKey[Unit]("Remove files from the local Maven Central staging area")
+cleanMavenCentralStaging := {
+  IO.delete(sbt.Keys.stagingDirectory.value)
+  IO.delete((ThisBuild / baseDirectory).value / "target" / "sona-bundle")
+}
 
 // These tasks are used in our bespoke release pipeline
 // TODO(shon): Once we've changed our packaging to conform to more standard SBT structures and practices,

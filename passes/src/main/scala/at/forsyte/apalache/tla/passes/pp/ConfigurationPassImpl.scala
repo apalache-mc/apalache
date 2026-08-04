@@ -1,39 +1,39 @@
 package at.forsyte.apalache.tla.passes.pp
 
+import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.ConfigurationError
+import at.forsyte.apalache.io.config.Constants.CINIT
+import at.forsyte.apalache.io.config.SpecificationOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
+import at.forsyte.apalache.io.tlc.config.{InitNextSpec, NullSpec, TemporalSpec, TlcConfig}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.{TlaActionOper, TlaBoolOper, TlaOper, TlaTempOper}
 import at.forsyte.apalache.tla.lir.transformations.standard.NonrecursiveLanguagePred
 import at.forsyte.apalache.tla.lir.transformations.{LanguageWatchdog, TransformationTracker}
 import at.forsyte.apalache.tla.pp._
+import at.forsyte.apalache.tla.typecheck.TypingInputException
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
-import at.forsyte.apalache.infra.passes.DerivedPredicates
-import at.forsyte.apalache.infra.passes.options.OptionGroup
-import at.forsyte.apalache.infra.tlc.config.TlcConfig
-import at.forsyte.apalache.infra.tlc.config.InitNextSpec
-import at.forsyte.apalache.infra.tlc.config.TemporalSpec
-import at.forsyte.apalache.infra.tlc.config.NullSpec
-import at.forsyte.apalache.tla.typecheck.TypingInputException
 
 /**
  * The pass that collects the configuration parameters and overrides constants and definitions. This pass also
  * configures attributes in the [[infra.passes.DerivedPredicates DerivedPredicates]] class.
  *
- * @param options
- *   the group of options used to configure the pass
+ * @param specification
+ *   specification options used to configure the pass
  * @param derivedPreds
  *   used to communicate specification predicates to later passes
- * @param nextPass
- *   next pass to call
+ * @param tracker
+ *   transformation tracker to keep the changes
+ * @param writerFactory
+ *   a writer factory
  */
 class ConfigurationPassImpl @Inject() (
-    val options: OptionGroup.HasCheckerPreds,
+    val specification: SpecificationOptions,
     val derivedPreds: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
     writerFactory: TlaWriterFactory)
@@ -41,14 +41,27 @@ class ConfigurationPassImpl @Inject() (
 
   override def name: String = "ConfigurationPass"
 
+  private def cinit = specification.constantInitializer
+
+  private def invariants = specification.invariants
+
+  private def temporalProperties = specification.temporalProperties
+
+  private def view = specification.view
+
+  private def persistent = specification.persistent
+
   override def execute(tlaModule: TlaModule): PassResult = {
     // Since this is the 1st pass after Inline, check absence of recursion first
     LanguageWatchdog(NonrecursiveLanguagePred).check(tlaModule)
 
     // try to read from the TLC configuration file and produce constant overrides
-    val overrides = options.predicates.tlcConfig match {
-      case None                             => setDerivedPredicates(); List.empty // No overrides
-      case Some((tlcConfig, tlcConfigFile)) => loadOptionsFromTlcConfig(tlaModule, tlcConfig, tlcConfigFile)
+    val overrides = specification.tlcConfig match {
+      case None =>
+        setDerivedPredicates()
+        List.empty
+      case Some(input) =>
+        loadOptionsFromTlcConfig(tlaModule, input.config, input.path.toFile)
     }
 
     val constOverrideNamesAndTypes =
@@ -73,7 +86,8 @@ class ConfigurationPassImpl @Inject() (
       if (overrideTag != constDeclTag) {
         throw new TypingInputException(
             s"Constant ${decl.name.drop(ConstAndDefRewriter.OVERRIDE_PREFIX.length)} declared in the specification has the type tag $constDeclTag, while the value defined in the .cfg file has the type tag $overrideTag.\n" +
-              s"Please make sure the values in the .cfg file have types matching those in the specification, or use --cinit instead.",
+              s"Please make sure the values in the .cfg file have types matching those in the specification, " +
+              s"or use --$CINIT instead.",
             decl.ID,
         )
       }
@@ -83,7 +97,7 @@ class ConfigurationPassImpl @Inject() (
       if (constOverrides.nonEmpty) {
         // If there are constant overrides, we need a CInit predicate, so either
         // fetch the configured one or use the default operator name "CInit"
-        derivedPreds.setCinit(options.predicates.cinit.getOrElse("CInit"))
+        derivedPreds.setCinit(cinit.getOrElse("CInit"))
         extendCinitWithOverrides(constOverrides, tlaModule, derivedPreds.cinit.get)
       } else {
         tlaModule.declarations
@@ -137,7 +151,7 @@ class ConfigurationPassImpl @Inject() (
   }
 
   private def setDerivedPredicates(): Unit = {
-    val (init, next) = options.predicates.behaviorSpec match {
+    val (init, next) = specification.behaviorSpec match {
       case InitNextSpec(init, next) => (init, next)
       // Any other case should be impossible, since we only call this function if no TLC config was provided
       // TODO: Should we change data structure to make this state unrepresentable?
@@ -146,11 +160,11 @@ class ConfigurationPassImpl @Inject() (
     derivedPreds.configure(
         init = init,
         next = next,
-        temporalProps = options.predicates.temporalProps,
-        invariants = options.predicates.invariants,
-        cinit = options.predicates.cinit,
-        view = options.predicates.view,
-        persistent = options.predicates.persistent,
+        temporalProps = temporalProperties,
+        invariants = invariants,
+        cinit = cinit,
+        view = view,
+        persistent = persistent,
     )
   }
 
@@ -170,7 +184,7 @@ class ConfigurationPassImpl @Inject() (
   private def loadOptionsFromTlcConfig(module: TlaModule, config: TlcConfig, configFile: File): Seq[TlaDecl] = {
     val basename = configFile.getName
     val configuredModule = new TlcConfigImporter(config)(module)
-    val (init, next) = options.predicates.behaviorSpec match {
+    val (init, next) = specification.behaviorSpec match {
       case InitNextSpec(init, next) => (init, next)
 
       case TemporalSpec(specName) =>
@@ -183,10 +197,10 @@ class ConfigurationPassImpl @Inject() (
     derivedPreds.configure(
         init = init,
         next = next,
-        invariants = options.predicates.invariants,
-        temporalProps = options.predicates.temporalProps,
-        view = options.predicates.view,
-        cinit = options.predicates.cinit,
+        invariants = invariants,
+        temporalProps = temporalProperties,
+        view = view,
+        cinit = cinit,
         persistent = List.empty,
     )
 

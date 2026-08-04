@@ -1,8 +1,11 @@
 package at.forsyte.apalache.tla.tooling.opt
 
+import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.infra.passes.options.SourceOption.FileSource
-import at.forsyte.apalache.infra.passes.options._
+import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.InputSource.FileSource
+import at.forsyte.apalache.io.config.Constants.{EXPRESSIONS, TRACE, TRACEE}
+import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.json.DefaultTagJsonReader
 import at.forsyte.apalache.tla.bmcmt.config.TraceeModule
 import at.forsyte.apalache.tla.tracee.UJsonTraceReader
@@ -18,18 +21,19 @@ import java.io.File
  * @author
  *   Jure Kukovec
  */
-class TraceeCmd(name: String = "tracee", description: String = "Evaluate expressions over a trace.")
+class TraceeCmd(name: String = TRACEE, description: String = "Evaluate expressions over a trace.")
     extends CheckCmd(name, description) {
 
-  var trace: File = arg[File](description = "a file containing an ITF trace. Must also define --expressions.")
+  var trace: File =
+    arg[File](name = TRACE, description = s"a file containing an ITF trace. Must also define --$EXPRESSIONS.")
 
   var expressions: List[String] =
-    arg[List[String]](name = "expressions",
-        description = "TLA+ expressions to be evaluated over a given trace. Must also define --trace.")
+    arg[List[String]](name = EXPRESSIONS,
+        description = s"TLA+ expressions to be evaluated over a given trace. Must also define --$TRACE.")
 
   private val traceReader = new UJsonTraceReader(None, DefaultTagJsonReader)
 
-  private def getLenFromFile(src: SourceOption): Int = {
+  private def getLenFromFile(src: InputSource): Int = {
     val ujson = traceReader.read(src)
     traceReader.getTraceLength(ujson)
   }
@@ -43,34 +47,40 @@ class TraceeCmd(name: String = "tracee", description: String = "Evaluate express
         s"$i->${i - 1}"
       }).mkString("|")
 
-  override def run() = {
-    val cfg = configuration.get
-    val options = OptionGroup.WithTracee(cfg).get
-
-    // The execution length is read from the input and is 1 shorter than the trace length,
-    // because the trace contains the initial state.
-    val executionLength = getLenFromFile(options.input.source) - 1
-
-    val lenAdjustedOpt = options.copy(checker = options.checker.copy(length = executionLength))
-    PassChainExecutor(new TraceeModule(lenAdjustedOpt)).run() match {
-      case Right(_)      => Right(s"Trace successfully generated.")
-      case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
+  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+    runWithOptions(ApalacheConfigResolver.resolveTrace(config)) { options =>
+      // The execution length is read from the input and is 1 shorter than the trace length,
+      // because the trace contains the initial state.
+      val executionLength = getLenFromFile(options.source) - 1
+      val lenAdjustedOptions = options.withLength(executionLength)
+      PassChainExecutor(new TraceeModule(lenAdjustedOptions)).run() match {
+        case Right(_)      => Right("Trace successfully generated.")
+        case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
+      }
     }
   }
 
-  override def toConfig() = for {
-    cfg <- super.toConfig()
-    src <- FileSource(trace)
-    tuning = Some(Map(
-            "search.outputTraces" -> "true",
-            "search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)),
-        ))
-  } yield cfg.copy(
-      checker = cfg.checker.copy(tuning = tuning),
-      tracee = cfg.tracee.copy(
-          trace = Some(src),
-          expressions = Some(expressions),
-      ),
-  )
+  override def toConfig: ConfigParseResult[ApalacheConfig] = {
+    val base = super.toConfig
+    if (!base.isSuccess) return ConfigParseResult.failureFrom(base)
+    val source = FileSource(trace)
+    if (!source.isSuccess) return ConfigParseResult.failureFrom(source)
+
+    val src = source.requireValue()
+    val tuning = Map(
+        "search.outputTraces" -> "true",
+        "search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)),
+    )
+    mergeConfig(
+        base,
+        ApalacheConfig(
+            checker = CheckerPatch(tuning = Some(tuning)),
+            traceEvaluation = TraceEvaluationPatch(
+                trace = Some(src),
+                expressions = Some(expressions),
+            ),
+        ),
+    )
+  }
 
 }

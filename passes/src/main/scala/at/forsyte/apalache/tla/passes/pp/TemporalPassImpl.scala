@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.config.Constants.INV
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -57,7 +58,8 @@ class TemporalPassImpl @Inject() (
           val level = levelFinder.getLevelOfDecl(temporalProp)
           if (level != TlaLevelTemporal) {
             logger.warn(
-                s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property of the initial state. Should ${temporalProp.name} be an invariant instead (--inv)?")
+                s"  > Temporal property ${temporalProp.name} has no temporal operators, so it specifies a property " +
+                  s"of the initial state. Should ${temporalProp.name} be an invariant instead (--$INV)?")
           }
           true
         case _ => false

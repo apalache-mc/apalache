@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.infra.passes.options.{SMTEncoding, SMTSolver}
+import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker

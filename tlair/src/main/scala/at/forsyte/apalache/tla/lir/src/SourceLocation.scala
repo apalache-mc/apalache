@@ -8,6 +8,21 @@ package at.forsyte.apalache.tla.lir.src
  * @author
  *   Igor Konnov
  */
+object SourceLocation {
+
+  /**
+   * Construct a source location, internalizing the filename to save space.
+   *
+   * @param filename
+   *   the name of the module the location points into
+   * @param region
+   *   the region of the source the location points at
+   */
+  def apply(filename: String, region: SourceRegion): SourceLocation = {
+    new SourceLocation(filename.intern(), region)
+  }
+}
+
 class SourceLocation(val filename: String, val region: SourceRegion) {
   override def toString: String = filename + ".tla:" + region
 
