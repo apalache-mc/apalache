@@ -7,7 +7,7 @@ import at.forsyte.apalache.io.json.JsonDeserializationError
 import at.forsyte.apalache.io.quint.QuintUnsupportedError
 import at.forsyte.apalache.tla.assignments.AssignmentException
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{
   LanguagePredError, MalformedSepecificationError, MalformedTlaError, OutdatedAnnotationsError, TypingException, UID,

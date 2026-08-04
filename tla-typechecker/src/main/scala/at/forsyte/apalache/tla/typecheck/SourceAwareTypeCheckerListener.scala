@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck
 
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.UID
 
 /** A [[TypeCheckerListener]] that has a source store and and a change listener */

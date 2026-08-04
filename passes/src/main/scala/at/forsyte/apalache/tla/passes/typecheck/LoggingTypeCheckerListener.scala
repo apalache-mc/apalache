@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.passes.typecheck
 
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.TlaType1
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.typecheck._

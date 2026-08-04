@@ -2,8 +2,8 @@ package at.forsyte.apalache.tla.passes.assignments
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.assignments._
-import at.forsyte.apalache.tla.imp.findBodyOf
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.findBodyOf
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.storage.{BodyMapFactory, ChangeListener, SourceLocator}

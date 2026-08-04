@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.passes.imp
 import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
 import at.forsyte.apalache.infra.passes.Pass.{PassFailure, PassResult}
 import at.forsyte.apalache.io.annotations.store._
-import at.forsyte.apalache.tla.imp.src.SourceStore
+import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.{CyclicDependencyError, TlaModule}
 import at.forsyte.apalache.tla.lir.transformations.standard.DeclarationSorter
 import at.forsyte.apalache.io.lir.TlaWriterFactory
