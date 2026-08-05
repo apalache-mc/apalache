@@ -99,6 +99,7 @@ We can set some JVM args and still have the default max heap size supplied.
 ```sh
 $ JVM_ARGS="-Xms1m" apalache-mc version --debug
 ...
+# JVM compatibility args: --sun-misc-unsafe-memory-access=allow
 # JVM args: -Xms1m -Xmx4096m
 ...
 ```
@@ -108,6 +109,7 @@ If we set the max heap size (with `-Xmx`) it will override the default max heap 
 ```sh
 $ JVM_ARGS="-Xmx16m" apalache-mc version --debug
 ...
+# JVM compatibility args: --sun-misc-unsafe-memory-access=allow
 # JVM args: -Xmx16m
 ...
 ```
@@ -499,6 +501,17 @@ EXITCODE: ERROR (12)
 ```
 
 ## running the check command
+
+### check command emits no Java 25 compatibility warnings
+
+The packaged launcher suppresses warnings from bundled dependencies that use
+`sun.misc.Unsafe` and restricted native-access methods. Check the minimal no-variable specification to exercise both
+application startup and native solver loading.
+
+```sh
+$ apalache-mc check --length=1 NoVars.tla 2>&1 | grep -Ei 'terminally deprecated|restricted method'
+[1]
+```
 
 ### Prints default computation length of 10 (regression #2087)
 

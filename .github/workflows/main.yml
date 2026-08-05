@@ -15,7 +15,7 @@ jobs:
   build-mdbook:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v2
@@ -30,12 +30,12 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v6
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
           cache: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
@@ -47,12 +47,12 @@ jobs:
       APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v6
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Check scaladoc
@@ -63,12 +63,12 @@ jobs:
       APALACHE_FATAL_WARNINGS: true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
+      - uses: actions/checkout@v6
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Coursier cache
@@ -96,13 +96,13 @@ jobs:
       matrix:
         operating-system: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Coursier cache
         uses: coursier/cache-action@v6
       - name: Coursier setup
         uses: coursier/setup-action@v1
         with:
-          jvm: temurin:1.17
+          jvm: temurin:25
           apps: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
@@ -120,6 +120,53 @@ jobs:
           find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
+
+  windows-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Build universal package
+        run: sbt "Universal/packageBin"
+      - name: Upload universal package
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-package
+          path: target/universal/apalache-*.zip
+          if-no-files-found: error
+
+  windows-package-smoke:
+    needs: windows-package
+    runs-on: windows-latest
+    steps:
+      # The repository contains a directory named `aux`, which Windows cannot
+      # check out because AUX is a reserved device name. Build on Linux and
+      # exercise the platform-independent package on Windows instead.
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+      - name: Download universal package
+        uses: actions/download-artifact@v8
+        with:
+          name: windows-package
+          path: package
+      - name: Run packaged Windows launcher
+        shell: pwsh
+        run: |
+          $archive = Get-ChildItem package/apalache-*.zip | Select-Object -First 1
+          Expand-Archive -LiteralPath $archive.FullName -DestinationPath windows-smoke
+          $launcher = Get-ChildItem windows-smoke -Recurse -Filter apalache-mc.bat | Select-Object -First 1
+          $output = & $launcher.FullName version --debug 2>&1
+          $output | Write-Output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
@@ -147,9 +194,9 @@ jobs:
             smt-solver: cvc5
             test-filter: ""
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Cache local m2 repository
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-sbt-${{ hashFiles('project/Dependencies.scala') }}
@@ -177,9 +224,11 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-      - name: Build dev-shell
+      - name: Validate dev-shell Java toolchain
         if: runner.os == 'Linux'
-        run: nix develop -c bash -c exit
+        run: |
+          nix develop -c java -version
+          nix develop -c sbt -batch 'eval require(System.getProperty("java.specification.version") == "25", "sbt must run on Java 25")'
       - name: Build and run integration tests
         if: runner.os == 'Linux'
         run: nix develop -c make integration
@@ -189,17 +238,17 @@ jobs:
           TEST_FILTER: ${{ matrix.test-filter }}
 
       # ── Direct path (macOS only, no Nix) ─────────────────────────────────────
-      - name: Set up JDK 17
+      - name: Set up JDK 25
         if: runner.os == 'macOS'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
       - name: Coursier setup
         if: runner.os == 'macOS'
         uses: coursier/setup-action@v1
         with:
-          jvm: temurin:1.17
+          jvm: temurin:25
           apps: sbt
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
@@ -236,7 +285,7 @@ jobs:
   docker-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # see: https://github.com/actions/runner-images/issues/10788
       - uses: sbt/setup-sbt@v1
       - name: Cache nix store
@@ -252,14 +301,12 @@ jobs:
             ${{ runner.os }}-nix-
             ${{ runner.os }}-
       - name: Install Nix
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v31
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-      - name: Build dev-shell
-        run: nix develop -c bash -c exit
       - name: Build the docker image
-        run: make docker
+        run: nix develop -c make docker
       - name: Run integration tests in docker container
         run: |
           nix develop -c bash -c '

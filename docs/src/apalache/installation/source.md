@@ -1,9 +1,9 @@
 # Building from source
 
 1. Install `git`.
-2. Install the [Eclipse Temurin][] or [Zulu][] builds of OpenJDK 17.
-   - Apalache currently requires Scala 2.13.8, see [this table of compatible JDK versions][compatibility table].
-   - We recommend OpenJDK 17, the latest LTS release.
+2. Install the [Eclipse Temurin][] or [Zulu][] builds of OpenJDK 25.
+   - Java 25 is the minimum supported JVM and is the latest LTS release.
+   - The Scala and sbt versions used by the build are compatible with Java 25; see the [compatibility table][].
 3. Install [sbt][].
    - On Debian Linux or Ubuntu, [follow this guide](https://www.scala-sbt.org/1.x/docs/Installing-sbt-on-Linux.html#Ubuntu+and+other+Debian-based+distributions)
    - On Arch: `sudo pacman -Syu sbt`
@@ -33,7 +33,7 @@ repository, you have three options after running `make`:
 
 
 [Eclipse Temurin]: https://adoptium.net/
-[Zulu]: https://www.azul.com/downloads/?version=java-17-lts&package=jdk#download-openjdk
+[Zulu]: https://www.azul.com/downloads/?version=java-25-lts&package=jdk#download-openjdk
 [compatibility table]: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
 [sbt]: https://www.scala-sbt.org/1.x/docs/Setup.html
 [direnv]: https://direnv.net/
