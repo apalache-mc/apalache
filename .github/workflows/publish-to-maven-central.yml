@@ -4,6 +4,12 @@ on:
   release:
     types:
       - published
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Release version without the v prefix (for example, 0.59.0)
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -16,24 +22,46 @@ concurrency:
 
 jobs:
   publish:
-    if: ${{ github.repository_owner == 'apalache-mc' && github.event.release.prerelease == false }}
+    if: >-
+      ${{
+        github.repository_owner == 'apalache-mc' &&
+        (
+          (github.event_name == 'release' && github.event.release.prerelease == false) ||
+          (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+        )
+      }}
     environment:
       name: maven-central
       url: https://central.sonatype.com/publishing/deployments
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', inputs.release_version) || github.event.release.tag_name }}
 
     steps:
       - name: Checkout the released version
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
           persist-credentials: false
 
-      - name: Set up JDK 17
+      # A manual run may retry a release whose tag contains an older, broken
+      # publishing script. Use the script from the workflow revision while
+      # keeping the released source itself pinned to RELEASE_TAG.
+      - name: Checkout current publishing automation
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: .publish-automation
+          sparse-checkout: script/publish-maven.sh
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 25
           cache: sbt
 
       - name: Set up sbt
@@ -41,8 +69,6 @@ jobs:
 
       - name: Verify the release tag and version
         shell: bash
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
 
@@ -79,6 +105,9 @@ jobs:
       - name: Publish tla-ir and tla-io
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          SONATYPE_TOKEN_PASSWORD: ${{ secrets.SONATYPE_TOKEN_PASSWORD }}
-          SONATYPE_TOKEN_USERNAME: ${{ secrets.SONATYPE_TOKEN_USERNAME }}
-        run: ./script/publish-maven.sh release
+          PUBLISH_MAVEN_PROJECT_ROOT: ${{ github.workspace }}
+          PUBLISH_MAVEN_SCRIPT: ${{ github.event_name == 'workflow_dispatch' && './.publish-automation/script/publish-maven.sh' || './script/publish-maven.sh' }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+        run: |
+          "$PUBLISH_MAVEN_SCRIPT" release

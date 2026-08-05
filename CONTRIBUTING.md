@@ -553,10 +553,15 @@ Publishing a GitHub release automatically runs the
 imports the signing key, and invokes
 `./script/publish-maven.sh release`. GitHub prereleases are skipped.
 
+The workflow can also be started manually from the Actions page on the `main`
+branch. Enter the release version without the `v` prefix (for example,
+`0.59.0`). Manual runs use the current publishing automation against the specified release tag, which allows a failed
+publication to be retried after a workflow fix without moving the release tag.
+
 Configure a GitHub Environment named `maven-central`, without a required reviewer, and add these environment secrets:
 
-- `SONATYPE_TOKEN_USERNAME`: username from a Central Portal user token;
-- `SONATYPE_TOKEN_PASSWORD`: password from the same Central Portal user token;
+- `SONATYPE_USERNAME`: username from a Central Portal user token;
+- `SONATYPE_PASSWORD`: password from the same Central Portal user token;
 - `PGP_SECRET`: base64-encoded, ASCII-armored private signing key; and
 - `PGP_PASSPHRASE`: passphrase for the signing key.
 
@@ -578,7 +583,7 @@ versions are immutable, rerun a failed publication only after confirming that Ce
 Manual publishing requires:
 
 - a [Central Portal user token](https://central.sonatype.org/publish/generate-portal-token/), exposed as
-  `SONATYPE_TOKEN_USERNAME` and `SONATYPE_TOKEN_PASSWORD`;
+  `SONATYPE_USERNAME` and `SONATYPE_PASSWORD`;
 - for snapshot publishing, snapshots enabled for the `org.apalache-mc`
   namespace in the Central Portal;
 - a secret GPG key in the local keyring, with its public key available from a public keyserver; and
