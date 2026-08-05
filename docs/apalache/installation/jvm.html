@@ -37,7 +37,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4e4544e3.js";
+            window.path_to_searchindex_js = "../../searchindex-33d2244c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-933c4279.js"></script>
@@ -180,8 +180,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="prebuilt-packages"><a class="header" href="#prebuilt-packages">Prebuilt Packages</a></h1>
-<p>You need to download and install a Java Virtual Machine first.
-We recommend version 17 of the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-17-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK.</p>
+<p>You need to download and install a Java Virtual Machine first. Apalache requires Java 25. We recommend
+the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-25-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK.</p>
 <p>Once you have installed Java, download the <a href="https://github.com/apalache-mc/apalache/releases">latest
 release</a> and unpack into
 a directory of your choice. Depending on your OS, you have two options.</p>
@@ -189,8 +189,9 @@ a directory of your choice. Depending on your OS, you have two options.</p>
 better, add the <code>./bin</code> directory to your <code>PATH</code> and run <code>apalache-mc</code>.</p>
 <p><em>Option 2: Windows.</em> You can run the script <code>./bin/apalache-mc.bat</code></p>
 <p>Alternatively, you can run Java directly with</p>
-<pre><code>java.exe -jar ./lib/apalache.jar &lt;args&gt;
+<pre><code>java --sun-misc-unsafe-memory-access=allow -jar ./lib/apalache.jar &lt;args&gt;
 </code></pre>
+<p>The packaged launch scripts supply this Java 25 compatibility option automatically.</p>
 <p>The arguments <code>&lt;args&gt;</code> are explained in <a href="../running.html">Running the Tool</a>.</p>
 
                     </main>

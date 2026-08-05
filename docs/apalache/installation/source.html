@@ -37,7 +37,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-4e4544e3.js";
+            window.path_to_searchindex_js = "../../searchindex-33d2244c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-933c4279.js"></script>
@@ -182,10 +182,10 @@
                         <h1 id="building-from-source"><a class="header" href="#building-from-source">Building from source</a></h1>
 <ol>
 <li>Install <code>git</code>.</li>
-<li>Install the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-17-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK 17.
+<li>Install the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-25-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK 25.
 <ul>
-<li>Apalache currently requires Scala 2.13.8, see <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">this table of compatible JDK versions</a>.</li>
-<li>We recommend OpenJDK 17, the latest LTS release.</li>
+<li>Java 25 is the minimum supported JVM and is the latest LTS release.</li>
+<li>The Scala and sbt versions used by the build are compatible with Java 25; see the <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">compatibility table</a>.</li>
 </ul>
 </li>
 <li>Install <a href="https://www.scala-sbt.org/1.x/docs/Setup.html">sbt</a>.
