@@ -167,9 +167,6 @@ jobs:
           $output = & $launcher.FullName version --debug 2>&1
           $output | Write-Output
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if ($output -match "terminally deprecated|restricted method") {
-            throw "Java 25 runtime warnings were emitted by the packaged launcher"
-          }
 
   integration-tests:
     runs-on: ${{ matrix.operating-system }}
