@@ -115,4 +115,4 @@
 - [ADR-023: Trace evaluation](./adr/023adr-trace-evaluation.md)
 - [ADR-024: Arena computation isolation](./adr/024adr-arena-pass.md)
 - [ADR-025: CVC5 solver backend integration](./adr/025adr-cvc5-solver-backend.md)
-- [ADR-026: Explicit configuration and run options](./adr/026adr-explicit-configuration.md)
+- [ADR-026: Explicit configuration and command options](./adr/026adr-explicit-configuration.md)

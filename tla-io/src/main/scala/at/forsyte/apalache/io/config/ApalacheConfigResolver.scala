@@ -1,8 +1,8 @@
 package at.forsyte.apalache.io.config
 
-import at.forsyte.apalache.infra.tlc.TlcConfigParserApalache
-import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.tlc.TlcConfigParserApalache
+import at.forsyte.apalache.io.tlc.config.{BehaviorSpec, InitNextSpec, TlcConfig, TlcConfigParseError}
 import org.slf4j.LoggerFactory
 
 import java.nio.charset.StandardCharsets

@@ -16,6 +16,8 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.6")
 addSbtPlugin("com.thesamet" % "sbt-protoc" % "1.0.6")
 // https://github.com/sbt/sbt-unidoc
 addSbtPlugin("com.github.sbt" % "sbt-unidoc" % "0.6.1")
+// https://github.com/sbt/sbt-pgp
+addSbtPlugin("com.github.sbt" % "sbt-pgp" % "2.3.1")
 
 // See https://github.com/scalapb/zio-grpc/blob/master/examples/routeguide/project/plugins.sbt
 val zioGrpcVersion = "0.5.3"
