@@ -553,6 +553,11 @@ Publishing a GitHub release automatically runs the
 imports the signing key, and invokes
 `./script/publish-maven.sh release`. GitHub prereleases are skipped.
 
+The workflow can also be started manually from the Actions page on the `main`
+branch. Enter the release version without the `v` prefix (for example,
+`0.59.0`). Manual runs use the current publishing automation against the specified release tag, which allows a failed
+publication to be retried after a workflow fix without moving the release tag.
+
 Configure a GitHub Environment named `maven-central`, without a required reviewer, and add these environment secrets:
 
 - `SONATYPE_USERNAME`: username from a Central Portal user token;
