@@ -1,4 +1,4 @@
-package at.forsyte.apalache.infra.tlc.config
+package at.forsyte.apalache.io.tlc.config
 
 import scala.util.parsing.input.Positional
 

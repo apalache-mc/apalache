@@ -1,7 +1,7 @@
 package at.forsyte.apalache.io.config
 
-import at.forsyte.apalache.infra.tlc.config.{BehaviorSpec, TlcConfig}
 import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.tlc.config.{BehaviorSpec, TlcConfig}
 import at.forsyte.apalache.tla.lir.Feature
 
 import java.nio.file.Path

@@ -1,9 +1,6 @@
-package at.forsyte.apalache.infra.tlc
+package at.forsyte.apalache.io.tlc
 
-import at.forsyte.apalache.infra.tlc.config.{
-  ConfigBoolValue, ConfigIntValue, ConfigModelValue, ConfigSetValue, ConfigStrValue, InitNextSpec, TemporalSpec,
-  TlcConfigParseError,
-}
+import at.forsyte.apalache.io.tlc.config._
 import org.junit.runner.RunWith
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.junit.JUnitRunner
