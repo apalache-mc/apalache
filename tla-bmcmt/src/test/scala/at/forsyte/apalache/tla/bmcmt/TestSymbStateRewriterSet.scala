@@ -549,6 +549,52 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(notInPred))
   }
 
+  test("""{Q \in SUBSET {1,2,3} : ~(2 \in Q)} ~~> sat""") { rewriterType: SMTEncoding =>
+    val set = intEnum(1, 2, 3)
+    val predEx = tla.not(tla.in(tla.int(2), tla.name("Q", intSetT)))
+    val ex = tla.filter(tla.name("Q", intSetT), tla.powSet(set), predEx)
+    val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    // {1,3} satisfies ~(2 \in Q)
+    val inPred = tla.in(tla.enumSet(tla.int(1), tla.int(3)), unchecked(nextState.ex))
+    assertTlaExAndRestore(rewriter, nextState.setRex(inPred))
+    // {1,2} does not satisfy ~(2 \in Q)
+    val notInPred = tla.not(tla.in(tla.enumSet(tla.int(1), tla.int(2)), unchecked(nextState.ex)))
+    assertTlaExAndRestore(rewriter, nextState.setRex(notInPred))
+  }
+
+  test("""{} \in {Q \in SUBSET {1,2} : Q = {}}""") { rewriterType: SMTEncoding =>
+    val set = intEnum(1, 2)
+    val predEx = tla.eql(tla.name("Q", intSetT), emptyIntSet)
+    val filteredSet = tla.filter(tla.name("Q", intSetT), tla.powSet(set), predEx)
+    val inEx = tla.in(emptyIntSet, filteredSet)
+    val state = new SymbState(inEx, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""{1} \notin {Q \in SUBSET {1,2} : Q = {}}""") { rewriterType: SMTEncoding =>
+    val set = intEnum(1, 2)
+    val predEx = tla.eql(tla.name("Q", intSetT), emptyIntSet)
+    val filteredSet = tla.filter(tla.name("Q", intSetT), tla.powSet(set), predEx)
+    val notInEx = tla.not(tla.in(tla.enumSet(tla.int(1)), filteredSet))
+    val state = new SymbState(notInEx, arena, Binding())
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
+  test("""{Q \in SUBSET {} : TRUE} ~~> {{}}""") { rewriterType: SMTEncoding =>
+    val predEx = tla.bool(true)
+    val ex = tla.filter(tla.name("Q", intSetT), tla.powSet(emptyIntSet), predEx)
+    val state = new SymbState(ex, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    // only member of SUBSET {} is {}, so the result is {{}}
+    val inPred = tla.in(emptyIntSet, unchecked(nextState.ex))
+    assertTlaExAndRestore(rewriter, nextState.setRex(inPred))
+  }
+
   test("""\E X \in SUBSET {1} IN {} = {x \in X : [y \in X |-> TRUE][x]}""") { rewriterType: SMTEncoding =>
     // regression
     val baseSet = tla.enumSet(tla.int(1))
