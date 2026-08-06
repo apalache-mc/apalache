@@ -86,7 +86,8 @@
 
               # Build
               # Nixpkgs wraps sbt with its default JRE, independently of PATH.
-              # Override it so Scala sees Java 25 when validating -release:25.
+              # Override it so the build and development tools run on Java 25;
+              # released artifacts still target Java 17.
               (sbt.override { jre = jdk25_headless; })
 
               # Development
