@@ -13,9 +13,13 @@ rem Set the path to the APALACHE JAR file
 set "APALACHE_JAR=%DIR%\..\lib\apalache.jar"
 
 rem Set JVM arguments
-rem Bundled dependencies still use sun.misc.Unsafe. Java 25 warns unless the
-rem application explicitly permits those calls (JEP 498).
-set "JVM_COMPAT_ARGS=--sun-misc-unsafe-memory-access=allow"
+rem Bundled dependencies still use sun.misc.Unsafe. Recent Java runtimes warn
+rem unless the application explicitly permits those calls (JEP 498), while
+rem Java 17 rejects the compatibility option. Probe the selected runtime so the
+rem same package works on both.
+set "JVM_COMPAT_ARGS="
+java --sun-misc-unsafe-memory-access=allow -version >nul 2>&1
+if %ERRORLEVEL% EQU 0 set "JVM_COMPAT_ARGS=--sun-misc-unsafe-memory-access=allow"
 set "JVM_ARGS="
 
 rem Check if the APALACHE JAR file exists
