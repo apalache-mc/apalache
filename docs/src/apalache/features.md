@@ -48,10 +48,15 @@ replaced with a constant.
 |----------------------------------------------------------------------|:----------:|:---------:|---------------------------------------|
 | `=`, `/=`, `\in`, `\notin`, `\intersect`, `\union`, `\subseteq`, `\` |     ✔      |     -     |                                       |
 | `{e_1, ..., e_n}`                                                    |     ✔      |     -     |                                       |
-| `{x \in S : p}`                                                      |     ✔      |     -     |                                       |
+| `{x \in S : p}`                                                      |     ✔      |     -     | `S = SUBSET T` expands T, see note below |
 | `{e : x \in S}`                                                      |     ✔      |     -     |                                       |
 | `SUBSET S`                                                           |     ✔      |     -     | Sometimes, the powersets are expanded |
 | `UNION S`                                                            |     ✔      |     -     | Provided that S is expanded           |
+
+**Note on `{x \in SUBSET T : p}`:** When the bounding set `S` is `SUBSET T`,
+Apalache expands `T` into all 2^n subsets before applying the filter. This is
+subject to the same size limit as other powerset expansions (base set up to
+`POWSET_MAX_BASE_SIZE = 20` elements).
 
 #### Functions
 
