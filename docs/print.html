@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-33d2244c.js";
+            window.path_to_searchindex_js = "searchindex-55f9b60e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-933c4279.js"></script>
@@ -3837,8 +3837,9 @@ required memory largely depends on the selected solver and specification. We
 recommend to allocate at least 4GB of memory for the tool.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="prebuilt-packages"><a class="header" href="#prebuilt-packages">Prebuilt Packages</a></h1>
-<p>You need to download and install a Java Virtual Machine first. Apalache requires Java 25. We recommend
-the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-25-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK.</p>
+<p>You need to download and install a Java Virtual Machine first. We recommend running Apalache on Java 25, using the
+<a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-25-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK. Released artifacts maintain bytecode compatibility with Java 17 and
+should run on Java 17 or newer, but Java 17 is less thoroughly tested than the recommended Java 25 runtime.</p>
 <p>Once you have installed Java, download the <a href="https://github.com/apalache-mc/apalache/releases">latest
 release</a> and unpack into
 a directory of your choice. Depending on your OS, you have two options.</p>
@@ -3846,9 +3847,8 @@ a directory of your choice. Depending on your OS, you have two options.</p>
 better, add the <code>./bin</code> directory to your <code>PATH</code> and run <code>apalache-mc</code>.</p>
 <p><em>Option 2: Windows.</em> You can run the script <code>./bin/apalache-mc.bat</code></p>
 <p>Alternatively, you can run Java directly with</p>
-<pre><code>java --sun-misc-unsafe-memory-access=allow -jar ./lib/apalache.jar &lt;args&gt;
+<pre><code>java -jar ./lib/apalache.jar &lt;args&gt;
 </code></pre>
-<p>The packaged launch scripts supply this Java 25 compatibility option automatically.</p>
 <p>The arguments <code>&lt;args&gt;</code> are explained in <a href="#running-the-tool">Running the Tool</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="using-a-docker-image"><a class="header" href="#using-a-docker-image">Using a docker image</a></h1>
@@ -3945,7 +3945,7 @@ build a docker image of Apalache, issue the following command in
 <li>Install <code>git</code>.</li>
 <li>Install the <a href="https://adoptium.net/">Eclipse Temurin</a> or <a href="https://www.azul.com/downloads/?version=java-25-lts&amp;package=jdk#download-openjdk">Zulu</a> builds of OpenJDK 25.
 <ul>
-<li>Java 25 is the minimum supported JVM and is the latest LTS release.</li>
+<li>Java 25 is the required build JDK and is the latest LTS release. Released artifacts target Java 17.</li>
 <li>The Scala and sbt versions used by the build are compatible with Java 25; see the <a href="https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html">compatibility table</a>.</li>
 </ul>
 </li>
