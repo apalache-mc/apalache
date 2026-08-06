@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
+import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 import at.forsyte.apalache.tla.lir._
@@ -29,6 +30,9 @@ class SetFilterRule(rewriter: SymbStateRewriter) extends RewritingRule {
         var newState = rewriter.rewriteUntilDone(state.setRex(setEx))
         newState = newState.asCell.cellType match {
           case CellTFrom(SetT1(_)) => newState
+          case PowSetT(SetT1(_))   =>
+            // expand SUBSET S into a finite set of all subsets, then filter normally
+            new PowSetCtor(rewriter).confringo(newState, newState.arena.getDom(newState.asCell))
           case tp @ _ => throw new NotImplementedError("A set filter over %s is not implemented".format(tp))
         }
         val setCell = newState.asCell
