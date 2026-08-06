@@ -1,6 +1,12 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.61.0 - 2026-08-06
+
+### Bug fixes
+
+- Lowered the bytecode target for released application and library artifacts from Java 25 to Java 17, restoring compatibility with Java 17 or newer. Java 25 remains the recommended runtime and the required development and release toolchain.
+
 ## 0.60.0 - 2026-08-05
 
 ### Breaking changes
