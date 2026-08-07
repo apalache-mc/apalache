@@ -110,8 +110,8 @@ of landing changes:
 2. Once the issue is created, maintainers may request more detailed
    documentation in the form of a [Request for Comment (RFC)][rfc] or
    [Architectural Decision Record (ADR)][adr].
-   - Please draft ADRs by starting with [our
-     template](./docs/src/adr/NNNadr-template.md).
+    - Please draft ADRs by starting with [our
+      template](./docs/src/adr/NNNadr-template.md).
 3. Discussion at the RFC stage will build collective understanding of the
    dimensions of the problem and help structure conversations around trade-offs.
 4. When the problem is well understood but the solution leads to large
@@ -125,32 +125,44 @@ of landing changes:
 
 ## Making a pull request
 
-We develop on the `main` branch and practice [trunk-based
-development](https://trunkbaseddevelopment.com/).
-
-Nontrivial changes should start with a [draft pull request][] against
-`main`. The draft signals that work is underway. When the work is ready for
-feedback, hitting "Ready for Review" will signal to the maintainers that you are
-ready for them to take a look.
-
-Where possible, implementation trajectories should aim to proceed as a series of
-small, logically distinct, incremental changes, in the form of small PRs that
-can be merged quickly. This helps manage the load for reviewers and reduces the
-likelihood of merge conflicts or strategically misdirected work.
-
-Each stage of the process is aimed at creating feedback cycles which align
-contributors and maintainers to make sure:
-
-- Contributors don’t waste their time implementing/proposing features which
-  won’t land in `main`.
-- Maintainers have the necessary context in order to support and review
-  contributions.
+> [!IMPORTANT]
+> Apalache has an [AI Policy][]. Check it before creating a pull request
+> with help of AI tools.
 
 > [!IMPORTANT]
 > Apalache has [DCO2][] enabled, as required by the Linux
 > Foundation.  Hence, you have to add `-s` to your commits such as `git commit
 > -s -m 'Commit message'`. This does not require any
 > cryptography knowledge/setup.
+
+We develop on the `main` branch and practice [trunk-based
+development](https://trunkbaseddevelopment.com/). We have several rules for
+contributions from the non-core contributors.
+
+1. If you are implementing a feature, and you not a core contributor,
+   you MUST first [discuss][] the problem that you are going to solve,
+   unless you are fixing a bug.
+
+1. If you are fixing a bug, there MUST be an open issue on this bug. This issue
+   MUST be confirmed by the project maintainers.
+
+1. Nontrivial changes SHOULD start with a [draft pull request][] against
+   `main`. The draft signals that work is underway. When the work is ready for
+   feedback, hitting "Ready for Review" will signal to the maintainers that you are
+   ready for them to take a look.
+
+1. Where possible, implementation trajectories should aim to proceed as a series of
+   small, logically distinct, incremental changes, in the form of small PRs that
+   can be merged quickly. This helps manage the load for reviewers and reduces the
+   likelihood of merge conflicts or strategically misdirected work.
+
+1. Each stage of the process is aimed at creating feedback cycles which align
+   contributors and maintainers to make sure:
+
+    1. Contributors don’t waste their time implementing/proposing features which
+       won’t land in `main`.
+    1. Maintainers have the necessary context in order to support and review
+       contributions.
 
 ## Dependencies
 
@@ -397,15 +409,15 @@ The CI configuration is located in
 
 [./.unreleased/](./.unreleased/)
 : A living record of the changes not yet released. It contains a subdirectory
-  for each supported category of change.
+for each supported category of change.
 
 [./RELEASE.md](./RELEASE.md)
 : A frozen record documenting the changes added since the last release. This is
-  only present in release commits.
+only present in release commits.
 
 [./CHANGES.md](./CHANGES.md)
 : The changelog accumulating the history of all the changes, across all
-  versions.
+versions.
 
 ### Recording changes
 
@@ -419,17 +431,17 @@ We break entries into the follow categories:
 
 [breaking-changes](https://en.wiktionary.org/wiki/breaking_change)
 : A breaking change occurs when behavior is introduced that could cause existing
-  usage patterns to fail. Examples include adding/removing CLI flags or changing
-  the representation of data that is emitted as part of our public API.
+usage patterns to fail. Examples include adding/removing CLI flags or changing
+the representation of data that is emitted as part of our public API.
 
 [features](https://en.wikipedia.org/wiki/Software_feature)
 : Features include adding any user-visible functionality or making significant
-  improvements to existing functionality.
+improvements to existing functionality.
 
 [bug-fixes](https://en.wikipedia.org/wiki/Software_bug)
 : "A software bug is an error, flaw or fault in computer software that causes it
-  to produce an incorrect or unexpected result." We only record the removal of
-  bugs and not their introduction ;)
+to produce an incorrect or unexpected result." We only record the removal of
+bugs and not their introduction ;)
 
 [documentation](https://en.wikipedia.org/wiki/Documentation)
 : Documentation includes the inline CLI documentation and the user manual.
@@ -482,16 +494,16 @@ The process proceeds in three steps:
 
 1. CI prepares a release, and opens a PR with the version changes and release
    notes. These are [manually via the GitHub UI][github-ui].
-   - The scheduled releases increment the patch number.
-   - Use the _Version_ input field to manually specify the version to release.
+    - The scheduled releases increment the patch number.
+    - Use the _Version_ input field to manually specify the version to release.
 
    <img src="./trigger-release.png" alt="How to trigger a release" width="700px">
 2. A human reviews the PR, approves it, and **merges** (_DO NOT SQUASH OR
    REBASE_) into the trunk, at which point CI kicks in to:
-   - tag the commit
-   - package the artifact
-   - publish it as a GitHub release
-   - announce the release in our internal `#releases` slack channel
+    - tag the commit
+    - package the artifact
+    - publish it as a GitHub release
+    - announce the release in our internal `#releases` slack channel
 3. Publishing the GitHub release triggers a separate workflow that signs and publishes `tla-ir` and `tla-io` to Maven
    Central.
 
@@ -505,8 +517,8 @@ The process proceeds in three steps:
 #### Requirements
 
 - [hub](https://github.com/github/hub) installed
-  - With a `GITHUB_TOKEN` variable in your shell environment holding an access
-    token with repo permissions.
+    - With a `GITHUB_TOKEN` variable in your shell environment holding an access
+      token with repo permissions.
 
 #### Prepare the release
 
@@ -515,12 +527,12 @@ Assuming the current version recorded in the project's `VERSION` file is
 
 - [ ] `git checkout main && git pull`
 - [ ] Run `./script/release-prepare.sh` to
-  - create and checkout a branch `release/l.m.n`.
-  - prepare and add a release commit `[release] l.m.n`
-  - update the changelog
-  - bump the version number
-  - commit the changes
-  - opens a pr into `main` with the title `[release] l.m.n`.
+    - create and checkout a branch `release/l.m.n`.
+    - prepare and add a release commit `[release] l.m.n`
+    - update the changelog
+    - bump the version number
+    - commit the changes
+    - opens a pr into `main` with the title `[release] l.m.n`.
 - [ ] Get the PR reviewed and merged and **DO NOT SQUASH THE CHANGES** on merge.
 
 If you need to set a specific version (e.g., to increment to a major version),
@@ -536,9 +548,9 @@ When the PR is merged into `main`:
 
 - [ ] Checkout the `[release] l.m.n` commit from the latest `main`
 - [ ] Run `./script/release-publish.sh` to
-  - tag the release commit
-  - package the
-  - create the release on github
+    - tag the release commit
+    - package the
+    - create the release on github
 - [ ] Update the download links at https://github.com/apalache-mc/apalache/blob/gh-pages/_config.yml#L7
 
 ### Publishing libraries to Maven Central
@@ -608,3 +620,5 @@ Released Maven Central coordinates are immutable.
 [adr]: https://en.wikipedia.org/wiki/Architectural_decision
 [draft pull request]: https://github.blog/2019-02-14-introducing-draft-pull-requests/
 [DCO2]: https://github.com/cncf/dco2
+[AI Policy]: ./AI_POLICY.md
+[discuss]: https://github.com/apalache-mc/apalache/discussions
