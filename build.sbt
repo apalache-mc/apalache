@@ -34,7 +34,7 @@ ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 ThisBuild / organization := "org.apalache-mc"
 ThisBuild / scalaVersion := "2.13.18"
 
-val minimumJavaVersion = "25"
+val artifactJavaVersion = "17"
 
 // Maven Central publication is opt-in for individual library sub-projects.
 ThisBuild / publish / skip := true
@@ -78,11 +78,11 @@ ThisBuild / libraryDependencies ++= Seq(
 //////////////////////
 
 fatalWarnings := sys.env.get("APALACHE_FATAL_WARNINGS").getOrElse("false").toBoolean
-ThisBuild / javacOptions ++= Seq("--release", minimumJavaVersion)
+ThisBuild / javacOptions ++= Seq("--release", artifactJavaVersion)
 ThisBuild / scalacOptions ++= {
   val commonOptions = Seq(
       // Compile all published classes for the minimum supported JVM.
-      s"-release:${minimumJavaVersion}",
+      s"-release:${artifactJavaVersion}",
       // Enable deprecation and feature warnings
       "-deprecation",
       "-feature",
