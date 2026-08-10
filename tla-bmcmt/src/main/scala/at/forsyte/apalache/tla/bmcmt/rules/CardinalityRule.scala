@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.SetOps
+import at.forsyte.apalache.tla.bmcmt.rules.support.SetOps
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience._
 import at.forsyte.apalache.tla.lir.oper.TlaFiniteSetOper
-import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperEx, SetT1, TlaEx}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.TlaInputError
 
 /**
