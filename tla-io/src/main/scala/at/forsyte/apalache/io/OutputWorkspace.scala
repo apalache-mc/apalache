@@ -64,7 +64,7 @@ final class OutputWorkspace(initialization: CommandInitializationOptions) {
 
   /** Open a UTF-8 writer that the caller must close. Prefer [[withWriter]] for scoped writes. */
   def openWriter(path: Path): PrintWriter = {
-    new PrintWriter(Files.newBufferedWriter(path, StandardCharsets.UTF_8))
+    new PrintWriter(Files.newBufferedWriter(path))
   }
 
   /** Apply `f` to a UTF-8 writer for `path`, then close the writer. */
