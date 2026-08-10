@@ -20,6 +20,7 @@ import scala.collection.immutable.SortedMap
  * API users should use the builders and factories in `org.apalache_mc.tla.jir`; this object is not a stable API.
  */
 object JavaToScalaAdapter {
+
   /** Converts a Java arbitrary-precision integer to its Scala counterpart. */
   def bigInt(value: java.math.BigInteger): BigInt = BigInt(value)
 
@@ -69,7 +70,8 @@ object JavaToScalaAdapter {
   def checkedPairs(
       values: Array[ExpressionPair[TlaBuilderExpr]],
       stateOf: Function[TlaBuilderExpr, Object]): Seq[(TBuilderInstruction, TBuilderInstruction)] =
-    values.toIndexedSeq.map(pair => checkedState(stateOf.apply(pair.first())) -> checkedState(stateOf.apply(pair.second())))
+    values.toIndexedSeq.map(pair =>
+      checkedState(stateOf.apply(pair.first())) -> checkedState(stateOf.apply(pair.second())))
 
   /** Converts scope-unchecked expression pairs to Scala tuples. */
   def uncheckedPairs(values: Array[ExpressionPair[TlaEx]]): Seq[(TlaEx, TlaEx)] =
@@ -89,7 +91,8 @@ object JavaToScalaAdapter {
   def checkedUpdates(
       values: Array[ExceptUpdate[TlaBuilderExpr]],
       stateOf: Function[TlaBuilderExpr, Object]): Seq[(TBuilderInstruction, TBuilderInstruction)] =
-    values.toIndexedSeq.map(update => checkedState(stateOf.apply(update.index())) -> checkedState(stateOf.apply(update.value())))
+    values.toIndexedSeq.map(update =>
+      checkedState(stateOf.apply(update.index())) -> checkedState(stateOf.apply(update.value())))
 
   /** Converts scope-unchecked EXCEPT updates to Scala tuples. */
   def uncheckedUpdates(values: Array[ExceptUpdate[TlaEx]]): Seq[(TlaEx, TlaEx)] =

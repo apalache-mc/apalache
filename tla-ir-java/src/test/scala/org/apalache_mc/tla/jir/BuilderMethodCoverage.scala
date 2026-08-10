@@ -71,9 +71,9 @@ private[jir] object BuilderMethodCoverage {
       case ("choose", 2)          => Array(f.expression(f.boundName), f.expression(f.predicate))
       case ("choose", 3)          =>
         Array(f.expression(f.boundName), f.expression(f.integerSet), f.expression(f.predicate))
-      case ("label", 2)          => Array(f.expression(f.predicate), Array("label"))
-      case ("and" | "or", 1)     => f.only(f.expressions(f.predicate, f.predicateTwo))
-      case ("not", 1)            => Array(f.expression(f.predicate))
+      case ("label", 2)             => Array(f.expression(f.predicate), Array("label"))
+      case ("and" | "or", 1)        => f.only(f.expressions(f.predicate, f.predicateTwo))
+      case ("not", 1)               => Array(f.expression(f.predicate))
       case ("implies" | "equiv", 2) =>
         Array(f.expression(f.predicate), f.expression(f.predicateTwo))
       case ("forall" | "exists", 2) =>
@@ -90,9 +90,9 @@ private[jir] object BuilderMethodCoverage {
       case ("intersect" | "union" | "subsetEq" | "difference", 2) =>
         Array(f.expression(f.integerSet), f.expression(f.integerSetTwo))
       case ("unionAll", 1) => Array(f.expression(f.nestedIntegerSet))
-      case ("filter", 3) =>
+      case ("filter", 3)   =>
         Array(f.expression(f.boundName), f.expression(f.integerSet), f.expression(f.predicate))
-      case ("map", 2) => Array(f.expression(f.boundName), f.expressionPairs(f.boundName, f.integerSet))
+      case ("map", 2)    => Array(f.expression(f.boundName), f.expressionPairs(f.boundName, f.integerSet))
       case ("funSet", 2) =>
         Array(f.expression(f.integerSet), f.expression(f.integerSetTwo))
       case ("recordSet", 1)                   => f.only(f.namedExpressions("field", f.integerSet))
@@ -104,10 +104,10 @@ private[jir] object BuilderMethodCoverage {
       case ("tuple", 1)                       => f.only(f.expressions(f.integer, f.predicate))
       case ("emptySeq", 1)                    => Array(IntT1)
       case ("seq", 1)                         => f.only(f.expressions(f.integer, f.integerTwo))
-      case ("funDef", 2) => Array(f.expression(f.boundName), f.expressionPairs(f.boundName, f.integerSet))
+      case ("funDef", 2)   => Array(f.expression(f.boundName), f.expressionPairs(f.boundName, f.integerSet))
       case ("funApply", 2) => Array(f.expression(f.function), f.expression(f.integer))
-      case ("domain", 1) => Array(f.expression(f.function))
-      case ("except", 3) =>
+      case ("domain", 1)   => Array(f.expression(f.function))
+      case ("except", 3)   =>
         Array(f.expression(f.function), f.expression(f.integer), f.expression(f.integerTwo))
       case ("append", 2) => Array(f.expression(f.integerSequence), f.expression(f.integer))
       case ("concat", 2) =>
@@ -115,13 +115,13 @@ private[jir] object BuilderMethodCoverage {
       case ("head" | "tail" | "len", 1) => Array(f.expression(f.integerSequence))
       case ("subSeq", 3)                =>
         Array(f.expression(f.integerSequence), f.expression(f.integer), f.expression(f.integerTwo))
-      case ("prime", 1)             => Array(f.expression(f.intName))
+      case ("prime", 1)                 => Array(f.expression(f.intName))
       case ("stutter" | "noStutter", 2) =>
         Array(f.expression(f.predicate), f.expression(f.intName))
-      case ("enabled", 1)   => Array(f.expression(f.predicate))
-      case ("unchanged", 1) => Array(f.expression(f.intName))
+      case ("enabled", 1)    => Array(f.expression(f.predicate))
+      case ("unchanged", 1)  => Array(f.expression(f.intName))
       case ("actionThen", 2) => Array(f.expression(f.predicate), f.expression(f.predicateTwo))
-      case ("ite", 3)       =>
+      case ("ite", 3)        =>
         Array(f.expression(f.predicate), f.expression(f.integer), f.expression(f.integerTwo))
       case ("caseSplit", 1) => f.only(f.expressionPairs(f.predicate, f.integer))
       case ("caseOther", 2) =>
@@ -129,11 +129,11 @@ private[jir] object BuilderMethodCoverage {
       case ("always" | "eventually", 1)  => Array(f.expression(f.predicate))
       case ("leadsTo" | "guarantees", 2) =>
         Array(f.expression(f.predicate), f.expression(f.predicateTwo))
-      case ("weakFair" | "strongFair", 2) => Array(f.expression(f.intName), f.expression(f.predicate))
+      case ("weakFair" | "strongFair", 2)           => Array(f.expression(f.intName), f.expression(f.predicate))
       case ("temporalExists" | "temporalForAll", 2) =>
         Array(f.expression(f.boundName), f.expression(f.predicate))
-      case ("assign", 2)    => Array(f.expression(f.primedInteger), f.expression(f.integerTwo))
-      case ("gen", 2)       => Array(f.expression(f.integer), IntT1)
+      case ("assign", 2) => Array(f.expression(f.primedInteger), f.expression(f.integerTwo))
+      case ("gen", 2)    => Array(f.expression(f.integer), IntT1)
       case ("repeat", 3) if parameterTypes(1) == classOf[BigInteger] =>
         Array(f.expression(f.binaryOperator), BigInteger.ONE, f.expression(f.integer))
       case ("repeat", 3) if parameterTypes(1) == java.lang.Long.TYPE =>
@@ -152,14 +152,14 @@ private[jir] object BuilderMethodCoverage {
         Array(f.expression(f.binaryOperator), f.expression(f.integer), f.expression(f.integerSet))
       case ("foldSeq", 3) =>
         Array(f.expression(f.binaryOperator), f.expression(f.integer), f.expression(f.integerSequence))
-      case ("setAsFun", 1)                                     => Array(f.expression(f.pairSet))
-      case ("notSupportedByModelChecker", 2)                   => Array("unsupported", IntT1)
-      case ("distinct", 1)                                     => f.only(f.expressions(f.integer, f.integerTwo))
-      case ("apalacheSeqCapacity", 1)                          => Array(f.expression(f.integerSequence))
-      case ("variant", 3)          => Array("Some", f.expression(f.integer), f.variantType)
-      case ("variantFilter", 2)    => Array("Some", f.expression(f.variantSet))
-      case ("variantTag", 1)       => Array(f.expression(f.variantValue))
-      case ("variantGetOrElse", 3) =>
+      case ("setAsFun", 1)                   => Array(f.expression(f.pairSet))
+      case ("notSupportedByModelChecker", 2) => Array("unsupported", IntT1)
+      case ("distinct", 1)                   => f.only(f.expressions(f.integer, f.integerTwo))
+      case ("apalacheSeqCapacity", 1)        => Array(f.expression(f.integerSequence))
+      case ("variant", 3)                    => Array("Some", f.expression(f.integer), f.variantType)
+      case ("variantFilter", 2)              => Array("Some", f.expression(f.variantSet))
+      case ("variantTag", 1)                 => Array(f.expression(f.variantValue))
+      case ("variantGetOrElse", 3)           =>
         Array("Some", f.expression(f.variantValue), f.expression(f.integerTwo))
       case ("variantGetUnsafe", 2) => Array("Some", f.expression(f.variantValue))
       case _                       => throw new AssertionError(s"No representative invocation for ${methodId(method)}")
