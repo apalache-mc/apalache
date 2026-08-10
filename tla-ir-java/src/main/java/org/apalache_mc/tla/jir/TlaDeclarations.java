@@ -3,7 +3,7 @@ package org.apalache_mc.tla.jir;
 import at.forsyte.apalache.tla.lir.TlaConstDecl;
 import at.forsyte.apalache.tla.lir.TlaType1;
 import at.forsyte.apalache.tla.lir.TlaVarDecl;
-import org.apalache_mc.tla.jir.impl.JavaFacadeSupport$;
+import org.apalache_mc.tla.jir.impl.JavaToScalaAdapter$;
 
 /** Creates typed TLA+ constant and variable declarations for use in Apalache IR. */
 public final class TlaDeclarations {
@@ -18,7 +18,7 @@ public final class TlaDeclarations {
    * @return the typed constant declaration
    */
   public static TlaConstDecl constant(String name, TlaType1 type) {
-    return JavaFacadeSupport$.MODULE$.constantDeclaration(name, type);
+    return JavaToScalaAdapter$.MODULE$.constantDeclaration(name, type);
   }
 
   /**
@@ -29,6 +29,6 @@ public final class TlaDeclarations {
    * @return the typed variable declaration
    */
   public static TlaVarDecl variable(String name, TlaType1 type) {
-    return JavaFacadeSupport$.MODULE$.variableDeclaration(name, type);
+    return JavaToScalaAdapter$.MODULE$.variableDeclaration(name, type);
   }
 }

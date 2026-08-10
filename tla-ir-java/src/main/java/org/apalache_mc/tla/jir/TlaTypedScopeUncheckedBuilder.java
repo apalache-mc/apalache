@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.VariantT1;
 import at.forsyte.apalache.tla.typecomp.ScopeUnsafeBuilder;
 import java.math.BigInteger;
 import java.util.concurrent.Callable;
-import org.apalache_mc.tla.jir.impl.JavaFacadeSupport$;
+import org.apalache_mc.tla.jir.impl.JavaToScalaAdapter$;
 import scala.collection.immutable.Seq;
 
 /**
@@ -75,8 +75,8 @@ public final class TlaTypedScopeUncheckedBuilder {
    */
   public TlaEx integer(BigInteger value) {
     return expression(
-        () -> JavaFacadeSupport$.MODULE$.uncheckedInteger(
-            builder, JavaFacadeSupport$.MODULE$.bigInt(value)));
+        () -> JavaToScalaAdapter$.MODULE$.uncheckedInteger(
+            builder, JavaToScalaAdapter$.MODULE$.bigInt(value)));
   }
 
   /**
@@ -125,7 +125,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    * @return the typed TLA+ IR expression
    */
   public TlaEx constant(String root, ConstT1 type) {
-    return expression(() -> JavaFacadeSupport$.MODULE$.uncheckedConstant(builder, root, type));
+    return expression(() -> JavaToScalaAdapter$.MODULE$.uncheckedConstant(builder, root, type));
   }
 
   /**
@@ -224,7 +224,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    */
   public TlaOperDecl decl(String name, TlaEx body, TypedParameter... parameters) {
     return declaration(
-        () -> builder.decl(name, body, JavaFacadeSupport$.MODULE$.typedParameters(parameters)));
+        () -> builder.decl(name, body, JavaToScalaAdapter$.MODULE$.typedParameters(parameters)));
   }
 
   /**
@@ -241,7 +241,7 @@ public final class TlaTypedScopeUncheckedBuilder {
   public TlaEx lambda(String uniqueName, TlaEx body, TypedParameter... parameters) {
     return expression(
         () -> builder.lambda(
-            uniqueName, body, JavaFacadeSupport$.MODULE$.typedParameters(parameters)));
+            uniqueName, body, JavaToScalaAdapter$.MODULE$.typedParameters(parameters)));
   }
 
   /**
@@ -255,7 +255,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    */
   public TlaEx letIn(TlaEx body, TlaOperDecl... declarations) {
     return expression(
-        () -> builder.letIn(body, JavaFacadeSupport$.MODULE$.uncheckedDecls(declarations)));
+        () -> builder.letIn(body, JavaToScalaAdapter$.MODULE$.uncheckedDecls(declarations)));
   }
 
   /**
@@ -270,7 +270,7 @@ public final class TlaTypedScopeUncheckedBuilder {
   @SafeVarargs
   public final TlaEx exceptMany(TlaEx function, ExceptUpdate<TlaEx>... updates) {
     return expression(
-        () -> builder.exceptMany(function, JavaFacadeSupport$.MODULE$.uncheckedUpdates(updates)));
+        () -> builder.exceptMany(function, JavaToScalaAdapter$.MODULE$.uncheckedUpdates(updates)));
   }
 
   /**
@@ -375,7 +375,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    */
   public TlaEx label(TlaEx expression, String... arguments) {
     return expression(
-        () -> builder.label(expression, JavaFacadeSupport$.MODULE$.strings(arguments)));
+        () -> builder.label(expression, JavaToScalaAdapter$.MODULE$.strings(arguments)));
   }
 
   /**
@@ -888,7 +888,7 @@ public final class TlaTypedScopeUncheckedBuilder {
   @SafeVarargs
   public final TlaEx record(NamedExpression<TlaEx>... fields) {
     return expression(
-        () -> builder.rowRec(JavaFacadeSupport$.MODULE$.noUncheckedRowVariable(), named(fields)));
+        () -> builder.rowRec(JavaToScalaAdapter$.MODULE$.noUncheckedRowVariable(), named(fields)));
   }
 
   /**
@@ -1315,7 +1315,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    */
   public TlaEx repeat(TlaEx operator, BigInteger count, TlaEx initial) {
     return expression(
-        () -> builder.repeat(operator, JavaFacadeSupport$.MODULE$.bigInt(count), initial));
+        () -> builder.repeat(operator, JavaToScalaAdapter$.MODULE$.bigInt(count), initial));
   }
 
   /**
@@ -1396,7 +1396,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    */
   public TlaEx mkSeq(BigInteger count, TlaEx operator) {
     return expression(
-        () -> builder.mkSeq(JavaFacadeSupport$.MODULE$.bigInt(count), operator));
+        () -> builder.mkSeq(JavaToScalaAdapter$.MODULE$.bigInt(count), operator));
   }
 
   /**
@@ -1581,7 +1581,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    * @return the underlying expression collection
    */
   private Seq expressions(TlaEx[] expressions) {
-    return JavaFacadeSupport$.MODULE$.uncheckedExpressions(expressions);
+    return JavaToScalaAdapter$.MODULE$.uncheckedExpressions(expressions);
   }
 
   /**
@@ -1591,7 +1591,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    * @return the underlying expression pairs
    */
   private Seq pairs(ExpressionPair<TlaEx>[] pairs) {
-    return JavaFacadeSupport$.MODULE$.uncheckedPairs(pairs);
+    return JavaToScalaAdapter$.MODULE$.uncheckedPairs(pairs);
   }
 
   /**
@@ -1601,7 +1601,7 @@ public final class TlaTypedScopeUncheckedBuilder {
    * @return the underlying named expressions
    */
   private Seq named(NamedExpression<TlaEx>[] fields) {
-    return JavaFacadeSupport$.MODULE$.uncheckedNamed(fields);
+    return JavaToScalaAdapter$.MODULE$.uncheckedNamed(fields);
   }
 
   /**
@@ -1615,7 +1615,7 @@ public final class TlaTypedScopeUncheckedBuilder {
     try {
       return action.call();
     } catch (Exception exception) {
-      throw JavaFacadeSupport$.MODULE$.translateException(exception);
+      throw JavaToScalaAdapter$.MODULE$.translateException(exception);
     }
   }
 

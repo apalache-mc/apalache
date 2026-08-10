@@ -10,7 +10,7 @@ import at.forsyte.apalache.tla.lir.VariantT1;
 import at.forsyte.apalache.tla.typecomp.ScopedBuilder;
 import java.math.BigInteger;
 import java.util.concurrent.Callable;
-import org.apalache_mc.tla.jir.impl.JavaFacadeSupport$;
+import org.apalache_mc.tla.jir.impl.JavaToScalaAdapter$;
 import scala.collection.immutable.Seq;
 import scalaz.IndexedStateT;
 
@@ -57,7 +57,7 @@ public final class TlaCheckedBuilder {
    * @return the typed TLA+ IR expression
    */
   public TlaEx build(TlaBuilderExpr expression) {
-    return call(() -> JavaFacadeSupport$.MODULE$.buildExpr(expression.state()));
+    return call(() -> JavaToScalaAdapter$.MODULE$.buildExpr(expression.state()));
   }
 
   /**
@@ -67,7 +67,7 @@ public final class TlaCheckedBuilder {
    * @return the typed TLA+ IR operator declaration
    */
   public TlaOperDecl build(TlaBuilderDecl declaration) {
-    return call(() -> JavaFacadeSupport$.MODULE$.buildDecl(declaration.state()));
+    return call(() -> JavaToScalaAdapter$.MODULE$.buildDecl(declaration.state()));
   }
 
   /**
@@ -100,8 +100,8 @@ public final class TlaCheckedBuilder {
    */
   public TlaBuilderExpr integer(BigInteger value) {
     return expression(
-        () -> JavaFacadeSupport$.MODULE$.checkedInteger(
-            builder, JavaFacadeSupport$.MODULE$.bigInt(value)));
+        () -> JavaToScalaAdapter$.MODULE$.checkedInteger(
+            builder, JavaToScalaAdapter$.MODULE$.bigInt(value)));
   }
 
   /**
@@ -150,7 +150,7 @@ public final class TlaCheckedBuilder {
    * @return the pending expression
    */
   public TlaBuilderExpr constant(String root, ConstT1 type) {
-    return expression(() -> JavaFacadeSupport$.MODULE$.checkedConstant(builder, root, type));
+    return expression(() -> JavaToScalaAdapter$.MODULE$.checkedConstant(builder, root, type));
   }
 
   /**
@@ -261,7 +261,7 @@ public final class TlaCheckedBuilder {
    */
   public TlaBuilderDecl decl(String name, TlaBuilderExpr body, TypedParameter... parameters) {
     return declaration(
-        () -> builder.decl(name, state(body), JavaFacadeSupport$.MODULE$.typedParameters(parameters)));
+        () -> builder.decl(name, state(body), JavaToScalaAdapter$.MODULE$.typedParameters(parameters)));
   }
 
   /**
@@ -279,7 +279,7 @@ public final class TlaCheckedBuilder {
     return declaration(
         () ->
             builder.declWithInferredParameterTypes(
-                name, state(body), JavaFacadeSupport$.MODULE$.operParameters(parameters)));
+                name, state(body), JavaToScalaAdapter$.MODULE$.operParameters(parameters)));
   }
 
   /**
@@ -297,7 +297,7 @@ public final class TlaCheckedBuilder {
       String uniqueName, TlaBuilderExpr body, TypedParameter... parameters) {
     return expression(
         () -> builder.lambda(
-            uniqueName, state(body), JavaFacadeSupport$.MODULE$.typedParameters(parameters)));
+            uniqueName, state(body), JavaToScalaAdapter$.MODULE$.typedParameters(parameters)));
   }
 
   /**
@@ -314,7 +314,7 @@ public final class TlaCheckedBuilder {
         () ->
             builder.letIn(
                 state(body),
-                JavaFacadeSupport$.MODULE$.checkedDecls(declarations, TlaBuilderDecl::state)));
+                JavaToScalaAdapter$.MODULE$.checkedDecls(declarations, TlaBuilderDecl::state)));
   }
 
   /**
@@ -333,7 +333,7 @@ public final class TlaCheckedBuilder {
         () ->
             builder.exceptMany(
                 state(function),
-                JavaFacadeSupport$.MODULE$.checkedUpdates(updates, TlaBuilderExpr::state)));
+                JavaToScalaAdapter$.MODULE$.checkedUpdates(updates, TlaBuilderExpr::state)));
   }
 
   /**
@@ -439,7 +439,7 @@ public final class TlaCheckedBuilder {
    */
   public TlaBuilderExpr label(TlaBuilderExpr expression, String... arguments) {
     return expression(
-        () -> builder.label(state(expression), JavaFacadeSupport$.MODULE$.strings(arguments)));
+        () -> builder.label(state(expression), JavaToScalaAdapter$.MODULE$.strings(arguments)));
   }
 
   /**
@@ -956,7 +956,7 @@ public final class TlaCheckedBuilder {
   @SafeVarargs
   public final TlaBuilderExpr record(NamedExpression<TlaBuilderExpr>... fields) {
     return expression(
-        () -> builder.rowRec(JavaFacadeSupport$.MODULE$.noRowVariable(), named(fields)));
+        () -> builder.rowRec(JavaToScalaAdapter$.MODULE$.noRowVariable(), named(fields)));
   }
 
   /**
@@ -1391,7 +1391,7 @@ public final class TlaCheckedBuilder {
     return expression(
         () ->
             builder.repeat(
-                state(operator), JavaFacadeSupport$.MODULE$.bigInt(count), state(initial)));
+                state(operator), JavaToScalaAdapter$.MODULE$.bigInt(count), state(initial)));
   }
 
   /**
@@ -1473,7 +1473,7 @@ public final class TlaCheckedBuilder {
    */
   public TlaBuilderExpr mkSeq(BigInteger count, TlaBuilderExpr operator) {
     return expression(
-        () -> builder.mkSeq(JavaFacadeSupport$.MODULE$.bigInt(count), state(operator)));
+        () -> builder.mkSeq(JavaToScalaAdapter$.MODULE$.bigInt(count), state(operator)));
   }
 
   /**
@@ -1663,7 +1663,7 @@ public final class TlaCheckedBuilder {
    * @return the underlying expression instruction
    */
   private IndexedStateT state(TlaBuilderExpr expression) {
-    return JavaFacadeSupport$.MODULE$.checkedState(expression.state());
+    return JavaToScalaAdapter$.MODULE$.checkedState(expression.state());
   }
 
   /**
@@ -1673,7 +1673,7 @@ public final class TlaCheckedBuilder {
    * @return the underlying declaration instruction
    */
   private IndexedStateT declState(TlaBuilderDecl declaration) {
-    return JavaFacadeSupport$.MODULE$.checkedDeclState(declaration.state());
+    return JavaToScalaAdapter$.MODULE$.checkedDeclState(declaration.state());
   }
 
   /**
@@ -1683,7 +1683,7 @@ public final class TlaCheckedBuilder {
    * @return the underlying expression instructions
    */
   private Seq expressions(TlaBuilderExpr[] expressions) {
-    return JavaFacadeSupport$.MODULE$.checkedExpressions(expressions, TlaBuilderExpr::state);
+    return JavaToScalaAdapter$.MODULE$.checkedExpressions(expressions, TlaBuilderExpr::state);
   }
 
   /**
@@ -1693,7 +1693,7 @@ public final class TlaCheckedBuilder {
    * @return the underlying expression pairs
    */
   private Seq pairs(ExpressionPair<TlaBuilderExpr>[] pairs) {
-    return JavaFacadeSupport$.MODULE$.checkedPairs(pairs, TlaBuilderExpr::state);
+    return JavaToScalaAdapter$.MODULE$.checkedPairs(pairs, TlaBuilderExpr::state);
   }
 
   /**
@@ -1703,7 +1703,7 @@ public final class TlaCheckedBuilder {
    * @return the underlying named expressions
    */
   private Seq named(NamedExpression<TlaBuilderExpr>[] fields) {
-    return JavaFacadeSupport$.MODULE$.checkedNamed(fields, TlaBuilderExpr::state);
+    return JavaToScalaAdapter$.MODULE$.checkedNamed(fields, TlaBuilderExpr::state);
   }
 
   /**
@@ -1717,7 +1717,7 @@ public final class TlaCheckedBuilder {
     try {
       return action.call();
     } catch (Exception exception) {
-      throw JavaFacadeSupport$.MODULE$.translateException(exception);
+      throw JavaToScalaAdapter$.MODULE$.translateException(exception);
     }
   }
 

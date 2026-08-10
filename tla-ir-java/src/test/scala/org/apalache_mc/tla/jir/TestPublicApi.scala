@@ -88,5 +88,5 @@ class TestPublicApi extends AnyFunSuite {
       classOf[TlaBuilderScopeException],
   )
 
-  private val implementationTypeNameFragments = Seq("scala.", "scalaz.", "$", "JavaFacadeSupport")
+  private val implementationTypeNameFragments = Seq("scala.", "scalaz.", "$", "JavaToScalaAdapter")
 }

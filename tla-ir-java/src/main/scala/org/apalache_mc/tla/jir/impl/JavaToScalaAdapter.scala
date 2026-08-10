@@ -19,7 +19,7 @@ import scala.collection.immutable.SortedMap
  *
  * API users should use the builders and factories in `org.apalache_mc.tla.jir`; this object is not a stable API.
  */
-object JavaFacadeSupport {
+object JavaToScalaAdapter {
   /** Converts a Java arbitrary-precision integer to its Scala counterpart. */
   def bigInt(value: java.math.BigInteger): BigInt = BigInt(value)
 

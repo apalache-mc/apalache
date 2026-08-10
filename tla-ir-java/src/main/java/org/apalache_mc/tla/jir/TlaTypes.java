@@ -16,7 +16,7 @@ import at.forsyte.apalache.tla.lir.TlaType1;
 import at.forsyte.apalache.tla.lir.TupT1;
 import at.forsyte.apalache.tla.lir.VarT1;
 import at.forsyte.apalache.tla.lir.VariantT1;
-import org.apalache_mc.tla.jir.impl.JavaFacadeSupport$;
+import org.apalache_mc.tla.jir.impl.JavaToScalaAdapter$;
 
 /**
  * Creates the TLA+ types accepted by the builders and declaration factories.
@@ -48,7 +48,7 @@ public final class TlaTypes {
    * @return the named constant type
    */
   public static ConstT1 constant(String name) {
-    return JavaFacadeSupport$.MODULE$.constantType(name);
+    return JavaToScalaAdapter$.MODULE$.constantType(name);
   }
 
   /**
@@ -59,7 +59,7 @@ public final class TlaTypes {
    * @return the type variable
    */
   public static VarT1 typeVariable(int index) {
-    return JavaFacadeSupport$.MODULE$.typeVariable(index);
+    return JavaToScalaAdapter$.MODULE$.typeVariable(index);
   }
 
   /**
@@ -69,7 +69,7 @@ public final class TlaTypes {
    * @return the type variable
    */
   public static VarT1 typeVariable(String name) {
-    return JavaFacadeSupport$.MODULE$.typeVariable(name);
+    return JavaToScalaAdapter$.MODULE$.typeVariable(name);
   }
 
   /**
@@ -80,7 +80,7 @@ public final class TlaTypes {
    * @return the function type
    */
   public static FunT1 function(TlaType1 argument, TlaType1 result) {
-    return JavaFacadeSupport$.MODULE$.functionType(argument, result);
+    return JavaToScalaAdapter$.MODULE$.functionType(argument, result);
   }
 
   /**
@@ -90,7 +90,7 @@ public final class TlaTypes {
    * @return the set type
    */
   public static SetT1 set(TlaType1 element) {
-    return JavaFacadeSupport$.MODULE$.setType(element);
+    return JavaToScalaAdapter$.MODULE$.setType(element);
   }
 
   /**
@@ -100,7 +100,7 @@ public final class TlaTypes {
    * @return the sequence type
    */
   public static SeqT1 sequence(TlaType1 element) {
-    return JavaFacadeSupport$.MODULE$.sequenceType(element);
+    return JavaToScalaAdapter$.MODULE$.sequenceType(element);
   }
 
   /**
@@ -110,7 +110,7 @@ public final class TlaTypes {
    * @return the tuple type
    */
   public static TupT1 tuple(TlaType1... elements) {
-    return JavaFacadeSupport$.MODULE$.tupleType(elements);
+    return JavaToScalaAdapter$.MODULE$.tupleType(elements);
   }
 
   /**
@@ -120,7 +120,7 @@ public final class TlaTypes {
    * @return the sparse-tuple type
    */
   public static SparseTupT1 sparseTuple(IndexedType... fields) {
-    return JavaFacadeSupport$.MODULE$.sparseTupleType(fields);
+    return JavaToScalaAdapter$.MODULE$.sparseTupleType(fields);
   }
 
   /**
@@ -133,7 +133,7 @@ public final class TlaTypes {
    * @return the operator type
    */
   public static OperT1 operator(TlaType1 result, TlaType1... arguments) {
-    return JavaFacadeSupport$.MODULE$.operatorType(result, arguments);
+    return JavaToScalaAdapter$.MODULE$.operatorType(result, arguments);
   }
 
   /**
@@ -143,7 +143,7 @@ public final class TlaTypes {
    * @return the row type
    */
   public static RowT1 row(NamedType... fields) {
-    return JavaFacadeSupport$.MODULE$.closedRowType(fields);
+    return JavaToScalaAdapter$.MODULE$.closedRowType(fields);
   }
 
   /**
@@ -154,7 +154,7 @@ public final class TlaTypes {
    * @return the row type
    */
   public static RowT1 row(String other, NamedType... fields) {
-    return JavaFacadeSupport$.MODULE$.openRowType(other, fields);
+    return JavaToScalaAdapter$.MODULE$.openRowType(other, fields);
   }
 
   /**
@@ -164,7 +164,7 @@ public final class TlaTypes {
    * @return the row-record type
    */
   public static RecRowT1 rowRecord(NamedType... fields) {
-    return JavaFacadeSupport$.MODULE$.closedRowRecordType(fields);
+    return JavaToScalaAdapter$.MODULE$.closedRowRecordType(fields);
   }
 
   /**
@@ -175,7 +175,7 @@ public final class TlaTypes {
    * @return the row-record type
    */
   public static RecRowT1 rowRecord(String other, NamedType... fields) {
-    return JavaFacadeSupport$.MODULE$.openRowRecordType(other, fields);
+    return JavaToScalaAdapter$.MODULE$.openRowRecordType(other, fields);
   }
 
   /**
@@ -185,7 +185,7 @@ public final class TlaTypes {
    * @return the variant type
    */
   public static VariantT1 variant(NamedType... fields) {
-    return JavaFacadeSupport$.MODULE$.closedVariantType(fields);
+    return JavaToScalaAdapter$.MODULE$.closedVariantType(fields);
   }
 
   /**
@@ -196,6 +196,6 @@ public final class TlaTypes {
    * @return the variant type
    */
   public static VariantT1 variant(String other, NamedType... fields) {
-    return JavaFacadeSupport$.MODULE$.openVariantType(other, fields);
+    return JavaToScalaAdapter$.MODULE$.openVariantType(other, fields);
   }
 }
