@@ -26,8 +26,9 @@ object ReportGenerator {
 
     val filledTemplate = template(specTxt, cmdStr, log, versionStr, os, jdk)
 
-    outputWorkspace.withWriterInRunDir(OutputWorkspace.ReportFile) {
-      _.println(filledTemplate)
+    outputWorkspace.withWriterInRunDir(OutputWorkspace.ReportFile) { writer =>
+      writer.write(filledTemplate)
+      writer.newLine()
     }
 
     new File(outputWorkspace.runDir.toFile, OutputWorkspace.ReportFile).getCanonicalPath

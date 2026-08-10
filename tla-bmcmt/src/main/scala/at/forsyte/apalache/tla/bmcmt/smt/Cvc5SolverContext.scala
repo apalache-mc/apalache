@@ -15,7 +15,7 @@ import at.forsyte.apalache.tla.types.{tlaU => tla}
 import _root_.io.github.cvc5.{CVC5ApiException, Kind, Result, Solver, Sort, Term, TermManager}
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 import java.util.concurrent.atomic.AtomicLong
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
@@ -29,7 +29,7 @@ import scala.collection.mutable.ListBuffer
 class Cvc5SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWorkspace] = None)
     extends SolverContext with LazyLogging {
   private val id: Long = Cvc5SolverContext.createId()
-  private val logWriters: Iterable[PrintWriter] = initLogs()
+  private val logWriters: Iterable[BufferedWriter] = initLogs()
 
   private val termManager = new TermManager()
   private val solver = new Solver(termManager)
@@ -216,11 +216,14 @@ class Cvc5SolverContext(val config: SolverConfig, outputWorkspace: Option[Output
 
   override def log(message: => String): Unit = {
     if (config.debug) {
-      logWriters.foreach(_.println(message))
+      logWriters.foreach { writer =>
+        writer.write(message)
+        writer.newLine()
+      }
     }
   }
 
-  private def initLogs(): Iterable[PrintWriter] = {
+  private def initLogs(): Iterable[BufferedWriter] = {
     val filePart = s"log$id.smt"
     val writers = outputWorkspace.toSeq.flatMap { workspace =>
       (Some(workspace.runDir) ++ workspace.additionalRunDir).map(dir => workspace.openWriter(dir.resolve(filePart)))
@@ -228,7 +231,8 @@ class Cvc5SolverContext(val config: SolverConfig, outputWorkspace: Option[Output
 
     if (!config.debug) {
       writers.foreach { writer =>
-        writer.println("Logging is disabled (Cvc5SolverContext.debug = false). Activate with --debug.")
+        writer.write("Logging is disabled (Cvc5SolverContext.debug = false). Activate with --debug.")
+        writer.newLine()
         writer.flush()
       }
     }

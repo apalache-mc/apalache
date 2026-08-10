@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout, TlaDeclAnnotator, TlaWriter}
 import at.forsyte.apalache.tla.lir._
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 
 /**
  * A decorator of PrettyWriter that prints code annotations.
@@ -15,7 +15,7 @@ import java.io.PrintWriter
  */
 class PrettyWriterWithAnnotations(
     annotationStore: AnnotationStore,
-    writer: PrintWriter,
+    writer: BufferedWriter,
     layout: TextLayout = TextLayout())
     extends TlaWriter {
 

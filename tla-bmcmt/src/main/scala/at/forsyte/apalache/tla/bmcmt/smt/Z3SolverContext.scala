@@ -16,7 +16,7 @@ import com.microsoft.z3._
 import com.microsoft.z3.enumerations.Z3_lbool
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import scala.collection.mutable
@@ -40,7 +40,7 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWo
   /**
    * A log writer, for debugging purposes.
    */
-  private val logWriters: Iterable[PrintWriter] = initLogs()
+  private val logWriters: Iterable[BufferedWriter] = initLogs()
 
   // Set the global configuration parameters for Z3 modules.
   Z3SolverContext.RANDOM_SEED_PARAMS.foreach { p =>
@@ -427,7 +427,7 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWo
   /**
    * Initialize up to two log writers, one in the run directory and one in the additional run directory, if set.
    */
-  private def initLogs(): Iterable[PrintWriter] = {
+  private def initLogs(): Iterable[BufferedWriter] = {
     val filePart = s"log$id.smt"
     val writers = outputWorkspace.toSeq.flatMap { workspace =>
       (Some(workspace.runDir) ++ workspace.additionalRunDir).map(dir => workspace.openWriter(dir.resolve(filePart)))
@@ -435,7 +435,8 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWo
 
     if (!config.debug) {
       writers.foreach { writer =>
-        writer.println("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+        writer.write("Logging is disabled (Z3SolverContext.debug = false). Activate with --debug.")
+        writer.newLine()
         writer.flush()
       }
     }
@@ -451,7 +452,10 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWo
    */
   def log(message: => String): Unit = {
     if (config.debug) {
-      logWriters.foreach(_.println(message))
+      logWriters.foreach { writer =>
+        writer.write(message)
+        writer.newLine()
+      }
     }
   }
 

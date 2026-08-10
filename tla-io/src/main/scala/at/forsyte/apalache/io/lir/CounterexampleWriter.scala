@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.tla
 import com.typesafe.scalalogging.LazyLogging
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 import java.util.Calendar
 
 /**
@@ -28,7 +28,7 @@ trait CounterexampleWriter {
   def write(trace: Trace[TlaEx]): Unit
 }
 
-class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class TlaCounterexampleWriter(writer: BufferedWriter) extends CounterexampleWriter {
 
   import CounterexampleWriter.stateToEx
 
@@ -46,9 +46,9 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
     } else {
       val prefix = if (state.size == 1) "" else "/\\ "
       state.toList.sortBy(_._1).foreach { case (name, value) =>
-        writer.print(s"$prefix$name = ")
+        writer.write(s"$prefix$name = ")
         pretty.write(value)
-        writer.println()
+        writer.newLine()
       }
     }
 
@@ -85,7 +85,7 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
   }
 }
 
-class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWriter(writer) {
+class TlcCounterexampleWriter(writer: BufferedWriter) extends TlaCounterexampleWriter(writer) {
   override def write(trace: Trace[TlaEx]): Unit = {
     // `states` must always contain at least 1 state: the constant initialization
     // This makes `states.tail` safe, since we have a nonempty sequence
@@ -107,18 +107,20 @@ class TlcCounterexampleWriter(writer: PrintWriter) extends TlaCounterexampleWrit
     trace.states.zipWithIndex.tail.foreach { case (state, i) =>
       val prefix = if (i == 1) s"$i: <Initial predicate>" else s"$i: <Next>"
 
-      writer.println(s"""@!@!@STARTMSG 2217:4 @!@!@
+      writer.write(s"""@!@!@STARTMSG 2217:4 @!@!@
                         |$prefix""".stripMargin)
-      // We still need to call PrettyWriter, since PrintWriter doesn't know how to output TlaEx
+      writer.newLine()
+      // We still need to call PrettyWriter, since BufferedWriter doesn't know how to output TlaEx
       printStateFormula(pretty, state)
-      writer.println("""|
+      writer.write("""|
              |@!@!@ENDMSG 2217 @!@!@""".stripMargin)
+      writer.newLine()
     }
     pretty.close()
   }
 }
 
-class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class JsonCounterexampleWriter(writer: BufferedWriter) extends CounterexampleWriter {
 
   import CounterexampleWriter.stateToEx
 
@@ -177,7 +179,7 @@ object CounterexampleWriter extends LazyLogging {
       prefix: String,
       suffix: String,
       trace: Trace[TlaEx]): List[String] = {
-    val writerHelper: String => PrintWriter => Unit =
+    val writerHelper: String => BufferedWriter => Unit =
       kind => writer => apply(kind, writer).write(trace)
 
     val fileNames = List(
@@ -201,7 +203,7 @@ object CounterexampleWriter extends LazyLogging {
    * @param writer
    *   destination for the formatted counterexample
    */
-  def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
+  def apply(kind: String, writer: BufferedWriter): CounterexampleWriter = {
     kind match {
       case "tla"      => new TlaCounterexampleWriter(writer)
       case "tlc"      => new TlcCounterexampleWriter(writer)

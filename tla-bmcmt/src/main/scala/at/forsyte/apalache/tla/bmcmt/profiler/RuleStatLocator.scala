@@ -28,15 +28,20 @@ class RuleStatLocator(outputWorkspace: Option[OutputWorkspace] = None) {
 
   def writeStats(): Unit =
     outputWorkspace.foreach(_.withProfilingWriter { writer =>
-      writer.println("Rule profiling statistics")
+      def writeLine(line: String): Unit = {
+        writer.write(line)
+        writer.newLine()
+      }
+
+      writeLine("Rule profiling statistics")
       val hrule = List.fill(80)('-').mkString
-      writer.println(hrule)
-      writer.println("%20s %9s %9s %9s %9s %9s"
+      writeLine(hrule)
+      writeLine("%20s %9s %9s %9s %9s %9s"
             .format("name", "calls", "cells", "smt-consts", "smt-asserts", "smt-avg-size"))
-      writer.println(hrule)
+      writeLine(hrule)
       val stats = ruleStats.values.toSeq.sortWith(_.nCalls > _.nCalls)
       for (rs <- stats) {
-        writer.println("%-20s %9d %9d %9d %9d %9d"
+        writeLine("%-20s %9d %9d %9d %9d %9d"
               .format(
                   rs.ruleName,
                   rs.nCalls,

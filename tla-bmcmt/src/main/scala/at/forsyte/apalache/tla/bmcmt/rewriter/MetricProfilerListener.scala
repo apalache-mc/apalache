@@ -57,9 +57,11 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
       .sorted(MetricProfilerListener.EntryOrdering)
 
     outputWorkspace.withWriterInRunDir(OutputWorkspace.SmtProfileFile) { writer =>
-      writer.println("# weight,nCells,nConsts,nSmtExprs,location")
+      writer.write("# weight,nCells,nConsts,nSmtExprs,location")
+      writer.newLine()
       for (entry <- sortedEntries) {
-        writer.println(stringOfEntry(entry))
+        writer.write(stringOfEntry(entry))
+        writer.newLine()
       }
     }
 

@@ -3,7 +3,7 @@ package at.forsyte.apalache.io.lir
 import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.TlaModule
 
-import java.io.{File, PrintWriter}
+import java.io.{BufferedWriter, File}
 
 /**
  * An interface for constructing instances of TlaWriter.
@@ -15,9 +15,9 @@ trait TlaWriterFactory {
 
   protected def outputWorkspace: OutputWorkspace
 
-  def createTlaWriter(printWriter: PrintWriter): TlaWriter
+  def createTlaWriter(writer: BufferedWriter): TlaWriter
 
-  def createJsonWriter(printWriter: PrintWriter): TlaWriter
+  def createJsonWriter(writer: BufferedWriter): TlaWriter
 
   /**
    * Write a module to a file (without appending), in all supported formats (TLA+ and JSON).
@@ -39,11 +39,11 @@ trait TlaWriterFactory {
   // output directory
   protected def writeModuleWithFormatWriter(
       extension: String,
-      createWriter: PrintWriter => TlaWriter,
+      createWriter: BufferedWriter => TlaWriter,
       file: Option[File],
     )(module: TlaModule,
       extendedModuleNames: List[String]): Unit = {
-    val writeHelper: (PrintWriter => Unit) => Unit = file match {
+    val writeHelper: (BufferedWriter => Unit) => Unit = file match {
       case Some(f) => outputWorkspace.withWriter(f.toPath)
       case None    => outputWorkspace.withWriterInIntermediateDir(module.name + extension)
     }

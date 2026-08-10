@@ -7,12 +7,13 @@ import at.forsyte.apalache.io.lir.TlaWriter
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import at.forsyte.apalache.tla.lir.{TlaDecl, TlaEx, TlaModule}
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 
 /**
  * An adapter between from TlaToJson and TlaWriter.
  */
-class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, writer: PrintWriter) extends TlaWriter {
+class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, writer: BufferedWriter)
+    extends TlaWriter {
   private val sourceLocator: SourceLocator = SourceLocator(sourceStore.makeSourceMap, changeListener)
 
   /**
@@ -25,7 +26,7 @@ class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, wr
    */
   override def write(module: TlaModule, extendedModuleNames: List[String]): Unit = {
     // we ignore extendedModuleNames as they are irrelevant in the JSON representation
-    writer.print(new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString)
+    writer.write(new TlaToUJson(Some(sourceLocator)).makeRoot(Seq(module)).toString)
   }
 
   /**
@@ -35,7 +36,7 @@ class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, wr
    *   a declaration
    */
   override def write(decl: TlaDecl): Unit = {
-    writer.print(new TlaToUJson(Some(sourceLocator)).apply(decl).toString)
+    writer.write(new TlaToUJson(Some(sourceLocator)).apply(decl).toString)
   }
 
   /**
@@ -45,6 +46,6 @@ class JsonTlaWriter(sourceStore: SourceStore, changeListener: ChangeListener, wr
    *   an expression
    */
   override def write(expr: TlaEx): Unit = {
-    writer.print(new TlaToUJson(Some(sourceLocator)).apply(expr).toString)
+    writer.write(new TlaToUJson(Some(sourceLocator)).apply(expr).toString)
   }
 }

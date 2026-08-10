@@ -4,17 +4,17 @@ import at.forsyte.apalache.io.itf.TlaToItfJson
 import at.forsyte.apalache.io.json.ujsonimpl.{ScalaToUJsonAdapter, UJsonRepresentation}
 import at.forsyte.apalache.tla.lir._
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 
 /**
  * This class produces counterexamples in the Informal Trace Format.
  *
  * @param writer
- *   a print writer to use
+ *   a buffered writer to use
  * @author
  *   Igor Konnov
  */
-class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class ItfCounterexampleWriter(writer: BufferedWriter) extends CounterexampleWriter {
   override def write(trace: Trace[TlaEx]): Unit = {
     writer.write(ujson.write(ItfCounterexampleWriter.mkJson(trace.module, trace.states), indent = 2))
   }

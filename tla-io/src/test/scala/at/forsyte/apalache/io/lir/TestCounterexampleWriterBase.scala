@@ -3,7 +3,8 @@ package at.forsyte.apalache.io.lir
 import at.forsyte.apalache.tla.lir.TlaEx
 import org.scalatest.Assertions
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{BufferedWriter, StringWriter}
+import scala.util.Using
 
 trait TestCounterexampleWriterBase extends Assertions {
 
@@ -27,10 +28,9 @@ trait TestCounterexampleWriterBase extends Assertions {
       expected: String): Unit = {
 
     val stringWriter = new StringWriter()
-    val printWriter = new PrintWriter(stringWriter)
-    val writer = CounterexampleWriter(kind, printWriter)
-    writer.write(trace)
-    printWriter.flush()
+    Using.resource(new BufferedWriter(stringWriter)) { bufferedWriter =>
+      CounterexampleWriter(kind, bufferedWriter).write(trace)
+    }
     val dateErasure = stringWriter.toString.replaceFirst(
         "Created by Apalache on [A-Za-z 0-9:]*( \\*\\))?([\n\"])",
         "Created by Apalache on DATETIME$1$2",

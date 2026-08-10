@@ -8,9 +8,10 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.{BufferedWriter, File, FileWriter}
 import scala.collection.immutable.{HashMap, HashSet}
 import java.io.StringWriter
+import scala.util.Using
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -27,7 +28,7 @@ import java.io.StringWriter
  *   Igor Konnov
  */
 class PrettyWriter(
-    writer: PrintWriter,
+    writer: BufferedWriter,
     layout: TextLayout = new TextLayout,
     declAnnotator: TlaDeclAnnotator = new TlaDeclAnnotator)
     extends PrettyPrinter with TlaWriter {
@@ -738,18 +739,16 @@ object PrettyWriter {
    *   an output file that will be created or overwritten
    */
   def write(module: TlaModule, outputFile: File): Unit = {
-    val writer = new PrintWriter(new FileWriter(outputFile, false))
-    try {
+    Using.resource(new BufferedWriter(new FileWriter(outputFile, false))) { writer =>
       new PrettyWriter(writer).write(module)
-    } finally {
-      writer.close()
     }
   }
 
   def writeAsString(module: TlaModule, extendedModules: List[String] = TlaWriter.STANDARD_MODULES): String = {
     val buf = new StringWriter()
-    val prettyWriter = new PrettyWriter(new PrintWriter(buf))
-    prettyWriter.write(module, extendedModules)
+    Using.resource(new BufferedWriter(buf)) { writer =>
+      new PrettyWriter(writer).write(module, extendedModules)
+    }
     buf.toString()
   }
 

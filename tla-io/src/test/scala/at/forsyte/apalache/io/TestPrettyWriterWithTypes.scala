@@ -11,26 +11,26 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{BufferedWriter, StringWriter}
 
 @RunWith(classOf[JUnitRunner])
 class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
   private var stringWriter: StringWriter = _
-  private var printWriter: PrintWriter = _
+  private var bufferedWriter: BufferedWriter = _
   private val layout80 = TextLayout().copy(textWidth = 80)
 
   override protected def beforeEach(): Unit = {
     stringWriter = new StringWriter()
-    printWriter = new PrintWriter(stringWriter)
+    bufferedWriter = new BufferedWriter(stringWriter)
   }
 
   test("variable declaration") {
     val decl = TlaVarDecl("myFun").withTag(Typed(FunT1(IntT1, BoolT1)))
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """VARIABLE
         |  (*
@@ -46,9 +46,9 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
     val decl = TlaConstDecl("N").withTag(Typed(IntT1))
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """CONSTANT
         |  (*
@@ -65,9 +65,9 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
       .withTag(Typed(OperT1(Seq(IntT1, StrT1), BoolT1)))
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """(*
         |  @type: ((Int, Str) => Bool);
@@ -84,9 +84,9 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
     decl.isRecursive = true
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """RECURSIVE RecOper(_, _)
         |(*
@@ -102,9 +102,9 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
     val decl = TlaAssumeDecl(None, tla.eql(tla.name("x"), tla.bool(true)))(Typed(BoolT1))
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """(*
         |  @type: Bool;
@@ -119,9 +119,9 @@ class TestPrettyWriterWithTypes extends AnyFunSuite with BeforeAndAfterEach {
     val decl = TlaAssumeDecl(Some("myAssume"), tla.eql(tla.name("x"), tla.bool(true)))(Typed(BoolT1))
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """(*
         |  @type: Bool;

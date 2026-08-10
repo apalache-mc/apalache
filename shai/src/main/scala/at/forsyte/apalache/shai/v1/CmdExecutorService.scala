@@ -16,8 +16,9 @@ import com.typesafe.scalalogging.Logger
 import io.grpc.Status
 import zio.{ZEnv, ZIO}
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{BufferedWriter, StringWriter}
 import scala.util.Try
+import scala.util.Using
 
 /**
  * Provides the [[CmdExecutorService]]
@@ -122,9 +123,11 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
     val annotationStore = createAnnotationStore()
 
     val buf = new StringWriter()
-    val prettyWriter = new PrettyWriterWithAnnotations(annotationStore, new PrintWriter(buf))
-    val modules_to_extend = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache", "Variants")
-    prettyWriter.write(module, modules_to_extend)
+    Using.resource(new BufferedWriter(buf)) { writer =>
+      val prettyWriter = new PrettyWriterWithAnnotations(annotationStore, writer)
+      val modules_to_extend = List("Integers", "Sequences", "FiniteSets", "TLC", "Apalache", "Variants")
+      prettyWriter.write(module, modules_to_extend)
+    }
     val moduleString = buf.toString
 
     val modifiedModule = extractLetFromFolds(moduleString)

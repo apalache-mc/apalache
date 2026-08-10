@@ -13,7 +13,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatestplus.junit.JUnitRunner
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{BufferedWriter, StringWriter}
+import scala.util.Using
 import scala.io.Source
 
 @RunWith(classOf[JUnitRunner])
@@ -45,10 +46,9 @@ class TestTlcConfigImporter extends AnyFunSuite with BeforeAndAfterEach {
 
     val mod2 = new TlcConfigImporter(config)(typedModule)
     val stringWriter = new StringWriter()
-    val printWriter = new PrintWriter(stringWriter)
-    val writer = new PrettyWriter(printWriter, layout80)
-    writer.write(mod2)
-    printWriter.flush()
+    Using.resource(new BufferedWriter(stringWriter)) { bufferedWriter =>
+      new PrettyWriter(bufferedWriter, layout80).write(mod2)
+    }
     assert(stringWriter.toString == expected)
   }
 

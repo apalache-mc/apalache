@@ -11,17 +11,17 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{BufferedWriter, StringWriter}
 
 @RunWith(classOf[JUnitRunner])
 class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEach {
   private var stringWriter: StringWriter = _
-  private var printWriter: PrintWriter = _
+  private var bufferedWriter: BufferedWriter = _
   private val layout80 = TextLayout().copy(textWidth = 80)
 
   override protected def beforeEach(): Unit = {
     stringWriter = new StringWriter()
-    printWriter = new PrintWriter(stringWriter)
+    bufferedWriter = new BufferedWriter(stringWriter)
   }
 
   test("variable declaration") {
@@ -29,9 +29,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val store = createAnnotationStore()
     store += decl.ID -> List(Annotation("type", AnnotationStr("Int -> Bool")))
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """VARIABLE
         |  (*
@@ -47,9 +47,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val decl = TlaVarDecl("myFun")
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """VARIABLE myFun
         |
@@ -62,9 +62,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val store = createAnnotationStore()
     store += decl.ID -> List(Annotation("type", AnnotationStr("Int")), Annotation("sweet", AnnotationBool(true)))
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """CONSTANT
         |  (*
@@ -82,9 +82,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val store = createAnnotationStore()
     store += decl.ID -> List(Annotation("type", AnnotationStr("(Int, Str) -> Bool")))
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """(*
         |  @type: (Int, Str) -> Bool;
@@ -101,9 +101,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val store = createAnnotationStore()
     store += decl.ID -> List(Annotation("type", AnnotationStr("(Int, Str) -> Bool")))
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """RECURSIVE RecOper(_, _)
         |(*
@@ -119,9 +119,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val decl = TlaOperDecl("MyOper", List(OperParam("x"), OperParam("y")), tla.bool(true))
     val store = createAnnotationStore()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """MyOper(x, y) == TRUE
         |
@@ -134,9 +134,9 @@ class TestPrettyWriterWithAnnotations extends AnyFunSuite with BeforeAndAfterEac
     val store = createAnnotationStore()
     store += decl.ID -> List()
 
-    val writer = new PrettyWriterWithAnnotations(store, printWriter, layout80)
+    val writer = new PrettyWriterWithAnnotations(store, bufferedWriter, layout80)
     writer.write(decl)
-    printWriter.flush()
+    bufferedWriter.flush()
     val expected =
       """MyOper(x, y) == TRUE
         |

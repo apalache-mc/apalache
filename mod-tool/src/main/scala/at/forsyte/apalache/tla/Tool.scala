@@ -57,14 +57,15 @@ object Tool extends LazyLogging {
     outputWorkspace <- Try(new OutputWorkspace(initialization))
   } yield {
     println(s"Output directory: ${outputWorkspace.runDir.normalize()}")
-    outputWorkspace.withWriterInRunDir(OutputWorkspace.RunFile)(
-        _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
-    )
+    outputWorkspace.withWriterInRunDir(OutputWorkspace.RunFile) { writer =>
+      writer.write(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
+      writer.newLine()
+    }
 
     // Write the application configuration, if debug is enabled
     if (initialization.common.debug) {
       outputWorkspace.withWriterInRunDir(OutputWorkspace.ConfigFile) { writer =>
-        writer.print(ApalacheConfigJsonParser.write(cfg.mergeWithDefaults, usePrettyPrinter = true))
+        writer.write(ApalacheConfigJsonParser.write(cfg.mergeWithDefaults, usePrettyPrinter = true))
       }
     }
 

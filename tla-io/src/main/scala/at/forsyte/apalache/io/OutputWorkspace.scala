@@ -2,12 +2,12 @@ package at.forsyte.apalache.io
 
 import at.forsyte.apalache.io.config.CommandInitializationOptions
 
-import java.io.IOException
-import java.io.PrintWriter
+import java.io.{BufferedWriter, IOException}
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import scala.util.Using
 
 /**
  * Owns the output workspace for one Apalache execution. It creates all configured directories during construction and
@@ -62,28 +62,19 @@ final class OutputWorkspace(initialization: CommandInitializationOptions) {
       })
 
   /** Open a UTF-8 writer that the caller must close. Prefer [[withWriter]] for scoped writes. */
-  def openWriter(path: Path): PrintWriter = {
-    new PrintWriter(Files.newBufferedWriter(path))
-  }
+  def openWriter(path: Path): BufferedWriter = Files.newBufferedWriter(path)
 
   /** Apply `f` to a UTF-8 writer for `path`, then close the writer. */
-  def withWriter(path: Path)(f: PrintWriter => Unit): Unit = {
-    val writer = openWriter(path)
-    try {
-      f(writer)
-    } finally {
-      writer.close()
-    }
-  }
+  def withWriter(path: Path)(f: BufferedWriter => Unit): Unit = Using.resource(openWriter(path))(f)
 
   /** Write under the generated run directory and mirror the writer to the configured additional run directory. */
-  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
+  def withWriterInRunDir(parts: String*)(f: BufferedWriter => Unit): Unit = {
     withWriterInJointPath(runDir, parts, f)
     additionalRunDir.foreach(withWriterInJointPath(_, parts, f))
   }
 
   /** Write under each intermediate directory when intermediate output is enabled. */
-  def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Unit = {
+  def withWriterInIntermediateDir(parts: String*)(f: BufferedWriter => Unit): Unit = {
     intermediateDirOpt.foreach { dir =>
       withWriterInJointPath(dir, parts, f)
       additionalIntermediateRunDirOpt.foreach(withWriterInJointPath(_, parts, f))
@@ -91,7 +82,7 @@ final class OutputWorkspace(initialization: CommandInitializationOptions) {
   }
 
   /** Write the rule-profiling report when profiling is enabled; return whether a write occurred. */
-  def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
+  def withProfilingWriter(f: BufferedWriter => Unit): Boolean = {
     if (initialization.common.profiling) {
       withWriterInRunDir(OutputWorkspace.RuleProfileFile)(f)
       true
@@ -103,7 +94,7 @@ final class OutputWorkspace(initialization: CommandInitializationOptions) {
   /**
    * Join `dir` and `parts`, and call `withWriter` with this path and `writeFun`.
    */
-  private def withWriterInJointPath(dir: Path, parts: Seq[String], writeFun: PrintWriter => Unit): Unit = {
+  private def withWriterInJointPath(dir: Path, parts: Seq[String], writeFun: BufferedWriter => Unit): Unit = {
     // Join the parts, starting with `dir`. The standard `Path.of` works only over strings.
     val joinedPath = parts.foldLeft(dir)(_.resolve(_))
     withWriter(joinedPath)(writeFun)

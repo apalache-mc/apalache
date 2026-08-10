@@ -8,7 +8,7 @@ import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import com.google.inject.{Inject, Singleton}
 
-import java.io.PrintWriter
+import java.io.BufferedWriter
 
 @Singleton
 class PrettyWriterWithAnnotationsFactory @Inject() (
@@ -17,11 +17,11 @@ class PrettyWriterWithAnnotationsFactory @Inject() (
     store: AnnotationStore,
     override protected val outputWorkspace: OutputWorkspace)
     extends TlaWriterFactory {
-  override def createTlaWriter(printWriter: PrintWriter): TlaWriter = {
-    new PrettyWriterWithAnnotations(store, printWriter)
+  override def createTlaWriter(writer: BufferedWriter): TlaWriter = {
+    new PrettyWriterWithAnnotations(store, writer)
   }
 
-  override def createJsonWriter(printWriter: PrintWriter): TlaWriter = {
-    new JsonTlaWriter(sourceStore, changeListener, printWriter)
+  override def createJsonWriter(writer: BufferedWriter): TlaWriter = {
+    new JsonTlaWriter(sourceStore, changeListener, writer)
   }
 }
