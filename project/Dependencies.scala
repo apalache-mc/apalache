@@ -67,6 +67,7 @@ object Dependencies {
     val jettyCompressionServer = "org.eclipse.jetty.compression" % "jetty-compression-server" % jettyVersion
     val jettyCompressionGzip = "org.eclipse.jetty.compression" % "jetty-compression-gzip" % jettyVersion
     val jettyCompressionZstandard = "org.eclipse.jetty.compression" % "jetty-compression-zstandard" % jettyVersion
+    val jspecify = "org.jspecify" % "jspecify" % "1.0.0"
   }
 
   // Test only depenendencies
