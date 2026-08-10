@@ -45,7 +45,7 @@ private class QuintTypeConverter extends LazyLogging {
   import QuintType._
 
   private def rowToTupleT1(row: Row): TlaType1 = {
-    // `aux(r, acc)` is a `(fields, other)`
+    // `support(r, acc)` is a `(fields, other)`
     // where `fields` is a map from tuple indices to tuple types, and
     // `other` is either `Some(var)` for an open row or `None` for a closed row.
     //
@@ -66,7 +66,7 @@ private class QuintTypeConverter extends LazyLogging {
 
   private def rowToRowT1(row: Row): RowT1 = {
 
-    // `aux(r, acc)` is a `(fields, other)`
+    // `support(r, acc)` is a `(fields, other)`
     // where `fields` is the list of field names and their types, and
     // `other` is either `Some(var)` for an open row or `None` for a closed row.
     //

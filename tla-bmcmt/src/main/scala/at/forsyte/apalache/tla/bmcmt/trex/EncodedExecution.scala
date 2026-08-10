@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.trex
 
 import at.forsyte.apalache.tla.bmcmt.Binding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
-import at.forsyte.apalache.tla.bmcmt.rules.aux.Oracle
+import at.forsyte.apalache.tla.bmcmt.rules.support.Oracle
 
 /**
  * A symbolic execution that has been translated to SMT.

@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.ProtoSeqOps
+import at.forsyte.apalache.tla.bmcmt.rules.support.ProtoSeqOps
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla

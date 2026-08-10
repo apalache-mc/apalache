@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.bmcmt
 import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.caches.TestDefaultValueCache
-import at.forsyte.apalache.tla.bmcmt.rules.aux._
+import at.forsyte.apalache.tla.bmcmt.rules.support._
 import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, PreproSolverContext, SolverConfig}
 import org.scalatest.Outcome
 

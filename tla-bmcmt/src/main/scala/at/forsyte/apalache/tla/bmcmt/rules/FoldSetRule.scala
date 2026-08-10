@@ -1,10 +1,8 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
-import at.forsyte.apalache.tla.bmcmt.rules.aux.SetOps
-import at.forsyte.apalache.tla.bmcmt.{
-  RewriterException, RewriterKnownLimitationError, RewritingRule, SymbState, SymbStateRewriter,
-}
+import at.forsyte.apalache.tla.bmcmt.rules.support.SetOps
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.ApalacheOper
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker

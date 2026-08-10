@@ -1,13 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.support.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
-import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import com.typesafe.scalalogging.LazyLogging
 
 /**

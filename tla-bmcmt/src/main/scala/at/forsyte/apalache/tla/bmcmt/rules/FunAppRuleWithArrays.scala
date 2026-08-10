@@ -2,10 +2,10 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.AuxOps._
+import at.forsyte.apalache.tla.bmcmt.rules.support.SupportOps._
 import at.forsyte.apalache.tla.bmcmt.types._
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.types.{tlaU => tla}
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, RecT1, SetT1, TlaEx}
 
 /**
  * Implements f[x] for: functions, records, and tuples.

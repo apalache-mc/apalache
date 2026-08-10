@@ -2,14 +2,14 @@ package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{ProtoSeqOps, RecordAndVariantOps}
+import at.forsyte.apalache.tla.bmcmt.rules.support.{ProtoSeqOps, RecordAndVariantOps}
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir.values._
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import at.forsyte.apalache.tla.typecomp._
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.collection.immutable.SortedMap
