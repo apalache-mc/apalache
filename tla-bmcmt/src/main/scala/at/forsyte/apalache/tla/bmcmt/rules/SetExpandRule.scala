@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.PowSetCtor
+import at.forsyte.apalache.tla.bmcmt.rules.support.PowSetCtor
 import at.forsyte.apalache.tla.lir.OperEx
 import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaSetOper}
 import com.typesafe.scalalogging.LazyLogging
