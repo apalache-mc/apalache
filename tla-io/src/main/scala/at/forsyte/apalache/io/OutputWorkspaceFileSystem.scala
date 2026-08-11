@@ -30,8 +30,7 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
     ensureDirExists(initialization.common.outDir.resolve(fileName).toAbsolutePath)
   }
 
-  /** Unique persistent directory for this execution inside `outDir`. */
-  override val runDir: Path = {
+  val runDir: Path = {
     val niceDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     val niceTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH-mm-ss"))
     // Despite the API name, this is a persistent run directory under outDir.
@@ -39,8 +38,7 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
     Files.createTempDirectory(outDir, s"${niceDate}T${niceTime}_")
   }
 
-  /** User-selected additional directory to which run output is mirrored. */
-  override val additionalRunDir: Option[Path] = initialization.common.runDir.map { path =>
+  val additionalRunDir: Option[Path] = initialization.common.runDir.map { path =>
     ensureDirExists(path.toAbsolutePath)
   }
 
@@ -59,14 +57,18 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
         ensureDirExists(path.resolve(OutputWorkspace.IntermediateDirName))
       })
 
-  /** Open a UTF-8 writer that the caller must close. Prefer [[withWriter]] for scoped writes. */
-  override def openWriter(path: Path): PrintWriter = {
-    new PrintWriter(Files.newBufferedWriter(path))
+  override def pathInRunDir(parts: String*): Path = {
+    parts.foldLeft(runDir)(_.resolve(_))
   }
 
-  /** Apply `f` to a UTF-8 writer for `path`, then close the writer. */
+  override def openLongLivedWritersInRunDirs(fileName: String): Iterable[PrintWriter] = {
+    (Some(runDir) ++ additionalRunDir).map { dir =>
+      new PrintWriter(Files.newBufferedWriter(dir.resolve(fileName)))
+    }
+  }
+
   override def withWriter(path: Path)(f: PrintWriter => Unit): Unit = {
-    val writer = openWriter(path)
+    val writer = new PrintWriter(Files.newBufferedWriter(path))
     try {
       f(writer)
     } finally {
@@ -74,13 +76,11 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
     }
   }
 
-  /** Write under the generated run directory and mirror the writer to the configured additional run directory. */
   override def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
-    withWriterInJointPath(runDir, parts, f)
+    withWriter(pathInRunDir(parts: _*))(f)
     additionalRunDir.foreach(withWriterInJointPath(_, parts, f))
   }
 
-  /** Write under each intermediate directory when intermediate output is enabled. */
   override def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Unit = {
     intermediateDirOpt.foreach { dir =>
       withWriterInJointPath(dir, parts, f)
@@ -88,7 +88,6 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
     }
   }
 
-  /** Write the rule-profiling report when profiling is enabled; return whether a write occurred. */
   override def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
     if (initialization.common.profiling) {
       withWriterInRunDir(OutputWorkspace.RuleProfileFile)(f)

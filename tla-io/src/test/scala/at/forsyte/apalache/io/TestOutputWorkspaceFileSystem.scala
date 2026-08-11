@@ -33,7 +33,7 @@ class TestOutputWorkspaceFileSystem extends AnyFunSuite {
       assert(workspaceB.withProfilingWriter(_.print("profile-b")))
 
       def readString(workspace: OutputWorkspace) = {
-        val path = OutputWorkspace.ruleProfilePath(workspace.runDir)
+        val path = workspace.pathInRunDir(OutputWorkspace.RuleProfileFile)
         Files.readString(path, StandardCharsets.UTF_8)
       }
       assert(readString(workspaceA) == "profile-a")
@@ -44,14 +44,16 @@ class TestOutputWorkspaceFileSystem extends AnyFunSuite {
       workspaceA.withWriter(scopedFile)(_.print(walz))
       assert(Files.readString(scopedFile, StandardCharsets.UTF_8) == walz)
 
-      val openFile = root.resolve("open.txt")
-      val openWriter = workspaceA.openWriter(openFile)
+      val openWriters = workspaceA.openLongLivedWritersInRunDirs("open.txt")
       try {
-        openWriter.print("long-lived")
-        openWriter.flush()
-        assert(Files.readString(openFile, StandardCharsets.UTF_8) == "long-lived")
+        openWriters.foreach { writer =>
+          writer.print("long-lived")
+          writer.flush()
+        }
+        assert(Files.readString(workspaceA.runDir.resolve("open.txt"), StandardCharsets.UTF_8) == "long-lived")
+        assert(Files.readString(additionalA.resolve("open.txt"), StandardCharsets.UTF_8) == "long-lived")
       } finally {
-        openWriter.close()
+        openWriters.foreach(_.close())
       }
     }
   }

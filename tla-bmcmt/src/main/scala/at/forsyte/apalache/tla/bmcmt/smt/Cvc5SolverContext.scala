@@ -222,8 +222,7 @@ class Cvc5SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspa
 
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers = (Some(outputWorkspace.runDir) ++ outputWorkspace.additionalRunDir)
-      .map(dir => outputWorkspace.openWriter(dir.resolve(filePart)))
+    val writers = outputWorkspace.openLongLivedWritersInRunDirs(filePart)
 
     if (!config.debug) {
       writers.foreach { writer =>

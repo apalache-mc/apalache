@@ -4,17 +4,77 @@ import java.io.PrintWriter
 import java.nio.file.Path
 
 /**
- * Owns the output workspace for one Apalache execution. See <a
+ * Owns the output locations and writer lifecycle conventions for one Apalache execution.
+ *
+ * Run-directory output may be mirrored to an additional directory. See <a
  * href="https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/009adr-outputs.md">ADR-009</a> for the output
  * layout.
  */
 trait OutputWorkspace {
-  def runDir: Path
-  def additionalRunDir: Option[Path]
-  def openWriter(path: Path): PrintWriter
+
+  /**
+   * Resolve `parts` relative to the primary run directory.
+   *
+   * @param parts
+   *   path components relative to the primary run directory
+   * @return
+   *   the resolved path
+   */
+  def pathInRunDir(parts: String*): Path
+
+  /**
+   * Open a writer for `fileName` in the primary run directory and, when configured, another in the additional run
+   * directory.
+   *
+   * These writers are intended for output that remains open throughout a long-running operation. The caller owns the
+   * returned writers and must close each of them.
+   *
+   * @param fileName
+   *   the file name relative to each run directory
+   * @return
+   *   the opened writers, with the primary run-directory writer first
+   */
+  def openLongLivedWritersInRunDirs(fileName: String): Iterable[PrintWriter]
+
+  /**
+   * Apply `f` to a writer for `path` and close the writer afterward.
+   *
+   * @param path
+   *   the file to write
+   * @param f
+   *   the operation to perform with the writer
+   */
   def withWriter(path: Path)(f: PrintWriter => Unit): Unit
+
+  /**
+   * Apply `f` to a writer below the primary run directory and repeat the operation below the additional run directory
+   * when configured.
+   *
+   * @param parts
+   *   path components relative to each run directory; all parent directories must already exist
+   * @param f
+   *   the operation to perform with each writer
+   */
   def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit
+
+  /**
+   * When intermediate output is enabled, apply `f` to a writer below each configured intermediate-output directory.
+   *
+   * @param parts
+   *   path components relative to each intermediate-output directory; all parent directories must already exist
+   * @param f
+   *   the operation to perform with each writer
+   */
   def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Unit
+
+  /**
+   * Apply `f` to the rule-profiling output writer in each run directory when profiling is enabled.
+   *
+   * @param f
+   *   the operation that writes the profiling output
+   * @return
+   *   `true` when profiling is enabled and the operation was applied, or `false` otherwise
+   */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean
 }
 
