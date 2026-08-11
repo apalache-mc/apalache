@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.caches
 
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
-import at.forsyte.apalache.tla.bmcmt.rules.aux.DefaultValueFactory
+import at.forsyte.apalache.tla.bmcmt.rules.support.DefaultValueFactory
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, SymbStateRewriter}
 import at.forsyte.apalache.tla.lir.TlaType1
 

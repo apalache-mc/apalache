@@ -1,10 +1,10 @@
 package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
-import at.forsyte.apalache.tla.bmcmt.rules.aux.{CherryPick, OracleHelper}
+import at.forsyte.apalache.tla.bmcmt.rules.support.{CherryPick, OracleHelper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 import at.forsyte.apalache.tla.lir.{OperEx, SetT1, TlaType1}
 import at.forsyte.apalache.tla.types.tla
-import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaOper}
 
 /**
  * <p>Rewriting rule for CHOOSE and Apalache!Guess. We implement a non-deterministic choice. It is not hard to add the
