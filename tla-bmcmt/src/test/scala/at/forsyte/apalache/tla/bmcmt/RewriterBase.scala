@@ -29,8 +29,8 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming, OutputWorkspaceNoopMock)
-      case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming, OutputWorkspaceNoopMock)
+      case SMTEncoding.OOPSLA19 => new SymbStateRewriterAuto(solverContext, renaming, OutputWorkspaceNoopMock)
+      case SMTEncoding.Arrays   => new SymbStateRewriterAutoWithArrays(solverContext, renaming, OutputWorkspaceNoopMock)
       case SMTEncoding.FunArrays =>
         new SymbStateRewriterAutoWithFunArrays(solverContext, renaming, OutputWorkspaceNoopMock)
       case oddRewriterType => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")

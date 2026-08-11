@@ -70,9 +70,9 @@ trait OutputWorkspace {
   /**
    * Apply `f` to a writer for `path` and close the writer afterward.
    *
-   * <b>Note:</b> `path` is not restricted to the directories owned by this workspace!
-   * Use this method only in the rare cases when you have to write to an arbitrary path.
-   * For example, `parse --output=filename` is a rare case when it's needed.
+   * <b>Note:</b> `path` is not restricted to the directories owned by this workspace! Use this method only in the rare
+   * cases when you have to write to an arbitrary path. For example, `parse --output=filename` is a rare case when it's
+   * needed.
    *
    * @param path
    *   the file to write

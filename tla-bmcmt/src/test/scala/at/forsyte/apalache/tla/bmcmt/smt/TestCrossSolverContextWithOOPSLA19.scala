@@ -558,7 +558,8 @@ class TestCrossSolverContextWithOOPSLA19 extends AnyFunSuite with Checkers {
     val prop = forAll(internalMembershipFormulaCaseGen) { formulaCase =>
       val cvc5Sat =
         internalMembershipFormulaIsSatWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
-      val z3Sat = internalMembershipFormulaIsSatWith(z3Config, new Z3SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
+      val z3Sat =
+        internalMembershipFormulaIsSatWith(z3Config, new Z3SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
       cvc5Sat == z3Sat
     }
 
