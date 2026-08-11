@@ -1,7 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.{InputSource, OutputWorkspace}
+import at.forsyte.apalache.io.{InputSource, OutputWorkspaceFileSystem}
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
@@ -93,7 +93,7 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
     val options = optionsResult.requireValue()
     val initialization = CommandInitializationOptions(SERVER, options.common, Some(options.source))
     val outputWorkspace =
-      try new OutputWorkspace(initialization)
+      try new OutputWorkspaceFileSystem(initialization)
       catch {
         case e: Exception =>
           return Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, s"Failed to initialize output: ${e.getMessage}"))

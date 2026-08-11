@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.io.OutputWorkspaceMock
 import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, SolverConfig}
 import org.junit.runner.RunWith
@@ -16,7 +17,7 @@ class TestTransitionExecutorWithIncrementalAndCvc5OOPSLA19
             smtEncoding = SMTEncoding.OOPSLA19,
             smtSolver = SMTSolver.CVC5,
             z3StatsSec = 0,
-        ))
+        ), OutputWorkspaceMock)
     withFixtureInContext(solver, new IncrementalExecutionContext(_), test)
   }
 }

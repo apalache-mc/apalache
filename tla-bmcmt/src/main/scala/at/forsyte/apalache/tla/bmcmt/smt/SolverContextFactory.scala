@@ -8,7 +8,7 @@ import at.forsyte.apalache.io.config.SMTSolver
  */
 object SolverContextFactory {
 
-  def create(config: SolverConfig, outputWorkspace: Option[OutputWorkspace] = None): SolverContext = {
+  def create(config: SolverConfig, outputWorkspace: OutputWorkspace): SolverContext = {
     config.smtSolver match {
       case SMTSolver.Z3 =>
         new Z3SolverContext(config, outputWorkspace)

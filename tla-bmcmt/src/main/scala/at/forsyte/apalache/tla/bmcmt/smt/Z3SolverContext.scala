@@ -31,7 +31,7 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Igor Konnov, Rodrigo Otoni
  */
-class Z3SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWorkspace] = None)
+class Z3SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspace)
     extends SolverContext with LazyLogging {
   private val id: Long = Z3SolverContext.createId()
 
@@ -429,9 +429,8 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: Option[OutputWo
    */
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers = outputWorkspace.toSeq.flatMap { workspace =>
-      (Some(workspace.runDir) ++ workspace.additionalRunDir).map(dir => workspace.openWriter(dir.resolve(filePart)))
-    }
+    val writers = (Some(outputWorkspace.runDir) ++ outputWorkspace.additionalRunDir)
+      .map(dir => outputWorkspace.openWriter(dir.resolve(filePart)))
 
     if (!config.debug) {
       writers.foreach { writer =>

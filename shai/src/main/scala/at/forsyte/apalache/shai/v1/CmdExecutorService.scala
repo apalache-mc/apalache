@@ -1,7 +1,7 @@
 package at.forsyte.apalache.shai.v1
 
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
-import at.forsyte.apalache.io.OutputWorkspace
+import at.forsyte.apalache.io.OutputWorkspaceFileSystem
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.config.Constants.SERVER
@@ -93,7 +93,7 @@ class CmdExecutorService(logger: Logger) extends ZioCmdExecutor.ZCmdExecutor[ZEn
 
     for {
       initialization <- ApalacheConfigResolver.resolveCommandInitialization(cfg).toCmdResult
-      outputWorkspace <- Try(new OutputWorkspace(initialization)).toCmdResult
+      outputWorkspace <- Try(new OutputWorkspaceFileSystem(initialization)).toCmdResult
       toolModule <- {
         cmd match {
           case Cmd.PARSE | Cmd.TLA =>

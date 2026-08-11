@@ -15,7 +15,7 @@ object RecordingSolverContext {
   def create(
       parentLog: Option[SmtLog],
       config: SolverConfig,
-      outputWorkspace: Option[OutputWorkspace] = None): RecordingSolverContext = {
+      outputWorkspace: OutputWorkspace): RecordingSolverContext = {
     val solverImpl = SolverContextFactory.create(config, outputWorkspace)
     val context = new RecordingSolverContext(parentLog, config, solverImpl)
     parentLog.foreach(_.replay(context.solverImpl))

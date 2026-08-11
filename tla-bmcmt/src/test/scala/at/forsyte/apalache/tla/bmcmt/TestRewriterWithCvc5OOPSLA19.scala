@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.OutputWorkspaceMock
 import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.caches.TestDefaultValueCache
@@ -20,7 +21,7 @@ class TestRewriterWithCvc5OOPSLA19
     with TestDefaultValueFactory with TestDefaultValueCache with TestSymbStateRewriterRepeat {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Cvc5SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = SMTEncoding.OOPSLA19, smtSolver = SMTSolver.CVC5)))
+                smtEncoding = SMTEncoding.OOPSLA19, smtSolver = SMTSolver.CVC5), OutputWorkspaceMock))
     arena = PureArenaAdapter.create(solverContext)
     val rewriter = create(SMTEncoding.OOPSLA19)
     assert(rewriter.solverContext.config.smtSolver == SMTSolver.CVC5)

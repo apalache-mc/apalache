@@ -7,9 +7,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters._
 
-class TestOutputWorkspace extends AnyFunSuite {
+class TestOutputWorkspaceFileSystem extends AnyFunSuite {
 
-  test("OutputWorkspace instances keep their output state isolated") {
+  test("OutputWorkspaceFileSystem instances keep their output state isolated") {
     withTempDirectory { root =>
       val additionalA = root.resolve("additional-a")
       val additionalB = root.resolve("additional-b")
@@ -56,7 +56,7 @@ class TestOutputWorkspace extends AnyFunSuite {
     }
   }
 
-  private def makeWorkspace(root: Path, additionalRunDir: Path): OutputWorkspace = {
+  private def makeWorkspace(root: Path, additionalRunDir: Path): OutputWorkspaceFileSystem = {
     val common = CommonOptions(
         debug = false,
         features = Nil,
@@ -66,7 +66,7 @@ class TestOutputWorkspace extends AnyFunSuite {
         smtprof = false,
         writeIntermediate = true,
     )
-    new OutputWorkspace(CommandInitializationOptions("check", common, None))
+    new OutputWorkspaceFileSystem(CommandInitializationOptions("check", common, None))
   }
 
   private def withTempDirectory(test: Path => Unit): Unit = {

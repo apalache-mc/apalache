@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules
 
+import at.forsyte.apalache.io.OutputWorkspaceMock
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.RewriterImpl
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, PureArena}
@@ -22,7 +23,7 @@ case object NoRule extends StratifiedRuleInterface {
  *   Jure Kukovec
  */
 sealed case class TestingRewriter(var cheatyMap: Map[UID, ArenaCell])
-    extends RewriterImpl(new Z3SolverContext(SolverConfig.default)) {
+    extends RewriterImpl(new Z3SolverContext(SolverConfig.default, OutputWorkspaceMock)) {
   def rewrite(ex: TlaEx)(startingScope: RewriterScope): (RewriterScope, ArenaCell) =
     ruleLookupTable.get(key(ex)) match {
       case Some(rule) => rule.apply(ex)(startingScope)

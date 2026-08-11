@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.OutputWorkspaceMock
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
@@ -28,19 +29,23 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming)
-      case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming)
-      case SMTEncoding.FunArrays => new SymbStateRewriterAutoWithFunArrays(solverContext, renaming)
-      case oddRewriterType       => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
+      case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming, OutputWorkspaceMock)
+      case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming, OutputWorkspaceMock)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterAutoWithFunArrays(solverContext, renaming, OutputWorkspaceMock)
+      case oddRewriterType => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
 
   protected def createWithoutCache(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case SMTEncoding.OOPSLA19  => new SymbStateRewriterImpl(solverContext, renaming)
-      case SMTEncoding.Arrays    => new SymbStateRewriterImplWithArrays(solverContext, renaming)
-      case SMTEncoding.FunArrays => new SymbStateRewriterImplWithFunArrays(solverContext, renaming)
-      case oddRewriterType       =>
+      case SMTEncoding.OOPSLA19 =>
+        new SymbStateRewriterImpl(solverContext, renaming, outputWorkspace = OutputWorkspaceMock)
+      case SMTEncoding.Arrays =>
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, outputWorkspace = OutputWorkspaceMock)
+      case SMTEncoding.FunArrays =>
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, outputWorkspace = OutputWorkspaceMock)
+      case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }
   }

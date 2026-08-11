@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.caches.{
   DefaultValueCache, ExprCache, IntValueCache, ModelValueCache, RecordDomainCache,
@@ -18,7 +19,10 @@ import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
  * @author
  *   Igor Konnov
  */
-class SymbStateRewriterAuto(private var _solverContext: SolverContext, renaming: IncrementalRenaming)
+class SymbStateRewriterAuto(
+    private var _solverContext: SolverContext,
+    renaming: IncrementalRenaming,
+    outputWorkspace: OutputWorkspace)
     extends SymbStateRewriter {
 
   /**
@@ -51,7 +55,8 @@ class SymbStateRewriterAuto(private var _solverContext: SolverContext, renaming:
 
   private val exprGradeStoreImpl = new ExprGradeStoreImpl()
   private val exprGradeAnalysis = new ExprGradeAnalysis(exprGradeStoreImpl)
-  protected val impl = new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore)
+  protected val impl =
+    new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, outputWorkspace = outputWorkspace)
 
   override def contextLevel: Int = impl.contextLevel
 

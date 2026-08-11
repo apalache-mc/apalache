@@ -6,7 +6,7 @@ import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
-import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, ReportGenerator}
+import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, OutputWorkspaceFileSystem, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -54,7 +54,7 @@ object Tool extends LazyLogging {
       if (result.isSuccess) Try(result.requireValue())
       else Failure(new ConfigurationError(result.errors.mkString("; ")))
     }
-    outputWorkspace <- Try(new OutputWorkspace(initialization))
+    outputWorkspace <- Try(new OutputWorkspaceFileSystem(initialization))
   } yield {
     println(s"Output directory: ${outputWorkspace.runDir.normalize()}")
     outputWorkspace.withWriterInRunDir(OutputWorkspace.RunFile)(

@@ -43,7 +43,7 @@ class SymbStateRewriterImpl(
     val renaming: IncrementalRenaming,
     val exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     val profilerListener: Option[MetricProfilerListener] = None,
-    val outputWorkspace: Option[OutputWorkspace] = None)
+    val outputWorkspace: OutputWorkspace)
     extends SymbStateRewriter with Serializable with Recoverable[SymbStateRewriterSnapshot] {
 
   /**

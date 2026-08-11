@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
+import at.forsyte.apalache.io.OutputWorkspaceMock
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
 import at.forsyte.apalache.tla.bmcmt.SymbStateRewriterImpl
@@ -25,7 +26,8 @@ trait ExecutorBase[SnapshotT] extends FixtureAnyFunSuite {
       solver: SolverContext,
       exeCtxFactory: SymbStateRewriterImpl => ExecutorContextT,
       test: OneArgTest): Outcome = {
-    val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl())
+    val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl(),
+        outputWorkspace = OutputWorkspaceMock)
     val exeCtx = exeCtxFactory(rewriter)
 
     // Tmp file to capture the noisy stdout from these tests

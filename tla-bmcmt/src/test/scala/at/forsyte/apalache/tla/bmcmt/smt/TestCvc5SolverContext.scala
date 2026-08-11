@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.io.OutputWorkspaceMock
 import at.forsyte.apalache.io.config.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.IntT1
@@ -11,7 +12,7 @@ class TestCvc5SolverContext extends AnyFunSuite {
   private val cvc5Config = SolverConfig.default.copy(smtSolver = SMTSolver.CVC5, z3StatsSec = 0)
 
   test("assert and evaluate an integer cell") {
-    val solver = new Cvc5SolverContext(cvc5Config)
+    val solver = new Cvc5SolverContext(cvc5Config, OutputWorkspaceMock)
     try {
       val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
       val x = arena.topCell
@@ -26,7 +27,7 @@ class TestCvc5SolverContext extends AnyFunSuite {
   }
 
   test("push and pop assertions") {
-    val solver = new Cvc5SolverContext(cvc5Config)
+    val solver = new Cvc5SolverContext(cvc5Config, OutputWorkspaceMock)
     try {
       val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
       val x = arena.topCell
