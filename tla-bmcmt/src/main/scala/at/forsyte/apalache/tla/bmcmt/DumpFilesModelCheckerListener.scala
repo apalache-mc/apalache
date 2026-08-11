@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt
 
 import at.forsyte.apalache.io.lir.{CounterexampleWriter, Trace}
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.TypedPredefs.BuilderExAsTyped
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.{BoolT1, TlaEx}
@@ -17,7 +18,7 @@ import com.typesafe.scalalogging.LazyLogging
  *   - "violation" and `errorIndex` for counterexamples, and
  *   - "example" and `exampleIndex` for examples.
  */
-object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLogging {
+class DumpFilesModelCheckerListener(outputWorkspace: OutputWorkspace) extends ModelCheckerListener with LazyLogging {
 
   override def onCounterexample(counterexample: Trace[TlaEx], errorIndex: Int): Unit = {
     dump(counterexample, errorIndex, "violation")
@@ -36,6 +37,7 @@ object DumpFilesModelCheckerListener extends ModelCheckerListener with LazyLoggi
       // Would require fixing inter-package dependencies, since it would require
       // exposing the Counterexample class to the tla-io project.
       CounterexampleWriter.writeAllFormats(
+          outputWorkspace,
           prefix,
           suffix,
           counterexample,

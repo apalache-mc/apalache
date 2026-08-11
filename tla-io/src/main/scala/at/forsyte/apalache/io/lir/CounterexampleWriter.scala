@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
@@ -18,7 +18,13 @@ import java.util.Calendar
  *   Andrey Kuprianov
  */
 trait CounterexampleWriter {
-  // Print out invariant violation
+
+  /**
+   * Write a trace that demonstrates an invariant violation.
+   *
+   * @param trace
+   *   counterexample trace to write
+   */
   def write(trace: Trace[TlaEx]): Unit
 }
 
@@ -26,6 +32,14 @@ class TlaCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter 
 
   import CounterexampleWriter.stateToEx
 
+  /**
+   * Write a state as a conjunction of assignments.
+   *
+   * @param pretty
+   *   TLA+ writer used to render state values
+   * @param state
+   *   state to write
+   */
   def printStateFormula(pretty: PrettyWriter, state: Trace.State): Unit =
     if (state.isEmpty) {
       pretty.write(tla.bool(true))
@@ -129,6 +143,12 @@ class JsonCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter
 
 object CounterexampleWriter extends LazyLogging {
 
+  /**
+   * Convert a state into a conjunction of assignments.
+   *
+   * @param state
+   *   state to convert
+   */
   def stateToEx(state: Trace.State): TBuilderInstruction =
     if (state.isEmpty) {
       tla.bool(true)
@@ -140,18 +160,20 @@ object CounterexampleWriter extends LazyLogging {
     }
 
   /**
-   * Write a counterexample in all supported formats (TLA+, MC.out, JSON), and return the list of files written.
+   * Write a counterexample in all supported formats (TLA+, TLC output, Apalache JSON, and ITF JSON), and return the
+   * list of files written.
    *
+   * @param outputWorkspace
+   *   output workspace in which to write the files
+   * @param prefix
+   *   filename prefix identifying the counterexample
    * @param suffix
-   *   suffix to be added in the end of a filename, may be empty
-   * @param rootModule
-   *   source module of the counterexample
-   * @param notInvariant
-   *   negated invariant
-   * @param states
-   *   sequence of states that represent the counterexample
+   *   optional filename suffix appended after `prefix`
+   * @param trace
+   *   counterexample trace to write
    */
   def writeAllFormats(
+      outputWorkspace: OutputWorkspace,
       prefix: String,
       suffix: String,
       trace: Trace[TlaEx]): List[String] = {
@@ -165,16 +187,20 @@ object CounterexampleWriter extends LazyLogging {
         ("itf.json", s"$prefix$suffix.itf.json"),
     )
 
-    fileNames.flatMap { case (kind, name) =>
-      if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
-        Some(OutputManager.runDir.resolve(name).normalize.toString)
-      } else {
-        None
-      }
+    fileNames.map { case (kind, name) =>
+      outputWorkspace.withWriterInRunDir(name)(writerHelper(kind))
+      outputWorkspace.pathInRunDir(name).normalize.toString
     }
   }
 
-  // factory method to get the desired CE writer
+  /**
+   * Construct a counterexample writer for a supported format.
+   *
+   * @param kind
+   *   output format identifier
+   * @param writer
+   *   destination for the formatted counterexample
+   */
   def apply(kind: String, writer: PrintWriter): CounterexampleWriter = {
     kind match {
       case "tla"      => new TlaCounterexampleWriter(writer)

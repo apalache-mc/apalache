@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.io.config.Constants.TUNING_OPTIONS
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
@@ -26,7 +26,8 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Thomas Pani
  */
-class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
+class Cvc5SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspace)
+    extends SolverContext with LazyLogging {
   private val id: Long = Cvc5SolverContext.createId()
   private val logWriters: Iterable[PrintWriter] = initLogs()
 
@@ -221,8 +222,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
 
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers =
-      (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+    val writers = outputWorkspace.openLongLivedWritersInRunDirs(filePart)
 
     if (!config.debug) {
       writers.foreach { writer =>

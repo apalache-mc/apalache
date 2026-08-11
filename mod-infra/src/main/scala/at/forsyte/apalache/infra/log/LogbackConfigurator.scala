@@ -17,14 +17,14 @@ import java.nio.file.Path
  * @author
  *   Igor Konnov
  */
-// TODO Configure to take OutputManager as parameter?
-class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) extends ContextAwareBase with Configurator {
+class LogbackConfigurator(logFiles: Seq[Path]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
     setContext(loggerContext)
-    runDir match {
-      case Some(_) => configure(loggerContext)
-      case None    => configureConsoleOnlyWarn(loggerContext)
+    if (logFiles.nonEmpty) {
+      configure(loggerContext)
+    } else {
+      configureConsoleOnlyWarn(loggerContext)
     }
   }
 
@@ -43,8 +43,7 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
     val consoleAppender = mkConsoleAppender(loggerContext, isDecorated = true)
     // only warnings at the root level
     rootLogger.setLevel(Level.WARN)
-    (runDir ++ customRunDir).foreach(d =>
-      rootLogger.addAppender(mkFileAppender(loggerContext, d.resolve("detailed.log").toFile())))
+    logFiles.foreach(path => rootLogger.addAppender(mkFileAppender(loggerContext, path.toFile)))
     rootLogger.addAppender(consoleAppender)
     // debug messages at the legacy Apalache level
     val legacyApalacheLogger = loggerContext.getLogger("at.forsyte.apalache")

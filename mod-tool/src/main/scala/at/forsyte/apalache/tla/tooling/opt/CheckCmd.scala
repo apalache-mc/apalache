@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.tooling.opt
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.PassOptionException
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.{InputSource, OutputWorkspace}
 import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.tuning.FineTuningParser
@@ -187,12 +187,12 @@ class CheckCmd(name: String = CHECK, description: String = "Check a TLA+ specifi
 
   }
 
-  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+  override def run(config: ApalacheConfig, outputWorkspace: OutputWorkspace): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveCheck(config)) { options =>
       val tuning = options.checker.tuning
       logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-      PassChainExecutor(new CheckerModule(options)).run() match {
+      PassChainExecutor(new CheckerModule(options, outputWorkspace)).run() match {
         case Right(_)      => Right(s"Checker reports no error up to computation length ${options.checker.length}")
         case Left(failure) => Left(failure.exitCode, "Checker has found an error")
       }

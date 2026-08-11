@@ -8,6 +8,7 @@ import java.io.File
 
 // imports from Sany utils
 import at.forsyte.apalache.infra.ExitCodes
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.ApalacheConfig
 import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS, TLA_PLUS_DIRECTORY, USER_HOME_PROPERTY}
 import util.ExecutionStatisticsCollector
@@ -28,7 +29,7 @@ class ConfigCmd extends ApalacheCommand(name = CONFIG, description = "Configure 
       )
         + "\nSee: https://apalache-mc.org/docs/apalache/statistics.html")
 
-  override def run(_config: ApalacheConfig): Either[(TExitCode, String), String] = {
+  override def run(_config: ApalacheConfig, _outputWorkspace: OutputWorkspace): Either[(TExitCode, String), String] = {
     logger.info("Configuring Apalache")
 
     if (!configDirExistsOrCreated()) {

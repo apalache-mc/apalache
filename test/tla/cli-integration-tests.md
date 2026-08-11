@@ -2178,7 +2178,7 @@ $ apalache-mc check --out-dir=./test-out-dir --length=0 --debug Counter.tla | se
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -exec basename {} \; | ./sort.sh
-application-config.json
+config.json
 detailed.log
 log0.smt
 run.txt
@@ -4120,7 +4120,7 @@ $ apalache-mc check --smt-solver=cvc5 --config-file=demo-config.json --run-dir=c
 Finally, confirm that the dumped config looks as expected, and clean up:
 
 ```sh
-$ cat ./configdump-dir/application-config.json
+$ cat ./configdump-dir/config.json
 {
   "command" : "check",
   "config-file" : "demo-config.json",

@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes.{DerivedPredicates, Pass, ToolModule}
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions, TypecheckerOptions, ValidatedTypecheckOptions}
@@ -12,8 +13,9 @@ import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, Tran
 import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
 import com.google.inject.TypeLiteral
 
-class TypeCheckerModule(options: ValidatedTypecheckOptions) extends ToolModule {
+class TypeCheckerModule(options: ValidatedTypecheckOptions, outputWorkspace: OutputWorkspace) extends ToolModule {
   override def configure(): Unit = {
+    bind(classOf[OutputWorkspace]).toInstance(outputWorkspace)
     bind(classOf[CommonOptions]).toInstance(options.common)
     bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
     bind(classOf[TypecheckerOptions]).toInstance(options.typechecker)

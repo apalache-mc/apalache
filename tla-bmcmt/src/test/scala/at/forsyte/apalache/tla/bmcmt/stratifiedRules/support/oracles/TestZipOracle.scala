@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
@@ -58,7 +59,7 @@ class TestZipOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   ignore("getIndexOfChosenValueFromModel recovers the index correctly") {
     val prop =
       forAll(Gen.zip(groupGen, Gen.choose(0, 11))) { case (groups, idx) =>
-        val ctx = new Z3SolverContext(SolverConfig.default)
+        val ctx = new Z3SolverContext(SolverConfig.default, OutputWorkspaceNoopMock)
         val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
         val (scope, backOracle) = IntOracle.create(RewriterScope.initial().copy(arena = paa.arena), 12)
         val oracle = new ZipOracle(backOracle, groups)

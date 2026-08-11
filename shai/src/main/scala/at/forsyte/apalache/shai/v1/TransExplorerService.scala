@@ -9,13 +9,15 @@ package at.forsyte.apalache.shai.v1
  * [[at.forsyte.apalache.tla.bmcmt.trex.TransitionExecutor]], thus enabling clients engage with the symbolic model
  * checker interactively.
  *
- * [[TranExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
+ * [[TransExplorerService]] is meant to be registered with [[RpcServer]], and should not need to be used directly.
  */
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.InputSource
+import at.forsyte.apalache.io.{InputSource, OutputWorkspaceFileSystem}
 import at.forsyte.apalache.io.config.Constants.SERVER
-import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CommonPatch, RunContextPatch}
+import at.forsyte.apalache.io.config.{
+  ApalacheConfig, ApalacheConfigResolver, CommandInitializationOptions, CommonPatch, RunContextPatch,
+}
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs.printer
 import at.forsyte.apalache.shai.v1.transExplorer._
@@ -176,7 +178,9 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
           throw new IllegalArgumentException(resolved.errors.mkString("; "))
         }
         val options = resolved.requireValue()
-        PassChainExecutor(new ParserModule(options))
+        val initialization = CommandInitializationOptions(SERVER, options.common, Some(options.source))
+        val outputWorkspace = new OutputWorkspaceFileSystem(initialization)
+        PassChainExecutor(new ParserModule(options, outputWorkspace))
           .run()
           .left
           .map { err =>

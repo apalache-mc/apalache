@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.Constants.{PORT, SERVER, SERVER_TYPE}
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.shai
@@ -37,7 +38,7 @@ class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in ser
         ApalacheConfig(server = ServerPatch(port = port, serverType = serverType)),
     )
 
-  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
+  override def run(config: ApalacheConfig, _outputWorkspace: OutputWorkspace): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveServer(config)) { options =>
       logger.info(s"Starting ${options.server.serverType} server on port ${options.server.port}...")
       options.server.serverType match {

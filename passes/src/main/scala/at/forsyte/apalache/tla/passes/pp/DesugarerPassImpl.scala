@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
@@ -20,6 +21,7 @@ import com.typesafe.scalalogging.LazyLogging
 class DesugarerPassImpl @Inject() (
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
+    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends DesugarerPass with LazyLogging {
 
@@ -40,7 +42,7 @@ class DesugarerPassImpl @Inject() (
     val output = ModuleByExTransformer(Desugarer(gen, varNames, tracker, operDefs))(input)
 
     // dump the result of preprocessing
-    writeOut(writerFactory, output)
+    writeOut(writerFactory, outputWorkspace, output)
     Right(output)
   }
 
