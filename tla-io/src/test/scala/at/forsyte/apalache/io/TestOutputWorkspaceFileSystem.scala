@@ -41,7 +41,7 @@ class TestOutputWorkspaceFileSystem extends AnyFunSuite {
 
       val scopedFile = root.resolve("scoped.txt")
       val walz = "An der schönen blauen Donau"
-      workspaceA.withWriter(scopedFile)(_.print(walz))
+      workspaceA.withWriterOutsideWorkspace(scopedFile)(_.print(walz))
       assert(Files.readString(scopedFile, StandardCharsets.UTF_8) == walz)
 
       val openWriters = workspaceA.openLongLivedWritersInRunDirs("open.txt")

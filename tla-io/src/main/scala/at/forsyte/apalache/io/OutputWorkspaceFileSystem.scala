@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter
  *   resolved values that determine this execution's output locations and enabled output features
  *
  * @author
- *   Jure Kukovec, Shon Feder, Igor Konnov
+ *   Jure Kukovec, Shon Feder, Igor Konnov, Thomas Pani
  */
 final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptions) extends OutputWorkspace {
   // helper function to create intermediate directories, if needed
@@ -79,17 +79,8 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
     }
   }
 
-  override def withWriter(path: Path)(f: PrintWriter => Unit): Unit = {
-    val writer = new PrintWriter(Files.newBufferedWriter(path))
-    try {
-      f(writer)
-    } finally {
-      writer.close()
-    }
-  }
-
   override def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit = {
-    withWriter(pathInRunDir(parts: _*))(f)
+    withWriterInternal(pathInRunDir(parts: _*))(f)
     additionalRunDir.foreach(withWriterInJointPath(_, parts, f))
   }
 
@@ -109,9 +100,23 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
     }
   }
 
-  /** Join `dir` and `parts`, and call `withWriter` with this path and `writeFun`. */
+  override def withWriterOutsideWorkspace(path: Path)(f: PrintWriter => Unit): Unit = {
+    withWriterInternal(path)(f)
+  }
+
+  // an internal implementation of withWriter
+  private def withWriterInternal(path: Path)(f: PrintWriter => Unit): Unit = {
+    val writer = new PrintWriter(Files.newBufferedWriter(path))
+    try {
+      f(writer)
+    } finally {
+      writer.close()
+    }
+  }
+
+  /** Join `dir` and `parts`, and call `withWriterOutsideWorkspace` with this path and `writeFun`. */
   private def withWriterInJointPath(dir: Path, parts: Seq[String], writeFun: PrintWriter => Unit): Unit = {
     val joinedPath = parts.foldLeft(dir)(_.resolve(_))
-    withWriter(joinedPath)(writeFun)
+    withWriterInternal(joinedPath)(writeFun)
   }
 }

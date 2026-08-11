@@ -37,16 +37,6 @@ trait OutputWorkspace {
   def openLongLivedWritersInRunDirs(fileName: String): Iterable[PrintWriter]
 
   /**
-   * Apply `f` to a writer for `path` and close the writer afterward.
-   *
-   * @param path
-   *   the file to write
-   * @param f
-   *   the operation to perform with the writer
-   */
-  def withWriter(path: Path)(f: PrintWriter => Unit): Unit
-
-  /**
    * Apply `f` to a writer below the primary run directory and repeat the operation below the additional run directory
    * when configured.
    *
@@ -76,6 +66,20 @@ trait OutputWorkspace {
    *   `true` when profiling is enabled and the operation was applied, or `false` otherwise
    */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean
+
+  /**
+   * Apply `f` to a writer for `path` and close the writer afterward.
+   *
+   * <b>Note:</b> `path` is not restricted to the directories owned by this workspace!
+   * Use this method only in the rare cases when you have to write to an arbitrary path.
+   * For example, `parse --output=filename` is a rare case when it's needed.
+   *
+   * @param path
+   *   the file to write
+   * @param f
+   *   the operation to perform with the writer
+   */
+  def withWriterOutsideWorkspace(path: Path)(f: PrintWriter => Unit): Unit
 }
 
 /** Names shared by output producers. */

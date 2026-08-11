@@ -12,7 +12,7 @@ object OutputWorkspaceNoopMock extends OutputWorkspace {
   override def openLongLivedWritersInRunDirs(fileName: String): Iterable[PrintWriter] =
     Iterable(new PrintWriter(OutputStream.nullOutputStream()))
 
-  override def withWriter(path: Path)(f: PrintWriter => Unit): Unit = withNullWriter(f)
+  override def withWriterOutsideWorkspace(path: Path)(f: PrintWriter => Unit): Unit = withNullWriter(f)
 
   override def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit = withNullWriter(f)
 
