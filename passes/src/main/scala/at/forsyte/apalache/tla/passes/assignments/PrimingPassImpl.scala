@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.passes.assignments
 
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.storage.BodyMapFactory
@@ -18,6 +19,7 @@ import com.typesafe.scalalogging.LazyLogging
 class PrimingPassImpl @Inject() (
     derivedPreds: DerivedPredicates,
     tracker: TransformationTracker,
+    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends PrimingPass with LazyLogging {
 
@@ -56,7 +58,7 @@ class PrimingPassImpl @Inject() (
     val newDeclarations: Seq[TlaDecl] = declarations ++ Seq(cinitPrimed, initPrimed).flatten
     val newModule = tlaModule.copy(declarations = newDeclarations)
 
-    writeOut(writerFactory, newModule)
+    writeOut(writerFactory, outputWorkspace, newModule)
 
     Right(newModule)
   }

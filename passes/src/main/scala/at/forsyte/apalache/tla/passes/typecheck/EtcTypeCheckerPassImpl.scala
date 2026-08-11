@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.passes.typecheck
 
 import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions, TypecheckerOptions}
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -23,6 +24,7 @@ class EtcTypeCheckerPassImpl @Inject() (
     changeListener: ChangeListener,
     tracker: TransformationTracker,
     val annotationStore: AnnotationStore,
+    outputWorkspace: OutputWorkspace,
     val writerFactory: TlaWriterFactory)
     extends EtcTypeCheckerPass with LazyLogging {
 
@@ -68,12 +70,13 @@ class EtcTypeCheckerPassImpl @Inject() (
       }
 
       logger.info(if (isTypeCoverageComplete) " > All expressions are typed" else " > Some expressions are untyped")
-      writeOut(writerFactory, newModule)
+      writeOut(writerFactory, outputWorkspace, newModule)
       utils.writeToOutput(
           newModule,
           commonOptions,
           moduleIoOptions.output,
           writerFactory,
+          outputWorkspace,
           logger,
           sourceStore,
       )

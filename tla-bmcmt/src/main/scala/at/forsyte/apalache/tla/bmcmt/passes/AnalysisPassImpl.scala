@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.lir.transformations.standard.ModuleByExTransformer
@@ -16,6 +17,7 @@ import com.typesafe.scalalogging.LazyLogging
 class AnalysisPassImpl @Inject() (
     exprGradeStoreImpl: ExprGradeStoreImpl,
     tracker: TransformationTracker,
+    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends AnalysisPass with LazyLogging {
 
@@ -55,7 +57,7 @@ class AnalysisPassImpl @Inject() (
       case _                => ()
     }
 
-    writeOut(writerFactory, marked)
+    writeOut(writerFactory, outputWorkspace, marked)
 
     logger.info("  > Introduced expression grades")
 

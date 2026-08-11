@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.passes.assignments
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.assignments._
 import at.forsyte.apalache.tla.lir.findBodyOf
 import at.forsyte.apalache.tla.lir.src.SourceStore
@@ -24,6 +25,7 @@ class TransitionPassImpl @Inject() (
     tracker: TransformationTracker,
     changeListener: ChangeListener,
     incrementalRenaming: IncrementalRenaming,
+    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends TransitionPass with LazyLogging {
 
@@ -92,7 +94,7 @@ class TransitionPassImpl @Inject() (
     val outModule = incrementalRenaming.renameInModule(new TlaModule(tlaModule.name, newDecls))
 
     // print the resulting module
-    writeOut(writerFactory, outModule)
+    writeOut(writerFactory, outputWorkspace, outModule)
 
     Right(outModule)
   }
