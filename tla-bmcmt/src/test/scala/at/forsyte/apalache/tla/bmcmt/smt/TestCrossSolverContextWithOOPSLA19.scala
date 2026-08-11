@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.io.OutputWorkspaceMock
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.SMTSolver
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, FixedElemPtr, InvalidTlaExException}
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
@@ -518,8 +518,8 @@ class TestCrossSolverContextWithOOPSLA19 extends AnyFunSuite with Checkers {
 
   test("CVC5 and Z3 agree on generated constraints over several arena cells") {
     val prop = forAll(formulaCaseGen) { formulaCase =>
-      val cvc5Sat = satWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceMock), formulaCase)
-      val z3Sat = satWith(z3Config, new Z3SolverContext(_, OutputWorkspaceMock), formulaCase)
+      val cvc5Sat = satWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
+      val z3Sat = satWith(z3Config, new Z3SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
       cvc5Sat == z3Sat
     }
 
@@ -528,8 +528,8 @@ class TestCrossSolverContextWithOOPSLA19 extends AnyFunSuite with Checkers {
 
   test("CVC5 and Z3 agree when evaluating generated ground expressions after sat") {
     val prop = forAll(evalCaseGen) { evalCase =>
-      val cvc5Values = evalWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceMock), evalCase)
-      val z3Values = evalWith(z3Config, new Z3SolverContext(_, OutputWorkspaceMock), evalCase)
+      val cvc5Values = evalWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceNoopMock), evalCase)
+      val z3Values = evalWith(z3Config, new Z3SolverContext(_, OutputWorkspaceNoopMock), evalCase)
       cvc5Values == z3Values
     }
 
@@ -557,8 +557,8 @@ class TestCrossSolverContextWithOOPSLA19 extends AnyFunSuite with Checkers {
 
     val prop = forAll(internalMembershipFormulaCaseGen) { formulaCase =>
       val cvc5Sat =
-        internalMembershipFormulaIsSatWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceMock), formulaCase)
-      val z3Sat = internalMembershipFormulaIsSatWith(z3Config, new Z3SolverContext(_, OutputWorkspaceMock), formulaCase)
+        internalMembershipFormulaIsSatWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
+      val z3Sat = internalMembershipFormulaIsSatWith(z3Config, new Z3SolverContext(_, OutputWorkspaceNoopMock), formulaCase)
       cvc5Sat == z3Sat
     }
 
@@ -587,8 +587,8 @@ class TestCrossSolverContextWithOOPSLA19 extends AnyFunSuite with Checkers {
       }
     }
 
-    val cvc5Rejects = rejectsLiteralMembershipWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceMock))
-    val z3Rejects = rejectsLiteralMembershipWith(z3Config, new Z3SolverContext(_, OutputWorkspaceMock))
+    val cvc5Rejects = rejectsLiteralMembershipWith(cvc5Config, new Cvc5SolverContext(_, OutputWorkspaceNoopMock))
+    val z3Rejects = rejectsLiteralMembershipWith(z3Config, new Z3SolverContext(_, OutputWorkspaceNoopMock))
 
     assert(cvc5Rejects && z3Rejects)
   }

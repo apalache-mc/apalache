@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputWorkspaceMock
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.SolverContext
@@ -29,10 +29,10 @@ trait RewriterBase extends FixtureAnyFunSuite {
 
   protected def create(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
-      case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming, OutputWorkspaceMock)
-      case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming, OutputWorkspaceMock)
+      case SMTEncoding.OOPSLA19  => new SymbStateRewriterAuto(solverContext, renaming, OutputWorkspaceNoopMock)
+      case SMTEncoding.Arrays    => new SymbStateRewriterAutoWithArrays(solverContext, renaming, OutputWorkspaceNoopMock)
       case SMTEncoding.FunArrays =>
-        new SymbStateRewriterAutoWithFunArrays(solverContext, renaming, OutputWorkspaceMock)
+        new SymbStateRewriterAutoWithFunArrays(solverContext, renaming, OutputWorkspaceNoopMock)
       case oddRewriterType => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
   }
@@ -40,11 +40,11 @@ trait RewriterBase extends FixtureAnyFunSuite {
   protected def createWithoutCache(rewriterType: SMTEncoding): SymbStateRewriter = {
     rewriterType match {
       case SMTEncoding.OOPSLA19 =>
-        new SymbStateRewriterImpl(solverContext, renaming, outputWorkspace = OutputWorkspaceMock)
+        new SymbStateRewriterImpl(solverContext, renaming, outputWorkspace = OutputWorkspaceNoopMock)
       case SMTEncoding.Arrays =>
-        new SymbStateRewriterImplWithArrays(solverContext, renaming, outputWorkspace = OutputWorkspaceMock)
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, outputWorkspace = OutputWorkspaceNoopMock)
       case SMTEncoding.FunArrays =>
-        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, outputWorkspace = OutputWorkspaceMock)
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, outputWorkspace = OutputWorkspaceNoopMock)
       case oddRewriterType =>
         throw new IllegalArgumentException(s"Unexpected cacheless rewriter of type $oddRewriterType")
     }

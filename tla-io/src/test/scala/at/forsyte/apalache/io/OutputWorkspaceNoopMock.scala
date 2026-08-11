@@ -5,7 +5,7 @@ import java.io.PrintWriter
 import java.nio.file.Path
 
 /** A filesystem-free output workspace for tests that do not inspect output files. */
-object OutputWorkspaceMock extends OutputWorkspace {
+object OutputWorkspaceNoopMock extends OutputWorkspace {
   override val runDir: Path = Path.of("mock-output")
   override val additionalRunDir: Option[Path] = None
 

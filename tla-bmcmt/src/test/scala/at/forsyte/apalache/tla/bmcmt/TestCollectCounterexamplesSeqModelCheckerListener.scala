@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputWorkspaceMock
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.Checker.Error
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
@@ -46,9 +46,9 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
     val params = new ModelCheckerParams(checkerInput, 1, Map()) { nMaxErrors = maxErrors }
 
     // create utility objects
-    val solver = RecordingSolverContext.create(None, SolverConfig.default, OutputWorkspaceMock)
+    val solver = RecordingSolverContext.create(None, SolverConfig.default, OutputWorkspaceNoopMock)
     val rewriter = new SymbStateRewriterImpl(solver, new IncrementalRenaming(new IdleTracker), new ExprGradeStoreImpl,
-        outputWorkspace = OutputWorkspaceMock)
+        outputWorkspace = OutputWorkspaceNoopMock)
     val ctx = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl(params.consts, params.vars, ctx)
 

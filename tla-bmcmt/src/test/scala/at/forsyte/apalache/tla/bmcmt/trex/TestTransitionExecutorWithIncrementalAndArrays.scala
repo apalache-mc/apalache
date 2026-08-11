@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.io.OutputWorkspaceMock
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import org.junit.runner.RunWith
@@ -19,7 +19,7 @@ class TestTransitionExecutorWithIncrementalAndArrays
               randomSeed = 0,
               z3StatsSec = 0,
               smtEncoding = SMTEncoding.Arrays,
-          ), OutputWorkspaceMock)
+          ), OutputWorkspaceNoopMock)
     withFixtureInContext(solver, new IncrementalExecutionContext(_), test)
   }
 }

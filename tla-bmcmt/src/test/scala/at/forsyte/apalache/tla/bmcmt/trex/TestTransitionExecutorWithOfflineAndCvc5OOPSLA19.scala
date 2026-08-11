@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.io.OutputWorkspaceMock
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.smt.{RecordingSolverContext, SolverConfig}
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
@@ -19,8 +19,8 @@ class TestTransitionExecutorWithOfflineAndCvc5OOPSLA19
             smtEncoding = SMTEncoding.OOPSLA19,
             smtSolver = SMTSolver.CVC5,
             z3StatsSec = 0,
-        ), OutputWorkspaceMock)
+        ), OutputWorkspaceNoopMock)
     withFixtureInContext(solver,
-        new OfflineExecutionContext(_, new IncrementalRenaming(new IdleTracker), OutputWorkspaceMock), test)
+        new OfflineExecutionContext(_, new IncrementalRenaming(new IdleTracker), OutputWorkspaceNoopMock), test)
   }
 }

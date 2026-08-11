@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputWorkspaceMock
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.{SMTEncoding, SMTSolver}
 import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, SolverConfig}
 import org.junit.runner.RunWith
@@ -11,7 +11,7 @@ import org.scalatestplus.junit.JUnitRunner
 class TestArenaWithCvc5OOPSLA19 extends TestArena {
   override protected def withFixture(test: NoArgTest): Outcome = {
     solver = new Cvc5SolverContext(SolverConfig.default.copy(debug = true, smtEncoding = SMTEncoding.OOPSLA19,
-            smtSolver = SMTSolver.CVC5), OutputWorkspaceMock)
+            smtSolver = SMTSolver.CVC5), OutputWorkspaceNoopMock)
     val result = test()
     solver.dispose()
     result
