@@ -20,41 +20,53 @@ import java.time.format.DateTimeFormatter
  *   Jure Kukovec, Shon Feder, Igor Konnov
  */
 final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptions) extends OutputWorkspace {
-
-  /** Namespace shared by all runs of the same input file or command. */
-  private val outDir: Path = {
-    val fileName = initialization.source match {
-      case Some(InputSource.FileSource(path, _)) => path.getFileName.toString
-      case _                                     => initialization.command
+  // helper function to create intermediate directories, if needed
+  private def findOrCreateDir(path: Path): Path = {
+    val absolutePath = path.toAbsolutePath
+    try {
+      Files.createDirectories(absolutePath)
+    } catch {
+      case e: IOException =>
+        throw new ConfigurationError(s"Could not find or create directory $absolutePath: ${e.getMessage}")
     }
-    ensureDirExists(initialization.common.outDir.resolve(fileName).toAbsolutePath)
   }
 
   val runDir: Path = {
+    // Namespace shared by all runs of the same input file or command (in the server mode).
+    val groupName = initialization.source match {
+      case Some(InputSource.FileSource(path, _)) => path.getFileName.toString
+      case _                                     => initialization.command
+    }
+    // Create {outDir}/{filename or command} to group the runs by their source name.
+    // Since the server mode does not have named sources, it uses the command name.
+    // Note: Path.resolve works here because groupName is not an absolute name.
+    val groupDirNameInOutDir = initialization.common.outDir.resolve(groupName)
+    val groupDir = findOrCreateDir(groupDirNameInOutDir)
+    // Create a unique directory under groupDir that looks like {yyyy-MM-dd}T{HH-mm-ss}_{suffix}
     val niceDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     val niceTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH-mm-ss"))
     // Despite the API name, this is a persistent run directory under outDir.
     // Note: createTempDirectory supplies a unique suffix so that concurrent executions do not collide.
-    Files.createTempDirectory(outDir, s"${niceDate}T${niceTime}_")
+    Files.createTempDirectory(groupDir, s"${niceDate}T${niceTime}_")
   }
 
   val additionalRunDir: Option[Path] = initialization.common.runDir.map { path =>
-    ensureDirExists(path.toAbsolutePath)
+    findOrCreateDir(path)
   }
 
   /** Intermediate-output directory inside `runDir`, present only when intermediate output is enabled. */
   private val intermediateDirOpt: Option[Path] =
     if (initialization.common.writeIntermediate) {
-      Some(ensureDirExists(runDir.resolve(OutputWorkspace.IntermediateDirName)))
+      Some(findOrCreateDir(runDir.resolve(OutputWorkspace.IntermediateDirName)))
     } else {
       None
     }
 
   /** Intermediate-output directory inside the additional run directory, when both options are enabled. */
-  private val additionalIntermediateRunDirOpt: Option[Path] =
+  private val additionalIntermediateDirOpt: Option[Path] =
     intermediateDirOpt.flatMap(_ =>
       additionalRunDir.map { path =>
-        ensureDirExists(path.resolve(OutputWorkspace.IntermediateDirName))
+        findOrCreateDir(path.resolve(OutputWorkspace.IntermediateDirName))
       })
 
   override def pathInRunDir(parts: String*): Path = {
@@ -84,7 +96,7 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
   override def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Unit = {
     intermediateDirOpt.foreach { dir =>
       withWriterInJointPath(dir, parts, f)
-      additionalIntermediateRunDirOpt.foreach(withWriterInJointPath(_, parts, f))
+      additionalIntermediateDirOpt.foreach(withWriterInJointPath(_, parts, f))
     }
   }
 
@@ -101,14 +113,5 @@ final class OutputWorkspaceFileSystem(initialization: CommandInitializationOptio
   private def withWriterInJointPath(dir: Path, parts: Seq[String], writeFun: PrintWriter => Unit): Unit = {
     val joinedPath = parts.foldLeft(dir)(_.resolve(_))
     withWriter(joinedPath)(writeFun)
-  }
-
-  private def ensureDirExists(path: Path): Path = {
-    try {
-      Files.createDirectories(path)
-    } catch {
-      case e: IOException =>
-        throw new ConfigurationError(s"Could not find or create directory ${path.toAbsolutePath}: ${e.getMessage}")
-    }
   }
 }

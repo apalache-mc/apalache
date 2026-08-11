@@ -8,7 +8,7 @@ object ReportGenerator {
   def getLog(outputWorkspace: OutputWorkspace): String = {
     val path = outputWorkspace.pathInRunDir(OutputWorkspace.DetailedLogFile)
     Matcher.quoteReplacement(Files.readString(path, StandardCharsets.UTF_8).trim)
-  } // handle $s in log
+  }
 
   // Can't access Version or Command in IO, have to pass at call site
   def prepareReportFile(

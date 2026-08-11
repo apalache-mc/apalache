@@ -166,7 +166,7 @@ object Tool extends LazyLogging {
       cmd: ApalacheCommand,
       config: ApalacheConfig,
       outputWorkspace: OutputWorkspace): ExitCodes.TExitCode = {
-    // a helper for submitting bug reports
+    // a helper function (!) for submitting bug reports in the catch section
     def readSourceCode(): Option[String] = config.source.flatMap(_.readUtf8.value)
 
     try {
