@@ -44,7 +44,7 @@ object Dependencies {
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.8.0").from(
         "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar")
-    val ujson = "com.lihaoyi" %% "ujson" % "4.3.2"
+    val ujson = "com.lihaoyi" %% "ujson" % "4.4.3"
     val upickle = "com.lihaoyi" %% "upickle" % "4.3.2"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
     val zio = "dev.zio" %% "zio" % zioVersion
