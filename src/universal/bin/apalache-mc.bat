@@ -15,7 +15,7 @@ set "APALACHE_JAR=%DIR%\..\lib\apalache.jar"
 rem Set JVM arguments
 rem Bundled dependencies still use sun.misc.Unsafe. Recent Java runtimes warn
 rem unless the application explicitly permits those calls (JEP 498), while
-rem Java 17 rejects the compatibility option. Probe the selected runtime so the
+rem Java 21 rejects the compatibility option. Probe the selected runtime so the
 rem same package works on both.
 set "JVM_COMPAT_ARGS="
 java --sun-misc-unsafe-memory-access=allow -version >nul 2>&1
