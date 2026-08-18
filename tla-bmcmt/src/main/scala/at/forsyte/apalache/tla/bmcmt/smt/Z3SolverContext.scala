@@ -1087,6 +1087,8 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspace
 object Z3SolverContext {
   private val nextId: AtomicLong = new AtomicLong(0)
 
+  private[tla] def resetIds(): Unit = nextId.set(0)
+
   private def createId(): Long = {
     nextId.getAndIncrement()
   }
