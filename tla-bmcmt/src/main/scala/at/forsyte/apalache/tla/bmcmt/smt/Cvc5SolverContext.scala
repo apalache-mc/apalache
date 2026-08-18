@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.io.config.Constants.TUNING_OPTIONS
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
@@ -221,7 +221,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
 
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers = OutputManager.openLongLivedWritersInRunDirs(filePart)
+    val writers = OutputWorkspace.openLongLivedWritersInRunDirs(filePart)
 
     if (!config.debug) {
       writers.foreach { writer =>
