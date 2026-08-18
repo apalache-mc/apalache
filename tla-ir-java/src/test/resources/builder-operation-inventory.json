@@ -1,0 +1,1090 @@
+{
+  "ScopedBuilder": {
+    "methods": [
+      {
+        "scalaSig": "AA(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "temporalForAll"
+      },
+      {
+        "scalaSig": "EE(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "temporalExists"
+      },
+      {
+        "scalaSig": "SF(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "strongFair"
+      },
+      {
+        "scalaSig": "WF(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "weakFair"
+      },
+      {
+        "scalaSig": "and(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "and"
+      },
+      {
+        "scalaSig": "apalacheSeqCapacity(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "apalacheSeqCapacity"
+      },
+      {
+        "scalaSig": "app(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "funApply"
+      },
+      {
+        "scalaSig": "appOp(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "operApply"
+      },
+      {
+        "scalaSig": "append(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "append"
+      },
+      {
+        "scalaSig": "assign(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "assign"
+      },
+      {
+        "scalaSig": "bool(Z)Lscalaz/IndexedStateT;",
+        "javaMethod": "bool"
+      },
+      {
+        "scalaSig": "booleanSet()Lscalaz/IndexedStateT;",
+        "javaMethod": "booleanSet"
+      },
+      {
+        "scalaSig": "box(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "always"
+      },
+      {
+        "scalaSig": "cap(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "intersect"
+      },
+      {
+        "scalaSig": "cardinality(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "cardinality"
+      },
+      {
+        "scalaSig": "caseOther(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "caseOther"
+      },
+      {
+        "scalaSig": "caseSplit(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "caseSplit"
+      },
+      {
+        "scalaSig": "choose(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "choose"
+      },
+      {
+        "scalaSig": "choose(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "choose"
+      },
+      {
+        "scalaSig": "comp(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "actionThen"
+      },
+      {
+        "scalaSig": "concat(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "concat"
+      },
+      {
+        "scalaSig": "const(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/ConstT1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "constant"
+      },
+      {
+        "scalaSig": "constCard(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "constCard"
+      },
+      {
+        "scalaSig": "constParsed(Ljava/lang/String;)Lscalaz/IndexedStateT;",
+        "javaMethod": "constParsed"
+      },
+      {
+        "scalaSig": "cup(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "union"
+      },
+      {
+        "scalaSig": "decl(Ljava/lang/String;Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "decl"
+      },
+      {
+        "scalaSig": "declWithInferredParameterTypes(Ljava/lang/String;Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "declWithInferredParameterTypes"
+      },
+      {
+        "scalaSig": "diamond(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "eventually"
+      },
+      {
+        "scalaSig": "distinct(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "distinct"
+      },
+      {
+        "scalaSig": "div(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "div"
+      },
+      {
+        "scalaSig": "dom(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "domain"
+      },
+      {
+        "scalaSig": "dotdot(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "interval"
+      },
+      {
+        "scalaSig": "emptySeq(Lat/forsyte/apalache/tla/lir/TlaType1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "emptySeq"
+      },
+      {
+        "scalaSig": "emptySet(Lat/forsyte/apalache/tla/lir/TlaType1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "emptySet"
+      },
+      {
+        "scalaSig": "enabled(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "enabled"
+      },
+      {
+        "scalaSig": "enumSet(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "enumSet"
+      },
+      {
+        "scalaSig": "eql(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "eql"
+      },
+      {
+        "scalaSig": "equiv(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "equiv"
+      },
+      {
+        "scalaSig": "except(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "except"
+      },
+      {
+        "scalaSig": "exceptMany(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "exceptMany"
+      },
+      {
+        "scalaSig": "exists(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "exists"
+      },
+      {
+        "scalaSig": "exists(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "exists"
+      },
+      {
+        "scalaSig": "exp(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "exp"
+      },
+      {
+        "scalaSig": "expand(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "expand"
+      },
+      {
+        "scalaSig": "filter(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "filter"
+      },
+      {
+        "scalaSig": "foldSeq(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "foldSeq"
+      },
+      {
+        "scalaSig": "foldSet(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "foldSet"
+      },
+      {
+        "scalaSig": "forall(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "forall"
+      },
+      {
+        "scalaSig": "forall(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "forall"
+      },
+      {
+        "scalaSig": "funDef(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "funDef"
+      },
+      {
+        "scalaSig": "funSet(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "funSet"
+      },
+      {
+        "scalaSig": "ge(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "ge"
+      },
+      {
+        "scalaSig": "gen(Lscalaz/IndexedStateT;Lat/forsyte/apalache/tla/lir/TlaType1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "gen"
+      },
+      {
+        "scalaSig": "gt(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "gt"
+      },
+      {
+        "scalaSig": "guarantees(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "guarantees"
+      },
+      {
+        "scalaSig": "guess(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "guess"
+      },
+      {
+        "scalaSig": "head(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "head"
+      },
+      {
+        "scalaSig": "impl(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "implies"
+      },
+      {
+        "scalaSig": "in(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "in"
+      },
+      {
+        "scalaSig": "int(Lscala/math/BigInt;)Lscalaz/IndexedStateT;",
+        "javaMethod": "integer"
+      },
+      {
+        "scalaSig": "intSet()Lscalaz/IndexedStateT;",
+        "javaMethod": "intSet"
+      },
+      {
+        "scalaSig": "isFiniteSet(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "isFiniteSet"
+      },
+      {
+        "scalaSig": "ite(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "ite"
+      },
+      {
+        "scalaSig": "label(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "label"
+      },
+      {
+        "scalaSig": "lambda(Ljava/lang/String;Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "lambda"
+      },
+      {
+        "scalaSig": "le(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "le"
+      },
+      {
+        "scalaSig": "leadsTo(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "leadsTo"
+      },
+      {
+        "scalaSig": "len(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "len"
+      },
+      {
+        "scalaSig": "letIn(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "letIn"
+      },
+      {
+        "scalaSig": "letIn(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "letIn"
+      },
+      {
+        "scalaSig": "lt(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "lt"
+      },
+      {
+        "scalaSig": "map(Lscalaz/IndexedStateT;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "map"
+      },
+      {
+        "scalaSig": "minus(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "minus"
+      },
+      {
+        "scalaSig": "mkSeq(Lscala/math/BigInt;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "mkSeq"
+      },
+      {
+        "scalaSig": "mkSeqConst(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "mkSeqConst"
+      },
+      {
+        "scalaSig": "mod(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "mod"
+      },
+      {
+        "scalaSig": "mult(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "mult"
+      },
+      {
+        "scalaSig": "name(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaType1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "name"
+      },
+      {
+        "scalaSig": "nameWithInferredType(Ljava/lang/String;)Lscalaz/IndexedStateT;",
+        "javaMethod": "nameWithInferredType"
+      },
+      {
+        "scalaSig": "natSet()Lscalaz/IndexedStateT;",
+        "javaMethod": "natSet"
+      },
+      {
+        "scalaSig": "neql(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "neql"
+      },
+      {
+        "scalaSig": "nostutt(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "noStutter"
+      },
+      {
+        "scalaSig": "not(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "not"
+      },
+      {
+        "scalaSig": "notSupportedByModelChecker(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaType1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "notSupportedByModelChecker"
+      },
+      {
+        "scalaSig": "notin(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "notIn"
+      },
+      {
+        "scalaSig": "or(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "or"
+      },
+      {
+        "scalaSig": "param(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaType1;)Lscala/Tuple2;",
+        "javaMethod": "param"
+      },
+      {
+        "scalaSig": "plus(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "plus"
+      },
+      {
+        "scalaSig": "powSet(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "powerSet"
+      },
+      {
+        "scalaSig": "prime(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "prime"
+      },
+      {
+        "scalaSig": "primeEq(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "primeEq"
+      },
+      {
+        "scalaSig": "recSet(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "recordSet"
+      },
+      {
+        "scalaSig": "repeat(Lscalaz/IndexedStateT;Lscala/math/BigInt;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "repeat"
+      },
+      {
+        "scalaSig": "rowRec(Lscala/Option;Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "record"
+      },
+      {
+        "scalaSig": "seq(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "seq"
+      },
+      {
+        "scalaSig": "seqSet(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "seqSet"
+      },
+      {
+        "scalaSig": "setAsFun(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "setAsFun"
+      },
+      {
+        "scalaSig": "setminus(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "difference"
+      },
+      {
+        "scalaSig": "skolem(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "skolem"
+      },
+      {
+        "scalaSig": "str(Ljava/lang/String;)Lscalaz/IndexedStateT;",
+        "javaMethod": "str"
+      },
+      {
+        "scalaSig": "stringSet()Lscalaz/IndexedStateT;",
+        "javaMethod": "stringSet"
+      },
+      {
+        "scalaSig": "stutt(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "stutter"
+      },
+      {
+        "scalaSig": "subseq(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "subSeq"
+      },
+      {
+        "scalaSig": "subseteq(Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "subsetEq"
+      },
+      {
+        "scalaSig": "tail(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "tail"
+      },
+      {
+        "scalaSig": "times(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "times"
+      },
+      {
+        "scalaSig": "tuple(Lscala/collection/immutable/Seq;)Lscalaz/IndexedStateT;",
+        "javaMethod": "tuple"
+      },
+      {
+        "scalaSig": "uminus(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "uminus"
+      },
+      {
+        "scalaSig": "unchanged(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "unchanged"
+      },
+      {
+        "scalaSig": "unchecked(Lat/forsyte/apalache/tla/lir/TlaEx;)Lscalaz/IndexedStateT;",
+        "javaMethod": "unchecked"
+      },
+      {
+        "scalaSig": "uncheckedDecl(Lat/forsyte/apalache/tla/lir/TlaOperDecl;)Lscalaz/IndexedStateT;",
+        "javaMethod": "uncheckedDecl"
+      },
+      {
+        "scalaSig": "union(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "unionAll"
+      },
+      {
+        "scalaSig": "varDeclAsNameEx(Lat/forsyte/apalache/tla/lir/TlaVarDecl;)Lscalaz/IndexedStateT;",
+        "javaMethod": "varDeclAsNameEx"
+      },
+      {
+        "scalaSig": "variant(Ljava/lang/String;Lscalaz/IndexedStateT;Lat/forsyte/apalache/tla/lir/VariantT1;)Lscalaz/IndexedStateT;",
+        "javaMethod": "variant"
+      },
+      {
+        "scalaSig": "variantFilter(Ljava/lang/String;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "variantFilter"
+      },
+      {
+        "scalaSig": "variantGetOrElse(Ljava/lang/String;Lscalaz/IndexedStateT;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "variantGetOrElse"
+      },
+      {
+        "scalaSig": "variantGetUnsafe(Ljava/lang/String;Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "variantGetUnsafe"
+      },
+      {
+        "scalaSig": "variantTag(Lscalaz/IndexedStateT;)Lscalaz/IndexedStateT;",
+        "javaMethod": "variantTag"
+      }
+    ],
+    "ignored": [
+      {
+        "scalaMethod": "caseOtherMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured caseOther"
+      },
+      {
+        "scalaMethod": "caseSplitMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured caseSplit"
+      },
+      {
+        "scalaMethod": "exceptDeep",
+        "reason": "deprecated deep EXCEPT"
+      },
+      {
+        "scalaMethod": "exceptGeneral",
+        "reason": "deprecated deep EXCEPT"
+      },
+      {
+        "scalaMethod": "funDefMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured funDef"
+      },
+      {
+        "scalaMethod": "mapMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured map"
+      },
+      {
+        "scalaMethod": "rec",
+        "reason": "legacy record constructor; Java facade exposes row-typed record"
+      },
+      {
+        "scalaMethod": "recMixed",
+        "reason": "legacy flat record constructor; Java facade exposes row-typed record"
+      },
+      {
+        "scalaMethod": "recSetMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured recordSet"
+      },
+      {
+        "scalaMethod": "selectInFun",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "selectInSet",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "smtMap",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "storeInSet",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "storeNotInFun",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "storeNotInSet",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "strict",
+        "reason": "constructor configuration"
+      },
+      {
+        "scalaMethod": "unconstrainArray",
+        "reason": "internal SMT-array encoding operation"
+      }
+    ]
+  },
+  "ScopeUnsafeBuilder": {
+    "methods": [
+      {
+        "scalaSig": "AA(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "temporalForAll"
+      },
+      {
+        "scalaSig": "EE(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "temporalExists"
+      },
+      {
+        "scalaSig": "SF(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "strongFair"
+      },
+      {
+        "scalaSig": "WF(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "weakFair"
+      },
+      {
+        "scalaSig": "and(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "and"
+      },
+      {
+        "scalaSig": "apalacheSeqCapacity(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "apalacheSeqCapacity"
+      },
+      {
+        "scalaSig": "app(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "funApply"
+      },
+      {
+        "scalaSig": "appOp(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "operApply"
+      },
+      {
+        "scalaSig": "append(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "append"
+      },
+      {
+        "scalaSig": "assign(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "assign"
+      },
+      {
+        "scalaSig": "bool(Z)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "bool"
+      },
+      {
+        "scalaSig": "booleanSet()Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "booleanSet"
+      },
+      {
+        "scalaSig": "box(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "always"
+      },
+      {
+        "scalaSig": "cap(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "intersect"
+      },
+      {
+        "scalaSig": "cardinality(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "cardinality"
+      },
+      {
+        "scalaSig": "caseOther(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "caseOther"
+      },
+      {
+        "scalaSig": "caseSplit(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "caseSplit"
+      },
+      {
+        "scalaSig": "choose(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "choose"
+      },
+      {
+        "scalaSig": "choose(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "choose"
+      },
+      {
+        "scalaSig": "comp(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "actionThen"
+      },
+      {
+        "scalaSig": "concat(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "concat"
+      },
+      {
+        "scalaSig": "const(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/ConstT1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "constant"
+      },
+      {
+        "scalaSig": "constCard(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "constCard"
+      },
+      {
+        "scalaSig": "constParsed(Ljava/lang/String;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "constParsed"
+      },
+      {
+        "scalaSig": "cup(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "union"
+      },
+      {
+        "scalaSig": "decl(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaOperDecl;",
+        "javaMethod": "decl"
+      },
+      {
+        "scalaSig": "diamond(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "eventually"
+      },
+      {
+        "scalaSig": "distinct(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "distinct"
+      },
+      {
+        "scalaSig": "div(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "div"
+      },
+      {
+        "scalaSig": "dom(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "domain"
+      },
+      {
+        "scalaSig": "dotdot(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "interval"
+      },
+      {
+        "scalaSig": "emptySeq(Lat/forsyte/apalache/tla/lir/TlaType1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "emptySeq"
+      },
+      {
+        "scalaSig": "emptySet(Lat/forsyte/apalache/tla/lir/TlaType1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "emptySet"
+      },
+      {
+        "scalaSig": "enabled(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "enabled"
+      },
+      {
+        "scalaSig": "enumSet(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "enumSet"
+      },
+      {
+        "scalaSig": "eql(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "eql"
+      },
+      {
+        "scalaSig": "equiv(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "equiv"
+      },
+      {
+        "scalaSig": "except(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "except"
+      },
+      {
+        "scalaSig": "exceptMany(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "exceptMany"
+      },
+      {
+        "scalaSig": "exists(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "exists"
+      },
+      {
+        "scalaSig": "exists(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "exists"
+      },
+      {
+        "scalaSig": "exp(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "exp"
+      },
+      {
+        "scalaSig": "expand(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "expand"
+      },
+      {
+        "scalaSig": "filter(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "filter"
+      },
+      {
+        "scalaSig": "foldSeq(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "foldSeq"
+      },
+      {
+        "scalaSig": "foldSet(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "foldSet"
+      },
+      {
+        "scalaSig": "forall(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "forall"
+      },
+      {
+        "scalaSig": "forall(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "forall"
+      },
+      {
+        "scalaSig": "funDef(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "funDef"
+      },
+      {
+        "scalaSig": "funSet(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "funSet"
+      },
+      {
+        "scalaSig": "ge(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "ge"
+      },
+      {
+        "scalaSig": "gen(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaType1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "gen"
+      },
+      {
+        "scalaSig": "gt(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "gt"
+      },
+      {
+        "scalaSig": "guarantees(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "guarantees"
+      },
+      {
+        "scalaSig": "guess(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "guess"
+      },
+      {
+        "scalaSig": "head(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "head"
+      },
+      {
+        "scalaSig": "impl(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "implies"
+      },
+      {
+        "scalaSig": "in(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "in"
+      },
+      {
+        "scalaSig": "int(Lscala/math/BigInt;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "integer"
+      },
+      {
+        "scalaSig": "intSet()Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "intSet"
+      },
+      {
+        "scalaSig": "isFiniteSet(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "isFiniteSet"
+      },
+      {
+        "scalaSig": "ite(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "ite"
+      },
+      {
+        "scalaSig": "label(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "label"
+      },
+      {
+        "scalaSig": "lambda(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "lambda"
+      },
+      {
+        "scalaSig": "le(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "le"
+      },
+      {
+        "scalaSig": "leadsTo(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "leadsTo"
+      },
+      {
+        "scalaSig": "len(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "len"
+      },
+      {
+        "scalaSig": "letIn(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaOperDecl;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "letIn"
+      },
+      {
+        "scalaSig": "letIn(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "letIn"
+      },
+      {
+        "scalaSig": "lt(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "lt"
+      },
+      {
+        "scalaSig": "map(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "map"
+      },
+      {
+        "scalaSig": "minus(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "minus"
+      },
+      {
+        "scalaSig": "mkSeq(Lscala/math/BigInt;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "mkSeq"
+      },
+      {
+        "scalaSig": "mkSeqConst(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "mkSeqConst"
+      },
+      {
+        "scalaSig": "mod(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "mod"
+      },
+      {
+        "scalaSig": "mult(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "mult"
+      },
+      {
+        "scalaSig": "name(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaType1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "name"
+      },
+      {
+        "scalaSig": "natSet()Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "natSet"
+      },
+      {
+        "scalaSig": "neql(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "neql"
+      },
+      {
+        "scalaSig": "nostutt(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "noStutter"
+      },
+      {
+        "scalaSig": "not(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "not"
+      },
+      {
+        "scalaSig": "notSupportedByModelChecker(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaType1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "notSupportedByModelChecker"
+      },
+      {
+        "scalaSig": "notin(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "notIn"
+      },
+      {
+        "scalaSig": "or(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "or"
+      },
+      {
+        "scalaSig": "param(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaType1;)Lscala/Tuple2;",
+        "javaMethod": "param"
+      },
+      {
+        "scalaSig": "plus(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "plus"
+      },
+      {
+        "scalaSig": "powSet(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "powerSet"
+      },
+      {
+        "scalaSig": "prime(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "prime"
+      },
+      {
+        "scalaSig": "primeEq(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "primeEq"
+      },
+      {
+        "scalaSig": "recSet(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "recordSet"
+      },
+      {
+        "scalaSig": "repeat(Lat/forsyte/apalache/tla/lir/TlaEx;Lscala/math/BigInt;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "repeat"
+      },
+      {
+        "scalaSig": "rowRec(Lscala/Option;Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "record"
+      },
+      {
+        "scalaSig": "seq(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "seq"
+      },
+      {
+        "scalaSig": "seqSet(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "seqSet"
+      },
+      {
+        "scalaSig": "setAsFun(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "setAsFun"
+      },
+      {
+        "scalaSig": "setminus(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "difference"
+      },
+      {
+        "scalaSig": "skolem(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "skolem"
+      },
+      {
+        "scalaSig": "str(Ljava/lang/String;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "str"
+      },
+      {
+        "scalaSig": "stringSet()Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "stringSet"
+      },
+      {
+        "scalaSig": "stutt(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "stutter"
+      },
+      {
+        "scalaSig": "subseq(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "subSeq"
+      },
+      {
+        "scalaSig": "subseteq(Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "subsetEq"
+      },
+      {
+        "scalaSig": "tail(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "tail"
+      },
+      {
+        "scalaSig": "times(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "times"
+      },
+      {
+        "scalaSig": "tuple(Lscala/collection/immutable/Seq;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "tuple"
+      },
+      {
+        "scalaSig": "uminus(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "uminus"
+      },
+      {
+        "scalaSig": "unchanged(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "unchanged"
+      },
+      {
+        "scalaSig": "unchecked(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "unchecked"
+      },
+      {
+        "scalaSig": "uncheckedDecl(Lat/forsyte/apalache/tla/lir/TlaOperDecl;)Lat/forsyte/apalache/tla/lir/TlaOperDecl;",
+        "javaMethod": "uncheckedDecl"
+      },
+      {
+        "scalaSig": "union(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "unionAll"
+      },
+      {
+        "scalaSig": "varDeclAsNameEx(Lat/forsyte/apalache/tla/lir/TlaVarDecl;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "varDeclAsNameEx"
+      },
+      {
+        "scalaSig": "variant(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/VariantT1;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "variant"
+      },
+      {
+        "scalaSig": "variantFilter(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "variantFilter"
+      },
+      {
+        "scalaSig": "variantGetOrElse(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaEx;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "variantGetOrElse"
+      },
+      {
+        "scalaSig": "variantGetUnsafe(Ljava/lang/String;Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "variantGetUnsafe"
+      },
+      {
+        "scalaSig": "variantTag(Lat/forsyte/apalache/tla/lir/TlaEx;)Lat/forsyte/apalache/tla/lir/TlaEx;",
+        "javaMethod": "variantTag"
+      }
+    ],
+    "ignored": [
+      {
+        "scalaMethod": "buildBySignatureLookup",
+        "reason": "protected internal"
+      },
+      {
+        "scalaMethod": "caseOtherMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured caseOther"
+      },
+      {
+        "scalaMethod": "caseSplitMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured caseSplit"
+      },
+      {
+        "scalaMethod": "cmpFactory",
+        "reason": "protected internal"
+      },
+      {
+        "scalaMethod": "funDefMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured funDef"
+      },
+      {
+        "scalaMethod": "mapMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured map"
+      },
+      {
+        "scalaMethod": "rec",
+        "reason": "legacy record constructor; Java facade exposes row-typed record"
+      },
+      {
+        "scalaMethod": "recMixed",
+        "reason": "legacy flat record constructor; Java facade exposes row-typed record"
+      },
+      {
+        "scalaMethod": "recSetMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured recordSet"
+      },
+      {
+        "scalaMethod": "rowRecMixed",
+        "reason": "flat Scala compatibility method; Java facade uses structured record"
+      },
+      {
+        "scalaMethod": "selectInFun",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "selectInSet",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "smtMap",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "storeInSet",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "storeNotInFun",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "storeNotInSet",
+        "reason": "internal SMT-array encoding operation"
+      },
+      {
+        "scalaMethod": "strict",
+        "reason": "constructor configuration"
+      },
+      {
+        "scalaMethod": "unconstrainArray",
+        "reason": "internal SMT-array encoding operation"
+      }
+    ]
+  }
+}
