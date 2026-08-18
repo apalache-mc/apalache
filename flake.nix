@@ -87,7 +87,7 @@
               # Build
               # Nixpkgs wraps sbt with its default JRE, independently of PATH.
               # Override it so the build and development tools run on Java 25;
-              # released artifacts still target Java 17.
+              # released artifacts target Java 21.
               (sbt.override { jre = jdk25_headless; })
 
               # Development
