@@ -1,8 +1,8 @@
 # Prebuilt Packages
 
 You need to download and install a Java Virtual Machine first. We recommend running Apalache on Java 25, using the
-[Eclipse Temurin][] or [Zulu][] builds of OpenJDK. Released artifacts maintain bytecode compatibility with Java 17 and
-should run on Java 17 or newer, but Java 17 is less thoroughly tested than the recommended Java 25 runtime.
+[Eclipse Temurin][] or [Zulu][] builds of OpenJDK. Released artifacts maintain bytecode compatibility with Java 21 and
+should run on Java 21 or newer, but Java 21 is less thoroughly tested than the recommended Java 25 runtime.
 
 Once you have installed Java, download the [latest
 release](https://github.com/apalache-mc/apalache/releases) and unpack into

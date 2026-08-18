@@ -1,7 +1,6 @@
 package at.forsyte.apalache.io
 
 import at.forsyte.apalache.io.config.{CommandInitializationOptions, CommonOptions}
-import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
 import java.io.FileWriter
@@ -11,22 +10,15 @@ import java.nio.file.Path
 import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.lang.ScopedValue
 import scala.jdk.CollectionConverters._
 
 /**
- * The OutputManager is the central source of truth, for all IO related locations. Any IO operation should request
- * read/write target paths from this object.
+ * Mutable output state for one dynamically scoped tool invocation.
  */
-object OutputManager extends LazyLogging {
+final private class OutputManagerState {
+  import OutputManager.Names._
 
-  object Names {
-    val IntermediateFoldername = "intermediate"
-    val RunFile = "run.txt"
-  }
-  import Names._
-
-  // TODO: Make OutputManager an injected instance and provide CommonOptions
-  // through its constructor instead of storing mutable global configuration.
   private var commonOptions: Option[CommonOptions] = None
   // outDirOpt is stored as an expanded and absolute path
   private var outDirOpt: Option[Path] = None
@@ -241,4 +233,88 @@ object OutputManager extends LazyLogging {
     .map { runDir =>
       readFileIntoString(new File(runDir.toFile, filename))
     }
+}
+
+/**
+ * The OutputManager is the central source of truth for all IO-related locations. Its public methods are retained as a
+ * compatibility facade, while each invocation stores its mutable state in a [[java.lang.ScopedValue]].
+ *
+ * Calls must run inside [[withScope]]. Code that hands work to another thread may use [[captureScope]] and
+ * [[Scope.run]] to propagate the current manager explicitly.
+ */
+object OutputManager {
+
+  object Names {
+    val IntermediateFoldername = "intermediate"
+    val RunFile = "run.txt"
+  }
+
+  final class Scope private[OutputManager] (private val state: OutputManagerState) {
+    def run[A](body: => A): A = withState(state)(body)
+  }
+
+  private val currentState: ScopedValue[OutputManagerState] = ScopedValue.newInstance[OutputManagerState]()
+
+  /** Run `body` with a fresh output manager and restore the previous binding afterwards. */
+  def withScope[A](body: => A): A = new Scope(new OutputManagerState).run(body)
+
+  /** Capture the currently bound output manager for explicit propagation to another thread. */
+  def captureScope(): Scope = new Scope(current)
+
+  /** Used by low-level components whose output logging is optional when they are used outside the tool runtime. */
+  private[apalache] def isBound: Boolean = currentState.isBound
+
+  private def current: OutputManagerState = {
+    if (currentState.isBound) {
+      currentState.get()
+    } else {
+      throw new IllegalStateException(
+          "OutputManager is not bound to the current thread; call OutputManager.withScope { ... }"
+      )
+    }
+  }
+
+  // Carrier.run has the same JVM descriptor on Java 21 through Java 25. Carrier.call does not.
+  private def withState[A](state: OutputManagerState)(body: => A): A = {
+    var result: Option[A] = None
+    ScopedValue.where(currentState, state).run(() => result = Some(body))
+    result.get
+  }
+
+  def initSourceLines(source: InputSource): Unit = current.initSourceLines(source)
+
+  def getAllSrc: Option[String] = current.getAllSrc
+
+  def isConfigured: Boolean = current.isConfigured
+
+  def runDirPathOpt: Option[Path] = current.runDirPathOpt
+
+  def customRunDirPathOpt: Option[Path] = current.customRunDirPathOpt
+
+  def outDir: Path = current.outDir
+
+  def runDir: Path = current.runDir
+
+  def configure(initialization: CommandInitializationOptions): Unit = current.configure(initialization)
+
+  def printWriter(base: File, fileParts: String*): PrintWriter = current.printWriter(base, fileParts: _*)
+
+  def printWriter(base: Path, fileParts: String*): PrintWriter = current.printWriter(base, fileParts: _*)
+
+  def printWriter(base: String, fileParts: String*): PrintWriter = current.printWriter(base, fileParts: _*)
+
+  def withWriterToFile(file: File)(f: PrintWriter => Unit): Unit = current.withWriterToFile(file)(f)
+
+  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean =
+    current.withWriterInRunDir(parts: _*)(f)
+
+  def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Boolean =
+    current.withWriterInIntermediateDir(parts: _*)(f)
+
+  def withProfilingWriter(f: PrintWriter => Unit): Boolean =
+    currentState.isBound && current.withProfilingWriter(f)
+
+  def readFileIntoString(file: File): String = current.readFileIntoString(file)
+
+  def readContentsOfFileInRunDir(filename: String): Option[String] = current.readContentsOfFileInRunDir(filename)
 }
