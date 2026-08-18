@@ -30,11 +30,11 @@ class TestConcurrentToolRuns extends AnyFunSuite {
       def run(source: Path, outDir: Path): Callable[Int] = () => {
         start.await()
         Tool.run(Array(
-            "parse",
-            s"--out-dir=$outDir",
-            "--write-intermediate=true",
-            source.toString,
-        ))
+                "parse",
+                s"--out-dir=$outDir",
+                "--write-intermediate=true",
+                source.toString,
+            ))
       }
 
       try {

@@ -31,8 +31,8 @@ class TestOutputManager extends AnyFunSuite {
       OutputManager.withScope {
         assert(!OutputManager.isConfigured)
         assert(OutputManager.getAllSrc.isEmpty)
-        OutputManager.configure(initialization("first", firstOut, Some(firstCustom), writeIntermediate = true,
-            Some(firstSource)))
+        OutputManager
+          .configure(initialization("first", firstOut, Some(firstCustom), writeIntermediate = true, Some(firstSource)))
         OutputManager.initSourceLines(firstSource)
 
         assert(OutputManager.isConfigured)
@@ -53,8 +53,8 @@ class TestOutputManager extends AnyFunSuite {
         assert(OutputManager.customRunDirPathOpt.isEmpty)
         assert(OutputManager.getAllSrc.isEmpty)
 
-        OutputManager.configure(initialization("second", secondOut, None, writeIntermediate = false,
-            Some(secondSource)))
+        OutputManager
+          .configure(initialization("second", secondOut, None, writeIntermediate = false, Some(secondSource)))
         OutputManager.initSourceLines(secondSource)
 
         assert(OutputManager.outDir == secondOut.resolve("second").toAbsolutePath)
@@ -100,13 +100,14 @@ class TestOutputManager extends AnyFunSuite {
           scope: OutputManager.Scope,
           command: String,
           sourceText: String): Callable[Observation] =
-        () => scope.run {
-          val source = InputSource.StringSource(sourceText)
-          OutputManager.configure(initialization(command, root.resolve(s"$command-out"), source = Some(source)))
-          OutputManager.initSourceLines(source)
-          barrier.await()
-          Observation(OutputManager.outDir, OutputManager.runDir, OutputManager.getAllSrc.get)
-        }
+        () =>
+          scope.run {
+            val source = InputSource.StringSource(sourceText)
+            OutputManager.configure(initialization(command, root.resolve(s"$command-out"), source = Some(source)))
+            OutputManager.initSourceLines(source)
+            barrier.await()
+            Observation(OutputManager.outDir, OutputManager.runDir, OutputManager.getAllSrc.get)
+          }
 
       try {
         val first = executor.submit(task(firstScope, "first", "---- MODULE First ----\n===="))
