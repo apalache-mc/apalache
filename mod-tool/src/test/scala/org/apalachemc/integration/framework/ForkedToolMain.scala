@@ -6,7 +6,7 @@ import at.forsyte.apalache.tla.Tool
 object ForkedToolMain {
   /** Runs Tool without console decoration and exits with Tool's exit code. */
   def main(arguments: Array[String]): Unit = {
-    val exitCode = Tool.run(arguments, isReset = false, isConsoleDecorated = false)
+    val exitCode = Tool.run(arguments)
     System.exit(exitCode)
   }
 }

@@ -75,7 +75,7 @@ private object InProcessToolRunner extends ToolRunner {
       System.setProperty("java.io.tmpdir", workspace.temporaryDirectory.toString)
       val exitCode = scala.Console.withOut(out) {
         scala.Console.withErr(err) {
-          Tool.run(arguments.toArray, isReset = true, isConsoleDecorated = false)
+          Tool.run(arguments.toArray)
         }
       }
       val elapsed = (System.nanoTime() - startedAt).nanos
