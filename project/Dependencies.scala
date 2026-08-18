@@ -44,8 +44,8 @@ object Dependencies {
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.8.0").from(
         "https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar")
-    val ujson = "com.lihaoyi" %% "ujson" % "4.3.2"
-    val upickle = "com.lihaoyi" %% "upickle" % "4.3.2"
+    val ujson = "com.lihaoyi" %% "ujson" % "4.4.3"
+    val upickle = "com.lihaoyi" %% "upickle" % "4.4.3"
     val z3 = "tools.aqua" % "z3-turnkey" % "4.14.1"
     val zio = "dev.zio" %% "zio" % zioVersion
     // Keep up to sync with version in plugins.sbt
@@ -60,7 +60,7 @@ object Dependencies {
     // json-rpc dependencies
     lazy val jettyVersion = "12.1.10"
     val jakartaServlet = "jakarta.servlet" % "jakarta.servlet-api" % "6.0.0" % Provided
-    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.20.2"
+    val jacksonDatabind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.22.1"
     val jacksonModuleScala = "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.22.0"
     val jettyServer = "org.eclipse.jetty" % "jetty-server" % jettyVersion
     val jettyServlet = "org.eclipse.jetty.ee10" % "jetty-ee10-servlet" % jettyVersion
