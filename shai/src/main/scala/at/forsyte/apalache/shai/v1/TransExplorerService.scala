@@ -13,6 +13,7 @@ package at.forsyte.apalache.shai.v1
  */
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CommonPatch, RunContextPatch}
@@ -82,8 +83,10 @@ private case class Conn(
  * @param logger
  *   The logger used by the service
  */
-class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
+class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger, outputScope: OutputManager.Scope)
     extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
+  def this(connections: Ref[Map[UUID, Conn]], logger: Logger) =
+    this(connections, logger, OutputManager.withScope(OutputManager.captureScope()))
 
   /** Concurrent tasks performed by the service that produce values of type `T` */
   type Result[T] = ZIO[ZEnv, Status, T]
@@ -160,33 +163,35 @@ class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger)
 
   private def parseSpec(spec: String, aux: Seq[String]): Result[Either[TransExplorerError, TlaModule]] =
     ZIO.effectTotal {
-      try {
-        // TODO: replace hard-coded options with options derived from CLI params
-        val config = ApalacheConfig(
-            context = RunContextPatch(command = Some(SERVER)),
-            common = CommonPatch(
-                outDir = Some(Path.of(".")),
-                debug = Some(true),
-            ),
-            source = Some(InputSource.StringSource(spec, aux.toList)),
-            output = Some(Path.of(".")),
-        )
-        val resolved = ApalacheConfigResolver.resolveParse(config)
-        if (!resolved.isSuccess) {
-          throw new IllegalArgumentException(resolved.errors.mkString("; "))
-        }
-        val options = resolved.requireValue()
-        PassChainExecutor(new ParserModule(options))
-          .run()
-          .left
-          .map { err =>
-            TransExplorerError(errorType = TransExplorerErrorType.PASS_FAILURE, data = ujson.write(err))
+      outputScope.run {
+        try {
+          // TODO: replace hard-coded options with options derived from CLI params
+          val config = ApalacheConfig(
+              context = RunContextPatch(command = Some(SERVER)),
+              common = CommonPatch(
+                  outDir = Some(Path.of(".")),
+                  debug = Some(true),
+              ),
+              source = Some(InputSource.StringSource(spec, aux.toList)),
+              output = Some(Path.of(".")),
+          )
+          val resolved = ApalacheConfigResolver.resolveParse(config)
+          if (!resolved.isSuccess) {
+            throw new IllegalArgumentException(resolved.errors.mkString("; "))
           }
-      } catch {
-        case err: Throwable =>
-          val errData =
-            ujson.Obj("msg" -> err.getMessage, "stack_trace" -> err.getStackTrace.map(_.toString()).toList)
-          Left(TransExplorerError(errorType = TransExplorerErrorType.UNEXPECTED, data = errData.toString()))
+          val options = resolved.requireValue()
+          PassChainExecutor(new ParserModule(options))
+            .run()
+            .left
+            .map { err =>
+              TransExplorerError(errorType = TransExplorerErrorType.PASS_FAILURE, data = ujson.write(err))
+            }
+        } catch {
+          case err: Throwable =>
+            val errData =
+              ujson.Obj("msg" -> err.getMessage, "stack_trace" -> err.getStackTrace.map(_.toString()).toList)
+            Left(TransExplorerError(errorType = TransExplorerErrorType.UNEXPECTED, data = errData.toString()))
+        }
       }
     }
 
