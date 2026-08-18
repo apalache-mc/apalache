@@ -15,7 +15,6 @@ import at.forsyte.apalache.tla.lir.transformations.standard.{
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.io.config.CommonOptions
-import at.forsyte.apalache.io.OutputWorkspace
 
 abstract class PreproPassPartial(
     val commonOptions: CommonOptions,
@@ -24,13 +23,12 @@ abstract class PreproPassPartial(
     tracker: TransformationTracker,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends PreproPass with LazyLogging {
   override def name: String = "PreprocessingPass"
 
   protected def writeAndReturn(module: TlaModule): TlaModule = {
-    writeOut(writerFactory, outputWorkspace, module)
+    writeOut(writerFactory, module)
     module
   }
 

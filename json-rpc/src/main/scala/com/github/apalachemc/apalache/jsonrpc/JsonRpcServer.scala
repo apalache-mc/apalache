@@ -1,7 +1,7 @@
 package com.github.apalachemc.apalache.jsonrpc
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.{InputSource, OutputWorkspaceFileSystem}
+import at.forsyte.apalache.io.{InputSource, OutputManager}
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.itf.{ItfJsonToTla, TlaToItfJson}
@@ -91,15 +91,8 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
           ))
     }
     val options = optionsResult.requireValue()
-    val initialization = CommandInitializationOptions(SERVER, options.common, Some(options.source))
-    val outputWorkspace =
-      try new OutputWorkspaceFileSystem(initialization)
-      catch {
-        case e: Exception =>
-          return Left(ServiceError(JsonRpcCodes.INTERNAL_ERROR, s"Failed to initialize output: ${e.getMessage}"))
-      }
     // call the parser
-    val passChainExecutor = PassChainExecutor(new CheckerModule(options, outputWorkspace))
+    val passChainExecutor = PassChainExecutor(new CheckerModule(options))
     passChainExecutor.run() match {
       case Left(failure) =>
         Left(ServiceError(failure.exitCode, s"Failed to load specification: $failure"))
@@ -769,7 +762,10 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
  *   exploration service that processes the exploration logic
  */
 @WebServlet(urlPatterns = Array("/rpc"), asyncSupported = true)
-class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyLogging {
+class JsonRpcServlet(service: ExplorationService, outputScope: OutputManager.Scope)
+    extends HttpServlet with LazyLogging {
+  def this(service: ExplorationService) =
+    this(service, OutputManager.withScope(OutputManager.captureScope()))
 
   /** The maximum number of threads to allow in the pool */
   private val MAX_POOL_SIZE = 1024
@@ -821,7 +817,8 @@ class JsonRpcServlet(service: ExplorationService) extends HttpServlet with LazyL
       }
     }
     // submit the task to our pool, so Jetty can continue serving other requests
-    executor.submit(runnable)
+    val scopedRunnable: Runnable = () => outputScope.run(runnable.run())
+    executor.submit(scopedRunnable)
   }
 
   private def processRequest(req: HttpServletRequest): ObjectNode = {
@@ -880,13 +877,17 @@ object JsonRpcServerApp {
   /** Minimum response size in bytes to apply compression. Smaller payloads are sent uncompressed. */
   private val MIN_COMPRESS_SIZE = 512
 
-  def run(config: ConfigParseResult[ApalacheConfig], port: Int): Unit = {
+  def run(config: ConfigParseResult[ApalacheConfig], port: Int): Unit = OutputManager.withScope {
+    run(config, port, OutputManager.captureScope())
+  }
+
+  def run(config: ConfigParseResult[ApalacheConfig], port: Int, outputScope: OutputManager.Scope): Unit = {
     val server = new Server(port)
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")
 
     val service = new ExplorationService(config)
-    context.addServlet(new ServletHolder(new JsonRpcServlet(service)), "/rpc")
+    context.addServlet(new ServletHolder(new JsonRpcServlet(service, outputScope)), "/rpc")
 
     // Wrap the servlet context with a CompressionHandler that supports gzip and zstd.
     // Compression implementations are registered explicitly so we can set minCompressSize.

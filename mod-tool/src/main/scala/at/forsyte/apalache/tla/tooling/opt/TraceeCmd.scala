@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.{InputSource, OutputWorkspace}
+import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.InputSource.FileSource
 import at.forsyte.apalache.io.config.Constants.{EXPRESSIONS, TRACE, TRACEE}
 import at.forsyte.apalache.io.config._
@@ -47,13 +47,13 @@ class TraceeCmd(name: String = TRACEE, description: String = "Evaluate expressio
         s"$i->${i - 1}"
       }).mkString("|")
 
-  override def run(config: ApalacheConfig, outputWorkspace: OutputWorkspace): Either[(TExitCode, String), String] = {
+  override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveTrace(config)) { options =>
       // The execution length is read from the input and is 1 shorter than the trace length,
       // because the trace contains the initial state.
       val executionLength = getLenFromFile(options.source) - 1
       val lenAdjustedOptions = options.withLength(executionLength)
-      PassChainExecutor(new TraceeModule(lenAdjustedOptions, outputWorkspace)).run() match {
+      PassChainExecutor(new TraceeModule(lenAdjustedOptions)).run() match {
         case Right(_)      => Right("Trace successfully generated.")
         case Left(failure) => Left(failure.exitCode, "Trace evaluation has found an error")
       }

@@ -8,7 +8,6 @@ import com.typesafe.scalalogging.LazyLogging
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.pp.UniqueNameGenerator
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.pp.Inliner
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -24,7 +23,6 @@ class TemporalPassImpl @Inject() (
     derivedPreds: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
     gen: UniqueNameGenerator,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory,
     renaming: IncrementalRenaming)
     extends TemporalPass with LazyLogging {
@@ -43,7 +41,7 @@ class TemporalPassImpl @Inject() (
         temporalToInvariants(tlaModule, formulas)
     }
 
-    writeOut(writerFactory, outputWorkspace, newModule)
+    writeOut(writerFactory, newModule)
 
     Right(newModule)
   }

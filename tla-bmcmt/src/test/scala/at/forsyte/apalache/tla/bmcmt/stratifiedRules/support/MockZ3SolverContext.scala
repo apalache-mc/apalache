@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support
 
-import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.lir.TlaEx
 
@@ -9,7 +8,7 @@ import at.forsyte.apalache.tla.lir.TlaEx
  *
  * We can use it in tests, to observe constraint generation without needing to instrument SMT.
  */
-class MockZ3SolverContext extends Z3SolverContext(SolverConfig.default, OutputWorkspaceNoopMock) {
+class MockZ3SolverContext extends Z3SolverContext(SolverConfig.default) {
   var constraints: Seq[TlaEx] = Seq.empty
   override def assertGroundExpr(ex: TlaEx): Unit = constraints = constraints :+ ex
 }

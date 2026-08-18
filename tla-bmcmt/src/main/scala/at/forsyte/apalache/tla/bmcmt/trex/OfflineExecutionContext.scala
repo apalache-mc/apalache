@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.trex
 
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt.smt.RecordingSolverContext
 import at.forsyte.apalache.tla.bmcmt.{SymbStateRewriter, SymbStateRewriterImpl, SymbStateRewriterImplWithArrays}
 import at.forsyte.apalache.tla.lir.transformations.standard.IncrementalRenaming
@@ -12,10 +11,7 @@ import com.typesafe.scalalogging.LazyLogging
  * @param rewriter
  *   an expression rewriter
  */
-class OfflineExecutionContext(
-    var rewriter: SymbStateRewriter,
-    renaming: IncrementalRenaming,
-    outputWorkspace: OutputWorkspace)
+class OfflineExecutionContext(var rewriter: SymbStateRewriter, renaming: IncrementalRenaming)
     extends ExecutionContext[OfflineExecutionContextSnapshot] with LazyLogging {
 
   /**
@@ -46,15 +42,14 @@ class OfflineExecutionContext(
    *   when recovery is impossible
    */
   override def recover(snapshot: OfflineExecutionContextSnapshot): Unit = {
-    val solver = RecordingSolverContext.create(Some(snapshot.smtLog), snapshot.solverConfig, outputWorkspace)
+    val solver = RecordingSolverContext.create(Some(snapshot.smtLog), snapshot.solverConfig)
     // TODO: issue #105, remove references to SolverContext, so recovery becomes less of a hack
 
     val newRewriter = rewriter match {
       case _: SymbStateRewriterImplWithArrays =>
-        new SymbStateRewriterImplWithArrays(solver, renaming, rewriter.exprGradeStore,
-            outputWorkspace = outputWorkspace)
+        new SymbStateRewriterImplWithArrays(solver, renaming, rewriter.exprGradeStore)
       case _: SymbStateRewriterImpl =>
-        new SymbStateRewriterImpl(solver, renaming, rewriter.exprGradeStore, outputWorkspace = outputWorkspace)
+        new SymbStateRewriterImpl(solver, renaming, rewriter.exprGradeStore)
       case oddRewriterType => throw new IllegalArgumentException(s"Unexpected rewriter of type $oddRewriterType")
     }
     newRewriter.config = rewriter.config

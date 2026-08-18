@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.{InputSource, OutputWorkspace}
+import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.tla.bmcmt.config.CheckerModule
@@ -61,7 +61,7 @@ class TestCmd extends ApalacheCommand(name = TEST, description = "Quickly test a
     )
   }
 
-  override def run(config: ApalacheConfig, outputWorkspace: OutputWorkspace) = {
+  override def run(config: ApalacheConfig) = {
     runWithOptions(ApalacheConfigResolver.resolveCheck(config)) { options =>
       // This is a special version of the `check` command that is tuned towards testing scenarios
       logger.info("Checker passOptions: filename=%s, before=%s, action=%s, after=%s"
@@ -70,7 +70,7 @@ class TestCmd extends ApalacheCommand(name = TEST, description = "Quickly test a
       val tuning = options.checker.tuning
       logger.info("Tuning: " + tuning.toList.map { case (k, v) => s"$k=$v" }.mkString(":"))
 
-      PassChainExecutor(new CheckerModule(options, outputWorkspace)).run() match {
+      PassChainExecutor(new CheckerModule(options)).run() match {
         case Right(_)      => Right("No example found")
         case Left(failure) =>
           Left(failure.exitCode, "Found a violation of the postcondition. Check violation.tla.")

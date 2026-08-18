@@ -4,7 +4,6 @@ import at.forsyte.apalache.infra.ExitCodes
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.tla.tracee._
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.TraceEvaluationOptions
 import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.json.DefaultTagJsonReader
@@ -28,7 +27,6 @@ class TraceePassImpl @Inject() (
     derivedPreds: DerivedPredicates.Configurable,
     traceOptions: TraceEvaluationOptions,
     tracker: TransformationTracker,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory,
     sourceStore: SourceStore)
     extends TraceePass with LazyLogging {
@@ -112,7 +110,7 @@ class TraceePassImpl @Inject() (
         // Mark introduced transition operators as persistent, so they don't get wiped by the inlinig pass.
         derivedPreds.addPersistent(initOper.name +: nextOpers.map(_.name): _*)
 
-        writeOut(writerFactory, outputWorkspace, outModule)
+        writeOut(writerFactory, outModule)
 
         Right(outModule)
       }

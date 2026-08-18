@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt.rules.vmt.TlaExToVMTWriter
 import at.forsyte.apalache.tla.lir.oper.TlaActionOper
 import at.forsyte.apalache.tla.lir.transformations.standard.ReplaceFixed
@@ -20,8 +19,7 @@ import com.typesafe.scalalogging.LazyLogging
 class ReTLAToVMTTranspilePassImpl @Inject() (
     pred: LanguagePred,
     gen: UniqueNameGenerator,
-    tracker: TransformationTracker,
-    outputWorkspace: OutputWorkspace)
+    tracker: TransformationTracker)
     extends TranspilePass with LazyLogging {
 
   override def name: String = "Transpiler"
@@ -50,7 +48,7 @@ class ReTLAToVMTTranspilePassImpl @Inject() (
     val vcInvs = getTransitionsWithNames(module, NormalizedNames.VC_INV_PREFIX)
     val vcActionInvs = getTransitionsWithNames(module, NormalizedNames.VC_ACTION_INV_PREFIX)
 
-    val vmtWriter = new TlaExToVMTWriter(gen, outputWorkspace)
+    val vmtWriter = new TlaExToVMTWriter(gen)
 
     vmtWriter.annotateAndWrite(
         module.varDeclarations,

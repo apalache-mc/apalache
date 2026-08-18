@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt.ArenaCell
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.SmtListener
@@ -14,9 +13,8 @@ object RecordingSolverContext {
    */
   def create(
       parentLog: Option[SmtLog],
-      config: SolverConfig,
-      outputWorkspace: OutputWorkspace): RecordingSolverContext = {
-    val solverImpl = SolverContextFactory.create(config, outputWorkspace)
+      config: SolverConfig): RecordingSolverContext = {
+    val solverImpl = SolverContextFactory.create(config)
     val context = new RecordingSolverContext(parentLog, config, solverImpl)
     parentLog.foreach(_.replay(context.solverImpl))
     context

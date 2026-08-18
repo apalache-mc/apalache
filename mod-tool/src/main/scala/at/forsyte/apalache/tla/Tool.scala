@@ -6,8 +6,7 @@ import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
-import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, OutputWorkspaceFileSystem, ReportGenerator}
-import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, Z3SolverContext}
+import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -29,7 +28,7 @@ object Tool extends LazyLogging {
 
   /**
    * Run the tool in the standalone mode with the provided arguments. This method calls [[java.lang.System.exit]] with
-   * the computed exit code. To call the tool without System.exit, use [[run(args:Array[String])*]].
+   * the computed exit code. To call the tool without System.exit, use [[run]].
    *
    * @param args
    *   the command line arguments
@@ -49,38 +48,33 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def outputAndLogConfig(
-      cmd: ApalacheCommand,
-      cfg: ApalacheConfig,
-      isConsoleDecorated: Boolean): Try[OutputWorkspace] = for {
+  private def outputAndLogConfig(cmd: ApalacheCommand, cfg: ApalacheConfig): Try[Unit] = for {
     initialization <- {
       val result = ApalacheConfigResolver.resolveCommandInitialization(cfg)
       if (result.isSuccess) Try(result.requireValue())
       else Failure(new ConfigurationError(result.errors.mkString("; ")))
     }
-    outputWorkspace <- Try(new OutputWorkspaceFileSystem(initialization))
+    _ <- Try(OutputManager.configure(initialization))
   } yield {
-    println(s"Output directory: ${outputWorkspace.runDir.normalize()}")
-    outputWorkspace.withWriterInRunDir(OutputWorkspace.RunFile)(
+    initialization.source.foreach(OutputManager.initSourceLines)
+    println(s"Output directory: ${OutputManager.runDir.normalize()}")
+    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
 
     // Write the application configuration, if debug is enabled
     if (initialization.common.debug) {
-      outputWorkspace.withWriterInRunDir(OutputWorkspace.ConfigFile) { writer =>
+      OutputManager.withWriterInRunDir("application-config.json") { writer =>
         writer.print(ApalacheConfigJsonParser.write(cfg.mergeWithDefaults, usePrettyPrinter = true))
       }
     }
 
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    val logFiles =
-      (outputWorkspace.runDir +: outputWorkspace.additionalRunDir.toSeq).map(OutputWorkspace.detailedLogPath)
-    new LogbackConfigurator(logFiles, isConsoleDecorated)
-      .configureDefaultContext()
+    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
+    // TODO: update workers when the multicore branch is integrated
     logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
 
     submitStatisticsIfEnabled(Map("tool" -> "apalache", "mode" -> cmd.label, "workers" -> "1"))
-    outputWorkspace
   }
 
   /** Build the CLI configuration, then select and merge at most one file-based configuration. */
@@ -96,32 +90,21 @@ object Tool extends LazyLogging {
     }
   }
 
-  /** Run the tool in library mode without resetting process-global state. */
-  def run(args: Array[String]): Int = run(args, isReset = false)
-
-  /** Run the tool in library mode with the default decorated console logger. */
-  def run(args: Array[String], isReset: Boolean): Int =
-    run(args, isReset, isConsoleDecorated = true)
-
   /**
-   * Run the tool in library mode, that is, without a call to System.exit.
+   * Run the tool in a library mode, that is, with a call to System.exit.
    *
    * @param args
    *   the command line arguments
-   * @param isReset
-   *   whether to reset process-global solver log IDs before this invocation
-   * @param isConsoleDecorated
-   *   whether console log messages include their level and timestamp decoration
    * @return
    *   the exit code; as usual, 0 means success.
    */
-  def run(args: Array[String], isReset: Boolean, isConsoleDecorated: Boolean): Int = {
-    if (isReset) {
-      Z3SolverContext.resetIds()
-      Cvc5SolverContext.resetIds()
-    }
+  def run(args: Array[String]): Int = OutputManager.withScope {
+    runInScope(args)
+  }
+
+  private def runInScope(args: Array[String]): Int = {
     // Configure the silent logger first. Otherwise, Apache Commons spills a lot of text to the console.
-    new LogbackConfigurator(Nil, isConsoleDecorated).configureDefaultContext()
+    new LogbackConfigurator(None, None).configureDefaultContext()
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
       .parse(args)
@@ -153,16 +136,16 @@ object Tool extends LazyLogging {
             ExitCodes.ERROR
           } else {
             val config = configResult.requireValue()
-            outputAndLogConfig(cmd, config, isConsoleDecorated) match {
+            outputAndLogConfig(cmd, config) match {
               case Failure(cfgErr) => {
                 logger.error(s"Configuration error: ${cfgErr.getMessage}")
                 ExitCodes.ERROR
               }
-              case Success(outputWorkspace) => {
+              case Success(()) => {
                 configResult.warnings.foreach(warning => logger.warn(warning))
                 val startTime = LocalDateTime.now()
                 try {
-                  runCommand(cmd, config, outputWorkspace)
+                  runCommand(cmd, config)
                 } finally {
                   printTimeDiff(startTime)
                 }
@@ -181,15 +164,9 @@ object Tool extends LazyLogging {
   }
 
   // Execute the program specified by the subcommand cmd, handling errors as needed
-  private def runCommand(
-      cmd: ApalacheCommand,
-      config: ApalacheConfig,
-      outputWorkspace: OutputWorkspace): ExitCodes.TExitCode = {
-    // a helper function (!) for submitting bug reports in the catch section
-    def readSourceCode(): Option[String] = config.source.flatMap(_.readUtf8.value)
-
+  private def runCommand(cmd: ApalacheCommand, config: ApalacheConfig): ExitCodes.TExitCode =
     try {
-      cmd.run(config, outputWorkspace) match {
+      cmd.run(config) match {
         case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
         case Right(msg)                 => { logger.info(msg); ExitCodes.OK }
       }
@@ -197,9 +174,7 @@ object Tool extends LazyLogging {
       case e: AdaptedException =>
         e.err match {
           case NormalErrorMessage(text) => logger.error(text)
-          case FailureMessage(text)     =>
-            logger.error(text, e)
-            generateBugReport(e, cmd, readSourceCode(), outputWorkspace)
+          case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd) }
         }
         ExitCodes.ERROR
 
@@ -210,10 +185,9 @@ object Tool extends LazyLogging {
 
       case e: Throwable =>
         logger.error("Unhandled exception", e)
-        generateBugReport(e, cmd, readSourceCode(), outputWorkspace)
+        generateBugReport(e, cmd)
         ExitCodes.ERROR
     }
-  }
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
@@ -268,14 +242,8 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def generateBugReport(
-      e: Throwable,
-      cmd: ApalacheCommand,
-      sourceText: Option[String],
-      outputWorkspace: OutputWorkspace): Unit = {
+  private def generateBugReport(e: Throwable, cmd: ApalacheCommand): Unit = {
     val absPath = ReportGenerator.prepareReportFile(
-        outputWorkspace,
-        sourceText,
         cmd.invocation.split(" ").dropRight(1).mkString(" "),
         s"${BuildInfo.version} build ${BuildInfo.build}",
     )

@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace}
+import at.forsyte.apalache.io.ConfigurationError
 import at.forsyte.apalache.io.config.Constants.CINIT
 import at.forsyte.apalache.io.config.SpecificationOptions
 import at.forsyte.apalache.io.lir.TlaWriterFactory
@@ -36,7 +36,6 @@ class ConfigurationPassImpl @Inject() (
     val specification: SpecificationOptions,
     val derivedPreds: DerivedPredicates.Configurable,
     tracker: TransformationTracker,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends ConfigurationPass with LazyLogging {
 
@@ -115,7 +114,7 @@ class ConfigurationPassImpl @Inject() (
     // However, that should be done very carefully. Maybe we should do that in the future.
 
     // dump the configuration result
-    writeOut(writerFactory, outputWorkspace, configuredModule)
+    writeOut(writerFactory, configuredModule)
 
     Right(configuredModule)
   }

@@ -1,35 +1,31 @@
 package at.forsyte.apalache.io
 
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
+import java.io.File
 import java.util.regex.Matcher
 
 object ReportGenerator {
-  def getLog(outputWorkspace: OutputWorkspace): String = {
-    val path = outputWorkspace.pathInRunDir(OutputWorkspace.DetailedLogFile)
-    Matcher.quoteReplacement(Files.readString(path, StandardCharsets.UTF_8).trim)
-  }
+  private val reportFile = "BugReport.md"
+
+  private def getFileOrEmptyStr(filename: String) = OutputManager.readContentsOfFileInRunDir(filename).getOrElse("")
+
+  def getLog(): String =
+    Matcher.quoteReplacement(getFileOrEmptyStr("detailed.log")) // handle $s in log
 
   // Can't access Version or Command in IO, have to pass at call site
-  def prepareReportFile(
-      outputWorkspace: OutputWorkspace,
-      sourceText: Option[String],
-      cmdStr: String,
-      versionStr: String): String = {
-    val specTxt = sourceText
-      .map(spec => s"```\n${spec.trim}\n````")
-      .getOrElse("<!-- TLA+ specification not found. -->")
-    val log = getLog(outputWorkspace)
+  def prepareReportFile(cmdStr: String, versionStr: String): String = {
+    val specTxt =
+      OutputManager.getAllSrc.map(spec => s"```\n$spec\n````").getOrElse("<!-- TLA+ specification not found. -->")
+    val log = getLog()
     val os = System.getProperty("os.name")
     val jdk = System.getProperty("java.version")
 
     val filledTemplate = template(specTxt, cmdStr, log, versionStr, os, jdk)
 
-    outputWorkspace.withWriterInRunDir(OutputWorkspace.ReportFile) {
+    OutputManager.withWriterInRunDir(reportFile) {
       _.println(filledTemplate)
     }
 
-    outputWorkspace.pathInRunDir(OutputWorkspace.ReportFile).toFile.getCanonicalPath
+    new File(OutputManager.runDir.toFile, reportFile).getCanonicalPath
   }
 
   private def template(

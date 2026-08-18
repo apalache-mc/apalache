@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.bmcmt.passes
 
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.CheckerOptions
 import at.forsyte.apalache.tla.bmcmt.VCGenerator
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule}
@@ -21,7 +20,6 @@ class VCGenPassImpl @Inject() (
     checkerOptions: CheckerOptions,
     derivedPredicates: DerivedPredicates,
     tracker: TransformationTracker,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends VCGenPass with LazyLogging {
 
@@ -49,7 +47,7 @@ class VCGenPassImpl @Inject() (
         })
         .getOrElse(moduleWithInvariants)
 
-    writeOut(writerFactory, outputWorkspace, moduleWithInvariantsAndView)
+    writeOut(writerFactory, moduleWithInvariantsAndView)
 
     Right(moduleWithInvariantsAndView)
   }

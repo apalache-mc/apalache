@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
 import at.forsyte.apalache.io.config.SMTEncoding
-import at.forsyte.apalache.io.OutputWorkspace
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.profiler.{IdleSmtListener, SmtListener}
@@ -31,8 +31,7 @@ import scala.collection.mutable.ListBuffer
  * @author
  *   Igor Konnov, Rodrigo Otoni
  */
-class Z3SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspace)
-    extends SolverContext with LazyLogging {
+class Z3SolverContext(val config: SolverConfig) extends SolverContext with LazyLogging {
   private val id: Long = Z3SolverContext.createId()
 
   logger.debug(s"Creating Z3 solver context ${id}")
@@ -425,11 +424,16 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspace
   }
 
   /**
-   * Initialize up to two log writers, one in the run directory and one in the additional run directory, if set.
+   * Initialize up to two log writers, one in the run directory and one in the custom run directory, if those are set.
    */
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers = outputWorkspace.openLongLivedWritersInRunDirs(filePart)
+    val writers =
+      if (OutputManager.isBound) {
+        (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
+      } else {
+        Iterable.empty
+      }
 
     if (!config.debug) {
       writers.foreach { writer =>
@@ -1086,8 +1090,6 @@ class Z3SolverContext(val config: SolverConfig, outputWorkspace: OutputWorkspace
 
 object Z3SolverContext {
   private val nextId: AtomicLong = new AtomicLong(0)
-
-  private[tla] def resetIds(): Unit = nextId.set(0)
 
   private def createId(): Long = {
     nextId.getAndIncrement()

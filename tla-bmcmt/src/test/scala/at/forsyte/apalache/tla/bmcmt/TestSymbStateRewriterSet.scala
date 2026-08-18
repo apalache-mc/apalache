@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{PreproSolverContext, SolverConfig, Z3SolverContext}
@@ -785,7 +784,7 @@ trait TestSymbStateRewriterSet extends RewriterBase {
 
       // reset the solver and arena
       solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                  smtEncoding = rewriterType), OutputWorkspaceNoopMock))
+                  smtEncoding = rewriterType)))
       arena = PureArenaAdapter.create(solverContext)
       val rewriter2 = create(rewriterType)
       val state2 = new SymbState(existsForm2, arena, Binding())

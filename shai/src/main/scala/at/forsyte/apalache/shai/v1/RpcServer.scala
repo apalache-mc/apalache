@@ -1,5 +1,6 @@
 package at.forsyte.apalache.shai.v1
 
+import at.forsyte.apalache.io.OutputManager
 import zio.{console, ExitCode, Ref, ZEnv, ZIO}
 
 import java.util.UUID
@@ -16,7 +17,9 @@ import java.net.BindException
  *
  * We extend LazyLogging to give the server process access to the same logger configured for the rest of Apalache.
  */
-class RpcServer(override val port: Int) extends ServerMain with LazyLogging {
+class RpcServer(override val port: Int, outputScope: OutputManager.Scope) extends ServerMain with LazyLogging {
+  def this(port: Int) = this(port, OutputManager.withScope(OutputManager.captureScope()))
+
   override def welcome: ZIO[ZEnv, Throwable, Unit] =
     console.putStrLn(s"The Apalache server is running on port ${port}. Press Ctrl-C to stop.")
 
@@ -26,9 +29,9 @@ class RpcServer(override val port: Int) extends ServerMain with LazyLogging {
     connections <- Ref.make(Map[UUID, Conn]())
     // Ensure atomic access to the parser
     // See https://github.com/apalache-mc/apalache/issues/1114#issuecomment-1180534894
-  } yield new TransExplorerService(connections, logger)
+  } yield new TransExplorerService(connections, logger, outputScope)
 
-  val createCmdExecutorService = ZIO.succeed(new CmdExecutorService(logger))
+  val createCmdExecutorService = ZIO.succeed(new CmdExecutorService(logger, outputScope))
 
   def services: ServiceList[ZEnv] =
     ServiceList.addM(createTransExplorerService).addM(createCmdExecutorService)
@@ -61,5 +64,7 @@ object RpcServer {
   val DEFAULT_PORT = 8822
   val STARTUP_ERROR_PROMPT = "Error while starting Apalache server:"
 
-  def apply(port: Int = DEFAULT_PORT) = new RpcServer(port)
+  def apply(port: Int = DEFAULT_PORT): RpcServer = new RpcServer(port)
+
+  def apply(port: Int, outputScope: OutputManager.Scope): RpcServer = new RpcServer(port, outputScope)
 }

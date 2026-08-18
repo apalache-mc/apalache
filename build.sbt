@@ -34,7 +34,7 @@ ThisBuild / version := scala.io.Source.fromFile(versionFile.value).mkString.trim
 ThisBuild / organization := "org.apalache-mc"
 ThisBuild / scalaVersion := "2.13.18"
 
-val artifactJavaVersion = "17"
+val artifactJavaVersion = "21"
 
 // Maven Central publication is opt-in for individual library sub-projects.
 ThisBuild / publish / skip := true

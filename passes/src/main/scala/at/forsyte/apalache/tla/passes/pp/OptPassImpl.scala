@@ -1,7 +1,6 @@
 package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.transformations.TransformationTracker
 import at.forsyte.apalache.tla.lir.transformations.standard._
@@ -23,7 +22,6 @@ import com.typesafe.scalalogging.LazyLogging
 class OptPassImpl @Inject() (
     gen: UniqueNameGenerator,
     tracker: TransformationTracker,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends OptPass with LazyLogging {
 
@@ -45,7 +43,7 @@ class OptPassImpl @Inject() (
     }
 
     // dump the result of preprocessing
-    writeOut(writerFactory, outputWorkspace, optimized)
+    writeOut(writerFactory, optimized)
 
     Right(optimized)
   }

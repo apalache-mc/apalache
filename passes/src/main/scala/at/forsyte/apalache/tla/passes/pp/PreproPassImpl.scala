@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.passes.pp
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.io.lir.TlaWriterFactory
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.storage.ChangeListener
 import at.forsyte.apalache.tla.lir.transformations.standard._
 import at.forsyte.apalache.tla.lir.transformations.{TlaModuleTransformation, TransformationTracker}
@@ -33,7 +32,6 @@ class PreproPassImpl @Inject() (
     tracker: TransformationTracker,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
-    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends PreproPassPartial(
         commonOptions,
@@ -42,7 +40,6 @@ class PreproPassImpl @Inject() (
         tracker,
         sourceStore,
         changeListener,
-        outputWorkspace,
         writerFactory,
     ) {
 

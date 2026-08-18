@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
-import at.forsyte.apalache.io.OutputWorkspace
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir._
@@ -17,7 +17,7 @@ import scalaz.unused
  * @author
  *   Jure Kukovec
  */
-class TlaExToVMTWriter(gen: UniqueNameGenerator, outputWorkspace: OutputWorkspace) {
+class TlaExToVMTWriter(gen: UniqueNameGenerator) {
   // Main entry point.
   def annotateAndWrite(
       varDecls: Seq[TlaVarDecl],
@@ -99,7 +99,7 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator, outputWorkspace: OutputWorkspac
       (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermToVMTWriter.assertDistinct)
     }
 
-    outputWorkspace.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
+    OutputManager.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
       writer.println(";Sorts")
       sortDecls.foreach(writer.println)
       writer.println()

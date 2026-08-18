@@ -2,7 +2,6 @@ package at.forsyte.apalache.tla.passes.imp
 
 import at.forsyte.apalache.infra.ExceptionAdapter
 import at.forsyte.apalache.infra.passes.{Pass, ToolModule}
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.annotations.{AnnotationStoreProvider, PrettyWriterWithAnnotationsFactory}
 import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions, ValidatedParseOptions}
@@ -16,9 +15,8 @@ import com.google.inject.TypeLiteral
  * @author
  *   Igor Konnov
  */
-class ParserModule(options: ValidatedParseOptions, outputWorkspace: OutputWorkspace) extends ToolModule {
+class ParserModule(options: ValidatedParseOptions) extends ToolModule {
   override def configure(): Unit = {
-    bind(classOf[OutputWorkspace]).toInstance(outputWorkspace)
     bind(classOf[CommonOptions]).toInstance(options.common)
     bind(classOf[ModuleIoOptions]).toInstance(ModuleIoOptions(options.source, options.output))
 

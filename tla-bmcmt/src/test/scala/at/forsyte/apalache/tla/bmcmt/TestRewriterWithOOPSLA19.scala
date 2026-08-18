@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.caches.TestDefaultValueCache
@@ -24,7 +23,7 @@ class TestRewriterWithOOPSLA19
     with TestDefaultValueFactory with TestDefaultValueCache with TestSymbStateRewriterRepeat {
   override protected def withFixture(test: OneArgTest): Outcome = {
     solverContext = new PreproSolverContext(new Z3SolverContext(SolverConfig.default.copy(debug = true,
-                smtEncoding = SMTEncoding.OOPSLA19), OutputWorkspaceNoopMock))
+                smtEncoding = SMTEncoding.OOPSLA19)))
     arena = PureArenaAdapter.create(solverContext)
     val result = test(SMTEncoding.OOPSLA19)
     solverContext.dispose()

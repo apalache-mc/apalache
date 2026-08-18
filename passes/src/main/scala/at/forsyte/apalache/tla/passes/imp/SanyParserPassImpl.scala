@@ -13,7 +13,6 @@ import com.typesafe.scalalogging.LazyLogging
 
 import java.io.File
 import at.forsyte.apalache.io.InputSource
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.{CommonOptions, ModuleIoOptions}
 
 import scala.io.Source
@@ -37,7 +36,6 @@ class SanyParserPassImpl @Inject() (
     val moduleIoOptions: ModuleIoOptions,
     val sourceStore: SourceStore,
     val annotationStore: AnnotationStore,
-    outputWorkspace: OutputWorkspace,
     val writerFactory: TlaWriterFactory)
     extends SanyParserPass with LazyLogging {
 
@@ -100,17 +98,9 @@ class SanyParserPassImpl @Inject() (
 
   private def saveLoadedModule(module: TlaModule): Either[PassFailure, Unit] = {
     // save the output
-    writeOut(writerFactory, outputWorkspace, module)
+    writeOut(writerFactory, module)
     // write parser output to specified destination, if requested
-    utils.writeToOutput(
-        module,
-        commonOptions,
-        moduleIoOptions.output,
-        writerFactory,
-        outputWorkspace,
-        logger,
-        sourceStore,
-    )
+    utils.writeToOutput(module, commonOptions, moduleIoOptions.output, writerFactory, logger, sourceStore)
     Right(())
   }
 

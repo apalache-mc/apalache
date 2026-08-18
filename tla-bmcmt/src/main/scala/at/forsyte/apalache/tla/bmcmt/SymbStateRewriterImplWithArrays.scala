@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.bmcmt.analyses.{ExprGradeStore, ExprGradeStoreImpl}
 import at.forsyte.apalache.tla.bmcmt.rewriter.MetricProfilerListener
 import at.forsyte.apalache.tla.bmcmt.rules._
@@ -26,9 +25,8 @@ class SymbStateRewriterImplWithArrays(
     _solverContext: SolverContext,
     renaming: IncrementalRenaming,
     exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
-    profilerListener: Option[MetricProfilerListener] = None,
-    outputWorkspace: OutputWorkspace)
-    extends SymbStateRewriterImpl(_solverContext, renaming, exprGradeStore, profilerListener, outputWorkspace) {
+    profilerListener: Option[MetricProfilerListener] = None)
+    extends SymbStateRewriterImpl(_solverContext, renaming, exprGradeStore, profilerListener) {
 
   @transient
   override lazy val ruleLookupTable: Map[String, List[RewritingRule]] = defaultRuleLookupTable ++ newRules

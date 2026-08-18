@@ -1,6 +1,5 @@
 package at.forsyte.apalache.tla.bmcmt.profiler
 
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
 
 /**
@@ -9,8 +8,8 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
  * @author
  *   Igor Konnov
  */
-class RuleStatListener(outputWorkspace: OutputWorkspace) extends SmtListener {
-  val locator = new RuleStatLocator(outputWorkspace)
+class RuleStatListener extends SmtListener {
+  val locator = new RuleStatLocator()
   private var stack: Seq[RuleStat] = Seq()
 
   def enterRule(ruleName: String): Unit = {
