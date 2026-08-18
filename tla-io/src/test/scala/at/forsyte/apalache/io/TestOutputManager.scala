@@ -13,71 +13,98 @@ import scala.util.Using
 @RunWith(classOf[JUnitRunner])
 class TestOutputManager extends AnyFunSuite {
 
-  private case class Observation(outDir: Path, runDir: Path, source: String)
+  private case class Observation(runDir: Path, contents: String)
 
-  test("calls outside a scope fail with a useful error") {
-    val error = intercept[IllegalStateException](OutputManager.isConfigured)
+  test("required access outside a configured scope fails and optional output is disabled") {
+    val error = intercept[IllegalStateException](OutputManager.runDir)
     assert(error.getMessage.contains("OutputManager.withScope"))
     assert(!OutputManager.withProfilingWriter(_ => fail("unbound profiling writer should be disabled")))
-    assert(OutputManager.Names.RunFile == "run.txt")
+    assert(OutputManager.openLongLivedWritersInRunDirs("unbound.txt").isEmpty)
+    OutputManager.withWriterInIntermediateDir("unbound.txt")(_ => fail("unbound intermediate output is disabled"))
+    assert(OutputManager.RunFile == "run.txt")
   }
 
-  test("fresh scopes do not retain paths or source lines") {
-    withTempDirectory("output-manager-sequential") { root =>
-      val firstOut = root.resolve("first-out")
-      val firstCustom = root.resolve("first-custom")
-      val firstSource = InputSource.StringSource("---- MODULE First ----\n====")
+  test("a workspace owns and mirrors its filesystem output") {
+    withTempDirectory("output-workspace-filesystem") { root =>
+      val additional = root.resolve("additional")
+      val workspace = new OutputManager(
+          initialization(
+              "check",
+              root.resolve("out"),
+              Some(additional),
+              writeIntermediate = true,
+              profiling = true,
+          )
+      )
 
-      OutputManager.withScope {
-        assert(!OutputManager.isConfigured)
-        assert(OutputManager.getAllSrc.isEmpty)
-        OutputManager
-          .configure(initialization("first", firstOut, Some(firstCustom), writeIntermediate = true, Some(firstSource)))
-        OutputManager.initSourceLines(firstSource)
+      assert(workspace.runDir.getParent == root.resolve("out/check").toAbsolutePath)
+      assert(workspace.additionalRunDir.contains(additional.toAbsolutePath))
+      assert(workspace.pathInRunDir("nested", "file.txt") == workspace.runDir.resolve("nested/file.txt"))
 
-        assert(OutputManager.isConfigured)
-        assert(OutputManager.outDir == firstOut.resolve("first").toAbsolutePath)
-        assert(OutputManager.customRunDirPathOpt.contains(firstCustom.toAbsolutePath))
-        assert(OutputManager.getAllSrc.contains("---- MODULE First ----\n===="))
-        assert(OutputManager.withWriterInIntermediateDir("first.txt")(_.println("first")))
-        assert(OutputManager.withWriterInRunDir("result.txt")(_.println("first")))
-        assert(Files.exists(OutputManager.runDir.resolve("result.txt")))
-        assert(Files.exists(firstCustom.resolve("result.txt")))
+      workspace.withWriterInRunDir("result.txt")(_.print("result"))
+      assert(Files.readString(workspace.pathInRunDir("result.txt")) == "result")
+      assert(Files.readString(additional.resolve("result.txt")) == "result")
+
+      workspace.withWriterInIntermediateDir("intermediate.txt")(_.print("intermediate"))
+      assert(Files.readString(workspace.pathInRunDir("intermediate/intermediate.txt")) == "intermediate")
+      assert(Files.readString(additional.resolve("intermediate/intermediate.txt")) == "intermediate")
+
+      assert(workspace.withProfilingWriter(_.print("profile")))
+      assert(Files.readString(workspace.pathInRunDir(OutputManager.RuleProfileFile)) == "profile")
+
+      val external = root.resolve("external.txt")
+      workspace.withWriterOutsideWorkspace(external)(_.print("external"))
+      assert(Files.readString(external) == "external")
+
+      val longLivedWriters = workspace.openLongLivedWritersInRunDirs("long-lived.txt").toList
+      try {
+        longLivedWriters.foreach { writer =>
+          writer.print("long-lived")
+          writer.flush()
+        }
+        assert(Files.readString(workspace.pathInRunDir("long-lived.txt")) == "long-lived")
+        assert(Files.readString(additional.resolve("long-lived.txt")) == "long-lived")
+      } finally {
+        longLivedWriters.foreach(_.close())
       }
 
-      val secondOut = root.resolve("second-out")
-      val secondSource = InputSource.StringSource("---- MODULE Second ----\n====")
+      val disabled = new OutputManager(initialization("disabled", root.resolve("out")))
+      disabled.withWriterInIntermediateDir("disabled.txt")(_ => fail("intermediate output should be disabled"))
+      assert(!disabled.withProfilingWriter(_ => fail("profiling should be disabled")))
+      assert(!Files.exists(disabled.pathInRunDir(OutputManager.IntermediateDirName)))
+    }
+  }
+
+  test("fresh scopes do not retain a previously configured workspace") {
+    withTempDirectory("output-workspace-sequential") { root =>
+      val firstRunDir = OutputManager.withScope {
+        OutputManager.configure(initialization("first", root.resolve("first-out")))
+        OutputManager.withWriterInRunDir("result.txt")(_.print("first"))
+        OutputManager.runDir
+      }
+
       OutputManager.withScope {
-        assert(!OutputManager.isConfigured)
-        assert(OutputManager.runDirPathOpt.isEmpty)
-        assert(OutputManager.customRunDirPathOpt.isEmpty)
-        assert(OutputManager.getAllSrc.isEmpty)
-
-        OutputManager
-          .configure(initialization("second", secondOut, None, writeIntermediate = false, Some(secondSource)))
-        OutputManager.initSourceLines(secondSource)
-
-        assert(OutputManager.outDir == secondOut.resolve("second").toAbsolutePath)
-        assert(OutputManager.customRunDirPathOpt.isEmpty)
-        assert(OutputManager.getAllSrc.contains("---- MODULE Second ----\n===="))
-        assert(!OutputManager.withWriterInIntermediateDir("second.txt")(_ => ()))
+        intercept[IllegalStateException](OutputManager.runDir)
+        OutputManager.configure(initialization("second", root.resolve("second-out")))
+        assert(OutputManager.runDir != firstRunDir)
+        assert(!Files.exists(OutputManager.pathInRunDir("result.txt")))
       }
     }
   }
 
   test("nested and exceptional scopes restore the previous binding") {
-    withTempDirectory("output-manager-nested") { root =>
+    withTempDirectory("output-workspace-nested") { root =>
       OutputManager.withScope {
         OutputManager.configure(initialization("outer", root.resolve("outer")))
-        val outerDir = OutputManager.outDir
+        val outerDir = OutputManager.runDir
 
         OutputManager.withScope {
-          assert(!OutputManager.isConfigured)
+          intercept[IllegalStateException](OutputManager.runDir)
           OutputManager.configure(initialization("inner", root.resolve("inner")))
-          assert(OutputManager.outDir != outerDir)
+          assert(OutputManager.runDir != outerDir)
         }
 
-        assert(OutputManager.outDir == outerDir)
+        assert(OutputManager.runDir == outerDir)
       }
 
       intercept[RuntimeException] {
@@ -85,42 +112,36 @@ class TestOutputManager extends AnyFunSuite {
           throw new RuntimeException("boom")
         }
       }
-      intercept[IllegalStateException](OutputManager.isConfigured)
+      intercept[IllegalStateException](OutputManager.runDir)
     }
   }
 
   test("captured scopes isolate concurrent configuration and can be rebound on worker threads") {
-    withTempDirectory("output-manager-concurrent") { root =>
+    withTempDirectory("output-workspace-concurrent") { root =>
       val firstScope = OutputManager.withScope(OutputManager.captureScope())
       val secondScope = OutputManager.withScope(OutputManager.captureScope())
       val barrier = new CyclicBarrier(2)
       val executor = Executors.newFixedThreadPool(2)
 
-      def task(
-          scope: OutputManager.Scope,
-          command: String,
-          sourceText: String): Callable[Observation] =
+      def task(scope: OutputManager.Scope, command: String): Callable[Observation] =
         () =>
           scope.run {
-            val source = InputSource.StringSource(sourceText)
-            OutputManager.configure(initialization(command, root.resolve(s"$command-out"), source = Some(source)))
-            OutputManager.initSourceLines(source)
+            OutputManager.configure(initialization(command, root.resolve(s"$command-out")))
+            OutputManager.withWriterInRunDir("same.txt")(_.print(command))
             barrier.await()
-            Observation(OutputManager.outDir, OutputManager.runDir, OutputManager.getAllSrc.get)
+            Observation(OutputManager.runDir, Files.readString(OutputManager.pathInRunDir("same.txt")))
           }
 
       try {
-        val first = executor.submit(task(firstScope, "first", "---- MODULE First ----\n===="))
-        val second = executor.submit(task(secondScope, "second", "---- MODULE Second ----\n===="))
+        val first = executor.submit(task(firstScope, "first"))
+        val second = executor.submit(task(secondScope, "second"))
         val firstResult = first.get()
         val secondResult = second.get()
 
-        assert(firstResult.outDir == root.resolve("first-out/first").toAbsolutePath)
-        assert(secondResult.outDir == root.resolve("second-out/second").toAbsolutePath)
-        assert(firstResult.runDir.startsWith(firstResult.outDir))
-        assert(secondResult.runDir.startsWith(secondResult.outDir))
-        assert(firstResult.source.contains("MODULE First"))
-        assert(secondResult.source.contains("MODULE Second"))
+        assert(firstResult.runDir.startsWith(root.resolve("first-out/first").toAbsolutePath))
+        assert(secondResult.runDir.startsWith(root.resolve("second-out/second").toAbsolutePath))
+        assert(firstResult.contents == "first")
+        assert(secondResult.contents == "second")
       } finally {
         executor.shutdownNow()
       }
@@ -132,19 +153,19 @@ class TestOutputManager extends AnyFunSuite {
       outDir: Path,
       runDir: Option[Path] = None,
       writeIntermediate: Boolean = false,
-      source: Option[InputSource] = None): CommandInitializationOptions =
+      profiling: Boolean = false): CommandInitializationOptions =
     CommandInitializationOptions(
         command,
         CommonOptions(
             debug = false,
             features = Nil,
             outDir = outDir,
-            profiling = false,
+            profiling = profiling,
             runDir = runDir,
             smtprof = false,
             writeIntermediate = writeIntermediate,
         ),
-        source,
+        source = None,
     )
 
   private def withTempDirectory[A](prefix: String)(body: Path => A): A = {

@@ -56,9 +56,8 @@ object Tool extends LazyLogging {
     }
     _ <- Try(OutputManager.configure(initialization))
   } yield {
-    initialization.source.foreach(OutputManager.initSourceLines)
     println(s"Output directory: ${OutputManager.runDir.normalize()}")
-    OutputManager.withWriterInRunDir(OutputManager.Names.RunFile)(
+    OutputManager.withWriterInRunDir(OutputManager.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
 
@@ -70,7 +69,7 @@ object Tool extends LazyLogging {
     }
 
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(OutputManager.runDirPathOpt, OutputManager.customRunDirPathOpt).configureDefaultContext()
+    new LogbackConfigurator(Some(OutputManager.runDir), OutputManager.additionalRunDir).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
     logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
 
@@ -164,7 +163,9 @@ object Tool extends LazyLogging {
   }
 
   // Execute the program specified by the subcommand cmd, handling errors as needed
-  private def runCommand(cmd: ApalacheCommand, config: ApalacheConfig): ExitCodes.TExitCode =
+  private def runCommand(cmd: ApalacheCommand, config: ApalacheConfig): ExitCodes.TExitCode = {
+    def readSourceCode(): Option[String] = config.source.flatMap(_.readUtf8.value)
+
     try {
       cmd.run(config) match {
         case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
@@ -174,7 +175,7 @@ object Tool extends LazyLogging {
       case e: AdaptedException =>
         e.err match {
           case NormalErrorMessage(text) => logger.error(text)
-          case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd) }
+          case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd, readSourceCode()) }
         }
         ExitCodes.ERROR
 
@@ -185,9 +186,10 @@ object Tool extends LazyLogging {
 
       case e: Throwable =>
         logger.error("Unhandled exception", e)
-        generateBugReport(e, cmd)
+        generateBugReport(e, cmd, readSourceCode())
         ExitCodes.ERROR
     }
+  }
 
   private def printTimeDiff(startTime: LocalDateTime): Unit = {
     val endTime = LocalDateTime.now()
@@ -242,8 +244,9 @@ object Tool extends LazyLogging {
     }
   }
 
-  private def generateBugReport(e: Throwable, cmd: ApalacheCommand): Unit = {
+  private def generateBugReport(e: Throwable, cmd: ApalacheCommand, sourceText: Option[String]): Unit = {
     val absPath = ReportGenerator.prepareReportFile(
+        sourceText,
         cmd.invocation.split(" ").dropRight(1).mkString(" "),
         s"${BuildInfo.version} build ${BuildInfo.build}",
     )
