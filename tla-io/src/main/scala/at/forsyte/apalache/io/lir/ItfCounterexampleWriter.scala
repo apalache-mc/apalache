@@ -3,6 +3,7 @@ package at.forsyte.apalache.io.lir
 import at.forsyte.apalache.io.itf.TlaToItfJson
 import at.forsyte.apalache.io.json.ujsonimpl.{ScalaToUJsonAdapter, UJsonRepresentation}
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
 
 import java.io.PrintWriter
 
@@ -14,9 +15,13 @@ import java.io.PrintWriter
  * @author
  *   Igor Konnov
  */
-class ItfCounterexampleWriter(writer: PrintWriter) extends CounterexampleWriter {
+class ItfCounterexampleWriter(writer: PrintWriter, variableDescriptionsStore: VariableDescriptionsStore)
+    extends CounterexampleWriter {
   override def write(trace: Trace[TlaEx]): Unit = {
-    writer.write(ujson.write(ItfCounterexampleWriter.mkJson(trace.module, trace.states), indent = 2))
+    writer.write(ujson.write(
+            ItfCounterexampleWriter.mkJson(trace.module, trace.states, variableDescriptionsStore.toMap),
+            indent = 2,
+        ))
   }
 }
 
@@ -33,8 +38,11 @@ object ItfCounterexampleWriter {
    * @return
    *   the JSON representation of the counterexample in the ITF format
    */
-  def mkJson(rootModule: TlaModule, states: IndexedSeq[Trace.State]): ujson.Value =
-    ujsonEncoder.mkJson(rootModule, states).value
+  def mkJson(
+      rootModule: TlaModule,
+      states: IndexedSeq[Trace.State],
+      variableDescriptions: Map[String, String] = Map.empty): ujson.Value =
+    ujsonEncoder.mkJson(rootModule, states, variableDescriptions).value
 
   def stateToJson(state: Trace.State, index: Int): ujson.Value =
     ujsonEncoder.stateToJson(state, index).value

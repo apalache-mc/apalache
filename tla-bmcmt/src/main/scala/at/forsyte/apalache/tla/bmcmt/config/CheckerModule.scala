@@ -8,7 +8,7 @@ import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.bmcmt.analyses._
 import at.forsyte.apalache.tla.bmcmt.passes._
-import at.forsyte.apalache.tla.lir.storage.ChangeListener
+import at.forsyte.apalache.tla.lir.storage.{ChangeListener, VariableDescriptionsStore}
 import at.forsyte.apalache.tla.lir.transformations.{TransformationListener, TransformationTracker}
 import at.forsyte.apalache.tla.passes.assignments.{PrimingPass, PrimingPassImpl, TransitionPass, TransitionPassImpl}
 import at.forsyte.apalache.tla.passes.imp.{SanyParserPass, SanyParserPassImpl}
@@ -50,6 +50,7 @@ class CheckerModule(options: ValidatedCheckOptions) extends ToolModule {
       .toProvider(classOf[AnnotationStoreProvider])
     bind(classOf[ExprGradeStore])
       .to(classOf[ExprGradeStoreImpl])
+    bind(classOf[VariableDescriptionsStore])
 
     // writers
     bind(classOf[TlaWriterFactory])
