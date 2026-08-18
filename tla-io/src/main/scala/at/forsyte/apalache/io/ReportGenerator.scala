@@ -1,20 +1,22 @@
 package at.forsyte.apalache.io
 
-import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.util.regex.Matcher
 
 object ReportGenerator {
   private val reportFile = "BugReport.md"
-
-  private def getFileOrEmptyStr(filename: String) = OutputManager.readContentsOfFileInRunDir(filename).getOrElse("")
+  private val detailedLogFile = "detailed.log"
 
   def getLog(): String =
-    Matcher.quoteReplacement(getFileOrEmptyStr("detailed.log")) // handle $s in log
+    Matcher.quoteReplacement(
+        Files.readString(OutputManager.pathInRunDir(detailedLogFile), StandardCharsets.UTF_8).trim
+    ) // handle $s in log
 
   // Can't access Version or Command in IO, have to pass at call site
-  def prepareReportFile(cmdStr: String, versionStr: String): String = {
+  def prepareReportFile(sourceText: Option[String], cmdStr: String, versionStr: String): String = {
     val specTxt =
-      OutputManager.getAllSrc.map(spec => s"```\n$spec\n````").getOrElse("<!-- TLA+ specification not found. -->")
+      sourceText.map(spec => s"```\n${spec.trim}\n````").getOrElse("<!-- TLA+ specification not found. -->")
     val log = getLog()
     val os = System.getProperty("os.name")
     val jdk = System.getProperty("java.version")
@@ -25,7 +27,7 @@ object ReportGenerator {
       _.println(filledTemplate)
     }
 
-    new File(OutputManager.runDir.toFile, reportFile).getCanonicalPath
+    OutputManager.pathInRunDir(reportFile).toFile.getCanonicalPath
   }
 
   private def template(
