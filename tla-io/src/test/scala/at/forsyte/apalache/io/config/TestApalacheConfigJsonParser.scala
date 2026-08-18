@@ -27,7 +27,7 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("reports all independent decoding errors") {
     val result = ApalacheConfigJsonParser.parse(
-        """{"run-dir":1,"debug":"yes","checker":{"length":"ten","inv":[1,true],"smt-solver":"unknown"},"server":{"port":"8822"}}""")
+        """{"run-dir":1,"debug":"yes","checker":{"length":"ten","inv":[1,true],"smt-solver":"unknown"},"server":{"ip":true,"port":"8822"}}""")
     val expected = Set(
         "$.run-dir: Expected a JSON string.",
         "$.debug: Expected a JSON boolean.",
@@ -35,6 +35,7 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
         "$.checker.inv[1]: Expected a JSON string.",
         "$.checker.length: Expected a 32-bit JSON integer.",
         "$.checker.smt-solver: Unexpected SMT solver backend: unknown",
+        "$.server.ip: Expected a JSON string.",
         "$.server.port: Expected a 32-bit JSON integer.",
     )
 
@@ -46,6 +47,18 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     val config = ApalacheConfig(checker = CheckerPatch(smtSolver = Some(SMTSolver.CVC5)))
 
     assert(ApalacheConfigJsonParser.write(config).contains(""""smt-solver":"cvc5""""))
+  }
+
+  test("round-trips the explorer server IP address") {
+    val config = ApalacheConfig(server = ServerPatch(
+        ip = Some("0.0.0.0"),
+        serverType = Some(ServerType.Explorer),
+    ))
+
+    val decoded = ApalacheConfigJsonParser.parse(ApalacheConfigJsonParser.write(config))
+
+    assert(decoded.isSuccess)
+    assert(decoded.requireValue().server == config.server)
   }
 
   test("preserves an explicit source format when a filename cannot express it") {
