@@ -33,6 +33,7 @@ class TestJsonRequests extends AnyFunSuite {
         assert(loadSpecParams.init == "Init", "Unexpected init")
         assert(loadSpecParams.next == "Next", "Unexpected next")
         assert(loadSpecParams.invariants.isEmpty, "Invariants should be empty")
+        assert(loadSpecParams.format == "tla", "Unexpected source format")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }
@@ -44,7 +45,7 @@ class TestJsonRequests extends AnyFunSuite {
     val input =
       s"""{"jsonrpc": "2.0", "method": "loadSpec", "params": { "sources": ["$encodedText"],
          |"init": "MyInit", "next": "MyNext", "invariants": ["inv1", "inv2"],
-         |"exports": ["MyView"]},"id": 1}""".stripMargin
+         |"exports": ["MyView"], "format": "qnt"},"id": 1}""".stripMargin
     val mapper = new ObjectMapper().registerModule(DefaultScalaModule)
     val inputJson = mapper.readTree(input)
     val parsed = new JsonParameterParser(mapper).parseLoadSpec(inputJson.path("params"))
@@ -54,6 +55,7 @@ class TestJsonRequests extends AnyFunSuite {
         assert(loadSpecParams.init == "MyInit", "Unexpected init")
         assert(loadSpecParams.next == "MyNext", "Unexpected next")
         assert(loadSpecParams.invariants == List("inv1", "inv2"), "Unexpected invariants")
+        assert(loadSpecParams.format == "qnt", "Unexpected source format")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
     }
