@@ -23,8 +23,7 @@ class SearchState(params: ModelCheckerParams) {
   private var _nFoundErrors: Int = 0
   private var _nTimeouts: Int = 0
   private val _counterexamples: ListBuffer[Trace[TlaEx]] = ListBuffer.empty
-  private var _nRunsLeft: Int =
-    if (params.isRandomSimulation) params.nSimulationRuns else 1
+  private var _nRunsLeft: Int = params.maxRun
 
   /**
    * Get the number of errors that were found so far (excluding deadlocks and runtime errors).
@@ -43,7 +42,7 @@ class SearchState(params: ModelCheckerParams) {
   def nTimeouts: Int = _nTimeouts
 
   /**
-   * Get the number of simulation runs to explore.
+   * Get the number of search runs left to explore.
    *
    * @return
    *   the non-negative number of runs.

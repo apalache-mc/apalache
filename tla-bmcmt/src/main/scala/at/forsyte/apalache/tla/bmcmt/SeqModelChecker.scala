@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.config.SearchKind
 import at.forsyte.apalache.io.lir.Trace
 import at.forsyte.apalache.tla.bmcmt.Checker._
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams.InvariantMode
@@ -44,6 +45,8 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
   private val searchState: SearchState = new SearchState(ctx.params)
   // cache for labels that are used in the current run
   private val labelsCache = new LabelsCache()
+  // a checker-local source of randomness initialized with the resolved per-run seed
+  private val random: Random = new Random(ctx.params.seed)
 
   override def run(): CheckerResult = {
     // initialize CONSTANTS
@@ -56,7 +59,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
     }
     val constSnapshot = trex.snapshot()
 
-    // Repeat the search: 1 time in the `check` mode, and `params.nSimulationRuns` times in the `simulation` mode.
+    // Repeat the search once in check mode, and up to params.maxRun times in simulation mode.
     // If the error budget (set with `params.nMaxErrors`) is overrun, terminate immediately.
     while (searchState.canContinue) {
       // apply the Init predicate
@@ -67,7 +70,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
         makeStep(isNext = true, ctx.checkerInput.nextTransitions)
       }
 
-      if (ctx.params.isRandomSimulation && ctx.params.saveRuns) {
+      if (ctx.params.searchKind == SearchKind.Simulate && ctx.params.outputTraces) {
         outputExampleRun()
       }
 
@@ -82,7 +85,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
 
     if (searchState.nFoundErrors > 0) {
       logger.info("Found %d error(s)".format(searchState.nFoundErrors))
-    } else if (!ctx.params.isRandomSimulation && ctx.params.saveRuns) {
+    } else if (ctx.params.searchKind == SearchKind.Check && ctx.params.outputTraces) {
       // Output an example in the end of the search.
       outputExampleRun()
     }
@@ -205,7 +208,8 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
 
     // in case we do random simulation, shuffle the indices and stop at the first enabled transition
     val transitionIndices =
-      if (ctx.params.isRandomSimulation) Random.shuffle(transitions.indices.toList) else transitions.indices
+      if (ctx.params.searchKind == SearchKind.Simulate) random.shuffle(transitions.indices.toList)
+      else transitions.indices
 
     // keep track of SMT timeouts
     var nTimeouts = 0
@@ -255,7 +259,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
                 }
               }
 
-              if (ctx.params.isRandomSimulation) {
+              if (ctx.params.searchKind == SearchKind.Simulate) {
                 // When random simulation is enabled, we need only one enabled transition.
                 // recover from the snapshot
                 trex.recover(snapshot.get)
@@ -270,7 +274,7 @@ class SeqModelChecker[ExecutorContextT](val ctx: ModelCheckerContext[ExecutorCon
               logger.info(s"Step ${trex.stepNo}: Transition #$no$labels_s is disabled")
 
             case None =>
-              if (ctx.params.isRandomSimulation) {
+              if (ctx.params.searchKind == SearchKind.Simulate) {
                 logger.info(s"Step ${trex.stepNo}: Transition #$no$labels_s => TIMEOUT. Transition ignored.")
                 nTimeouts += 1
               } else {

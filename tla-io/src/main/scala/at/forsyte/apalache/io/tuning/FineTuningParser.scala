@@ -30,8 +30,6 @@ object FineTuningParser {
       "search.transitionFilter" -> RegexFieldType(),
       "search.invariantFilter" -> RegexFieldType(),
       "rewriter.shortCircuit" -> BoolFieldType(),
-      // keeping for backwards compatibility
-      "smt.randomSeed" -> UnsignedIntFieldType(),
       // setting the SMT logic in CVC5
       "cvc5.smt.logic" -> StringFieldType(),
       // For the parameters starting with "z3.", see:
@@ -201,7 +199,6 @@ object FineTuningParser {
       "z3.sat.probing_limit" -> UnsignedIntFieldType(),
       "z3.sat.propagate.prefetch" -> BoolFieldType(),
       "z3.sat.random_freq" -> DoubleFieldType(),
-      "z3.sat.random_seed" -> UnsignedIntFieldType(),
       "z3.sat.reorder.activity_scale" -> UnsignedIntFieldType(),
       "z3.sat.reorder.base" -> UnsignedIntFieldType(),
       "z3.sat.reorder.itau" -> DoubleFieldType(),
@@ -318,7 +315,6 @@ object FineTuningParser {
       "z3.nlsat.minimize_conflicts" -> BoolFieldType(),
       "z3.nlsat.randomize" -> BoolFieldType(),
       "z3.nlsat.reorder" -> BoolFieldType(),
-      "z3.nlsat.seed" -> UnsignedIntFieldType(),
       "z3.nlsat.shuffle_vars" -> BoolFieldType(),
       "z3.nlsat.simplify_conflicts" -> BoolFieldType(),
       "z3.rewriter.algebraic_number_evaluator" -> BoolFieldType(),
@@ -485,7 +481,6 @@ object FineTuningParser {
       "z3.smt.qi.quick_checker" -> UnsignedIntFieldType(),
       "z3.smt.qsat_use_qel" -> BoolFieldType(),
       "z3.smt.quasi_macros" -> BoolFieldType(),
-      "z3.smt.random_seed" -> UnsignedIntFieldType(),
       "z3.smt.refine_inj_axioms" -> BoolFieldType(),
       "z3.smt.relevancy" -> UnsignedIntFieldType(),
       "z3.smt.restart.max" -> UnsignedIntFieldType(),
