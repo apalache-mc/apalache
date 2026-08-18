@@ -164,8 +164,6 @@ object Tool extends LazyLogging {
 
   // Execute the program specified by the subcommand cmd, handling errors as needed
   private def runCommand(cmd: ApalacheCommand, config: ApalacheConfig): ExitCodes.TExitCode = {
-    def readSourceCode(): Option[String] = config.source.flatMap(_.readUtf8.value)
-
     try {
       cmd.run(config) match {
         case Left((errorCode, failMsg)) => { logger.info(failMsg); errorCode }
@@ -175,7 +173,9 @@ object Tool extends LazyLogging {
       case e: AdaptedException =>
         e.err match {
           case NormalErrorMessage(text) => logger.error(text)
-          case FailureMessage(text)     => { logger.error(text, e); generateBugReport(e, cmd, readSourceCode()) }
+          case FailureMessage(text)     =>
+            logger.error(text, e)
+            generateBugReport(e, cmd, config.source.flatMap(_.readUtf8.value))
         }
         ExitCodes.ERROR
 
@@ -186,7 +186,7 @@ object Tool extends LazyLogging {
 
       case e: Throwable =>
         logger.error("Unhandled exception", e)
-        generateBugReport(e, cmd, readSourceCode())
+        generateBugReport(e, cmd, config.source.flatMap(_.readUtf8.value))
         ExitCodes.ERROR
     }
   }
