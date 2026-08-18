@@ -20,6 +20,7 @@ class TestOutputManager extends AnyFunSuite {
     assert(error.getMessage.contains("OutputManager.withScope"))
     assert(!OutputManager.withProfilingWriter(_ => fail("unbound profiling writer should be disabled")))
     assert(OutputManager.openLongLivedWritersInRunDirs("unbound.txt").isEmpty)
+    assert(!OutputManager.withWriterInRunDir("unbound.txt")(_ => fail("unbound run output is disabled")))
     OutputManager.withWriterInIntermediateDir("unbound.txt")(_ => fail("unbound intermediate output is disabled"))
     assert(OutputManager.RunFile == "run.txt")
   }

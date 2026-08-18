@@ -152,8 +152,12 @@ object OutputManager {
   def openLongLivedWritersInRunDirs(fileName: String): Iterable[PrintWriter] =
     currentOption.map(_.openLongLivedWritersInRunDirs(fileName)).getOrElse(Iterable.empty)
 
-  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit =
-    current.withWriterInRunDir(parts: _*)(f)
+  /** Optional output for components that may be used outside the tool runtime. */
+  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean =
+    currentOption.exists { workspace =>
+      workspace.withWriterInRunDir(parts: _*)(f)
+      true
+    }
 
   /** Optional output that is disabled until a workspace is configured and intermediate output is enabled. */
   def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Unit =
