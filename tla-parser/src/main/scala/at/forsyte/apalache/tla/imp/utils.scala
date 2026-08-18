@@ -8,6 +8,7 @@ import com.typesafe.scalalogging.Logger
 import org.apache.commons.io.FilenameUtils
 
 import at.forsyte.apalache.io.config.CommonOptions
+import at.forsyte.apalache.io.OutputWorkspace
 
 import java.nio.file.Path
 
@@ -18,6 +19,7 @@ object utils {
       common: CommonOptions,
       output: Option[Path],
       writerFactory: TlaWriterFactory,
+      outputWorkspace: OutputWorkspace,
       logger: Logger,
       sourceStore: SourceStore): Unit =
     output.foreach { outputPath =>
@@ -30,12 +32,14 @@ object utils {
       ext match {
         case "tla" =>
           writerFactory.writeModuleToTla(
+              outputWorkspace,
               module.copy(name),
               TlaWriter.STANDARD_MODULES,
               Some(outfile),
           )
         case "json" =>
           writerFactory.writeModuleToJson(
+              outputWorkspace,
               module.copy(name),
               TlaWriter.STANDARD_MODULES,
               Some(outfile),

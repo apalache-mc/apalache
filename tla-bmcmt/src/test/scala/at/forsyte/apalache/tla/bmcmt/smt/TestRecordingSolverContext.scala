@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.smt
 
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.lir.IntT1
 import at.forsyte.apalache.tla.typecomp._
@@ -16,7 +17,7 @@ trait TestRecordingSolverContext extends AnyFunSuite {
   private val int42: BuilderT = tla.int(42)
 
   test("operations proxied") {
-    val solver = RecordingSolverContext.create(None, solverConfig)
+    val solver = RecordingSolverContext.create(None, solverConfig, OutputWorkspaceNoopMock)
     val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toBuilder, int42))
@@ -25,7 +26,7 @@ trait TestRecordingSolverContext extends AnyFunSuite {
   }
 
   test("write and read") {
-    val solver = RecordingSolverContext.create(None, solverConfig)
+    val solver = RecordingSolverContext.create(None, solverConfig, OutputWorkspaceNoopMock)
     val arena = PureArenaAdapter.create(solver).appendCell(IntT1)
     val x = arena.topCell
     solver.assertGroundExpr(tla.eql(x.toBuilder, int42))
@@ -37,14 +38,14 @@ trait TestRecordingSolverContext extends AnyFunSuite {
     solver.assertGroundExpr(tla.gt(x.toBuilder, tla.int(1000)))
     assert(!solver.sat())
     // restore the context
-    val restoredSolver = RecordingSolverContext.create(Some(log), solverConfig)
+    val restoredSolver = RecordingSolverContext.create(Some(log), solverConfig, OutputWorkspaceNoopMock)
     // the restored context should be satisfiable
     assert(restoredSolver.sat())
     assert(restoredSolver.evalGroundExpr(x.toBuilder) == int42.build)
   }
 
   test("pop on empty") {
-    val solver = RecordingSolverContext.create(None, solverConfig)
+    val solver = RecordingSolverContext.create(None, solverConfig, OutputWorkspaceNoopMock)
     assertThrows[IllegalArgumentException](solver.pop(2))
   }
 }

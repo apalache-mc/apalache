@@ -7,9 +7,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import scala.jdk.CollectionConverters._
 
-class TestOutputWorkspace extends AnyFunSuite {
+class TestOutputWorkspaceFileSystem extends AnyFunSuite {
 
-  test("OutputWorkspace instances keep their output state isolated") {
+  test("OutputWorkspaceFileSystem instances keep their output state isolated") {
     withTempDirectory { root =>
       val additionalA = root.resolve("additional-a")
       val additionalB = root.resolve("additional-b")
@@ -33,7 +33,7 @@ class TestOutputWorkspace extends AnyFunSuite {
       assert(workspaceB.withProfilingWriter(_.print("profile-b")))
 
       def readString(workspace: OutputWorkspace) = {
-        val path = OutputWorkspace.ruleProfilePath(workspace.runDir)
+        val path = workspace.pathInRunDir(OutputWorkspace.RuleProfileFile)
         Files.readString(path, StandardCharsets.UTF_8)
       }
       assert(readString(workspaceA) == "profile-a")
@@ -41,22 +41,24 @@ class TestOutputWorkspace extends AnyFunSuite {
 
       val scopedFile = root.resolve("scoped.txt")
       val walz = "An der schönen blauen Donau"
-      workspaceA.withWriter(scopedFile)(_.print(walz))
+      workspaceA.withWriterOutsideWorkspace(scopedFile)(_.print(walz))
       assert(Files.readString(scopedFile, StandardCharsets.UTF_8) == walz)
 
-      val openFile = root.resolve("open.txt")
-      val openWriter = workspaceA.openWriter(openFile)
+      val openWriters = workspaceA.openLongLivedWritersInRunDirs("open.txt")
       try {
-        openWriter.print("long-lived")
-        openWriter.flush()
-        assert(Files.readString(openFile, StandardCharsets.UTF_8) == "long-lived")
+        openWriters.foreach { writer =>
+          writer.print("long-lived")
+          writer.flush()
+        }
+        assert(Files.readString(workspaceA.runDir.resolve("open.txt"), StandardCharsets.UTF_8) == "long-lived")
+        assert(Files.readString(additionalA.resolve("open.txt"), StandardCharsets.UTF_8) == "long-lived")
       } finally {
-        openWriter.close()
+        openWriters.foreach(_.close())
       }
     }
   }
 
-  private def makeWorkspace(root: Path, additionalRunDir: Path): OutputWorkspace = {
+  private def makeWorkspace(root: Path, additionalRunDir: Path): OutputWorkspaceFileSystem = {
     val common = CommonOptions(
         debug = false,
         features = Nil,
@@ -66,7 +68,7 @@ class TestOutputWorkspace extends AnyFunSuite {
         smtprof = false,
         writeIntermediate = true,
     )
-    new OutputWorkspace(CommandInitializationOptions("check", common, None))
+    new OutputWorkspaceFileSystem(CommandInitializationOptions("check", common, None))
   }
 
   private def withTempDirectory(test: Path => Unit): Unit = {

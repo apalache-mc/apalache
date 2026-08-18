@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.PureArena
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
@@ -138,7 +139,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
   // We cannot test getIndexOfChosenValueFromModel without running the solver
   // Ignored until we figure out why it's killing GH CLI
   ignore("getIndexOfChosenValueFromModel recovers the index correctly for nonempty cell collection") {
-    val ctx = new Z3SolverContext(SolverConfig.default)
+    val ctx = new Z3SolverContext(SolverConfig.default, OutputWorkspaceNoopMock)
     val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
     initScope = initScope.copy(arena = paa.arena)
     val prop =
@@ -162,7 +163,7 @@ class TestUninterpretedConstOracle extends AnyFunSuite with BeforeAndAfterEach w
   }
 
   test("getIndexOfChosenValueFromModel recovers the index correctly for empty collections") {
-    val ctx = new Z3SolverContext(SolverConfig.default)
+    val ctx = new Z3SolverContext(SolverConfig.default, OutputWorkspaceNoopMock)
     val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
     val (_, oracle) = UninterpretedConstOracle.create(rewriter, cache, initScope.copy(arena = paa.arena), 0)
     ctx.declareCell(oracle.oracleCell)

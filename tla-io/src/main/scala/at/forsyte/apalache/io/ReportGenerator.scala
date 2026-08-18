@@ -1,15 +1,14 @@
 package at.forsyte.apalache.io
 
-import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.regex.Matcher
 
 object ReportGenerator {
   def getLog(outputWorkspace: OutputWorkspace): String = {
-    val path = OutputWorkspace.detailedLogPath(outputWorkspace.runDir)
+    val path = outputWorkspace.pathInRunDir(OutputWorkspace.DetailedLogFile)
     Matcher.quoteReplacement(Files.readString(path, StandardCharsets.UTF_8).trim)
-  } // handle $s in log
+  }
 
   // Can't access Version or Command in IO, have to pass at call site
   def prepareReportFile(
@@ -30,7 +29,7 @@ object ReportGenerator {
       _.println(filledTemplate)
     }
 
-    new File(outputWorkspace.runDir.toFile, OutputWorkspace.ReportFile).getCanonicalPath
+    outputWorkspace.pathInRunDir(OutputWorkspace.ReportFile).toFile.getCanonicalPath
   }
 
   private def template(

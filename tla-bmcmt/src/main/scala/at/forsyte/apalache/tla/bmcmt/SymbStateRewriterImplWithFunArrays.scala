@@ -27,7 +27,7 @@ class SymbStateRewriterImplWithFunArrays(
     renaming: IncrementalRenaming,
     exprGradeStore: ExprGradeStore = new ExprGradeStoreImpl(),
     profilerListener: Option[MetricProfilerListener] = None,
-    outputWorkspace: Option[OutputWorkspace] = None)
+    outputWorkspace: OutputWorkspace)
     extends SymbStateRewriterImpl(_solverContext, renaming, exprGradeStore, profilerListener, outputWorkspace) {
 
   @transient

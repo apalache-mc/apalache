@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
 import at.forsyte.apalache.tla.lir._
@@ -106,7 +107,7 @@ class TestMockOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers {
   test("getIndexOfChosenValueFromModel recovers the index correctly") {
     val prop =
       forAll(Gen.zip(nonNegIntGen)) { fixed =>
-        val ctx = new Z3SolverContext(SolverConfig.default)
+        val ctx = new Z3SolverContext(SolverConfig.default, OutputWorkspaceNoopMock)
         val oracle = MockOracle.create(fixed)
         oracle.getIndexOfChosenValueFromModel(ctx) == fixed
       }

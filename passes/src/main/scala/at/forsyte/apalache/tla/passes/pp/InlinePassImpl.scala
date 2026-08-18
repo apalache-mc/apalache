@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.passes.pp
 
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.lir.TlaWriterFactory
 import at.forsyte.apalache.tla.lir.findBodyOf
 import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
@@ -18,6 +19,7 @@ class InlinePassImpl @Inject() (
     derivedPreds: DerivedPredicates,
     tracker: TransformationTracker,
     renaming: IncrementalRenaming,
+    outputWorkspace: OutputWorkspace,
     writerFactory: TlaWriterFactory)
     extends InlinePass with LazyLogging {
 
@@ -70,7 +72,7 @@ class InlinePassImpl @Inject() (
     )
 
     // dump the result of preprocessing
-    writeOut(writerFactory, constInlinedModule)
+    writeOut(writerFactory, outputWorkspace, constInlinedModule)
 
     Right(constInlinedModule)
   }

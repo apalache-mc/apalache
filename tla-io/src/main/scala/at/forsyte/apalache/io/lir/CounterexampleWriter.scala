@@ -189,7 +189,7 @@ object CounterexampleWriter extends LazyLogging {
 
     fileNames.map { case (kind, name) =>
       outputWorkspace.withWriterInRunDir(name)(writerHelper(kind))
-      outputWorkspace.runDir.resolve(name).normalize.toString
+      outputWorkspace.pathInRunDir(name).normalize.toString
     }
   }
 

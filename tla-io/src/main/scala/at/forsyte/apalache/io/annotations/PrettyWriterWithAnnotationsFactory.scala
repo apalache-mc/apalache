@@ -1,7 +1,6 @@
 package at.forsyte.apalache.io.annotations
 
 import at.forsyte.apalache.io.annotations.store.AnnotationStore
-import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.json.JsonTlaWriter
 import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.io.lir.{TlaWriter, TlaWriterFactory}
@@ -14,8 +13,7 @@ import java.io.PrintWriter
 class PrettyWriterWithAnnotationsFactory @Inject() (
     sourceStore: SourceStore,
     changeListener: ChangeListener,
-    store: AnnotationStore,
-    override protected val outputWorkspace: OutputWorkspace)
+    store: AnnotationStore)
     extends TlaWriterFactory {
   override def createTlaWriter(printWriter: PrintWriter): TlaWriter = {
     new PrettyWriterWithAnnotations(store, printWriter)

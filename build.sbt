@@ -341,7 +341,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
       tlair % "test->test",
       infra,
-      tla_io,
+      tla_io % "compile->compile;test->test",
       tla_pp,
       tla_assignments,
       passes,

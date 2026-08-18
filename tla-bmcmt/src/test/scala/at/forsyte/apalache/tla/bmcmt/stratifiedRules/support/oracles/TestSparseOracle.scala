@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.stratifiedRules.support.oracles
 
+import at.forsyte.apalache.io.OutputWorkspaceNoopMock
 import at.forsyte.apalache.tla.bmcmt.arena.PureArenaAdapter
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
 import at.forsyte.apalache.tla.bmcmt.stratifiedRules.RewriterScope
@@ -71,7 +72,7 @@ class TestSparseOracle extends AnyFunSuite with BeforeAndAfterEach with Checkers
 
   // We cannot test getIndexOfChosenValueFromModel without running the solver
   test("getIndexOfChosenValueFromModel recovers the index correctly") {
-    val ctx = new Z3SolverContext(SolverConfig.default)
+    val ctx = new Z3SolverContext(SolverConfig.default, OutputWorkspaceNoopMock)
     val paa = PureArenaAdapter.create(ctx) // We use PAA, since it performs the basic context initialization
     val paa2 = paa.appendCell(IntT1) // also declares the cell
     intOracleCell = paa2.topCell

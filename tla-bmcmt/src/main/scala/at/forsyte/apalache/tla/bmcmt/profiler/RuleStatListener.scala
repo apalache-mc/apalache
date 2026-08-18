@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.lir.{OperEx, TlaEx}
  * @author
  *   Igor Konnov
  */
-class RuleStatListener(outputWorkspace: Option[OutputWorkspace] = None) extends SmtListener {
+class RuleStatListener(outputWorkspace: OutputWorkspace) extends SmtListener {
   val locator = new RuleStatLocator(outputWorkspace)
   private var stack: Seq[RuleStat] = Seq()
 

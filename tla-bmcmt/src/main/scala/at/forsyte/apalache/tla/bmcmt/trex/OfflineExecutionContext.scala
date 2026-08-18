@@ -15,7 +15,7 @@ import com.typesafe.scalalogging.LazyLogging
 class OfflineExecutionContext(
     var rewriter: SymbStateRewriter,
     renaming: IncrementalRenaming,
-    outputWorkspace: Option[OutputWorkspace] = None)
+    outputWorkspace: OutputWorkspace)
     extends ExecutionContext[OfflineExecutionContextSnapshot] with LazyLogging {
 
   /**

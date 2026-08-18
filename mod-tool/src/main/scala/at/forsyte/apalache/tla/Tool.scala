@@ -6,7 +6,7 @@ import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
-import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, ReportGenerator}
+import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, OutputWorkspaceFileSystem, ReportGenerator}
 import at.forsyte.apalache.tla.bmcmt.smt.{Cvc5SolverContext, Z3SolverContext}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
@@ -58,7 +58,7 @@ object Tool extends LazyLogging {
       if (result.isSuccess) Try(result.requireValue())
       else Failure(new ConfigurationError(result.errors.mkString("; ")))
     }
-    outputWorkspace <- Try(new OutputWorkspace(initialization))
+    outputWorkspace <- Try(new OutputWorkspaceFileSystem(initialization))
   } yield {
     println(s"Output directory: ${outputWorkspace.runDir.normalize()}")
     outputWorkspace.withWriterInRunDir(OutputWorkspace.RunFile)(
@@ -185,7 +185,7 @@ object Tool extends LazyLogging {
       cmd: ApalacheCommand,
       config: ApalacheConfig,
       outputWorkspace: OutputWorkspace): ExitCodes.TExitCode = {
-    // a helper for submitting bug reports
+    // a helper function (!) for submitting bug reports in the catch section
     def readSourceCode(): Option[String] = config.source.flatMap(_.readUtf8.value)
 
     try {

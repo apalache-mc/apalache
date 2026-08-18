@@ -145,7 +145,7 @@ class BoundedCheckerPassImpl @Inject() (
       input: CheckerInput,
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
-    val solverContext: RecordingSolverContext = RecordingSolverContext.create(None, solverConfig, Some(outputWorkspace))
+    val solverContext: RecordingSolverContext = RecordingSolverContext.create(None, solverConfig, outputWorkspace)
 
     val metricProfilerListener =
       if (solverConfig.profile) {
@@ -162,7 +162,7 @@ class BoundedCheckerPassImpl @Inject() (
             renaming,
             exprGradeStore,
             metricProfilerListener,
-            Some(outputWorkspace),
+            outputWorkspace,
         )
       case SMTEncoding.Arrays =>
         new SymbStateRewriterImplWithArrays(
@@ -170,7 +170,7 @@ class BoundedCheckerPassImpl @Inject() (
             renaming,
             exprGradeStore,
             metricProfilerListener,
-            Some(outputWorkspace),
+            outputWorkspace,
         )
       case SMTEncoding.FunArrays =>
         new SymbStateRewriterImplWithFunArrays(
@@ -178,7 +178,7 @@ class BoundedCheckerPassImpl @Inject() (
             renaming,
             exprGradeStore,
             metricProfilerListener,
-            Some(outputWorkspace),
+            outputWorkspace,
         )
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
@@ -205,7 +205,7 @@ class BoundedCheckerPassImpl @Inject() (
       input: CheckerInput,
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
-    val solverContext: RecordingSolverContext = RecordingSolverContext.create(None, solverConfig, Some(outputWorkspace))
+    val solverContext: RecordingSolverContext = RecordingSolverContext.create(None, solverConfig, outputWorkspace)
 
     if (solverConfig.profile) {
       logger.warn("SMT profiling is enabled, but offline SMT is used. No profiling data will be written.")
@@ -213,19 +213,18 @@ class BoundedCheckerPassImpl @Inject() (
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case SMTEncoding.OOPSLA19 =>
-        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, outputWorkspace = Some(outputWorkspace))
+        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, outputWorkspace = outputWorkspace)
       case SMTEncoding.Arrays =>
-        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore,
-            outputWorkspace = Some(outputWorkspace))
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, outputWorkspace = outputWorkspace)
       case SMTEncoding.FunArrays =>
         new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore,
-            outputWorkspace = Some(outputWorkspace))
+            outputWorkspace = outputWorkspace)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
     rewriter.config = RewriterConfig(tuning)
 
     type SnapshotT = OfflineExecutionContextSnapshot
-    val executorContext = new OfflineExecutionContext(rewriter, renaming, Some(outputWorkspace))
+    val executorContext = new OfflineExecutionContext(rewriter, renaming, outputWorkspace)
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
@@ -243,15 +242,15 @@ class BoundedCheckerPassImpl @Inject() (
       tuning: Map[String, String],
       solverConfig: SolverConfig): Checker.CheckerResult = {
     // In contrast to the local instances, we are not recording the SMT constraints.
-    val solverContext: SolverContext = SolverContextFactory.create(solverConfig, Some(outputWorkspace))
+    val solverContext: SolverContext = SolverContextFactory.create(solverConfig, outputWorkspace)
 
     val rewriter: SymbStateRewriterImpl = params.smtEncoding match {
       case SMTEncoding.OOPSLA19 =>
-        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, None, Some(outputWorkspace))
+        new SymbStateRewriterImpl(solverContext, renaming, exprGradeStore, None, outputWorkspace)
       case SMTEncoding.Arrays =>
-        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, None, Some(outputWorkspace))
+        new SymbStateRewriterImplWithArrays(solverContext, renaming, exprGradeStore, None, outputWorkspace)
       case SMTEncoding.FunArrays =>
-        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore, None, Some(outputWorkspace))
+        new SymbStateRewriterImplWithFunArrays(solverContext, renaming, exprGradeStore, None, outputWorkspace)
       case oddEncoding => throw new IllegalArgumentException(s"Unexpected checker.smt-encoding=$oddEncoding")
     }
 
