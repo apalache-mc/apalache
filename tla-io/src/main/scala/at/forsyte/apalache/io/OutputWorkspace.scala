@@ -113,11 +113,11 @@ final class OutputWorkspace(initialization: CommandInitializationOptions) {
 /**
  * Dynamically scoped access to the output workspace for the current tool invocation.
  *
- * A fresh scope starts without a configured workspace. [[configure]] installs one after command initialization has
- * been resolved. [[captureScope]] and [[Scope.run]] propagate the same workspace state to another thread.
+ * A fresh scope starts without a configured workspace. [[configure]] installs one after command initialization has been
+ * resolved. [[captureScope]] and [[Scope.run]] propagate the same workspace state to another thread.
  */
 object OutputWorkspace {
-  private final class State {
+  final private class State {
     var workspace: Option[OutputWorkspace] = None
   }
 
@@ -152,8 +152,12 @@ object OutputWorkspace {
   def openLongLivedWritersInRunDirs(fileName: String): Iterable[PrintWriter] =
     currentOption.map(_.openLongLivedWritersInRunDirs(fileName)).getOrElse(Iterable.empty)
 
-  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Unit =
-    current.withWriterInRunDir(parts: _*)(f)
+  /** Optional output for components that may be used outside the tool runtime. */
+  def withWriterInRunDir(parts: String*)(f: PrintWriter => Unit): Boolean =
+    currentOption.exists { workspace =>
+      workspace.withWriterInRunDir(parts: _*)(f)
+      true
+    }
 
   /** Optional output that is disabled until a workspace is configured and intermediate output is enabled. */
   def withWriterInIntermediateDir(parts: String*)(f: PrintWriter => Unit): Unit =

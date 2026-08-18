@@ -20,6 +20,7 @@ class TestOutputWorkspace extends AnyFunSuite {
     assert(error.getMessage.contains("OutputWorkspace.withScope"))
     assert(!OutputWorkspace.withProfilingWriter(_ => fail("unbound profiling writer should be disabled")))
     assert(OutputWorkspace.openLongLivedWritersInRunDirs("unbound.txt").isEmpty)
+    assert(!OutputWorkspace.withWriterInRunDir("unbound.txt")(_ => fail("unbound run output is disabled")))
     OutputWorkspace.withWriterInIntermediateDir("unbound.txt")(_ => fail("unbound intermediate output is disabled"))
     assert(OutputWorkspace.RunFile == "run.txt")
   }

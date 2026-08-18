@@ -165,9 +165,12 @@ object CounterexampleWriter extends LazyLogging {
         ("itf.json", s"$prefix$suffix.itf.json"),
     )
 
-    fileNames.map { case (kind, name) =>
-      OutputWorkspace.withWriterInRunDir(name)(writerHelper(kind))
-      OutputWorkspace.pathInRunDir(name).normalize.toString
+    fileNames.flatMap { case (kind, name) =>
+      if (OutputWorkspace.withWriterInRunDir(name)(writerHelper(kind))) {
+        Some(OutputWorkspace.pathInRunDir(name).normalize.toString)
+      } else {
+        None
+      }
     }
   }
 
