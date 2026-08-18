@@ -1,11 +1,12 @@
 package com.github.apalachemc.apalache.jsonrpc
 
+import at.forsyte.apalache.io.OutputManager
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config.{ApalacheConfig, ConfigParseResult}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.junit.runner.RunWith
-import org.scalatest.BeforeAndAfter
+import org.scalatest.{BeforeAndAfter, Outcome}
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.prop.TableFor2
 import org.scalatestplus.junit.JUnitRunner
@@ -34,6 +35,9 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
       """.stripMargin
 
   private var service: ExplorationService = _
+
+  override protected def withFixture(test: NoArgTest): Outcome =
+    OutputManager.withScope(super.withFixture(test))
 
   before {
     val config = ConfigParseResult.success(ApalacheConfig.empty.withCommand(SERVER))
