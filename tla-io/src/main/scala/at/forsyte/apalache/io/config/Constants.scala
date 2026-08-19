@@ -52,6 +52,7 @@ object Constants {
   val FILE = "file"
   val FORMAT = "format"
   val INFER_POLY = "infer-poly"
+  val IP = "ip"
   val KIND = "kind"
   val PATH = "path"
   val PORT = "port"
