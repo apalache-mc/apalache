@@ -34,6 +34,7 @@ import java.util.concurrent.locks.{Lock, ReentrantLock}
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
 import scala.collection.concurrent.TrieMap
 import scala.collection.immutable.SortedSet
+import scala.util.Try
 
 /**
  * An error that can occur in the exploration service.
@@ -707,15 +708,27 @@ class ExplorationService(config: ConfigParseResult[ApalacheConfig]) extends Lazy
     } else if (params.sources.isEmpty) {
       ConfigParseResult.failure("loadSpec requires at least one source.")
     } else {
-      val source = InputSource.StringSource(params.sources.head, params.sources.tail.toList)
-      ApalacheConfigResolver.resolveRemote(
-          base = config.requireValue(),
-          source = source,
-          init = params.init,
-          next = params.next,
-          invariants = params.invariants,
-          persistent = params.exports,
-      )
+      Try(InputSource.Format.fromString(params.format)).toEither match {
+        case Left(error) =>
+          ConfigParseResult.failure(error.getMessage)
+
+        case Right(InputSource.Format.Itf) =>
+          ConfigParseResult.failure("loadSpec does not support the itf source format.")
+
+        case Right(format) if format != InputSource.Format.Tla && params.sources.size != 1 =>
+          ConfigParseResult.failure(s"loadSpec requires exactly one source for ${format.name} input.")
+
+        case Right(format) =>
+          val source = InputSource.StringSource(params.sources.head, params.sources.tail.toList, format)
+          ApalacheConfigResolver.resolveRemote(
+              base = config.requireValue(),
+              source = source,
+              init = params.init,
+              next = params.next,
+              invariants = params.invariants,
+              persistent = params.exports,
+          )
+      }
     }
   }
 

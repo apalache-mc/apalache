@@ -160,7 +160,7 @@ $ curl -X POST http://localhost:8822/rpc \
 
 ### 3.1. Method loadSpec
 
-Load a TLA+ specification from a list of base64-encoded source files.
+Load a specification from a list of base64-encoded source files.
 The server will parse the specification and store all the necessary
 objects in memory for further exploration. This includes the SMT solver.
 The solver does not consume much memory after loading the specification.
@@ -185,6 +185,7 @@ be used in subsequent calls to refer to this session.
       "${imported-module1-in-base64}",
       "..."
     ],
+    "format": "${optional-source-format}",
     "init": "${optional-initializer-predicate}",
     "next": "${optional-transition-predicate}",
     "invariants": [
@@ -200,6 +201,11 @@ be used in subsequent calls to refer to this session.
   }
 }
 ```
+
+The optional `format` is `tla` (the default), `qnt` for the Quint JSON IR
+produced by `quint compile --target=json`, or `json` for Apalache JSON IR.
+TLA+ input may include auxiliary modules after the root module; JSON-based
+formats accept exactly one compiled source.
 
 Note that if you are going to evaluate operators in the subsequent calls,
 you should list them in the `exports` field. Otherwise, the specification
