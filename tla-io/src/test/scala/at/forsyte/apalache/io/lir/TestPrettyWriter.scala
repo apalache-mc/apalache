@@ -371,6 +371,27 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("unbounded CHOOSE") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(choose(name("x"), bool(true)))
+    printWriter.flush()
+    assert("CHOOSE x : TRUE" == stringWriter.toString)
+  }
+
+  test("unbounded forall") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(forall(name("x"), bool(false)))
+    printWriter.flush()
+    assert("\\A x : FALSE" == stringWriter.toString)
+  }
+
+  test("unbounded exists") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(exists(name("x"), bool(false)))
+    printWriter.flush()
+    assert("\\E x : FALSE" == stringWriter.toString)
+  }
+
   test("multi-line exists") {
     val writer = new PrettyWriter(printWriter, layout40)
     val expr =
