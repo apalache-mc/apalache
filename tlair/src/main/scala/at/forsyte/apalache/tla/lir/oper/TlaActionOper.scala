@@ -17,7 +17,7 @@ object TlaActionOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (15, 15)
+    override def precedence: (Int, Int) = (150, 150)
   }
 
   /**
@@ -28,7 +28,7 @@ object TlaActionOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (4, 15)
+    override def precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -39,7 +39,7 @@ object TlaActionOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (4, 15)
+    override def precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -50,7 +50,7 @@ object TlaActionOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (4, 15)
+    override def precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -61,7 +61,7 @@ object TlaActionOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (4, 15)
+    override def precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -70,6 +70,6 @@ object TlaActionOper {
   object composition extends TlaActionOper {
     override val name: String = "COMPOSE"
     override def arity: OperArity = FixedArity(2)
-    override def precedence: (Int, Int) = (13, 13)
+    override def precedence: (Int, Int) = (50, 140)
   }
 }

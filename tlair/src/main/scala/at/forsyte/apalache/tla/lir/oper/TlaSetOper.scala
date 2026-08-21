@@ -15,7 +15,7 @@ object TlaSetOper {
   object enumSet extends TlaSetOper {
     override val arity = AnyArity()
     override val name = "SET_ENUM"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -25,7 +25,7 @@ object TlaSetOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "FUN_SET"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -37,7 +37,7 @@ object TlaSetOper {
     override def arity: OperArity = MinimalArity(2) && AnyEvenArity()
 
     override val name: String = "RECORD_SET"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -47,7 +47,7 @@ object TlaSetOper {
     override def arity: OperArity = FixedArity(1)
 
     override val name: String = "Sequences!Seq"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -56,7 +56,7 @@ object TlaSetOper {
   object in extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "SET_IN"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -65,7 +65,7 @@ object TlaSetOper {
   object notin extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "SET_NOT_IN"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -74,7 +74,7 @@ object TlaSetOper {
   object cup extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "SET_UNION2"
-    override val precedence: (Int, Int) = (8, 8)
+    override val precedence: (Int, Int) = (80, 80)
   }
 
   /**
@@ -83,7 +83,7 @@ object TlaSetOper {
   object cap extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "SET_INTERSECT"
-    override val precedence: (Int, Int) = (8, 8)
+    override val precedence: (Int, Int) = (80, 80)
   }
 
   /**
@@ -92,7 +92,7 @@ object TlaSetOper {
   object subseteq extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "SET_SUBSET_EQ"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -101,7 +101,7 @@ object TlaSetOper {
   object setminus extends TlaSetOper {
     override val arity = FixedArity(2)
     override val name = "SET_MINUS"
-    override val precedence: (Int, Int) = (8, 8)
+    override val precedence: (Int, Int) = (80, 80)
   }
 
   /**
@@ -110,7 +110,7 @@ object TlaSetOper {
   object filter extends TlaSetOper {
     override val arity = FixedArity(3)
     override val name = "SET_FILTER"
-    override val precedence: (Int, Int) = (16, 16)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -119,7 +119,7 @@ object TlaSetOper {
   object map extends TlaSetOper {
     override val arity = MinimalArity(3) && AnyOddArity()
     override val name = "SET_MAP"
-    override val precedence: (Int, Int) = (16, 16)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -129,7 +129,7 @@ object TlaSetOper {
   object powerset extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SET_POWERSET"
-    override val precedence: (Int, Int) = (8, 8)
+    override val precedence: (Int, Int) = (100, 130)
   }
 
   /**
@@ -138,7 +138,7 @@ object TlaSetOper {
   object union extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SET_UNARY_UNION"
-    override val precedence: (Int, Int) = (8, 8)
+    override val precedence: (Int, Int) = (100, 130)
   }
 
   /**
@@ -148,6 +148,6 @@ object TlaSetOper {
   object times extends TlaSetOper {
     override val arity = MinimalArity(2)
     override val name = "SET_TIMES"
-    override val precedence: (Int, Int) = (10, 13)
+    override val precedence: (Int, Int) = (100, 130)
   }
 }
