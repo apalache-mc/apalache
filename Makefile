@@ -3,7 +3,7 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: default all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run docs docs-view quint-fixtures tla-io/src/test/resources/tictactoe.json test/tla/booleans.qnt.json
+.PHONY: default all apalache package compile test test-coverage integration scala-integration docker dist fmt-check fmt-fix clean run docs docs-view quint-fixtures tla-io/src/test/resources/tictactoe.json test/tla/booleans.qnt.json
 
 default: package
 
@@ -40,6 +40,10 @@ test-coverage:
 integration: package
 	test/mdx-test.py --debug $(if $(TEST_FILTER),"$(TEST_FILTER)")
 	test/mdx-test.py --test_file=test/tla/tlc-integration-tests.md --debug $(if $(TEST_FILTER),"$(TEST_FILTER)")
+
+# Run the Scala CLI integration tests
+scala-integration:
+	sbt tool/cliIntegrationTest
 
 # Generate fixtures needed to test quint integration
 quint-fixtures: tla-io/src/test/resources/tictactoe.json tla-io/src/test/resources/clockSync3.json test/tla/booleans.qnt.json

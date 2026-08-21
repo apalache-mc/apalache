@@ -1,8 +1,8 @@
 # ADR-009: Apalache Outputs
 
-| authors                                | last revised    |
-| -------------------------------------- | --------------: |
-| Jure Kukovec, Shon Feder               | 2021-12-14      |
+| authors                                | last revised |
+| -------------------------------------- |-------------:|
+| Jure Kukovec, Shon Feder               |   2026-08-05 |
 
 This ADR documents the various files produced by Apalache, and where they get written to.
 
@@ -45,12 +45,12 @@ _apalache-out/
     ├── 2021-11-05T22-54-55_810261790529975561
 ```
 
-### Custom run directories
+### Additional run directory
 
-The `--run-dir` flag can be used to specify an output directory into which
+The `--run-dir` flag can be used to specify an additional output directory into which
 outputs are written directly. When the `--run-dir` flag is specified, all
 content included in the run directory specified above will *also* be written
-into the directories specified by this argument.
+into the directory specified by this argument.
 
 ## 3. Structure of a run directory
 
@@ -58,6 +58,7 @@ Each run directory outlined in the previous section, should contain the
 following:
   
 - A file `run.txt`, containing the command issued for this run, with all implicit parameters filled in, so it can be replicated exactly
+- A file `config.json` containing the merged application configuration, if `--debug` is set
 - 0 or more counterexample files
 - a pre-filled bug report file `BugReport.md`, if the tool exited with a `FailureMessage`
 - if `--write-intermediate` is set, a subdirectory `intermediate`, containing outputs associated with each of the passes in Apalache
