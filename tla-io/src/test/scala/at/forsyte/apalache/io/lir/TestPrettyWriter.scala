@@ -636,6 +636,14 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert(expected == stringWriter.toString)
   }
 
+  test("a map with a membership-valued body") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    val expr = map(in(not(bool(false)), name("S")), name("x"), name("T"))
+    writer.write(expr)
+    printWriter.flush()
+    assert("{ ((~FALSE) \\in S): x \\in T }" == stringWriter.toString)
+  }
+
   test("a multi-line map") {
     val writer = new PrettyWriter(printWriter, layout30)
     val expr = map(
