@@ -90,7 +90,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(enabled(prime(name("x"))))
     printWriter.flush()
-    assert("ENABLED x'" == stringWriter.toString)
+    assert("ENABLED (x')" == stringWriter.toString)
   }
 
   test("UNCHANGED") {
@@ -98,6 +98,13 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     writer.write(unchanged(name("x")))
     printWriter.flush()
     assert("UNCHANGED x" == stringWriter.toString)
+  }
+
+  test("UNCHANGED and prime") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(unchanged(prime(name("x"))))
+    printWriter.flush()
+    assert("UNCHANGED (x')" == stringWriter.toString)
   }
 
   test("[A]_vars") {
@@ -142,11 +149,25 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("[]A" == stringWriter.toString)
   }
 
+  test("[] and prime") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(box(prime(name("x"))))
+    printWriter.flush()
+    assert("[](x')" == stringWriter.toString)
+  }
+
   test("<>A") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(diamond(name("A")))
     printWriter.flush()
     assert("<>A" == stringWriter.toString)
+  }
+
+  test("<> and prime") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(diamond(prime(name("x"))))
+    printWriter.flush()
+    assert("<>(x')" == stringWriter.toString)
   }
 
   test("A ~> B") {
