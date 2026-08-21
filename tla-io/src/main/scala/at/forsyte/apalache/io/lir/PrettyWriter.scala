@@ -425,17 +425,17 @@ class PrettyWriter(
 
       // [A]_vars or <A>_vars
       case OperEx(op, action, vars) if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
-        def wrapper = if (op == TlaActionOper.stutter) brackets _ else angles _
-
+        val actionDoc = exToDoc(op.precedence, action, nameResolver)
+        val wrappedAction =
+          if (op == TlaActionOper.stutter) brackets(actionDoc) else text("<<") <> actionDoc <> text(">>")
         val doc =
-          wrapper(exToDoc(op.precedence, action, nameResolver)) <>
-            "_" <> exToDoc(op.precedence, vars, nameResolver)
+          wrappedAction <> "_" <> subscriptToDoc(vars, nameResolver)
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op, vars, action) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
         val sign = if (op == TlaTempOper.weakFairness) "WF" else "SF"
         val doc =
-          sign <> "_" <> exToDoc(op.precedence, vars, nameResolver) <>
+          sign <> "_" <> subscriptToDoc(vars, nameResolver) <>
             parens(exToDoc(op.precedence, action, nameResolver))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
@@ -683,6 +683,14 @@ class PrettyWriter(
       parens(doc)
     } else {
       doc // expression's precedence is higher, no need for parentheses
+    }
+  }
+
+  private def subscriptToDoc(subscript: TlaEx, nameResolver: String => String): Doc = {
+    val doc = exToDoc((0, 0), subscript, nameResolver)
+    subscript match {
+      case NameEx(_) | ValEx(TlaBool(_)) => doc
+      case _                             => parens(doc)
     }
   }
 
