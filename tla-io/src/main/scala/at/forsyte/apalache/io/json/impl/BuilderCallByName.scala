@@ -25,6 +25,7 @@ object BuilderCallByName {
       TlaOper.apply.name -> TlaOper.apply,
       TlaOper.chooseBounded.name -> TlaOper.chooseBounded,
       TlaOper.chooseUnbounded.name -> TlaOper.chooseUnbounded,
+      TlaOper.label.name -> TlaOper.label,
       TlaBoolOper.and.name -> TlaBoolOper.and,
       TlaBoolOper.or.name -> TlaBoolOper.or,
       TlaBoolOper.not.name -> TlaBoolOper.not,
@@ -141,6 +142,9 @@ object BuilderCallByName {
       case TlaOper.chooseUnbounded =>
         val Seq(x, p) = args
         tla.choose(x, p)
+      case TlaOper.label =>
+        val ex +: labelArgs = args
+        tla.label(ex, labelArgs.map(arg => getStrValue(arg)): _*)
       case TlaBoolOper.and =>
         tla.and(args: _*)
       case TlaBoolOper.or =>
