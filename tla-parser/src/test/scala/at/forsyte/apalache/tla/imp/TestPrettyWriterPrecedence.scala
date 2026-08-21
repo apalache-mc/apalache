@@ -104,6 +104,24 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     assertRoundTrips(cases, "ActionSubscriptRoundTrip")
   }
 
+  test("embedded labels are parenthesized and round-trip through SANY") {
+    val labelledTuple = label(tuple(), "label0")
+    val issueExample = in(concat(tuple(), label(concat(tuple(), tuple()), "label0")), enumSet())
+    val cases = Seq(
+        exactCase("issue example", issueExample, "<<>> \\o (label0 :: (<<>> \\o <<>>)) \\in {}"),
+        exactCase("label on the left of an infix operator", concat(labelledTuple, tuple()),
+            "(label0 :: <<>>) \\o <<>>"),
+        exactCase("label on the right of an infix operator", concat(tuple(), labelledTuple),
+            "<<>> \\o (label0 :: <<>>)"),
+        exactCase("label as a membership operand", in(label(name("x"), "label0"), name("S")), "(label0 :: x) \\in S"),
+        exactCase("label as a function expression", appFun(label(name("a"), "label0"), int(1)), "(label0 :: a)[1]"),
+        exactCase("label as a function argument", appFun(name("a"), label(int(1), "label0")), "a[(label0 :: 1)]"),
+        exactCase("label under a prefix operator", enabled(label(bool(false), "label0")), "ENABLED (label0 :: FALSE)"),
+    )
+
+    assertRoundTrips(cases, "LabelRoundTrip")
+  }
+
   test("prefix operands are parenthesized and round-trip through SANY") {
     val prefixes: Seq[(String, String, TlaEx => TlaEx)] = Seq(
         ("ENABLED", "ENABLED ", arg => enabled(arg)),

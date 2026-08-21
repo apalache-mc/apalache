@@ -396,6 +396,14 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("L2(a, b) :: 1" == stringWriter.toString)
   }
 
+  test("a labelled operand is parenthesized") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    val expr = in(concat(tuple(), label(concat(tuple(), tuple()), "label0")), enumSet())
+    writer.write(expr)
+    printWriter.flush()
+    assert("<<>> \\o (label0 :: (<<>> \\o <<>>)) \\in {}" == stringWriter.toString)
+  }
+
   test("one-line exists") {
     val writer = new PrettyWriter(printWriter, layout40)
     val expr = exists(name("x"), name("y"), name("z"))

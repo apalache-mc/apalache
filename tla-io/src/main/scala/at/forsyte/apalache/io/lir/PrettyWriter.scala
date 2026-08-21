@@ -421,7 +421,8 @@ class PrettyWriter(
         val doc =
           text(name) <> optionalArgs <> space <> "::" <>
             nest(line <> exToDoc(oper.precedence, decoratedExpr, nameResolver))
-        group(wrapWithParen(parentPrecedence, oper.precedence, doc))
+        // A label extends to the right, so treat it as undelimited when deciding whether its parent must group it.
+        group(wrapWithParen(parentPrecedence, (0, 0), doc))
 
       // [A]_vars or <A>_vars
       case OperEx(op, action, vars) if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
