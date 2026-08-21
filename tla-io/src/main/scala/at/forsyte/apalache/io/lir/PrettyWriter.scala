@@ -220,6 +220,18 @@ class PrettyWriter(
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
 
+      case OperEx(op, x, pred)
+          if op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded ||
+            op == TlaOper.chooseUnbounded =>
+        val sign = PrettyWriter.bindingOps(op)
+        val doc =
+          group(
+              group(text(sign) <> space <> text(sanitizeID(x.toString)) <> space <> text(":")) <>
+                nest(line <> exToDoc(op.precedence, pred, nameResolver))
+          ) ///
+
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
       case OperEx(op, x, pred) if op == TlaTempOper.EE || op == TlaTempOper.AA =>
         val sign = PrettyWriter.bindingOps(op)
         val doc =
@@ -801,6 +813,9 @@ object PrettyWriter {
       TlaBoolOper.exists -> "\\E",
       TlaBoolOper.forall -> "\\A",
       TlaOper.chooseBounded -> "CHOOSE",
+      TlaBoolOper.existsUnbounded -> "\\E",
+      TlaBoolOper.forallUnbounded -> "\\A",
+      TlaOper.chooseUnbounded -> "CHOOSE",
       TlaTempOper.EE -> "\\EE",
       TlaTempOper.AA -> "\\AA",
   ) ////

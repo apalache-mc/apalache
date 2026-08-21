@@ -36,7 +36,7 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
         val source =
           s"""---- MODULE $moduleName ----
              |EXTENDS Integers
-             |VARIABLES a, b, c, S, T, x
+             |VARIABLES a, b, c, S, T, x, y
              |Test == $printed
              |================================
              |""".stripMargin
@@ -67,6 +67,22 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     )
 
     assertRoundTrips(cases, "PrecedenceRoundTrip")
+  }
+
+  test("unbounded binders use TLA+ syntax and round-trip through SANY") {
+    val chooseEx = choose(name("z"), bool(true))
+    val forallEx = forall(name("z"), bool(false))
+    val existsEx = exists(name("z"), bool(false))
+    val cases = Seq(
+        exactCase("unbounded CHOOSE", chooseEx, "CHOOSE z : TRUE"),
+        exactCase("unbounded forall", forallEx, "\\A z : FALSE"),
+        exactCase("unbounded exists", existsEx, "\\E z : FALSE"),
+        exactCase("unbounded CHOOSE under equality", eql(chooseEx, name("y")), "(CHOOSE z : TRUE) = y"),
+        exactCase("unbounded forall under equality", eql(forallEx, bool(true)), "(\\A z : FALSE) = TRUE"),
+        exactCase("unbounded exists under equality", eql(existsEx, bool(true)), "(\\E z : FALSE) = TRUE"),
+    )
+
+    assertRoundTrips(cases, "UnboundedBinderRoundTrip")
   }
 
   test("prefix operands are parenthesized and round-trip through SANY") {
