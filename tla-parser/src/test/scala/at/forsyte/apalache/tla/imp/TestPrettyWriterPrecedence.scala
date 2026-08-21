@@ -35,7 +35,7 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
         val moduleName = s"$moduleNamePrefix$index"
         val source =
           s"""---- MODULE $moduleName ----
-             |EXTENDS Integers
+             |EXTENDS Integers, Sequences
              |VARIABLES a, b, c, S, T, x, y
              |Test == $printed
              |================================
@@ -83,6 +83,25 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     )
 
     assertRoundTrips(cases, "UnboundedBinderRoundTrip")
+  }
+
+  test("action and fairness subscripts use TLA+ delimiters and round-trip through SANY") {
+    val action = bool(false)
+    val actionSubscript = head(tuple())
+    val cases = Seq(
+        exactCase("stuttering action with a bare subscript", stutt(action, name("x")), "[FALSE]_x"),
+        exactCase("non-stuttering action with a bare subscript", nostutt(action, name("x")), "<<FALSE>>_x"),
+        exactCase("weak fairness with a bare subscript", WF(name("x"), action), "WF_x(FALSE)"),
+        exactCase("strong fairness with a bare subscript", SF(name("x"), action), "SF_x(FALSE)"),
+        exactCase("stuttering action with a grouped subscript", stutt(action, actionSubscript), "[FALSE]_(Head(<<>>))"),
+        exactCase("non-stuttering action with a grouped subscript", nostutt(action, actionSubscript),
+            "<<FALSE>>_(Head(<<>>))"),
+        exactCase("weak fairness with a grouped subscript", WF(int(0), action), "WF_(0)(FALSE)"),
+        exactCase("strong fairness with a grouped subscript", SF(int(0), action), "SF_(0)(FALSE)"),
+        exactCase("non-stuttering action with a Boolean subscript", nostutt(action, bool(false)), "<<FALSE>>_FALSE"),
+    )
+
+    assertRoundTrips(cases, "ActionSubscriptRoundTrip")
   }
 
   test("prefix operands are parenthesized and round-trip through SANY") {

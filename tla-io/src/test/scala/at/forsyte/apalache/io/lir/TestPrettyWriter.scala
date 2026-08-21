@@ -114,11 +114,32 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("[A]_vars" == stringWriter.toString)
   }
 
-  test("<A>_vars") {
+  test("<<A>>_vars") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(nostutt(name("A"), name("vars")))
     printWriter.flush()
-    assert("<A>_vars" == stringWriter.toString)
+    assert("<<A>>_vars" == stringWriter.toString)
+  }
+
+  test("<<FALSE>>_FALSE") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(nostutt(bool(false), bool(false)))
+    printWriter.flush()
+    assert("<<FALSE>>_FALSE" == stringWriter.toString)
+  }
+
+  test("[FALSE]_(Head(<<>>))") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(stutt(bool(false), head(tuple())))
+    printWriter.flush()
+    assert("[FALSE]_(Head(<<>>))" == stringWriter.toString)
+  }
+
+  test("<<FALSE>>_(Head(<<>>))") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(nostutt(bool(false), head(tuple())))
+    printWriter.flush()
+    assert("<<FALSE>>_(Head(<<>>))" == stringWriter.toString)
   }
 
   test("A \\cdot B") {
@@ -135,11 +156,25 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("WF_vars(A)" == stringWriter.toString)
   }
 
+  test("WF_(0)(FALSE)") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(WF(int(0), bool(false)))
+    printWriter.flush()
+    assert("WF_(0)(FALSE)" == stringWriter.toString)
+  }
+
   test("SF_vars(A)") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(SF(name("vars"), name("A")))
     printWriter.flush()
     assert("SF_vars(A)" == stringWriter.toString)
+  }
+
+  test("SF_(0)(FALSE)") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(SF(int(0), bool(false)))
+    printWriter.flush()
+    assert("SF_(0)(FALSE)" == stringWriter.toString)
   }
 
   test("[]A") {
