@@ -1,1 +1,1 @@
-Fixed checked JSON IR deserialization of labeled expressions, which previously failed on `LABEL` nodes written by Apalache.
+Fixed JSON IR deserialization of labeled expressions, see #3466
