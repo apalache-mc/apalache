@@ -9,6 +9,12 @@ import java.io.{PrintWriter, StringWriter}
 import scala.io.Source
 
 class TestPrettyWriterPrecedence extends SanyImporterTestBase {
+  private case class RoundTripCase(
+      label: String,
+      original: TlaEx,
+      expectedText: String,
+      expectedParsed: TlaEx)
+
   private def write(ex: TlaEx): String = {
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
@@ -17,27 +23,20 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     stringWriter.toString
   }
 
-  test("precedence conflicts are parenthesized and round-trip through SANY") {
-    val cases: Seq[(TlaEx, String)] = Seq(
-        (eql(comp(name("a"), name("b")), name("c")), "(a \\cdot b) = c"),
-        (eql(name("a"), comp(name("b"), name("c"))), "a = (b \\cdot c)"),
-        (times(union(name("S")), name("T")), "(UNION S) \\X T"),
-        (times(name("S"), union(name("T"))), "S \\X (UNION T)"),
-        (times(powSet(name("S")), name("T")), "(SUBSET S) \\X T"),
-        (times(name("S"), powSet(name("T"))), "S \\X (SUBSET T)"),
-        (times(dom(name("S")), name("T")), "(DOMAIN S) \\X T"),
-        (times(name("S"), dom(name("T"))), "S \\X (DOMAIN T)"),
-    )
+  private def exactCase(label: String, original: TlaEx, expectedText: String): RoundTripCase =
+    RoundTripCase(label, original, expectedText, original)
 
-    cases.zipWithIndex.foreach { case ((original, expected), index) =>
-      withClue(s"case $index: ") {
-        val printed = write(original)
-        assert(printed == expected)
+  private def assertRoundTrips(cases: Seq[RoundTripCase], moduleNamePrefix: String): Unit = {
+    cases.zipWithIndex.foreach { case (testCase, index) =>
+      withClue(s"${testCase.label}: ") {
+        val printed = write(testCase.original)
+        assert(printed == testCase.expectedText)
 
-        val moduleName = s"PrecedenceRoundTrip$index"
+        val moduleName = s"$moduleNamePrefix$index"
         val source =
           s"""---- MODULE $moduleName ----
-             |CONSTANTS a, b, c, S, T
+             |EXTENDS Integers
+             |VARIABLES a, b, c, S, T, x
              |Test == $printed
              |================================
              |""".stripMargin
@@ -48,8 +47,63 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
           }
           .getOrElse(fail("SANY did not import the Test declaration"))
 
-        assert(parsed == original)
+        assert(parsed == testCase.expectedParsed)
       }
     }
+  }
+
+  test("precedence conflicts are parenthesized and round-trip through SANY") {
+    val cases = Seq(
+        exactCase("composition on the left of equality", eql(comp(name("a"), name("b")), name("c")),
+            "(a \\cdot b) = c"),
+        exactCase("composition on the right of equality", eql(name("a"), comp(name("b"), name("c"))),
+            "a = (b \\cdot c)"),
+        exactCase("UNION on the left of product", times(union(name("S")), name("T")), "(UNION S) \\X T"),
+        exactCase("UNION on the right of product", times(name("S"), union(name("T"))), "S \\X (UNION T)"),
+        exactCase("SUBSET on the left of product", times(powSet(name("S")), name("T")), "(SUBSET S) \\X T"),
+        exactCase("SUBSET on the right of product", times(name("S"), powSet(name("T"))), "S \\X (SUBSET T)"),
+        exactCase("DOMAIN on the left of product", times(dom(name("S")), name("T")), "(DOMAIN S) \\X T"),
+        exactCase("DOMAIN on the right of product", times(name("S"), dom(name("T"))), "S \\X (DOMAIN T)"),
+    )
+
+    assertRoundTrips(cases, "PrecedenceRoundTrip")
+  }
+
+  test("prefix operands are parenthesized and round-trip through SANY") {
+    val prefixes: Seq[(String, String, TlaEx => TlaEx)] = Seq(
+        ("ENABLED", "ENABLED ", arg => enabled(arg)),
+        ("UNCHANGED", "UNCHANGED ", arg => unchanged(arg)),
+        ("diamond", "<>", arg => diamond(arg)),
+        ("box", "[]", arg => box(arg)),
+    )
+    val operands: Seq[(String, TlaEx, String)] = Seq(
+        ("prime", prime(name("x")), "x'"),
+        ("equality", eql(name("x"), bool(false)), "x = FALSE"),
+        ("inequality", neql(name("x"), bool(false)), "x /= FALSE"),
+        ("membership", in(name("x"), name("S")), "x \\in S"),
+        ("non-membership", notin(name("x"), name("S")), "x \\notin S"),
+    )
+    val cases = for {
+      (prefixLabel, prefixText, prefix) <- prefixes
+      (operandLabel, operand, operandText) <- operands
+      // Apart from ENABLED, SANY parses these prime cases but rejects them during semantic level checking.
+      // TestPrettyWriter covers their exact output.
+      if operandLabel != "prime" || prefixLabel == "ENABLED"
+      original = prefix(operand)
+    } yield exactCase(s"$prefixLabel over $operandLabel", original, s"$prefixText($operandText)")
+
+    assertRoundTrips(cases, "PrefixRoundTrip")
+  }
+
+  test("negative integer literals are parenthesized and parse through SANY") {
+    val cases = Seq(
+        RoundTripCase("top-level negative integer", int(-1), "-1", uminus(int(1))),
+        RoundTripCase("negative exponent", exp(int(2), int(-1)), "2 ^ (-1)", exp(int(2), uminus(int(1)))),
+        RoundTripCase("negative multiplier", mult(int(2), int(-1)), "2 * (-1)", mult(int(2), uminus(int(1)))),
+        RoundTripCase("negative divisor", div(int(2), int(-1)), "2 \\div (-1)", div(int(2), uminus(int(1)))),
+        RoundTripCase("unary minus of a negative integer", uminus(int(-106)), "-(-106)", uminus(uminus(int(106)))),
+    )
+
+    assertRoundTrips(cases, "NegativeRoundTrip")
   }
 }

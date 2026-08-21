@@ -150,7 +150,9 @@ class PrettyWriter(
 
       case NameEx(x) =>
         text(nameResolver(x))
-      case ValEx(TlaStr(str))   => text("\"%s\"".format(str))
+      case ValEx(TlaStr(str))                => text("\"%s\"".format(str))
+      case ValEx(TlaInt(value)) if value < 0 =>
+        wrapWithParen(parentPrecedence, TlaArithOper.uminus.precedence, text(value.toString))
       case ValEx(TlaInt(value)) => text(value.toString)
       case ValEx(TlaBool(b))    => text(if (b) "TRUE" else "FALSE")
       case ValEx(TlaBoolSet)    => text("BOOLEAN")
@@ -162,7 +164,8 @@ class PrettyWriter(
       case NullEx => text("\"NOP\"")
 
       case OperEx(op @ TlaActionOper.prime, e) =>
-        exToDoc(op.precedence, e, nameResolver) <> "'"
+        val doc = exToDoc(op.precedence, e, nameResolver) <> "'"
+        wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(TlaSetOper.enumSet) =>
         // an empty set
@@ -424,27 +427,17 @@ class PrettyWriter(
             parens(exToDoc(op.precedence, action, nameResolver))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
-      case OperEx(op, arg @ NameEx(_)) if PrettyWriter.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
-        wrapWithParen(parentPrecedence, op.precedence, doc)
-
-      case OperEx(op, arg @ ValEx(_)) if PrettyWriter.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
-        wrapWithParen(parentPrecedence, op.precedence, doc)
-
-      case OperEx(op, arg @ OperEx(_, _)) if PrettyWriter.unaryOps.contains(op) =>
-        // a unary operator over unary operator, no parentheses needed
-        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
-        wrapWithParen(parentPrecedence, op.precedence, doc)
-
       case OperEx(TlaFunOper.recFunRef) =>
         text(recFunName) // even if the name is undefined, print it
 
       // a unary operator that is mapped to Apalache IR
       case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
-        // in all other cases, introduce parentheses.
-        // Yse the minimal precedence, as we are introducing the parentheses in any case.
-        text(PrettyWriter.unaryOps(op)) <> parens(exToDoc((0, 0), arg, nameResolver))
+        val argDoc = arg match {
+          case NameEx(_) | ValEx(_) | OperEx(_, _) => exToDoc(op.precedence, arg, nameResolver)
+          case _                                   => parens(exToDoc((0, 0), arg, nameResolver))
+        }
+        val doc = text(PrettyWriter.unaryOps(op)) <> argDoc
+        wrapWithParen(parentPrecedence, op.precedence, doc)
 
       // a binary infix operator that is mapped to Apalache IR
       case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
