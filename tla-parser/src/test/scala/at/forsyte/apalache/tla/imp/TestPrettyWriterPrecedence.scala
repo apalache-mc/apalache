@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.imp
 
 import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
-import at.forsyte.apalache.tla.lir.convenience.tla._
+import at.forsyte.apalache.tla.lir.convenience.tla.{not => tlaNot, _}
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaOperDecl}
 
 import java.io.{PrintWriter, StringWriter}
@@ -120,6 +120,19 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     )
 
     assertRoundTrips(cases, "LabelRoundTrip")
+  }
+
+  test("membership-valued set-map bodies are parenthesized and round-trip through SANY") {
+    val scalarBody = in(tlaNot(bool(false)), name("S"))
+    val tupleBody = in(tuple(name("x"), name("y")), name("S"))
+    val nestedMap = map(map(in(name("x"), name("S")), name("u"), name("T")), name("v"), name("S"))
+    val cases = Seq(
+        exactCase("scalar membership body", map(scalarBody, name("z"), name("T")), "{ ((~FALSE) \\in S): z \\in T }"),
+        exactCase("tuple membership body", map(tupleBody, name("z"), name("T")), "{ (<<x, y>> \\in S): z \\in T }"),
+        exactCase("membership body in a nested map", nestedMap, "{ { (x \\in S): u \\in T }: v \\in S }"),
+    )
+
+    assertRoundTrips(cases, "SetMapBodyRoundTrip")
   }
 
   test("prefix operands are parenthesized and round-trip through SANY") {
