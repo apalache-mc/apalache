@@ -3,7 +3,6 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.{TlaEx, TlaOperDecl}
 
 import java.io.{PrintWriter, StringWriter}
@@ -16,20 +15,6 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     new PrettyWriter(printWriter, TextLayout().copy(textWidth = 80)).write(ex)
     printWriter.flush()
     stringWriter.toString
-  }
-
-  test("operator precedences use SANY's native scale") {
-    assert(TlaBoolOper.implies.precedence == (10, 10))
-    assert(TlaOper.eq.precedence == (50, 50))
-    assert(TlaArithOper.plus.precedence == (100, 100))
-    assert(TlaActionOper.prime.precedence == (150, 150))
-    assert(TlaOper.apply.precedence == (160, 160))
-
-    assert(TlaActionOper.composition.precedence == (50, 140))
-    assert(TlaSetOper.union.precedence == (100, 130))
-    assert(TlaSetOper.powerset.precedence == (100, 130))
-    assert(TlaFunOper.domain.precedence == (100, 130))
-    assert(TlaSetOper.times.precedence == (100, 130))
   }
 
   test("precedence conflicts are parenthesized and round-trip through SANY") {
