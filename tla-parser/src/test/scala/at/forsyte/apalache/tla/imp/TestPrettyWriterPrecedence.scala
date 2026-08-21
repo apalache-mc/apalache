@@ -57,9 +57,11 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
              |================================
              |""".stripMargin
         val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString(source))
-        val parsed = modules(rootName).declarations.collectFirst {
-          case decl: TlaOperDecl if decl.name == "Test" => decl.body
-        }.getOrElse(fail("SANY did not import the Test declaration"))
+        val parsed = modules(rootName).declarations
+          .collectFirst {
+            case decl: TlaOperDecl if decl.name == "Test" => decl.body
+          }
+          .getOrElse(fail("SANY did not import the Test declaration"))
 
         assert(parsed == original)
       }
