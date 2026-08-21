@@ -20,7 +20,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -34,7 +34,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = AnyArity()
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -45,7 +45,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -56,7 +56,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -67,7 +67,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -79,7 +79,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(2) || FixedArity(3)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -91,7 +91,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -103,7 +103,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -115,7 +115,7 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -126,6 +126,6 @@ object ApalacheInternalOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (5, 5)
+    override def precedence: (Int, Int) = (160, 160)
   }
 }

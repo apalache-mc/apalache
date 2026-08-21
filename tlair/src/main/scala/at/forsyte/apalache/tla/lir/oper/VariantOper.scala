@@ -20,7 +20,7 @@ object VariantOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -31,7 +31,7 @@ object VariantOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -42,7 +42,7 @@ object VariantOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -54,7 +54,7 @@ object VariantOper {
 
     override def arity: OperArity = FixedArity(3)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -66,6 +66,6 @@ object VariantOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 }
