@@ -1357,7 +1357,7 @@ EXITCODE: OK
 ### check reorderTest.tla MayFail succeeds: fixed SMT fails under SMT-based assignment finding
 
 ```sh
-$ apalache-mc check --next=MayFail --tuning-options-file=reorderTest.properties reorderTest.tla | sed 's/I@.*//'
+$ apalache-mc check --next=MayFail --seed=0 reorderTest.tla | sed 's/I@.*//'
 ...
 The outcome is: NoError
 ...
@@ -1886,6 +1886,75 @@ $ apalache-mc simulate --timeout-smt=1 --length=10 --inv=Inv Paxos.tla | grep 'E
 EXITCODE: OK
 ```
 
+### simulate --seed reproduces transition choices and seeds Z3
+
+Two `--seed` invocations produce the same transition choices. `--seed` also matches the typed `checker.seed`
+configuration field.
+
+```sh
+$ printf '%s\n' '{"checker":{"seed":4242,"max-run":2}}' > seed-config.json
+$ apalache-mc simulate --seed=4242 --smt-solver=z3 --run-dir=./seed-run-cli-1 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-1.txt
+$ apalache-mc simulate --seed=4242 --smt-solver=z3 --run-dir=./seed-run-cli-2 --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-cli-2.txt
+$ apalache-mc simulate --config-file=seed-config.json --smt-solver=z3 --run-dir=./seed-run-config --debug --length=3 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-config.txt
+$ test -s seed-cli-1.txt && cmp -s seed-cli-1.txt seed-cli-2.txt && cmp -s seed-cli-1.txt seed-config.txt; echo $?
+0
+$ grep '"seed" : 4242' ./seed-run-cli-1/application-config.json
+    "seed" : 4242,
+$ grep '"search-kind" : "simulate"' ./seed-run-config/application-config.json
+    "search-kind" : "simulate",
+$ grep '"max-run" : 2' ./seed-run-config/application-config.json
+    "max-run" : 2,
+$ head -n 6 ./seed-run-cli-1/log0.smt
+(set-option :fp.spacer.random_seed 4242)
+(set-option :nlsat.seed 4242)
+(set-option :sat.random_seed 4242)
+(set-option :sls.random_seed 4242)
+(set-option :smt.random_seed 4242)
+;; (params random_seed 4242)
+$ rm -rf ./seed-run-cli-1 ./seed-run-cli-2 ./seed-run-config seed-cli-1.txt seed-cli-2.txt seed-config.txt seed-config.json
+```
+
+### generated simulation seed can be replayed
+
+When no seed is provided, configuration resolution generates one. The checker logs that seed so the same transition
+choices can be replayed.
+
+```sh
+$ apalache-mc simulate --smt-solver=z3 --run-dir=./seed-run-generated --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | tee seed-generated-output.txt >/dev/null
+$ sed -n 's/.*Using search seed \([0-9][0-9]*\).*/\1/p' seed-generated-output.txt > seed-generated.txt
+$ sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' seed-generated-output.txt > seed-generated-choices.txt
+$ apalache-mc simulate --seed=$(cat seed-generated.txt) --smt-solver=z3 --run-dir=./seed-run-replayed --debug --length=3 --max-run=2 TestInvLabels.tla 2>/dev/null | sed -n 's/.*randomly picked transition #\([0-9][0-9]*\).*/\1/p' > seed-replayed-choices.txt
+$ test -s seed-generated.txt && test -s seed-generated-choices.txt && cmp -s seed-generated-choices.txt seed-replayed-choices.txt; echo $?
+0
+$ rm -rf ./seed-run-generated ./seed-run-replayed seed-generated-output.txt seed-generated.txt seed-generated-choices.txt seed-replayed-choices.txt
+```
+
+### simulate seed seeds CVC5
+
+```sh
+$ apalache-mc simulate --seed=4242 --smt-solver=cvc5 --run-dir=./seed-run-cvc5 --debug --length=0 --max-run=1 TestInvLabels.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+$ head -n 3 ./seed-run-cvc5/log0.smt
+(set-logic QF_UFLIA)
+(set-option :random-seed 4242)
+(set-option :sat-random-seed 4242)
+$ rm -rf ./seed-run-cvc5
+```
+
+### removed search tuning controls are rejected
+
+Search controls are typed checker fields rather than tuning options.
+
+```sh
+$ apalache-mc simulate --tuning-options=search.seed=4242 --length=0 TestInvLabels.tla 2>&1 | grep -o -e 'Unexpected field search.seed' -e 'EXITCODE: ERROR (255)'
+Unexpected field search.seed
+EXITCODE: ERROR (255)
+$ apalache-mc check --tuning-options=search.outputTraces=true --length=0 TestInvLabels.tla 2>&1 | grep -o -e 'Unexpected field search.outputTraces' -e 'EXITCODE: ERROR (255)'
+Unexpected field search.outputTraces
+EXITCODE: ERROR (255)
+```
+
 ### simulate y2k with --output-traces succeeds
 
 ```sh
@@ -2185,10 +2254,10 @@ run.txt
 $ rm -rf ./test-out-dir
 ```
 
-#### check SMT seed is picked up by Z3
+#### check --seed is picked up by Z3
 
 ```sh
-$ apalache-mc check --smt-solver=z3 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --seed=4242 --smt-solver=z3 --out-dir=./test-out-dir --length=0 --debug Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 6 {} \;
@@ -2201,10 +2270,10 @@ $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 6 {} \;
 $ rm -rf ./test-out-dir
 ```
 
-#### check SMT seed is picked up by CVC5
+#### check --seed is picked up by CVC5
 
 ```sh
-$ apalache-mc check --smt-solver=cvc5 --out-dir=./test-out-dir --length=0 --debug --tuning-options=smt.randomSeed=4242 Counter.tla | sed 's/[IEW]@.*//'
+$ apalache-mc check --seed=4242 --smt-solver=cvc5 --out-dir=./test-out-dir --length=0 --debug Counter.tla | sed 's/[IEW]@.*//'
 ...
 EXITCODE: OK
 $ find ./test-out-dir/Counter.tla/* -type f -name log0.smt -exec head -n 3 {} \;
@@ -4106,7 +4175,7 @@ $ rm -rf ./.apalache.json
 First, set some custom config options, to ensure they'll be merged into the derived config:
 
 ```sh
-$ printf '%s\n' '{"out-dir":"./cfg-out","features":["rows"],"checker":{"length":0,"inv":["Inv"],"tuning":{"search.outputTraces":"true"}}}' > demo-config.json
+$ printf '%s\n' '{"out-dir":"./cfg-out","features":["rows"],"checker":{"length":0,"inv":["Inv"],"output-traces":true}}' > demo-config.json
 ```
 
 Then, run a trivial checking command with `--debug` so the derived config will
@@ -4133,10 +4202,10 @@ $ cat ./configdump-dir/application-config.json
   "features" : [ "rows" ],
   "source" : "Counter.tla",
   "checker" : {
-    "tuning" : {
-      "search.outputTraces" : "true"
-    },
+    "tuning" : { },
     "algo" : "incremental",
+    "search-kind" : "check",
+    "output-traces" : true,
     "discard-disabled" : true,
     "inv" : [ "Inv" ],
     "length" : 0,
