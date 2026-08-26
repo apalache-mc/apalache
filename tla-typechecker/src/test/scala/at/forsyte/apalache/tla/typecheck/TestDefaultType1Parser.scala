@@ -342,6 +342,15 @@ class TestDefaultType1Parser extends AnyFunSuite with Checkers with TlaType1Gen 
     assert(expected == result)
   }
 
+  test("deeply nested variants in an operator type") {
+    val text = "(() => Tag1(Tag2(Tag3(Tag4(Tag5(Tag6(MODEL)))))))"
+    val nestedVariant = (6 to 1 by -1).foldLeft(ConstT1("MODEL"): TlaType1) { case (valueType, index) =>
+      VariantT1(RowT1(s"Tag$index" -> valueType))
+    }
+
+    assert(OperT1(Seq.empty, nestedVariant) == parser.parseType(text))
+  }
+
   test("variant tags may start with reserved type keyword prefixes") {
     val tags = Seq("IntFoo", "RealBar", "BoolBaz", "StrQux", "SetX", "SeqThing", "VariantAlt", "RecTag")
     val text = tags.map(tag => s"$tag(Int)").mkString(" | ")

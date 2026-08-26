@@ -33,7 +33,7 @@ object TlaArithOper {
   object plus extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "PLUS"
-    override val precedence: (Int, Int) = (10, 10)
+    override val precedence: (Int, Int) = (100, 100)
   }
 
   /**
@@ -42,7 +42,7 @@ object TlaArithOper {
   object uminus extends TlaArithOper {
     override val arity = FixedArity(1)
     override val name = "UNARY_MINUS"
-    override val precedence: (Int, Int) = (12, 12)
+    override val precedence: (Int, Int) = (120, 120)
   }
 
   /**
@@ -51,7 +51,7 @@ object TlaArithOper {
   object minus extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "MINUS"
-    override val precedence: (Int, Int) = (11, 11)
+    override val precedence: (Int, Int) = (110, 110)
   }
 
   /**
@@ -61,7 +61,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "MULT"
-    override val precedence: (Int, Int) = (13, 13)
+    override val precedence: (Int, Int) = (130, 130)
   }
 
   /**
@@ -71,7 +71,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "DIV"
-    override val precedence: (Int, Int) = (13, 13)
+    override val precedence: (Int, Int) = (130, 130)
   }
 
   /**
@@ -81,7 +81,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "MOD"
-    override val precedence: (Int, Int) = (10, 11)
+    override val precedence: (Int, Int) = (100, 110)
   }
 
   /**
@@ -91,7 +91,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "REAL_DIV"
-    override val precedence: (Int, Int) = (13, 13)
+    override val precedence: (Int, Int) = (130, 130)
   }
 
   /**
@@ -101,7 +101,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "POW"
-    override val precedence: (Int, Int) = (14, 14)
+    override val precedence: (Int, Int) = (140, 140)
   }
 
   /**
@@ -111,7 +111,7 @@ object TlaArithOper {
   object dotdot extends TlaArithOper {
     override val arity = FixedArity(2)
     override val name = "INT_RANGE"
-    override val precedence: (Int, Int) = (9, 9)
+    override val precedence: (Int, Int) = (90, 90)
   }
 
   /**
@@ -122,7 +122,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "LT"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -133,7 +133,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "GT"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -144,7 +144,7 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "LE"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -155,6 +155,6 @@ object TlaArithOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "GE"
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 }

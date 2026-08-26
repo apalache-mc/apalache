@@ -49,13 +49,16 @@ object QueryKind {
  *   the names of state invariants to preprocess and expose for checking. Default is an empty list.
  * @param exports
  *   the names of the operators that can be used in evaluations, e.g., `query`. Default is an empty list.
+ * @param format
+ *   the source format: "tla", "qnt" (Quint JSON IR), or "json" (Apalache JSON IR). Default is "tla".
  */
 case class LoadSpecParams(
     sources: Seq[String],
     init: String = "Init",
     next: String = "Next",
     invariants: List[String] = List(),
-    exports: List[String] = List())
+    exports: List[String] = List(),
+    format: String = "tla")
     extends ExplorationServiceParams
 
 /**
