@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.lir._
 
 import java.io.StringReader
 import scala.collection.immutable.SortedMap
-import scala.util.parsing.combinator.Parsers
+import scala.util.parsing.combinator.PackratParsers
 import scala.util.parsing.input.NoPosition
 
 /**
@@ -20,7 +20,7 @@ import scala.util.parsing.input.NoPosition
  * @author
  *   Igor Konnov, Shon Feder
  */
-object DefaultType1Parser extends Parsers with Type1Parser {
+object DefaultType1Parser extends PackratParsers with Type1Parser {
   override type Elem = Type1Token
 
   // This pattern recognizes camelCase and lowercase:
@@ -73,7 +73,7 @@ object DefaultType1Parser extends Parsers with Type1Parser {
     }
   }
 
-  private def typeExpr: Parser[TlaType1] = {
+  private lazy val typeExpr: PackratParser[TlaType1] = {
     operator | function | noFunExpr
   }
 

@@ -17,7 +17,7 @@ object TlaTempOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override val precedence: (Int, Int) = (4, 15)
+    override val precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -28,7 +28,7 @@ object TlaTempOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override val precedence: (Int, Int) = (4, 15)
+    override val precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -39,7 +39,7 @@ object TlaTempOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (2, 2)
+    override val precedence: (Int, Int) = (20, 20)
   }
 
   /**
@@ -50,7 +50,7 @@ object TlaTempOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (2, 2)
+    override val precedence: (Int, Int) = (20, 20)
   }
 
   /**
@@ -59,7 +59,7 @@ object TlaTempOper {
   object weakFairness extends TlaTempOper {
     override val name: String = "WEAK_FAIRNESS"
     override def arity: OperArity = FixedArity(2)
-    override val precedence: (Int, Int) = (4, 15)
+    override val precedence: (Int, Int) = (40, 150)
   }
 
   /**
@@ -70,7 +70,7 @@ object TlaTempOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (4, 15)
+    override val precedence: (Int, Int) = (40, 150)
   }
 
   /**

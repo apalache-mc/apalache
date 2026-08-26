@@ -30,6 +30,14 @@ import at.forsyte.apalache.tla.lir.values.TlaStr
 class Quint(quintOutput: QuintOutput) extends LazyLogging {
   // the name prefix that is used to introduce expression labels
   final private val LABEL_PREFIX = "__label_"
+  private object LabelName {
+    def unapply(qualifiedName: String): Option[String] =
+      qualifiedName
+        .split("::")
+        .lastOption
+        .filter(_.startsWith(LABEL_PREFIX))
+        .map(_.stripPrefix(LABEL_PREFIX))
+  }
   private val nameGen = new QuintNameGen // name generator, reused across the entire spec
   private val typeConv = new QuintTypeConverter
   private val unsafeBuilder = new UnsafeLiteralAndNameBuilder {}
@@ -689,8 +697,7 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
   }
 
   // Translate Quint expression `val __label_Foo = true; scope` into TLA+ `Label(e, "Foo")`.
-  private def labelledExpression(opDef: QuintDef.QuintOpDef, expr: QuintEx): NullaryOpReader[TBuilderInstruction] = {
-    val labelName = opDef.name.stripPrefix(LABEL_PREFIX)
+  private def labelledExpression(labelName: String, expr: QuintEx): NullaryOpReader[TBuilderInstruction] = {
     for {
       tlaExpr <- tlaExpression(expr)
     } yield tla.label(tlaExpr, labelName)
@@ -749,8 +756,8 @@ class Quint(quintOutput: QuintOutput) extends LazyLogging {
         }
       case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.qualifier == "nondet" =>
         nondetBinding(binding, scope)
-      case QuintLet(_, binding: QuintDef.QuintOpDef, scope) if binding.name.startsWith(LABEL_PREFIX) =>
-        labelledExpression(binding, scope)
+      case QuintLet(_, QuintDef.QuintOpDef(_, LabelName(labelName), _, _), scope) =>
+        labelledExpression(labelName, scope)
       case QuintLet(_, opDef, expr) =>
         opDefConverter(opDef).flatMap { case (tlaOpDef, nullaryName) =>
           tlaExpression(expr)

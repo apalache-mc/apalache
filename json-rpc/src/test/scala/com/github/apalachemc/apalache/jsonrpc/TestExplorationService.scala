@@ -13,6 +13,7 @@ import org.scalatestplus.junit.JUnitRunner
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.immutable.SortedSet
+import scala.util.Using
 
 @RunWith(classOf[JUnitRunner])
 class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaCheckPropertyChecks {
@@ -33,6 +34,9 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
       |View == (x = 0)
       |=====================
       """.stripMargin
+
+  private val quintSpec =
+    Using.resource(scala.io.Source.fromResource("jsonrpc-bigint.qnt.json"))(_.mkString)
 
   private var service: ExplorationService = _
 
@@ -70,6 +74,39 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
         fail(s"Unexpected result: $result")
       case Left(error) =>
         fail(s"Failed to load specification: $error")
+    }
+  }
+
+  test("load Quint JSON IR") {
+    service.loadSpec(LoadSpecParams(sources = Seq(quintSpec), init = "init", next = "step", format = "qnt")) match {
+      case Right(LoadSpecResult(sessionId, _, params)) =>
+        assert(sessionId.nonEmpty, "Session ID should not be empty")
+        assert(params.initTransitions.size == 1, "Should have one initial transition")
+        assert(params.nextTransitions.size == 1, "Should have one next transition")
+      case Right(result) =>
+        fail(s"Unexpected result: $result")
+      case Left(error) =>
+        fail(s"Failed to load Quint JSON IR: $error")
+    }
+  }
+
+  test("reject unsupported specification formats") {
+    Seq("unknown", "itf").foreach { format =>
+      service.loadSpec(LoadSpecParams(sources = Seq(spec1), format = format)) match {
+        case Left(ServiceError(code, _)) =>
+          assert(code == JsonRpcCodes.INVALID_PARAMS)
+        case Right(result) =>
+          fail(s"Expected $format input to be rejected, but got: $result")
+      }
+    }
+  }
+
+  test("reject auxiliary sources for JSON-based formats") {
+    service.loadSpec(LoadSpecParams(sources = Seq(quintSpec, quintSpec), format = "qnt")) match {
+      case Left(ServiceError(code, _)) =>
+        assert(code == JsonRpcCodes.INVALID_PARAMS)
+      case Right(result) =>
+        fail(s"Expected auxiliary Quint input to be rejected, but got: $result")
     }
   }
 

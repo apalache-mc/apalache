@@ -22,7 +22,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (70, 70)
   }
 
   /**
@@ -33,7 +33,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -46,7 +46,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (100, 100)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -58,7 +58,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (100, 100)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -75,7 +75,7 @@ object ApalacheOper {
 
     override def interpretation: Interpretation.Value = Interpretation.Predefined
 
-    override val precedence: (Int, Int) = (0, 0) // see Section 15.2.1 in Lamport's book
+    override val precedence: (Int, Int) = (160, 160) // as operator application
   }
 
   /**
@@ -88,7 +88,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (100, 100)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -101,7 +101,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override def precedence: (Int, Int) = (100, 100)
+    override def precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -118,7 +118,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -130,7 +130,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -148,7 +148,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(3)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -164,7 +164,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(3)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -177,7 +177,7 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(3)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -195,6 +195,6 @@ object ApalacheOper {
 
     override def arity: OperArity = FixedArity(1)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 }
