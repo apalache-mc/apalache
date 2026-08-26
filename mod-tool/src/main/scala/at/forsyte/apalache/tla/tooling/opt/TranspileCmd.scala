@@ -12,11 +12,7 @@ class TranspileCmd extends AbstractCheckerCmd(name = TRANSPILE, description = "T
 
   override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveCheck(config)) { options =>
-      val outFilePath = OutputManager.runDirPathOpt
-        .map { p =>
-          p.resolve(TlaExToVMTWriter.outFileName).toAbsolutePath
-        }
-        .getOrElse(TlaExToVMTWriter.outFileName)
+      val outFilePath = OutputManager.pathInRunDir(TlaExToVMTWriter.outFileName).toAbsolutePath
 
       PassChainExecutor(new ReTLAToVMTModule(options)).run() match {
         case Right(_)      => Right(s"VMT constraints successfully generated at\n$outFilePath")
