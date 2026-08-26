@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.{TlaEx, UID}
 import at.forsyte.apalache.tla.lir.storage.{ChangeListener, SourceLocator}
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 
 /**
  * This listener registers the SMT metrics that are created when an expression is being translated in SMT. These metrics
@@ -57,7 +57,7 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
       .toList
       .sorted(MetricProfilerListener.EntryOrdering)
 
-    OutputManager.withWriterInRunDir(profileFileName) { writer =>
+    OutputWorkspace.withWriterInRunDir(profileFileName) { writer =>
       writer.println("# weight,nCells,nConsts,nSmtExprs,location")
       for (entry <- sortedEntries) {
         writer.println(stringOfEntry(entry))
@@ -66,7 +66,7 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
 
     logger
       .info("%d profile entries to be found in %s".format(sortedEntries.size,
-              OutputManager.pathInRunDir(profileFileName)))
+              OutputWorkspace.pathInRunDir(profileFileName)))
   }
 
   private def stringOfEntry(entry: (UID, SolverContextMetrics)): String = {
