@@ -150,7 +150,9 @@ class PrettyWriter(
 
       case NameEx(x) =>
         text(nameResolver(x))
-      case ValEx(TlaStr(str))   => text("\"%s\"".format(str))
+      case ValEx(TlaStr(str))                => text("\"%s\"".format(str))
+      case ValEx(TlaInt(value)) if value < 0 =>
+        wrapWithParen(parentPrecedence, TlaArithOper.uminus.precedence, text(value.toString))
       case ValEx(TlaInt(value)) => text(value.toString)
       case ValEx(TlaBool(b))    => text(if (b) "TRUE" else "FALSE")
       case ValEx(TlaBoolSet)    => text("BOOLEAN")
@@ -162,7 +164,8 @@ class PrettyWriter(
       case NullEx => text("\"NOP\"")
 
       case OperEx(op @ TlaActionOper.prime, e) =>
-        exToDoc(op.precedence, e, nameResolver) <> "'"
+        val doc = exToDoc(op.precedence, e, nameResolver) <> "'"
+        wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(TlaSetOper.enumSet) =>
         // an empty set
@@ -212,6 +215,18 @@ class PrettyWriter(
               group(text(sign) <> space <> text(sanitizeID(x.toString)) <> space <>
                 text(PrettyWriter.binaryOps(TlaSetOper.in)) <> softline <>
                 exToDoc(op.precedence, set, nameResolver) <> text(":")) <>
+                nest(line <> exToDoc(op.precedence, pred, nameResolver))
+          ) ///
+
+        wrapWithParen(parentPrecedence, op.precedence, doc)
+
+      case OperEx(op, x, pred)
+          if op == TlaBoolOper.existsUnbounded || op == TlaBoolOper.forallUnbounded ||
+            op == TlaOper.chooseUnbounded =>
+        val sign = PrettyWriter.bindingOps(op)
+        val doc =
+          group(
+              group(text(sign) <> space <> text(sanitizeID(x.toString)) <> space <> text(":")) <>
                 nest(line <> exToDoc(op.precedence, pred, nameResolver))
           ) ///
 
@@ -283,7 +298,10 @@ class PrettyWriter(
                 "\\in" <> nest(line <> exToDoc(TlaSetOper.in.precedence, p._2, nameResolver)))) ///
 
         val binders = ssep(boxes.toList, comma <> line)
-        val bodyDoc = exToDoc((0, 0), body, nameResolver)
+        val bodyDoc = body match {
+          case OperEx(TlaSetOper.in, _, _) => parens(exToDoc((0, 0), body, nameResolver))
+          case _                           => exToDoc((0, 0), body, nameResolver)
+        }
         group(braces(nest(line <> bodyDoc <> text(":") <> nest(line <> binders)) <> line))
 
       case OperEx(TlaSetOper.filter, name, set, pred) =>
@@ -406,45 +424,36 @@ class PrettyWriter(
         val doc =
           text(name) <> optionalArgs <> space <> "::" <>
             nest(line <> exToDoc(oper.precedence, decoratedExpr, nameResolver))
-        group(wrapWithParen(parentPrecedence, oper.precedence, doc))
+        // A label extends to the right, so treat it as undelimited when deciding whether its parent must group it.
+        group(wrapWithParen(parentPrecedence, (0, 0), doc))
 
       // [A]_vars or <A>_vars
       case OperEx(op, action, vars) if op == TlaActionOper.stutter || op == TlaActionOper.nostutter =>
-        def wrapper = if (op == TlaActionOper.stutter) brackets _ else angles _
-
+        val actionDoc = exToDoc(op.precedence, action, nameResolver)
+        val wrappedAction =
+          if (op == TlaActionOper.stutter) brackets(actionDoc) else text("<<") <> actionDoc <> text(">>")
         val doc =
-          wrapper(exToDoc(op.precedence, action, nameResolver)) <>
-            "_" <> exToDoc(op.precedence, vars, nameResolver)
+          wrappedAction <> "_" <> subscriptToDoc(vars, nameResolver)
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
 
       case OperEx(op, vars, action) if op == TlaTempOper.weakFairness || op == TlaTempOper.strongFairness =>
         val sign = if (op == TlaTempOper.weakFairness) "WF" else "SF"
         val doc =
-          sign <> "_" <> exToDoc(op.precedence, vars, nameResolver) <>
+          sign <> "_" <> subscriptToDoc(vars, nameResolver) <>
             parens(exToDoc(op.precedence, action, nameResolver))
         wrapWithParen(parentPrecedence, op.precedence, group(doc))
-
-      case OperEx(op, arg @ NameEx(_)) if PrettyWriter.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
-        wrapWithParen(parentPrecedence, op.precedence, doc)
-
-      case OperEx(op, arg @ ValEx(_)) if PrettyWriter.unaryOps.contains(op) =>
-        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
-        wrapWithParen(parentPrecedence, op.precedence, doc)
-
-      case OperEx(op, arg @ OperEx(_, _)) if PrettyWriter.unaryOps.contains(op) =>
-        // a unary operator over unary operator, no parentheses needed
-        val doc = text(PrettyWriter.unaryOps(op)) <> exToDoc(op.precedence, arg, nameResolver)
-        wrapWithParen(parentPrecedence, op.precedence, doc)
 
       case OperEx(TlaFunOper.recFunRef) =>
         text(recFunName) // even if the name is undefined, print it
 
       // a unary operator that is mapped to Apalache IR
       case OperEx(op, arg) if PrettyWriter.unaryOps.contains(op) =>
-        // in all other cases, introduce parentheses.
-        // Yse the minimal precedence, as we are introducing the parentheses in any case.
-        text(PrettyWriter.unaryOps(op)) <> parens(exToDoc((0, 0), arg, nameResolver))
+        val argDoc = arg match {
+          case NameEx(_) | ValEx(_) | OperEx(_, _) => exToDoc(op.precedence, arg, nameResolver)
+          case _                                   => parens(exToDoc((0, 0), arg, nameResolver))
+        }
+        val doc = text(PrettyWriter.unaryOps(op)) <> argDoc
+        wrapWithParen(parentPrecedence, op.precedence, doc)
 
       // a binary infix operator that is mapped to Apalache IR
       case OperEx(op, lhs, rhs) if PrettyWriter.binaryOps.contains(op) =>
@@ -681,6 +690,14 @@ class PrettyWriter(
     }
   }
 
+  private def subscriptToDoc(subscript: TlaEx, nameResolver: String => String): Doc = {
+    val doc = exToDoc((0, 0), subscript, nameResolver)
+    subscript match {
+      case NameEx(_) | ValEx(TlaBool(_)) => doc
+      case _                             => parens(doc)
+    }
+  }
+
   private def wrapWithComment(comment: Doc): Doc = {
     text("(*") <> space <> comment <> space <> text("*)")
   }
@@ -808,6 +825,9 @@ object PrettyWriter {
       TlaBoolOper.exists -> "\\E",
       TlaBoolOper.forall -> "\\A",
       TlaOper.chooseBounded -> "CHOOSE",
+      TlaBoolOper.existsUnbounded -> "\\E",
+      TlaBoolOper.forallUnbounded -> "\\A",
+      TlaOper.chooseUnbounded -> "CHOOSE",
       TlaTempOper.EE -> "\\EE",
       TlaTempOper.AA -> "\\AA",
   ) ////

@@ -90,7 +90,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(enabled(prime(name("x"))))
     printWriter.flush()
-    assert("ENABLED x'" == stringWriter.toString)
+    assert("ENABLED (x')" == stringWriter.toString)
   }
 
   test("UNCHANGED") {
@@ -100,6 +100,13 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("UNCHANGED x" == stringWriter.toString)
   }
 
+  test("UNCHANGED and prime") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(unchanged(prime(name("x"))))
+    printWriter.flush()
+    assert("UNCHANGED (x')" == stringWriter.toString)
+  }
+
   test("[A]_vars") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(stutt(name("A"), name("vars")))
@@ -107,11 +114,32 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("[A]_vars" == stringWriter.toString)
   }
 
-  test("<A>_vars") {
+  test("<<A>>_vars") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(nostutt(name("A"), name("vars")))
     printWriter.flush()
-    assert("<A>_vars" == stringWriter.toString)
+    assert("<<A>>_vars" == stringWriter.toString)
+  }
+
+  test("<<FALSE>>_FALSE") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(nostutt(bool(false), bool(false)))
+    printWriter.flush()
+    assert("<<FALSE>>_FALSE" == stringWriter.toString)
+  }
+
+  test("[FALSE]_(Head(<<>>))") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(stutt(bool(false), head(tuple())))
+    printWriter.flush()
+    assert("[FALSE]_(Head(<<>>))" == stringWriter.toString)
+  }
+
+  test("<<FALSE>>_(Head(<<>>))") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(nostutt(bool(false), head(tuple())))
+    printWriter.flush()
+    assert("<<FALSE>>_(Head(<<>>))" == stringWriter.toString)
   }
 
   test("A \\cdot B") {
@@ -128,11 +156,25 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("WF_vars(A)" == stringWriter.toString)
   }
 
+  test("WF_(0)(FALSE)") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(WF(int(0), bool(false)))
+    printWriter.flush()
+    assert("WF_(0)(FALSE)" == stringWriter.toString)
+  }
+
   test("SF_vars(A)") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(SF(name("vars"), name("A")))
     printWriter.flush()
     assert("SF_vars(A)" == stringWriter.toString)
+  }
+
+  test("SF_(0)(FALSE)") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(SF(int(0), bool(false)))
+    printWriter.flush()
+    assert("SF_(0)(FALSE)" == stringWriter.toString)
   }
 
   test("[]A") {
@@ -142,11 +184,25 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("[]A" == stringWriter.toString)
   }
 
+  test("[] and prime") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(box(prime(name("x"))))
+    printWriter.flush()
+    assert("[](x')" == stringWriter.toString)
+  }
+
   test("<>A") {
     val writer = new PrettyWriter(printWriter, layout80)
     writer.write(diamond(name("A")))
     printWriter.flush()
     assert("<>A" == stringWriter.toString)
+  }
+
+  test("<> and prime") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    writer.write(diamond(prime(name("x"))))
+    printWriter.flush()
+    assert("<>(x')" == stringWriter.toString)
   }
 
   test("A ~> B") {
@@ -340,6 +396,14 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     assert("L2(a, b) :: 1" == stringWriter.toString)
   }
 
+  test("a labelled operand is parenthesized") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    val expr = in(concat(tuple(), label(concat(tuple(), tuple()), "label0")), enumSet())
+    writer.write(expr)
+    printWriter.flush()
+    assert("<<>> \\o (label0 :: (<<>> \\o <<>>)) \\in {}" == stringWriter.toString)
+  }
+
   test("one-line exists") {
     val writer = new PrettyWriter(printWriter, layout40)
     val expr = exists(name("x"), name("y"), name("z"))
@@ -348,6 +412,27 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     // a multi-line vertical box always breaks from the previous line, as otherwise it is incredibly hard to indent
     val expected = "\\E x \\in y: z"
     assert(expected == stringWriter.toString)
+  }
+
+  test("unbounded CHOOSE") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(choose(name("x"), bool(true)))
+    printWriter.flush()
+    assert("CHOOSE x : TRUE" == stringWriter.toString)
+  }
+
+  test("unbounded forall") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(forall(name("x"), bool(false)))
+    printWriter.flush()
+    assert("\\A x : FALSE" == stringWriter.toString)
+  }
+
+  test("unbounded exists") {
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(exists(name("x"), bool(false)))
+    printWriter.flush()
+    assert("\\E x : FALSE" == stringWriter.toString)
   }
 
   test("multi-line exists") {
@@ -549,6 +634,14 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     val expected =
       """{ x + y: x \in S, y \in T }""".stripMargin
     assert(expected == stringWriter.toString)
+  }
+
+  test("a map with a membership-valued body") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    val expr = map(in(not(bool(false)), name("S")), name("x"), name("T"))
+    writer.write(expr)
+    printWriter.flush()
+    assert("{ ((~FALSE) \\in S): x \\in T }" == stringWriter.toString)
   }
 
   test("a multi-line map") {
