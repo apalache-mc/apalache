@@ -1,6 +1,29 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.62.2 - 2026-08-26
+
+### Bug fixes
+
+- Align operator priorities with SANY so that `PrettyWriter` parenthesizes sequential composition and set-prefix operators correctly.
+- Fixed JSON IR deserialization of labeled expressions, see #3466
+- Render non-stuttering actions and action or fairness subscripts with valid TLA+ delimiters in `PrettyWriter` output.
+- Render unbounded `CHOOSE`, `\A`, and `\E` binders as valid TLA+ in `PrettyWriter` output.
+- Parenthesize labelled expressions when embedded in larger `PrettyWriter` output so that they preserve their grouping in TLA+.
+- Fixed exponential backtracking when parsing nested type annotations, which could exhaust the JVM heap on short inputs, see #3464.
+- Parenthesize membership-valued set-map bodies in `PrettyWriter` output so that SANY does not confuse them with map bindings.
+- Correctly parenthesize prefix and prime expressions and negative integer literals in `PrettyWriter` output.
+
+## 0.62.1 - 2026-08-19
+
+### Features
+
+- Allow the JSON-RPC `loadSpec` method to load Quint JSON IR and Apalache JSON IR in addition to TLA+, see #3457.
+
+### Bug fixes
+
+- Recognize namespace-qualified Quint label bindings, such as `main::replica::__label_proposer`, by reading the label from the final name segment.
+
 ## 0.62.0 - 2026-08-18
 
 ### Breaking changes

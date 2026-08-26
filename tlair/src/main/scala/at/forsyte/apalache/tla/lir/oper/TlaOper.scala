@@ -16,7 +16,7 @@ trait TlaOper extends Serializable {
   def arity: OperArity
 
   /**
-   * Operator precedence. See: Lamport. Specifying Systems, 2004, p. 271, Table 6.
+   * Operator precedence on SANY's native scale. See: Lamport. Specifying Systems, 2004, p. 271, Table 6.
    * @return
    *   the range that defines operator precedence [a, b].
    */
@@ -89,7 +89,7 @@ object TlaOper {
     val name = "EQ"
     val interpretation: Interpretation.Value = Interpretation.Predefined
     val arity = FixedArity(2)
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -99,7 +99,7 @@ object TlaOper {
     val name = "NE"
     val interpretation: Interpretation.Value = Interpretation.Predefined
     val arity = FixedArity(2)
-    override val precedence: (Int, Int) = (5, 5)
+    override val precedence: (Int, Int) = (50, 50)
   }
 
   /**
@@ -131,7 +131,7 @@ object TlaOper {
     override def interpretation: Interpretation.Value = Interpretation.Predefined
 
     override val name: String = "OPER_APP"
-    override val precedence: (Int, Int) = (16, 16)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -183,7 +183,7 @@ object TlaOper {
 
     override val interpretation: Interpretation.Value = Interpretation.Predefined
 
-    override val precedence: (Int, Int) = (16, 16) // similar to function application
+    override val precedence: (Int, Int) = (160, 160) // similar to function application
 
     /**
      * Do the operator arguments satisfy the operator invariant? For instance, some operators only allow name

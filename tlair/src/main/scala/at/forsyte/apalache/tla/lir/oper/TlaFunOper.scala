@@ -21,7 +21,7 @@ object TlaFunOper {
     override def arity: OperArity = AnyEvenArity()
 
     override val name: String = "RECORD"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -31,7 +31,7 @@ object TlaFunOper {
   object tuple extends TlaFunOper {
     override val arity = AnyArity()
     override val name = "TUPLE"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -41,7 +41,7 @@ object TlaFunOper {
   object app extends TlaFunOper {
     override val arity: OperArity = FixedArity(2)
     override val name: String = "FUN_APP"
-    override val precedence: (Int, Int) = (16, 16)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   /**
@@ -50,7 +50,7 @@ object TlaFunOper {
   object domain extends TlaFunOper {
     override val arity: OperArity = FixedArity(1)
     override val name: String = "DOMAIN"
-    override val precedence: (Int, Int) = (9, 9)
+    override val precedence: (Int, Int) = (100, 130)
   }
 
   /**
@@ -65,7 +65,7 @@ object TlaFunOper {
     override def arity: OperArity = AnyOddArity() && MinimalArity(3)
 
     override val name: String = "FUN_CTOR"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 
   /**
@@ -99,7 +99,7 @@ object TlaFunOper {
 
     override def name: String = "FUN_REC_CTOR"
 
-    override def precedence: (Int, Int) = (100, 100) // as the operator declaration
+    override def precedence: (Int, Int) = (160, 160) // as the operator declaration
   }
 
   /**
@@ -118,7 +118,7 @@ object TlaFunOper {
     override def name: String = "FUN_REC_REF"
 
     override def arity: OperArity = FixedArity(0)
-    override def precedence: (Int, Int) = (16, 16) // as function application
+    override def precedence: (Int, Int) = (160, 160) // as function application
   }
 
   /**
@@ -136,6 +136,6 @@ object TlaFunOper {
   object except extends TlaFunOper {
     override def arity: OperArity = AnyOddArity() && MinimalArity(3)
     override val name: String = "EXCEPT"
-    override val precedence: (Int, Int) = (16, 16) // as the function application
+    override val precedence: (Int, Int) = (160, 160) // as the function application
   }
 }
