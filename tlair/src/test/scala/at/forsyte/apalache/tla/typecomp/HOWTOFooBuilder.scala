@@ -19,7 +19,7 @@ class HOWTOFooBuilder extends BuilderTest {
 
     override def arity: OperArity = FixedArity(2)
 
-    override val precedence: (Int, Int) = (100, 100)
+    override val precedence: (Int, Int) = (160, 160)
   }
 
   // We know the signature to be

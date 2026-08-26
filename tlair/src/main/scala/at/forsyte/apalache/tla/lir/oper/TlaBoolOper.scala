@@ -18,7 +18,7 @@ object TlaBoolOper {
   object and extends TlaBoolOper {
     override def arity = AnyArity()
     override val name = "AND"
-    override val precedence: (Int, Int) = (3, 3)
+    override val precedence: (Int, Int) = (30, 30)
   }
 
   /**
@@ -29,7 +29,7 @@ object TlaBoolOper {
     override def arity: OperArity = AnyArity()
 
     override val name: String = "OR"
-    override val precedence: (Int, Int) = (3, 3)
+    override val precedence: (Int, Int) = (30, 30)
   }
 
   /**
@@ -39,7 +39,7 @@ object TlaBoolOper {
     override def arity: OperArity = FixedArity(1)
 
     override val name: String = "NOT"
-    override val precedence: (Int, Int) = (4, 4)
+    override val precedence: (Int, Int) = (40, 40)
   }
 
   /**
@@ -49,7 +49,7 @@ object TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "IMPLIES"
-    override val precedence: (Int, Int) = (1, 1)
+    override val precedence: (Int, Int) = (10, 10)
   }
 
   /**
@@ -59,7 +59,7 @@ object TlaBoolOper {
     override def arity: OperArity = FixedArity(2)
 
     override val name: String = "EQUIV"
-    override val precedence: (Int, Int) = (2, 2)
+    override val precedence: (Int, Int) = (20, 20)
   }
 
   /**

@@ -26,6 +26,7 @@ class TestUJsonToTlaViaBuilder extends AnyFunSuite with Checkers {
     val exs: Seq[TlaEx] = Seq(
         tla.and(tla.name("x", BoolT1), tla.bool(true)),
         tla.ite(tla.name("p", BoolT1), tla.name("A", ConstT1("X")), tla.name("B", ConstT1("X"))),
+        tla.label(tla.bool(false), "label0"),
         tla.letIn(
             tla.appOp(tla.name("A", OperT1(Seq(IntT1), IntT1)), tla.int(1)),
             tla.decl(
