@@ -5,11 +5,11 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, FinFunSetT, InfSetT, PowSetT}
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.lir._
-import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
- * This rule constructs a cell for a function set [S -> T]. Nontrivial function sets stay unexpanded and point to S
- * and T. Function sets with a definitely empty operand are represented as an ordinary empty or singleton set.
+ * This rule constructs a cell for a function set [S -> T]. Nontrivial function sets stay unexpanded and point to S and
+ * T. Function sets with a definitely empty operand are represented as an ordinary empty or singleton set.
  *
  * @author
  *   Igor Konnov
@@ -21,6 +21,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
    * Set emptiness classification.
    */
   sealed private trait SetEmptiness {
+
     /**
      * The set is empty when the predicate holds true.
      */
@@ -55,7 +56,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
-      case funSetEx@OperEx(TlaSetOper.funSet, domEx, cdmEx) =>
+      case funSetEx @ OperEx(TlaSetOper.funSet, domEx, cdmEx) =>
         // switch to cell theory
         var nextState = rewriter.rewriteUntilDone(state.setRex(domEx))
         val dom = nextState.asCell
@@ -63,10 +64,10 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
         val cdm = nextState.asCell
 
         val funT = TlaType1.fromTypeTag(funSetEx.typeTag) match {
-          case SetT1(ft@FunT1(_, _)) => ft
-          case t =>
+          case SetT1(ft @ FunT1(_, _)) => ft
+          case t                       =>
             throw new TypingException(s"Function-set $funSetEx should have a set-of-functions type, found: $t",
-              funSetEx.ID)
+                funSetEx.ID)
         }
 
         (setEmptiness(nextState, dom), setEmptiness(nextState, cdm)) match {
@@ -74,11 +75,11 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           case (StaticallyEmpty, _) =>
             makeSingletonWhen(nextState, funT, tla.bool(true))
 
-            // [S -> {}] contains the empty function exactly when S is empty.
+          // [S -> {}] contains the empty function exactly when S is empty.
           case (domEmptiness, StaticallyEmpty) =>
             makeSingletonWhen(nextState, funT, domEmptiness.predicate)
 
-            // the default case: rewrite to a special cell without expanding the set of functions
+          // the default case: rewrite to a special cell without expanding the set of functions
           case _ =>
             val arena = nextState.arena.appendCellOld(FinFunSetT(dom.cellType, cdm.cellType))
             val newCell = arena.topCell
@@ -108,7 +109,8 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           StaticallyNonEmpty
         } else {
           // remove the elements that are known to be non-members statically
-          val potentialMembers = pointersAndPredicates.filterNot { case (_, pred) => simplifier.isFalseConst(pred) }.map(_._1.elem)
+          val potentialMembers =
+            pointersAndPredicates.filterNot { case (_, pred) => simplifier.isFalseConst(pred) }.map(_._1.elem)
           if (potentialMembers.isEmpty) {
             StaticallyEmpty
           } else {
@@ -119,11 +121,11 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
           }
         }
 
-        // Every powerset contains the empty set. The built-in infinite sets are non-empty too.
+      // Every powerset contains the empty set. The built-in infinite sets are non-empty too.
       case PowSetT(_) | InfSetT(_) =>
         StaticallyNonEmpty
 
-        // [S -> T] is empty exactly when S is non-empty and T is empty.
+      // [S -> T] is empty exactly when S is non-empty and T is empty.
       case FinFunSetT(_, _) =>
         val domEmptiness = setEmptiness(state, state.arena.getDom(set))
         val cdmEmptiness = setEmptiness(state, state.arena.getCdm(set))
