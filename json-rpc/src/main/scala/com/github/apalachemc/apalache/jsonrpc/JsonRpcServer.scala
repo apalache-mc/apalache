@@ -28,6 +28,7 @@ import org.eclipse.jetty.compression.zstandard.ZstandardCompression
 import org.eclipse.jetty.ee10.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.server.Server
 
+import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.{Lock, ReentrantLock}
 import java.util.concurrent.{LinkedBlockingQueue, ThreadPoolExecutor, TimeUnit}
@@ -891,11 +892,24 @@ object JsonRpcServerApp {
   private val MIN_COMPRESS_SIZE = 512
 
   def run(config: ConfigParseResult[ApalacheConfig], port: Int): Unit = OutputManager.withScope {
-    run(config, port, OutputManager.captureScope())
+    run(config, ApalacheConfigResolver.defaultExplorerIp, port, OutputManager.captureScope())
   }
 
   def run(config: ConfigParseResult[ApalacheConfig], port: Int, outputScope: OutputManager.Scope): Unit = {
-    val server = new Server(port)
+    run(config, ApalacheConfigResolver.defaultExplorerIp, port, outputScope)
+  }
+
+  def run(config: ConfigParseResult[ApalacheConfig], ip: String, port: Int): Unit =
+    OutputManager.withScope {
+      run(config, ip, port, OutputManager.captureScope())
+    }
+
+  def run(
+      config: ConfigParseResult[ApalacheConfig],
+      ip: String,
+      port: Int,
+      outputScope: OutputManager.Scope): Unit = {
+    val server = newServer(ip, port)
     val context = new ServletContextHandler(ServletContextHandler.SESSIONS)
     context.setContextPath("/")
 
@@ -917,13 +931,20 @@ object JsonRpcServerApp {
     server.setHandler(compressionHandler)
 
     server.start()
-    println(s"JSON-RPC server running on http://localhost:$port/rpc (gzip+zstd compression enabled)")
+    println(s"JSON-RPC server running on ${server.getURI.resolve("/rpc")} (gzip+zstd compression enabled)")
     server.join()
   }
 
+  private[jsonrpc] def newServer(ip: String, port: Int): Server =
+    new Server(InetSocketAddress.createUnresolved(ip, port))
+
+  private[jsonrpc] def newServer(port: Int): Server =
+    newServer(ApalacheConfigResolver.defaultExplorerIp, port)
+
   def main(args: Array[String]): Unit = {
     val port = if (args.nonEmpty) args(0).toInt else 8822
+    val ip = if (args.length > 1) args(1) else ApalacheConfigResolver.defaultExplorerIp
     val cfg = ApalacheConfigLoader.load(ApalacheConfig.empty.withCommand(SERVER))
-    run(cfg, port)
+    run(cfg, ip, port)
   }
 }
