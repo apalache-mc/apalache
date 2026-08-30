@@ -63,4 +63,21 @@ class TestTlaToItfJson extends AnyFunSuite {
                 SortedMap("x" -> tla.int(2).build),
             )))
   }
+
+  test("encoder emits variable descriptions only when supplied") {
+    val intTag = Typed(IntT1)
+    val module = TlaModule("test", List(TlaVarDecl("generated")(intTag)))
+    val trace = IndexedSeq[Trace.State](
+        SortedMap(),
+        SortedMap("generated" -> tla.int(1).build),
+    )
+
+    val withoutDescriptions = ujsonEncoder.mkJson(module, trace).value
+    val withDescriptions =
+      ujsonEncoder.mkJson(module, trace, Map("generated" -> "original temporal expression")).value
+
+    assert(!withoutDescriptions("#meta").obj.contains("variables-to-expressions"))
+    assert(withDescriptions("#meta")("variables-to-expressions") ==
+      ujson.Obj("generated" -> "original temporal expression"))
+  }
 }

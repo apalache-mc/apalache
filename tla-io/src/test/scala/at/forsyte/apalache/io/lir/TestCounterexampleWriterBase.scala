@@ -1,6 +1,7 @@
 package at.forsyte.apalache.io.lir
 
 import at.forsyte.apalache.tla.lir.TlaEx
+import at.forsyte.apalache.tla.lir.storage.VariableDescriptionsStore
 import org.scalatest.Assertions
 
 import java.io.{PrintWriter, StringWriter}
@@ -28,7 +29,7 @@ trait TestCounterexampleWriterBase extends Assertions {
 
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
-    val writer = CounterexampleWriter(kind, printWriter)
+    val writer = CounterexampleWriter(kind, printWriter, new VariableDescriptionsStore())
     writer.write(trace)
     printWriter.flush()
     val dateErasure = stringWriter.toString.replaceFirst(

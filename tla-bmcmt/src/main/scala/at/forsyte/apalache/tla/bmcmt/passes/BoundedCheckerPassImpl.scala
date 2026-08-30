@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.io.config.SMTEncoding
 import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
 import at.forsyte.apalache.io.config.Algorithm.Remote
+import at.forsyte.apalache.io.config.{Algorithm, CheckerOptions, CommonOptions, SMTEncoding}
 import at.forsyte.apalache.io.tuning.FineTuningParser
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
+import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
@@ -23,8 +24,6 @@ import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.io.config.{Algorithm, CheckerOptions, CommonOptions}
-import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -40,7 +39,8 @@ class BoundedCheckerPassImpl @Inject() (
     exprGradeStore: ExprGradeStore,
     sourceStore: SourceStore,
     changeListener: ChangeListener,
-    renaming: IncrementalRenaming)
+    renaming: IncrementalRenaming,
+    dumpFilesModelCheckerListener: DumpFilesModelCheckerListener)
     extends BoundedCheckerPass with LazyLogging {
 
   override def name: String = "BoundedChecker"
@@ -172,7 +172,7 @@ class BoundedCheckerPassImpl @Inject() (
     val filteredTrex =
       new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
+    val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(dumpFilesModelCheckerListener))
     val checker = new SeqModelChecker[SnapshotT](ctx)
     val outcome = checker.run()
     rewriter.dispose()
@@ -207,7 +207,7 @@ class BoundedCheckerPassImpl @Inject() (
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
     val filteredTrex = new FilteredTransitionExecutor[SnapshotT](params.transitionFilter, params.invFilter, trex)
 
-    val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(DumpFilesModelCheckerListener))
+    val ctx = ModelCheckerContext(params, input, filteredTrex, Seq(dumpFilesModelCheckerListener))
     val checker = new SeqModelChecker[SnapshotT](ctx)
     val outcome = checker.run()
     executorContext.dispose()
@@ -239,7 +239,7 @@ class BoundedCheckerPassImpl @Inject() (
     val executorContext = new IncrementalExecutionContext(rewriter)
     val trex = new TransitionExecutorImpl[SnapshotT](params.consts, params.vars, executorContext)
 
-    this.modelCheckerContext = Some(ModelCheckerContext(params, input, trex, Seq(DumpFilesModelCheckerListener)))
+    this.modelCheckerContext = Some(ModelCheckerContext(params, input, trex, Seq(dumpFilesModelCheckerListener)))
     logger.info(s"The outcome is: prepared for remote symbolic execution")
     NoError()
   }
