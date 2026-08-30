@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.types.{Substitution, TypeCheckerProfiler, TypeUnifier, TypeVarPool}
 
 /**
  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
@@ -13,14 +13,19 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
   private var solution: Substitution = approximateSolution
   private var constraints: List[Clause] = List.empty
   private var typesToReport: List[(Clause, TlaType1)] = List.empty
+  // Index of all variable numbers bound in any equivalence class, for O(1) isFreeVar checks.
+  // See https://github.com/apalache-mc/apalache/issues/973
+  private var boundVars: Set[Int] = approximateSolution.allVarNums
 
   def addConstraint(constraint: Clause): Unit = {
     constraints = constraints :+ constraint
   }
 
   def solvePartially(): Option[Substitution] = {
+    if (TypeCheckerProfiler.enabled) TypeCheckerProfiler.solvePartiallyCallCount += 1
     var progress = true
     while (constraints.nonEmpty && progress) {
+      if (TypeCheckerProfiler.enabled) TypeCheckerProfiler.solvePartiallyTotalLoopIterations += 1
       var postponed: List[Clause] = List.empty
       progress = false
 
@@ -29,6 +34,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
           case Some((uniqueSolution, typ)) =>
             progress = true
             solution = uniqueSolution
+            boundVars = solution.allVarNums
             typesToReport :+= (cons, solution.subRec(typ))
           case None =>
             cons match {
@@ -88,11 +94,10 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
    *   true if the variable occurs in the partial solution of the solver
    */
   def isFreeVar(varNo: Int): Boolean = {
-    def outsideClass(cls: EqClass): Boolean = !cls.typeVars.contains(varNo)
-    // Check both the approximate solution, which the solver was initialized with, and the solution, if it exists.
-    // This is probably a computationally expensive check:
-    // https://github.com/apalache-mc/apalache/issues/973
-    approximateSolution.mapping.keySet.forall(outsideClass) && solution.mapping.keySet.forall(outsideClass)
+    if (TypeCheckerProfiler.enabled) TypeCheckerProfiler.isFreeVarCallCount += 1
+    // O(1) check using pre-computed index of all bound variable numbers.
+    // Fixes https://github.com/apalache-mc/apalache/issues/973
+    !boundVars.contains(varNo)
   }
 
   private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
