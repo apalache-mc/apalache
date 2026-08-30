@@ -86,3 +86,18 @@ sbt 'tool/CliIntegration/testOnly org.apalachemc.integration.ParseCommandTest --
 expanded across the selected workers, and the suite itself skips workers it does not support.
 
 Set `APALACHE_CLI_TEST_TIMING=true` to print the active configuration and elapsed time of each Tool invocation.
+
+ScalaTest also writes per-test start and completion events to configuration-specific JSONL files. By default they
+are under `target/cli-integration-timings`; set `APALACHE_CLI_TEST_TIMING_DIR` to choose another
+directory. Generate the same Markdown summary and CSV diagnostics used in GitHub Actions with:
+
+```sh
+python3 script/cli_integration_timing_report.py \
+  --input target/cli-integration-timings \
+  --markdown /tmp/cli-integration-timings.md \
+  --csv /tmp/cli-integration-timings.csv \
+  --label local
+```
+
+The Actions job summary shows quartiles, the median, Tukey outliers, and a Mermaid chart of the ten slowest tests
+for each configuration. Timing data is informational and does not introduce a performance gate.

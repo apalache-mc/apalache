@@ -405,7 +405,18 @@ lazy val tool = (project in file("mod-tool"))
       CliIntegration / resourceDirectory := (Test / resourceDirectory).value,
       CliIntegration / fork := true,
       CliIntegration / parallelExecution := true,
-      CliIntegration / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
+      CliIntegration / logBuffered := false,
+      CliIntegration / testOptions += Tests.Argument(
+          TestFrameworks.ScalaTest,
+          "-C",
+          "org.apalachemc.integration.framework.IntegrationTimingReporter",
+          // Report a test every 30 seconds while it is still running. This makes
+          // unexpectedly slow tests visible in the live Actions log as well as
+          // in the post-run timing summary.
+          "-W",
+          "30",
+          "30",
+      ),
       CliIntegration / javaOptions ++= {
         val javaFeature = java.lang.Runtime.version().feature()
         val compatibilityOptions =

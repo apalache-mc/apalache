@@ -152,10 +152,34 @@ jobs:
       - uses: sbt/setup-sbt@v1
       - name: Set APALACHE_HOME env
         run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      - name: Test CLI integration timing report
+        run: python3 -m unittest discover -s test -p 'test_cli_integration_timing_report.py'
       - name: Run Scala CLI integration tests
         run: make scala-integration
         env:
           APALACHE_CLI_TEST_CONFIGS: ${{ matrix.test-configurations }}
+          APALACHE_CLI_TEST_TIMING: true
+          APALACHE_CLI_TEST_TIMING_DIR: ${{ runner.temp }}/apalache-cli-integration-timings
+      - name: Add CLI integration timings to the job summary
+        if: always()
+        shell: bash
+        run: |
+          python3 script/cli_integration_timing_report.py \
+            --input "$RUNNER_TEMP/apalache-cli-integration-timings" \
+            --markdown "$RUNNER_TEMP/cli-integration-timing-summary.md" \
+            --csv "$RUNNER_TEMP/cli-integration-timings.csv" \
+            --label "${{ matrix.operating-system }} / ${{ matrix.test-configurations }}"
+          cat "$RUNNER_TEMP/cli-integration-timing-summary.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload CLI integration timing data
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: cli-integration-timings-${{ matrix.operating-system }}-${{ matrix.test-configurations }}
+          path: |
+            ${{ runner.temp }}/apalache-cli-integration-timings/*.jsonl
+            ${{ runner.temp }}/cli-integration-timings.csv
+          if-no-files-found: warn
+          retention-days: 14
       - name: Cleanup before cache
         # See https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
         shell: bash
