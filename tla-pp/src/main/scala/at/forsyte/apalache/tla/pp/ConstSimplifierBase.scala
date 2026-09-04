@@ -3,7 +3,7 @@ package at.forsyte.apalache.tla.pp
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaInt, TlaStr}
-import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderT, BuilderUT}
+import at.forsyte.apalache.tla.types.{BuilderT, BuilderUT}
 
 import scala.collection.immutable.SortedSet
 
@@ -249,20 +249,6 @@ abstract class ConstSimplifierBase {
     // \A x \in S: FALSE <=> S = {}
     case OperEx(TlaBoolOper.forall, _, set, ValEx(TlaBool(false))) =>
       simplifyShallow(OperEx(TlaOper.eq, set, emptySet(set.typeTag))(boolTag))
-
-    // [{} -> X] <=> [{} -> {Gen(1)}]
-    case funSet @ OperEx(TlaSetOper.funSet, OperEx(TlaSetOper.enumSet), _) =>
-      val funSetT = TlaType1.fromTypeTag(funSet.typeTag)
-      funSetT match {
-        case SetT1(FunT1(domElemT, cdmElemT)) =>
-          val mockCdm = tla.gen(ValEx(TlaInt(1))(intTag), SetT1(cdmElemT))
-          tla.funSet(tla.emptySet(domElemT), mockCdm)
-        case t =>
-          throw new TypingException(s"Function-set $funSet should have a set-of-functions type, found: $t", funSet.ID)
-      }
-    // if A /= {}, then [ A -> {} ] <=> {}
-    case funSet @ OperEx(TlaSetOper.funSet, _, OperEx(TlaSetOper.enumSet)) =>
-      emptySet(funSet.typeTag)
 
     // Set simplifications that hold for an arbitrary set S, not only for set enumerations.
     // These complement the literal-only rules below.

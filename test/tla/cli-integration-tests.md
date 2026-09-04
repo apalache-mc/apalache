@@ -2649,6 +2649,14 @@ $ apalache-mc check Bug1058.tla | sed 's/[IEW]@.*//'
 EXITCODE: OK
 ```
 
+### check EmptyFunctionSet.tla: empty function-set operands after rewriting
+
+```sh
+$ apalache-mc check --inv=Inv --length=0 --no-deadlock EmptyFunctionSet.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Bug1136.tla reports no error: regression for #1136
 
 ```sh
