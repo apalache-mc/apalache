@@ -19,4 +19,13 @@ trait TestSymbStateRewriterAction extends RewriterBase {
         fail("Expected x to be renamed to x'")
     }
   }
+
+  test("prime rejects arena cells") { rewriterType: SMTEncoding =>
+    arena = arena.appendCell(IntT1)
+    val cell = arena.topCell
+    val state = new SymbState(tla.prime(cell.toBuilder), arena, Binding())
+
+    val error = intercept[RewriterException](create(rewriterType).rewriteOnce(state))
+    assert(error.getMessage.contains(s"Prime operator cannot be applied to arena cell $cell"))
+  }
 }
