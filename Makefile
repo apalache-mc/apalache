@@ -3,7 +3,7 @@
 # Markdown files used for integration tests
 TEST_MD_FILES := $(wildcard test/tla/*.md)
 
-.PHONY: default all apalache package compile test test-coverage integration docker dist fmt-check fmt-fix clean run docs docs-view quint-fixtures tla-io/src/test/resources/tictactoe.json test/tla/booleans.qnt.json
+.PHONY: default all apalache package compile test test-coverage publish-maven-snapshot integration docker dist fmt-check fmt-fix clean run docs docs-view quint-fixtures tla-io/src/test/resources/tictactoe.json test/tla/booleans.qnt.json
 
 default: package
 
@@ -25,6 +25,10 @@ compile:
 
 test:
 	sbt test
+
+# Test, sign, and publish library snapshots to the Maven Central snapshot repository
+publish-maven-snapshot:
+	./script/publish-maven.sh snapshot
 
 # Compile code with fatal warnings enables
 compile-strict: export APALACHE_FATAL_WARNINGS=true

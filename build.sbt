@@ -180,6 +180,8 @@ lazy val tlair = (project in file("tlair"))
           Deps.logging,
           Deps.scalaParserCombinators,
           Deps.scalaz,
+          Deps.slf4j,
+          Deps.logbackClassic % Test,
           TestDeps.junit,
           TestDeps.scalatest,
           TestDeps.scalacheck,
@@ -187,6 +189,36 @@ lazy val tlair = (project in file("tlair"))
           TestDeps.scalatestplusJunit,
           TestDeps.scalatestplusScalacheck,
           Deps.shapeless % Test,
+      ),
+      Compile / packageBin / packageOptions += Package.ManifestAttributes(
+          "Automatic-Module-Name" -> "org.apalache_mc.tla.ir"
+      ),
+  )
+
+lazy val tla_ir_java = (project in file("tla-ir-java"))
+  .dependsOn(tlair)
+  .settings(
+      testSettings,
+      name := "tla-ir-java",
+      moduleName := "tla-ir-java",
+      description := "Java facade for Apalache's typed intermediate representation and builder APIs for TLA+",
+      crossPaths := false,
+      publish / skip := false,
+      publishTo := {
+        if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+        else localStaging.value
+      },
+      libraryDependencies := Seq(
+          scalaOrganization.value % "scala-library" % scalaVersion.value,
+          Deps.jspecify,
+          Deps.jacksonDatabind % Test,
+          Deps.logbackClassic % Test,
+          TestDeps.junit,
+          TestDeps.scalatest,
+          TestDeps.scalatestplusJunit,
+      ),
+      Compile / packageBin / packageOptions += Package.ManifestAttributes(
+          "Automatic-Module-Name" -> "org.apalache_mc.tla.jir"
       ),
   )
 
@@ -409,6 +441,7 @@ lazy val root = (project in file("."))
   .aggregate(
       // propagate commands to these sub-projects
       tlair,
+      tla_ir_java,
       infra,
       tla_io,
       tla_parser,

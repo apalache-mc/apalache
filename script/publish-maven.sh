@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Publish the tla-ir and tla-io libraries to the Sonatype Central Portal.
+# Publish the tla-ir, tla-ir-java, and tla-io libraries to the Sonatype Central Portal.
 # Credentials and signing keys are deliberately read from the environment and
 # the user's GnuPG keyring, never from repository files.
 
@@ -89,17 +89,21 @@ case "$MODE" in
     snapshot)
         sbt -batch \
             "tlair / test" \
+            "tla_ir_java / test" \
             "tla_io / test" \
             "tlair / publishSigned" \
+            "tla_ir_java / publishSigned" \
             "tla_io / publishSigned"
         ;;
     release)
-        echo "Publishing org.apalache-mc:tla-ir_2.13 and org.apalache-mc:tla-io_2.13 version $VERSION"
+        echo "Publishing org.apalache-mc:tla-ir_2.13, org.apalache-mc:tla-ir-java, and org.apalache-mc:tla-io_2.13 version $VERSION"
         sbt -batch \
             "tlair / test" \
+            "tla_ir_java / test" \
             "tla_io / test" \
             cleanMavenCentralStaging \
             "tlair / publishSigned" \
+            "tla_ir_java / publishSigned" \
             "tla_io / publishSigned" \
             sonaRelease
         ;;
