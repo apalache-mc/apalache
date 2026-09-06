@@ -76,13 +76,13 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
       val expectedBody = call(name("Lambda3"), if (multipleDecls) appDecl(seedDecl) else bool(false))
       val expected = letIn(if (multipleDecls) letIn(expectedBody, seedDecl) else expectedBody, lambdaDecl)
       val contexts: Seq[(String, TlaEx => TlaEx)] = Seq(
-        ("top level", ex => ex),
-        ("issue 88", ex => and(eql(name("var0"), ex), eql(name("step"), int(0)))),
-        ("conjunction", ex => and(ex, eql(name("step"), int(0)))),
-        ("implication", ex => impl(eql(name("var0"), ex), eql(name("step"), int(0)))),
-        ("membership", ex => and(in(ex, enumSet(bool(false))), eql(name("step"), int(0)))),
-        ("CASE OTHER", ex => and(caseOther(ex, bool(true), bool(false)), eql(name("step"), int(0)))),
-        ("IF branch", ex => and(ite(bool(true), ex, bool(false)), eql(name("step"), int(0)))),
+          ("top level", ex => ex),
+          ("issue 88", ex => and(eql(name("var0"), ex), eql(name("step"), int(0)))),
+          ("conjunction", ex => and(ex, eql(name("step"), int(0)))),
+          ("implication", ex => impl(eql(name("var0"), ex), eql(name("step"), int(0)))),
+          ("membership", ex => and(in(ex, enumSet(bool(false))), eql(name("step"), int(0)))),
+          ("CASE OTHER", ex => and(caseOther(ex, bool(true), bool(false)), eql(name("step"), int(0)))),
+          ("IF branch", ex => and(ite(bool(true), ex, bool(false)), eql(name("step"), int(0)))),
       )
       contexts.zipWithIndex.foreach { case ((label, context), index) =>
         val printed = write(context(original), width)

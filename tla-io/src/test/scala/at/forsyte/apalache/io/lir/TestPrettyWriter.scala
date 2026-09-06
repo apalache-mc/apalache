@@ -969,12 +969,12 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
         else OperEx(ApalacheOper.foldSeq, lambda, bool(false), tuple())
       val expectedCall = s"(LET Lambda3(p, q) == p IN $opName(Lambda3, FALSE, <<>>))"
       val cases: Seq[(TlaEx, String)] = Seq(
-        (call, expectedCall),
-        (and(eql(name("var0"), call), eql(name("step"), int(0))), s"var0 = $expectedCall /\\ step = 0"),
-        (and(call, bool(true)), s"$expectedCall /\\ TRUE"),
-        (impl(call, bool(true)), s"$expectedCall => TRUE"),
-        (in(call, name("S")), s"$expectedCall \\in S"),
-        (caseOther(call, bool(true), bool(false)), s"CASE TRUE -> FALSE [] OTHER -> $expectedCall"),
+          (call, expectedCall),
+          (and(eql(name("var0"), call), eql(name("step"), int(0))), s"var0 = $expectedCall /\\ step = 0"),
+          (and(call, bool(true)), s"$expectedCall /\\ TRUE"),
+          (impl(call, bool(true)), s"$expectedCall => TRUE"),
+          (in(call, name("S")), s"$expectedCall \\in S"),
+          (caseOther(call, bool(true), bool(false)), s"CASE TRUE -> FALSE [] OTHER -> $expectedCall"),
       )
       cases.foreach { case (expr, expected) =>
         val buffer = new StringWriter()
