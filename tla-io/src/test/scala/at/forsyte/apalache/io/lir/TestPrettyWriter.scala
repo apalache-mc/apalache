@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.convenience.tla
 import at.forsyte.apalache.tla.lir.convenience.tla._
-import at.forsyte.apalache.tla.lir.oper.{TlaArithOper, TlaFunOper, TlaOper}
+import at.forsyte.apalache.tla.lir.oper.{ApalacheOper, TlaArithOper, TlaFunOper, TlaOper}
 import at.forsyte.apalache.tla.lir.values.TlaInt
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
@@ -949,10 +949,54 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     printWriter.flush()
     // LET declaration needs to be printed before the application
     val expected =
-      """LET A(param1, param2) == param1 + param2
+      """(LET A(param1, param2) ==
+        |  param1 + param2
         |IN
-        |Foo((A(1, 2)))""".stripMargin
+        |Foo((A(1, 2))))""".stripMargin
     assert(expected == stringWriter.toString)
+  }
+
+  for {
+    named <- Seq(false, true)
+    width <- Seq(20, 1000)
+  } {
+    test(s"synthesized LET is delimited (named=$named, width=$width)") {
+      val decl = TlaOperDecl("Lambda3", List(OperParam("p"), OperParam("q")), name("p"))
+      val lambda = letIn(name("Lambda3"), decl)
+      val opName = if (named) "Fold" else "ApaFoldSeqLeft"
+      val call: TlaEx =
+        if (named) appOp(name(opName), lambda, bool(false), tuple())
+        else OperEx(ApalacheOper.foldSeq, lambda, bool(false), tuple())
+      val expectedCall = s"(LET Lambda3(p, q) == p IN $opName(Lambda3, FALSE, <<>>))"
+      val cases: Seq[(TlaEx, String)] = Seq(
+        (call, expectedCall),
+        (and(eql(name("var0"), call), eql(name("step"), int(0))), s"var0 = $expectedCall /\\ step = 0"),
+        (and(call, bool(true)), s"$expectedCall /\\ TRUE"),
+        (impl(call, bool(true)), s"$expectedCall => TRUE"),
+        (in(call, name("S")), s"$expectedCall \\in S"),
+        (caseOther(call, bool(true), bool(false)), s"CASE TRUE -> FALSE [] OTHER -> $expectedCall"),
+      )
+      cases.foreach { case (expr, expected) =>
+        val buffer = new StringWriter()
+        val output = new PrintWriter(buffer)
+        new PrettyWriter(output, TextLayout().copy(textWidth = width)).write(expr)
+        output.flush()
+        val printed = buffer.toString
+        assert(printed.replaceAll("\\s+", " ") == expected)
+        assert(printed.contains("\n") == (width == 20))
+      }
+    }
+  }
+
+  test("synthesized LET parentheses enclose all extracted declarations") {
+    val first = TlaOperDecl("Lambda3", List(OperParam("p")), name("p"))
+    val second = TlaOperDecl("Lambda4", List(OperParam("q")), name("q"))
+    val expr = appOp(name("Combine"), letIn(name("Lambda3"), first), letIn(name("Lambda4"), second))
+    val writer = new PrettyWriter(printWriter, layout40)
+    writer.write(expr)
+    printWriter.flush()
+    assert(stringWriter.toString.replaceAll("\\s+", " ") ==
+      "(LET Lambda3(p) == p IN LET Lambda4(q) == q IN Combine(Lambda3, Lambda4))")
   }
 
   test("a LAMBDA as LET-IN") {

@@ -8,9 +8,8 @@ import at.forsyte.apalache.tla.lir.oper._
 import at.forsyte.apalache.tla.lir.values._
 import org.bitbucket.inkytonik.kiama.output.PrettyPrinter
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.{File, FileWriter, PrintWriter, StringWriter}
 import scala.collection.immutable.{HashMap, HashSet}
-import java.io.StringWriter
 
 /**
  * <p>A pretty printer to a file that formats a TLA+ expression to a given text width (normally, 80 characters). As
@@ -493,7 +492,7 @@ class PrettyWriter(
           } else if (decls.isEmpty) {
             group(parseableName(name) <> parens(commaSeparated))
           } else {
-            group(ssep(decls, line) <> line <> parseableName(name) <> parens(commaSeparated))
+            letToDocInParens(decls, parseableName(name) <> parens(commaSeparated))
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -520,7 +519,7 @@ class PrettyWriter(
           } else if (decls.isEmpty) {
             group(unqualifiedName <> parens(commaSeparated))
           } else {
-            group(ssep(decls, line) <> line <> unqualifiedName <> parens(commaSeparated))
+            letToDocInParens(decls, unqualifiedName <> parens(commaSeparated))
           }
 
         wrapWithParen(parentPrecedence, op.precedence, doc)
@@ -548,6 +547,12 @@ class PrettyWriter(
 
       case expr => throw new PrettyPrinterError(s"PrettyPrinter failed toDoc conversion on expression ${expr}")
     }
+  }
+
+  private def letToDocInParens(decls: List[Doc], application: Doc): Doc = {
+    // Hoisting declarations turns an application into a LET whose scope extends to the right.
+    // Always delimit it, even in contexts such as CASE OTHER that pass parent precedence (0, 0).
+    parens(group(ssep(decls, line) <> line <> application))
   }
 
   /**

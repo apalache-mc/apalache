@@ -3,7 +3,8 @@ package at.forsyte.apalache.tla.imp
 import at.forsyte.apalache.io.lir.{PrettyWriter, TextLayout}
 import at.forsyte.apalache.tla.lir.UntypedPredefs._
 import at.forsyte.apalache.tla.lir.convenience.tla.{not => tlaNot, _}
-import at.forsyte.apalache.tla.lir.{TlaEx, TlaOperDecl}
+import at.forsyte.apalache.tla.lir.oper.ApalacheOper
+import at.forsyte.apalache.tla.lir.{OperEx, OperParam, TlaEx, TlaOperDecl}
 
 import java.io.{PrintWriter, StringWriter}
 import scala.io.Source
@@ -15,10 +16,10 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
       expectedText: String,
       expectedParsed: TlaEx)
 
-  private def write(ex: TlaEx): String = {
+  private def write(ex: TlaEx, width: Int = 80): String = {
     val stringWriter = new StringWriter()
     val printWriter = new PrintWriter(stringWriter)
-    new PrettyWriter(printWriter, TextLayout().copy(textWidth = 80)).write(ex)
+    new PrettyWriter(printWriter, TextLayout().copy(textWidth = width)).write(ex)
     printWriter.flush()
     stringWriter.toString
   }
@@ -40,14 +41,62 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
              |Test == $printed
              |================================
              |""".stripMargin
-        val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString(source))
-        val parsed = modules(rootName).declarations
-          .collectFirst {
-            case decl: TlaOperDecl if decl.name == "Test" => decl.body
-          }
-          .getOrElse(fail("SANY did not import the Test declaration"))
+        assert(parseTestBody(source) == testCase.expectedParsed)
+      }
+    }
+  }
 
-        assert(parsed == testCase.expectedParsed)
+  private def parseTestBody(source: String): TlaEx = {
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString(source))
+    modules(rootName).declarations
+      .collectFirst {
+        case decl: TlaOperDecl if decl.name == "Test" => decl.body
+      }
+      .getOrElse(fail("SANY did not import the Test declaration"))
+  }
+
+  for {
+    named <- Seq(false, true)
+    multipleDecls <- Seq(false, true)
+    width <- Seq(20, 1000)
+  } {
+    test(s"synthesized LET preserves scope through SANY (named=$named, multiple=$multipleDecls, width=$width)") {
+      val lambdaDecl = TlaOperDecl("Lambda3", List(OperParam("p"), OperParam("q")), name("p"))
+      val seedDecl = TlaOperDecl("Seed", List.empty, bool(false))
+      val lambda = letIn(name("Lambda3"), lambdaDecl)
+      val seed = if (multipleDecls) letIn(appDecl(seedDecl), seedDecl) else bool(false)
+
+      def call(operatorArg: TlaEx, seedArg: TlaEx): TlaEx =
+        if (named) appOp(name("Fold"), operatorArg, seedArg, tuple())
+        else OperEx(ApalacheOper.foldSeq, operatorArg, seedArg, tuple())
+
+      val original = call(lambda, seed)
+      // The printer hoists argument-local definitions. SANY should recover that hoisted tree,
+      // not the original argument-local LETs, and must not move any surrounding operands into it.
+      val expectedBody = call(name("Lambda3"), if (multipleDecls) appDecl(seedDecl) else bool(false))
+      val expected = letIn(if (multipleDecls) letIn(expectedBody, seedDecl) else expectedBody, lambdaDecl)
+      val contexts: Seq[(String, TlaEx => TlaEx)] = Seq(
+        ("top level", ex => ex),
+        ("issue 88", ex => and(eql(name("var0"), ex), eql(name("step"), int(0)))),
+        ("conjunction", ex => and(ex, eql(name("step"), int(0)))),
+        ("implication", ex => impl(eql(name("var0"), ex), eql(name("step"), int(0)))),
+        ("membership", ex => and(in(ex, enumSet(bool(false))), eql(name("step"), int(0)))),
+        ("CASE OTHER", ex => and(caseOther(ex, bool(true), bool(false)), eql(name("step"), int(0)))),
+        ("IF branch", ex => and(ite(bool(true), ex, bool(false)), eql(name("step"), int(0)))),
+      )
+      contexts.zipWithIndex.foreach { case ((label, context), index) =>
+        val printed = write(context(original), width)
+        val source =
+          s"""---- MODULE SynthesizedLet$index ----
+             |EXTENDS Integers, Sequences, Apalache
+             |VARIABLES var0, step
+             |Fold(Op(_, _), initial, seq) == ApaFoldSeqLeft(Op, initial, seq)
+             |Test == $printed
+             |================================
+             |""".stripMargin
+        withClue(s"$label: $printed\n") {
+          assert(parseTestBody(source) == context(expected))
+        }
       }
     }
   }
