@@ -299,7 +299,9 @@ class LazyEquality(rewriter: SymbStateRewriter)
    * enumerated sets of nonempty-domain functions remains unsupported: it would require a different coverage encoding.
    */
   private def mkFunSetEmptyEq(state: SymbState, funSet: ArenaCell, set: ArenaCell): SymbState = {
+    // All empty functions are equal, so this guarantees at most one distinct member, even with multiple arena edges.
     val onlyEmptyFunctions = state.arena.getHas(set).forall { fun =>
+      // For function cells, cdm is the graph relation, not the target set as it is for function-set cells.
       // OOPSLA19 functions need not have a domain edge; their relation is empty iff their domain is empty.
       val support = if (state.arena.hasDom(fun)) state.arena.getDom(fun) else state.arena.getCdm(fun)
       SetEmptiness(state, support) == SetEmptiness.StaticallyEmpty
