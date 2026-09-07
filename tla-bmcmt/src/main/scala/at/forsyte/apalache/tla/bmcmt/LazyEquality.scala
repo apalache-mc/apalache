@@ -284,9 +284,12 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val c2 = tla.unchecked(SetEmptiness(nextState, cdm2).predicate)
 
     // #3477: both singleton empty-function sets, both empty sets, or matching operands.
-    // See test/tla/FunctionSetEqualityProofs.tla for the characterization proved in TLAPS.
-    val predicate = tla
-      .or(tla.and(d1, d2), tla.and(tla.not(d1), tla.not(d2), c1, c2), tla.and(safeEq(dom1, dom2), safeEq(cdm1, cdm2)))
+    // See https://gist.github.com/konnov/cc33215f5026e85abe8c75f96b1e5d02 for the characterization proved in TLAPS.
+    val predicate = tla.or(
+        tla.and(d1, d2),
+        tla.and(tla.not(d1), tla.not(d2), c1, c2),
+        tla.and(safeEq(dom1, dom2), safeEq(cdm1, cdm2)),
+    )
     cacheFunSetEqPredicate(nextState, left, right, predicate).setRex(state.ex)
   }
 
