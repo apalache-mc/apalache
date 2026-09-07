@@ -5,11 +5,11 @@ import at.forsyte.apalache.tla.bmcmt.caches.{EqCache, EqCacheSnapshot}
 import at.forsyte.apalache.tla.bmcmt.implicitConversions._
 import at.forsyte.apalache.tla.bmcmt.rewriter.{ConstSimplifierForSmt, Recoverable}
 import at.forsyte.apalache.tla.bmcmt.rules.support.SupportOps._
-import at.forsyte.apalache.tla.bmcmt.rules.support.{ProtoSeqOps, RecordAndVariantOps}
+import at.forsyte.apalache.tla.bmcmt.rules.support.{ProtoSeqOps, RecordAndVariantOps, SetEmptiness}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{tla, BuilderT}
+import at.forsyte.apalache.tla.types.{BuilderT, tla}
 import scalaz.unused
 
 import scala.collection.immutable.SortedMap
@@ -168,6 +168,12 @@ class LazyEquality(rewriter: SymbStateRewriter)
           case (FinFunSetT(_, _), FinFunSetT(_, _)) =>
             mkFunSetEq(state, left, right)
 
+          case (FinFunSetT(_, _), CellTFrom(SetT1(FunT1(_, _)))) =>
+            mkFunSetEmptyEq(state, left, right)
+
+          case (CellTFrom(SetT1(FunT1(_, _))), FinFunSetT(_, _)) =>
+            mkFunSetEmptyEq(state, right, left)
+
           case (lt, rt) =>
             throw new CheckerException(s"Unexpected equality test over types $lt and $rt", state.ex)
         }
@@ -270,15 +276,65 @@ class LazyEquality(rewriter: SymbStateRewriter)
     val cdm1 = state.arena.getCdm(left)
     val dom2 = state.arena.getDom(right)
     val cdm2 = state.arena.getCdm(right)
-    var nextState = mkSetEq(state, dom1, dom2)
-    nextState = mkSetEq(nextState, cdm1, cdm2)
-    val eq = tla.equiv(tla.eql(left.toBuilder, right.toBuilder),
-        tla.and(tla.eql(dom1.toBuilder, dom2.toBuilder), tla.eql(cdm1.toBuilder, cdm2.toBuilder)))
-    rewriter.solverContext.assertGroundExpr(eq)
-    eqCache.put(left, right, EqCache.EqEntry())
+    var nextState = cacheOneEqConstraint(state, dom1, dom2)
+    nextState = cacheOneEqConstraint(nextState, cdm1, cdm2)
+    val d1 = tla.unchecked(SetEmptiness(nextState, dom1).predicate)
+    val d2 = tla.unchecked(SetEmptiness(nextState, dom2).predicate)
+    val c1 = tla.unchecked(SetEmptiness(nextState, cdm1).predicate)
+    val c2 = tla.unchecked(SetEmptiness(nextState, cdm2).predicate)
 
-    // recover the original expression and theory
-    nextState.setRex(state.ex)
+    // #3477: both singleton empty-function sets, both empty sets, or matching operands.
+    // See test/tla/FunctionSetEqualityProofs.tla for the characterization proved in TLAPS.
+    val predicate = tla
+      .or(tla.and(d1, d2), tla.and(tla.not(d1), tla.not(d2), c1, c2), tla.and(safeEq(dom1, dom2), safeEq(cdm1, cdm2)))
+    cacheFunSetEqPredicate(nextState, left, right, predicate).setRex(state.ex)
+  }
+
+  /**
+   * Compare a lazy function set with an ordinary empty set or a (possibly conditional) singleton containing the empty
+   * function. FunSetCtorRule produces these ordinary sets when an operand is definitely empty. General comparison to
+   * enumerated sets of nonempty-domain functions remains unsupported: it would require a different coverage encoding.
+   */
+  private def mkFunSetEmptyEq(state: SymbState, funSet: ArenaCell, set: ArenaCell): SymbState = {
+    val onlyEmptyFunctions = state.arena.getHas(set).forall { fun =>
+      // OOPSLA19 functions need not have a domain edge; their relation is empty iff their domain is empty.
+      val support = if (state.arena.hasDom(fun)) state.arena.getDom(fun) else state.arena.getCdm(fun)
+      SetEmptiness(state, support) == SetEmptiness.StaticallyEmpty
+    }
+    if (funSet.cellType.toTlaType1 != set.cellType.toTlaType1 || !onlyEmptyFunctions) {
+      throw new RewriterException("Equality between a function set and an enumerated set of nonempty-domain " +
+        "functions is not supported", state.ex)
+    }
+
+    val setEmpty = tla.unchecked(SetEmptiness(state, set).predicate)
+    val domEmpty = tla.unchecked(SetEmptiness(state, state.arena.getDom(funSet)).predicate)
+    val funSetEmpty = tla.unchecked(SetEmptiness(state, funSet).predicate)
+    val predicate = tla.or(tla.and(tla.not(setEmpty), domEmpty), tla.and(setEmpty, funSetEmpty))
+    cacheFunSetEqPredicate(state, funSet, set, predicate)
+  }
+
+  /** Mixed representations have different uninterpreted sorts, but share their array sort in the Arrays encoding. */
+  private def cacheFunSetEqPredicate(
+                                      state: SymbState,
+                                      left: ArenaCell,
+                                      right: ArenaCell,
+                                      predicate: BuilderT): SymbState = {
+    val simplified = simplifier.applySimplifyShallowToBuilderEx(predicate)
+    if (
+      left.cellType.signature == right.cellType.signature ||
+        rewriter.solverContext.config.smtEncoding == SMTEncoding.Arrays
+    ) {
+      // Arrays also need this constraint when these values are used as keys in enclosing sets.
+      rewriter.solverContext.assertGroundExpr(tla.equiv(tla.eql(left.toBuilder, right.toBuilder), simplified))
+      eqCache.put(left, right, EqCache.EqEntry())
+      state
+    } else {
+      val nextState = state.updateArena(_.appendCell(BoolT1))
+      val pred = nextState.arena.topCell
+      rewriter.solverContext.assertGroundExpr(tla.equiv(pred.toBuilder, simplified))
+      eqCache.put(left, right, EqCache.ExprEntry(pred.toNameEx))
+      nextState
+    }
   }
 
   /**
