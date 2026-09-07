@@ -4,7 +4,7 @@ import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
 import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, FinFunSetT, InfSetT, PowSetT}
 import at.forsyte.apalache.tla.bmcmt.{ArenaCell, RewriterException, SymbState}
 import at.forsyte.apalache.tla.lir.SetT1
-import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * A predicate that holds exactly when the set is empty. When the membership can be predicted statically, the predicate

@@ -39,7 +39,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
         state = rewriter.rewriteUntilDone(state.setRex(tla.funSet(operand(0, 1), operand(1, 3))))
         val left = state.asCell
         state = rewriter.rewriteUntilDone(state.setRex(tla.funSet(operand(2, if (sameDomain) 1 else 2),
-          operand(3, if (sameCodomain) 3 else 4))))
+                    operand(3, if (sameCodomain) 3 else 4))))
         val right = state.asCell
         assert(left.cellType.isInstanceOf[FinFunSetT])
         assert(right.cellType.isInstanceOf[FinFunSetT])
@@ -78,7 +78,7 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
       val withGuard = arena.appendCell(BoolT1)
       val guard = withGuard.topCell
       val filtered = tla.filter(tla.name("x", IntT1), tla.enumSet(tla.int(1), tla.int(2)),
-        tla.and(guard.toBuilder, tla.eql(tla.name("x", IntT1), tla.int(1))))
+          tla.and(guard.toBuilder, tla.eql(tla.name("x", IntT1), tla.int(1))))
       var state = rewriter.rewriteUntilDone(new SymbState(filtered, withGuard, Binding()))
       val set = state.asCell
       assert(state.arena.getHas(set).nonEmpty)
@@ -162,8 +162,8 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val left = tla.funSet(tla.enumSet(tla.int(0)), tla.funSet(domain, tla.emptySet(IntT1)))
     val right = tla.funSet(tla.enumSet(tla.int(0)), tla.funSet(domain, tla.enumSet(tla.int(2))))
     val assertions = tla.and(
-      tla.eql(tla.eql(left, right), guard.toBuilder),
-      tla.eql(tla.eql(tla.enumSet(left), tla.enumSet(right)), guard.toBuilder),
+        tla.eql(tla.eql(left, right), guard.toBuilder),
+        tla.eql(tla.eql(tla.enumSet(left), tla.enumSet(right)), guard.toBuilder),
     )
     val state = new SymbState(assertions, withGuard, Binding())
     assertForBothGuardValues(rewriter, state, guard)
@@ -196,10 +196,10 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     val one = tla.enumSet(tla.int(1))
     val two = tla.enumSet(tla.int(2))
     val assertions = tla.and(
-      tla.eql(tla.funSet(empty, one), tla.funSet(empty, two)),
-      tla.eql(tla.funSet(one, empty), tla.funSet(two, empty)),
-      tla.not(tla.eql(tla.funSet(empty, empty), tla.funSet(one, empty))),
-      tla.not(tla.eql(tla.funSet(one, one), tla.funSet(one, two))),
+        tla.eql(tla.funSet(empty, one), tla.funSet(empty, two)),
+        tla.eql(tla.funSet(one, empty), tla.funSet(two, empty)),
+        tla.not(tla.eql(tla.funSet(empty, empty), tla.funSet(one, empty))),
+        tla.not(tla.eql(tla.funSet(one, one), tla.funSet(one, two))),
     )
     assertTlaExAndRestore(create(rewriterType), new SymbState(assertions, arena, Binding()))
   }

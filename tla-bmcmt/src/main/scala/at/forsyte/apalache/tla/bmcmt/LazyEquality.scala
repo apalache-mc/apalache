@@ -9,7 +9,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.{ProtoSeqOps, RecordAndVarian
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecomp._
-import at.forsyte.apalache.tla.types.{BuilderT, tla}
+import at.forsyte.apalache.tla.types.{tla, BuilderT}
 import scalaz.unused
 
 import scala.collection.immutable.SortedMap
@@ -303,7 +303,7 @@ class LazyEquality(rewriter: SymbStateRewriter)
     }
     if (funSet.cellType.toTlaType1 != set.cellType.toTlaType1 || !onlyEmptyFunctions) {
       throw new RewriterException("Equality between a function set and an enumerated set of nonempty-domain " +
-        "functions is not supported", state.ex)
+            "functions is not supported", state.ex)
     }
 
     val setEmpty = tla.unchecked(SetEmptiness(state, set).predicate)
@@ -315,13 +315,13 @@ class LazyEquality(rewriter: SymbStateRewriter)
 
   /** Mixed representations have different uninterpreted sorts, but share their array sort in the Arrays encoding. */
   private def cacheFunSetEqPredicate(
-                                      state: SymbState,
-                                      left: ArenaCell,
-                                      right: ArenaCell,
-                                      predicate: BuilderT): SymbState = {
+      state: SymbState,
+      left: ArenaCell,
+      right: ArenaCell,
+      predicate: BuilderT): SymbState = {
     val simplified = simplifier.applySimplifyShallowToBuilderEx(predicate)
     if (
-      left.cellType.signature == right.cellType.signature ||
+        left.cellType.signature == right.cellType.signature ||
         rewriter.solverContext.config.smtEncoding == SMTEncoding.Arrays
     ) {
       // Arrays also need this constraint when these values are used as keys in enclosing sets.

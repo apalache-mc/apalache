@@ -7,7 +7,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.SetEmptiness.StaticallyEmpty
 import at.forsyte.apalache.tla.bmcmt.types.FinFunSetT
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper.TlaSetOper
-import at.forsyte.apalache.tla.types.{BuilderUT => BuilderT, tlaU => tla}
+import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
  * This rule constructs a cell for a function set [S -> T]. Nontrivial function sets stay unexpanded and point to S and
