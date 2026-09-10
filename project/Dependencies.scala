@@ -74,6 +74,7 @@ object Dependencies {
   object TestDeps {
     // Libraries
     val junit = "junit" % "junit" % "4.13.2" % Test
+    val junitInterface = "com.github.sbt" % "junit-interface" % "0.13.3" % Test
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.19.0" % Test
     val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 

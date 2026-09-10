@@ -8,7 +8,16 @@ package org.apalache_mc.tla.jir;
  */
 public class TlaBuilderException extends RuntimeException {
   /**
-   * Creates a builder exception with its underlying cause.
+   * Creates an exception describing why a builder operation failed.
+   *
+   * @param message a description of the invalid input or operation
+   */
+  public TlaBuilderException(String message) {
+    super(message);
+  }
+
+  /**
+   * Creates a builder exception that retains the original failure.
    *
    * @param message a description of the invalid builder input
    * @param cause the error that caused the builder operation to fail

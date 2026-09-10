@@ -1,13 +1,22 @@
 package org.apalache_mc.tla.jir;
 
 /**
- * Indicates that a builder operation received incompatible TLA+ types.
+ * Indicates incompatible TLA+ types or a missing/inconsistent typed IR tag.
  *
  * <p>Examples include adding a Boolean to an integer, using a non-Boolean expression as a predicate, or applying a
  * function to an argument that does not match its parameter type. The exception message describes the expected and
  * actual types.</p>
  */
 public final class TlaBuilderTypeException extends TlaBuilderException {
+  /**
+   * Creates an exception describing a missing, inconsistent or incompatible type.
+   *
+   * @param message a description of the type error
+   */
+  public TlaBuilderTypeException(String message) {
+    super(message);
+  }
+
   /**
    * Creates an exception describing invalid operand or result types.
    *

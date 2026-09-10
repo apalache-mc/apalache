@@ -211,9 +211,9 @@ lazy val tla_ir_java = (project in file("tla-ir-java"))
       libraryDependencies := Seq(
           scalaOrganization.value % "scala-library" % scalaVersion.value,
           Deps.jspecify,
-          Deps.jacksonDatabind % Test,
           Deps.logbackClassic % Test,
           TestDeps.junit,
+          TestDeps.junitInterface,
           TestDeps.scalatest,
           TestDeps.scalatestplusJunit,
       ),
@@ -267,6 +267,36 @@ lazy val tla_io = (project in file("tla-io"))
           TestDeps.scalacheck,
           TestDeps.scalatestplusJunit,
           TestDeps.scalatestplusScalacheck,
+      ),
+      Compile / packageBin / packageOptions += Package.ManifestAttributes(
+          "Automatic-Module-Name" -> "org.apalache_mc.tla.io"
+      ),
+  )
+
+lazy val tla_io_java = (project in file("tla-io-java"))
+  .dependsOn(tla_ir_java, tla_io, tla_ir_java % "test->test")
+  .settings(
+      testSettings,
+      name := "tla-io-java",
+      moduleName := "tla-io-java",
+      description := "Java text and typed JSON APIs for Apalache's TLA+ IR",
+      crossPaths := false,
+      publish / skip := false,
+      publishTo := {
+        if (isSnapshot.value) Some(Resolver.sonatypeCentralSnapshots)
+        else localStaging.value
+      },
+      libraryDependencies := Seq(
+          scalaOrganization.value % "scala-library" % scalaVersion.value,
+          Deps.jspecify,
+          Deps.logbackClassic % Test,
+          TestDeps.junit,
+          TestDeps.junitInterface,
+          TestDeps.scalatest,
+          TestDeps.scalatestplusJunit,
+      ),
+      Compile / packageBin / packageOptions += Package.ManifestAttributes(
+          "Automatic-Module-Name" -> "org.apalache_mc.tla.jio"
       ),
   )
 
@@ -399,6 +429,8 @@ lazy val tool = (project in file("mod-tool"))
   .enablePlugins(BuildInfoPlugin)
   .settings(
       testSettings,
+      // Stream-aware Tool tests exercise process-global console/logging state; do not overlap suites.
+      Test / parallelExecution := false,
       // The following buildInfo values will be available in the source
       // code in the `apalache.BuildInfo` singleton.
       // See https://github.com/sbt/sbt-buildinfo
@@ -442,6 +474,7 @@ lazy val root = (project in file("."))
       // propagate commands to these sub-projects
       tlair,
       tla_ir_java,
+      tla_io_java,
       infra,
       tla_io,
       tla_parser,

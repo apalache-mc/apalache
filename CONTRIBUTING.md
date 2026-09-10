@@ -555,8 +555,10 @@ When the PR is merged into `main`:
 
 ### Publishing libraries to Maven Central
 
-The libraries `org.apalache-mc:tla-ir_2.13`, `org.apalache-mc:tla-ir-java`, and
-`org.apalache-mc:tla-io_2.13` can be published independently of the Apalache distribution.
+The libraries `org.apalache-mc:tla-ir_2.13`, `org.apalache-mc:tla-ir-java`,
+`org.apalache-mc:tla-io_2.13`, and `org.apalache-mc:tla-io-java` are published in
+lockstep, independently of the Apalache distribution. The Java facades target
+Java 21 and use unsuffixed artifact names. See [the Java API guide](tla-ir-java/README.md).
 
 #### Automated publishing
 

@@ -1,10 +1,11 @@
 /**
- * Constructs typed Apalache TLA+ intermediate-representation values from Java.
+ * Java APIs for creating, inspecting and transforming Apalache's typed TLA+ representation.
  *
- * <p>{@link org.apalache_mc.tla.jir.TlaCheckedBuilder} is the primary entry point for building expressions and
- * declarations with type and scope validation. {@link org.apalache_mc.tla.jir.TlaTypedScopeUncheckedBuilder} is
- * available to callers that already guarantee lexical scope. {@link org.apalache_mc.tla.jir.TlaTypes} and
- * {@link org.apalache_mc.tla.jir.TlaDeclarations} provide the supporting type and declaration factories.</p>
+ * <p>Use {@link org.apalache_mc.tla.jir.TlaCheckedBuilder} to construct expressions and
+ * declarations with type and scope validation. Use
+ * {@link org.apalache_mc.tla.jir.TlaTypedScopeUncheckedBuilder} only when the caller already
+ * guarantees lexical scope. The remaining utility classes inspect types and declarations,
+ * transform expression trees, assemble modules, identify operators and solve type variables.</p>
  */
 @NullMarked
 package org.apalache_mc.tla.jir;

@@ -12,13 +12,17 @@ import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
 import util.ExecutionStatisticsCollector
 
+import java.io.PrintStream
 import java.time.LocalDateTime
+import java.util.Objects
 import java.time.temporal.ChronoUnit
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Random, Success, Try}
 
 /**
- * Command line access to the APALACHE tools.
+ * Runs Apalache from the command line or from an embedding application.
+ *
+ * Use [[main]] for a standalone process and [[run]] when the caller needs an exit code without terminating the JVM.
  *
  * @author
  *   Igor Konnov
@@ -91,7 +95,7 @@ object Tool extends LazyLogging {
   }
 
   /**
-   * Run the tool in a library mode, that is, with a call to System.exit.
+   * Run the tool in library mode, without calling System.exit, including on CLI parsing errors.
    *
    * @param args
    *   the command line arguments
@@ -99,7 +103,46 @@ object Tool extends LazyLogging {
    *   the exit code; as usual, 0 means success.
    */
   def run(args: Array[String]): Int = OutputManager.withScope {
-    runInScope(args)
+    try runInScope(args)
+    catch {
+      // clist otherwise terminates the host JVM on invalid arguments, even in library mode.
+      case exit: org.backuity.clist.util.ExitException => exit.code
+    }
+  }
+
+  /**
+   * Run the tool with Java and Scala console output directed to caller-owned streams.
+   *
+   * This overload changes process-global streams and is intended for sequential calls in an isolated tool JVM. It
+   * restores the previous streams and does not close the supplied streams.
+   *
+   * @param args
+   *   the command line arguments
+   * @param out
+   *   standard output for this invocation
+   * @param err
+   *   standard error for this invocation
+   * @return
+   *   the exit code; as usual, 0 means success
+   */
+  def run(args: Array[String], out: PrintStream, err: PrintStream): Int = {
+    val checkedArgs = Objects.requireNonNull(args, "args").clone()
+    val checkedOut = Objects.requireNonNull(out, "out")
+    val checkedErr = Objects.requireNonNull(err, "err")
+    val previousOut = System.out
+    val previousErr = System.err
+    Console.withOut(checkedOut) {
+      Console.withErr(checkedErr) {
+        try {
+          System.setOut(checkedOut)
+          System.setErr(checkedErr)
+          run(checkedArgs)
+        } finally {
+          System.setOut(previousOut)
+          System.setErr(previousErr)
+        }
+      }
+    }
   }
 
   private def runInScope(args: Array[String]): Int = {
@@ -107,7 +150,7 @@ object Tool extends LazyLogging {
     new LogbackConfigurator(None, None).configureDefaultContext()
     // first, call the arguments parser, which can also handle the standard commands such as version
     val cli = Cli
-      .parse(args)
+      .parse(args)(org.backuity.clist.util.Console.out, org.backuity.clist.util.Exit.withException)
       .withProgramName("apalache-mc")
       .version(BuildInfo.version)
       .withCommands(
