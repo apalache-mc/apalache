@@ -10,6 +10,73 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   val i_to_B: TlaType1 = FunT1(IntT1, SetT1(BoolT1))
   val i_to_i_to_B: TlaType1 = FunT1(IntT1, FunT1(IntT1, SetT1(BoolT1)))
 
+  test("[{} -> {}] is a singleton containing the empty function") { rewriterType: SMTEncoding =>
+    val funSet = tla.funSet(tla.emptySet(IntT1), tla.emptySet(IntT1))
+    val state = new SymbState(funSet, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    val setCell = nextState.asCell
+
+    assert(setCell.cellType == CellTFrom(SetT1(FunT1(IntT1, IntT1))))
+    val Seq(FixedElemPtr(emptyFun)) = nextState.arena.getHasPtr(setCell)
+    assert(nextState.arena.getHas(nextState.arena.getDom(emptyFun)).isEmpty)
+    assert(nextState.arena.getHas(nextState.arena.getCdm(emptyFun)).isEmpty)
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.selectInSet(emptyFun.toBuilder, setCell.toBuilder)))
+  }
+
+  test("[{1} -> {}] is empty") { rewriterType: SMTEncoding =>
+    val funSet = tla.funSet(tla.enumSet(tla.int(1)), tla.emptySet(IntT1))
+    val state = new SymbState(funSet, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    val setCell = nextState.asCell
+
+    assert(setCell.cellType == CellTFrom(SetT1(FunT1(IntT1, IntT1))))
+    assert(nextState.arena.getHasPtr(setCell).isEmpty)
+  }
+
+  test("[S -> {}] conditionally contains the empty function when S is symbolically empty") {
+    rewriterType: SMTEncoding =>
+      val arenaWithGuard = arena.appendCell(BoolT1)
+      val guard = arenaWithGuard.topCell
+      val empty = tla.emptySet(IntT1)
+      val singleton = tla.enumSet(tla.int(1))
+      val domain = tla.ite(guard.toBuilder, empty, singleton)
+      val funSet = tla.funSet(domain, empty)
+      val state = new SymbState(funSet, arenaWithGuard, Binding())
+      val rewriter = create(rewriterType)
+      val nextState = rewriter.rewriteUntilDone(state)
+      val setCell = nextState.asCell
+
+      assert(setCell.cellType == CellTFrom(SetT1(FunT1(IntT1, IntT1))))
+      val Seq(ptr) = nextState.arena.getHasPtr(setCell)
+      val emptyFun = ptr.elem
+      val emptyFunInSet = tla.selectInSet(emptyFun.toBuilder, setCell.toBuilder)
+
+      rewriter.push()
+      rewriter.solverContext.assertGroundExpr(guard.toBuilder)
+      rewriter.solverContext.assertGroundExpr(emptyFunInSet)
+      assert(rewriter.solverContext.sat())
+      rewriter.pop()
+
+      rewriter.push()
+      rewriter.solverContext.assertGroundExpr(tla.not(guard.toBuilder))
+      rewriter.solverContext.assertGroundExpr(emptyFunInSet)
+      assertUnsatOrExplain()
+      rewriter.pop()
+  }
+
+  test("separately constructed [{} -> {}] values are equal") { rewriterType: SMTEncoding =>
+    val rewriter = create(rewriterType)
+    val funSet1 = tla.funSet(tla.emptySet(IntT1), tla.emptySet(IntT1))
+    val state1 = rewriter.rewriteUntilDone(new SymbState(funSet1, arena, Binding()))
+    val funSet2 = tla.funSet(tla.emptySet(IntT1), tla.emptySet(IntT1))
+    val state2 = rewriter.rewriteUntilDone(state1.setRex(funSet2))
+    val equality = tla.eql(state1.asCell.toBuilder, state2.asCell.toBuilder)
+
+    assertTlaExAndRestore(rewriter, state2.setRex(equality))
+  }
+
   test("""[{1, 2, 3} -> {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
     val domain = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))
     val codomain = tla.enumSet(tla.bool(false), tla.bool(true))

@@ -279,6 +279,18 @@ trait TestSymbStateRewriterSet extends RewriterBase {
     }
   }
 
+  test("""an arena cell \in {1}""") { rewriterType: SMTEncoding =>
+    // Regression for #3479: arena-cell names are not stored in Binding, so they must bypass
+    // the singleton-set optimization that resolves the left-hand side through Binding.
+    arena = arena.appendCell(IntT1)
+    val cell = arena.topCell
+    val membership = tla.in(cell.toBuilder, tla.enumSet(tla.int(1)))
+    val expected = tla.eql(cell.toBuilder, tla.int(1))
+    val state = new SymbState(tla.eql(membership, expected), arena, Binding())
+
+    assertTlaExAndRestore(create(rewriterType), state)
+  }
+
   test("""~(Bool \in {TRUE, TRUE})""") { rewriterType: SMTEncoding =>
     arena = arena.appendCell(BoolT1)
     val cell = arena.topCell
