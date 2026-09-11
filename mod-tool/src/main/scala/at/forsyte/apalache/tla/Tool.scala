@@ -22,7 +22,7 @@ import scala.util.{Failure, Random, Success, Try}
 /**
  * Runs Apalache from the command line or from an embedding application.
  *
- * Use [[main]] for a standalone process and [[run]] when the caller needs an exit code without terminating the JVM.
+ * Use [[main]] for a standalone process and `run` when the caller needs an exit code without terminating the JVM.
  *
  * @author
  *   Igor Konnov
@@ -32,7 +32,7 @@ object Tool extends LazyLogging {
 
   /**
    * Run the tool in the standalone mode with the provided arguments. This method calls [[java.lang.System.exit]] with
-   * the computed exit code. To call the tool without System.exit, use [[run]].
+   * the computed exit code. To call the tool without System.exit, use `run`.
    *
    * @param args
    *   the command line arguments

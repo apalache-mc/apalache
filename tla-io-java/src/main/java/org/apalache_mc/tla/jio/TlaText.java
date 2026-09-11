@@ -17,8 +17,8 @@ import scala.jdk.javaapi.CollectionConverters;
 /**
  * Formats typed TLA+ expressions and modules with a reusable text layout.
  *
- * <p>Use {@link #write(TlaEx, PrintWriter)} or a module-writing overload when writing to
- * an existing destination. Use {@link #render(Consumer)} to capture a write operation as
+ * <p>Use {@code write(TlaEx, PrintWriter)} or a module-writing overload when writing to
+ * an existing destination. Use {@code render(Consumer)} to capture a write operation as
  * a string.</p>
  */
 public final class TlaText {

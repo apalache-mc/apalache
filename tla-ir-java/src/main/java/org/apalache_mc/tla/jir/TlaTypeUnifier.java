@@ -50,7 +50,7 @@ public final class TlaTypeUnifier {
    * @param left the first type
    * @param right the second type
    * @return the successful unification, or empty if the types are incompatible
-   * @throws IllegalArgumentException if no fresh variable ID remains
+   * @throws java.lang.IllegalArgumentException if no fresh variable ID remains
    */
   public Optional<Unification> unify(
       Optional<TlaTypeSubstitution> initial, TlaType1 left, TlaType1 right) {

@@ -1,8 +1,8 @@
 package org.apalache_mc.tla.jio;
 
 /**
- * Thrown when {@link TlaJson#readModule(String)} cannot parse JSON or decode a typed TLA+ module.
- * The original parsing or decoding error is available from {@link #getCause()}.
+ * Thrown when {@code TlaJson.readModule(String)} cannot parse JSON or decode a typed TLA+ module.
+ * The original parsing or decoding error is available from {@code getCause()}.
  */
 public final class TlaJsonException extends RuntimeException {
   /**
