@@ -34,7 +34,8 @@ class SetInRule(rewriter: SymbStateRewriter) extends RewritingRule {
     state.ex match {
       // a common pattern x \in {y} that is equivalent to x = y, e.g., the assignment solver creates it
       case OperEx(op, NameEx(name), OperEx(TlaSetOper.enumSet, rhs))
-          if op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet =>
+          if (op == TlaSetOper.in || op == ApalacheInternalOper.selectInSet) &&
+            !ArenaCell.isValidName(name) =>
         val nextState = rewriter.rewriteUntilDone(state.setRex(rhs))
         val rhsCell = nextState.arena.findCellByNameEx(nextState.ex)
         val lhsCell = state.binding(name)

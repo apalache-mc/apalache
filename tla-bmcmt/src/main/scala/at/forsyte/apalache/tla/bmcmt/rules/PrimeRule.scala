@@ -21,6 +21,9 @@ class PrimeRule extends RewritingRule {
 
   override def apply(state: SymbState): SymbState = {
     state.ex match {
+      case OperEx(TlaActionOper.prime, NameEx(name)) if ArenaCell.isValidName(name) =>
+        throw new RewriterException(s"Prime operator cannot be applied to arena cell $name", state.ex)
+
       case OperEx(TlaActionOper.prime, nEx @ NameEx(name)) =>
         state.setRex(tla.name(name + "'", TlaType1.fromTypeTag(nEx.typeTag)))
 

@@ -40,7 +40,7 @@ An implementation of ``TI`` _must_ support two main phases of operation:
     ``F: 'a -> 'a`` in its internal storage and returns the type ``Int``. Given the expression ``{x, y}``
     and the argument types ``x: Int`` and ``y: Int``, it can find the resulting type ``Set[Int]`` without
     referring to the storage. In other words, ``TIE`` provides the user with **one step** of type inference.
-    If there are no ambiguities in the type computation or the ambiguities can be resolved by quering the storage,
+    If there are no ambiguities in the type computation or the ambiguities can be resolved by querying the storage,
     ``TIE`` _must_ return the resulting type. **Importantly**, ``TIE`` _must_ assume that it can be given expressions
     that have not been analyzed in the first stage. Such expressions may originate from the rewriting techniques
     used by the client. In this case, ``TIE`` _must_ try to compute the resulting type. Only if the resulting type
