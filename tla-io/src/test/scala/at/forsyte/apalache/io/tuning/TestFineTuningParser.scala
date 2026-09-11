@@ -50,6 +50,28 @@ class TestFineTuningParser extends AnyFunSuite {
     assert(config.isLeft)
   }
 
+  test("rejects typed search controls as tuning options") {
+    Seq(
+        "search.seed",
+        "search.simulation",
+        "search.simulation.maxRun",
+        "search.outputTraces",
+    ).foreach { key =>
+      assert(FineTuningParser.fromStrings(Map(key -> "1")).isLeft)
+    }
+  }
+
+  test("rejects SMT-specific seed options") {
+    Seq(
+        "smt.randomSeed",
+        "z3.sat.random_seed",
+        "z3.nlsat.seed",
+        "z3.smt.random_seed",
+    ).foreach { key =>
+      assert(FineTuningParser.fromStrings(Map(key -> "4242")).isLeft)
+    }
+  }
+
   test("parses z3.memory_high_watermark_mb") {
     val config = FineTuningParser.fromStrings(Map("z3.memory_high_watermark_mb" -> "123"))
     assert(config.isRight && config.exists(_.get("z3.memory_high_watermark_mb").contains(123)))

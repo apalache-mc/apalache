@@ -2,16 +2,22 @@
 
 | authors                                | last revised    |
 | -------------------------------------- | --------------: |
-| Thomas Pani                            | 2026-05-11      |
+| Thomas Pani                            | 2026-08-02      |
 
 **Table of Contents**
 
+- [Revisions](#revisions)
 - [Summary (Overview)](#summary)
 - [Context (Problem)](#context)
 - [Options (Alternatives)](#options)
 - [Solution (Decision)](#solution)
 - [Consequences (Retrospection)](#consequences)
 - [References](#references)
+
+## Revisions
+
+**Rev. 2026-08-02.** The backend-neutral seed control discussed below as `smt.randomSeed` was retired in favor of the
+typed `checker.seed` configuration field, see #3404. The original decision text is retained for historical accuracy.
 
 ## Summary
 

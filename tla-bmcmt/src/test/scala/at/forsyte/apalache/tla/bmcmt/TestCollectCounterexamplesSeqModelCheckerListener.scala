@@ -1,5 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
+import at.forsyte.apalache.io.config.SearchKind
 import at.forsyte.apalache.tla.bmcmt.Checker.Error
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStoreImpl
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
@@ -42,7 +43,9 @@ class TestCollectCounterexamplesModelCheckerListener extends AnyFunSuite {
           None,
           CheckerInputVC(List((invEx, notInv))),
       )
-    val params = new ModelCheckerParams(checkerInput, 1, Map()) { nMaxErrors = maxErrors }
+    val params = new ModelCheckerParams(checkerInput, 1, Map(), SearchKind.Check, 0, 1, false) {
+      nMaxErrors = maxErrors
+    }
 
     // create utility objects
     val solver = RecordingSolverContext.create(None, SolverConfig.default)
