@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
 import at.forsyte.apalache.io.OutputManager
-import at.forsyte.apalache.io.config.Constants.{PORT, SERVER, SERVER_TYPE}
+import at.forsyte.apalache.io.config.Constants.{IP, PORT, SERVER, SERVER_TYPE}
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.shai
 import com.github.apalachemc.apalache.jsonrpc.JsonRpcServerApp
@@ -20,6 +20,12 @@ class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in ser
   implicit val serverTypeRead: Read[ServerType] =
     Read.reads[ServerType](s"a server type: ${ServerType.values.mkString(", ")}")(ServerType.fromString)
 
+  var ip: Option[String] = opt[Option[String]](name = IP,
+      description = descriptionWithDefault(
+          "the IP address served by the explorer JSON-RPC server (unsupported by checker)",
+          ApalacheConfigResolver.defaultExplorerIp,
+      ))
+
   var port: Option[Int] = opt[Option[Int]](name = PORT,
       description = descriptionWithDefault(
           "the port served by the RPC server",
@@ -35,7 +41,7 @@ class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in ser
   override def toConfig: ConfigParseResult[ApalacheConfig] =
     mergeConfig(
         super.toConfig,
-        ApalacheConfig(server = ServerPatch(port = port, serverType = serverType)),
+        ApalacheConfig(server = ServerPatch(ip = ip, port = port, serverType = serverType)),
     )
 
   override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
@@ -47,7 +53,8 @@ class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in ser
           val server = shai.v1.RpcServer(options.server.port, outputScope)
           server.main(Array())
         case ServerType.Explorer =>
-          JsonRpcServerApp.run(ConfigParseResult.success(config), options.server.port, outputScope)
+          val ip = options.server.ip.getOrElse(throw new IllegalStateException("Missing resolved explorer IP address"))
+          JsonRpcServerApp.run(ConfigParseResult.success(config), ip, options.server.port, outputScope)
       }
       Right("Server terminated")
     }

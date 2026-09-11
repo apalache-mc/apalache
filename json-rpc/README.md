@@ -29,6 +29,7 @@ exploration of TLA+ specifications.
 ## 1. Design principles
 
 - The server is designed for running on a local machine:
+    - It binds to the IPv4 loopback address (`127.0.0.1`) by default.
     - It does not do any load balancing. If you check plenty of specs in parallel,
       it may run out of memory.
     - It is not meant to face the Internet. An attacker may find a way to crash it.
@@ -118,6 +119,10 @@ first:
 ```sh
 $ ../bin/apalache-mc server --server-type=explorer
 ```
+
+To allow connections from other machines, supply an explicit IP address, for
+example `--ip=0.0.0.0`. This exposes the service on every IPv4 network
+interface, so use it only behind an appropriate firewall.
 
 ### 3.0. Method health
 

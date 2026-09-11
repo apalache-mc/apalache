@@ -121,6 +121,7 @@ object ApalacheConfig {
 
   private def mergeServer(higher: ServerPatch, lower: ServerPatch): ServerPatch =
     ServerPatch(
+        ip = higher.ip.orElse(lower.ip),
         port = higher.port.orElse(lower.port),
         serverType = higher.serverType.orElse(lower.serverType),
     )
