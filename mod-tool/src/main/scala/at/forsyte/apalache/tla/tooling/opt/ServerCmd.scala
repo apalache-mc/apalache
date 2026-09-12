@@ -1,7 +1,7 @@
 package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.infra.ExitCodes.TExitCode
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.Constants.{PORT, SERVER, SERVER_TYPE}
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.shai
@@ -41,7 +41,7 @@ class ServerCmd extends ApalacheCommand(name = SERVER, description = "Run in ser
   override def run(config: ApalacheConfig): Either[(TExitCode, String), String] = {
     runWithOptions(ApalacheConfigResolver.resolveServer(config)) { options =>
       logger.info(s"Starting ${options.server.serverType} server on port ${options.server.port}...")
-      val outputScope = OutputManager.captureScope()
+      val outputScope = OutputWorkspace.captureScope()
       options.server.serverType match {
         case ServerType.Checker =>
           val server = shai.v1.RpcServer(options.server.port, outputScope)

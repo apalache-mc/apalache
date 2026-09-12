@@ -17,7 +17,6 @@ import java.nio.file.Path
  * @author
  *   Igor Konnov
  */
-// TODO Configure to take OutputManager as parameter?
 class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
     val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]

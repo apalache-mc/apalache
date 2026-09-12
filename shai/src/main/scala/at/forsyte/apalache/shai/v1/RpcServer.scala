@@ -1,6 +1,6 @@
 package at.forsyte.apalache.shai.v1
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import zio.{console, ExitCode, Ref, ZEnv, ZIO}
 
 import java.util.UUID
@@ -17,8 +17,8 @@ import java.net.BindException
  *
  * We extend LazyLogging to give the server process access to the same logger configured for the rest of Apalache.
  */
-class RpcServer(override val port: Int, outputScope: OutputManager.Scope) extends ServerMain with LazyLogging {
-  def this(port: Int) = this(port, OutputManager.withScope(OutputManager.captureScope()))
+class RpcServer(override val port: Int, outputScope: OutputWorkspace.Scope) extends ServerMain with LazyLogging {
+  def this(port: Int) = this(port, OutputWorkspace.withScope(OutputWorkspace.captureScope()))
 
   override def welcome: ZIO[ZEnv, Throwable, Unit] =
     console.putStrLn(s"The Apalache server is running on port ${port}. Press Ctrl-C to stop.")
@@ -66,5 +66,5 @@ object RpcServer {
 
   def apply(port: Int = DEFAULT_PORT): RpcServer = new RpcServer(port)
 
-  def apply(port: Int, outputScope: OutputManager.Scope): RpcServer = new RpcServer(port, outputScope)
+  def apply(port: Int, outputScope: OutputWorkspace.Scope): RpcServer = new RpcServer(port, outputScope)
 }

@@ -6,7 +6,7 @@ import at.forsyte.apalache.infra._
 import at.forsyte.apalache.infra.log.LogbackConfigurator
 import at.forsyte.apalache.io.config._
 import at.forsyte.apalache.io.config.Constants.{CONFIG, ENABLE_STATS}
-import at.forsyte.apalache.io.{ConfigurationError, OutputManager, ReportGenerator}
+import at.forsyte.apalache.io.{ConfigurationError, OutputWorkspace, ReportGenerator}
 import at.forsyte.apalache.tla.tooling.opt._
 import com.typesafe.scalalogging.LazyLogging
 import org.backuity.clist.Cli
@@ -54,22 +54,22 @@ object Tool extends LazyLogging {
       if (result.isSuccess) Try(result.requireValue())
       else Failure(new ConfigurationError(result.errors.mkString("; ")))
     }
-    _ <- Try(OutputManager.configure(initialization))
+    _ <- Try(OutputWorkspace.configure(initialization))
   } yield {
-    println(s"Output directory: ${OutputManager.runDir.normalize()}")
-    OutputManager.withWriterInRunDir(OutputManager.RunFile)(
+    println(s"Output directory: ${OutputWorkspace.runDir.normalize()}")
+    OutputWorkspace.withWriterInRunDir(OutputWorkspace.RunFile)(
         _.println(s"${cmd.env} ${cmd.label} ${cmd.invocation}")
     )
 
     // Write the application configuration, if debug is enabled
     if (initialization.common.debug) {
-      OutputManager.withWriterInRunDir("application-config.json") { writer =>
+      OutputWorkspace.withWriterInRunDir("application-config.json") { writer =>
         writer.print(ApalacheConfigJsonParser.write(cfg.mergeWithDefaults, usePrettyPrinter = true))
       }
     }
 
     // force our programmatic logback configuration, as the autoconfiguration works unpredictably
-    new LogbackConfigurator(Some(OutputManager.runDir), OutputManager.additionalRunDir).configureDefaultContext()
+    new LogbackConfigurator(Some(OutputWorkspace.runDir), OutputWorkspace.additionalRunDir).configureDefaultContext()
     // TODO: update workers when the multicore branch is integrated
     logger.info(s"# APALACHE version: ${BuildInfo.version} | build: ${BuildInfo.build}")
 
@@ -97,7 +97,7 @@ object Tool extends LazyLogging {
    * @return
    *   the exit code; as usual, 0 means success.
    */
-  def run(args: Array[String]): Int = OutputManager.withScope {
+  def run(args: Array[String]): Int = OutputWorkspace.withScope {
     runInScope(args)
   }
 

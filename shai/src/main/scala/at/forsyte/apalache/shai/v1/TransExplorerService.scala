@@ -13,7 +13,7 @@ package at.forsyte.apalache.shai.v1
  */
 
 import at.forsyte.apalache.infra.passes.PassChainExecutor
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config.{ApalacheConfig, ApalacheConfigResolver, CommonPatch, RunContextPatch}
@@ -83,10 +83,10 @@ private case class Conn(
  * @param logger
  *   The logger used by the service
  */
-class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger, outputScope: OutputManager.Scope)
+class TransExplorerService(connections: Ref[Map[UUID, Conn]], logger: Logger, outputScope: OutputWorkspace.Scope)
     extends ZioTransExplorer.ZTransExplorer[ZEnv, Any] {
   def this(connections: Ref[Map[UUID, Conn]], logger: Logger) =
-    this(connections, logger, OutputManager.withScope(OutputManager.captureScope()))
+    this(connections, logger, OutputWorkspace.withScope(OutputWorkspace.captureScope()))
 
   /** Concurrent tasks performed by the service that produce values of type `T` */
   type Result[T] = ZIO[ZEnv, Status, T]
