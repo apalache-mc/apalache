@@ -2,9 +2,11 @@ package at.forsyte.apalache.tla.bmcmt.rules
 
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.rewriter.ConstSimplifierForSmt
-import at.forsyte.apalache.tla.bmcmt.types.{CellTFrom, FinFunSetT, InfSetT, PowSetT}
-import at.forsyte.apalache.tla.lir.oper.TlaSetOper
+import at.forsyte.apalache.tla.bmcmt.rules.support.SetEmptiness
+import at.forsyte.apalache.tla.bmcmt.rules.support.SetEmptiness.StaticallyEmpty
+import at.forsyte.apalache.tla.bmcmt.types.FinFunSetT
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.oper.TlaSetOper
 import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 
 /**
@@ -16,36 +18,6 @@ import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
  */
 class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
   private val simplifier = new ConstSimplifierForSmt
-
-  /**
-   * Set emptiness classification.
-   */
-  sealed private trait SetEmptiness {
-
-    /**
-     * The set is empty when the predicate holds true.
-     */
-    def predicate: BuilderT
-  }
-
-  /**
-   * A set is empty at translation time.
-   */
-  private case object StaticallyEmpty extends SetEmptiness {
-    override val predicate: BuilderT = tla.bool(true)
-  }
-
-  /**
-   * A set is non-empty at translation time.
-   */
-  private case object StaticallyNonEmpty extends SetEmptiness {
-    override val predicate: BuilderT = tla.bool(false)
-  }
-
-  /**
-   * A set may be empty when the predicate evaluates to true (in SMT).
-   */
-  private case class SymbolicallyEmptyWhen(predicate: BuilderT) extends SetEmptiness
 
   override def isApplicable(symbState: SymbState): Boolean = {
     symbState.ex match {
@@ -70,7 +42,7 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
                 funSetEx.ID)
         }
 
-        (setEmptiness(nextState, dom), setEmptiness(nextState, cdm)) match {
+        (SetEmptiness(nextState, dom), SetEmptiness(nextState, cdm)) match {
           // There is exactly one function over the empty domain, independently of the co-domain.
           case (StaticallyEmpty, _) =>
             makeSingletonWhen(nextState, funT, tla.bool(true))
@@ -81,7 +53,8 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
           // the default case: rewrite to a special cell without expanding the set of functions
           case _ =>
-            val arena = nextState.arena.appendCellOld(FinFunSetT(dom.cellType, cdm.cellType))
+            // This is an unexpanded set, not an empty array. LazyEquality constrains its equality semantics.
+            val arena = nextState.arena.appendCellOld(FinFunSetT(dom.cellType, cdm.cellType), isUnconstrained = true)
             val newCell = arena.topCell
             val newArena = arena
               .setDom(newCell, dom)
@@ -91,65 +64,6 @@ class FunSetCtorRule(rewriter: SymbStateRewriter) extends RewritingRule {
 
       case _ =>
         throw new RewriterException("%s is not applicable".format(getClass.getSimpleName), state.ex)
-    }
-  }
-
-  /**
-   * Classify set emptiness from its rewritten arena representation. In particular, an ordinary finite set is empty when
-   * all of its potential membership pointers are false. The symbolic predicate is retained when emptiness depends on
-   * the current model.
-   */
-  private def setEmptiness(state: SymbState, set: ArenaCell): SetEmptiness = {
-    def simplify(ex: BuilderT): BuilderT = simplifier.applySimplifyShallowToBuilderEx(ex)
-
-    set.cellType match {
-      case CellTFrom(SetT1(_)) =>
-        val pointersAndPredicates = state.arena.getHasPtr(set).map(ptr => ptr -> simplify(ptr.toSmt))
-        if (pointersAndPredicates.exists { case (_, pred) => simplifier.isTrueConst(pred) }) {
-          StaticallyNonEmpty
-        } else {
-          // remove the elements that are known to be non-members statically
-          val potentialMembers =
-            pointersAndPredicates.filterNot { case (_, pred) => simplifier.isFalseConst(pred) }.map(_._1.elem)
-          if (potentialMembers.isEmpty) {
-            StaticallyEmpty
-          } else {
-            // Pointer conditions are arena metadata and, in the Arrays encoding, may contain store expressions.
-            // Use actual set membership for the semantic emptiness predicate.
-            val noMember = potentialMembers.map(elem => tla.not(tla.selectInSet(elem.toBuilder, set.toBuilder)))
-            SymbolicallyEmptyWhen(simplify(tla.and(noMember: _*)))
-          }
-        }
-
-      // Every powerset contains the empty set. The built-in infinite sets are non-empty too.
-      case PowSetT(_) | InfSetT(_) =>
-        StaticallyNonEmpty
-
-      // [S -> T] is empty exactly when S is non-empty and T is empty.
-      case FinFunSetT(_, _) =>
-        val domEmptiness = setEmptiness(state, state.arena.getDom(set))
-        val cdmEmptiness = setEmptiness(state, state.arena.getCdm(set))
-        isFunSetEmpty(domEmptiness, cdmEmptiness)
-
-      case unexpected =>
-        throw new RewriterException(s"Expected a set cell, found: $unexpected", state.ex)
-    }
-  }
-
-  private def isFunSetEmpty(dom: SetEmptiness, cdm: SetEmptiness): SetEmptiness = {
-    def simplify(ex: BuilderT): BuilderT = simplifier.applySimplifyShallowToBuilderEx(ex)
-
-    (dom, cdm) match {
-      case (StaticallyEmpty, _) | (_, StaticallyNonEmpty) =>
-        StaticallyNonEmpty
-      case (StaticallyNonEmpty, StaticallyEmpty) =>
-        StaticallyEmpty
-      case (StaticallyNonEmpty, SymbolicallyEmptyWhen(cdmPred)) =>
-        SymbolicallyEmptyWhen(cdmPred)
-      case (SymbolicallyEmptyWhen(domPred), StaticallyEmpty) =>
-        SymbolicallyEmptyWhen(simplify(tla.not(domPred)))
-      case (SymbolicallyEmptyWhen(domPred), SymbolicallyEmptyWhen(cdmPred)) =>
-        SymbolicallyEmptyWhen(simplify(tla.and(tla.not(domPred), cdmPred)))
     }
   }
 
