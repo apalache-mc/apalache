@@ -221,12 +221,7 @@ class Cvc5SolverContext(val config: SolverConfig) extends SolverContext with Laz
 
   private def initLogs(): Iterable[PrintWriter] = {
     val filePart = s"log$id.smt"
-    val writers =
-      if (OutputManager.isBound) {
-        (OutputManager.runDirPathOpt ++ OutputManager.customRunDirPathOpt).map(OutputManager.printWriter(_, filePart))
-      } else {
-        Iterable.empty
-      }
+    val writers = OutputManager.openLongLivedWritersInRunDirs(filePart)
 
     if (!config.debug) {
       writers.foreach { writer =>

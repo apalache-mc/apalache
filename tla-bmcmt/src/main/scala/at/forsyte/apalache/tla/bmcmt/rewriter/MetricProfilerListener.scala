@@ -66,7 +66,7 @@ class MetricProfilerListener(sourceStore: SourceStore, changeListener: ChangeLis
 
     logger
       .info("%d profile entries to be found in %s".format(sortedEntries.size,
-              OutputManager.runDir.resolve(profileFileName)))
+              OutputManager.pathInRunDir(profileFileName)))
   }
 
   private def stringOfEntry(entry: (UID, SolverContextMetrics)): String = {

@@ -167,7 +167,7 @@ object CounterexampleWriter extends LazyLogging {
 
     fileNames.flatMap { case (kind, name) =>
       if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
-        Some(OutputManager.runDir.resolve(name).normalize.toString)
+        Some(OutputManager.pathInRunDir(name).normalize.toString)
       } else {
         None
       }
