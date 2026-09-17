@@ -297,10 +297,9 @@ class PrettyWriter(
                 "\\in" <> nest(line <> exToDoc(TlaSetOper.in.precedence, p._2, nameResolver)))) ///
 
         val binders = ssep(boxes.toList, comma <> line)
-        val bodyDoc = body match {
-          case OperEx(TlaSetOper.in, _, _) => parens(exToDoc((0, 0), body, nameResolver))
-          case _                           => exToDoc((0, 0), body, nameResolver)
-        }
+        // A bare membership body is parsed as the binding of a set filter. Always delimit the body rather than
+        // inspecting its IR shape: transparent wrappers such as singleton conjunctions may print only their argument.
+        val bodyDoc = parens(exToDoc((0, 0), body, nameResolver))
         group(braces(nest(line <> bodyDoc <> text(":") <> nest(line <> binders)) <> line))
 
       case OperEx(TlaSetOper.filter, name, set, pred) =>
