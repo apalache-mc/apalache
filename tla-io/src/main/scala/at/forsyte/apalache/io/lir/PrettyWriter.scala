@@ -297,10 +297,8 @@ class PrettyWriter(
                 "\\in" <> nest(line <> exToDoc(TlaSetOper.in.precedence, p._2, nameResolver)))) ///
 
         val binders = ssep(boxes.toList, comma <> line)
-        val bodyDoc = body match {
-          case OperEx(TlaSetOper.in, _, _) => parens(exToDoc((0, 0), body, nameResolver))
-          case _                           => exToDoc((0, 0), body, nameResolver)
-        }
+        // Always put in parenthesis. Otherwise, SANY may be confused about { x \in S: x \in T }.
+        val bodyDoc = parens(exToDoc((0, 0), body, nameResolver))
         group(braces(nest(line <> bodyDoc <> text(":") <> nest(line <> binders)) <> line))
 
       case OperEx(TlaSetOper.filter, name, set, pred) =>

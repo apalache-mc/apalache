@@ -1,0 +1,1 @@
+Fix PrettyWriter to always parenthesize set-map bodies: { (e) : x \in S }. See [model-checker-hardening apalache-printer-010](https://github.com/tlaplus/model-checker-hardening/blob/main/findings/apalache-printer/apalache-printer-010.md).
