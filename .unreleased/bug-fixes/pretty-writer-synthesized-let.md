@@ -1,0 +1,2 @@
+Fixed PrettyWriter changing expression scope when hoisting lambda argument declarations into LET-IN expressions,
+see [model-checker-hardening#88](https://github.com/tlaplus/model-checker-hardening/issues/88).
