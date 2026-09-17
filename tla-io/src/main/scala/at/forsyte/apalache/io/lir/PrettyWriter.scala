@@ -297,8 +297,7 @@ class PrettyWriter(
                 "\\in" <> nest(line <> exToDoc(TlaSetOper.in.precedence, p._2, nameResolver)))) ///
 
         val binders = ssep(boxes.toList, comma <> line)
-        // A bare membership body is parsed as the binding of a set filter. Always delimit the body rather than
-        // inspecting its IR shape: transparent wrappers such as singleton conjunctions may print only their argument.
+        // Always put in parenthesis. Otherwise, SANY may be confused about { x \in S: x \in T }.
         val bodyDoc = parens(exToDoc((0, 0), body, nameResolver))
         group(braces(nest(line <> bodyDoc <> text(":") <> nest(line <> binders)) <> line))
 
