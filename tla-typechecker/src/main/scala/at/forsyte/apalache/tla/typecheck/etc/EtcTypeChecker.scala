@@ -239,6 +239,17 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         // If it is successful, use the partial solution to refine the types in the type context.
         val approxSolution = solver.solvePartially().getOrElse(throw new UnwindException)
 
+        // Variables not yet quantified in the enclosing context are shared while checking this definition. An
+        // enclosing definition may quantify them later. Variables already quantified by earlier definitions are
+        // instantiated on use, so they are not shared with this solver.
+        val sharedVars = ctx.types.iterator
+          .filter(_._1 != name)
+          .flatMap { case (_, scheme) =>
+            (scheme.principalType.usedNames -- scheme.quantifiedVars)
+              .flatMap(v => approxSolution.subRec(VarT1(v)).usedNames)
+          }
+          .toSet
+
         // introduce a new instance of the constraint solver for the operator definition
         val letInSolver = new ConstraintSolver(varPool)
         val operScheme =
@@ -299,18 +310,33 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
 
         letInSolver.addConstraint(defClause)
 
-        val principalDefType =
+        val localSolution =
           letInSolver.solve() match {
             case None =>
               onTypeError(ex.sourceRef, s"Error when computing the type of $name")
               throw new UnwindException
 
             case Some(sub) =>
-              sub.subRec(defType)
+              sub
           }
 
-        // Find free variables of the principal type, to use them as quantified variables
-        val freeVars = principalDefType.usedNames.filter(solver.isFreeVar)
+        // Propagate refinements of shared variables to the enclosing solver. Variables introduced only for this
+        // definition stay local and may be quantified when its type is generalized.
+        sharedVars.toSeq.sorted.foreach { v =>
+          val refinedType = localSolution.subRec(VarT1(v))
+          if (refinedType != VarT1(v)) {
+            val clause = EqClause(VarT1(v), refinedType)
+              .setOnTypeError((_, _) =>
+                onTypeError(defEx.sourceRef, s"Type constraints in $name conflict with the enclosing context"))
+            solver.addConstraint(clause)
+          }
+        }
+        val enclosingSolution = solver.solvePartially().getOrElse(throw new UnwindException)
+        val principalDefType = enclosingSolution.subRec(localSolution.subRec(defType))
+
+        // Quantify only variables that remain free and do not belong to the refined enclosing context.
+        val contextVars = sharedVars.flatMap(v => enclosingSolution.subRec(VarT1(v)).usedNames)
+        val freeVars = principalDefType.usedNames.filter(solver.isFreeVar) -- contextVars
         if (!inferPolytypes && freeVars.nonEmpty) {
           // the user has disabled let-polymorphism
           onTypeError(ex.sourceRef,

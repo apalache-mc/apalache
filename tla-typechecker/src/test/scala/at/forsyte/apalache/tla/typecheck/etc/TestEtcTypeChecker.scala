@@ -11,6 +11,8 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.easymock.EasyMockSugar
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.mutable
+
 @RunWith(classOf[JUnitRunner])
 class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAfterEach with EtcBuilder {
   private val parser: Type1Parser = DefaultType1Parser
@@ -34,6 +36,112 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     listener
       .onTypeError(wrapper.sourceRef.asInstanceOf[ExactRef], "Error when computing the type of wrapper")
       .anyTimes()
+  }
+
+  private class CollectingListener extends DefaultTypeCheckerListener {
+    val types: mutable.Map[UID, TlaType1] = mutable.Map.empty
+    val errors: mutable.ListBuffer[String] = mutable.ListBuffer.empty
+
+    override def onTypeFound(sourceRef: ExactRef, monotype: TlaType1): Unit = {
+      types(sourceRef.tlaId) = monotype
+    }
+
+    override def onTypeError(sourceRef: EtcRef, message: String): Unit = {
+      errors += message
+    }
+  }
+
+  private def operatorWithParameter(body: EtcExpr, scopedEx: EtcExpr): (EtcLet, EtcAbs) = {
+    val n = mkUniqName("n")
+    val fBody = mkUniqAbs(body, (n, mkUniqConst(parser("Set(a)"))))
+    (mkUniqLet("F", fBody, scopedEx), fBody)
+  }
+
+  private def integerLocalDefinition: EtcExpr = {
+    val plus = mkUniqApp(Seq(parser("(Int, Int) => Int")), mkUniqName("n"), mkUniqConst(IntT1))
+    mkUniqLet("k", mkUniqAbs(plus), mkUniqAppByName(mkUniqName("k")))
+  }
+
+  test("a local definition constrains an enclosing parameter") {
+    val (letF, fBody) = operatorWithParameter(integerLocalDefinition, mkUniqConst(BoolT1))
+    for (inferPoly <- Seq(true, false)) {
+      val listener = new CollectingListener
+      val typeChecker = new EtcTypeChecker(new TypeVarPool(start = 1000), inferPolytypes = inferPoly)
+      assert(typeChecker.compute(listener, TypeContext.empty, letF).contains(BoolT1))
+      assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
+      assert(listener.errors.isEmpty)
+    }
+  }
+
+  test("a local definition rejects an incompatible argument to the enclosing operator") {
+    val call = mkUniqAppByName(mkUniqName("F"), mkUniqConst(SetT1(BoolT1)))
+    val (letF, fBody) = operatorWithParameter(integerLocalDefinition, call)
+    val listener = new CollectingListener
+    assert(checker.compute(listener, TypeContext.empty, letF).isEmpty)
+    assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
+    assert(listener.errors.exists(_.contains("Set(Bool)")), listener.errors.mkString("\n"))
+  }
+
+  test("a conditional inside a local definition constrains an enclosing parameter") {
+    val lessThanZero = mkUniqApp(Seq(parser("(Int, Int) => Bool")), mkUniqName("n"), mkUniqConst(IntT1))
+    val negativeN = mkUniqApp(Seq(parser("Int => Int")), mkUniqName("n"))
+    val conditional = mkUniqApp(Seq(parser("(Bool, Int, Int) => Int")), lessThanZero, negativeN, mkUniqName("n"))
+    val local = mkUniqLet("a", mkUniqAbs(conditional), mkUniqAppByName(mkUniqName("a")))
+    val (letF, fBody) = operatorWithParameter(local, mkUniqConst(BoolT1))
+    val listener = new CollectingListener
+    assert(checker.compute(listener, TypeContext.empty, letF).contains(BoolT1))
+    assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
+    assert(listener.errors.isEmpty)
+  }
+
+  test("constraints cross multiple local definition boundaries") {
+    val plus = mkUniqApp(Seq(parser("(Int, Int) => Int")), mkUniqName("n"), mkUniqConst(IntT1))
+    val inner = mkUniqLet("j", mkUniqAbs(plus), mkUniqAppByName(mkUniqName("j")))
+    val outer = mkUniqLet("k", mkUniqAbs(inner), mkUniqAppByName(mkUniqName("k")))
+    val (letF, fBody) = operatorWithParameter(outer, mkUniqConst(BoolT1))
+    val listener = new CollectingListener
+    assert(checker.compute(listener, TypeContext.empty, letF).contains(BoolT1))
+    assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
+    assert(listener.errors.isEmpty)
+  }
+
+  test("a local operator constrains a parameter of the enclosing operator") {
+    val plus = mkUniqApp(Seq(parser("(Int, Int) => Int")), mkUniqName("y"), mkUniqName("n"))
+    val gBody = mkUniqAbs(plus, (mkUniqName("y"), mkUniqConst(parser("Set(b)"))))
+    val local = mkUniqLet("G", gBody, mkUniqAppByName(mkUniqName("G"), mkUniqConst(IntT1)))
+    val (letF, fBody) = operatorWithParameter(local, mkUniqConst(BoolT1))
+    val listener = new CollectingListener
+    assert(checker.compute(listener, TypeContext.empty, letF).contains(BoolT1))
+    assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
+    assert(listener.errors.isEmpty)
+  }
+
+  test("a type variable exposed through an enclosing parameter is not generalized locally") {
+    val setUnion = parser("(Set(c), Set(c)) => Set(c)")
+    val kDefinition = mkUniqApp(Seq(setUnion), mkUniqName("n"), mkUniqConst(parser("Set(b)")))
+    val kUse = mkUniqAppByName(mkUniqName("K"))
+    val body = mkUniqApp(Seq(setUnion), kUse, mkUniqConst(SetT1(IntT1)))
+    val local = mkUniqLet("K", mkUniqAbs(kDefinition), body)
+    val (letF, fBody) = operatorWithParameter(local, mkUniqConst(BoolT1))
+    val listener = new CollectingListener
+    assert(checker.compute(listener, TypeContext.empty, letF).contains(BoolT1))
+    assert(listener.types(fBody.sourceRef.tlaId) == parser("Set(Int) => Set(Int)"))
+    assert(listener.errors.isEmpty)
+  }
+
+  test("an independent local definition remains polymorphic") {
+    val id = mkUniqAbs(mkUniqName("x"), (mkUniqName("x"), mkUniqConst(parser("Set(b)"))))
+    val intUse = mkUniqApp(Seq(parser("(Int, Int) => Bool")), mkUniqAppByName(mkUniqName("Id"), mkUniqConst(IntT1)),
+        mkUniqConst(IntT1))
+    val boolUse = mkUniqApp(Seq(parser("(Bool, Bool) => Bool")), mkUniqAppByName(mkUniqName("Id"), mkUniqConst(BoolT1)),
+        mkUniqConst(BoolT1))
+    val both = mkUniqApp(Seq(parser("(Bool, Bool) => Bool")), intUse, boolUse)
+    val local = mkUniqLet("Id", id, both)
+    val (letF, fBody) = operatorWithParameter(local, mkUniqConst(BoolT1))
+    val listener = new CollectingListener
+    assert(checker.compute(listener, TypeContext.empty, letF).contains(BoolT1))
+    assert(listener.types(fBody.sourceRef.tlaId) == parser("a => Bool"))
+    assert(listener.errors.isEmpty)
   }
 
   test("check monotypes") {

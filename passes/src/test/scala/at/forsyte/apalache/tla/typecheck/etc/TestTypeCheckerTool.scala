@@ -8,7 +8,7 @@ import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
 import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
-import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.typecheck.{DefaultTypeCheckerListener, TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import com.typesafe.scalalogging.LazyLogging
 import org.easymock.EasyMock
@@ -18,6 +18,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.easymock.EasyMockSugar
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.mutable
 import scala.io.Source
 
 /**
@@ -125,6 +126,34 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   test("the tool consumes its output on TlcSpec1") {
     typecheckSpec("TlcSpec1")
+  }
+
+  test("local definitions constrain the types of enclosing operators") {
+    val (rootName, modules) = sanyImporter.loadFromSource(loadSpecFromResource("LetPolyRegression"))
+    val module = modules(rootName)
+    val expectedType = parser("Int => Int")
+
+    for (inferPoly <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly, useRows = false)
+      val tagged = typechecker.checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
+          uid => throw new TypingException("No type for UID: " + uid, uid), module)
+      assert(tagged.isDefined)
+      val operators = tagged.get.operDeclarations.map(d => d.name -> d).toMap
+      for (name <- Seq("Direct", "ViaLet", "ViaLetIf", "ViaLocal", "ViaNested")) {
+        assert(operators(name).typeTag == Typed(expectedType), name)
+      }
+    }
+  }
+
+  test("a bad call to an operator constrained through LET is a type error") {
+    val (rootName, modules) = sanyImporter.loadFromSource(loadSpecFromResource("LetPolyBadCall"))
+    val errors = mutable.ListBuffer.empty[String]
+    val listener = new DefaultTypeCheckerListener() {
+      override def onTypeError(sourceRef: EtcRef, message: String): Unit = errors += message
+    }
+    val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows = false)
+    assert(!typechecker.check(listener, modules(rootName)))
+    assert(errors.exists(_.contains("Set(Bool)")), errors.mkString("\n"))
   }
 
   private def typecheckSpecAndEncoding(specName: String): Unit = {
