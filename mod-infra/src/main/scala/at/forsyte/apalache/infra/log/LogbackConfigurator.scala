@@ -30,8 +30,8 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
 
   /**
    * Get the logback logger context, waiting for SLF4J's one-time provider initialization if needed. While another
-   * thread is running the initialization, `LoggerFactory.getILoggerFactory` returns a `SubstituteLoggerFactory`
-   * instead of the logback context.
+   * thread is running the initialization, `LoggerFactory.getILoggerFactory` returns a `SubstituteLoggerFactory` instead
+   * of the logback context.
    *
    * Note that SLF4J offers no API to await the initialization, so we have to poll. This is a long-standing unsolved
    * issue upstream: https://jira.qos.ch/browse/SLF4J-167
@@ -39,8 +39,8 @@ class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) exte
   @scala.annotation.tailrec
   private def awaitLoggerContext(deadlineNanos: Long): LoggerContext =
     LoggerFactory.getILoggerFactory match {
-      case context: LoggerContext => context
-      case other if System.nanoTime() < deadlineNanos =>
+      case context: LoggerContext                 => context
+      case _ if System.nanoTime() < deadlineNanos =>
         Thread.sleep(10)
         awaitLoggerContext(deadlineNanos)
       case other =>
