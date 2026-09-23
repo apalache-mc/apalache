@@ -309,9 +309,10 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           .setOnTypeError(onError)
 
         letInSolver.addConstraint(defClause)
+        letInSolver.addTypeReport(defType)(onTypeFound(defEx.sourceRef, _))
 
         val localSolution =
-          letInSolver.solve() match {
+          letInSolver.solve(reportTypes = false) match {
             case None =>
               onTypeError(ex.sourceRef, s"Error when computing the type of $name")
               throw new UnwindException
@@ -363,8 +364,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           }
         }
 
-        // report the type of the definition
-        onTypeFound(defEx.sourceRef, principalDefType)
+        // The signature and body may still depend on enclosing variables. Do not publish provisional types:
+        // later definitions or the IN expression can refine those variables, even with polymorphism disabled.
+        letInSolver.reportTypesTo(solver, sharedVars)
 
         // compute the type of the expression under the definition
         val underCtx = new TypeContext(ctx.types + (name -> TlaType1Scheme(principalDefType, freeVars)))

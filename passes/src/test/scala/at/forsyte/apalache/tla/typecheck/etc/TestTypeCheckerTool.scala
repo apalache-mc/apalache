@@ -7,7 +7,7 @@ import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
+import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.typecheck.{DefaultTypeCheckerListener, TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import com.typesafe.scalalogging.LazyLogging
@@ -154,6 +154,65 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
     val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows = false)
     assert(!typechecker.check(listener, modules(rootName)))
     assert(errors.exists(_.contains("Set(Bool)")), errors.mkString("\n"))
+  }
+
+  test("shared LET types are final on every callback, including after JSON round-tripping") {
+    val (rootName, modules) = sanyImporter.loadFromSource(loadSpecFromResource("LetSharedTypes"))
+    val listener = new DefaultTypeCheckerListener() {
+      override def onTypeFound(sourceRef: ExactRef, tp: TlaType1): Unit = {
+        // Check every notification, not just the last type recorded for each UID. Like the production listener
+        // with --infer-poly=false, this must reject provisional polymorphic types immediately.
+        assert(tp.isMono, s"Provisional type $tp at $sourceRef")
+      }
+      override def onTypeError(sourceRef: EtcRef, message: String): Unit = fail(message)
+    }
+    val enc = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer)
+    val dec = new UJsonToTla(sourceStoreOpt = None)(DefaultTagJsonReader)
+    for (inferPoly <- Seq(true, false); useRows <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly, useRows)
+      val tagged = typechecker
+        .checkAndTag(new IdleTracker(), listener, uid => throw new TypingException("No type for UID: " + uid, uid),
+            modules(rootName))
+        .get
+      val operators = tagged.operDeclarations.map(d => d.name -> d).toMap
+      for (name <- Seq("F", "Reversed", "ViaBody")) {
+        assert(operators(name).typeTag == Typed(parser("Int => Bool")))
+      }
+      for (name <- Seq("Nested", "ViaRecord")) {
+        assert(operators(name).typeTag == Typed(parser("Int => Int")))
+      }
+      assert(operators("Alias").typeTag == Typed(parser("(Int, Int) => Int")))
+      assert(operators("ViaSet").typeTag == Typed(parser("Set(Int) => Set(Int)")))
+      assert(typechecker.check(listener, dec.asTlaModule(enc(tagged))))
+    }
+  }
+
+  test("a local operator can share a captured type while generalizing its own parameter") {
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE MixedLet ----
+        |EXTENDS Integers
+        |F(n) == LET K(y) == [captured |-> n, value |-> y]
+        |            c == n + 1
+        |        IN K(TRUE).value /\ K(1).value = 1 /\ c > 0
+        |====
+        |""".stripMargin))
+    for (useRows <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows)
+      val tagged = typechecker
+        .checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
+            uid => throw new TypingException("No type for UID: " + uid, uid), modules(rootName))
+        .get
+      val f = tagged.operDeclarations.find(_.name == "F").get
+      assert(f.typeTag == Typed(parser("Int => Bool")))
+      val k = f.body.asInstanceOf[LetInEx].decls.find(_.name == "K").get
+      val signature = TlaType1.fromTypeTag(k.typeTag)
+      assert(signature.usedNames.size == 1)
+      val a = VarT1(signature.usedNames.head)
+      val fields = Seq("captured" -> IntT1, "value" -> a)
+      val result = if (useRows) RecRowT1(RowT1(fields: _*)) else RecT1(fields: _*)
+      assert(signature == OperT1(Seq(a), result))
+      assert(k.body.typeTag == Typed(result))
+    }
   }
 
   private def typecheckSpecAndEncoding(specName: String): Unit = {

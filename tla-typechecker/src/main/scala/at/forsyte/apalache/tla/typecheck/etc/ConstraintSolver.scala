@@ -1,6 +1,7 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.TlaType1
+import at.forsyte.apalache.tla.lir.{TlaType1, VarT1}
+import at.forsyte.apalache.tla.typecheck.etc.ConstraintSolver.TypeReport
 import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
 
 /**
@@ -12,10 +13,33 @@ import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVa
 class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution = Substitution.empty) {
   private var solution: Substitution = approximateSolution
   private var constraints: List[Clause] = List.empty
-  private var typesToReport: List[(Clause, TlaType1)] = List.empty
+  private var typesToReport: List[TypeReport] = List.empty
 
   def addConstraint(constraint: Clause): Unit = {
     constraints = constraints :+ constraint
+  }
+
+  // Reporting must not add equations: that would affect isFreeVar and hence generalization.
+  /** Add a success callback that can be deferred and refined across LET scopes. */
+  private[etc] def addTypeReport(tt: TlaType1)(notify: TlaType1 => Unit): Unit = {
+    typesToReport :+= TypeReport(tt, notify)
+  }
+
+  /** After a successful local solve, pass reports that still depend on the enclosing context to its solver. */
+  private[etc] def reportTypesTo(parent: ConstraintSolver, sharedVars: Set[Int]): Unit = {
+    val sharedNames = sharedVars.flatMap(v => solution.subRec(VarT1(v)).usedNames)
+    for (report <- typesToReport) {
+      val resolved = report.resolve(solution)
+      // Preserve variables that an enclosing solver may still refine, including variables newly exposed by
+      // local solutions. Everything else belongs to this definition and must survive further specialization.
+      val refinable = resolved.tt.usedNames & sharedNames
+      if (refinable.isEmpty) {
+        resolved.emit(resolved.tt)
+      } else {
+        parent.typesToReport :+= resolved.copy(frozenVars = resolved.frozenVars ++ (resolved.tt.usedNames -- refinable))
+      }
+    }
+    typesToReport = List.empty
   }
 
   def solvePartially(): Option[Substitution] = {
@@ -29,7 +53,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
           case Some((uniqueSolution, typ)) =>
             progress = true
             solution = uniqueSolution
-            typesToReport :+= (cons, solution.subRec(typ))
+            addTypeReport(solution.subRec(typ))(cons.onTypeFound)
           case None =>
             cons match {
               case OrClause(_ @_*) =>
@@ -43,6 +67,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
                 cons.onTypeError(solution, Seq(solution.subRec(term)))
                 // reset the constraints, so they are not reported later
                 constraints = List.empty
+                typesToReport = List.empty
                 return None
             }
         }
@@ -56,13 +81,17 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     Some(solution)
   }
 
-  def solve(): Option[Substitution] = {
+  // LET definitions defer success callbacks until reportTypesTo can determine which types are final.
+  def solve(reportTypes: Boolean = true): Option[Substitution] = {
     val isDefined = solvePartially().isDefined
 
     if (isDefined && constraints.isEmpty) {
-      // all constraints have been solved, report the types
-      for ((c, t) <- typesToReport) {
-        c.onTypeFound(solution.subRec(t))
+      if (reportTypes) {
+        for (report <- typesToReport) {
+          val resolved = report.resolve(solution)
+          resolved.emit(resolved.tt)
+        }
+        typesToReport = List.empty
       }
 
       Some(solution)
@@ -75,6 +104,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
         case c @ EqClause(_, term) =>
           c.onTypeError(solution, Seq(solution.subRec(term)))
       }
+      typesToReport = List.empty
       None
     }
   }
@@ -107,6 +137,20 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
           case Seq(uniqueSolution) => Some(uniqueSolution)
           case _                   => None
         }
+    }
+  }
+}
+
+object ConstraintSolver {
+  // A report may outlive the solver of its definition. Only its still-shared variables can then be refined.
+  private case class TypeReport(tt: TlaType1, emit: TlaType1 => Unit, frozenVars: Set[Int] = Set.empty) {
+    def resolve(sub: Substitution): TypeReport = {
+      if (frozenVars.isEmpty) {
+        copy(tt = sub.subRec(tt))
+      } else {
+        val scoped = Substitution((tt.usedNames -- frozenVars).map(v => EqClass(v) -> sub.subRec(VarT1(v))).toMap)
+        copy(tt = scoped.subRec(tt))
+      }
     }
   }
 }

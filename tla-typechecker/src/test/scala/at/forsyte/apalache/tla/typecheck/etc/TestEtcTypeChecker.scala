@@ -74,12 +74,33 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
   }
 
   test("a local definition rejects an incompatible argument to the enclosing operator") {
-    val call = mkUniqAppByName(mkUniqName("F"), mkUniqConst(SetT1(BoolT1)))
-    val (letF, fBody) = operatorWithParameter(integerLocalDefinition, call)
-    val listener = new CollectingListener
-    assert(checker.compute(listener, TypeContext.empty, letF).isEmpty)
-    assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
-    assert(listener.errors.exists(_.contains("Set(Bool)")), listener.errors.mkString("\n"))
+    val lessThanZero = mkUniqApp(Seq(parser("(Int, Int) => Bool")), mkUniqName("n"), mkUniqConst(IntT1))
+    val negativeN = mkUniqApp(Seq(parser("Int => Int")), mkUniqName("n"))
+    val conditional = mkUniqApp(Seq(parser("(Bool, Int, Int) => Int")), lessThanZero, negativeN, mkUniqName("n"))
+    val localIf = mkUniqLet("a", mkUniqAbs(conditional), mkUniqAppByName(mkUniqName("a")))
+    for (body <- Seq(integerLocalDefinition, localIf); inferPoly <- Seq(true, false)) {
+      val call = mkUniqAppByName(mkUniqName("F"), mkUniqConst(SetT1(BoolT1)))
+      val (letF, fBody) = operatorWithParameter(body, call)
+      val listener = new CollectingListener
+      val typeChecker = new EtcTypeChecker(new TypeVarPool(start = 1000), inferPolytypes = inferPoly)
+      assert(typeChecker.compute(listener, TypeContext.empty, letF).isEmpty)
+      assert(listener.types(fBody.sourceRef.tlaId) == parser("Int => Int"))
+      assert(listener.errors.exists(_.contains("Set(Bool)")), listener.errors.mkString("\n"))
+    }
+  }
+
+  test("sibling definitions cannot impose conflicting types on a captured parameter") {
+    val negate = mkUniqApp(Seq(parser("Bool => Bool")), mkUniqName("n"))
+    val asBool = mkUniqLet("b", mkUniqAbs(negate), mkUniqAppByName(mkUniqName("b")))
+    val plus = mkUniqApp(Seq(parser("(Int, Int) => Int")), mkUniqName("n"), mkUniqConst(IntT1))
+    val local = mkUniqLet("i", mkUniqAbs(plus), asBool)
+    val (letF, _) = operatorWithParameter(local, mkUniqConst(BoolT1))
+    for (inferPoly <- Seq(true, false)) {
+      val listener = new CollectingListener
+      val typeChecker = new EtcTypeChecker(new TypeVarPool(start = 1000), inferPolytypes = inferPoly)
+      assert(typeChecker.compute(listener, TypeContext.empty, letF).isEmpty)
+      assert(listener.errors.nonEmpty)
+    }
   }
 
   test("a conditional inside a local definition constrains an enclosing parameter") {

@@ -3549,6 +3549,33 @@ Type checker [OK]
 EXITCODE: OK
 ```
 
+### typecheck LET shared types
+
+Later LET constraints must refine earlier expression and declaration tags, even
+when polymorphism is disabled. Check the serialized types as well.
+
+```sh
+$ for poly in true false; do apalache-mc typecheck --infer-poly=$poly --output=LetSharedTypes.json ../../passes/src/test/resources/LetSharedTypes.tla | grep 'EXITCODE:'; done
+EXITCODE: OK
+EXITCODE: OK
+$ apalache-mc typecheck --infer-poly=false LetSharedTypes.json | grep 'EXITCODE:'
+EXITCODE: OK
+$ for poly in true false; do apalache-mc typecheck --infer-poly=$poly ../../passes/src/test/resources/LetPolyBadCall.tla | grep 'EXITCODE:'; done
+EXITCODE: ERROR (120)
+EXITCODE: ERROR (120)
+```
+
+### check LET shared types
+
+In particular, the CHOOSE expression in an earlier definition must not retain a
+polymorphic tag after a later definition constrains the captured parameter.
+
+```sh
+$ apalache-mc check --length=0 --inv=Inv ../../passes/src/test/resources/LetSharedTypes.tla | grep -E 'state invariant 0 holds|EXITCODE:' | sed 's/ *I@.*//'
+State 0: state invariant 0 holds.
+EXITCODE: OK
+```
+
 ### typecheck letpoly_inst.tla
 
 Test the Snowcat support let-polymorphism.
