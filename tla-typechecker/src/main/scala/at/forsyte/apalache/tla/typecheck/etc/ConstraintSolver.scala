@@ -7,6 +7,12 @@ import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVa
 /**
  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
  *
+ * When the solver finds the type of a clause, it records a type report. Once all constraints are solved, [[solve]]
+ * applies the solution to the reports and sends them to their callbacks. The type checker solves every LET definition
+ * with a separate solver, and some types in the definition may contain type variables of the enclosing context. The
+ * enclosing solver can still refine these variables. Hence, the solver of a definition calls [[solveDeferringReports]]
+ * and then [[reportTypesTo]], which sends the final reports and passes the others to the enclosing solver.
+ *
  * @author
  *   Igor Konnov
  */
@@ -19,24 +25,33 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     constraints = constraints :+ constraint
   }
 
-  // Reporting must not add equations: that would affect isFreeVar and hence generalization.
-  /** Add a success callback that can be deferred and refined across LET scopes. */
-  private[etc] def addTypeReport(tt: TlaType1)(notify: TlaType1 => Unit): Unit = {
-    typesToReport :+= TypeReport(tt, notify)
+  /**
+   * Send the type `tt` to `callback`, once it is final. Unlike a clause, a report does not add equations. Hence, it
+   * does not change the solution.
+   */
+  private[etc] def addTypeReport(tt: TlaType1)(callback: TlaType1 => Unit): Unit = {
+    addReport(TypeReport(tt, callback))
   }
 
-  /** After a successful local solve, pass reports that still depend on the enclosing context to its solver. */
+  /**
+   * Hand over the type reports after [[solveDeferringReports]]. A report is final, unless it contains a type variable
+   * that the solution assigns to a shared variable. Send the final reports, and pass the others to `parent`.
+   *
+   * @param parent
+   *   the solver of the enclosing context
+   * @param sharedVars
+   *   the type variables that the definition shares with the enclosing context
+   */
   private[etc] def reportTypesTo(parent: ConstraintSolver, sharedVars: Set[Int]): Unit = {
     val sharedNames = sharedVars.flatMap(v => solution.subRec(VarT1(v)).usedNames)
     for (report <- typesToReport) {
       val resolved = report.resolve(solution)
-      // Preserve variables that an enclosing solver may still refine, including variables newly exposed by
-      // local solutions. Everything else belongs to this definition and must survive further specialization.
       val refinable = resolved.tt.usedNames & sharedNames
       if (refinable.isEmpty) {
-        resolved.emit(resolved.tt)
+        resolved.send()
       } else {
-        parent.typesToReport :+= resolved.copy(frozenVars = resolved.frozenVars ++ (resolved.tt.usedNames -- refinable))
+        // The other variables belong to the definition. The enclosing solver must not refine them.
+        parent.addReport(resolved.copy(frozenVars = resolved.frozenVars ++ (resolved.tt.usedNames -- refinable)))
       }
     }
     typesToReport = List.empty
@@ -81,19 +96,31 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     Some(solution)
   }
 
-  // LET definitions defer success callbacks until reportTypesTo can determine which types are final.
-  def solve(reportTypes: Boolean = true): Option[Substitution] = {
+  /**
+   * Solve all constraints and send the type reports.
+   *
+   * @return
+   *   the solution, if all constraints are solved; None, otherwise
+   */
+  def solve(): Option[Substitution] = {
+    val result = solveDeferringReports()
+    if (result.isDefined) {
+      typesToReport.foreach(_.resolve(solution).send())
+      typesToReport = List.empty
+    }
+    result
+  }
+
+  /**
+   * Solve all constraints like [[solve]], but keep the type reports for [[reportTypesTo]].
+   *
+   * @return
+   *   the solution, if all constraints are solved; None, otherwise
+   */
+  private[etc] def solveDeferringReports(): Option[Substitution] = {
     val isDefined = solvePartially().isDefined
 
     if (isDefined && constraints.isEmpty) {
-      if (reportTypes) {
-        for (report <- typesToReport) {
-          val resolved = report.resolve(solution)
-          resolved.emit(resolved.tt)
-        }
-        typesToReport = List.empty
-      }
-
       Some(solution)
     } else {
       constraints.foreach {
@@ -109,20 +136,8 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     }
   }
 
-  /**
-   * Test whether a variable is free in the context that is induced by the solved constraints.
-   *
-   * @param varNo
-   *   a variable number
-   * @return
-   *   true if the variable occurs in the partial solution of the solver
-   */
-  def isFreeVar(varNo: Int): Boolean = {
-    def outsideClass(cls: EqClass): Boolean = !cls.typeVars.contains(varNo)
-    // Check both the approximate solution, which the solver was initialized with, and the solution, if it exists.
-    // This is probably a computationally expensive check:
-    // https://github.com/apalache-mc/apalache/issues/973
-    approximateSolution.mapping.keySet.forall(outsideClass) && solution.mapping.keySet.forall(outsideClass)
+  private def addReport(report: TypeReport): Unit = {
+    typesToReport :+= report
   }
 
   private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
@@ -142,8 +157,22 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
 }
 
 object ConstraintSolver {
-  // A report may outlive the solver of its definition. Only its still-shared variables can then be refined.
-  private case class TypeReport(tt: TlaType1, emit: TlaType1 => Unit, frozenVars: Set[Int] = Set.empty) {
+
+  /**
+   * A type to send to `callback`, once it is final.
+   *
+   * @param frozenVars
+   *   the type variables that must not be substituted anymore. When the solver of a LET definition passes a report to
+   *   the enclosing solver, it freezes the variables that the definition does not share with the enclosing context. The
+   *   definition has either generalized them, or they occur only inside the definition. Normally, the enclosing solver
+   *   never sees these variables, since every use of a definition instantiates its type with fresh variables. The
+   *   exception is an operator passed by name, e.g., `K` in `Apply(K, 1)`: the case of `EtcName` in [[EtcTypeChecker]]
+   *   does not instantiate the type, so the enclosing solver may bind the generalized variables of `K`. Freezing keeps
+   *   the reported types consistent with the generalized signature of the definition.
+   */
+  private case class TypeReport(tt: TlaType1, callback: TlaType1 => Unit, frozenVars: Set[Int] = Set.empty) {
+
+    /** Apply the substitution to the variables that are not frozen. */
     def resolve(sub: Substitution): TypeReport = {
       if (frozenVars.isEmpty) {
         copy(tt = sub.subRec(tt))
@@ -152,5 +181,7 @@ object ConstraintSolver {
         copy(tt = scoped.subRec(tt))
       }
     }
+
+    def send(): Unit = callback(tt)
   }
 }

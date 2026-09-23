@@ -146,7 +146,13 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   }
 
   test("a bad call to an operator constrained through LET is a type error") {
-    val (rootName, modules) = sanyImporter.loadFromSource(loadSpecFromResource("LetPolyBadCall"))
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE LetPolyBadCall ----
+        |EXTENDS Integers
+        |ViaLet(n) == LET k == n + 1 IN k
+        |Bad == ViaLet({TRUE}) = 0
+        |====
+        |""".stripMargin))
     val errors = mutable.ListBuffer.empty[String]
     val listener = new DefaultTypeCheckerListener() {
       override def onTypeError(sourceRef: EtcRef, message: String): Unit = errors += message
@@ -157,7 +163,28 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   }
 
   test("shared LET types are final on every callback, including after JSON round-tripping") {
-    val (rootName, modules) = sanyImporter.loadFromSource(loadSpecFromResource("LetSharedTypes"))
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE LetSharedTypes ----
+        |EXTENDS Integers
+        |F(n) == LET k == (CHOOSE y \in {n}: TRUE) = n
+        |            c == n + 1
+        |        IN k /\ c > 0
+        |Reversed(n) == LET c == n + 1
+        |                   k == (CHOOSE y \in {n}: TRUE) = n
+        |               IN k /\ c > 0
+        |ViaBody(n) == LET k == (CHOOSE y \in {n}: TRUE) = n
+        |              IN k /\ n > 0
+        |Nested(n) == LET k == LET j == CHOOSE y \in {n}: TRUE IN j
+        |             IN k + 1
+        |Alias(n, m) == LET k == IF TRUE THEN n ELSE m
+        |                   c == m + 1
+        |               IN k + c
+        |ViaSet(n) == LET k == n \cup {} IN k \cup {1}
+        |ViaRecord(n) == LET k == [captured |-> n]
+        |                    c == n + 1
+        |                IN k.captured + c
+        |====
+        |""".stripMargin))
     val listener = new DefaultTypeCheckerListener() {
       override def onTypeFound(sourceRef: ExactRef, tp: TlaType1): Unit = {
         // Check every notification, not just the last type recorded for each UID. Like the production listener
@@ -188,30 +215,37 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   }
 
   test("a local operator can share a captured type while generalizing its own parameter") {
-    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
-        |---- MODULE MixedLet ----
-        |EXTENDS Integers
-        |F(n) == LET K(y) == [captured |-> n, value |-> y]
-        |            c == n + 1
-        |        IN K(TRUE).value /\ K(1).value = 1 /\ c > 0
-        |====
-        |""".stripMargin))
-    for (useRows <- Seq(true, false)) {
+    // In PassByName, K is passed by name, which does not instantiate the type of K. Hence, the enclosing solver binds
+    // the parameter type of K to Int. The signature of K must stay generic nevertheless.
+    val scopedExprs = Seq(
+        "MixedLet" -> """K(TRUE).value /\ K(1).value = 1 /\ c > 0""",
+        "PassByName" -> "Apply(K, 1).value = c",
+    )
+    for ((moduleName, scopedExpr) <- scopedExprs; useRows <- Seq(true, false)) {
+      val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString(s"""
+          |---- MODULE $moduleName ----
+          |EXTENDS Integers
+          |Apply(Op(_), x) == Op(x)
+          |F(n) == LET K(y) == [captured |-> n, value |-> y]
+          |            c == n + 1
+          |        IN $scopedExpr
+          |====
+          |""".stripMargin))
       val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows)
       val tagged = typechecker
         .checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
             uid => throw new TypingException("No type for UID: " + uid, uid), modules(rootName))
         .get
       val f = tagged.operDeclarations.find(_.name == "F").get
-      assert(f.typeTag == Typed(parser("Int => Bool")))
+      assert(f.typeTag == Typed(parser("Int => Bool")), moduleName)
       val k = f.body.asInstanceOf[LetInEx].decls.find(_.name == "K").get
       val signature = TlaType1.fromTypeTag(k.typeTag)
-      assert(signature.usedNames.size == 1)
+      assert(signature.usedNames.size == 1, moduleName)
       val a = VarT1(signature.usedNames.head)
       val fields = Seq("captured" -> IntT1, "value" -> a)
       val result = if (useRows) RecRowT1(RowT1(fields: _*)) else RecT1(fields: _*)
-      assert(signature == OperT1(Seq(a), result))
-      assert(k.body.typeTag == Typed(result))
+      assert(signature == OperT1(Seq(a), result), moduleName)
+      assert(k.body.typeTag == Typed(result), moduleName)
     }
   }
 

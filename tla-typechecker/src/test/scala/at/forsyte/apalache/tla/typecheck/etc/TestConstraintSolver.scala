@@ -23,20 +23,19 @@ class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilde
     val found = mutable.ListBuffer.empty[TlaType1]
     inner.addTypeReport(parser("c => a"))(found += _)
     inner.addConstraint(EqClause(VarT1("a"), parser("Set(b)")))
-    assert(inner.solve(reportTypes = false).isDefined)
+    assert(inner.solveDeferringReports().isDefined)
     inner.reportTypesTo(outer, Set(VarT1("a").no))
     assert(found.isEmpty)
-    // Reports alone must not make variables non-free in the receiving solver.
-    assert(outer.isFreeVar(VarT1("b").no))
-    assert(outer.isFreeVar(VarT1("c").no))
+    // Passing reports must not add equations to the receiving solver.
+    assert(outer.solvePartially().exists(_.isEmpty))
 
     outer.addConstraint(EqClause(VarT1("b"), parser("Set(d)")))
-    assert(outer.solve(reportTypes = false).isDefined)
+    assert(outer.solveDeferringReports().isDefined)
     outer.reportTypesTo(root, Set(VarT1("b").no))
     assert(found.isEmpty)
-    assert(root.isFreeVar(VarT1("d").no))
     root.addConstraint(EqClause(VarT1("d"), IntT1))
-    // c belongs to the inner definition, even if an enclosing solver uses the same variable number.
+    // c is frozen, as it is not shared with the enclosing context. The root solver may still bind c, when the inner
+    // definition generalizes c and the definition is passed by name, which does not instantiate its type.
     root.addConstraint(EqClause(VarT1("c"), BoolT1))
     assert(root.solve().isDefined)
     assert(found.toList == List(parser("c => Set(Set(Int))")))
@@ -50,11 +49,11 @@ class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilde
     val outer = new ConstraintSolver(pool)
     val found = mutable.ListBuffer.empty[TlaType1]
     inner.addTypeReport(parser("a => a"))(found += _)
-    assert(inner.solve(reportTypes = false).isDefined)
+    assert(inner.solveDeferringReports().isDefined)
     assert(found.isEmpty)
     inner.reportTypesTo(outer, Set.empty)
     assert(found.toList == List(parser("a => a")))
-    assert(outer.isFreeVar(VarT1("a").no))
+    assert(outer.solvePartially().exists(_.isEmpty))
     assert(outer.solve().isDefined)
     assert(found.size == 1)
   }
@@ -65,7 +64,7 @@ class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilde
     val outer = new ConstraintSolver(pool)
     val found = mutable.ListBuffer.empty[TlaType1]
     inner.addTypeReport(VarT1("a"))(found += _)
-    assert(inner.solve(reportTypes = false).isDefined)
+    assert(inner.solveDeferringReports().isDefined)
     inner.reportTypesTo(outer, Set(VarT1("a").no))
     outer.addConstraint(EqClause(VarT1("a"), IntT1))
     outer.addConstraint(EqClause(VarT1("a"), BoolT1))
