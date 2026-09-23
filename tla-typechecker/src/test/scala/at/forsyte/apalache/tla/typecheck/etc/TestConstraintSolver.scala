@@ -34,9 +34,7 @@ class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilde
     outer.reportTypesTo(root, Set(VarT1("b").no))
     assert(found.isEmpty)
     root.addConstraint(EqClause(VarT1("d"), IntT1))
-    // c is frozen, as it is not shared with the enclosing context. The root solver may still bind c, when the inner
-    // definition generalizes c and the definition is passed by name, which does not instantiate its type.
-    root.addConstraint(EqClause(VarT1("c"), BoolT1))
+    // c belongs to the definition. Uses instantiate it, so the root solver only refines the shared d.
     assert(root.solve().isDefined)
     assert(found.toList == List(parser("c => Set(Set(Int))")))
     assert(root.solve().isDefined)

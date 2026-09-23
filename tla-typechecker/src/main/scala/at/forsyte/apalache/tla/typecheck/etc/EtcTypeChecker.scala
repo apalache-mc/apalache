@@ -80,14 +80,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         if (polyVars.isEmpty) {
           // For a non-polymorphic type, report it, as it may be the only place, where it is reported.
           // This is relevant for VARIABLES and CONSTANTS.
-          // Add a trivial constraint: a = declaredType. We need it to place a callback.
-          val fresh = varPool.fresh
-          val watchClause =
-            EqClause(fresh, declaredType)
-              .setOnTypeFound { inferredType =>
-                onTypeFound(ex.sourceRef, inferredType)
-              }
-          solver.addConstraint(watchClause)
+          solver.addTypeReport(declaredType)(onTypeFound(ex.sourceRef, _))
         }
 
         computeRec(extCtx, solver, scopedEx)
@@ -101,8 +94,15 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             onTypeFound(ex.sourceRef, scheme.principalType)
             scheme.principalType
           } else {
+            // Operators passed by name need fresh quantified variables, just like applications by name.
+            // Keep unquantified variables shared with the enclosing context.
+            var instantiatedType = scheme.principalType
+            if (scheme.principalType.isInstanceOf[OperT1] && scheme.quantifiedVars.nonEmpty) {
+              val varRenamingMap = scheme.quantifiedVars.toSeq.map(v => EqClass(v) -> varPool.fresh)
+              instantiatedType = Substitution(varRenamingMap: _*).subRec(scheme.principalType)
+            }
             // introduce a constant, as the type may get refined later
-            computeRec(ctx, solver, mkConst(ex.sourceRef, scheme.principalType))
+            computeRec(ctx, solver, mkConst(ex.sourceRef, instantiatedType))
           }
         } else {
           onTypeError(ex.sourceRef, s"No annotation found for $name. Make sure that you've put one in front of $name.")
@@ -199,12 +199,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             instantiatedType = Substitution(varRenamingMap: _*).subRec(scheme.principalType)
           }
 
-          // If we reported the type right away, it would contained variables that have not been resolved yet.
-          // Hence, we introduce a fresh variable to get the type reported, once the solver knows it most precisely.
-          val fresh = varPool.fresh
-          val clause = EqClause(fresh, instantiatedType)
-            .setOnTypeFound(tt => onTypeFound(name.sourceRef, tt))
-          solver.addConstraint(clause)
+          // Report the instantiated type after the constraints have refined it.
+          solver.addTypeReport(instantiatedType)(onTypeFound(name.sourceRef, _))
           // delegate the rest to the application-by-type
           val instantiatedExpr = mkApp(ex.sourceRef, Seq(instantiatedType), args: _*)
           instantiatedExpr.typeErrorExplanation = ex.typeErrorExplanation

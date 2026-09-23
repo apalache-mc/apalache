@@ -215,8 +215,7 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
   }
 
   test("a local operator can share a captured type while generalizing its own parameter") {
-    // In PassByName, K is passed by name, which does not instantiate the type of K. Hence, the enclosing solver binds
-    // the parameter type of K to Int. The signature of K must stay generic nevertheless.
+    // Passing K by name must instantiate its generalized parameter while preserving its captured type.
     val scopedExprs = Seq(
         "MixedLet" -> """K(TRUE).value /\ K(1).value = 1 /\ c > 0""",
         "PassByName" -> "Apply(K, 1).value = c",
@@ -246,6 +245,33 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
       val result = if (useRows) RecRowT1(RowT1(fields: _*)) else RecT1(fields: _*)
       assert(signature == OperT1(Seq(a), result), moduleName)
       assert(k.body.typeTag == Typed(result), moduleName)
+    }
+  }
+
+  test("passing a nested local operator by name preserves later refinements of its captured type") {
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE NestedLetByName ----
+        |EXTENDS Integers, Sequences
+        |IsId(Op(_)) == \A x: Op(x) = x
+        |F(n) == LET Wrap == LET K(y) == Head(n) IN IsId(K)
+        |        IN Wrap /\ Head(n) > 0
+        |====
+        |""".stripMargin))
+    for (useRows <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows)
+      val tagged = typechecker
+        .checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
+            uid => throw new TypingException("No type for UID: " + uid, uid), modules(rootName))
+        .get
+      val f = tagged.operDeclarations.find(_.name == "F").get
+      assert(f.typeTag == Typed(parser("Seq(Int) => Bool")))
+      val wrap = f.body.asInstanceOf[LetInEx].decls.find(_.name == "Wrap").get
+      val k = wrap.body.asInstanceOf[LetInEx].decls.find(_.name == "K").get
+      val signature = TlaType1.fromTypeTag(k.typeTag)
+      assert(signature.usedNames.size == 1)
+      val a = VarT1(signature.usedNames.head)
+      assert(signature == OperT1(Seq(a), IntT1))
+      assert(k.body.typeTag == Typed(IntT1))
     }
   }
 

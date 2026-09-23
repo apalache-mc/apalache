@@ -2,7 +2,7 @@ package at.forsyte.apalache.tla.typecheck.etc
 
 import at.forsyte.apalache.tla.lir.{TlaType1, VarT1}
 import at.forsyte.apalache.tla.typecheck.etc.ConstraintSolver.TypeReport
-import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
@@ -16,8 +16,8 @@ import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVa
  * @author
  *   Igor Konnov
  */
-class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution = Substitution.empty) {
-  private var solution: Substitution = approximateSolution
+class ConstraintSolver(varPool: TypeVarPool) {
+  private var solution: Substitution = Substitution.empty
   private var constraints: List[Clause] = List.empty
   private var typesToReport: List[TypeReport] = List.empty
 
@@ -30,7 +30,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
    * does not change the solution.
    */
   private[etc] def addTypeReport(tt: TlaType1)(callback: TlaType1 => Unit): Unit = {
-    addReport(TypeReport(tt, callback))
+    typesToReport :+= TypeReport(tt, callback)
   }
 
   /**
@@ -45,13 +45,12 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
   private[etc] def reportTypesTo(parent: ConstraintSolver, sharedVars: Set[Int]): Unit = {
     val sharedNames = sharedVars.flatMap(v => solution.subRec(VarT1(v)).usedNames)
     for (report <- typesToReport) {
-      val resolved = report.resolve(solution)
-      val refinable = resolved.tt.usedNames & sharedNames
-      if (refinable.isEmpty) {
-        resolved.send()
+      val resolvedType = solution.subRec(report.tt)
+      if ((resolvedType.usedNames & sharedNames).isEmpty) {
+        report.callback(resolvedType)
       } else {
-        // The other variables belong to the definition. The enclosing solver must not refine them.
-        parent.addReport(resolved.copy(frozenVars = resolved.frozenVars ++ (resolved.tt.usedNames -- refinable)))
+        // Definition-local variables stay untouched: every use instantiates its quantified variables.
+        parent.typesToReport :+= report.copy(tt = resolvedType)
       }
     }
     typesToReport = List.empty
@@ -105,7 +104,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
   def solve(): Option[Substitution] = {
     val result = solveDeferringReports()
     if (result.isDefined) {
-      typesToReport.foreach(_.resolve(solution).send())
+      typesToReport.foreach(report => report.callback(solution.subRec(report.tt)))
       typesToReport = List.empty
     }
     result
@@ -136,10 +135,6 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     }
   }
 
-  private def addReport(report: TypeReport): Unit = {
-    typesToReport :+= report
-  }
-
   private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
     constraint match {
       case EqClause(unknown, term) =>
@@ -158,30 +153,6 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
 
 object ConstraintSolver {
 
-  /**
-   * A type to send to `callback`, once it is final.
-   *
-   * @param frozenVars
-   *   the type variables that must not be substituted anymore. When the solver of a LET definition passes a report to
-   *   the enclosing solver, it freezes the variables that the definition does not share with the enclosing context. The
-   *   definition has either generalized them, or they occur only inside the definition. Normally, the enclosing solver
-   *   never sees these variables, since every use of a definition instantiates its type with fresh variables. The
-   *   exception is an operator passed by name, e.g., `K` in `Apply(K, 1)`: the case of `EtcName` in [[EtcTypeChecker]]
-   *   does not instantiate the type, so the enclosing solver may bind the generalized variables of `K`. Freezing keeps
-   *   the reported types consistent with the generalized signature of the definition.
-   */
-  private case class TypeReport(tt: TlaType1, callback: TlaType1 => Unit, frozenVars: Set[Int] = Set.empty) {
-
-    /** Apply the substitution to the variables that are not frozen. */
-    def resolve(sub: Substitution): TypeReport = {
-      if (frozenVars.isEmpty) {
-        copy(tt = sub.subRec(tt))
-      } else {
-        val scoped = Substitution((tt.usedNames -- frozenVars).map(v => EqClass(v) -> sub.subRec(VarT1(v))).toMap)
-        copy(tt = scoped.subRec(tt))
-      }
-    }
-
-    def send(): Unit = callback(tt)
-  }
+  /** A type to send to `callback`, once it is final. */
+  private case class TypeReport(tt: TlaType1, callback: TlaType1 => Unit)
 }

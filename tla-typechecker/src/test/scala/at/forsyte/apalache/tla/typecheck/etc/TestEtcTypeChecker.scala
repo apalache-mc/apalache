@@ -165,6 +165,29 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     assert(listener.errors.isEmpty)
   }
 
+  test("polymorphic names instantiate quantified variables and preserve captured variables") {
+    val ctx = TypeContext("K" -> TlaType1Scheme(parser("a => b"), Set(VarT1("a").no)))
+    for (secondResult <- Seq(IntT1, BoolT1)) {
+      val first = mkUniqName("K")
+      val second = mkUniqName("K")
+      val firstType = OperT1(Seq(IntT1), IntT1)
+      val secondType = OperT1(Seq(BoolT1), secondResult)
+      val app = mkUniqApp(Seq(OperT1(Seq(firstType, secondType), BoolT1)), first, second)
+      val listener = new CollectingListener
+      val result = checker.compute(listener, ctx, app)
+      if (secondResult == IntT1) {
+        assert(result.contains(BoolT1))
+        assert(listener.types(first.sourceRef.tlaId) == firstType)
+        assert(listener.types(second.sourceRef.tlaId) == secondType)
+        assert(listener.errors.isEmpty)
+      } else {
+        // The argument types are independent, but both results refer to the same captured b.
+        assert(result.isEmpty)
+        assert(listener.errors.nonEmpty)
+      }
+    }
+  }
+
   test("check monotypes") {
     val mono = mkUniqConst(parser("Int -> Int"))
     val listener = mock[TypeCheckerListener]
@@ -273,40 +296,36 @@ class TestEtcTypeChecker extends AnyFunSuite with EasyMockSugar with BeforeAndAf
     val oper = parser("a => c")
     val arg = mkUniqConst(parser("b"))
     val app = mkUniqApp(Seq(oper), arg)
-    val listener = mock[TypeCheckerListener]
+    val listener = new CollectingListener
     val wrapper = wrapWithLet(app)
-    expecting {
-      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("a"))
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("c"))
-      listener.onTypeFound(wrapper.sourceRef.asInstanceOf[ExactRef], parser("() => c"))
-
-      // consume any types for the wrapper and lambda
-      consumeWrapperTypes(listener, wrapper)
+    val computed = checker.compute(listener, TypeContext.empty, wrapper)
+    computed match {
+      case Some(OperT1(Seq(), v: VarT1)) => assert(v != VarT1("c"))
+      case other                         => fail(s"Expected an instantiated operator type, found $other")
     }
-    whenExecuting(listener) {
-      val computed = checker.compute(listener, TypeContext.empty, wrapper)
-      assert(computed.contains(parser("() => c")))
-    }
+    assert(listener.types(arg.sourceRef.tlaId) == parser("a"))
+    assert(listener.types(app.sourceRef.tlaId) == parser("c"))
+    assert(listener.types(wrapper.bound.sourceRef.tlaId) == parser("() => c"))
+    assert(computed.contains(listener.types(wrapper.sourceRef.tlaId)))
+    assert(listener.errors.isEmpty)
   }
 
   test("unresolved result") {
     val oper = parser("Int => a")
     val arg = mkUniqConst(IntT1)
     val app = mkUniqApp(Seq(oper), arg)
-    val listener = mock[TypeCheckerListener]
+    val listener = new CollectingListener
     val wrapper = wrapWithLet(app)
-    expecting {
-      listener.onTypeFound(arg.sourceRef.asInstanceOf[ExactRef], parser("Int"))
-      listener.onTypeFound(app.sourceRef.asInstanceOf[ExactRef], parser("a"))
-      listener.onTypeFound(wrapper.sourceRef.asInstanceOf[ExactRef], parser("() => a"))
-
-      // consume any types for the wrapper and lambda
-      consumeWrapperTypes(listener, wrapper)
+    val computed = checker.compute(listener, TypeContext.empty, wrapper)
+    computed match {
+      case Some(OperT1(Seq(), v: VarT1)) => assert(v != VarT1("a"))
+      case other                         => fail(s"Expected an instantiated operator type, found $other")
     }
-    whenExecuting(listener) {
-      val computed = checker.compute(listener, TypeContext.empty, wrapper)
-      assert(computed.contains(parser("() => a")))
-    }
+    assert(listener.types(arg.sourceRef.tlaId) == IntT1)
+    assert(listener.types(app.sourceRef.tlaId) == parser("a"))
+    assert(listener.types(wrapper.bound.sourceRef.tlaId) == parser("() => a"))
+    assert(computed.contains(listener.types(wrapper.sourceRef.tlaId)))
+    assert(listener.errors.isEmpty)
   }
 
   test("one resolved, one unresolved") {
