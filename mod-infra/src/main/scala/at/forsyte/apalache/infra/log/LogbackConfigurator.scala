@@ -20,13 +20,33 @@ import java.nio.file.Path
 // TODO Configure to take OutputManager as parameter?
 class LogbackConfigurator(runDir: Option[Path], customRunDir: Option[Path]) extends ContextAwareBase with Configurator {
   def configureDefaultContext(): Unit = {
-    val loggerContext = LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext]
+    val loggerContext = awaitLoggerContext(System.nanoTime() + java.time.Duration.ofSeconds(30).toNanos)
     setContext(loggerContext)
     runDir match {
       case Some(_) => configure(loggerContext)
       case None    => configureConsoleOnlyWarn(loggerContext)
     }
   }
+
+  /**
+   * Get the logback logger context, waiting for SLF4J's one-time provider initialization if needed. While another
+   * thread is running the initialization, `LoggerFactory.getILoggerFactory` returns a `SubstituteLoggerFactory`
+   * instead of the logback context.
+   *
+   * Note that SLF4J offers no API to await the initialization, so we have to poll. This is a long-standing unsolved
+   * issue upstream: https://jira.qos.ch/browse/SLF4J-167
+   */
+  @scala.annotation.tailrec
+  private def awaitLoggerContext(deadlineNanos: Long): LoggerContext =
+    LoggerFactory.getILoggerFactory match {
+      case context: LoggerContext => context
+      case other if System.nanoTime() < deadlineNanos =>
+        Thread.sleep(10)
+        awaitLoggerContext(deadlineNanos)
+      case other =>
+        throw new IllegalStateException(
+            s"SLF4J did not initialize a logback LoggerContext; got ${other.getClass.getName}")
+    }
 
   def configureConsoleOnlyWarn(loggerContext: LoggerContext): Unit = {
     loggerContext.reset() // forget everything that was configured automagically

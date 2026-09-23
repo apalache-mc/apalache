@@ -10,8 +10,8 @@ import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVa
  * When the solver finds the type of a clause, it records a type report. Once all constraints are solved, [[solve]]
  * applies the solution to the reports and sends them to their callbacks. The type checker solves every LET definition
  * with a separate solver, and some types in the definition may contain type variables of the enclosing context. The
- * enclosing solver can still refine these variables. Hence, the solver of a definition calls [[solveDeferringReports]]
- * and then [[reportTypesTo]], which sends the final reports and passes the others to the enclosing solver.
+ * enclosing solver can still refine these variables. Hence, the solver of a definition calls `solveDeferringReports`
+ * and then `reportTypesTo`, which sends the final reports and passes the others to the enclosing solver.
  *
  * @author
  *   Igor Konnov
@@ -34,7 +34,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
   }
 
   /**
-   * Hand over the type reports after [[solveDeferringReports]]. A report is final, unless it contains a type variable
+   * Hand over the type reports after `solveDeferringReports`. A report is final, unless it contains a type variable
    * that the solution assigns to a shared variable. Send the final reports, and pass the others to `parent`.
    *
    * @param parent
