@@ -10,7 +10,7 @@ object ReportGenerator {
 
   def getLog(): String =
     Matcher.quoteReplacement(
-        Files.readString(OutputManager.pathInRunDir(detailedLogFile), StandardCharsets.UTF_8).trim
+        Files.readString(OutputWorkspace.pathInRunDir(detailedLogFile), StandardCharsets.UTF_8).trim
     ) // handle $s in log
 
   // Can't access Version or Command in IO, have to pass at call site
@@ -23,11 +23,11 @@ object ReportGenerator {
 
     val filledTemplate = template(specTxt, cmdStr, log, versionStr, os, jdk)
 
-    OutputManager.withWriterInRunDir(reportFile) {
+    OutputWorkspace.withWriterInRunDir(reportFile) {
       _.println(filledTemplate)
     }
 
-    OutputManager.pathInRunDir(reportFile).toFile.getCanonicalPath
+    OutputWorkspace.pathInRunDir(reportFile).toFile.getCanonicalPath
   }
 
   private def template(

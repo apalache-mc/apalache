@@ -16,7 +16,7 @@ class TestConcurrentToolRuns extends AnyFunSuite {
 
   test("concurrent Tool runs keep intermediate output in their own directories") {
     // Avoid racing SLF4J's one-time provider initialization. Logback itself remains process-global and is not part of
-    // the OutputManager isolation contract exercised by this test.
+    // the OutputWorkspace isolation contract exercised by this test.
     new LogbackConfigurator(None, None).configureDefaultContext()
 
     withTempDirectory("concurrent-tool-runs") { root =>

@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.rules.vmt
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
 import at.forsyte.apalache.tla.lir.formulas._
 import at.forsyte.apalache.tla.lir._
@@ -99,7 +99,7 @@ class TlaExToVMTWriter(gen: UniqueNameGenerator) {
       (if (litsForSortS.size > 1) Some(litsForSortS) else None).map(TermToVMTWriter.assertDistinct)
     }
 
-    OutputManager.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
+    OutputWorkspace.withWriterInRunDir(TlaExToVMTWriter.outFileName) { writer =>
       writer.println(";Sorts")
       sortDecls.foreach(writer.println)
       writer.println()

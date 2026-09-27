@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
  * directory when requested. See
  * [[https://github.com/apalache-mc/apalache/blob/main/docs/src/adr/009adr-outputs.md ADR-009]] for the output layout.
  */
-final class OutputManager(initialization: CommandInitializationOptions) {
+final class OutputWorkspace(initialization: CommandInitializationOptions) {
   private val groupDir: Path = {
     val groupName = initialization.source match {
       case Some(InputSource.FileSource(path, _)) => path.getFileName.toString
@@ -36,7 +36,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
 
   private val intermediateDirOpt: Option[Path] =
     if (initialization.common.writeIntermediate) {
-      Some(findOrCreateDir(runDir.resolve(OutputManager.IntermediateDirName)))
+      Some(findOrCreateDir(runDir.resolve(OutputWorkspace.IntermediateDirName)))
     } else {
       None
     }
@@ -44,7 +44,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
   private val additionalIntermediateDirOpt: Option[Path] =
     intermediateDirOpt.flatMap(_ =>
       additionalRunDir.map { path =>
-        findOrCreateDir(path.resolve(OutputManager.IntermediateDirName))
+        findOrCreateDir(path.resolve(OutputWorkspace.IntermediateDirName))
       })
 
   /** Resolve `parts` relative to the primary run directory. */
@@ -73,7 +73,7 @@ final class OutputManager(initialization: CommandInitializationOptions) {
   /** Write the rule-profiling report when profiling is enabled. */
   def withProfilingWriter(f: PrintWriter => Unit): Boolean = {
     if (initialization.common.profiling) {
-      withWriterInRunDir(OutputManager.RuleProfileFile)(f)
+      withWriterInRunDir(OutputWorkspace.RuleProfileFile)(f)
       true
     } else {
       false
@@ -116,12 +116,12 @@ final class OutputManager(initialization: CommandInitializationOptions) {
  * A fresh scope starts without a configured workspace. [[configure]] installs one after command initialization has been
  * resolved. [[captureScope]] and [[Scope.run]] propagate the same workspace state to another thread.
  */
-object OutputManager {
+object OutputWorkspace {
   final private class State {
-    var workspace: Option[OutputManager] = None
+    var workspace: Option[OutputWorkspace] = None
   }
 
-  final class Scope private[OutputManager] (private val state: State) {
+  final class Scope private[OutputWorkspace] (private val state: State) {
     def run[A](body: => A): A = withState(state)(body)
   }
 
@@ -139,7 +139,7 @@ object OutputManager {
 
   /** Construct and install the workspace for the current scope. */
   def configure(initialization: CommandInitializationOptions): Unit = {
-    state.workspace = Some(new OutputManager(initialization))
+    state.workspace = Some(new OutputWorkspace(initialization))
   }
 
   def runDir: Path = current.runDir
@@ -170,14 +170,14 @@ object OutputManager {
   def withWriterOutsideWorkspace(path: Path)(f: PrintWriter => Unit): Unit =
     current.withWriterOutsideWorkspace(path)(f)
 
-  private def currentOption: Option[OutputManager] =
+  private def currentOption: Option[OutputWorkspace] =
     if (currentState.isBound) currentState.get().workspace else None
 
-  private def current: OutputManager =
+  private def current: OutputWorkspace =
     currentOption.getOrElse {
       throw new IllegalStateException(
-          "OutputManager is not configured in the current scope; " +
-            "call OutputManager.withScope { OutputManager.configure(...) ... }"
+          "OutputWorkspace is not configured in the current scope; " +
+            "call OutputWorkspace.withScope { OutputWorkspace.configure(...) ... }"
       )
     }
 
@@ -186,7 +186,7 @@ object OutputManager {
       currentState.get()
     } else {
       throw new IllegalStateException(
-          "OutputManager is not bound to the current thread; call OutputManager.withScope { ... }"
+          "OutputWorkspace is not bound to the current thread; call OutputWorkspace.withScope { ... }"
       )
     }
   }
