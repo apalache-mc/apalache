@@ -123,6 +123,34 @@ lazy val testSettings = Seq(
     Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH")
 )
 
+lazy val CliIntegration = config("cliIntegration").extend(Test)
+lazy val cliIntegrationTest = taskKey[Unit]("Run the ScalaTest CLI integration suite")
+
+val cliIntegrationWorkers = Vector(
+    "general" -> Map.empty[String, String],
+    "oopsla19-z3" -> Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "oopsla19"),
+    "oopsla19-cvc5" -> Map("SMT_SOLVER" -> "cvc5", "SMT_ENCODING" -> "oopsla19"),
+    "arrays-z3" -> Map("SMT_SOLVER" -> "z3", "SMT_ENCODING" -> "arrays"),
+)
+
+def selectedCliIntegrationWorkers(): Vector[(String, Map[String, String])] =
+  sys.env.get("APALACHE_CLI_TEST_CONFIGS") match {
+    case None | Some("") => cliIntegrationWorkers
+    case Some(value)     =>
+      val selectedIds = value.split(',').iterator.map(_.trim).filter(_.nonEmpty).toSet
+      if (selectedIds.isEmpty) {
+        throw new MessageOnlyException("APALACHE_CLI_TEST_CONFIGS must name at least one configuration")
+      }
+      val knownIds = cliIntegrationWorkers.map(_._1).toSet
+      val unknownIds = selectedIds -- knownIds
+      if (unknownIds.nonEmpty) {
+        throw new MessageOnlyException(
+            s"Unknown APALACHE_CLI_TEST_CONFIGS value(s): ${unknownIds.toVector.sorted.mkString(", ")}; " +
+              s"expected ${cliIntegrationWorkers.map(_._1).mkString(", ")}")
+      }
+      cliIntegrationWorkers.filter(worker => selectedIds.contains(worker._1))
+  }
+
 ThisBuild / assembly / assemblyMergeStrategy := {
   // Workaround for conflict with grpc-netty manifest files
   // See https://github.com/sbt/sbt-assembly/issues/362
@@ -313,7 +341,7 @@ lazy val tla_bmcmt = (project in file("tla-bmcmt"))
       // See https://www.scala-sbt.org/1.x/docs/Multi-Project.html#Per-configuration+classpath+dependencies
       tlair % "test->test",
       infra,
-      tla_io,
+      tla_io % "compile->compile;test->test",
       tla_pp,
       tla_assignments,
       passes,
@@ -365,8 +393,50 @@ lazy val json_rpc = (project in file("json-rpc"))
 lazy val tool = (project in file("mod-tool"))
   .dependsOn(tlair, tla_io, tla_assignments, tla_typechecker, tla_bmcmt, shai, json_rpc, passes)
   .enablePlugins(BuildInfoPlugin)
+  .configs(CliIntegration)
   .settings(
       testSettings,
+      inConfig(CliIntegration)(Defaults.testSettings),
+      CliIntegration / scalaSource := (Test / scalaSource).value,
+      CliIntegration / unmanagedSources := {
+        val integrationDir = (CliIntegration / scalaSource).value / "org" / "apalachemc" / "integration"
+        (integrationDir ** "*.scala").get.filterNot(HiddenFileFilter.accept)
+      },
+      CliIntegration / resourceDirectory := (Test / resourceDirectory).value,
+      CliIntegration / fork := true,
+      CliIntegration / parallelExecution := true,
+      CliIntegration / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oCDEH"),
+      CliIntegration / javaOptions ++= {
+        val javaFeature = java.lang.Runtime.version().feature()
+        val compatibilityOptions =
+          (if (javaFeature >= 22) Seq("--enable-native-access=ALL-UNNAMED") else Seq.empty) ++
+            (if (javaFeature >= 24) Seq("--sun-misc-unsafe-memory-access=allow") else Seq.empty)
+        compatibilityOptions ++ Seq(
+            s"-Dapalache.cli.test.repo-root=${(ThisBuild / baseDirectory).value.getAbsolutePath}",
+            s"-Dapalache.cli.test.classpath=${(CliIntegration / fullClasspath).value.files.mkString(java.io.File.pathSeparator)}",
+        )
+      },
+      CliIntegration / testGrouping := {
+        val tests = (CliIntegration / definedTests).value
+        val commonJavaOptions = (CliIntegration / javaOptions).value.toVector
+        val workingDirectory = (ThisBuild / baseDirectory).value
+        selectedCliIntegrationWorkers().map { case (workerId, workerEnvironment) =>
+          val forkOptions = ForkOptions()
+            .withWorkingDirectory(workingDirectory)
+            .withRunJVMOptions(commonJavaOptions :+ s"-Dapalache.cli.test.configuration=$workerId")
+            .withEnvVars(workerEnvironment)
+          Tests.Group(
+              s"cli-integration-$workerId",
+              tests,
+              Tests.SubProcess(forkOptions),
+          )
+        }
+      },
+      Test / unmanagedSources / excludeFilter := {
+        val integrationDir = (Test / scalaSource).value / "org" / "apalachemc" / "integration"
+        HiddenFileFilter || new SimpleFileFilter(_.toPath.startsWith(integrationDir.toPath))
+      },
+      cliIntegrationTest := (CliIntegration / test).value,
       // The following buildInfo values will be available in the source
       // code in the `apalache.BuildInfo` singleton.
       // See https://github.com/sbt/sbt-buildinfo
