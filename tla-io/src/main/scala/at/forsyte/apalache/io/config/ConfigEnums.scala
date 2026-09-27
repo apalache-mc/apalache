@@ -69,6 +69,27 @@ object Algorithm {
     }
 }
 
+/** Supported model-checker search modes. */
+sealed abstract class SearchKind(val name: String) {
+  final override def toString: String = name
+}
+
+object SearchKind {
+  case object Check extends SearchKind(Constants.CHECK)
+
+  case object Simulate extends SearchKind(Constants.SIMULATE)
+
+  /** Canonical values in user-facing order. */
+  val values: List[SearchKind] = List(Check, Simulate)
+
+  def fromString(value: String): SearchKind =
+    value.toLowerCase match {
+      case Constants.CHECK    => Check
+      case Constants.SIMULATE => Simulate
+      case other              => throw new IllegalArgumentException(s"Unexpected search kind: $other")
+    }
+}
+
 /** Supported server implementations. */
 sealed abstract class ServerType(val name: String) {
   final override def toString: String = name

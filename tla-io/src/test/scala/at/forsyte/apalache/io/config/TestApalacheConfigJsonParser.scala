@@ -16,11 +16,14 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
 
   test("reports invalid option values as configuration errors") {
     val solverResult = ApalacheConfigJsonParser.parse("""{"checker":{"smt-solver":"unknown"}}""")
+    val searchKindResult = ApalacheConfigJsonParser.parse("""{"checker":{"search-kind":"unknown"}}""")
     val formatResult =
       ApalacheConfigJsonParser.parse("""{"source":{"kind":"string","content":"x","format":"unknown"}}""")
 
     assert(!solverResult.isSuccess)
     assert(solverResult.errors.contains("$.checker.smt-solver: Unexpected SMT solver backend: unknown"))
+    assert(!searchKindResult.isSuccess)
+    assert(searchKindResult.errors.contains("$.checker.search-kind: Unexpected search kind: unknown"))
     assert(!formatResult.isSuccess)
     assert(formatResult.errors.contains("$.source.format: Unsupported source format: unknown"))
   }
@@ -33,9 +36,9 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
         "$.debug: Expected a JSON boolean.",
         "$.checker.inv[0]: Expected a JSON string.",
         "$.checker.inv[1]: Expected a JSON string.",
-        "$.checker.length: Expected a 32-bit JSON integer.",
+        "$.checker.length: Expected a JSON integer in -2147483648..2147483647.",
         "$.checker.smt-solver: Unexpected SMT solver backend: unknown",
-        "$.server.port: Expected a 32-bit JSON integer.",
+        "$.server.port: Expected a JSON integer in -2147483648..2147483647.",
     )
 
     assert(!result.isSuccess)
@@ -46,6 +49,34 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     val config = ApalacheConfig(checker = CheckerPatch(smtSolver = Some(SMTSolver.CVC5)))
 
     assert(ApalacheConfigJsonParser.write(config).contains(""""smt-solver":"cvc5""""))
+  }
+
+  test("round-trips typed checker search controls") {
+    val config = ApalacheConfig(checker = CheckerPatch(
+        seed = Some(42),
+        searchKind = Some(SearchKind.Simulate),
+        maxRun = Some(7),
+        outputTraces = Some(true),
+    ))
+
+    val json = ApalacheConfigJsonParser.write(config)
+    val decoded = ApalacheConfigJsonParser.parse(json)
+    assert(decoded.isSuccess)
+    assert(decoded.requireValue() == config)
+    assert(json.contains(""""seed":42"""))
+    assert(json.contains(""""search-kind":"simulate""""))
+    assert(json.contains(""""max-run":7"""))
+    assert(json.contains(""""output-traces":true"""))
+  }
+
+  test("seed parsing accepts the upper bound and rejects overflow") {
+    val boundary = ApalacheConfigJsonParser.parse(s"""{"checker":{"seed":${Int.MaxValue}}}""")
+    assert(boundary.isSuccess)
+    assert(boundary.requireValue().checker.seed.contains(Int.MaxValue))
+
+    val overflow = ApalacheConfigJsonParser.parse("""{"checker":{"seed":2147483648}}""")
+    assert(!overflow.isSuccess)
+    assert(overflow.errors.contains("$.checker.seed: Expected a JSON integer in -2147483648..2147483647."))
   }
 
   test("preserves an explicit source format when a filename cannot express it") {
