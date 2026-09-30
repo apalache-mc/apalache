@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.pp
 
-import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperT1, RecT1, SetT1, StrT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, FunT1, IntT1, OperEx, OperT1, RecT1, SetT1, StrT1, TupT1, Typed}
 import at.forsyte.apalache.tla.lir.convenience.tla._
 import at.forsyte.apalache.tla.lir.transformations.impl.TrackerWithListeners
 import at.forsyte.apalache.tla.lir.TypedPredefs._
@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.scalatestplus.junit.JUnitRunner
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funsuite.AnyFunSuite
+import at.forsyte.apalache.tla.lir.oper.{TlaBoolOper, TlaSetOper}
 
 @RunWith(classOf[JUnitRunner])
 class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
@@ -286,4 +287,66 @@ class TestExprOptimizer extends AnyFunSuite with BeforeAndAfterEach {
     val expected = exp(int(2), card(name("S").as(intSetT)).as(intT)).as(intT)
     assert(expected == output)
   }
+
+  // an optimization for set membership over sets of tuples.
+  test("""t \in { <<x, y>>: x \in S, y \in T } becomes t[1] \in S /\ t[2] \in T""") {
+    val tupT = TupT1(IntT1, BoolT1)
+    val tuple_xy = tuple(name("x").as(intT), name("y").as(boolT)).as(tupT)
+    val S = name("S").as(intSetT)
+    val T = name("T").as(boolSetT)
+    val tupleSet = map(tuple_xy, name("x").as(intT), S, name("y").as(boolT), T).as(SetT1(tupT))
+    val t = name("t").as(tupT)
+    val input = in(t, tupleSet).as(boolT)
+
+    val mem1 = in(appFun(t, int(1)).as(intT), S).as(boolT)
+    val mem2 = in(appFun(t, int(2)).as(boolT), T).as(boolT)
+    val expected = and(mem1, mem2).as(boolT)
+    val output = optimizer.apply(input)
+
+    assert(expected == output)
+    output match {
+      case OperEx(TlaBoolOper.and, OperEx(TlaSetOper.in, t1, _), OperEx(TlaSetOper.in, t2, _)) =>
+        assert(t1.typeTag == Typed(intT))
+        assert(t2.typeTag == Typed(boolT))
+
+      case _ =>
+        fail(s"Unexpected output: $output")
+    }
+  }
+
+  test("""t \in (A \X B) \X C becomes t[1][1] \in A /\ t[1][2] \in B /\ t[2] \in C""") {
+    val abT = TupT1(IntT1, IntT1)
+    val tupT = TupT1(abT, IntT1)
+    val A = name("A").as(intSetT)
+    val B = name("B").as(intSetT)
+    val C = name("C").as(intSetT)
+    val tuple_ab = tuple(name("a").as(intT), name("b").as(intT)).as(abT)
+    val setAB = map(tuple_ab, name("a").as(intT), A, name("b").as(intT), B).as(SetT1(abT))
+    val tuple_xy = tuple(name("x").as(abT), name("y").as(intT)).as(tupT)
+    val tupleSet = map(tuple_xy, name("x").as(abT), setAB, name("y").as(intT), C).as(SetT1(tupT))
+    val t = name("t").as(tupT)
+    val input = in(t, tupleSet).as(boolT)
+    val output = optimizer.apply(input)
+
+    val t1 = appFun(t, int(1)).as(abT)
+    val memAB = and(in(appFun(t1, int(1)).as(intT), A).as(boolT), in(appFun(t1, int(2)).as(intT), B).as(boolT))
+      .as(boolT)
+    val memC = in(appFun(t, int(2)).as(intT), C).as(boolT)
+    val expected = and(memAB, memC).as(boolT)
+
+    assert(expected == output)
+  }
+
+  test("""t \in { <<y, x>>: x \in S, y \in T } is not optimized""") {
+    val tupT = TupT1(IntT1, IntT1)
+    val tuple_yx = tuple(name("y").as(intT), name("x").as(intT)).as(tupT)
+    val S = name("S").as(intSetT)
+    val T = name("T").as(intSetT)
+    val tupleSet = map(tuple_yx, name("x").as(intT), S, name("y").as(intT), T).as(SetT1(tupT))
+    val input = in(name("t").as(tupT), tupleSet).as(boolT)
+    val output = optimizer.apply(input)
+
+    assert(input == output)
+  }
+
 }
