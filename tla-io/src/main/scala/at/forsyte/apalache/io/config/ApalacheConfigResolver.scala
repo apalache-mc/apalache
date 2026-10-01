@@ -25,6 +25,9 @@ object ApalacheConfigResolver {
   /** Deadlock setting used when neither application nor TLC configuration supplies one. */
   val defaultCheckDeadlocks: Boolean = true
 
+  /** IPv4 loopback address used by the explorer server unless explicitly overridden. */
+  val defaultExplorerIp: String = "127.0.0.1"
+
   /** Resolve the values needed to initialize output and logging for a command. */
   def resolveCommandInitialization(config: ApalacheConfig): ConfigParseResult[CommandInitializationOptions] = {
     val commandResult = requireCommand(config)
@@ -197,16 +200,32 @@ object ApalacheConfigResolver {
       ConfigParseResult.failureFrom(commandResult)
     } else {
       val server = config.mergeWithDefaults.server
-      ConfigParseResult.success(
-          ValidatedServerOptions(
-              resolveCommon(config),
-              ServerOptions(
-                  port = requireDefault(server.port, s"$SERVER.$PORT"),
-                  serverType = requireDefault(server.serverType, s"$SERVER.$SERVER_TYPE"),
+      val serverType = requireDefault(server.serverType, s"$SERVER.$SERVER_TYPE")
+      config.server.ip match {
+        case Some(ip) if ip.trim.isEmpty =>
+          ConfigParseResult.failure(List(s"$SERVER.$IP must not be blank."), commandResult.warnings)
+        case Some(_) if serverType == ServerType.Checker =>
+          ConfigParseResult.failure(
+              List(s"$SERVER.$IP is supported only by the explorer server."),
+              commandResult.warnings,
+          )
+        case ip =>
+          val resolvedIp = serverType match {
+            case ServerType.Explorer => Some(ip.getOrElse(defaultExplorerIp))
+            case ServerType.Checker  => None
+          }
+          ConfigParseResult.success(
+              ValidatedServerOptions(
+                  resolveCommon(config),
+                  ServerOptions(
+                      ip = resolvedIp,
+                      port = requireDefault(server.port, s"$SERVER.$PORT"),
+                      serverType = serverType,
+                  ),
               ),
-          ),
-          commandResult.warnings,
-      )
+              commandResult.warnings,
+          )
+      }
     }
   }
 

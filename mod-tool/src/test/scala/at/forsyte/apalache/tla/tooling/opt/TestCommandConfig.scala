@@ -98,14 +98,17 @@ class TestCommandConfig extends AnyFunSuite {
 
     val serverConfig =
       serverPatch.mergeWithLower(ApalacheConfig(server = ServerPatch(
+              ip = Some("192.0.2.1"),
               port = Some(9000),
               serverType = Some(ServerType.Explorer),
           )))
+    assert(serverConfig.server.ip.contains("192.0.2.1"))
     assert(serverConfig.server.port.contains(9000))
     assert(serverConfig.server.serverType.contains(ServerType.Explorer))
 
     val explicitServerCommand = new ServerCmd()
-    explicitServerCommand.read(List("--server-type=explorer"))
+    explicitServerCommand.read(List("--server-type=explorer", "--ip=0.0.0.0"))
+    assert(explicitServerCommand.toConfig.requireValue().server.ip.contains("0.0.0.0"))
     assert(explicitServerCommand.toConfig.requireValue().server.serverType.contains(ServerType.Explorer))
 
     val simulateCommand = new SimulateCmd()

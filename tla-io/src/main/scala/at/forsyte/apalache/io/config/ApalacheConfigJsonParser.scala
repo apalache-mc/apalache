@@ -248,7 +248,8 @@ object ApalacheConfigJsonParser {
           val path = s"$$.$SERVER"
           build(
               ServerPatch(),
-              validation(rejectUnknown(obj, path, Set(PORT, SERVER_TYPE))),
+              validation(rejectUnknown(obj, path, Set(IP, PORT, SERVER_TYPE))),
+              update(text(obj, IP, path))((server: ServerPatch, value) => server.copy(ip = value)),
               update(integer(obj, PORT, path))((server: ServerPatch, value) => server.copy(port = value)),
               update(enumValue(obj, SERVER_TYPE, path, ServerType.fromString))((server: ServerPatch, value) =>
                 server.copy(serverType = value)),
@@ -582,6 +583,7 @@ object ApalacheConfigJsonParser {
 
   private def writeServer(root: ObjectNode, server: ServerPatch): Unit = {
     val obj = mapper.createObjectNode()
+    put(obj, IP, server.ip)
     putInt(obj, PORT, server.port)
     putNamed(obj, SERVER_TYPE, server.serverType, (value: ServerType) => value.name)
     setIfNonEmpty(root, SERVER, obj)
