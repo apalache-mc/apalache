@@ -10,6 +10,200 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
   val i_to_B: TlaType1 = FunT1(IntT1, SetT1(BoolT1))
   val i_to_i_to_B: TlaType1 = FunT1(IntT1, FunT1(IntT1, SetT1(BoolT1)))
 
+  private def assertForBothGuardValues(rewriter: SymbStateRewriter, state: SymbState, guard: ArenaCell): Unit = {
+    rewriter.push()
+    val nextState = rewriter.rewriteUntilDone(state)
+    for (value <- Seq(false, true)) {
+      rewriter.push()
+      rewriter.solverContext.assertGroundExpr(tla.eql(guard.toBuilder, tla.bool(value)))
+      assertTlaExAndRestore(rewriter, nextState)
+      rewriter.pop()
+    }
+    rewriter.pop()
+  }
+
+  // Keep all four operands symbolic so constructor normalization cannot hide the lazy-equality bug.
+  for (sameDomain <- Seq(false, true); sameCodomain <- Seq(false, true)) {
+    test(s"function-set equality (#3477): symbolic operands, sameDomain=$sameDomain, sameCodomain=$sameCodomain") {
+      rewriterType: SMTEncoding =>
+        val rewriter = create(rewriterType)
+        var state = new SymbState(tla.bool(true), arena, Binding())
+        val guards = (0 until 4).map { _ =>
+          state = state.updateArena(_.appendCell(BoolT1))
+          state.arena.topCell
+        }
+
+        def operand(index: Int, value: Int): TBuilderInstruction =
+          tla.ite(guards(index).toBuilder, tla.enumSet(tla.int(value)), tla.emptySet(IntT1))
+
+        state = rewriter.rewriteUntilDone(state.setRex(tla.funSet(operand(0, 1), operand(1, 3))))
+        val left = state.asCell
+        state = rewriter.rewriteUntilDone(state.setRex(tla.funSet(operand(2, if (sameDomain) 1 else 2),
+                    operand(3, if (sameCodomain) 3 else 4))))
+        val right = state.asCell
+        assert(left.cellType.isInstanceOf[FinFunSetT])
+        assert(right.cellType.isInstanceOf[FinFunSetT])
+
+        // Repeat after pop, reversing the operands, to exercise equality-cache scoping and symmetry.
+        for ((a, b) <- Seq((left, right), (right, left))) {
+          rewriter.push()
+          val eqState = rewriter.rewriteUntilDone(state.setRex(tla.eql(a.toBuilder, b.toBuilder)))
+          for (mask <- 0 until 16) {
+            val present = guards.indices.map(i => (mask & (1 << i)) != 0)
+            val d1 = present(0)
+            val c1 = present(1)
+            val d2 = present(2)
+            val c2 = present(3)
+            val expected =
+              (!d1 && !d2) || (d1 && d2 && !c1 && !c2) ||
+                (d1 && d2 && c1 && c2 && sameDomain && sameCodomain)
+            rewriter.push()
+            guards.zip(present).foreach { case (guard, value) =>
+              rewriter.solverContext.assertGroundExpr(tla.eql(guard.toBuilder, tla.bool(value)))
+            }
+            withClue(s"membership mask=$mask: ") {
+              // Check consistency as well as validity: an inconsistent encoding must not pass vacuously.
+              assertTlaExAndRestore(rewriter, eqState.setRex(tla.eql(tla.unchecked(eqState.ex), tla.bool(expected))))
+            }
+            rewriter.pop()
+          }
+          rewriter.pop()
+        }
+    }
+  }
+
+  for (filterDomain <- Seq(false, true)) {
+    test(s"function-set equality (#3477): filtered operand, filterDomain=$filterDomain") { rewriterType: SMTEncoding =>
+      val rewriter = create(rewriterType)
+      val withGuard = arena.appendCell(BoolT1)
+      val guard = withGuard.topCell
+      val filtered = tla.filter(tla.name("x", IntT1), tla.enumSet(tla.int(1), tla.int(2)),
+          tla.and(guard.toBuilder, tla.eql(tla.name("x", IntT1), tla.int(1))))
+      var state = rewriter.rewriteUntilDone(new SymbState(filtered, withGuard, Binding()))
+      val set = state.asCell
+      assert(state.arena.getHas(set).nonEmpty)
+
+      def funSet(value: Int): TBuilderInstruction =
+        if (filterDomain) tla.funSet(set.toBuilder, tla.enumSet(tla.int(value)))
+        else tla.funSet(tla.enumSet(tla.int(value)), set.toBuilder)
+
+      state = rewriter.rewriteUntilDone(state.setRex(funSet(3)))
+      val left = state.asCell
+      state = rewriter.rewriteUntilDone(state.setRex(funSet(4)))
+      val right = state.asCell
+      assert(left.cellType.isInstanceOf[FinFunSetT])
+      assert(right.cellType.isInstanceOf[FinFunSetT])
+      val eq = tla.eql(left.toBuilder, right.toBuilder)
+      assertForBothGuardValues(rewriter, state.setRex(tla.eql(eq, tla.not(guard.toBuilder))), guard)
+    }
+  }
+
+  for (sameOuterDomain <- Seq(false, true)) {
+    test(s"function-set equality (#3477): nested codomains, sameOuterDomain=$sameOuterDomain") {
+      rewriterType: SMTEncoding =>
+        val rewriter = create(rewriterType)
+        val withGuard = arena.appendCell(BoolT1)
+        val guard = withGuard.topCell
+        val codomain = tla.ite(guard.toBuilder, tla.emptySet(IntT1), tla.enumSet(tla.int(3)))
+        val leftEx = tla.funSet(tla.enumSet(tla.int(0)), tla.funSet(tla.enumSet(tla.int(1)), codomain))
+        val rightEx = tla
+          .funSet(tla.enumSet(tla.int(if (sameOuterDomain) 0 else 10)), tla.funSet(tla.enumSet(tla.int(2)), codomain))
+        var state = rewriter.rewriteUntilDone(new SymbState(leftEx, withGuard, Binding()))
+        val left = state.asCell
+        state = rewriter.rewriteUntilDone(state.setRex(rightEx))
+        val right = state.asCell
+        assert(state.arena.getCdm(left).cellType.isInstanceOf[FinFunSetT])
+        assert(state.arena.getCdm(right).cellType.isInstanceOf[FinFunSetT])
+        val eq = tla.eql(left.toBuilder, right.toBuilder)
+        assertForBothGuardValues(rewriter, state.setRex(tla.eql(eq, guard.toBuilder)), guard)
+    }
+  }
+
+  test("function-set equality (#3477): mixed conditional empty-function singleton and lazy set") {
+    rewriterType: SMTEncoding =>
+      val rewriter = create(rewriterType)
+      var state = new SymbState(tla.bool(true), arena, Binding())
+      val guards = (0 until 3).map { _ =>
+        state = state.updateArena(_.appendCell(BoolT1))
+        state.arena.topCell
+      }
+
+      def operand(index: Int, value: Int): TBuilderInstruction =
+        tla.ite(guards(index).toBuilder, tla.emptySet(IntT1), tla.enumSet(tla.int(value)))
+
+      state = rewriter.rewriteUntilDone(state.setRex(tla.funSet(operand(0, 1), tla.emptySet(IntT1))))
+      val ordinary = state.asCell
+      state = rewriter.rewriteUntilDone(state.setRex(tla.funSet(operand(1, 2), operand(2, 3))))
+      val lazySet = state.asCell
+      assert(ordinary.cellType == CellTFrom(SetT1(FunT1(IntT1, IntT1))))
+      assert(lazySet.cellType.isInstanceOf[FinFunSetT])
+      for ((left, right) <- Seq((ordinary, lazySet), (lazySet, ordinary))) {
+        rewriter.push()
+        val eqState = rewriter.rewriteUntilDone(state.setRex(tla.eql(left.toBuilder, right.toBuilder)))
+        for (mask <- 0 until 8) {
+          val empty = guards.indices.map(i => (mask & (1 << i)) != 0)
+          val expected = (empty(0) && empty(1)) || (!empty(0) && !empty(1) && empty(2))
+          rewriter.push()
+          guards.zip(empty).foreach { case (guard, value) =>
+            rewriter.solverContext.assertGroundExpr(tla.eql(guard.toBuilder, tla.bool(value)))
+          }
+          assertTlaExAndRestore(rewriter, eqState.setRex(tla.eql(tla.unchecked(eqState.ex), tla.bool(expected))))
+          rewriter.pop()
+        }
+        rewriter.pop()
+      }
+  }
+
+  test("function-set equality (#3477): nested mixed representations") { rewriterType: SMTEncoding =>
+    val rewriter = create(rewriterType)
+    val withGuard = arena.appendCell(BoolT1)
+    val guard = withGuard.topCell
+    val domain = tla.ite(guard.toBuilder, tla.emptySet(IntT1), tla.enumSet(tla.int(1)))
+    val left = tla.funSet(tla.enumSet(tla.int(0)), tla.funSet(domain, tla.emptySet(IntT1)))
+    val right = tla.funSet(tla.enumSet(tla.int(0)), tla.funSet(domain, tla.enumSet(tla.int(2))))
+    val assertions = tla.and(
+        tla.eql(tla.eql(left, right), guard.toBuilder),
+        tla.eql(tla.eql(tla.enumSet(left), tla.enumSet(right)), guard.toBuilder),
+    )
+    val state = new SymbState(assertions, withGuard, Binding())
+    assertForBothGuardValues(rewriter, state, guard)
+  }
+
+  test("function-set equality (#3477): reject general mixed enumerated function sets") { rewriterType: SMTEncoding =>
+    val domain = tla.enumSet(tla.int(1))
+    val fun = tla.funDef(tla.int(2), tla.name("x", IntT1) -> domain)
+    val equality = tla.eql(tla.funSet(domain, tla.enumSet(tla.int(2))), tla.enumSet(fun))
+    val rewriter = create(rewriterType)
+    val error = intercept[RewriterException] {
+      rewriter.rewriteUntilDone(new SymbState(equality, arena, Binding()))
+    }
+    assert(error.getMessage.contains("enumerated set of nonempty-domain functions"))
+  }
+
+  test("function-set equality (#3477): reject unsupported lazy operand equality") { rewriterType: SMTEncoding =>
+    val domain = tla.enumSet(tla.int(0))
+    val left = tla.funSet(domain, tla.powSet(tla.enumSet(tla.int(1))))
+    val right = tla.funSet(domain, tla.powSet(tla.enumSet(tla.int(2))))
+    val rewriter = create(rewriterType)
+    // Unexpanded powersets have no ordinary membership edges. Treating them as enumerated sets would equate them.
+    intercept[CheckerException] {
+      rewriter.rewriteUntilDone(new SymbState(tla.eql(left, right), arena, Binding()))
+    }
+  }
+
+  test("function-set equality (#3477): literal degenerate sets") { rewriterType: SMTEncoding =>
+    val empty = tla.emptySet(IntT1)
+    val one = tla.enumSet(tla.int(1))
+    val two = tla.enumSet(tla.int(2))
+    val assertions = tla.and(
+        tla.eql(tla.funSet(empty, one), tla.funSet(empty, two)),
+        tla.eql(tla.funSet(one, empty), tla.funSet(two, empty)),
+        tla.not(tla.eql(tla.funSet(empty, empty), tla.funSet(one, empty))),
+        tla.not(tla.eql(tla.funSet(one, one), tla.funSet(one, two))),
+    )
+    assertTlaExAndRestore(create(rewriterType), new SymbState(assertions, arena, Binding()))
+  }
+
   test("[{} -> {}] is a singleton containing the empty function") { rewriterType: SMTEncoding =>
     val funSet = tla.funSet(tla.emptySet(IntT1), tla.emptySet(IntT1))
     val state = new SymbState(funSet, arena, Binding())

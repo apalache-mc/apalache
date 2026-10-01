@@ -2657,6 +2657,14 @@ $ apalache-mc check --inv=Inv --length=0 --no-deadlock EmptyFunctionSet.tla | se
 EXITCODE: OK
 ```
 
+### check FunctionSetEquality3477.tla: equality with symbolically empty operands
+
+```sh
+$ apalache-mc check --inv=Inv --length=0 --no-deadlock FunctionSetEquality3477.tla | sed 's/[IEW]@.*//'
+...
+EXITCODE: OK
+```
+
 ### check Bug1136.tla reports no error: regression for #1136
 
 ```sh
