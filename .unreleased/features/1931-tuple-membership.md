@@ -1,1 +1,0 @@
-Rewrite `t \in S \X T` into `t[1] \in S /\ t[2] \in T` instead of constructing the cartesian product,  see #1931.
