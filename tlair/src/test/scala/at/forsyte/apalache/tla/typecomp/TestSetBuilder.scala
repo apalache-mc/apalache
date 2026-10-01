@@ -61,6 +61,16 @@ class TestSetBuilder extends BuilderTest {
     }
   }
 
+  test("large enumSet does not overflow the stack") {
+    // Like the temperature range -200..200, but large enough to expose
+    // non-stack-safe builder evaluation even on JVMs with larger stacks.
+    val elements = (-5000 to 5000).map(builder.int(_))
+    val result = builder.enumSet(elements: _*).build
+    val expected = OperEx(TlaSetOper.enumSet, elements.map(_.build): _*)(Typed(SetT1(IntT1)))
+
+    assert(result.eqTyped(expected))
+  }
+
   test("emptySet") {
 
     def run(tt: TlaType1): Boolean = {

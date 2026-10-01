@@ -632,7 +632,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     writer.write(expr)
     printWriter.flush()
     val expected =
-      """{ x + y: x \in S, y \in T }""".stripMargin
+      """{ (x + y): x \in S, y \in T }""".stripMargin
     assert(expected == stringWriter.toString)
   }
 
@@ -642,6 +642,18 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     writer.write(expr)
     printWriter.flush()
     assert("{ ((~FALSE) \\in S): x \\in T }" == stringWriter.toString)
+  }
+
+  test("a map with membership-valued bodies under transparent Boolean wrappers") {
+    val writer = new PrettyWriter(printWriter, layout80)
+    val membership = in(plus(name("y"), int(0)), name("S"))
+    val expr = tuple(
+        map(and(membership), name("y"), name("T")),
+        map(or(membership), name("y"), name("T")),
+    )
+    writer.write(expr)
+    printWriter.flush()
+    assert("<<{ (y + 0 \\in S): y \\in T }, { (y + 0 \\in S): y \\in T }>>" == stringWriter.toString)
   }
 
   test("a multi-line map") {
@@ -657,7 +669,7 @@ class TestPrettyWriter extends AnyFunSuite with BeforeAndAfterEach {
     printWriter.flush()
     val expected =
       """{
-        |  verylong1 + verylong2:
+        |  (verylong1 + verylong2):
         |    verylong1 \in verylong3,
         |    verylong2 \in verylong4
         |}""".stripMargin
