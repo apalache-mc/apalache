@@ -97,6 +97,22 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
         apply(tla.and(domEq +: fieldsEq: _*).as(b))
       }
 
+    case memEx @ OperEx(TlaSetOper.in, tup,
+            OperEx(TlaSetOper.map, tupleEx @ OperEx(TlaFunOper.tuple, elems @ _*), varsAndSets @ _*))
+        if isTuple(tupleEx) && 2 * elems.length == varsAndSets.length =>
+      // Transform tup \in {<<x_1,...,x_k>> : x_1 \in S_1 , ... , x_k \in S_k}
+      // into tup[1] \in S_1 /\ ... /\ tup[k] \in S_k
+      val (vars, sets) = TlaOper.deinterleave(varsAndSets)
+      if (elems != vars) {
+        memEx
+      } else {
+        val b = BoolT1
+        val memberships = elems.zip(sets).zipWithIndex.map { case ((elem, set), i) =>
+          apply(tla.in(tla.appFun(tup, tla.int(i + 1)).as(elem.typeTag.asTlaType1()), set).as(b))
+        }
+        apply(tla.and(memberships: _*).as(b))
+      }
+
     // S ∈ SUBSET { ["a" ↦ x] : x ∈ T }
     case memEx @ OperEx(TlaSetOper.in, setRec,
             OperEx(TlaSetOper.powerset,
@@ -261,6 +277,13 @@ class ExprOptimizer(nameGen: UniqueNameGenerator, tracker: TransformationTracker
       case Typed(SetT1(elemType)) => elemType
       case t                      =>
         throw new MalformedTlaError(s"Expected a set, found: $t", e)
+    }
+  }
+
+  private def isTuple(e: TlaEx): Boolean = {
+    e.typeTag match {
+      case Typed(TupT1(_ @_*)) => true
+      case _                   => false
     }
   }
 }

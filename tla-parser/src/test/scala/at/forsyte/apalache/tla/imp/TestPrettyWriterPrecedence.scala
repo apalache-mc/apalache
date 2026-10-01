@@ -171,14 +171,38 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     assertRoundTrips(cases, "LabelRoundTrip")
   }
 
-  test("membership-valued set-map bodies are parenthesized and round-trip through SANY") {
+  test("parenthesized set-map bodies round-trip through SANY") {
     val scalarBody = in(tlaNot(bool(false)), name("S"))
     val tupleBody = in(tuple(name("x"), name("y")), name("S"))
+    val ordinaryMap = map(plus(name("u"), name("v")), name("u"), name("S"), name("v"), name("T"))
     val nestedMap = map(map(in(name("x"), name("S")), name("u"), name("T")), name("v"), name("S"))
+    val wrappedMembership = in(name("z"), enumSet(int(1)))
+    val compoundMembership = in(plus(name("z"), int(0)), enumSet(int(1)))
+    val canonicalWrappedMap = map(wrappedMembership, name("z"), enumSet(int(2)))
+    val canonicalCompoundMap = map(compoundMembership, name("z"), enumSet(int(2)))
     val cases = Seq(
+        exactCase("ordinary map with multiple binders", ordinaryMap, "{ (u + v): u \\in S, v \\in T }"),
         exactCase("scalar membership body", map(scalarBody, name("z"), name("T")), "{ ((~FALSE) \\in S): z \\in T }"),
         exactCase("tuple membership body", map(tupleBody, name("z"), name("T")), "{ (<<x, y>> \\in S): z \\in T }"),
-        exactCase("membership body in a nested map", nestedMap, "{ { (x \\in S): u \\in T }: v \\in S }"),
+        exactCase("nested map body", nestedMap, "{ ({ (x \\in S): u \\in T }): v \\in S }"),
+        RoundTripCase(
+            "membership under singleton conjunction",
+            map(and(wrappedMembership), name("z"), enumSet(int(2))),
+            "{ (z \\in {1}): z \\in {2} }",
+            canonicalWrappedMap,
+        ),
+        RoundTripCase(
+            "membership under singleton disjunction",
+            map(or(wrappedMembership), name("z"), enumSet(int(2))),
+            "{ (z \\in {1}): z \\in {2} }",
+            canonicalWrappedMap,
+        ),
+        RoundTripCase(
+            "compound membership under singleton conjunction",
+            map(and(compoundMembership), name("z"), enumSet(int(2))),
+            "{ (z + 0 \\in {1}): z \\in {2} }",
+            canonicalCompoundMap,
+        ),
     )
 
     assertRoundTrips(cases, "SetMapBodyRoundTrip")
