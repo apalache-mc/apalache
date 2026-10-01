@@ -80,14 +80,7 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
         if (polyVars.isEmpty) {
           // For a non-polymorphic type, report it, as it may be the only place, where it is reported.
           // This is relevant for VARIABLES and CONSTANTS.
-          // Add a trivial constraint: a = declaredType. We need it to place a callback.
-          val fresh = varPool.fresh
-          val watchClause =
-            EqClause(fresh, declaredType)
-              .setOnTypeFound { inferredType =>
-                onTypeFound(ex.sourceRef, inferredType)
-              }
-          solver.addConstraint(watchClause)
+          solver.addTypeReport(declaredType)(onTypeFound(ex.sourceRef, _))
         }
 
         computeRec(extCtx, solver, scopedEx)
@@ -101,8 +94,15 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             onTypeFound(ex.sourceRef, scheme.principalType)
             scheme.principalType
           } else {
+            // Operators passed by name need fresh quantified variables, just like applications by name.
+            // Keep unquantified variables shared with the enclosing context.
+            var instantiatedType = scheme.principalType
+            if (scheme.principalType.isInstanceOf[OperT1] && scheme.quantifiedVars.nonEmpty) {
+              val varRenamingMap = scheme.quantifiedVars.toSeq.map(v => EqClass(v) -> varPool.fresh)
+              instantiatedType = Substitution(varRenamingMap: _*).subRec(scheme.principalType)
+            }
             // introduce a constant, as the type may get refined later
-            computeRec(ctx, solver, mkConst(ex.sourceRef, scheme.principalType))
+            computeRec(ctx, solver, mkConst(ex.sourceRef, instantiatedType))
           }
         } else {
           onTypeError(ex.sourceRef, s"No annotation found for $name. Make sure that you've put one in front of $name.")
@@ -199,12 +199,8 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
             instantiatedType = Substitution(varRenamingMap: _*).subRec(scheme.principalType)
           }
 
-          // If we reported the type right away, it would contained variables that have not been resolved yet.
-          // Hence, we introduce a fresh variable to get the type reported, once the solver knows it most precisely.
-          val fresh = varPool.fresh
-          val clause = EqClause(fresh, instantiatedType)
-            .setOnTypeFound(tt => onTypeFound(name.sourceRef, tt))
-          solver.addConstraint(clause)
+          // Report the instantiated type after the constraints have refined it.
+          solver.addTypeReport(instantiatedType)(onTypeFound(name.sourceRef, _))
           // delegate the rest to the application-by-type
           val instantiatedExpr = mkApp(ex.sourceRef, Seq(instantiatedType), args: _*)
           instantiatedExpr.typeErrorExplanation = ex.typeErrorExplanation
@@ -235,9 +231,16 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
       case letEx @ EtcLet(name, defEx @ EtcAbs(defBody, binders @ _*), scopedEx) =>
         // Let-definitions that support polymorphism.
         // let name = lambda x \in X, y \in Y, ...: boundEx in scopedEx
+        // This is the let rule of Hindley-Milner, with a separate constraint solver for the definition:
+        //   1. Find the type variables that the definition shares with the enclosing context.
+        //   2. Solve the constraints of the definition with its own solver.
+        //   3. Pass the refinements of the shared variables to the enclosing solver.
+        //   4. Generalize the type variables that do not occur in the refined enclosing context.
+        //
         // Before analyzing the operator definition, try to partially solve the equations in the current context.
         // If it is successful, use the partial solution to refine the types in the type context.
         val approxSolution = solver.solvePartially().getOrElse(throw new UnwindException)
+        val sharedVars = sharedTypeVars(ctx, approxSolution)
 
         // introduce a new instance of the constraint solver for the operator definition
         val letInSolver = new ConstraintSolver(varPool)
@@ -298,19 +301,23 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           .setOnTypeError(onError)
 
         letInSolver.addConstraint(defClause)
+        letInSolver.addTypeReport(defType)(onTypeFound(defEx.sourceRef, _))
 
-        val principalDefType =
-          letInSolver.solve() match {
+        val localSolution =
+          letInSolver.solveDeferringReports() match {
             case None =>
               onTypeError(ex.sourceRef, s"Error when computing the type of $name")
               throw new UnwindException
 
             case Some(sub) =>
-              sub.subRec(defType)
+              sub
           }
 
-        // Find free variables of the principal type, to use them as quantified variables
-        val freeVars = principalDefType.usedNames.filter(solver.isFreeVar)
+        val enclosingSolution = exportRefinements(solver, localSolution, sharedVars, name, defEx.sourceRef)
+        val principalDefType = enclosingSolution.subRec(localSolution.subRec(defType))
+        // Generalize the type variables that do not occur in the refined enclosing context. This matches
+        // `reportTypesTo` below, which defers only the reports that depend on the shared variables.
+        val freeVars = principalDefType.usedNames -- typeVarsUnder(enclosingSolution, sharedVars)
         if (!inferPolytypes && freeVars.nonEmpty) {
           // the user has disabled let-polymorphism
           onTypeError(ex.sourceRef,
@@ -337,8 +344,9 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
           }
         }
 
-        // report the type of the definition
-        onTypeFound(defEx.sourceRef, principalDefType)
+        // The signature and body may still depend on the shared variables. Do not publish provisional types:
+        // later definitions or the IN expression can refine those variables, even with polymorphism disabled.
+        letInSolver.reportTypesTo(solver, sharedVars)
 
         // compute the type of the expression under the definition
         val underCtx = new TypeContext(ctx.types + (name -> TlaType1Scheme(principalDefType, freeVars)))
@@ -348,6 +356,42 @@ class EtcTypeChecker(varPool: TypeVarPool, inferPolytypes: Boolean = true) exten
       case EtcLet(_, _, _) =>
         throw new RuntimeException("Bug in type checker. Ill-formed let-expression: " + ex)
     }
+  }
+
+  // Find the type variables that a LET definition shares with the enclosing context: the variables of the context types
+  // that are not quantified, after applying the partial solution `sub`. The definition may refine these variables, but
+  // it must not generalize them. Quantified variables are not shared, as every use instantiates them with fresh
+  // variables.
+  private def sharedTypeVars(ctx: TypeContext, sub: Substitution): Set[Int] = {
+    val unquantified = ctx.types.values.flatMap(scheme => scheme.principalType.usedNames -- scheme.quantifiedVars)
+    typeVarsUnder(sub, unquantified.toSet)
+  }
+
+  // Pass the refinements of the shared variables in the local solution of the definition `name` to the enclosing
+  // solver, and return the partial solution of the enclosing solver. The type variables that were introduced only for
+  // the definition stay local, so they can be generalized.
+  private def exportRefinements(
+      solver: ConstraintSolver,
+      localSolution: Substitution,
+      sharedVars: Set[Int],
+      name: String,
+      defRef: EtcRef): Substitution = {
+    // sort the variables to add the constraints in a deterministic order
+    sharedVars.toSeq.sorted.foreach { v =>
+      val refinedType = localSolution.subRec(VarT1(v))
+      if (refinedType != VarT1(v)) {
+        val clause = EqClause(VarT1(v), refinedType)
+          .setOnTypeError((_, _) =>
+            onTypeError(defRef, s"Type constraints in $name conflict with the enclosing context"))
+        solver.addConstraint(clause)
+      }
+    }
+    solver.solvePartially().getOrElse(throw new UnwindException)
+  }
+
+  // the type variables that occur in the types of `vars` under the substitution `sub`
+  private def typeVarsUnder(sub: Substitution, vars: Set[Int]): Set[Int] = {
+    vars.flatMap(v => sub.subRec(VarT1(v)).usedNames)
   }
 
   // produce constraints for the binders that are used in a lambda expression

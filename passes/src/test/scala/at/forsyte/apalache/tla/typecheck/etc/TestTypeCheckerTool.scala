@@ -7,8 +7,8 @@ import at.forsyte.apalache.io.lir.TlaType1PrinterPredefs
 import at.forsyte.apalache.tla.imp.SanyImporter
 import at.forsyte.apalache.tla.lir.src.SourceStore
 import at.forsyte.apalache.tla.lir.transformations.impl.IdleTracker
-import at.forsyte.apalache.tla.lir.{TlaType1, Typed, TypingException, UID}
-import at.forsyte.apalache.tla.typecheck.{TypeCheckerListener, TypeCheckerTool}
+import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.typecheck.{DefaultTypeCheckerListener, TypeCheckerListener, TypeCheckerTool}
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import com.typesafe.scalalogging.LazyLogging
 import org.easymock.EasyMock
@@ -18,6 +18,7 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.easymock.EasyMockSugar
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.mutable
 import scala.io.Source
 
 /**
@@ -125,6 +126,153 @@ class TestTypeCheckerTool extends AnyFunSuite with BeforeAndAfterEach with EasyM
 
   test("the tool consumes its output on TlcSpec1") {
     typecheckSpec("TlcSpec1")
+  }
+
+  test("local definitions constrain the types of enclosing operators") {
+    val (rootName, modules) = sanyImporter.loadFromSource(loadSpecFromResource("LetPolyRegression"))
+    val module = modules(rootName)
+    val expectedType = parser("Int => Int")
+
+    for (inferPoly <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly, useRows = false)
+      val tagged = typechecker.checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
+          uid => throw new TypingException("No type for UID: " + uid, uid), module)
+      assert(tagged.isDefined)
+      val operators = tagged.get.operDeclarations.map(d => d.name -> d).toMap
+      for (name <- Seq("Direct", "ViaLet", "ViaLetIf", "ViaLocal", "ViaNested")) {
+        assert(operators(name).typeTag == Typed(expectedType), name)
+      }
+    }
+  }
+
+  test("a bad call to an operator constrained through LET is a type error") {
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE LetPolyBadCall ----
+        |EXTENDS Integers
+        |ViaLet(n) == LET k == n + 1 IN k
+        |Bad == ViaLet({TRUE}) = 0
+        |====
+        |""".stripMargin))
+    val errors = mutable.ListBuffer.empty[String]
+    val listener = new DefaultTypeCheckerListener() {
+      override def onTypeError(sourceRef: EtcRef, message: String): Unit = errors += message
+    }
+    val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows = false)
+    assert(!typechecker.check(listener, modules(rootName)))
+    assert(errors.exists(_.contains("Set(Bool)")), errors.mkString("\n"))
+  }
+
+  test("shared LET types are final on every callback, including after JSON round-tripping") {
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE LetSharedTypes ----
+        |EXTENDS Integers
+        |F(n) == LET k == (CHOOSE y \in {n}: TRUE) = n
+        |            c == n + 1
+        |        IN k /\ c > 0
+        |Reversed(n) == LET c == n + 1
+        |                   k == (CHOOSE y \in {n}: TRUE) = n
+        |               IN k /\ c > 0
+        |ViaBody(n) == LET k == (CHOOSE y \in {n}: TRUE) = n
+        |              IN k /\ n > 0
+        |Nested(n) == LET k == LET j == CHOOSE y \in {n}: TRUE IN j
+        |             IN k + 1
+        |Alias(n, m) == LET k == IF TRUE THEN n ELSE m
+        |                   c == m + 1
+        |               IN k + c
+        |ViaSet(n) == LET k == n \cup {} IN k \cup {1}
+        |ViaRecord(n) == LET k == [captured |-> n]
+        |                    c == n + 1
+        |                IN k.captured + c
+        |====
+        |""".stripMargin))
+    val listener = new DefaultTypeCheckerListener() {
+      override def onTypeFound(sourceRef: ExactRef, tp: TlaType1): Unit = {
+        // Check every notification, not just the last type recorded for each UID. Like the production listener
+        // with --infer-poly=false, this must reject provisional polymorphic types immediately.
+        assert(tp.isMono, s"Provisional type $tp at $sourceRef")
+      }
+      override def onTypeError(sourceRef: EtcRef, message: String): Unit = fail(message)
+    }
+    val enc = new TlaToUJson(locatorOpt = None)(TlaType1PrinterPredefs.printer)
+    val dec = new UJsonToTla(sourceStoreOpt = None)(DefaultTagJsonReader)
+    for (inferPoly <- Seq(true, false); useRows <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly, useRows)
+      val tagged = typechecker
+        .checkAndTag(new IdleTracker(), listener, uid => throw new TypingException("No type for UID: " + uid, uid),
+            modules(rootName))
+        .get
+      val operators = tagged.operDeclarations.map(d => d.name -> d).toMap
+      for (name <- Seq("F", "Reversed", "ViaBody")) {
+        assert(operators(name).typeTag == Typed(parser("Int => Bool")))
+      }
+      for (name <- Seq("Nested", "ViaRecord")) {
+        assert(operators(name).typeTag == Typed(parser("Int => Int")))
+      }
+      assert(operators("Alias").typeTag == Typed(parser("(Int, Int) => Int")))
+      assert(operators("ViaSet").typeTag == Typed(parser("Set(Int) => Set(Int)")))
+      assert(typechecker.check(listener, dec.asTlaModule(enc(tagged))))
+    }
+  }
+
+  test("a local operator can share a captured type while generalizing its own parameter") {
+    // Passing K by name must instantiate its generalized parameter while preserving its captured type.
+    val scopedExprs = Seq(
+        "MixedLet" -> """K(TRUE).value /\ K(1).value = 1 /\ c > 0""",
+        "PassByName" -> "Apply(K, 1).value = c",
+    )
+    for ((moduleName, scopedExpr) <- scopedExprs; useRows <- Seq(true, false)) {
+      val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString(s"""
+          |---- MODULE $moduleName ----
+          |EXTENDS Integers
+          |Apply(Op(_), x) == Op(x)
+          |F(n) == LET K(y) == [captured |-> n, value |-> y]
+          |            c == n + 1
+          |        IN $scopedExpr
+          |====
+          |""".stripMargin))
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows)
+      val tagged = typechecker
+        .checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
+            uid => throw new TypingException("No type for UID: " + uid, uid), modules(rootName))
+        .get
+      val f = tagged.operDeclarations.find(_.name == "F").get
+      assert(f.typeTag == Typed(parser("Int => Bool")), moduleName)
+      val k = f.body.asInstanceOf[LetInEx].decls.find(_.name == "K").get
+      val signature = TlaType1.fromTypeTag(k.typeTag)
+      assert(signature.usedNames.size == 1, moduleName)
+      val a = VarT1(signature.usedNames.head)
+      val fields = Seq("captured" -> IntT1, "value" -> a)
+      val result = if (useRows) RecRowT1(RowT1(fields: _*)) else RecT1(fields: _*)
+      assert(signature == OperT1(Seq(a), result), moduleName)
+      assert(k.body.typeTag == Typed(result), moduleName)
+    }
+  }
+
+  test("passing a nested local operator by name preserves later refinements of its captured type") {
+    val (rootName, modules) = sanyImporter.loadFromSource(Source.fromString("""
+        |---- MODULE NestedLetByName ----
+        |EXTENDS Integers, Sequences
+        |IsId(Op(_)) == \A x: Op(x) = x
+        |F(n) == LET Wrap == LET K(y) == Head(n) IN IsId(K)
+        |        IN Wrap /\ Head(n) > 0
+        |====
+        |""".stripMargin))
+    for (useRows <- Seq(true, false)) {
+      val typechecker = new TypeCheckerTool(annotationStore, inferPoly = true, useRows)
+      val tagged = typechecker
+        .checkAndTag(new IdleTracker(), new DefaultTypeCheckerListener(),
+            uid => throw new TypingException("No type for UID: " + uid, uid), modules(rootName))
+        .get
+      val f = tagged.operDeclarations.find(_.name == "F").get
+      assert(f.typeTag == Typed(parser("Seq(Int) => Bool")))
+      val wrap = f.body.asInstanceOf[LetInEx].decls.find(_.name == "Wrap").get
+      val k = wrap.body.asInstanceOf[LetInEx].decls.find(_.name == "K").get
+      val signature = TlaType1.fromTypeTag(k.typeTag)
+      assert(signature.usedNames.size == 1)
+      val a = VarT1(signature.usedNames.head)
+      assert(signature == OperT1(Seq(a), IntT1))
+      assert(k.body.typeTag == Typed(IntT1))
+    }
   }
 
   private def typecheckSpecAndEncoding(specName: String): Unit = {
