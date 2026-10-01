@@ -238,7 +238,7 @@ package object typecomp {
    * @throws TBuilderScopeException
    *   when a constructed expression has an incorrect scope
    */
-  implicit def build[T](builderState: TBuilderInternalState[T]): T = builderState.run(TBuilderContext.empty)._2
+  implicit def build[T](builderState: TBuilderInternalState[T]): T = builderState.runRec(TBuilderContext.empty)._2
 
   /**
    * An implicit conversion via a class that works as [[build]], but via a method call to `.build()`.
