@@ -665,6 +665,16 @@ $ apalache-mc check Bug593.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
+### check Bug3491 preserves tuple binders in function domains
+
+```sh
+$ apalache-mc check --length=0 --init=Init --next=Next --inv=Inv Bug3491.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check Bug3400 reports SANY semantic error
 
 Out-of-order definitions should report SANY's semantic error details instead of
