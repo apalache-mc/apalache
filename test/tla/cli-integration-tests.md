@@ -665,6 +665,16 @@ $ apalache-mc check Bug593.tla | sed 's/I@.*//'
 EXITCODE: ERROR (255)
 ```
 
+### check Bug3491 preserves tuple binders in function domains
+
+```sh
+$ apalache-mc check --length=0 --init=Init --next=Next --inv=Inv Bug3491.tla | sed 's/I@.*//'
+...
+The outcome is: NoError
+...
+EXITCODE: OK
+```
+
 ### check Bug3400 reports SANY semantic error
 
 Out-of-order definitions should report SANY's semantic error details instead of
@@ -1932,8 +1942,11 @@ $ rm -rf ./test-out-dir
 
 This will run under cvc5 regardless which SMT_SOLVER is set; if both CLI arg and environment variable configure the same parameter, the CLI argument wins.
 
+Docker forwards stdout and stderr independently, so sort the diagnostic and exit code
+to keep their order stable. Match whole lines to exclude the repeated diagnostic in the bug report prompt.
+
 ```sh
-$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "error when rewriting to SMT:|EXITCODE" | sed -n '1p;$p' | sed 's/[[:space:]]*$//'
+$ apalache-mc check --smt-solver=cvc5 --length=0 --inv=SquareNonNegative NonLinearArithmetic.tla 2>&1 | sed 's/[IEW]@.*//' | grep -E "^<unknown>: error when rewriting to SMT:|^EXITCODE:" | sed 's/[[:space:]]*$//' | LC_ALL=C sort
 <unknown>: error when rewriting to SMT: cvc5 is using SMT logic QF_UFLIA, which only permits linear integer arithmetic, but the solver saw a nonlinear arithmetic term. Re-run with --tuning-options=cvc5.smt.logic=QF_UFNIA.
 EXITCODE: ERROR (255)
 ```
