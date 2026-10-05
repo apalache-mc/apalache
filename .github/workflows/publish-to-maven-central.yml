@@ -102,7 +102,7 @@ jobs:
 
           printf '%s' "$PGP_SECRET" | base64 --decode | gpg --batch --import
 
-      - name: Publish tla-ir and tla-io
+      - name: Publish tla-ir, tla-ir-java, and tla-io
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PUBLISH_MAVEN_PROJECT_ROOT: ${{ github.workspace }}

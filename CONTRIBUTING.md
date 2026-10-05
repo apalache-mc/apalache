@@ -555,8 +555,10 @@ When the PR is merged into `main`:
 
 ### Publishing libraries to Maven Central
 
-The Scala 2.13 libraries `org.apalache-mc:tla-ir_2.13` and
-`org.apalache-mc:tla-io_2.13` can be published independently of the Apalache distribution.
+The libraries `org.apalache-mc:tla-ir_2.13`, `org.apalache-mc:tla-ir-java`,
+`org.apalache-mc:tla-io_2.13`, and `org.apalache-mc:tla-io-java` are published in
+lockstep, independently of the Apalache distribution. The Java facades target
+Java 21 and use unsuffixed artifact names. See [the Java API guide](tla-ir-java/README.md).
 
 #### Automated publishing
 
@@ -606,7 +608,7 @@ The publication version is always read from `VERSION`; the script does not permi
 
 ```sh
 # VERSION must end in -SNAPSHOT. This publishes directly to Central snapshots.
-./script/publish-maven.sh snapshot
+make publish-maven-snapshot
 
 # VERSION must have no -SNAPSHOT and tracked files must be clean.
 # This publishes automatically after Central validation succeeds.

@@ -749,6 +749,7 @@ class Builder {
         TlaOper.eq.name -> TlaOper.eq,
         TlaOper.ne.name -> TlaOper.ne,
         TlaOper.apply.name -> TlaOper.apply,
+        TlaOper.label.name -> TlaOper.label,
         TlaOper.chooseBounded.name -> TlaOper.chooseBounded,
         TlaOper.chooseUnbounded.name -> TlaOper.chooseUnbounded,
         TlaBoolOper.and.name -> TlaBoolOper.and,
