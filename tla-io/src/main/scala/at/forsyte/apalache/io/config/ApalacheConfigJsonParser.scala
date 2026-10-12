@@ -2,7 +2,7 @@ package at.forsyte.apalache.io.config
 
 import at.forsyte.apalache.io.InputSource
 import at.forsyte.apalache.tla.lir.Feature
-import com.fasterxml.jackson.core.{JsonFactory, JsonParser}
+import com.fasterxml.jackson.core.{JsonFactory, JsonParser, StreamReadConstraints}
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 
@@ -29,6 +29,8 @@ object ApalacheConfigJsonParser {
 
   private val factory = new JsonFactory()
   factory.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+  // Raises default 20M-character limit to 1 GiB.
+  factory.setStreamReadConstraints(StreamReadConstraints.builder().maxStringLength(1024 * 1024 * 1024).build())
   private val mapper = new ObjectMapper(factory)
 
   /** Parse one strict JSON document into a sparse configuration, using `sourceName` to identify diagnostics. */
