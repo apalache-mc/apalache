@@ -33,7 +33,7 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     assert(result.isSuccess)
     result.requireValue().source match {
       case Some(InputSource.StringSource(parsed, _, _)) => assert(parsed.length == length)
-      case other                                         => fail(s"Unexpected source: $other")
+      case other                                        => fail(s"Unexpected source: $other")
     }
   }
 
