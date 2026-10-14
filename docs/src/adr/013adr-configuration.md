@@ -7,6 +7,9 @@
 > **Status: Deprecated.** Superseded by
 > [ADR-026: Explicit configuration and run options](./026adr-explicit-configuration.md).
 
+> **Revision note (2026-08-03):** `OutputManager` was renamed to
+> `OutputWorkspace`.
+
 **Table of Contents**
 
 - [Summary (Overview)](#summary)

@@ -121,6 +121,51 @@ jobs:
           find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
           find $HOME/.sbt                              -name "*.lock"               -delete || true
 
+  scala-cli-integration-tests:
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      # Match the MDX configuration/OS matrix while running its entries as
+      # independent jobs. The baseline jobs also cover configuration-independent commands.
+      fail-fast: false
+      matrix:
+        include:
+          - operating-system: ubuntu-latest
+            test-configurations: general,oopsla19-z3
+          - operating-system: macos-latest
+            test-configurations: general,oopsla19-z3
+          # Arrays and cvc5 have no expected OS-specific behavior in these
+          # tests, so run them once on Ubuntu instead of repeating them on macOS.
+          - operating-system: ubuntu-latest
+            test-configurations: arrays-z3
+          - operating-system: ubuntu-latest
+            test-configurations: oopsla19-cvc5
+    steps:
+      - uses: actions/checkout@v6
+      - name: Coursier cache
+        uses: coursier/cache-action@v6
+      - name: Coursier setup
+        uses: coursier/setup-action@v1
+        with:
+          jvm: temurin:25
+          apps: sbt
+      # see: https://github.com/actions/runner-images/issues/10788
+      - uses: sbt/setup-sbt@v1
+      - name: Set APALACHE_HOME env
+        run: echo "APALACHE_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+      - name: Run Scala CLI integration tests
+        run: make scala-integration
+        env:
+          APALACHE_CLI_TEST_CONFIGS: ${{ matrix.test-configurations }}
+      - name: Cleanup before cache
+        # See https://www.scala-sbt.org/1.x/docs/GitHub-Actions-with-sbt.html#Caching
+        shell: bash
+        run: |
+          rm -rf "$HOME/.ivy2/local" || true
+          find $HOME/Library/Caches/Coursier/v1        -name "ivydata-*.properties" -delete || true
+          find $HOME/.ivy2/cache                       -name "ivydata-*.properties" -delete || true
+          find $HOME/.cache/coursier/v1                -name "ivydata-*.properties" -delete || true
+          find $HOME/.sbt                              -name "*.lock"               -delete || true
+
   universal-package:
     runs-on: ubuntu-latest
     steps:
