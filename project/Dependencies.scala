@@ -12,7 +12,7 @@ object Dependencies {
 
   object Deps {
     // Versions
-    lazy val logbackVersion = "1.5.32"
+    lazy val logbackVersion = "1.5.38"
     lazy val clistVersion = "3.5.1"
 
     // Libraries
@@ -20,7 +20,7 @@ object Dependencies {
     val clistMacros = "org.backuity.clist" %% "clist-macros" % clistVersion
     val commonsBeanutils =
       "commons-beanutils" % "commons-beanutils" % "1.11.0" // Apparently an untracked dependency of commonsConfiguration2
-    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.15.0"
+    val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.15.1"
     val commonsIo = "commons-io" % "commons-io" % "2.22.0"
     private lazy val cvc5Version = "1.3.4"
     // The cvc5 POM publishes native jars as classifiers, not transitive dependencies.
@@ -39,7 +39,7 @@ object Dependencies {
     val logging = "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6"
     val scalaParserCombinators = "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
     val scalaCollectionContrib = "org.scala-lang.modules" %% "scala-collection-contrib" % "0.3.0"
-    val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.5"
+    val scalaz = "org.scalaz" %% "scalaz-core" % "7.3.9"
     val slf4j = "org.slf4j" % "slf4j-api" % "2.0.18"
     val shapeless = "com.chuusai" %% "shapeless" % "2.3.12"
     val tla2tools = ("org.lamport" % "tla2tools" % "1.8.0").from(
@@ -76,7 +76,7 @@ object Dependencies {
     val scalacheck = "org.scalacheck" %% "scalacheck" % "1.19.0" % Test
     val easymock = "org.easymock" % "easymock" % "5.6.0" % Test
 
-    val scalaTestVersion = "3.2.15"
+    val scalaTestVersion = "3.2.20"
     val scalatest = "org.scalatest" %% "scalatest" % scalaTestVersion % Test
     val scalatestplusEasymock = "org.scalatestplus" %% "easymock-4-3" % s"${scalaTestVersion}.0" % Test
     val scalatestplusJunit = "org.scalatestplus" %% "junit-4-13" % s"${scalaTestVersion}.0" % Test
