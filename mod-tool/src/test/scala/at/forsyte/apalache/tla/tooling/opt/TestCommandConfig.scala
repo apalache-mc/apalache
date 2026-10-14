@@ -2,6 +2,7 @@ package at.forsyte.apalache.tla.tooling.opt
 
 import at.forsyte.apalache.io.config.Constants._
 import at.forsyte.apalache.io.config._
+import org.backuity.clist.ParsingException
 import org.scalatest.funsuite.AnyFunSuite
 
 class TestCommandConfig extends AnyFunSuite {
@@ -69,25 +70,64 @@ class TestCommandConfig extends AnyFunSuite {
   test("omitted checker flags do not override lower-precedence tuning") {
     val lower = ApalacheConfig(
         common = CommonPatch(debug = Some(true)),
-        checker = CheckerPatch(tuning = Some(Map(
-                "custom" -> "value",
-                "search.outputTraces" -> "true",
-            ))),
+        checker = CheckerPatch(
+            seed = Some(17),
+            searchKind = Some(SearchKind.Simulate),
+            maxRun = Some(9),
+            outputTraces = Some(true),
+            tuning = Some(Map("custom" -> "value")),
+        ),
     )
     val command = new CheckCmd()
     command.read(List("CommandConfig.tla"))
 
     val sparse = command.toConfig.requireValue()
     assert(sparse.checker.tuning.isEmpty)
+    assert(sparse.checker.seed.isEmpty)
+    assert(sparse.checker.maxRun.isEmpty)
+    assert(sparse.checker.outputTraces.isEmpty)
+    assert(sparse.checker.searchKind.contains(SearchKind.Check))
     assert(sparse.typechecker.inferPoly.isEmpty)
     val inherited = sparse.mergeWithLower(lower)
     assert(inherited.common.debug.contains(true))
-    assert(inherited.checker.tuning.flatMap(_.get("search.outputTraces")).contains("true"))
+    assert(inherited.checker.seed.contains(17))
+    assert(inherited.checker.maxRun.contains(9))
+    assert(inherited.checker.outputTraces.contains(true))
+    assert(inherited.checker.searchKind.contains(SearchKind.Check))
 
-    command.saveRuns = Some(false)
+    command.outputTraces = Some(false)
+    command.seed = Some(42)
     val explicit = command.toConfig.requireValue().mergeWithLower(lower)
     assert(explicit.checker.tuning.flatMap(_.get("custom")).contains("value"))
-    assert(explicit.checker.tuning.flatMap(_.get("search.outputTraces")).contains("false"))
+    assert(explicit.checker.seed.contains(42))
+    assert(explicit.checker.outputTraces.contains(false))
+  }
+
+  test("seed is validated during resolution") {
+    val invalid = new CheckCmd()
+    invalid.read(List("CommandConfig.tla"))
+    invalid.seed = Some(-1)
+    val invalidResult = ApalacheConfigResolver.resolveCheck(invalid.toConfig.requireValue())
+    assert(!invalidResult.isSuccess)
+    assert(invalidResult.errors.contains("Option checker.seed must be between 0 and 2147483647, but got -1."))
+
+    val command = new CheckCmd()
+    command.read(List("CommandConfig.tla"))
+    command.seed = Some(42)
+    val config = ApalacheConfigResolver.resolveCheck(command.toConfig.requireValue()).requireValue()
+    assert(config.checker.seed == 42)
+  }
+
+  test("seed parsing accepts the upper bound and rejects overflow") {
+    val boundary = new CheckCmd()
+    boundary.read(List(s"--$SEED=${Int.MaxValue}", "CommandConfig.tla"))
+    val config = ApalacheConfigResolver.resolveCheck(boundary.toConfig.requireValue()).requireValue()
+    assert(config.checker.seed == Int.MaxValue)
+
+    val overflow = intercept[ParsingException] {
+      new CheckCmd().read(List(s"--$SEED=2147483648", "CommandConfig.tla"))
+    }
+    assert(overflow.getMessage.contains("expected an Int"))
   }
 
   test("server and simulation parser defaults remain lower precedence") {
@@ -111,14 +151,16 @@ class TestCommandConfig extends AnyFunSuite {
     val simulateCommand = new SimulateCmd()
     simulateCommand.read(List("CommandConfig.tla"))
     val simulationPatch = simulateCommand.toConfig.requireValue()
-    val simulationConfig = simulationPatch.mergeWithLower(
-        ApalacheConfig(checker = CheckerPatch(tuning = Some(Map("search.simulation.maxRun" -> "17")))))
-    assert(simulationConfig.checker.tuning.flatMap(_.get("search.simulation")).contains("true"))
-    assert(simulationConfig.checker.tuning.flatMap(_.get("search.simulation.maxRun")).contains("17"))
+    val simulationConfig = simulationPatch.mergeWithLower(ApalacheConfig(checker = CheckerPatch(
+            searchKind = Some(SearchKind.Check),
+            maxRun = Some(17),
+        )))
+    assert(simulationConfig.checker.searchKind.contains(SearchKind.Simulate))
+    assert(simulationConfig.checker.maxRun.contains(17))
 
     simulateCommand.maxRun = Some(5)
     val explicitMaxRun = simulateCommand.toConfig.requireValue().mergeWithLower(simulationConfig)
-    assert(explicitMaxRun.checker.tuning.flatMap(_.get("search.simulation.maxRun")).contains("5"))
+    assert(explicitMaxRun.checker.maxRun.contains(5))
   }
 
   private def assertOptionLists(command: ApalacheCommand, optionName: String, values: List[String]): Unit = {

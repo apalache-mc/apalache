@@ -67,14 +67,14 @@ class TraceeCmd(name: String = TRACEE, description: String = "Evaluate expressio
     if (!source.isSuccess) return ConfigParseResult.failureFrom(source)
 
     val src = source.requireValue()
-    val tuning = Map(
-        "search.outputTraces" -> "true",
-        "search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)),
-    )
+    val tuning = Map("search.transitionFilter" -> tuningRegexFromLength(getLenFromFile(src)))
     mergeConfig(
         base,
         ApalacheConfig(
-            checker = CheckerPatch(tuning = Some(tuning)),
+            checker = CheckerPatch(
+                tuning = Some(tuning),
+                outputTraces = Some(true),
+            ),
             traceEvaluation = TraceEvaluationPatch(
                 trace = Some(src),
                 expressions = Some(expressions),

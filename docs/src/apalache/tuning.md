@@ -143,13 +143,6 @@ Technically, Apalache propagates all the parameters that start with `z3.` to Z3.
 However, some of these parameters fail in the solver, even when they work in the
 command line. Hence, you have to experiment with the choice of parameters.
 
-## Randomization
-
-`smt.randomSeed=<int>` passes the random seed to the selected SMT backend. For
-Z3, Apalache maps this to Z3's `sat.random_seed` and `smt.random_seed`
-parameters. For CVC5, Apalache maps this to CVC5's `seed` and
-`sat-random-seed` options.
-
 ## Translation to SMT
 
 ### Short-circuiting

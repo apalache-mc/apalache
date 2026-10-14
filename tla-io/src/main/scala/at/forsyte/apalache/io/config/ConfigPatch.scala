@@ -32,6 +32,10 @@ final case class CommonPatch(
 final case class CheckerPatch(
     tuning: Option[Map[String, String]] = None,
     algorithm: Option[Algorithm] = None,
+    searchKind: Option[SearchKind] = None,
+    seed: Option[Int] = None,
+    maxRun: Option[Int] = None,
+    outputTraces: Option[Boolean] = None,
     tlcConfig: Option[Path] = None,
     discardDisabled: Option[Boolean] = None,
     constantInitializer: Option[String] = None,

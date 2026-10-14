@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt
 
-import at.forsyte.apalache.io.config.SMTEncoding
+import at.forsyte.apalache.io.config.{SMTEncoding, SearchKind}
 import at.forsyte.apalache.tla.bmcmt.Checker.{CheckerResult, Error}
 import at.forsyte.apalache.tla.bmcmt.search.ModelCheckerParams
 import at.forsyte.apalache.tla.bmcmt.smt.{SolverConfig, Z3SolverContext}
@@ -187,7 +187,7 @@ trait CrossTestEncodings extends AnyFunSuite with Checkers {
         None,
         verificationConditions,
     )
-    val checkerParams = new ModelCheckerParams(checkerInput, 0)
+    val checkerParams = new ModelCheckerParams(checkerInput, 0, Map(), SearchKind.Check, 0, 1, false)
 
     val solverContext =
       new Z3SolverContext(new SolverConfig(debug = false, profile = false, randomSeed = 0, smtEncoding = smtEncoding,

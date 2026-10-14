@@ -1,12 +1,13 @@
 package at.forsyte.apalache.tla.bmcmt.passes
 
-import at.forsyte.apalache.io.config.SMTEncoding
-import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
 import at.forsyte.apalache.infra.passes.DerivedPredicates
 import at.forsyte.apalache.infra.passes.Pass.PassResult
+import at.forsyte.apalache.infra.{ExitCodes, PassOptionException}
 import at.forsyte.apalache.io.config.Algorithm.Remote
+import at.forsyte.apalache.io.config.{Algorithm, CheckerOptions, CommonOptions, SMTEncoding}
 import at.forsyte.apalache.io.tuning.FineTuningParser
 import at.forsyte.apalache.tla.assignments.ModuleAdapter
+import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 import at.forsyte.apalache.tla.bmcmt._
 import at.forsyte.apalache.tla.bmcmt.analyses.ExprGradeStore
 import at.forsyte.apalache.tla.bmcmt.rewriter.{MetricProfilerListener, RewriterConfig}
@@ -23,8 +24,6 @@ import at.forsyte.apalache.tla.lir.{ModuleProperty, TlaModule, TlaOperDecl}
 import at.forsyte.apalache.tla.pp.NormalizedNames
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
-import at.forsyte.apalache.io.config.{Algorithm, CheckerOptions, CommonOptions}
-import at.forsyte.apalache.tla.bmcmt.Checker.NoError
 
 /**
  * The implementation of a bounded model checker with SMT.
@@ -94,7 +93,16 @@ class BoundedCheckerPassImpl @Inject() (
     // TODO: default smtEncoding option is needed here for executions with TestCmd, add encoding option to TestCmd instead
     val smtEncoding = checkerOptions.smtEncoding
 
-    val params = new ModelCheckerParams(input, stepsBound, tuning)
+    val params =
+      new ModelCheckerParams(
+          input,
+          stepsBound,
+          tuning,
+          checkerOptions.searchKind,
+          checkerOptions.seed,
+          checkerOptions.maxRun,
+          checkerOptions.outputTraces,
+      )
     params.discardDisabled = checkerOptions.discardDisabled
     params.checkForDeadlocks = checkerOptions.checkDeadlocks
     params.nMaxErrors = checkerOptions.maxError
@@ -102,7 +110,8 @@ class BoundedCheckerPassImpl @Inject() (
     params.smtEncoding = smtEncoding
 
     val smtProfile = commonOptions.smtprof
-    val smtRandomSeed = tuning.getOrElse("smt.randomSeed", "0").toInt
+    logger.info(s"Using search seed ${checkerOptions.seed}")
+    val smtRandomSeed = checkerOptions.seed
     val smtStatsSec =
       tuning.getOrElse("smt.statsSec", SolverConfig.default.z3StatsSec.toString).toInt
     // Parse the tuning parameters that are relevant to the selected SMT solver.

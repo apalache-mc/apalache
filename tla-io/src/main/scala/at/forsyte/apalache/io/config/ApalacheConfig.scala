@@ -57,6 +57,8 @@ object ApalacheConfig {
       checker = CheckerPatch(
           tuning = Some(Map.empty),
           algorithm = Some(Algorithm.Incremental),
+          searchKind = Some(SearchKind.Check),
+          outputTraces = Some(false),
           discardDisabled = Some(true),
           length = Some(10),
           maxError = Some(1),
@@ -92,6 +94,10 @@ object ApalacheConfig {
     CheckerPatch(
         tuning = mergeMaps(higher.tuning, lower.tuning),
         algorithm = higher.algorithm.orElse(lower.algorithm),
+        searchKind = higher.searchKind.orElse(lower.searchKind),
+        seed = higher.seed.orElse(lower.seed),
+        maxRun = higher.maxRun.orElse(lower.maxRun),
+        outputTraces = higher.outputTraces.orElse(lower.outputTraces),
         tlcConfig = higher.tlcConfig.orElse(lower.tlcConfig),
         discardDisabled = higher.discardDisabled.orElse(lower.discardDisabled),
         constantInitializer = higher.constantInitializer.orElse(lower.constantInitializer),
