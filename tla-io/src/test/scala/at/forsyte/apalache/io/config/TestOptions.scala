@@ -82,8 +82,36 @@ class TestOptions extends AnyFunSuite {
     val serverResult = ApalacheConfigResolver.resolveServer(config.withCommand(SERVER))
     assert(serverResult.isSuccess)
     val server = serverResult.requireValue().server
+    assert(server.ip.isEmpty)
     assert(server.port == defaults.server.port.get)
     assert(server.serverType == defaults.server.serverType.get)
+  }
+
+  test("server resolver applies and validates the explorer IP address") {
+    val defaultExplorer = ApalacheConfig(
+        context = RunContextPatch(command = Some(SERVER)),
+        server = ServerPatch(serverType = Some(ServerType.Explorer)),
+    )
+    val defaultResult = ApalacheConfigResolver.resolveServer(defaultExplorer)
+    assert(defaultResult.isSuccess)
+    assert(defaultResult.requireValue().server.ip.contains(ApalacheConfigResolver.defaultExplorerIp))
+
+    val explicitResult = ApalacheConfigResolver.resolveServer(
+        defaultExplorer.copy(server = defaultExplorer.server.copy(ip = Some("0.0.0.0"))))
+    assert(explicitResult.isSuccess)
+    assert(explicitResult.requireValue().server.ip.contains("0.0.0.0"))
+
+    val blankResult =
+      ApalacheConfigResolver.resolveServer(defaultExplorer.copy(server = defaultExplorer.server.copy(ip = Some("  "))))
+    assert(!blankResult.isSuccess)
+    assert(blankResult.errors.exists(_.contains("server.ip must not be blank")))
+
+    val checkerResult = ApalacheConfigResolver.resolveServer(ApalacheConfig(
+            context = RunContextPatch(command = Some(SERVER)),
+            server = ServerPatch(ip = Some("127.0.0.1"), serverType = Some(ServerType.Checker)),
+        ))
+    assert(!checkerResult.isSuccess)
+    assert(checkerResult.errors.exists(_.contains("supported only by the explorer server")))
   }
 
   test("sources report availability and read UTF-8 content") {

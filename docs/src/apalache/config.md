@@ -103,7 +103,8 @@ In the table below, a default of "none" means that the value is optional.
 | `typechecker` | `infer-poly`         | Allow inference of polymorphic types.                        | boolean                      | `true`                                      |
 | `tracee`      | `trace`              | Select the trace to evaluate.                                | path string or source object | required by `tracee`; ITF or Apalache JSON  |
 |               | `expressions`        | Name the expressions evaluated in each trace state.          | nonempty array of strings    | required by `tracee`                        |
-| `server`      | `port`               | Set the listening port.                                      | integer                      | `8822`                                      |
+| `server`      | `ip`                 | Set the explorer JSON-RPC listening IP address.              | string                       | `127.0.0.1`; unsupported by `checker`       |
+|               | `port`               | Set the listening port.                                      | integer                      | `8822`                                      |
 |               | `server-type`        | Select the server implementation.                            | string                       | `checker`; also `explorer`                  |
 
 Top-level `command` and `config-file` can appear in trusted JSON and configuration dumps when in debug mode.
