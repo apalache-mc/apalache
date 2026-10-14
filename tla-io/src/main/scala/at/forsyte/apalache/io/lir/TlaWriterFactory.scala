@@ -40,7 +40,7 @@ trait TlaWriterFactory {
     )(module: TlaModule,
       extendedModuleNames: List[String]): Unit = {
     val writeHelper: (PrintWriter => Unit) => Unit = file match {
-      case Some(f) => OutputManager.withWriterToFile(f)
+      case Some(f) => OutputManager.withWriterOutsideWorkspace(f.toPath)
       case None    => OutputManager.withWriterInIntermediateDir(module.name + extension)
     }
     writeHelper(createWriter(_).write(module, extendedModuleNames))
