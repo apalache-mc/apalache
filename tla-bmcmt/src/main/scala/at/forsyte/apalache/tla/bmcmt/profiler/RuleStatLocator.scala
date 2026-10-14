@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.bmcmt.profiler
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 
 import scala.collection.immutable.SortedMap
 
@@ -27,7 +27,7 @@ class RuleStatLocator {
   def getStats = SortedMap(ruleStats.toSeq: _*)
 
   def writeStats(): Unit =
-    OutputManager.withProfilingWriter { writer =>
+    OutputWorkspace.withProfilingWriter { writer =>
       writer.println("Rule profiling statistics")
       val hrule = List.fill(80)('-').mkString
       writer.println(hrule)
