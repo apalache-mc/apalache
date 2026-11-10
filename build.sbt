@@ -564,6 +564,38 @@ docker / imageNames := {
   )
 }
 
+// sbt-docker 1.11.0 parses the config digest from BuildKit logs, which is not a
+// taggable image ID with Docker's containerd image store. Read Docker's --iidfile
+// instead, and leave the plugin responsible for staging and building the image.
+docker := {
+  val log = streams.value.log
+  val executable = (docker / dockerPath).value
+  val options = (docker / buildOptions).value
+  val names = (docker / imageNames).value
+  val definition = (docker / dockerfile).value
+  val arguments = (docker / dockerBuildArguments).value
+  val stageDir = (docker / target).value
+  val imageIdFile = java.io.File.createTempFile("apalache-docker-", ".iid")
+  try {
+    sbtdocker.DockerBuild(
+        definition,
+        sbtdocker.staging.DefaultDockerfileProcessor,
+        Seq.empty,
+        options
+          .copy(additionalArguments = options.additionalArguments ++ Seq("--iidfile", imageIdFile.getAbsolutePath)),
+        arguments,
+        stageDir,
+        executable,
+        log,
+    )
+    val imageId = ImageId(IO.read(imageIdFile).trim.stripPrefix("sha256:"))
+    names.foreach(name => sbtdocker.DockerTag(imageId, name, executable, log))
+    imageId
+  } finally {
+    IO.delete(imageIdFile)
+  }
+}
+
 docker / dockerfile := {
   val rootDir = (ThisBuild / baseDirectory).value
   // Docker Working Dir

@@ -25,6 +25,18 @@ class TestApalacheConfigJsonParser extends AnyFunSuite {
     assert(formatResult.errors.contains("$.source.format: Unsupported source format: unknown"))
   }
 
+  test("parses source content just over the former 20M-character string limit") {
+    val length = 20 * 1000 * 1000 + 1
+    val content = "x" * length
+    val result = ApalacheConfigJsonParser.parse(s"""{"source":{"kind":"string","content":"$content"}}""")
+
+    assert(result.isSuccess)
+    result.requireValue().source match {
+      case Some(InputSource.StringSource(parsed, _, _)) => assert(parsed.length == length)
+      case other                                        => fail(s"Unexpected source: $other")
+    }
+  }
+
   test("reports all independent decoding errors") {
     val result = ApalacheConfigJsonParser.parse(
         """{"run-dir":1,"debug":"yes","checker":{"length":"ten","inv":[1,true],"smt-solver":"unknown"},"server":{"port":"8822"}}""")

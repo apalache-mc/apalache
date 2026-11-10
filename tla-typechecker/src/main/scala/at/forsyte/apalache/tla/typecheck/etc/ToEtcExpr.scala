@@ -534,12 +534,8 @@ class ToEtcExpr(
         // start with "b", as "a" goes to the result
         val typeVars = varPool.fresh(bindings.length)
 
-        val funFrom = typeVars match {
-          // With one argument, the generated function has the type b -> a, that is, no tuple is involved.
-          case Seq(v) => v
-          // With multiple arguments, the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
-          case _ => TupT1(typeVars: _*)
-        }
+        val (binders, _) = TlaOper.deinterleave(args)
+        val funFrom = functionDomainType(binders, typeVars)
 
         // The principal type is ((b, c) => a) => (<<b, c>> -> a).
         // Note that the generated function has the type <<b, c>> -> a, that is, it accepts a tuple.
@@ -582,16 +578,10 @@ class ToEtcExpr(
         val resultType = varPool.fresh
         val argTypes = varPool.fresh(bindings.length)
 
-        // wrap multiple variables into a tuple, while keeping a single variable unwrapped
-        def mkFunFrom: Seq[VarT1] => TlaType1 = {
-          // With one argument, the generated function has the type b -> a, that is, no tuple is involved.
-          case Seq(one) => one
-          // With multiple arguments, the generated function has the type <<b, c>> -> a, that is, it accepts a tuple
-          case many => TupT1(many: _*)
-        }
+        val (binders, _) = TlaOper.deinterleave(args)
 
         // e.g., b -> a, or <<b, c>> -> a
-        val funType = FunT1(mkFunFrom(argTypes), resultType)
+        val funType = FunT1(functionDomainType(binders, argTypes), resultType)
         // e.g., b => a, or (b, c) => a
         val operType = OperT1(argTypes, resultType)
         val principal = OperT1(Seq(OperT1(Seq(funType), operType)), funType)
@@ -599,7 +589,7 @@ class ToEtcExpr(
         val innerLambda = mkAbs(BlameRef(body.ID), this(body), bindings: _*)
         // create another vector of type variables for the lambda over a function
         val recFunResTypeVar = varPool.fresh
-        val resFunArgTypes = mkFunFrom(varPool.fresh(bindings.length))
+        val resFunArgTypes = functionDomainType(binders, varPool.fresh(bindings.length))
         val funRefByName = mkName(BlameRef(funDef.ID), TlaFunOper.recFunRef.uniqueName)
         val outerLambda = mkAbs(
             BlameRef(ex.ID),
@@ -921,6 +911,21 @@ class ToEtcExpr(
       // This should be unreachable
       case expr =>
         throw new IllegalArgumentException(s"Unsupported expression: ${expr}")
+    }
+  }
+
+  // Rebuild the domain's tuple shape from the original binders, using the unpacked lambda's parameter types.
+  private def functionDomainType(binders: Seq[TlaEx], leafTypes: Seq[VarT1]): TlaType1 = {
+    val types = leafTypes.iterator
+    def binderType(binder: TlaEx): TlaType1 = binder match {
+      case NameEx(_)                            => types.next()
+      case OperEx(TlaFunOper.tuple, elems @ _*) => TupT1(elems.map(binderType): _*)
+      case _ => throw new TypingInputException(s"Unexpected binding $binder", binder.ID)
+    }
+
+    binders.map(binderType) match {
+      case Seq(one) => one
+      case many     => TupT1(many: _*)
     }
   }
 

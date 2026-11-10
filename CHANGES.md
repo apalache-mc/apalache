@@ -1,6 +1,19 @@
 <!-- NOTE: This file is generated. Do not write release notes here.
  Notes for unreleased changes go in the .unreleased/ directory. -->
  
+## 0.63.0 - 2026-11-09
+
+### Breaking changes
+
+- Align PrettyWriter with the corrected tla2tools precedence: `SUBSET` and `UNION` have precedence 8, and `DOMAIN` has precedence 9. Existing specifications that rely on the old binding need explicit parentheses, for example `(SUBSET S) \cup T` and `(DOMAIN f) .. n`. `SUBSET 1 .. 3` now means `SUBSET (1 .. 3)`. See [tlaplus/tlaplus#1508](https://github.com/tlaplus/tlaplus/pull/1508).
+
+## 0.62.4 - 2026-10-12
+
+### Bug fixes
+
+- Raise JSON content limits from 20MB to 1GB to fix Quint errors, see #3494
+- Fixed flattened domain types for function constructors with tuple binders next to other binders, including recursive functions, see #3491.
+
 ## 0.62.3 - 2026-10-01
 
 ### Features

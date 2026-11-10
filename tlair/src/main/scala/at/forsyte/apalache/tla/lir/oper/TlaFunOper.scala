@@ -50,7 +50,7 @@ object TlaFunOper {
   object domain extends TlaFunOper {
     override val arity: OperArity = FixedArity(1)
     override val name: String = "DOMAIN"
-    override val precedence: (Int, Int) = (100, 130)
+    override val precedence: (Int, Int) = (90, 90)
   }
 
   /**

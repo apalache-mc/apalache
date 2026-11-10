@@ -129,7 +129,7 @@ object TlaSetOper {
   object powerset extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SET_POWERSET"
-    override val precedence: (Int, Int) = (100, 130)
+    override val precedence: (Int, Int) = (80, 80)
   }
 
   /**
@@ -138,7 +138,7 @@ object TlaSetOper {
   object union extends TlaSetOper {
     override val arity = FixedArity(1)
     override val name = "SET_UNARY_UNION"
-    override val precedence: (Int, Int) = (100, 130)
+    override val precedence: (Int, Int) = (80, 80)
   }
 
   /**

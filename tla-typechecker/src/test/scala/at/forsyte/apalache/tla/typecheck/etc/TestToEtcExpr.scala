@@ -537,6 +537,39 @@ class TestToEtcExpr extends AnyFunSuite with BeforeAndAfterEach with ToEtcExprBa
     assert(expected == mkToEtcExpr()(fun))
   }
 
+  for (tupleFirst <- Seq(false, true); recursive <- Seq(false, true)) {
+    test(s"function definition with mixed tuple binders: tupleFirst=$tupleFirst, recursive=$recursive") {
+      val pair = OperEx(TlaFunOper.tuple, NameEx("x"), NameEx("y"))
+      val bindings =
+        if (tupleFirst) Seq(pair, NameEx("T"), NameEx("z"), NameEx("S"))
+        else Seq(NameEx("z"), NameEx("S"), pair, NameEx("T"))
+      val ctor = if (recursive) TlaFunOper.recFunDef else TlaFunOper.funDef
+      val fun = OperEx(ctor, NameEx("ex") +: bindings: _*)
+
+      val projX = mkProjection("a", "b", projFirst = true, "T")
+      val projY = mkProjection("c", "d", projFirst = false, "T")
+      val tupleParams = Seq((mkUniqName("x"), projX), (mkUniqName("y"), projY))
+      val scalarParam = (mkUniqName("z"), mkUniqName("S"))
+      val params = if (tupleFirst) tupleParams :+ scalarParam else scalarParam +: tupleParams
+      val lambda = mkUniqAbs(mkUniqName("ex"), params: _*)
+      val domain = if (tupleFirst) "<<<<f, g>>, h>>" else "<<f, <<g, h>>>>"
+
+      val expected =
+        if (recursive) {
+          val principal = parser(s"(($domain -> e) => ((f, g, h) => e)) => ($domain -> e)")
+          val recDomain = if (tupleFirst) "<<<<j, k>>, l>>" else "<<j, <<k, l>>>>"
+          val outerLambda = mkUniqAbs(lambda,
+              (mkUniqName(TlaFunOper.recFunRef.uniqueName), mkUniqConst(parser(s"Set($recDomain -> i)"))))
+          mkUniqApp(Seq(principal), outerLambda)
+        } else {
+          val principal = parser(s"((f, g, h) => e) => ($domain -> e)")
+          mkUniqApp(Seq(principal), lambda)
+        }
+
+      assert(expected == mkToEtcExpr()(fun))
+    }
+  }
+
   test("function update [ f EXCEPT ![e1] = e2 ]") {
     // a function or a sequence
     val ex = tla.except(tla.name("f"), tla.tuple(tla.name("e1")), tla.name("e2"))
