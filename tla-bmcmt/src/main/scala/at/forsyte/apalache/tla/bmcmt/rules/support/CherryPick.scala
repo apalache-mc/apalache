@@ -240,7 +240,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newState = cacheEqConstraintsIfNeeded(newState, tuples, newTuple)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
-    
+
     newState.setRex(newTuple.toBuilder)
   }
 
@@ -330,7 +330,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
-    
+
     newState = newState.setArena(newArena)
     newState = cacheEqConstraintsIfNeeded(newState, records, newRecord)
 
