@@ -3125,12 +3125,32 @@ $ apalache-mc check --inv=Inv InlineAssumptions3318.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
-### check Bug3493 succeeds: chosing from a set of records (array-encoding)
+### check Bug3493 succeeds: choosing from a set of records (array-encoding)
 
-Regression test for issue 3493, see https://github.com/apalache-mc/apalache/issues/3493
+Regression test for issue 3493, see https://github.com/apalache-mc/apalache/issues/3493.
 
 ```sh
 $ apalache-mc check --inv=Inv --length=3 Bug3493.tla
+...
+EXITCODE: OK
+```
+
+### check Bug3493 with tuples (array-encoding)
+
+Regression test for a variation of issue 3493.
+
+```sh
+$ apalache-mc check --inv=Inv --length=3 Bug3493-Tuple.tla
+...
+EXITCODE: OK
+```
+
+### check Bug3493 with sequences (array-encoding)
+
+Regression test for a variation of issue 3493.
+
+```sh
+$ apalache-mc check --inv=Inv --length=3 Bug3493-SeqPick.tla
 ...
 EXITCODE: OK
 ```
