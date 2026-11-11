@@ -234,15 +234,14 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element t[i], as it will use the same oracle!
 
-    newState = cacheEqConstraintsIfNeeded(newState, tuples, newTuple)
-
     // add the new fields to arena
     val newArena = newState.arena.appendHasNoSmt(newTuple, newFields: _*)
-    rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
-    newState
-      .setArena(newArena)
-      .setRex(newTuple.toBuilder)
+    newState = newState.setArena(newArena)
+    newState = cacheEqConstraintsIfNeeded(newState, tuples, newTuple)
 
+    rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
+    
+    newState.setRex(newTuple.toBuilder)
   }
 
   /**
@@ -331,14 +330,13 @@ class CherryPick(rewriter: SymbStateRewriter) {
     newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
     // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
-
+    
+    newState = newState.setArena(newArena)
     newState = cacheEqConstraintsIfNeeded(newState, records, newRecord)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$commonRecordT")
 
-    newState
-      .setArena(newArena)
-      .setRex(newRecord.toBuilder)
+    newState.setRex(newRecord.toBuilder)
   }
 
   /**
@@ -446,6 +444,7 @@ class CherryPick(rewriter: SymbStateRewriter) {
       .map(FixedElemPtr)
     nextState = nextState.updateArena(_.appendHasNoSmt(newVariant, pickedValuesAndTag: _*))
     nextState = cacheEqConstraintsIfNeeded(nextState, variants, newVariant)
+
     rewriter.solverContext.log(s"; } CHERRY-PICK $newVariant:$variantT")
 
     nextState.setRex(newVariant.toBuilder)
@@ -490,7 +489,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
               keyCells.map { c =>
                 SmtExprElemPtr(c, tla.in(c.toBuilder, newDom.toBuilder))
               }: _*))
-      nextState = cacheEqConstraintsIfNeeded(nextState, domains, newDom)
       // Constrain membership with SMT
       for ((dom, no) <- domains.zipWithIndex) {
         val domainCells = nextState.arena.getHas(dom)
@@ -815,7 +813,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // construct the sequence
     nextState = protoSeqOps.mkSeq(nextState, seqType, protoSeq, length)
 
-    nextState = cacheEqConstraintsIfNeeded(nextState, memberSeqs, protoSeq)
     rewriter.solverContext.log(s"; } CHERRY-PICK $nextState:$seqType")
     nextState
   }
