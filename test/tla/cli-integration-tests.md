@@ -3125,6 +3125,16 @@ $ apalache-mc check --inv=Inv InlineAssumptions3318.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check Bug3493 succeeds: chosing from a set of records (array-encoding)
+
+Regression test for issue 3493, see https://github.com/apalache-mc/apalache/issues/3493
+
+```sh
+$ apalache-mc check --inv=Inv --length=3 Bug3493.tla
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
