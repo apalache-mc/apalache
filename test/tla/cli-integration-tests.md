@@ -3140,7 +3140,7 @@ EXITCODE: OK
 Regression test for a variation of issue 3493.
 
 ```sh
-$ apalache-mc check --inv=Inv --length=3 Bug3493-Tuple.tla
+$ apalache-mc check --inv=Inv --length=3 Bug3493Tuple.tla
 ...
 EXITCODE: OK
 ```
@@ -3150,7 +3150,7 @@ EXITCODE: OK
 Regression test for a variation of issue 3493.
 
 ```sh
-$ apalache-mc check --inv=Inv --length=3 Bug3493-SeqPick.tla
+$ apalache-mc check --inv=Inv --length=3 Bug3493SeqPick.tla
 ...
 EXITCODE: OK
 ```
