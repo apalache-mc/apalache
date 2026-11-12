@@ -6,6 +6,7 @@ import at.forsyte.apalache.tla.bmcmt.arena.PtrUtil
 import at.forsyte.apalache.tla.bmcmt.rules.support.SupportOps._
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
+import at.forsyte.apalache.tla.lir.values.TlaBool
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types._
 
@@ -1105,9 +1106,12 @@ class CherryPick(rewriter: SymbStateRewriter) {
           throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
       }
 
-      // x \in S => f[x] \in T
-      val argInDom = tla.selectInSet(arg.elem.toBuilder, dom.toBuilder)
-      memberships :+= tla.or(tla.not(argInDom), tla.and(resultConstraints: _*))
+      // x \in S => f[x] \in T, unless f[x] \in T trivially holds, e.g., for T = SUBSET(U) or T = Int
+      val nonTrivialConstraints = resultConstraints.filterNot(_.build == ValEx(TlaBool(true))(Typed(BoolT1)))
+      if (nonTrivialConstraints.nonEmpty) {
+        val argInDom = tla.selectInSet(arg.elem.toBuilder, dom.toBuilder)
+        memberships :+= tla.or(tla.not(argInDom), tla.and(nonTrivialConstraints: _*))
+      }
     }
 
     // If S is empty, the relation is empty too.

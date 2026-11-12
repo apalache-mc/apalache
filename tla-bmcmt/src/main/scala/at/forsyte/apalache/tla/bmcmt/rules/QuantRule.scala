@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import com.typesafe.scalalogging.LazyLogging
@@ -300,9 +300,9 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
           .setRex(predEx)
           .setBinding(extendedBinding))
 
-    set.cellType match {
-      case PowSetT(_) =>
-        // SUBSET(S) is never empty, and isMember is TRUE
+    isMember.build match {
+      case ValEx(TlaBool(true)) =>
+        // the witness trivially belongs to the set, e.g., for SUBSET(S) or [S -> Int]
         ()
 
       case _ =>
