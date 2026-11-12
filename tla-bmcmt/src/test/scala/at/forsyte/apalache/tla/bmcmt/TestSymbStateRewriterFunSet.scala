@@ -211,6 +211,71 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     assert(solverContext.sat())
   }
 
+  // {y \in {1, 2}: y > 5} is empty, but only the SMT solver knows about it
+  private def symbolicallyEmptySet(varName: String): TBuilderInstruction =
+    tla.filter(tla.name(varName, IntT1), tla.enumSet(tla.int(1), tla.int(2)),
+        tla.gt(tla.name(varName, IntT1), tla.int(5)))
+
+  private val i_to_i: TlaType1 = FunT1(IntT1, IntT1)
+
+  // regression for the sibling of #3503: the membership in [S -> T] must not become a global fact
+  test("""Skolem(\E f \in [{1} -> {y \in {1, 2}: y > 5}]: g' <- f) is FALSE, regression""") {
+    rewriterType: SMTEncoding =>
+      val funset = tla.funSet(tla.enumSet(tla.int(1)), symbolicallyEmptySet("y"))
+      val pred = tla.assign(tla.prime(tla.name("g", i_to_i)), tla.name("f", i_to_i))
+      val skolemEx = tla.skolem(tla.exists(tla.name("f", i_to_i), funset, pred))
+
+      val state = new SymbState(skolemEx, arena, Binding())
+      val rewriter = create(rewriterType)
+      val nextState = rewriter.rewriteUntilDone(state)
+      // the buggy implementation asserted that the picked result belongs to the empty co-domain
+      assert(solverContext.sat())
+      assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(tla.unchecked(nextState.ex))))
+  }
+
+  test("""Skolem(\E f \in [{y \in {1, 2}: y > 5} -> {z \in {1, 2}: z > 5}]: g' <- f) is TRUE""") {
+    rewriterType: SMTEncoding =>
+      // [{} -> {}] contains the empty function
+      val funset = tla.funSet(symbolicallyEmptySet("y"), symbolicallyEmptySet("z"))
+      val pred = tla.assign(tla.prime(tla.name("g", i_to_i)), tla.name("f", i_to_i))
+      val skolemEx = tla.skolem(tla.exists(tla.name("f", i_to_i), funset, pred))
+
+      val state = new SymbState(skolemEx, arena, Binding())
+      val rewriter = create(rewriterType)
+      val nextState = rewriter.rewriteUntilDone(state)
+      assert(solverContext.sat())
+      assertTlaExAndRestore(rewriter, nextState)
+  }
+
+  test("""Skolem(\E f \in [{1} -> [{2} -> {y \in {1, 2}: y > 5}]]: g' <- f) is FALSE, regression""") {
+    rewriterType: SMTEncoding =>
+      val i_to_i_to_i = FunT1(IntT1, i_to_i)
+      val funset = tla.funSet(tla.enumSet(tla.int(1)), tla.funSet(tla.enumSet(tla.int(2)), symbolicallyEmptySet("y")))
+      val pred = tla.assign(tla.prime(tla.name("g", i_to_i_to_i)), tla.name("f", i_to_i_to_i))
+      val skolemEx = tla.skolem(tla.exists(tla.name("f", i_to_i_to_i), funset, pred))
+
+      val state = new SymbState(skolemEx, arena, Binding())
+      val rewriter = create(rewriterType)
+      val nextState = rewriter.rewriteUntilDone(state)
+      assert(solverContext.sat())
+      assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(tla.unchecked(nextState.ex))))
+  }
+
+  test("""Skolem(\E f \in [{1} -> {y \in {1, 2, 3}: y > 2}]: f[1] /= 3) is FALSE""") { rewriterType: SMTEncoding =>
+    // the witness must still be restricted to the co-domain
+    val codomain = tla.filter(tla.name("y", IntT1), tla.enumSet(tla.int(1), tla.int(2), tla.int(3)),
+        tla.gt(tla.name("y", IntT1), tla.int(2)))
+    val funset = tla.funSet(tla.enumSet(tla.int(1)), codomain)
+    val pred = tla.not(tla.eql(tla.app(tla.name("f", i_to_i), tla.int(1)), tla.int(3)))
+    val skolemEx = tla.skolem(tla.exists(tla.name("f", i_to_i), funset, pred))
+
+    val state = new SymbState(skolemEx, arena, Binding())
+    val rewriter = create(rewriterType)
+    val nextState = rewriter.rewriteUntilDone(state)
+    assert(solverContext.sat())
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(tla.unchecked(nextState.ex))))
+  }
+
   // this should be fixed by implementing #91
   test("""[x \in {1, 2} |-> {x = 1}] \in [{1, 2} -> SUBSET {FALSE, TRUE}]""") { rewriterType: SMTEncoding =>
     val domain = tla.enumSet(tla.int(1), tla.int(2))

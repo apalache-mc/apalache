@@ -1582,6 +1582,19 @@ Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set
 EXITCODE: ERROR (75)
 ```
 
+### check SkolemEmptyFunSet reports the violation
+
+Regression test: the membership of a skolemized `\E f \in [S -> T]` must not be
+a global fact when the co-domain can be empty (sibling of #3503).
+
+```sh
+$ apalache-mc check --length=2 --inv=Inv SkolemEmptyFunSet.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ### check --inv with a temporal property fails (temporal)
 
 ```sh

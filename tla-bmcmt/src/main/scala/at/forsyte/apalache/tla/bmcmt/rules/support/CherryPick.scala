@@ -46,30 +46,10 @@ class CherryPick(rewriter: SymbStateRewriter) {
         // a powerset is never empty, pick an element
         pickFromPowset(CellTFrom(t), set, state)
 
-      case FinFunSetT(CellTFrom(SetT1(argT)), CellTFrom(SetT1(resT))) =>
-        // No emptiness check, since we are dealing with a function set [S -> T].
-        // If S is empty, we get a function of the empty set.
-        pickFunFromFunSet(FunT1(argT, resT), set, state)
-
-      case FinFunSetT(CellTFrom(SetT1(argT)), InfSetT(resT)) =>
-        // No emptiness check, since we are dealing with a function set [S -> T].
-        // If S is empty, we get a function of the empty set.
-        pickFunFromFunSet(FunT1(argT, resT.toTlaType1), set, state)
-
-      case FinFunSetT(CellTFrom(SetT1(argT)), PowSetT(resultT @ SetT1(_))) =>
-        // No emptiness check, since we are dealing with a function set [S -> T].
-        // If S is empty, we get a function of the empty set.
-        pickFunFromFunSet(FunT1(argT, resultT), set, state)
-
-      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), CellTFrom(SetT1(result2T)))) =>
-        pickFunFromFunSet(FunT1(arg1T, FunT1(arg2T, result2T)), set, state)
-
-      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), PowSetT(result2T @ SetT1(_)))) =>
-        pickFunFromFunSet(FunT1(arg1T, FunT1(arg2T, result2T)), set, state)
-
-      case FinFunSetT(CellTFrom(SetT1(_)), PowSetT(_)) | FinFunSetT(CellTFrom(SetT1(_)), FinFunSetT(_, _)) =>
-        throw new RewriterException(s"Rewriting for the type ${set.cellType} is not implemented. Raise an issue.",
-            state.ex)
+      case funSetT: FinFunSetT =>
+        // [S -> T] is empty iff S is non-empty and T is empty. As this method has to produce a member,
+        // it asserts that the picked function belongs to [S -> T]. See pickGuarded for the alternative.
+        pickFunFromFunSet(funSetElemType(funSetT, state), set, state)
 
       case InfSetT(CellTFrom(IntT1)) if set == state.arena.cellIntSet() || set == state.arena.cellNatSet() =>
         // pick an integer or natural
@@ -88,6 +68,74 @@ class CherryPick(rewriter: SymbStateRewriter) {
         rewriter.solverContext.assertGroundExpr(oracle.caseAssertions(nextState, elemsIn :+ elseAssert))
 
         pickByOracle(nextState, oracle, elems, elseAssert)
+    }
+  }
+
+  /**
+   * Pick an element from a set that may be empty in some states, without asserting that it is non-empty.
+   *
+   * In contrast to [[pick]], this method does not assert any facts that may fail when the set is empty. Instead, it
+   * returns a Boolean expression that holds iff the picked cell belongs to the set. The caller must make this
+   * expression a part of its result, e.g., `\E x \in S: P` holds iff `isMember /\ P[picked/x]`. Asserting the
+   * membership globally would make every execution, in which the set is empty, unsatisfiable, see #3503.
+   *
+   * @param set
+   *   a set
+   * @param state
+   *   a symbolic state
+   * @return
+   *   a new symbolic state whose expression stores the picked cell, and the expression `isMember`
+   */
+  def pickGuarded(set: ArenaCell, state: SymbState): (SymbState, BuilderT) = {
+    set.cellType match {
+      case PowSetT(_) | InfSetT(_) =>
+        // a powerset, Int, and Nat are never empty
+        (pick(set, state, state.arena.cellFalse().toBuilder), tla.bool(true))
+
+      case funSetT: FinFunSetT =>
+        pickFunFromFunSetGuarded(funSetElemType(funSetT, state), set, state)
+
+      case CellTFrom(SetT1(elemT)) =>
+        val elems = state.arena.getHas(set)
+        if (elems.isEmpty) {
+          // the set is statically empty, nothing to pick
+          val (newArena, defaultValue) = rewriter.defaultValueCache.getOrCreate(state.arena, elemT)
+          (state.setArena(newArena).setRex(defaultValue.toBuilder), tla.bool(false))
+        } else {
+          // oracle = N iff the set is empty, the same idea as in ChooseOrGuessRule
+          val (oracleState, oracle) = oracleFactory.newDefaultOracle(state, elems.size + 1)
+          OracleHelper.assertOraclePicksSetMembers(rewriter, oracleState, oracle, set, elems)
+          val nextState = pickByOracle(oracleState, oracle, elems, oracleState.arena.cellTrue().toBuilder)
+          (nextState, tla.not(oracle.whenEqualTo(nextState, elems.size)))
+        }
+
+      case tp =>
+        throw new RewriterException(s"Cannot pick an element from a set of type $tp", state.ex)
+    }
+  }
+
+  /**
+   * Compute the type of the functions in a function set.
+   */
+  private def funSetElemType(funSetT: FinFunSetT, state: SymbState): FunT1 = {
+    funSetT match {
+      case FinFunSetT(CellTFrom(SetT1(argT)), CellTFrom(SetT1(resT))) =>
+        FunT1(argT, resT)
+
+      case FinFunSetT(CellTFrom(SetT1(argT)), InfSetT(resT)) =>
+        FunT1(argT, resT.toTlaType1)
+
+      case FinFunSetT(CellTFrom(SetT1(argT)), PowSetT(resultT @ SetT1(_))) =>
+        FunT1(argT, resultT)
+
+      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), CellTFrom(SetT1(result2T)))) =>
+        FunT1(arg1T, FunT1(arg2T, result2T))
+
+      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), PowSetT(result2T @ SetT1(_)))) =>
+        FunT1(arg1T, FunT1(arg2T, result2T))
+
+      case _ =>
+        throw new RewriterException(s"Rewriting for the type $funSetT is not implemented. Raise an issue.", state.ex)
     }
   }
 
@@ -975,6 +1023,20 @@ class CherryPick(rewriter: SymbStateRewriter) {
    *   a new symbolic state with the expression holding a fresh cell that stores the picked element.
    */
   def pickFunFromFunSet(funT: FunT1, funSet: ArenaCell, state: SymbState): SymbState = {
+    val (nextState, isMember) = pickFunFromFunSetGuarded(funT, funSet, state)
+    rewriter.solverContext.assertGroundExpr(isMember)
+    nextState
+  }
+
+  /**
+   * Like [[pickFunFromFunSet]], but does not assert that the picked function belongs to [S -> T], as [S -> T] may be
+   * empty in some states. See [[pickGuarded]].
+   *
+   * @return
+   *   a new symbolic state with the expression holding a fresh cell that stores the picked function, and the expression
+   *   that holds iff the picked function belongs to [S -> T]
+   */
+  def pickFunFromFunSetGuarded(funT: FunT1, funSet: ArenaCell, state: SymbState): (SymbState, BuilderT) = {
     rewriter.solverContext.log("; PICK %s FROM %s {".format(funT, funSet))
     val dom = state.arena.getDom(funSet)
     // Get the set of potential arguments, always expanded! Remove the duplicates.
@@ -994,9 +1056,15 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // For every domain cell, pick a result from the co-domain.
     // The beauty of CherryPick: when the co-domain is not expanded, CherryPick will pick one value out of the co-domain,
     // instead of constructing the co-domain first.
+    //
+    // The co-domain may be empty in some states. Hence, we do not assert that the picked results belong to the
+    // co-domain, but collect these constraints in isMember: For every potential argument x, x \in S => f[x] \in T.
+    var memberships = Seq.empty[BuilderT]
     for ((arg, isNonDup) <- nextState.arena.getHasPtr(dom).zip(nonDups)) {
-      nextState = pick(cdm, nextState, nextState.arena.cellFalse().toBuilder) // the co-domain should be non-empty
+      val (pickState, isResultInCdm) = pickGuarded(cdm, nextState)
+      nextState = pickState
       val pickedResult = nextState.asCell
+      var resultConstraints = Seq(isResultInCdm)
 
       nextState = nextState.updateArena(_.appendCell(TupT1(funT.arg, funT.res)))
       val pair = nextState.arena.topCell
@@ -1022,9 +1090,11 @@ class CherryPick(rewriter: SymbStateRewriter) {
               rewriter.solverContext.assertGroundExpr(resCell.toBuilder)
 
             case _: FinFunSetT =>
-              nextState = pick(cdm, nextState, nextState.arena.cellFalse().toBuilder)
+              val (recState, isRecInCdm) = pickGuarded(cdm, nextState)
+              nextState = recState
               val recursivelyPickedFun = nextState.asCell
               rewriter.solverContext.assertGroundExpr(tla.eql(pickedResult.toBuilder, recursivelyPickedFun.toBuilder))
+              resultConstraints :+= isRecInCdm
 
             case _: InfSetT =>
               nextState = nextState.updateArena(_.appendCellOld(cdm.cellType.asInstanceOf[InfSetT].elemType))
@@ -1043,9 +1113,9 @@ class CherryPick(rewriter: SymbStateRewriter) {
                 // We ensure that the pickedResult is in cdm. Correctness of the domain is ensured by the for-loop
                 // inAndEq checks if pickedResult is in cdm
                 val elemsInAndEq = cmdElems.map(inAndEq(rewriter, _, pickedResult, cdm, lazyEq = true))
-                rewriter.solverContext.assertGroundExpr(tla.or(elemsInAndEq: _*))
+                resultConstraints :+= (if (elemsInAndEq.isEmpty) tla.bool(false) else tla.or(elemsInAndEq: _*))
               } else {
-                rewriter.solverContext.assertGroundExpr(tla.selectInSet(pickedResult.toBuilder, cdm.toBuilder))
+                resultConstraints :+= tla.selectInSet(pickedResult.toBuilder, cdm.toBuilder)
               }
           }
 
@@ -1059,12 +1129,17 @@ class CherryPick(rewriter: SymbStateRewriter) {
         case oddEncodingType =>
           throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
       }
+
+      // x \in S => f[x] \in T
+      val argInDom = tla.selectInSet(arg.elem.toBuilder, dom.toBuilder)
+      memberships :+= tla.or(tla.not(argInDom), tla.and(resultConstraints: _*))
     }
 
     // If S is empty, the relation is empty too.
 
     rewriter.solverContext.log("; } PICK %s FROM %s".format(funT, funSet))
-    nextState.setRex(funCell.toBuilder)
+    val isMember = if (memberships.isEmpty) tla.bool(true) else tla.and(memberships: _*)
+    (nextState.setRex(funCell.toBuilder), isMember)
   }
 
   // just declare an integer, and in case of Nat make it non-negative

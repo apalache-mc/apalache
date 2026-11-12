@@ -280,9 +280,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 
-  // Introduce a Skolem constant for a free-standing existential quantifier:
-  // In case of SUBSET(S), it is really easy: we have to enforce that a witness is a subset of S.
-  // A powerset is never empty, so we do not have to worry about this case.
+  // Introduce a Skolem constant for a free-standing existential quantifier over SUBSET(S) or [S -> T].
+  // A powerset is never empty, whereas [S -> T] is empty when S is non-empty and T is empty.
+  // Since T may be empty only in some states, the membership of the witness must be a part of the result,
+  // not a global fact. Otherwise, every execution through such a state would be lost, see #3503.
   private def skolemExistsByPick(
       setState: SymbState,
       boundVar: String,
@@ -290,18 +291,30 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       set: ArenaCell) = {
     rewriter.solverContext.log("; free existential rule over " + set.cellType)
     // pick an arbitrary witness
-    val pickState = pickRule.pick(set, setState, setState.arena.cellFalse().toBuilder)
-    val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
+    val (pickState, isMember) = pickRule.pickGuarded(set, setState)
+    val pickedCell = pickState.asCell
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(pickState.binding.toMap + (boundVar -> pickedCell))
     // predState.ex contains the predicate applied to the witness
-    val predState = rewriter.rewriteUntilDone(pickState
+    var nextState = rewriter.rewriteUntilDone(pickState
           .setRex(predEx)
           .setBinding(extendedBinding))
-    val predWitness = predState.ex
 
-    predState
-      .setRex(predWitness)
-      .setBinding(Binding(predState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
+    set.cellType match {
+      case PowSetT(_) =>
+        // SUBSET(S) is never empty, and isMember is TRUE
+        ()
+
+      case _ =>
+        // \E x \in S: p holds iff witness \in S /\ p[witness/x]
+        val predWitness = tla.unchecked(nextState.ex)
+        nextState = nextState.updateArena(_.appendCell(BoolT1))
+        val exPred = nextState.arena.topCell
+        rewriter.solverContext.assertGroundExpr(tla.equiv(exPred.toBuilder, tla.and(isMember, predWitness)))
+        nextState = nextState.setRex(exPred.toBuilder)
+    }
+
+    nextState
+      .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 }
