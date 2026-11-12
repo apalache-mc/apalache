@@ -203,18 +203,29 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     rewriter.solverContext.log(s"; skolemizable existential $boundVar over $leftBound..$rightBound ")
     var nextState = state.setArena(state.arena.appendCell(IntT1))
     val witness = nextState.arena.topCell
-    // assert that the witness is in the range leftBound..rightBound
+    // The witness is in the range leftBound..rightBound. The range may be empty in some states, so
+    // the bounds are a conjunct of the result, not a global fact: asserting them would make every
+    // execution through a state with an empty range unsatisfiable, whichever transition it takes.
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.ge(witness.toBuilder, tla.unchecked(leftBound))))
-    rewriter.solverContext.assertGroundExpr(nextState.ex)
+    val aboveLeft = tla.unchecked(nextState.ex)
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.le(witness.toBuilder, tla.unchecked(rightBound))))
-    rewriter.solverContext.assertGroundExpr(nextState.ex)
+    val belowRight = tla.unchecked(nextState.ex)
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(nextState.binding.toMap + (boundVar -> witness))
     // predState.ex contains the predicate applied to the witness
     nextState = rewriter.rewriteUntilDone(nextState
           .setRex(predEx)
           .setBinding(extendedBinding))
+    val predWitness = tla.unchecked(nextState.ex)
+
+    // \E x \in a..b: p holds iff a <= witness /\ witness <= b /\ p[witness/x]
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
+    val exPred = nextState.arena.topCell
+    val iff = tla.equiv(exPred.toBuilder, tla.and(aboveLeft, belowRight, predWitness))
+    rewriter.solverContext.assertGroundExpr(iff)
+
     nextState
+      .setRex(exPred.toBuilder)
       .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 
