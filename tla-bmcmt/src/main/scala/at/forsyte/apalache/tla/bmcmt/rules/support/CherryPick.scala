@@ -812,6 +812,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val length = nextState.asCell
     // construct the sequence
     nextState = protoSeqOps.mkSeq(nextState, seqType, protoSeq, length)
+    val newSeq = nextState.asCell
+    nextState = cacheEqConstraintsIfNeeded(nextState, memberSeqs, newSeq)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $nextState:$seqType")
     nextState
