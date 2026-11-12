@@ -500,6 +500,32 @@ trait TestSymbStateRewriterBool extends RewriterBase {
     assertTlaExAndRestore(rewriter, nextState.setRex(eq))
   }
 
+  test("""skolemization over an empty range: \E i \in a..b: x' \in {i}, regression""") { rewriterType: SMTEncoding =>
+    // the range 5..4 is empty: its bounds must not become global facts
+    prepareArena()
+    val ex =
+      tla.skolem(tla.exists(
+              intName("i"),
+              tla.dotdot(intName("a"), intName("b")),
+              tla.assign(tla.prime(intName("x")), intName("i")),
+          ))
+
+    val rewriter = create(rewriterType)
+
+    // rewrite 5 and 4 first, to produce a and b
+    var state = new SymbState(tla.int(5), arena, Binding())
+    state = rewriter.rewriteUntilDone(state)
+    val aCell = state.asCell
+    state = rewriter.rewriteUntilDone(state.setRex(tla.int(4)))
+    val bCell = state.asCell
+    val binding: Binding = Binding("a" -> aCell, "b" -> bCell)
+
+    val nextState = rewriter.rewriteUntilDone(state.setBinding(binding).setRex(ex))
+    assert(solverContext.sat()) // regression test, the buggy implementation asserted 5 <= i <= 4 here
+    // \E i \in 5..4: ... is false
+    assertTlaExAndRestore(rewriter, nextState.setRex(tla.not(tla.unchecked(nextState.ex))))
+  }
+
   test("""\A x \in {1, 2, 3}: x < 10 ~~> $B$k""") { rewriterType: SMTEncoding =>
     prepareArena()
     val set123 = tla.enumSet(tla.int(1), tla.int(2), tla.int(3))

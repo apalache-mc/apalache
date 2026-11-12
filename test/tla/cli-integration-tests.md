@@ -1569,6 +1569,19 @@ $ apalache-mc check Bug985.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check SkolemEmptyRange reports the violation
+
+Regression test: the bounds of a skolemized `\E x \in a..b` must not be global
+facts when the range can be empty.
+
+```sh
+$ apalache-mc check --length=2 --inv=Inv SkolemEmptyRange.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Bug1126 succeeds
 
 Regression test for https://github.com/apalache-mc/apalache/issues/1126
