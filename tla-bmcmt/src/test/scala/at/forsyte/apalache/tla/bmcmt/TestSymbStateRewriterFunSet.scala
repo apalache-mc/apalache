@@ -9,6 +9,7 @@ import at.forsyte.apalache.tla.types.tla
 trait TestSymbStateRewriterFunSet extends RewriterBase {
   val i_to_B: TlaType1 = FunT1(IntT1, SetT1(BoolT1))
   val i_to_i_to_B: TlaType1 = FunT1(IntT1, FunT1(IntT1, SetT1(BoolT1)))
+  val i_to_i: TlaType1 = FunT1(IntT1, IntT1)
 
   test("[{} -> {}] is a singleton containing the empty function") { rewriterType: SMTEncoding =>
     val funSet = tla.funSet(tla.emptySet(IntT1), tla.emptySet(IntT1))
@@ -211,13 +212,6 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
     assert(solverContext.sat())
   }
 
-  // {y \in {1, 2}: y > 5} is empty, but only the SMT solver knows about it
-  private def symbolicallyEmptySet(varName: String): TBuilderInstruction =
-    tla.filter(tla.name(varName, IntT1), tla.enumSet(tla.int(1), tla.int(2)),
-        tla.gt(tla.name(varName, IntT1), tla.int(5)))
-
-  private val i_to_i: TlaType1 = FunT1(IntT1, IntT1)
-
   // regression for the sibling of #3503: the membership in [S -> T] must not become a global fact
   test("""Skolem(\E f \in [{1} -> {y \in {1, 2}: y > 5}]: g' <- f) is FALSE, regression""") {
     rewriterType: SMTEncoding =>
@@ -385,4 +379,9 @@ trait TestSymbStateRewriterFunSet extends RewriterBase {
         fail("Unexpected rewriting result")
     }
   }
+
+  // {y \in {1, 2}: y > 5} is empty, but only the SMT solver knows about it
+  private def symbolicallyEmptySet(varName: String): TBuilderInstruction =
+    tla.filter(tla.name(varName, IntT1), tla.enumSet(tla.int(1), tla.int(2)),
+        tla.gt(tla.name(varName, IntT1), tla.int(5)))
 }

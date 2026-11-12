@@ -115,31 +115,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
   }
 
   /**
-   * Compute the type of the functions in a function set.
-   */
-  private def funSetElemType(funSetT: FinFunSetT, state: SymbState): FunT1 = {
-    funSetT match {
-      case FinFunSetT(CellTFrom(SetT1(argT)), CellTFrom(SetT1(resT))) =>
-        FunT1(argT, resT)
-
-      case FinFunSetT(CellTFrom(SetT1(argT)), InfSetT(resT)) =>
-        FunT1(argT, resT.toTlaType1)
-
-      case FinFunSetT(CellTFrom(SetT1(argT)), PowSetT(resultT @ SetT1(_))) =>
-        FunT1(argT, resultT)
-
-      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), CellTFrom(SetT1(result2T)))) =>
-        FunT1(arg1T, FunT1(arg2T, result2T))
-
-      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), PowSetT(result2T @ SetT1(_)))) =>
-        FunT1(arg1T, FunT1(arg2T, result2T))
-
-      case _ =>
-        throw new RewriterException(s"Rewriting for the type $funSetT is not implemented. Raise an issue.", state.ex)
-    }
-  }
-
-  /**
    * Determine the type of the set elements and pick an element of this type.
    *
    * Warning: this method does not check, whether the picked element actually belongs to the set. You have to do it
@@ -1151,5 +1126,30 @@ class CherryPick(rewriter: SymbStateRewriter) {
       rewriter.solverContext.assertGroundExpr(tla.ge(intCell.toBuilder, tla.int(0)))
     }
     nextState.setRex(intCell.toBuilder)
+  }
+
+  /**
+   * Compute the type of the functions in a function set.
+   */
+  private def funSetElemType(funSetT: FinFunSetT, state: SymbState): FunT1 = {
+    funSetT match {
+      case FinFunSetT(CellTFrom(SetT1(argT)), CellTFrom(SetT1(resT))) =>
+        FunT1(argT, resT)
+
+      case FinFunSetT(CellTFrom(SetT1(argT)), InfSetT(resT)) =>
+        FunT1(argT, resT.toTlaType1)
+
+      case FinFunSetT(CellTFrom(SetT1(argT)), PowSetT(resultT @ SetT1(_))) =>
+        FunT1(argT, resultT)
+
+      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), CellTFrom(SetT1(result2T)))) =>
+        FunT1(arg1T, FunT1(arg2T, result2T))
+
+      case FinFunSetT(CellTFrom(SetT1(arg1T)), FinFunSetT(CellTFrom(SetT1(arg2T)), PowSetT(result2T @ SetT1(_)))) =>
+        FunT1(arg1T, FunT1(arg2T, result2T))
+
+      case _ =>
+        throw new RewriterException(s"Rewriting for the type $funSetT is not implemented. Raise an issue.", state.ex)
+    }
   }
 }
