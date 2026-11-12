@@ -3155,6 +3155,16 @@ $ apalache-mc check --inv=Inv --length=3 Bug3493SeqPick.tla
 EXITCODE: OK
 ```
 
+### check Bug3493 with some more sequences (array-encoding)
+
+Regression test for a variation of issue 3493.
+
+```sh
+$ apalache-mc check --inv=Inv --length=3 Bug3493SeqGuarded.tla
+...
+EXITCODE: OK
+```
+
 ## running the typecheck command
 
 ### typecheck Empty.tla reports no error
