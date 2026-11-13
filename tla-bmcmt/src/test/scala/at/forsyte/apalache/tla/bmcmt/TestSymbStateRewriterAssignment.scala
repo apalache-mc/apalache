@@ -355,20 +355,15 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val state = new SymbState(asgn, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
-    val boundCell =
-      nextState.ex match {
-        case NameEx(name) =>
-          assert(arena.cellTrue().toString == name)
-          assert(nextState.binding.toMap.size == 1)
-          assert(nextState.binding.contains("x'"))
-          nextState.binding("x'")
-
-        case _ =>
-          fail("Unexpected rewriting result")
-      }
-
     // no contradiction introduced
     assert(solverContext.sat())
+    // [S -> T] may be empty, so the result is not TRUE syntactically, but it must be valid
+    assertTlaExAndRestore(rewriter, nextState)
+    solverContext.assertGroundExpr(nextState.ex)
+    assert(nextState.binding.toMap.size == 1)
+    assert(nextState.binding.contains("x'"))
+    val boundCell = nextState.binding("x'")
+
     // may equal to fun0
     rewriter.push()
     val eqFun0 = tla.eql(boundCell.toBuilder, fun0)
@@ -416,16 +411,11 @@ trait TestSymbStateRewriterAssignment extends RewriterBase {
     val state = new SymbState(asgn, arena, Binding())
     val rewriter = create(rewriterType)
     val nextState = rewriter.rewriteUntilDone(state)
-    nextState.ex match {
-      case NameEx(name) =>
-        assert(arena.cellTrue().toString == name)
-        assert(nextState.binding.toMap.size == 1)
-        assert(nextState.binding.contains("x'"))
-        nextState.binding("x'")
-
-      case _ =>
-        fail("Unexpected rewriting result")
-    }
+    assert(solverContext.sat())
+    // [S -> T] may be empty, so the result is not TRUE syntactically, but it must be valid
+    assertTlaExAndRestore(rewriter, nextState)
+    assert(nextState.binding.toMap.size == 1)
+    assert(nextState.binding.contains("x'"))
   }
 
   test("""\E t \in [0..4 -> Nat]: x' <- t""") { rewriterType: SMTEncoding =>
