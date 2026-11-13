@@ -5,7 +5,7 @@ import at.forsyte.apalache.tla.bmcmt.rules.support.{CherryPick, OracleHelper}
 import at.forsyte.apalache.tla.bmcmt.types._
 import at.forsyte.apalache.tla.lir._
 import at.forsyte.apalache.tla.lir.oper._
-import at.forsyte.apalache.tla.lir.values.{TlaIntSet, TlaNatSet}
+import at.forsyte.apalache.tla.lir.values.{TlaBool, TlaIntSet, TlaNatSet}
 import at.forsyte.apalache.tla.typecomp._
 import at.forsyte.apalache.tla.types.{tlaU => tla, BuilderUT => BuilderT}
 import com.typesafe.scalalogging.LazyLogging
@@ -203,18 +203,29 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
     rewriter.solverContext.log(s"; skolemizable existential $boundVar over $leftBound..$rightBound ")
     var nextState = state.setArena(state.arena.appendCell(IntT1))
     val witness = nextState.arena.topCell
-    // assert that the witness is in the range leftBound..rightBound
+    // The witness is in the range leftBound..rightBound. The range may be empty in some states, so
+    // the bounds are a conjunct of the result, not a global fact: asserting them would make every
+    // execution through a state with an empty range unsatisfiable, whichever transition it takes.
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.ge(witness.toBuilder, tla.unchecked(leftBound))))
-    rewriter.solverContext.assertGroundExpr(nextState.ex)
+    val aboveLeft = tla.unchecked(nextState.ex)
     nextState = rewriter.rewriteUntilDone(nextState.setRex(tla.le(witness.toBuilder, tla.unchecked(rightBound))))
-    rewriter.solverContext.assertGroundExpr(nextState.ex)
+    val belowRight = tla.unchecked(nextState.ex)
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(nextState.binding.toMap + (boundVar -> witness))
     // predState.ex contains the predicate applied to the witness
     nextState = rewriter.rewriteUntilDone(nextState
           .setRex(predEx)
           .setBinding(extendedBinding))
+    val predWitness = tla.unchecked(nextState.ex)
+
+    // \E x \in a..b: p holds iff a <= witness /\ witness <= b /\ p[witness/x]
+    nextState = nextState.updateArena(_.appendCell(BoolT1))
+    val exPred = nextState.arena.topCell
+    val iff = tla.equiv(exPred.toBuilder, tla.and(aboveLeft, belowRight, predWitness))
+    rewriter.solverContext.assertGroundExpr(iff)
+
     nextState
+      .setRex(exPred.toBuilder)
       .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 
@@ -280,9 +291,10 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 
-  // Introduce a Skolem constant for a free-standing existential quantifier:
-  // In case of SUBSET(S), it is really easy: we have to enforce that a witness is a subset of S.
-  // A powerset is never empty, so we do not have to worry about this case.
+  // Introduce a Skolem constant for a free-standing existential quantifier over SUBSET(S) or [S -> T].
+  // A powerset is never empty, whereas [S -> T] is empty when S is non-empty and T is empty.
+  // Since T may be empty only in some states, the membership of the witness must be a part of the result,
+  // not a global fact. Otherwise, every execution through such a state would be lost, see #3503.
   private def skolemExistsByPick(
       setState: SymbState,
       boundVar: String,
@@ -290,18 +302,30 @@ class QuantRule(rewriter: SymbStateRewriter) extends RewritingRule with LazyLogg
       set: ArenaCell) = {
     rewriter.solverContext.log("; free existential rule over " + set.cellType)
     // pick an arbitrary witness
-    val pickState = pickRule.pick(set, setState, setState.arena.cellFalse().toBuilder)
-    val pickedCell = pickState.arena.findCellByNameEx(pickState.ex)
+    val (pickState, isMember) = pickRule.pickGuarded(set, setState)
+    val pickedCell = pickState.asCell
     // enforce that the witness satisfies the predicate
     val extendedBinding = Binding(pickState.binding.toMap + (boundVar -> pickedCell))
     // predState.ex contains the predicate applied to the witness
-    val predState = rewriter.rewriteUntilDone(pickState
+    var nextState = rewriter.rewriteUntilDone(pickState
           .setRex(predEx)
           .setBinding(extendedBinding))
-    val predWitness = predState.ex
 
-    predState
-      .setRex(predWitness)
-      .setBinding(Binding(predState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
+    isMember.build match {
+      case ValEx(TlaBool(true)) =>
+        // the witness trivially belongs to the set, e.g., for SUBSET(S) or [S -> Int]
+        ()
+
+      case _ =>
+        // \E x \in S: p holds iff witness \in S /\ p[witness/x]
+        val predWitness = tla.unchecked(nextState.ex)
+        nextState = nextState.updateArena(_.appendCell(BoolT1))
+        val exPred = nextState.arena.topCell
+        rewriter.solverContext.assertGroundExpr(tla.equiv(exPred.toBuilder, tla.and(isMember, predWitness)))
+        nextState = nextState.setRex(exPred.toBuilder)
+    }
+
+    nextState
+      .setBinding(Binding(nextState.binding.toMap - boundVar)) // forget the binding to x, but not the other bindings!
   }
 }

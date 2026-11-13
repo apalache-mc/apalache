@@ -24,7 +24,7 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     stringWriter.toString
   }
 
-  private def exactCase(label: String, original: TlaEx, expectedText: String): RoundTripCase =
+  private def equalRoundTripCase(label: String, original: TlaEx, expectedText: String): RoundTripCase =
     RoundTripCase(label, original, expectedText, original)
 
   private def assertRoundTrips(cases: Seq[RoundTripCase], moduleNamePrefix: String): Unit = {
@@ -103,19 +103,88 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
 
   test("precedence conflicts are parenthesized and round-trip through SANY") {
     val cases = Seq(
-        exactCase("composition on the left of equality", eql(comp(name("a"), name("b")), name("c")),
+        equalRoundTripCase("composition on the left of equality", eql(comp(name("a"), name("b")), name("c")),
             "(a \\cdot b) = c"),
-        exactCase("composition on the right of equality", eql(name("a"), comp(name("b"), name("c"))),
+        equalRoundTripCase("composition on the right of equality", eql(name("a"), comp(name("b"), name("c"))),
             "a = (b \\cdot c)"),
-        exactCase("UNION on the left of product", times(union(name("S")), name("T")), "(UNION S) \\X T"),
-        exactCase("UNION on the right of product", times(name("S"), union(name("T"))), "S \\X (UNION T)"),
-        exactCase("SUBSET on the left of product", times(powSet(name("S")), name("T")), "(SUBSET S) \\X T"),
-        exactCase("SUBSET on the right of product", times(name("S"), powSet(name("T"))), "S \\X (SUBSET T)"),
-        exactCase("DOMAIN on the left of product", times(dom(name("S")), name("T")), "(DOMAIN S) \\X T"),
-        exactCase("DOMAIN on the right of product", times(name("S"), dom(name("T"))), "S \\X (DOMAIN T)"),
+        equalRoundTripCase("UNION on the left of product", times(union(name("S")), name("T")), "(UNION S) \\X T"),
+        equalRoundTripCase("UNION on the right of product", times(name("S"), union(name("T"))), "S \\X (UNION T)"),
+        equalRoundTripCase("SUBSET on the left of product", times(powSet(name("S")), name("T")), "(SUBSET S) \\X T"),
+        equalRoundTripCase("SUBSET on the right of product", times(name("S"), powSet(name("T"))), "S \\X (SUBSET T)"),
+        equalRoundTripCase("DOMAIN on the left of product", times(dom(name("S")), name("T")), "(DOMAIN S) \\X T"),
+        equalRoundTripCase("DOMAIN on the right of product", times(name("S"), dom(name("T"))), "S \\X (DOMAIN T)"),
     )
 
     assertRoundTrips(cases, "PrecedenceRoundTrip")
+  }
+
+  test("SUBSET and UNION conflicts with set operators round-trip through SANY") {
+    val unaryOperators: Seq[(String, TlaEx => TlaEx)] = Seq(
+        ("SUBSET", ex => powSet(ex)),
+        ("UNION", ex => union(ex)),
+    )
+    val binaryOperators: Seq[(String, (TlaEx, TlaEx) => TlaEx)] = Seq(
+        ("\\union", (lhs, rhs) => cup(lhs, rhs)),
+        ("\\intersect", (lhs, rhs) => cap(lhs, rhs)),
+        ("\\", (lhs, rhs) => setminus(lhs, rhs)),
+    )
+    val cases = for {
+      (operatorName, applyUnary) <- unaryOperators
+      (binaryOperatorName, applyBinary) <- binaryOperators
+      testCase <- Seq(
+          equalRoundTripCase(s"$operatorName on the left of $binaryOperatorName",
+              applyBinary(applyUnary(name("S")), name("T")), s"($operatorName S) $binaryOperatorName T"),
+          equalRoundTripCase(s"$operatorName on the right of $binaryOperatorName",
+              applyBinary(name("S"), applyUnary(name("T"))), s"S $binaryOperatorName ($operatorName T)"),
+          equalRoundTripCase(s"$operatorName over $binaryOperatorName", applyUnary(applyBinary(name("S"), name("T"))),
+              s"$operatorName (S $binaryOperatorName T)"),
+      )
+    } yield testCase
+
+    assertRoundTrips(cases, "SetPrefixRoundTrip")
+  }
+
+  test("set and function operators preserve interval and arithmetic grouping through SANY") {
+    val unaryOperators: Seq[(String, TlaEx => TlaEx)] = Seq(
+        ("SUBSET", ex => powSet(ex)),
+        ("UNION", ex => union(ex)),
+        ("DOMAIN", ex => dom(ex)),
+    )
+    val cases = unaryOperators.flatMap { case (operatorName, applyUnary) =>
+      Seq(
+          equalRoundTripCase(s"$operatorName on the left of interval", dotdot(applyUnary(name("S")), name("T")),
+              s"($operatorName S) .. T"),
+          equalRoundTripCase(s"$operatorName on the right of interval", dotdot(name("S"), applyUnary(name("T"))),
+              s"S .. ($operatorName T)"),
+          equalRoundTripCase(s"$operatorName over interval", applyUnary(dotdot(int(1), int(3))),
+              s"$operatorName (1 .. 3)"),
+          equalRoundTripCase(s"$operatorName on the left of addition", plus(applyUnary(name("S")), name("T")),
+              s"($operatorName S) + T"),
+          equalRoundTripCase(s"$operatorName on the right of addition", plus(name("S"), applyUnary(name("T"))),
+              s"S + ($operatorName T)"),
+          equalRoundTripCase(s"$operatorName over addition", applyUnary(plus(name("S"), name("T"))),
+              s"$operatorName (S + T)"),
+      )
+    }
+
+    assertRoundTrips(cases, "SetPrefixBindingRoundTrip")
+  }
+
+  test("nested set and function operators round-trip through SANY") {
+    val unaryOperators: Seq[(String, Int, TlaEx => TlaEx)] = Seq(
+        ("SUBSET", 80, ex => powSet(ex)),
+        ("UNION", 80, ex => union(ex)),
+        ("DOMAIN", 90, ex => dom(ex)),
+    )
+    val cases = for {
+      (outerOperatorName, outerPrecedence, applyOuterOperator) <- unaryOperators
+      (innerOperatorName, innerPrecedence, applyInnerOperator) <- unaryOperators
+      innerExpressionText = s"$innerOperatorName S"
+      operandText = if (innerPrecedence > outerPrecedence) innerExpressionText else s"($innerExpressionText)"
+    } yield equalRoundTripCase(s"$outerOperatorName over $innerOperatorName",
+        applyOuterOperator(applyInnerOperator(name("S"))), s"$outerOperatorName $operandText")
+
+    assertRoundTrips(cases, "NestedSetPrefixRoundTrip")
   }
 
   test("unbounded binders use TLA+ syntax and round-trip through SANY") {
@@ -123,12 +192,12 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     val forallEx = forall(name("z"), bool(false))
     val existsEx = exists(name("z"), bool(false))
     val cases = Seq(
-        exactCase("unbounded CHOOSE", chooseEx, "CHOOSE z : TRUE"),
-        exactCase("unbounded forall", forallEx, "\\A z : FALSE"),
-        exactCase("unbounded exists", existsEx, "\\E z : FALSE"),
-        exactCase("unbounded CHOOSE under equality", eql(chooseEx, name("y")), "(CHOOSE z : TRUE) = y"),
-        exactCase("unbounded forall under equality", eql(forallEx, bool(true)), "(\\A z : FALSE) = TRUE"),
-        exactCase("unbounded exists under equality", eql(existsEx, bool(true)), "(\\E z : FALSE) = TRUE"),
+        equalRoundTripCase("unbounded CHOOSE", chooseEx, "CHOOSE z : TRUE"),
+        equalRoundTripCase("unbounded forall", forallEx, "\\A z : FALSE"),
+        equalRoundTripCase("unbounded exists", existsEx, "\\E z : FALSE"),
+        equalRoundTripCase("unbounded CHOOSE under equality", eql(chooseEx, name("y")), "(CHOOSE z : TRUE) = y"),
+        equalRoundTripCase("unbounded forall under equality", eql(forallEx, bool(true)), "(\\A z : FALSE) = TRUE"),
+        equalRoundTripCase("unbounded exists under equality", eql(existsEx, bool(true)), "(\\E z : FALSE) = TRUE"),
     )
 
     assertRoundTrips(cases, "UnboundedBinderRoundTrip")
@@ -138,16 +207,18 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     val action = bool(false)
     val actionSubscript = head(tuple())
     val cases = Seq(
-        exactCase("stuttering action with a bare subscript", stutt(action, name("x")), "[FALSE]_x"),
-        exactCase("non-stuttering action with a bare subscript", nostutt(action, name("x")), "<<FALSE>>_x"),
-        exactCase("weak fairness with a bare subscript", WF(name("x"), action), "WF_x(FALSE)"),
-        exactCase("strong fairness with a bare subscript", SF(name("x"), action), "SF_x(FALSE)"),
-        exactCase("stuttering action with a grouped subscript", stutt(action, actionSubscript), "[FALSE]_(Head(<<>>))"),
-        exactCase("non-stuttering action with a grouped subscript", nostutt(action, actionSubscript),
+        equalRoundTripCase("stuttering action with a bare subscript", stutt(action, name("x")), "[FALSE]_x"),
+        equalRoundTripCase("non-stuttering action with a bare subscript", nostutt(action, name("x")), "<<FALSE>>_x"),
+        equalRoundTripCase("weak fairness with a bare subscript", WF(name("x"), action), "WF_x(FALSE)"),
+        equalRoundTripCase("strong fairness with a bare subscript", SF(name("x"), action), "SF_x(FALSE)"),
+        equalRoundTripCase("stuttering action with a grouped subscript", stutt(action, actionSubscript),
+            "[FALSE]_(Head(<<>>))"),
+        equalRoundTripCase("non-stuttering action with a grouped subscript", nostutt(action, actionSubscript),
             "<<FALSE>>_(Head(<<>>))"),
-        exactCase("weak fairness with a grouped subscript", WF(int(0), action), "WF_(0)(FALSE)"),
-        exactCase("strong fairness with a grouped subscript", SF(int(0), action), "SF_(0)(FALSE)"),
-        exactCase("non-stuttering action with a Boolean subscript", nostutt(action, bool(false)), "<<FALSE>>_FALSE"),
+        equalRoundTripCase("weak fairness with a grouped subscript", WF(int(0), action), "WF_(0)(FALSE)"),
+        equalRoundTripCase("strong fairness with a grouped subscript", SF(int(0), action), "SF_(0)(FALSE)"),
+        equalRoundTripCase("non-stuttering action with a Boolean subscript", nostutt(action, bool(false)),
+            "<<FALSE>>_FALSE"),
     )
 
     assertRoundTrips(cases, "ActionSubscriptRoundTrip")
@@ -157,15 +228,19 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     val labelledTuple = label(tuple(), "label0")
     val issueExample = in(concat(tuple(), label(concat(tuple(), tuple()), "label0")), enumSet())
     val cases = Seq(
-        exactCase("issue example", issueExample, "<<>> \\o (label0 :: (<<>> \\o <<>>)) \\in {}"),
-        exactCase("label on the left of an infix operator", concat(labelledTuple, tuple()),
+        equalRoundTripCase("issue example", issueExample, "<<>> \\o (label0 :: (<<>> \\o <<>>)) \\in {}"),
+        equalRoundTripCase("label on the left of an infix operator", concat(labelledTuple, tuple()),
             "(label0 :: <<>>) \\o <<>>"),
-        exactCase("label on the right of an infix operator", concat(tuple(), labelledTuple),
+        equalRoundTripCase("label on the right of an infix operator", concat(tuple(), labelledTuple),
             "<<>> \\o (label0 :: <<>>)"),
-        exactCase("label as a membership operand", in(label(name("x"), "label0"), name("S")), "(label0 :: x) \\in S"),
-        exactCase("label as a function expression", appFun(label(name("a"), "label0"), int(1)), "(label0 :: a)[1]"),
-        exactCase("label as a function argument", appFun(name("a"), label(int(1), "label0")), "a[(label0 :: 1)]"),
-        exactCase("label under a prefix operator", enabled(label(bool(false), "label0")), "ENABLED (label0 :: FALSE)"),
+        equalRoundTripCase("label as a membership operand", in(label(name("x"), "label0"), name("S")),
+            "(label0 :: x) \\in S"),
+        equalRoundTripCase("label as a function expression", appFun(label(name("a"), "label0"), int(1)),
+            "(label0 :: a)[1]"),
+        equalRoundTripCase("label as a function argument", appFun(name("a"), label(int(1), "label0")),
+            "a[(label0 :: 1)]"),
+        equalRoundTripCase("label under a prefix operator", enabled(label(bool(false), "label0")),
+            "ENABLED (label0 :: FALSE)"),
     )
 
     assertRoundTrips(cases, "LabelRoundTrip")
@@ -181,10 +256,12 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
     val canonicalWrappedMap = map(wrappedMembership, name("z"), enumSet(int(2)))
     val canonicalCompoundMap = map(compoundMembership, name("z"), enumSet(int(2)))
     val cases = Seq(
-        exactCase("ordinary map with multiple binders", ordinaryMap, "{ (u + v): u \\in S, v \\in T }"),
-        exactCase("scalar membership body", map(scalarBody, name("z"), name("T")), "{ ((~FALSE) \\in S): z \\in T }"),
-        exactCase("tuple membership body", map(tupleBody, name("z"), name("T")), "{ (<<x, y>> \\in S): z \\in T }"),
-        exactCase("nested map body", nestedMap, "{ ({ (x \\in S): u \\in T }): v \\in S }"),
+        equalRoundTripCase("ordinary map with multiple binders", ordinaryMap, "{ (u + v): u \\in S, v \\in T }"),
+        equalRoundTripCase("scalar membership body", map(scalarBody, name("z"), name("T")),
+            "{ ((~FALSE) \\in S): z \\in T }"),
+        equalRoundTripCase("tuple membership body", map(tupleBody, name("z"), name("T")),
+            "{ (<<x, y>> \\in S): z \\in T }"),
+        equalRoundTripCase("nested map body", nestedMap, "{ ({ (x \\in S): u \\in T }): v \\in S }"),
         RoundTripCase(
             "membership under singleton conjunction",
             map(and(wrappedMembership), name("z"), enumSet(int(2))),
@@ -229,7 +306,7 @@ class TestPrettyWriterPrecedence extends SanyImporterTestBase {
       // TestPrettyWriter covers their exact output.
       if operandLabel != "prime" || prefixLabel == "ENABLED"
       original = prefix(operand)
-    } yield exactCase(s"$prefixLabel over $operandLabel", original, s"$prefixText($operandText)")
+    } yield equalRoundTripCase(s"$prefixLabel over $operandLabel", original, s"$prefixText($operandText)")
 
     assertRoundTrips(cases, "PrefixRoundTrip")
   }

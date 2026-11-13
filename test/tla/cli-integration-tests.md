@@ -1569,6 +1569,19 @@ $ apalache-mc check Bug985.tla | sed 's/I@.*//'
 EXITCODE: OK
 ```
 
+### check SkolemEmptyRange reports the violation
+
+Regression test: the bounds of a skolemized `\E x \in a..b` must not be global
+facts when the range can be empty.
+
+```sh
+$ apalache-mc check --length=2 --inv=Inv SkolemEmptyRange.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
+```
+
 ### check Bug1126 succeeds
 
 Regression test for https://github.com/apalache-mc/apalache/issues/1126
@@ -1580,6 +1593,19 @@ $ apalache-mc check Bug1126.tla | sed 's/[IE]@.*//'
 Bug1126.tla:15:14-15:27: unsupported expression: Seq(_) produces an infinite set of unbounded sequences. See: https://apalache-mc.org/docs/apalache/known-issues.html#using-seqs
 ...
 EXITCODE: ERROR (75)
+```
+
+### check SkolemEmptyFunSet reports the violation
+
+Regression test: the membership of a skolemized `\E f \in [S -> T]` must not be
+a global fact when the co-domain can be empty (sibling of #3503).
+
+```sh
+$ apalache-mc check --length=2 --inv=Inv SkolemEmptyFunSet.tla | sed 's/I@.*//'
+...
+The outcome is: Error
+...
+EXITCODE: ERROR (12)
 ```
 
 ### check --inv with a temporal property fails (temporal)
