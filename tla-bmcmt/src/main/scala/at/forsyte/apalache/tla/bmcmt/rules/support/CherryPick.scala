@@ -1141,21 +1141,6 @@ class CherryPick(rewriter: SymbStateRewriter) {
     nextState.setRex(intCell.toBuilder)
   }
 
-  // Caches needed equalities for the arrays encoding; not needed for sets nor functions
-  // For details, see https://github.com/apalache-mc/apalache/issues/3493
-  private def cacheEqConstraintsIfNeeded(
-      state: SymbState,
-      dataStructure: Seq[ArenaCell],
-      element: ArenaCell): SymbState = {
-    val nextState = rewriter.solverContext.config.smtEncoding match {
-      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
-        rewriter.lazyEq.cacheEqConstraints(state, dataStructure.map((_, element)))
-      case SMTEncoding.OOPSLA19 =>
-        state // no changes are needed for the oopsla19 encoding
-      case oddEncodingType =>
-        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
-    }
-    return nextState
   /**
    * Compute the type of the functions in a function set.
    */
@@ -1179,5 +1164,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case _ =>
         throw new RewriterException(s"Rewriting for the type $funSetT is not implemented. Raise an issue.", state.ex)
     }
+  }
+
+  // Caches needed equalities for the arrays encoding; not needed for sets nor functions
+  // For details, see https://github.com/apalache-mc/apalache/issues/3493
+  private def cacheEqConstraintsIfNeeded(
+      state: SymbState,
+      dataStructure: Seq[ArenaCell],
+      element: ArenaCell): SymbState = {
+    val nextState = rewriter.solverContext.config.smtEncoding match {
+      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+        rewriter.lazyEq.cacheEqConstraints(state, dataStructure.map((_, element)))
+      case SMTEncoding.OOPSLA19 =>
+        state // no changes are needed for the oopsla19 encoding
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+    }
+    return nextState
   }
 }
