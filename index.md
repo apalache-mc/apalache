@@ -71,8 +71,7 @@ Aztec Governance Protocol [[blogpost]][aztec-gov] (2025)
 
 ## Theory
 
-To read an academic papers about the theory behind Apalache, check our [paper at
-OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
+To read about the theory behind Apalache, check our academic papers at [OOPSLA'19][oopsla19], [TACAS'23][tacas23], and [CAV'26][cav26].
 
 ## Talks
 
@@ -122,8 +121,9 @@ OOPSLA19][oopsla19] and [paper at TACAS23][tacas23].
 [chonkybft]: https://protocols-made-fun.com/consensus/matterlabs/quint/specification/modelchecking/2024/07/29/chonkybft.html
 [tendermint]: https://github.com/cometbft/cometbft/blob/main/spec/light-client/accountability/Synopsis.md
 [light-client]: https://github.com/cometbft/cometbft/blob/main/spec/light-client/README.md
-[tacas23]: https://link.springer.com/chapter/10.1007/978-3-031-30823-9_7
-[oopsla19]: https://dl.acm.org/doi/10.1145/3360549
+[cav26]: https://doi.org/10.1007/978-3-032-32519-8_8
+[tacas23]: https://doi.org/10.1007/978-3-031-30823-9_7
+[oopsla19]: https://doi.org/10.1145/3360549
 [Solarkraft]: https://github.com/freespek/solarkraft/
 [Atomkraft]: https://github.com/informalsystems/atomkraft
 [JSON RPC Server]: https://github.com/apalache-mc/apalache/tree/main/json-rpc
