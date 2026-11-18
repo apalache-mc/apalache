@@ -255,16 +255,18 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // for each index i, pick a value from the projection { t[i] : t \in tuples }
     val newFields = cellType.elems.indices.map(pickAtPos).map { FixedElemPtr }
 
-    // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
+    // For the oopsla19 encoding we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element t[i], as it will use the same oracle!
+    // For the (fun)arrays encoding this is needed, and is done in cacheEqConstraintsIfNeeded.
 
     // add the new fields to arena
     val newArena = newState.arena.appendHasNoSmt(newTuple, newFields: _*)
-    rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
-    newState
-      .setArena(newArena)
-      .setRex(newTuple.toBuilder)
+    newState = newState.setArena(newArena)
+    newState = cacheEqConstraintsIfNeeded(newState, tuples, newTuple)
 
+    rewriter.solverContext.log(s"; } CHERRY-PICK $newTuple:$cellType")
+
+    newState.setRex(newTuple.toBuilder)
   }
 
   /**
@@ -351,14 +353,16 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // and connect them to the record
     var newArena = newState.arena.setDom(newRecord, newDom)
     newArena = newArena.appendHasNoSmt(newRecord, fieldCells: _*)
-    // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
+    // For the oopsla19 encoding we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
+    // For the (fun)arrays encoding this is needed, and is done in cacheEqConstraintsIfNeeded.
+
+    newState = newState.setArena(newArena)
+    newState = cacheEqConstraintsIfNeeded(newState, records, newRecord)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$commonRecordT")
 
-    newState
-      .setArena(newArena)
-      .setRex(newRecord.toBuilder)
+    newState.setRex(newRecord.toBuilder)
   }
 
   /**
@@ -401,8 +405,12 @@ class CherryPick(rewriter: SymbStateRewriter) {
     // pick the fields using the oracle and connect them to the record
     val pickedFieldValues = fieldTypes.keySet.toSeq.map(projectOnField).map(FixedElemPtr)
     nextState = nextState.updateArena(_.appendHasNoSmt(newRecord, pickedFieldValues: _*))
-    // The awesome property: we do not have to enforce equality of the field values, as this will be enforced by
+    // For the oopsla19 encoding we do not have to enforce equality of the field values, as this will be enforced by
     // the rule for the respective element r.key, as it will use the same oracle!
+    // For the (fun)arrays encoding this is needed, and is done in cacheEqConstraintsIfNeeded.
+
+    nextState = cacheEqConstraintsIfNeeded(nextState, records, newRecord)
+
     rewriter.solverContext.log(s"; } CHERRY-PICK $newRecord:$recordT")
 
     nextState.setRex(newRecord.toBuilder)
@@ -462,6 +470,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
       }
       .map(FixedElemPtr)
     nextState = nextState.updateArena(_.appendHasNoSmt(newVariant, pickedValuesAndTag: _*))
+    nextState = cacheEqConstraintsIfNeeded(nextState, variants, newVariant)
+
     rewriter.solverContext.log(s"; } CHERRY-PICK $newVariant:$variantT")
 
     nextState.setRex(newVariant.toBuilder)
@@ -788,7 +798,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     //
     // We construct a new sequence R = << z_1, ..., z_n >> where z_i = FROM { c_i, d_i }
     //
-    // As we are not tracking membership for sequences, no additional SMT constraints are needed
+    // As we are not tracking membership for sequences, no additional SMT constraints are needed.
+    // The above is for the oopsla19 encoding, for the (fun)arrays encoding SMT constraints can be added via cacheEqConstraintsIfNeeded.
     val maxCapacity = elemsOfMemberSeqs.map(_.size).reduce(Math.max)
     assert(maxCapacity != 0)
 
@@ -829,6 +840,8 @@ class CherryPick(rewriter: SymbStateRewriter) {
     val length = nextState.asCell
     // construct the sequence
     nextState = protoSeqOps.mkSeq(nextState, seqType, protoSeq, length)
+    val newSeq = nextState.asCell
+    nextState = cacheEqConstraintsIfNeeded(nextState, memberSeqs, newSeq)
 
     rewriter.solverContext.log(s"; } CHERRY-PICK $nextState:$seqType")
     nextState
@@ -1155,5 +1168,22 @@ class CherryPick(rewriter: SymbStateRewriter) {
       case _ =>
         throw new RewriterException(s"Rewriting for the type $funSetT is not implemented. Raise an issue.", state.ex)
     }
+  }
+
+  // Caches needed equalities for the arrays encoding; not needed for sets nor functions
+  // For details, see https://github.com/apalache-mc/apalache/issues/3493
+  private def cacheEqConstraintsIfNeeded(
+      state: SymbState,
+      dataStructure: Seq[ArenaCell],
+      element: ArenaCell): SymbState = {
+    val nextState = rewriter.solverContext.config.smtEncoding match {
+      case SMTEncoding.Arrays | SMTEncoding.FunArrays =>
+        rewriter.lazyEq.cacheEqConstraints(state, dataStructure.map((_, element)))
+      case SMTEncoding.OOPSLA19 =>
+        state // no changes are needed for the oopsla19 encoding
+      case oddEncodingType =>
+        throw new IllegalArgumentException(s"Unexpected SMT encoding of type $oddEncodingType")
+    }
+    return nextState
   }
 }
