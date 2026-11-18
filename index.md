@@ -123,7 +123,7 @@ To read about the theory behind Apalache, check our academic papers at [OOPSLA'1
 [light-client]: https://github.com/cometbft/cometbft/blob/main/spec/light-client/README.md
 [cav26]: https://doi.org/10.1007/978-3-032-32519-8_8
 [tacas23]: https://doi.org/10.1007/978-3-031-30823-9_7
-[oopsla19]: https://doi.org/10.5281/zenodo.3370063
+[oopsla19]: https://doi.org/10.1145/3360549
 [Solarkraft]: https://github.com/freespek/solarkraft/
 [Atomkraft]: https://github.com/informalsystems/atomkraft
 [JSON RPC Server]: https://github.com/apalache-mc/apalache/tree/main/json-rpc
