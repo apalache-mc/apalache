@@ -1,6 +1,6 @@
 package com.github.apalachemc.apalache.jsonrpc
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.config.Constants.SERVER
 import at.forsyte.apalache.io.config.{ApalacheConfig, ConfigParseResult}
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -41,7 +41,7 @@ class TestExplorationService extends AnyFunSuite with BeforeAndAfter with ScalaC
   private var service: ExplorationService = _
 
   override protected def withFixture(test: NoArgTest): Outcome =
-    OutputManager.withScope(super.withFixture(test))
+    OutputWorkspace.withScope(super.withFixture(test))
 
   before {
     val config = ConfigParseResult.success(ApalacheConfig.empty.withCommand(SERVER))

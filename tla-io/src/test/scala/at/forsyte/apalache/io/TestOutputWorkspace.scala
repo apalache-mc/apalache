@@ -11,24 +11,24 @@ import scala.jdk.CollectionConverters._
 import scala.util.Using
 
 @RunWith(classOf[JUnitRunner])
-class TestOutputManager extends AnyFunSuite {
+class TestOutputWorkspace extends AnyFunSuite {
 
   private case class Observation(runDir: Path, contents: String)
 
   test("required access outside a configured scope fails and optional output is disabled") {
-    val error = intercept[IllegalStateException](OutputManager.runDir)
-    assert(error.getMessage.contains("OutputManager.withScope"))
-    assert(!OutputManager.withProfilingWriter(_ => fail("unbound profiling writer should be disabled")))
-    assert(OutputManager.openLongLivedWritersInRunDirs("unbound.txt").isEmpty)
-    assert(!OutputManager.withWriterInRunDir("unbound.txt")(_ => fail("unbound run output is disabled")))
-    OutputManager.withWriterInIntermediateDir("unbound.txt")(_ => fail("unbound intermediate output is disabled"))
-    assert(OutputManager.RunFile == "run.txt")
+    val error = intercept[IllegalStateException](OutputWorkspace.runDir)
+    assert(error.getMessage.contains("OutputWorkspace.withScope"))
+    assert(!OutputWorkspace.withProfilingWriter(_ => fail("unbound profiling writer should be disabled")))
+    assert(OutputWorkspace.openLongLivedWritersInRunDirs("unbound.txt").isEmpty)
+    assert(!OutputWorkspace.withWriterInRunDir("unbound.txt")(_ => fail("unbound run output is disabled")))
+    OutputWorkspace.withWriterInIntermediateDir("unbound.txt")(_ => fail("unbound intermediate output is disabled"))
+    assert(OutputWorkspace.RunFile == "run.txt")
   }
 
   test("a workspace owns and mirrors its filesystem output") {
     withTempDirectory("output-workspace-filesystem") { root =>
       val additional = root.resolve("additional")
-      val workspace = new OutputManager(
+      val workspace = new OutputWorkspace(
           initialization(
               "check",
               root.resolve("out"),
@@ -51,7 +51,7 @@ class TestOutputManager extends AnyFunSuite {
       assert(Files.readString(additional.resolve("intermediate/intermediate.txt")) == "intermediate")
 
       assert(workspace.withProfilingWriter(_.print("profile")))
-      assert(Files.readString(workspace.pathInRunDir(OutputManager.RuleProfileFile)) == "profile")
+      assert(Files.readString(workspace.pathInRunDir(OutputWorkspace.RuleProfileFile)) == "profile")
 
       val external = root.resolve("external.txt")
       workspace.withWriterOutsideWorkspace(external)(_.print("external"))
@@ -69,68 +69,68 @@ class TestOutputManager extends AnyFunSuite {
         longLivedWriters.foreach(_.close())
       }
 
-      val disabled = new OutputManager(initialization("disabled", root.resolve("out")))
+      val disabled = new OutputWorkspace(initialization("disabled", root.resolve("out")))
       disabled.withWriterInIntermediateDir("disabled.txt")(_ => fail("intermediate output should be disabled"))
       assert(!disabled.withProfilingWriter(_ => fail("profiling should be disabled")))
-      assert(!Files.exists(disabled.pathInRunDir(OutputManager.IntermediateDirName)))
+      assert(!Files.exists(disabled.pathInRunDir(OutputWorkspace.IntermediateDirName)))
     }
   }
 
   test("fresh scopes do not retain a previously configured workspace") {
     withTempDirectory("output-workspace-sequential") { root =>
-      val firstRunDir = OutputManager.withScope {
-        OutputManager.configure(initialization("first", root.resolve("first-out")))
-        OutputManager.withWriterInRunDir("result.txt")(_.print("first"))
-        OutputManager.runDir
+      val firstRunDir = OutputWorkspace.withScope {
+        OutputWorkspace.configure(initialization("first", root.resolve("first-out")))
+        OutputWorkspace.withWriterInRunDir("result.txt")(_.print("first"))
+        OutputWorkspace.runDir
       }
 
-      OutputManager.withScope {
-        intercept[IllegalStateException](OutputManager.runDir)
-        OutputManager.configure(initialization("second", root.resolve("second-out")))
-        assert(OutputManager.runDir != firstRunDir)
-        assert(!Files.exists(OutputManager.pathInRunDir("result.txt")))
+      OutputWorkspace.withScope {
+        intercept[IllegalStateException](OutputWorkspace.runDir)
+        OutputWorkspace.configure(initialization("second", root.resolve("second-out")))
+        assert(OutputWorkspace.runDir != firstRunDir)
+        assert(!Files.exists(OutputWorkspace.pathInRunDir("result.txt")))
       }
     }
   }
 
   test("nested and exceptional scopes restore the previous binding") {
     withTempDirectory("output-workspace-nested") { root =>
-      OutputManager.withScope {
-        OutputManager.configure(initialization("outer", root.resolve("outer")))
-        val outerDir = OutputManager.runDir
+      OutputWorkspace.withScope {
+        OutputWorkspace.configure(initialization("outer", root.resolve("outer")))
+        val outerDir = OutputWorkspace.runDir
 
-        OutputManager.withScope {
-          intercept[IllegalStateException](OutputManager.runDir)
-          OutputManager.configure(initialization("inner", root.resolve("inner")))
-          assert(OutputManager.runDir != outerDir)
+        OutputWorkspace.withScope {
+          intercept[IllegalStateException](OutputWorkspace.runDir)
+          OutputWorkspace.configure(initialization("inner", root.resolve("inner")))
+          assert(OutputWorkspace.runDir != outerDir)
         }
 
-        assert(OutputManager.runDir == outerDir)
+        assert(OutputWorkspace.runDir == outerDir)
       }
 
       intercept[RuntimeException] {
-        OutputManager.withScope {
+        OutputWorkspace.withScope {
           throw new RuntimeException("boom")
         }
       }
-      intercept[IllegalStateException](OutputManager.runDir)
+      intercept[IllegalStateException](OutputWorkspace.runDir)
     }
   }
 
   test("captured scopes isolate concurrent configuration and can be rebound on worker threads") {
     withTempDirectory("output-workspace-concurrent") { root =>
-      val firstScope = OutputManager.withScope(OutputManager.captureScope())
-      val secondScope = OutputManager.withScope(OutputManager.captureScope())
+      val firstScope = OutputWorkspace.withScope(OutputWorkspace.captureScope())
+      val secondScope = OutputWorkspace.withScope(OutputWorkspace.captureScope())
       val barrier = new CyclicBarrier(2)
       val executor = Executors.newFixedThreadPool(2)
 
-      def task(scope: OutputManager.Scope, command: String): Callable[Observation] =
+      def task(scope: OutputWorkspace.Scope, command: String): Callable[Observation] =
         () =>
           scope.run {
-            OutputManager.configure(initialization(command, root.resolve(s"$command-out")))
-            OutputManager.withWriterInRunDir("same.txt")(_.print(command))
+            OutputWorkspace.configure(initialization(command, root.resolve(s"$command-out")))
+            OutputWorkspace.withWriterInRunDir("same.txt")(_.print(command))
             barrier.await()
-            Observation(OutputManager.runDir, Files.readString(OutputManager.pathInRunDir("same.txt")))
+            Observation(OutputWorkspace.runDir, Files.readString(OutputWorkspace.pathInRunDir("same.txt")))
           }
 
       try {

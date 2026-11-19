@@ -1,7 +1,7 @@
 package at.forsyte.apalache.shai.v1
 
 import at.forsyte.apalache.infra.passes.{Pass, PassChainExecutor}
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.annotations.PrettyWriterWithAnnotations
 import at.forsyte.apalache.io.annotations.store._
 import at.forsyte.apalache.io.config.Constants.SERVER
@@ -31,9 +31,9 @@ import scala.util.Try
  * [[CmdExecutorService]] is meant to be registered with the [[RpcServer]], and should not need to be used directly.
  */
 
-class CmdExecutorService(logger: Logger, outputScope: OutputManager.Scope)
+class CmdExecutorService(logger: Logger, outputScope: OutputWorkspace.Scope)
     extends ZioCmdExecutor.ZCmdExecutor[ZEnv, Any] {
-  def this(logger: Logger) = this(logger, OutputManager.withScope(OutputManager.captureScope()))
+  def this(logger: Logger) = this(logger, OutputWorkspace.withScope(OutputWorkspace.captureScope()))
 
   val _todo = logger
 

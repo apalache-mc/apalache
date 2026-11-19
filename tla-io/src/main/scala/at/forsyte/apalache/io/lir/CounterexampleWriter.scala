@@ -1,6 +1,6 @@
 package at.forsyte.apalache.io.lir
 
-import at.forsyte.apalache.io.OutputManager
+import at.forsyte.apalache.io.OutputWorkspace
 import at.forsyte.apalache.io.json.ujsonimpl.TlaToUJson
 import at.forsyte.apalache.tla.typecomp.{build, TBuilderInstruction}
 import at.forsyte.apalache.tla.lir.TypedPredefs.TypeTagAsTlaType1
@@ -166,8 +166,8 @@ object CounterexampleWriter extends LazyLogging {
     )
 
     fileNames.flatMap { case (kind, name) =>
-      if (OutputManager.withWriterInRunDir(name)(writerHelper(kind))) {
-        Some(OutputManager.pathInRunDir(name).normalize.toString)
+      if (OutputWorkspace.withWriterInRunDir(name)(writerHelper(kind))) {
+        Some(OutputWorkspace.pathInRunDir(name).normalize.toString)
       } else {
         None
       }
