@@ -75,8 +75,9 @@ final case class TraceEvaluationOptions(
     expressions: List[String])
     extends ValidatedOptions
 
-/** Validated server port and implementation. */
+/** Validated server endpoint and implementation. The IP address is defined only for the explorer server. */
 final case class ServerOptions(
+    ip: Option[String],
     port: Int,
     serverType: ServerType)
     extends ValidatedOptions

@@ -57,8 +57,9 @@ final case class TraceEvaluationPatch(
     expressions: Option[List[String]] = None)
     extends ConfigPatch
 
-/** Patches the listening port and server implementation in `server`. */
+/** Patches the listening address, port, and server implementation in `server`. */
 final case class ServerPatch(
+    ip: Option[String] = None,
     port: Option[Int] = None,
     serverType: Option[ServerType] = None)
     extends ConfigPatch
