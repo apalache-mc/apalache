@@ -184,11 +184,19 @@ case class VarT1(no: Int) extends TlaType1 {
     }
   }
 
-  override def usedNames: Set[Int] = Set(no)
+  override lazy val usedNames: Set[Int] = Set(no)
 
 }
 
 object VarT1 {
+  // Intern the first 1024 variables so mkCanonicalSub and other hot paths
+  // never allocate a fresh VarT1 for a previously-seen variable index.
+  private val CACHE_SIZE = 1024
+  private val cache: Array[VarT1] = Array.tabulate(CACHE_SIZE)(new VarT1(_))
+
+  def apply(no: Int): VarT1 =
+    if (no >= 0 && no < CACHE_SIZE) cache(no) else new VarT1(no)
+
   // human-friendly names of the first 26 variables
   protected val QNAMES: Vector[String] = Vector(
       "a",
@@ -296,7 +304,7 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
   // always wrap a function with parenthesis, to make it non-ambiguous
   override def toString: String = s"($arg -> $res)"
 
-  override def usedNames: Set[Int] = arg.usedNames ++ res.usedNames
+  override lazy val usedNames: Set[Int] = arg.usedNames ++ res.usedNames
 
 }
 
@@ -309,7 +317,7 @@ case class FunT1(arg: TlaType1, res: TlaType1) extends TlaType1 {
 case class SetT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Set($elem)"
 
-  override def usedNames: Set[Int] = elem.usedNames
+  override lazy val usedNames: Set[Int] = elem.usedNames
 
 }
 
@@ -322,7 +330,7 @@ case class SetT1(elem: TlaType1) extends TlaType1 {
 case class SeqT1(elem: TlaType1) extends TlaType1 {
   override def toString: String = s"Seq($elem)"
 
-  override def usedNames: Set[Int] = elem.usedNames
+  override lazy val usedNames: Set[Int] = elem.usedNames
 
 }
 
@@ -338,7 +346,7 @@ case class TupT1(elems: TlaType1*) extends TlaType1 {
     "<<%s>>".format(elemStrs.mkString(", "))
   }
 
-  override def usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) =>
+  override lazy val usedNames: Set[Int] = elems.foldLeft(Set[Int]()) { (s, t) =>
     s ++ t.usedNames
   }
 }
@@ -355,7 +363,7 @@ case class SparseTupT1(fieldTypes: SortedMap[Int, TlaType1]) extends TlaType1 {
     "<| %s |>".format(keyTypeStrs.mkString(", "))
   }
 
-  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
+  override lazy val usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
     s ++ t.usedNames
   }
 
@@ -383,7 +391,7 @@ case class RecT1(fieldTypes: SortedMap[String, TlaType1]) extends TlaType1 {
     "[%s]".format(keyTypeStrs.mkString(", "))
   }
 
-  override def usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
+  override lazy val usedNames: Set[Int] = fieldTypes.values.foldLeft(Set[Int]()) { (s, t) =>
     s ++ t.usedNames
   }
 
@@ -409,7 +417,7 @@ case class OperT1(args: Seq[TlaType1], res: TlaType1) extends TlaType1 {
     "((%s) => %s)".format(argStrs.mkString(", "), res.toString)
   }
 
-  override def usedNames: Set[Int] = res.usedNames ++ args.foldLeft(Set[Int]()) { (s, t) =>
+  override lazy val usedNames: Set[Int] = res.usedNames ++ args.foldLeft(Set[Int]()) { (s, t) =>
     s ++ t.usedNames
   }
 
@@ -437,7 +445,7 @@ case class RowT1(fieldTypes: SortedMap[String, TlaType1], other: Option[VarT1]) 
     }
   }
 
-  override def usedNames: Set[Int] =
+  override lazy val usedNames: Set[Int] =
     fieldTypes.values
       .map(_.usedNames)
       .foldLeft(other.map(_.usedNames).getOrElse(Set.empty))(_ ++ _)
@@ -470,7 +478,7 @@ case class RecRowT1(row: RowT1) extends TlaType1 {
 
   }
 
-  override def usedNames: Set[Int] = row.usedNames
+  override lazy val usedNames: Set[Int] = row.usedNames
 }
 
 /**
@@ -495,5 +503,5 @@ case class VariantT1(row: RowT1) extends TlaType1 {
     }
   }
 
-  override def usedNames: Set[Int] = row.usedNames
+  override lazy val usedNames: Set[Int] = row.usedNames
 }
