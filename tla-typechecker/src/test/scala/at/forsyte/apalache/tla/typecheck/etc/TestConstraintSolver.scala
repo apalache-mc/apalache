@@ -1,6 +1,6 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.{OperT1, VarT1}
+import at.forsyte.apalache.tla.lir.{BoolT1, IntT1, OperT1, TlaType1, VarT1}
 import at.forsyte.apalache.tla.types.TypeVarPool
 import at.forsyte.apalache.tla.types.parser.{DefaultType1Parser, Type1Parser}
 import org.junit.runner.RunWith
@@ -8,10 +8,67 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.easymock.EasyMockSugar
 import org.scalatestplus.junit.JUnitRunner
 
+import scala.collection.mutable
+
 @RunWith(classOf[JUnitRunner])
 class TestConstraintSolver extends AnyFunSuite with EasyMockSugar with EtcBuilder {
   private val FIRST_VAR: Int = 100
   private val parser: Type1Parser = DefaultType1Parser
+
+  test("reports follow shared variables across solvers without constraining local polymorphism") {
+    val pool = new TypeVarPool(FIRST_VAR)
+    val inner = new ConstraintSolver(pool)
+    val outer = new ConstraintSolver(pool)
+    val root = new ConstraintSolver(pool)
+    val found = mutable.ListBuffer.empty[TlaType1]
+    inner.addTypeReport(parser("c => a"))(found += _)
+    inner.addConstraint(EqClause(VarT1("a"), parser("Set(b)")))
+    assert(inner.solveDeferringReports().isDefined)
+    inner.reportTypesTo(outer, Set(VarT1("a").no))
+    assert(found.isEmpty)
+    // Passing reports must not add equations to the receiving solver.
+    assert(outer.solvePartially().exists(_.isEmpty))
+
+    outer.addConstraint(EqClause(VarT1("b"), parser("Set(d)")))
+    assert(outer.solveDeferringReports().isDefined)
+    outer.reportTypesTo(root, Set(VarT1("b").no))
+    assert(found.isEmpty)
+    root.addConstraint(EqClause(VarT1("d"), IntT1))
+    // c belongs to the definition. Uses instantiate it, so the root solver only refines the shared d.
+    assert(root.solve().isDefined)
+    assert(found.toList == List(parser("c => Set(Set(Int))")))
+    assert(root.solve().isDefined)
+    assert(found.size == 1)
+  }
+
+  test("reports independent of the enclosing context are published at the definition boundary") {
+    val pool = new TypeVarPool(FIRST_VAR)
+    val inner = new ConstraintSolver(pool)
+    val outer = new ConstraintSolver(pool)
+    val found = mutable.ListBuffer.empty[TlaType1]
+    inner.addTypeReport(parser("a => a"))(found += _)
+    assert(inner.solveDeferringReports().isDefined)
+    assert(found.isEmpty)
+    inner.reportTypesTo(outer, Set.empty)
+    assert(found.toList == List(parser("a => a")))
+    assert(outer.solvePartially().exists(_.isEmpty))
+    assert(outer.solve().isDefined)
+    assert(found.size == 1)
+  }
+
+  test("a failed enclosing solve discards deferred reports") {
+    val pool = new TypeVarPool(FIRST_VAR)
+    val inner = new ConstraintSolver(pool)
+    val outer = new ConstraintSolver(pool)
+    val found = mutable.ListBuffer.empty[TlaType1]
+    inner.addTypeReport(VarT1("a"))(found += _)
+    assert(inner.solveDeferringReports().isDefined)
+    inner.reportTypesTo(outer, Set(VarT1("a").no))
+    outer.addConstraint(EqClause(VarT1("a"), IntT1))
+    outer.addConstraint(EqClause(VarT1("a"), BoolT1))
+    assert(outer.solve().isEmpty)
+    assert(found.isEmpty)
+  }
 
   test("unique solution") {
     val solver = new ConstraintSolver(new TypeVarPool(FIRST_VAR))

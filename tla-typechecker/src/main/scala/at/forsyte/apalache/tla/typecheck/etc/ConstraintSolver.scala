@@ -1,21 +1,59 @@
 package at.forsyte.apalache.tla.typecheck.etc
 
-import at.forsyte.apalache.tla.lir.TlaType1
-import at.forsyte.apalache.tla.types.{EqClass, Substitution, TypeUnifier, TypeVarPool}
+import at.forsyte.apalache.tla.lir.{TlaType1, VarT1}
+import at.forsyte.apalache.tla.typecheck.etc.ConstraintSolver.TypeReport
+import at.forsyte.apalache.tla.types.{Substitution, TypeUnifier, TypeVarPool}
 
 /**
  * A constraint solver that collects a series of equations and solves them with the type unification algorithm.
  *
+ * When the solver finds the type of a clause, it records a type report. Once all constraints are solved, [[solve]]
+ * applies the solution to the reports and sends them to their callbacks. The type checker solves every LET definition
+ * with a separate solver, and some types in the definition may contain type variables of the enclosing context. The
+ * enclosing solver can still refine these variables. Hence, the solver of a definition calls `solveDeferringReports`
+ * and then `reportTypesTo`, which sends the final reports and passes the others to the enclosing solver.
+ *
  * @author
  *   Igor Konnov
  */
-class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution = Substitution.empty) {
-  private var solution: Substitution = approximateSolution
+class ConstraintSolver(varPool: TypeVarPool) {
+  private var solution: Substitution = Substitution.empty
   private var constraints: List[Clause] = List.empty
-  private var typesToReport: List[(Clause, TlaType1)] = List.empty
+  private var typesToReport: List[TypeReport] = List.empty
 
   def addConstraint(constraint: Clause): Unit = {
     constraints = constraints :+ constraint
+  }
+
+  /**
+   * Send the type `tt` to `callback`, once it is final. Unlike a clause, a report does not add equations. Hence, it
+   * does not change the solution.
+   */
+  private[etc] def addTypeReport(tt: TlaType1)(callback: TlaType1 => Unit): Unit = {
+    typesToReport :+= TypeReport(tt, callback)
+  }
+
+  /**
+   * Hand over the type reports after `solveDeferringReports`. A report is final, unless it contains a type variable
+   * that the solution assigns to a shared variable. Send the final reports, and pass the others to `parent`.
+   *
+   * @param parent
+   *   the solver of the enclosing context
+   * @param sharedVars
+   *   the type variables that the definition shares with the enclosing context
+   */
+  private[etc] def reportTypesTo(parent: ConstraintSolver, sharedVars: Set[Int]): Unit = {
+    val sharedNames = sharedVars.flatMap(v => solution.subRec(VarT1(v)).usedNames)
+    for (report <- typesToReport) {
+      val resolvedType = solution.subRec(report.tt)
+      if ((resolvedType.usedNames & sharedNames).isEmpty) {
+        report.callback(resolvedType)
+      } else {
+        // Definition-local variables stay untouched: every use instantiates its quantified variables.
+        parent.typesToReport :+= report.copy(tt = resolvedType)
+      }
+    }
+    typesToReport = List.empty
   }
 
   def solvePartially(): Option[Substitution] = {
@@ -29,7 +67,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
           case Some((uniqueSolution, typ)) =>
             progress = true
             solution = uniqueSolution
-            typesToReport :+= (cons, solution.subRec(typ))
+            addTypeReport(solution.subRec(typ))(cons.onTypeFound)
           case None =>
             cons match {
               case OrClause(_ @_*) =>
@@ -43,6 +81,7 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
                 cons.onTypeError(solution, Seq(solution.subRec(term)))
                 // reset the constraints, so they are not reported later
                 constraints = List.empty
+                typesToReport = List.empty
                 return None
             }
         }
@@ -56,15 +95,31 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
     Some(solution)
   }
 
+  /**
+   * Solve all constraints and send the type reports.
+   *
+   * @return
+   *   the solution, if all constraints are solved; None, otherwise
+   */
   def solve(): Option[Substitution] = {
+    val result = solveDeferringReports()
+    if (result.isDefined) {
+      typesToReport.foreach(report => report.callback(solution.subRec(report.tt)))
+      typesToReport = List.empty
+    }
+    result
+  }
+
+  /**
+   * Solve all constraints like [[solve]], but keep the type reports for [[reportTypesTo]].
+   *
+   * @return
+   *   the solution, if all constraints are solved; None, otherwise
+   */
+  private[etc] def solveDeferringReports(): Option[Substitution] = {
     val isDefined = solvePartially().isDefined
 
     if (isDefined && constraints.isEmpty) {
-      // all constraints have been solved, report the types
-      for ((c, t) <- typesToReport) {
-        c.onTypeFound(solution.subRec(t))
-      }
-
       Some(solution)
     } else {
       constraints.foreach {
@@ -75,24 +130,9 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
         case c @ EqClause(_, term) =>
           c.onTypeError(solution, Seq(solution.subRec(term)))
       }
+      typesToReport = List.empty
       None
     }
-  }
-
-  /**
-   * Test whether a variable is free in the context that is induced by the solved constraints.
-   *
-   * @param varNo
-   *   a variable number
-   * @return
-   *   true if the variable occurs in the partial solution of the solver
-   */
-  def isFreeVar(varNo: Int): Boolean = {
-    def outsideClass(cls: EqClass): Boolean = !cls.typeVars.contains(varNo)
-    // Check both the approximate solution, which the solver was initialized with, and the solution, if it exists.
-    // This is probably a computationally expensive check:
-    // https://github.com/apalache-mc/apalache/issues/973
-    approximateSolution.mapping.keySet.forall(outsideClass) && solution.mapping.keySet.forall(outsideClass)
   }
 
   private def solveOne(solution: Substitution, constraint: Clause): Option[(Substitution, TlaType1)] = {
@@ -109,4 +149,10 @@ class ConstraintSolver(varPool: TypeVarPool, approximateSolution: Substitution =
         }
     }
   }
+}
+
+object ConstraintSolver {
+
+  /** A type to send to `callback`, once it is final. */
+  private case class TypeReport(tt: TlaType1, callback: TlaType1 => Unit)
 }
