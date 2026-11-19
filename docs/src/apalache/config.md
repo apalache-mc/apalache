@@ -177,7 +177,7 @@ to JSON:
 
 Then rename `.apalache.cfg` to `.apalache.json` before running Apalache. Automatically discovered legacy filenames are
 ignored, while an explicit `--config-file` ending in `.cfg` is an error. With `--debug`, the merged canonical JSON
-configuration is written to `application-config.json` in the run directory.
+configuration is written to `config.json` in the run directory.
 
 The strict JSON parser accepts only canonical names and values. In particular, apply these changes to older
 configurations:
