@@ -42,6 +42,10 @@ final case class TypecheckerOptions(inferPoly: Boolean) extends ValidatedOptions
 /** Validated model-checker engine settings independent of the specification. */
 final case class CheckerOptions(
     algorithm: Algorithm,
+    searchKind: SearchKind,
+    seed: Int,
+    maxRun: Int,
+    outputTraces: Boolean,
     discardDisabled: Boolean,
     length: Int,
     maxError: Int,
